@@ -90,6 +90,10 @@ class MultiWidgetManager {
     }
     
     autoResize(textarea) {
+        if(textarea.scrollHeight === 0){
+            // Wait for DOM/CSS initialization before calculating height.
+            return setTimeout(() => this.autoResize(textarea), 200);
+        }
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
     }
