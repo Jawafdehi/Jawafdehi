@@ -105,7 +105,7 @@ export interface DocumentSource {
   source_id: string;
   title: string;
   description: string;
-  source_type: DocumentSourceType | string; // DocumentSourceType for known values; plain string covers legacy/unknown backend values
+  source_type: DocumentSourceType | string | null; // DocumentSourceType for known values; plain string covers legacy/unknown backend values; null if not classified
   url?: string[] | null; // Array of URLs for this source (may be missing or null during migration)
   related_entities: JawafEntity[]; // Related entities
   created_at: string;
