@@ -68,8 +68,7 @@ export function DocumentSourceCard({
         
         {hasUrls && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {urls.map((url) => {
-              const index = urls.indexOf(url);
+            {urls.map((url, index) => {
               const linkText = urls.length > 1 
                 ? t("documentSource.viewSourceN", { n: index + 1 })
                 : t("documentSource.viewSource");
@@ -77,7 +76,7 @@ export function DocumentSourceCard({
               
               return (
                 <Button 
-                  key={url}
+                  key={`${index}-${url}`}
                   variant="outline" 
                   size="sm" 
                   asChild
