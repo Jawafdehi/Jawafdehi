@@ -105,18 +105,12 @@ const Index = () => {
         {/* Statistics Section */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StatCard
                 title={t("home.stats.totalCases")}
                 value={getStatValue(stats?.published_cases)}
                 icon={FileText}
                 description={t("home.stats.totalCasesDesc")}
-              />
-              <StatCard
-                title={t("home.stats.underInvestigation")}
-                value={getStatValue(stats?.cases_under_investigation)}
-                icon={Eye}
-                description={t("home.stats.underInvestigationDesc")}
               />
               <StatCard
                 title={t("home.stats.entitiesTracked")}

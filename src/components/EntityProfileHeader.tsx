@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from "@/utils/nes-helpers";
+import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 interface EntityProfileHeaderProps {
   entity: Entity;
@@ -19,19 +20,26 @@ const EntityProfileHeader = ({
   caseCount = 0,
   jawafEntityId
 }: EntityProfileHeaderProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
   const primaryName = getPrimaryName(entity.names, 'en') || t('entityDetail.unknown');
   const primaryNameNe = getPrimaryName(entity.names, 'ne');
-  const position = getAttribute(entity, 'position') || getAttribute(entity, 'role');
-  const organization = getAttribute(entity, 'organization');
+  const positionValue = getAttribute(entity, 'position') || getAttribute(entity, 'role');
+  const position = positionValue ? translateDynamicText(String(positionValue), currentLang) : null;
+  const organizationValue = getAttribute(entity, 'organization');
+  const organization = organizationValue ? translateDynamicText(String(organizationValue), currentLang) : null;
   const isOrganization = entity.type === 'organization';
   const email = getEmail(entity.contacts);
   const phone = getPhone(entity.contacts);
   const website = getWebsite(entity.contacts);
-  const description = getDescription(entity.description, 'en');
+  const description = getDescription(entity.description, currentLang);
   
   // Get photo URL from entity pictures
   const photoUrl = entity.pictures?.find(p => p.type === 'thumb' || p.type === 'full')?.url;
+  
+  // Translate entity type and subtype
+  const translatedType = translateDynamicText(entity.type, currentLang);
+  const translatedSubType = entity.sub_type ? translateDynamicText(formatSubType(entity.sub_type), currentLang) : null;
   
   return (
     <Card className="mb-6">
@@ -62,15 +70,15 @@ const EntityProfileHeader = ({
                 <p className="text-xl text-muted-foreground mb-2">{primaryNameNe}</p>
               )}
               {position && (
-                <p className="text-lg text-muted-foreground">{String(position)}</p>
+                <p className="text-lg text-muted-foreground">{position}</p>
               )}
               {organization && (
-                <p className="text-muted-foreground">{String(organization)}</p>
+                <p className="text-muted-foreground">{organization}</p>
               )}
               
               <div className="flex gap-2 mt-3 flex-wrap">
-                <Badge variant="outline">{entity.type}</Badge>
-                {entity.sub_type && <Badge variant="outline">{formatSubType(entity.sub_type)}</Badge>}
+                <Badge variant="outline">{translatedType}</Badge>
+                {translatedSubType && <Badge variant="outline">{translatedSubType}</Badge>}
               </div>
             </div>
 

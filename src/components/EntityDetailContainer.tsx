@@ -149,7 +149,7 @@ export function EntityDetailContainer({
                 
                 {entity && (
                   <div className="flex gap-2 mt-3 flex-wrap">
-                    <Badge variant="outline">{entity.type}</Badge>
+                    <Badge variant="outline">{t(`entityDetail.${entity.type}`)}</Badge>
                     {entity.sub_type && <Badge variant="outline">{formatSubType(entity.sub_type)}</Badge>}
                   </div>
                 )}
@@ -194,13 +194,13 @@ export function EntityDetailContainer({
               <Card className="flex-1 bg-muted/50">
                 <CardContent className="p-4 text-center">
                   <div className="text-3xl font-bold text-primary">{allegedCases.length}</div>
-                  <div className="text-sm text-muted-foreground">Total Allegations</div>
+                  <div className="text-sm text-muted-foreground">{t('entityDetail.totalAllegations')}</div>
                 </CardContent>
               </Card>
               <Card className="flex-1 bg-muted/50">
                 <CardContent className="p-4 text-center">
                   <div className="text-3xl font-bold text-primary">{allCases.length}</div>
-                  <div className="text-sm text-muted-foreground">Active Cases</div>
+                  <div className="text-sm text-muted-foreground">{t('entityDetail.activeCases')}</div>
                 </CardContent>
               </Card>
             </div>
@@ -209,7 +209,7 @@ export function EntityDetailContainer({
           {/* Description */}
           {description && (
             <div className="mt-6 pt-6 border-t">
-              <h3 className="font-semibold mb-2">About</h3>
+              <h3 className="font-semibold mb-2">{t('entityDetail.about')}</h3>
               <p className="text-muted-foreground leading-relaxed">
                 {description}
               </p>
@@ -221,8 +221,8 @@ export function EntityDetailContainer({
       {/* Tabbed Content */}
       <Tabs defaultValue="cases" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="cases">Cases</TabsTrigger>
-          <TabsTrigger value="overview">Entity Details</TabsTrigger>
+          <TabsTrigger value="cases">{t('entityDetail.cases')}</TabsTrigger>
+          <TabsTrigger value="overview">{t('entityDetail.entityDetails')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -231,8 +231,7 @@ export function EntityDetailContainer({
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                This entity does not have detailed profile information available yet. 
-                Only basic information from case records is shown.
+                {t('entityDetail.noNesDataAlert')}
               </AlertDescription>
             </Alert>
           )}
@@ -247,7 +246,7 @@ export function EntityDetailContainer({
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>{t("entityDetail.allegedCases")} ({allegedCases.length})</CardTitle>
-              <p className="text-sm text-muted-foreground">Cases where this entity is alleged to be involved</p>
+              <p className="text-sm text-muted-foreground">{t('entityDetail.allegedCasesDescription')}</p>
             </CardHeader>
             <CardContent>
               {allegedCases.length > 0 ? (
@@ -284,7 +283,7 @@ export function EntityDetailContainer({
           <Card>
             <CardHeader>
               <CardTitle>{t("entityDetail.relatedCases")} ({relatedCases.length})</CardTitle>
-              <p className="text-sm text-muted-foreground">Cases where this entity is mentioned or related</p>
+              <p className="text-sm text-muted-foreground">{t('entityDetail.relatedCasesDescription')}</p>
             </CardHeader>
             <CardContent>
               {relatedCases.length > 0 ? (

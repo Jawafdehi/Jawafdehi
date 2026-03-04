@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar } from "lucide-react";
 import { Case } from "@/services/api";
 import { formatDate } from "@/utils/date";
+import { useTranslation } from "react-i18next";
+import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 interface CaseItemProps {
   case: Case;
@@ -17,14 +19,18 @@ const statusConfig = {
 };
 
 const CaseItem = ({ case: caseData }: CaseItemProps) => {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language;
+  
   const statusInfo = statusConfig[caseData.status as keyof typeof statusConfig] || statusConfig['Pending'];
+  const translatedStatus = translateDynamicText(statusInfo.label, currentLang);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <CardTitle className="text-lg">{caseData.name}</CardTitle>
-          <Badge className={statusInfo.class}>{statusInfo.label}</Badge>
+          <Badge className={statusInfo.class}>{translatedStatus}</Badge>
         </div>
       </CardHeader>
 

@@ -20,9 +20,11 @@ import { toast } from "sonner";
 import { formatDate, formatDateWithBS, formatCaseDateRange } from "@/utils/date";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
+import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 const CaseDetail = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
   const { id } = useParams();
   const [caseData, setCaseData] = useState<CaseDetailType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -203,7 +205,8 @@ const CaseDetail = () => {
                 <div className="text-sm flex flex-wrap gap-1">
                   {caseData.alleged_entities.map((e, index) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                    const displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    displayName = translateDynamicText(displayName, currentLang);
                     return (
                       <span key={e.id}>
                         <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
@@ -220,7 +223,8 @@ const CaseDetail = () => {
                 <div className="text-sm flex flex-wrap gap-1">
                   {caseData.locations.length > 0 ? caseData.locations.map((e, index) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                    const displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    displayName = translateDynamicText(displayName, currentLang);
                     return (
                       <span key={e.id}>
                         <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
@@ -276,7 +280,8 @@ const CaseDetail = () => {
                 <div className="text-sm text-muted-foreground">
                   {caseData.related_entities.map((e, index) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                    const displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    displayName = translateDynamicText(displayName, currentLang);
                     return (
                       <span key={index}>
                         <Link to={`/entity/${e.id}`} className="text-primary hover:underline">

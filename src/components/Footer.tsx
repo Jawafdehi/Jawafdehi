@@ -103,6 +103,16 @@ export const Footer = () => {
                   {t("footer.githubRepo")}
                 </a>
               </li>
+              <li>
+                <a
+                  href="https://stats.uptimerobot.com/lwVRcc5suC"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t("footer.siteStatus")}
+                </a>
+              </li>
             </ul>
           </div>
         </div>

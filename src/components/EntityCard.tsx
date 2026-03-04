@@ -7,6 +7,7 @@ import { Building2, User, MapPin } from "lucide-react";
 import { Entity } from "@/services/api";
 import { getPrimaryName, getAttribute } from "@/utils/nes-helpers";
 import type { JawafEntity } from "@/types/jds";
+import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 interface EntityCardProps {
   entity?: Entity; // NES entity data (optional)
@@ -34,12 +35,15 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
       : getPrimaryName(entity.names, 'ne');
     
     const positionValue = getAttribute(entity, 'position') || getAttribute(entity, 'role');
-    position = positionValue ? String(positionValue) : null;
+    position = positionValue ? translateDynamicText(String(positionValue), currentLang) : null;
     
     const organizationValue = getAttribute(entity, 'organization');
-    organization = organizationValue ? String(organizationValue) : null;
+    organization = organizationValue ? translateDynamicText(String(organizationValue), currentLang) : null;
     
     province = (getAttribute(entity, 'province') || getAttribute(entity, 'location')) as string | null;
+    if (province) {
+      province = translateDynamicText(province, currentLang);
+    }
     isOrganization = entity.type === 'organization';
 
     // Get profile picture (prefer thumb, fallback to first available)

@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: ['main*', 'develop*']
+  pull_request:
+    branches: ['main*', 'develop*']
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      
+      - name: Load cached node_modules
+        id: cached-dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+      
+      - name: Install dependencies
+        if: steps.cached-dependencies.outputs.cache-hit != 'true'
+        run: bun install
+      
+      - name: Run linter
+        run: bun run lint
+      
+      - name: Run tests
+        run: bun run test
+      
+      - name: Build project
+        run: bun run build

@@ -378,7 +378,7 @@ const About = () => {
                 <div className="text-muted-foreground">
                   <p>
                     <strong className="text-foreground">
-                      <a href="https://api.jawafdehi.newnepal.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      <a href="https://portal.jawafdehi.org/api/swagger/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                         Jawafdehi API
                       </a>
                     </strong> - Backend API for managing corruption cases, moderation, and entity integration.
