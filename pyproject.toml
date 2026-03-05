@@ -24,12 +24,14 @@ rules = "^3.5"
 whitenoise = "^6.11.0"
 django-auditlog = "^3.3.0"
 gunicorn = "^23.0.0"
+pydantic = "^2.12.5"
 
 
 [tool.poetry.group.dev.dependencies]
 hypothesis = "^6.148.2"
 pytest = "^9.0.1"
 pytest-django = "^4.11.1"
+pytest-asyncio = "^1.3.0"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
@@ -37,6 +39,7 @@ python_files = ["tests.py", "test_*.py", "*_tests.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--reuse-db"
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core"]

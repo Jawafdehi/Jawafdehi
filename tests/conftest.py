@@ -19,7 +19,6 @@ from cases.models import Case, JawafEntity, DocumentSource
 User = get_user_model()
 
 # Configure Hypothesis settings globally
-# Double the default deadline from 200ms to 400ms for slower test environments
 hypothesis_settings.register_profile(
     "default",
     deadline=400,  # 400ms instead of default 200ms

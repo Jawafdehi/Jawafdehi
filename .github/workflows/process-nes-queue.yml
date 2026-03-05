@@ -1,0 +1,113 @@
+# GitHub Actions workflow for processing the NES Queue System (NESQ).
+#
+# This workflow:
+# 1. Runs daily at midnight UTC via cron schedule
+# 2. Checks out both jawafdehi-api and nes-db repositories
+# 3. Runs the Django process_queue management command to process APPROVED items
+# 4. Commits and pushes any resulting nes-db file changes
+#
+# The management command processes approved NESQueueItems via the NES
+# PublicationService, writing entity changes to the nes-db FileDatabase.
+# Git operations (add, commit, push) are handled here as shell steps,
+# NOT in the Python processor.
+#
+# Required secrets:
+#   NES_DB_PUSH_TOKEN - GitHub PAT with write access to nes-db repository
+#   DATABASE_URL      - PostgreSQL connection string for the Jawafdehi database
+#   SECRET_KEY        - Django secret key
+#
+# See .kiro/specs/nes-queue-system/ for full specification.
+
+name: Process NES Queue
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual triggering for testing and urgent processing
+
+jobs:
+  process-queue:
+    name: Process Approved Queue Items
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------
+      # 1. Checkout repositories
+      # -----------------------------------------------------------
+      - name: Checkout jawafdehi-api
+        uses: actions/checkout@v4
+
+      - name: Checkout nes-db
+        uses: actions/checkout@v4
+        with:
+          repository: NewNepal-org/NepalEntityService
+          token: ${{ secrets.NES_DB_PUSH_TOKEN }}
+          path: nes-db
+
+      # -----------------------------------------------------------
+      # 2. Set up Python and dependencies
+      # -----------------------------------------------------------
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      # -----------------------------------------------------------
+      # 3. Configure git for nes-db commits
+      # -----------------------------------------------------------
+      - name: Configure git identity for nes-db
+        working-directory: nes-db
+        run: |
+          git config user.name "Jawafdehi NESQ Bot"
+          git config user.email "nesq-bot@jawafdehi.org"
+
+      # -----------------------------------------------------------
+      # 4. Run the queue processor
+      # -----------------------------------------------------------
+      - name: Process approved queue items
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          NES_DB_PATH: ${{ github.workspace }}/nes-db
+          DEBUG: 'False'
+        run: poetry run python manage.py process_queue --verbose
+
+      # -----------------------------------------------------------
+      # 5. Show nes-db changes
+      # -----------------------------------------------------------
+      - name: Show nes-db changes
+        working-directory: nes-db
+        run: |
+          echo "=== Changed files ==="
+          git diff --stat
+          echo ""
+          echo "=== Full diff ==="
+          git diff
+
+      # -----------------------------------------------------------
+      # 6. Commit and push nes-db changes
+      # -----------------------------------------------------------
+      - name: Commit and push NES changes
+        working-directory: nes-db
+        run: |
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            # Count changed files for the commit message
+            CHANGED_FILES=$(git diff --cached --name-only | wc -l | tr -d ' ')
+            git commit -m "Process NESQ items — ${CHANGED_FILES} file(s) updated"
+            git push
+          fi

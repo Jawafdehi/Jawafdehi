@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework.authtoken",
     "drf_spectacular",
     "django_filters",
     "corsheaders",
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     "auditlog",
     "rules.apps.AutodiscoverRulesConfig",
     "cases",
+    "nesq",
 ]
 
 MIDDLEWARE = [
@@ -225,6 +227,10 @@ CORS_ALLOW_METHODS = ["GET", "HEAD", "OPTIONS"]
 
 # NES API Configuration
 NES_API_URL = os.getenv("NES_API_URL", "https://nes.newnepal.org/api")
+
+# NES Database Path - required for GitHub Actions queue processing only.
+# Points to the local clone of the nes-db repository.
+NES_DB_PATH = os.getenv("NES_DB_PATH")
 
 # Feature Flags
 EXPOSE_CASES_IN_REVIEW = os.getenv("EXPOSE_CASES_IN_REVIEW", "False") == "True"
