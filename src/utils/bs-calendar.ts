@@ -51,8 +51,8 @@ const P: Record<string, number[]> = {
 };
 
 /**
- * Compact lookup: BS year → pattern key.
- * Keeps the table readable and small.
+ * Compact lookup: BS year → month-length array.
+ * Keeps the table readable and small by reusing common patterns.
  */
 const YEAR_PATTERN: [number, number[]][] = [
   [1975, P.A], [1976, P.B], [1977, P.C], [1978, P.D],
@@ -128,8 +128,29 @@ export interface BSDate {
 /**
  * Convert AD (year, month, day) to Bikram Sambat.
  * All inputs are plain numbers — no Date objects, no timezone issues.
+ * 
+ * @throws {RangeError} If the date is invalid or outside supported range
  */
 export function adToBS(adYear: number, adMonth: number, adDay: number): BSDate {
+  // Validate Gregorian date inputs
+  if (!Number.isInteger(adYear) || !Number.isInteger(adMonth) || !Number.isInteger(adDay)) {
+    throw new RangeError('Year, month, and day must be integers');
+  }
+  
+  if (adMonth < 1 || adMonth > 12) {
+    throw new RangeError(`Invalid month: ${adMonth}. Must be 1-12`);
+  }
+  
+  if (adDay < 1 || adDay > 31) {
+    throw new RangeError(`Invalid day: ${adDay}. Must be 1-31`);
+  }
+  
+  // Validate day is valid for the given month/year
+  const daysInMonth = new Date(adYear, adMonth, 0).getDate();
+  if (adDay > daysInMonth) {
+    throw new RangeError(`Invalid date: ${adYear}-${adMonth}-${adDay}. Month ${adMonth} has only ${daysInMonth} days`);
+  }
+  
   let remaining = gregorianToJDN(adYear, adMonth, adDay) - BS_EPOCH_JDN;
   if (remaining < 0) throw new RangeError('Date is before BS 1975 (AD 1918-04-13)');
 

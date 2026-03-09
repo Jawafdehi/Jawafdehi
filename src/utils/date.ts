@@ -10,14 +10,30 @@ import { adToBS } from './bs-calendar';
 
 const KATHMANDU_TZ = 'Asia/Kathmandu';
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const DATETIME_WITH_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-/** Parse an ISO string, treating bare YYYY-MM-DD as UTC midnight. */
+/** 
+ * Parse an ISO string, treating bare YYYY-MM-DD as UTC midnight.
+ * Rejects datetime strings without timezone info to prevent timezone-dependent interpretation.
+ * 
+ * @throws {Error} If datetime string lacks timezone offset
+ */
 function parse(dateString: string): Date {
-  return DATE_ONLY.test(dateString)
-    ? new Date(`${dateString}T00:00:00Z`)
-    : parseISO(dateString);
+  // Allow date-only strings (treated as UTC midnight)
+  if (DATE_ONLY.test(dateString)) {
+    return new Date(`${dateString}T00:00:00Z`);
+  }
+  
+  // Reject datetime strings without timezone offset
+  if (dateString.includes('T') && !DATETIME_WITH_OFFSET.test(dateString)) {
+    throw new Error(
+      `Invalid datetime: "${dateString}". Datetime strings must include timezone offset (Z or +HH:MM) to prevent timezone-dependent interpretation.`
+    );
+  }
+  
+  return parseISO(dateString);
 }
 
 /** Get the "YYYY-MM-DD" key for a date in Kathmandu timezone. */
@@ -78,9 +94,11 @@ export function formatCaseDateRange(
   if (!startDate && endDate) return formatDateWithBS(endDate);
   if (startDate && !endDate) return `${formatDateWithBS(startDate)} - ${ongoingText}`;
 
-  // Both dates exist
+  // Both dates exist at this point
+  if (!startDate || !endDate) return 'N/A'; // Type narrowing
+  
   try {
-    if (kathmanduKey(startDate!) === kathmanduKey(endDate!)) {
+    if (kathmanduKey(startDate) === kathmanduKey(endDate)) {
       return formatDateWithBS(startDate);
     }
     return `${formatDateWithBS(startDate)} - ${formatDateWithBS(endDate)}`;
