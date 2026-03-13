@@ -1,161 +1,109 @@
 /**
- * Date formatting utilities with Kathmandu timezone support
- * All dates on the website should be displayed in Kathmandu timezone (Asia/Kathmandu, GMT+5:45)
+ * Date formatting utilities with Kathmandu timezone support.
+ * All dates on the website are displayed in Asia/Kathmandu (GMT+5:45).
+ *
  */
 
-import { format, parseISO, isSameDay } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
-import DateConverter from '@remotemerge/nepali-date-converter';
+import { parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
+import { adToBS } from './bs-calendar';
 
-const KATHMANDU_TIMEZONE = 'Asia/Kathmandu';
+const KATHMANDU_TZ = 'Asia/Kathmandu';
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+// ISO 8601 datetime with timezone offset (seconds optional per ISO 8601)
+const DATETIME_WITH_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
-// Nepali month names
-const NEPALI_MONTHS = [
-  'बैशाख', 'जेष्ठ', 'आषाढ', 'श्रावण', 'भाद्र', 'आश्विन',
-  'कार्तिक', 'मंसिर', 'पौष', 'माघ', 'फाल्गुन', 'चैत्र'
-];
+// ── Helpers ──────────────────────────────────────────────────────────────
 
-// Nepali numerals mapping
-const NEPALI_NUMERALS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
-
-/**
- * Convert a number to Nepali numerals
- * @param num - Number to convert
- * @returns String with Nepali numerals
+/** 
+ * Parse an ISO string, treating bare YYYY-MM-DD as UTC midnight.
+ * Rejects datetime strings without timezone info to prevent timezone-dependent interpretation.
+ * 
+ * @throws {Error} If datetime string lacks timezone offset
  */
-function toNepaliNumerals(num: number): string {
-  return String(num)
-    .split('')
-    .map((digit) => NEPALI_NUMERALS[parseInt(digit, 10)] || digit)
-    .join('');
+function parse(dateString: string): Date {
+  // Allow date-only strings (treated as UTC midnight)
+  if (DATE_ONLY.test(dateString)) {
+    return new Date(`${dateString}T00:00:00Z`);
+  }
+  
+  // Reject datetime strings without timezone offset
+  if (dateString.includes('T') && !DATETIME_WITH_OFFSET.test(dateString)) {
+    throw new Error(
+      `Invalid datetime: "${dateString}". Datetime strings must include timezone offset (Z or +HH:MM) to prevent timezone-dependent interpretation.`
+    );
+  }
+  
+  return parseISO(dateString);
 }
 
-/**
- * Format a date string to display in Kathmandu timezone
- * @param dateString - ISO date string
- * @param formatString - date-fns format string (default: 'PP' for localized date)
- * @returns Formatted date string in Kathmandu timezone
- */
-export function formatDate(dateString: string | null | undefined, formatString = 'PP'): string {
-  if (!dateString) return 'N/A';
+/** Get the "YYYY-MM-DD" key for a date in Kathmandu timezone. */
+function kathmanduKey(dateString: string): string {
+  return formatInTimeZone(parse(dateString), KATHMANDU_TZ, 'yyyy-MM-dd');
+}
 
+// ── AD formatting ────────────────────────────────────────────────────────
+
+/** Format a date string in Kathmandu timezone (default format: 'PP'). */
+export function formatDate(dateString: string | null | undefined, fmt = 'PP'): string {
+  if (!dateString) return 'N/A';
   try {
-    const date = parseISO(dateString);
-    const zonedDate = toZonedTime(date, KATHMANDU_TIMEZONE);
-    return format(zonedDate, formatString);
-  } catch (error) {
-    console.error('Error formatting date:', error);
+    return formatInTimeZone(parse(dateString), KATHMANDU_TZ, fmt);
+  } catch {
     return 'Invalid Date';
   }
 }
 
-/**
- * Format a date string to display in Kathmandu timezone with time
- * @param dateString - ISO date string
- * @returns Formatted date and time string in Kathmandu timezone
- */
+/** Format a date string with time in Kathmandu timezone. */
 export function formatDateTime(dateString: string | null | undefined): string {
   return formatDate(dateString, 'PPp');
 }
 
-/**
- * Convert AD date to BS (Bikram Sambat) date
- * @param dateString - ISO date string
- * @returns BS date object with year, month, date, and formatted string
- */
-function convertToBS(dateString: string | null | undefined): { year: number; month: number; date: number; formatted: string } | null {
+// ── BS conversion ────────────────────────────────────────────────────────
+
+/** Convert an ISO date string → BS date (year, month, date, formatted). */
+function convertToBS(dateString: string | null | undefined) {
   if (!dateString) return null;
-
   try {
-    const date = parseISO(dateString);
-    const zonedDate = toZonedTime(date, KATHMANDU_TIMEZONE);
-    const year = zonedDate.getFullYear();
-    const month = zonedDate.getMonth() + 1; // JavaScript months are 0-indexed
-    const day = zonedDate.getDate();
-
-    // Convert to YYYY-MM-DD format for the converter
-    const adDateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const bsDate = new DateConverter(adDateString).toBs();
-
-    const monthName = NEPALI_MONTHS[bsDate.month - 1] || '';
-    const nepaliYear = toNepaliNumerals(bsDate.year);
-    const nepaliDate = toNepaliNumerals(bsDate.date);
-    const formatted = `${nepaliYear} ${monthName} ${nepaliDate}`;
-
-    return {
-      year: bsDate.year,
-      month: bsDate.month,
-      date: bsDate.date,
-      formatted
-    };
-  } catch (error) {
-    console.error('Error converting to BS date:', error);
+    const d = parse(dateString);
+    const y = Number(formatInTimeZone(d, KATHMANDU_TZ, 'yyyy'));
+    const m = Number(formatInTimeZone(d, KATHMANDU_TZ, 'M'));
+    const day = Number(formatInTimeZone(d, KATHMANDU_TZ, 'd'));
+    return adToBS(y, m, day);
+  } catch {
     return null;
   }
 }
 
-/**
- * Format a date string to display both AD and BS dates
- * @param dateString - ISO date string
- * @param formatString - date-fns format string (default: 'PP' for localized date)
- * @returns Formatted date string with both AD and BS dates
- */
-export function formatDateWithBS(dateString: string | null | undefined, formatString = 'PP'): string {
+// ── Combined AD + BS formatting ──────────────────────────────────────────
+
+/** Format a date as "AD date (BS date)". */
+export function formatDateWithBS(dateString: string | null | undefined, fmt = 'PP'): string {
   if (!dateString) return 'N/A';
-
-  const adDate = formatDate(dateString, formatString);
-  const bsDate = convertToBS(dateString);
-
-  if (bsDate) {
-    return `${adDate} (${bsDate.formatted})`;
-  }
-
-  return adDate;
+  const ad = formatDate(dateString, fmt);
+  const bs = convertToBS(dateString);
+  return bs ? `${ad} (${bs.formatted})` : ad;
 }
 
-/**
- * Format a date range for case details with both AD and BS dates
- * @param startDate - Case start date
- * @param endDate - Case end date
- * @param ongoingText - Translated text for "Ongoing" (default: "Ongoing")
- * @returns Formatted date range or "Ongoing" if no end date, with BS dates
- */
+/** Format a start/end date range with BS dates, or show "Ongoing". */
 export function formatCaseDateRange(
   startDate: string | null | undefined,
   endDate: string | null | undefined,
-  ongoingText: string = 'Ongoing'
+  ongoingText = 'Ongoing'
 ): string {
   if (!startDate && !endDate) return 'N/A';
+  if (!startDate && endDate) return formatDateWithBS(endDate);
+  if (startDate && !endDate) return `${formatDateWithBS(startDate)} - ${ongoingText}`;
 
-  // If no start date but has end date, just show end date
-  if (!startDate && endDate) {
-    return formatDateWithBS(endDate);
-  }
-
-  // If has start date but no end date, show as ongoing
-  if (startDate && !endDate) {
-    return `${formatDateWithBS(startDate)} - ${ongoingText}`;
-  }
-
-  // If both dates exist, check if they're the same day
-  if (startDate && endDate) {
-    try {
-      const start = parseISO(startDate);
-      const end = parseISO(endDate);
-
-      // If dates are the same day, show single date
-      if (isSameDay(start, end)) {
-        return formatDateWithBS(startDate);
-      }
-
-      // Otherwise show date range
-      return `${formatDateWithBS(startDate)} - ${formatDateWithBS(endDate)}`;
-    } catch (error) {
-      console.error('Error comparing dates:', error);
-      // Fallback to showing both dates even if comparison fails
-      return `${formatDateWithBS(startDate)} - ${formatDateWithBS(endDate)}`;
+  // Both dates exist at this point
+  if (!startDate || !endDate) return 'N/A'; // Type narrowing
+  
+  try {
+    if (kathmanduKey(startDate) === kathmanduKey(endDate)) {
+      return formatDateWithBS(startDate);
     }
+    return `${formatDateWithBS(startDate)} - ${formatDateWithBS(endDate)}`;
+  } catch {
+    return `${formatDateWithBS(startDate)} - ${formatDateWithBS(endDate)}`;
   }
-
-  return 'N/A';
 }
