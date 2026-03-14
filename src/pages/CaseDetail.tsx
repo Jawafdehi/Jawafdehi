@@ -17,7 +17,7 @@ import { getEntityById } from "@/services/api";
 import type { CaseDetail as CaseDetailType, DocumentSource } from "@/types/jds";
 import type { Entity } from "@/types/nes";
 import { toast } from "sonner";
-import { formatDate, formatDateWithBS, formatCaseDateRange } from "@/utils/date";
+import { formatDateWithBS, formatCaseDateRange } from "@/utils/date";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
@@ -366,34 +366,6 @@ const CaseDetail = () => {
                       />
                     );
                   })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Audit Trail */}
-          {caseData.audit_history && caseData.audit_history.versions?.length > 0 && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>{t("caseDetail.audit_history")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {caseData.audit_history.versions?.map((version, index) => (
-                    <div key={index} className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-foreground">
-                          {t("caseDetail.version")} {version.version_number}
-                        </h4>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(version.datetime)}
-                        </span>
-                      </div>
-                      {version.change_summary && (
-                        <p className="text-sm text-muted-foreground">{version.change_summary}</p>
-                      )}
-                    </div>
-                  ))}
                 </div>
               </CardContent>
             </Card>

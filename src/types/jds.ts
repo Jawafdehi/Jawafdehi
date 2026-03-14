@@ -65,17 +65,6 @@ export interface EvidenceEntry {
   description: string;
 }
 
-export interface VersionInfo {
-  version_number: number;
-  user_id?: number;
-  change_summary?: string;
-  datetime: string;
-}
-
-export interface AuditHistory {
-  versions: VersionInfo[];
-}
-
 export interface Case {
   id: number;
   case_id: string; // Unique identifier shared across versions
@@ -91,14 +80,11 @@ export interface Case {
   key_allegations: string[]; // List of key allegation statements
   timeline: TimelineEntry[];
   evidence: EvidenceEntry[];
-  versionInfo?: VersionInfo;
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
 }
 
-export interface CaseDetail extends Case {
-  audit_history: AuditHistory; // Complete audit trail
-}
+export type CaseDetail = Case;
 
 export interface DocumentSource {
   id: number;
