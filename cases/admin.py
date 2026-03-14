@@ -268,7 +268,6 @@ class CaseAdmin(admin.ModelAdmin):
 
     list_display = [
         "case_id",
-        "version",
         "title",
         "case_type",
         "state_badge",
@@ -290,7 +289,6 @@ class CaseAdmin(admin.ModelAdmin):
 
     readonly_fields = [
         "case_id",
-        "version",
         "created_at",
         "updated_at",
         "version_info_display",
@@ -340,6 +338,7 @@ class CaseAdmin(admin.ModelAdmin):
                     "timeline",
                     "description",
                     "tags",
+                    "notes",
                 )
             },
         ),
@@ -349,7 +348,6 @@ class CaseAdmin(admin.ModelAdmin):
             "Metadata",
             {
                 "fields": (
-                    "version",
                     "created_at",
                     "updated_at",
                     "version_info_display",
@@ -391,17 +389,11 @@ class CaseAdmin(admin.ModelAdmin):
         info = obj.versionInfo
         html = "<div style='font-family: monospace;'>"
 
-        if "version_number" in info:
-            html += f"<strong>Version:</strong> {info['version_number']}<br>"
-
         if "action" in info:
             html += f"<strong>Action:</strong> {info['action']}<br>"
 
         if "datetime" in info:
             html += f"<strong>DateTime:</strong> {info['datetime']}<br>"
-
-        if "source_version" in info:
-            html += f"<strong>Source Version:</strong> {info['source_version']}<br>"
 
         if "user_id" in info:
             html += f"<strong>User ID:</strong> {info['user_id']}<br>"

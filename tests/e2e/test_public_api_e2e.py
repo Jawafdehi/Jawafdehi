@@ -56,7 +56,6 @@ class TestPublicAPIWorkflows:
                 },
             ],
             state=CaseState.PUBLISHED,
-            version=1,
         )
 
         # Create a source for the corruption case
@@ -84,7 +83,6 @@ class TestPublicAPIWorkflows:
             description="Election promise to build hospital was not fulfilled.",
             tags=["infrastructure", "healthcare"],
             state=CaseState.PUBLISHED,
-            version=1,
         )
 
         # Create a draft case (should not be visible)
@@ -95,7 +93,6 @@ class TestPublicAPIWorkflows:
             case_type=CaseType.CORRUPTION,
             description="This is a draft case",
             state=CaseState.DRAFT,
-            version=1,
         )
 
         # Create a closed case (should not be visible)
@@ -106,7 +103,6 @@ class TestPublicAPIWorkflows:
             case_type=CaseType.CORRUPTION,
             description="This is a closed case",
             state=CaseState.CLOSED,
-            version=1,
         )
 
     def test_browse_filter_search_view_workflow(self):
@@ -226,7 +222,6 @@ class TestPublicAPIWorkflows:
             case_type=CaseType.CORRUPTION,
             description="This is an in-review case",
             state=CaseState.IN_REVIEW,
-            version=1,
         )
 
         # IN_REVIEW cases are always accessible via detail endpoint
@@ -245,86 +240,48 @@ class TestPublicAPIWorkflows:
             in_review_case.case_id not in case_ids
         ), "In Review cases should not appear in list"
 
-    def test_audit_history_retrieval(self):
+    def test_notes_field_in_case_detail(self):
         """
-        E2E Test: Verify audit history is included when retrieving case details.
+        E2E Test: Verify notes field is included when retrieving case details.
 
         Workflow:
-        1. Create a published case (version 1)
-        2. Create a draft from it and publish (version 2)
-        3. Retrieve the case via API
-        4. Verify audit history includes both versions
+        1. Create a published case with notes
+        2. Retrieve the case via API
+        3. Verify notes field is included in the response
 
-        Validates: Requirements 6.3, 7.1, 7.2
+        Validates: Requirements 6.3
         """
-        # Step 1: Create initial published case
-        case_v1 = create_case_with_entities(
-            title="Case with Version History",
+        # Step 1: Create a published case with notes
+        case = create_case_with_entities(
+            title="Case with Notes",
             alleged_entities=["entity:person/test-official"],
             key_allegations=["Initial allegation"],
             case_type=CaseType.CORRUPTION,
-            description="Initial version of the case",
+            description="A case with markdown notes.",
             state=CaseState.PUBLISHED,
-            version=1,
-            versionInfo={
-                "version_number": 1,
-                "user_id": "user123",
-                "change_summary": "Initial publication",
-                "datetime": "2024-01-15T10:00:00Z",
-            },
         )
+        case.notes = (
+            "## Background\n\nThis case involves corruption at the ministry level."
+        )
+        case.save()
 
-        # Step 2: Create a draft and publish it (version 2)
-        case_v2 = case_v1.create_draft()
-        case_v2.title = "Case with Version History - Updated"
-        case_v2.key_allegations = ["Initial allegation", "Additional allegation"]
-        case_v2.versionInfo = {
-            "version_number": 2,
-            "user_id": "user456",
-            "change_summary": "Added new allegation",
-            "datetime": "2024-02-20T14:30:00Z",
-        }
-        case_v2.state = CaseState.PUBLISHED
-        case_v2.save()
-
-        # Step 3: Retrieve the case via API (should get v2)
-        response = self.client.get(f"/api/cases/{case_v2.id}/")
+        # Step 2: Retrieve the case via API
+        response = self.client.get(f"/api/cases/{case.id}/")
         assert response.status_code == 200
 
         case_detail = response.data
 
-        # Verify we got version 2
-        assert case_detail["title"] == "Case with Version History - Updated"
-        assert len(case_detail["key_allegations"]) == 2
-
-        # Step 4: Verify audit history is included
+        # Step 3: Verify notes field is included
+        assert "notes" in case_detail, "Detail endpoint should include notes field"
         assert (
-            "audit_history" in case_detail
-        ), "Detail endpoint should include audit_history"
+            case_detail["notes"]
+            == "## Background\n\nThis case involves corruption at the ministry level."
+        ), "Notes content should match what was saved"
 
-        audit_history = case_detail["audit_history"]
+        # Verify audit_history is NOT included
         assert (
-            len(audit_history) == 2
-        ), "Audit history should include both published versions"
-
-        # Verify audit history is in reverse chronological order (newest first)
-        assert (
-            audit_history[0]["version_number"] == 2
-        ), "First entry should be version 2 (newest)"
-        assert (
-            audit_history[1]["version_number"] == 1
-        ), "Second entry should be version 1"
-
-        # Verify audit history includes required fields
-        for entry in audit_history:
-            assert "version_number" in entry
-            assert "user_id" in entry
-            assert "change_summary" in entry
-            assert "datetime" in entry
-
-        # Verify specific audit details
-        assert audit_history[0]["change_summary"] == "Added new allegation"
-        assert audit_history[1]["change_summary"] == "Initial publication"
+            "audit_history" not in case_detail
+        ), "Detail endpoint should not include audit_history"
 
     def test_filter_by_tags_workflow(self):
         """
@@ -415,11 +372,10 @@ class TestPublicAPIWorkflows:
     def test_document_source_visibility_workflow(self):
         """
         E2E Test: Verify document sources are only visible for published cases.
-        (And IN_REVIEW cases if feature flag is enabled)
 
         Workflow:
         1. List all sources
-        2. Verify only sources from published cases appear (and IN_REVIEW if flag enabled)
+        2. Verify only sources from published cases appear
         3. Retrieve specific source
         4. Verify source details are complete
 
@@ -473,37 +429,34 @@ class TestPublicAPIWorkflows:
             response.status_code == 404
         ), "Source from draft case should not be accessible"
 
-    def test_highest_version_only_in_list(self):
+    def test_single_row_per_case_in_list(self):
         """
-        E2E Test: Verify only the highest version of each case appears in list.
+        E2E Test: Verify each case_id appears exactly once in the list.
 
         Workflow:
-        1. Create case version 1 (published)
-        2. Create case version 2 (published)
+        1. Create a published case
+        2. Edit it in-place
         3. List all cases
-        4. Verify only version 2 appears
+        4. Verify the case appears exactly once with updated content
 
         Validates: Requirements 6.1, 8.3
         """
-        # Step 1: Create version 1
-        case_v1 = create_case_with_entities(
-            title="Multi-Version Case v1",
+        # Step 1: Create a published case
+        case = create_case_with_entities(
+            title="Single Row Case - Original Title",
             alleged_entities=["entity:person/test"],
-            key_allegations=["Allegation v1"],
+            key_allegations=["Original allegation"],
             case_type=CaseType.CORRUPTION,
-            description="Version 1",
+            description="Original description",
             state=CaseState.PUBLISHED,
-            version=1,
         )
 
-        case_id = case_v1.case_id
+        case_id = case.case_id
 
-        # Step 2: Create version 2
-        case_v2 = case_v1.create_draft()
-        case_v2.title = "Multi-Version Case v2"
-        case_v2.description = "Version 2"
-        case_v2.state = CaseState.PUBLISHED
-        case_v2.save()
+        # Step 2: Edit the case in-place
+        case.title = "Single Row Case - Updated Title"
+        case.description = "Updated description"
+        case.save()
 
         # Step 3: List all cases
         response = self.client.get("/api/cases/")
@@ -511,16 +464,15 @@ class TestPublicAPIWorkflows:
 
         results = response.data.get("results", [])
 
-        # Step 4: Verify only version 2 appears
-        matching_cases = [case for case in results if case["case_id"] == case_id]
-
-        assert len(matching_cases) == 1, "Should only return one version per case_id"
+        # Step 4: Verify the case appears exactly once with updated content
+        matching_cases = [c for c in results if c["case_id"] == case_id]
+        assert len(matching_cases) == 1, "Should only return one row per case_id"
 
         returned_case = matching_cases[0]
         assert (
-            returned_case["title"] == "Multi-Version Case v2"
-        ), "Should return the highest version (v2)"
-        assert returned_case["description"] == "Version 2"
+            returned_case["title"] == "Single Row Case - Updated Title"
+        ), "Should return the current (updated) title"
+        assert returned_case["description"] == "Updated description"
 
     def test_pagination_workflow(self):
         """
@@ -543,7 +495,6 @@ class TestPublicAPIWorkflows:
                 case_type=CaseType.CORRUPTION,
                 description=f"Test case {i}",
                 state=CaseState.PUBLISHED,
-                version=1,
             )
 
         # Request first page

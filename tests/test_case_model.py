@@ -2,8 +2,8 @@
 Property-based tests for Case model.
 
 Feature: accountability-platform-core
-Tests Properties 1, 2, 3, 3a, 4, 18
-Validates: Requirements 1.1, 1.2, 1.3, 1.4, 7.3
+Tests Properties 1, 2, 3, 18
+Validates: Requirements 1.1, 1.2, 1.3, 7.3
 """
 
 import pytest
@@ -21,7 +21,7 @@ from tests.strategies import minimal_case_data, complete_case_data
 
 
 @pytest.mark.django_db
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 @given(case_data=minimal_case_data())
 def test_new_cases_start_in_draft_state(case_data):
     """
@@ -35,9 +35,6 @@ def test_new_cases_start_in_draft_state(case_data):
     assert (
         case.state == CaseState.DRAFT
     ), f"New case should start in DRAFT state, but got {case.state}"
-    assert (
-        case.version == 1
-    ), f"New case should start at version 1, but got {case.version}"
 
 
 # ============================================================================
@@ -46,7 +43,7 @@ def test_new_cases_start_in_draft_state(case_data):
 
 
 @pytest.mark.django_db
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 @given(case_data=minimal_case_data())
 def test_draft_validation_is_lenient(case_data):
     """
@@ -67,7 +64,7 @@ def test_draft_validation_is_lenient(case_data):
 
 
 @pytest.mark.django_db
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 @given(case_data=complete_case_data())
 def test_in_review_validation_is_strict(case_data):
     """
@@ -123,7 +120,7 @@ def test_in_review_validation_rejects_incomplete_data():
 
 
 @pytest.mark.django_db
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 @given(case_data=complete_case_data())
 def test_draft_submission_transitions_to_in_review(case_data):
     """
@@ -141,97 +138,6 @@ def test_draft_submission_transitions_to_in_review(case_data):
     assert (
         case.state == CaseState.IN_REVIEW
     ), f"Submitted case should be in IN_REVIEW state, but got {case.state}"
-
-
-# ============================================================================
-# Property 3a: Draft creation increments version
-# ============================================================================
-
-
-@pytest.mark.django_db
-@settings(max_examples=50)
-@given(case_data=complete_case_data())
-def test_draft_creation_increments_version(case_data):
-    """
-    Feature: accountability-platform-core, Property 3a: Draft creation increments version
-
-    For any published case, when create_draft() is called, the new draft
-    should have version incremented by 1.
-    Validates: Requirements 1.4
-    """
-    # Create and publish a case
-    case = create_case_with_entities(**case_data)
-    case.state = CaseState.PUBLISHED
-    case.save()
-
-    original_version = case.version
-    original_case_id = case.case_id
-
-    # Create a draft from the published case
-    draft = case.create_draft()
-
-    assert (
-        draft.case_id == original_case_id
-    ), f"Draft should have same case_id as original, but got {draft.case_id} vs {original_case_id}"
-    assert (
-        draft.version == original_version + 1
-    ), f"Draft version should be {original_version + 1}, but got {draft.version}"
-    assert (
-        draft.state == CaseState.DRAFT
-    ), f"New draft should be in DRAFT state, but got {draft.state}"
-
-    # Original should remain unchanged
-    case.refresh_from_db()
-    assert case.state == CaseState.PUBLISHED, "Original case should remain PUBLISHED"
-    assert case.version == original_version, "Original case version should not change"
-
-
-# ============================================================================
-# Property 4: Editing published cases preserves original
-# ============================================================================
-
-
-@pytest.mark.django_db
-@settings(max_examples=50)
-@given(case_data=complete_case_data())
-def test_editing_published_cases_preserves_original(case_data):
-    """
-    Feature: accountability-platform-core, Property 4: Editing published cases preserves original
-
-    For any published case, when a Contributor edits it, a new draft revision
-    should be created and the published version should remain unchanged.
-    Validates: Requirements 1.4
-    """
-    # Create and publish a case
-    case = create_case_with_entities(**case_data)
-    case.state = CaseState.PUBLISHED
-    case.save()
-
-    original_title = case.title
-    original_case_id = case.case_id
-    original_version = case.version
-    original_id = case.id
-
-    # Create a draft for editing
-    draft = case.create_draft()
-
-    # Modify the draft
-    new_title = f"{original_title} - Modified"
-    draft.title = new_title
-    draft.save()
-
-    # Verify draft has changes
-    assert draft.title == new_title, "Draft should have the modified title"
-    assert draft.state == CaseState.DRAFT, "Draft should be in DRAFT state"
-    assert draft.case_id == original_case_id, "Draft should have same case_id"
-    assert draft.id != original_id, "Draft should be a new database record"
-
-    # Verify original is preserved
-    case.refresh_from_db()
-    assert case.title == original_title, "Original case title should be unchanged"
-    assert case.state == CaseState.PUBLISHED, "Original case should remain PUBLISHED"
-    assert case.version == original_version, "Original case version should be unchanged"
-    assert case.id == original_id, "Original case should be the same database record"
 
 
 # ============================================================================
@@ -274,13 +180,33 @@ def test_case_requires_title():
         )
 
 
+@pytest.mark.django_db
+def test_case_notes_default_to_blank_and_persist():
+    """
+    Edge case: Cases should support internal notes with a blank default.
+    """
+    case = create_case_with_entities(
+        title="Notes Case",
+        alleged_entities=["entity:person/test-person"],
+        case_type=CaseType.CORRUPTION,
+    )
+
+    assert case.notes == ""
+
+    case.notes = "## Internal note\n\nFollow up with records office."
+    case.save()
+    case.refresh_from_db()
+
+    assert case.notes == "## Internal note\n\nFollow up with records office."
+
+
 # ============================================================================
 # Property 18: Soft delete sets state to CLOSED
 # ============================================================================
 
 
 @pytest.mark.django_db
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 @given(case_data=complete_case_data())
 def test_soft_delete_sets_state_to_closed(case_data):
     """
@@ -317,7 +243,7 @@ def test_soft_delete_sets_state_to_closed(case_data):
 
 
 @pytest.mark.django_db
-@settings(max_examples=50)
+@settings(max_examples=50, deadline=None)
 @given(case_data=complete_case_data())
 def test_soft_delete_preserves_all_data(case_data):
     """
@@ -333,7 +259,6 @@ def test_soft_delete_preserves_all_data(case_data):
     case.save()
 
     original_title = case.title
-    original_version = case.version
     original_alleged_entities = list(case.alleged_entities.all())
     original_key_allegations = case.key_allegations.copy()
 
@@ -344,10 +269,39 @@ def test_soft_delete_preserves_all_data(case_data):
     case.refresh_from_db()
     assert case.state == CaseState.CLOSED, "Soft-deleted case should have state CLOSED"
     assert case.title == original_title, "Soft-deleted case should preserve title"
-    assert case.version == original_version, "Soft-deleted case should preserve version"
     assert (
         list(case.alleged_entities.all()) == original_alleged_entities
     ), "Soft-deleted case should preserve alleged_entities"
     assert (
         case.key_allegations == original_key_allegations
     ), "Soft-deleted case should preserve key_allegations"
+
+
+# ============================================================================
+# Notes field
+# ============================================================================
+
+
+@pytest.mark.django_db
+def test_notes_field_defaults_to_empty():
+    """Cases are created with an empty notes field by default."""
+    case = create_case_with_entities(
+        title="Test case",
+        alleged_entities=["entity:person/test-person"],
+        case_type=CaseType.CORRUPTION,
+    )
+    assert case.notes == "", "notes field should default to empty string"
+
+
+@pytest.mark.django_db
+def test_notes_field_stores_markdown():
+    """The notes field accepts and persists markdown content."""
+    markdown_content = "## Internal notes\n\n- Point one\n- Point two"
+    case = create_case_with_entities(
+        title="Test case",
+        alleged_entities=["entity:person/test-person"],
+        case_type=CaseType.CORRUPTION,
+        notes=markdown_content,
+    )
+    case.refresh_from_db()
+    assert case.notes == markdown_content

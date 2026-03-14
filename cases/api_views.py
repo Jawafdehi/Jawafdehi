@@ -6,7 +6,6 @@ See: .kiro/specs/accountability-platform-core/design.md
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Max, Q
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
@@ -42,7 +41,7 @@ from .serializers import (
         description="""
         Retrieve a paginated list of published accountability cases.
         
-        Only cases with state=PUBLISHED and the highest version per case_id are returned.
+        Only cases with state=PUBLISHED are returned.
         Results are ordered by creation date (newest first).
         
         **Filtering:**
@@ -90,15 +89,14 @@ from .serializers import (
         tags=["cases"],
     ),
     retrieve=extend_schema(
-        summary="Retrieve a case with audit history",
+        summary="Retrieve a case",
         description="""
         Retrieve detailed information about a specific published case.
         
-        This endpoint includes:
-        - Complete case data (title, description, allegations, evidence, timeline)
-        - Audit history showing all published versions of this case
+        This endpoint includes complete case data (title, description, allegations,
+        evidence, timeline) and any internal notes.
         
-        Only published cases are accessible through this endpoint.
+        Published and IN_REVIEW cases are accessible through this endpoint.
         """,
         tags=["cases"],
     ),
@@ -109,7 +107,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
 
     Provides:
     - List endpoint: GET /api/cases/
-    - Retrieve endpoint: GET /api/cases/{id}/ (includes audit history)
+    - Retrieve endpoint: GET /api/cases/{id}/
     - Patch endpoint: PATCH /api/cases/{id}/ (authenticated users only)
 
     Filtering:
@@ -119,8 +117,8 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
     Search:
     - Full-text search across title, description, key_allegations
 
-    Only published cases (state=PUBLISHED) with the highest version
-    per case_id are accessible.
+    Only published cases (state=PUBLISHED) are accessible.
+    The detail endpoint also includes IN_REVIEW cases.
     """
 
     serializer_class = CaseSerializer
@@ -138,58 +136,29 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         return super().get_permissions()
 
     def get_serializer_class(self):
-        """
-        Use CaseDetailSerializer for retrieve action to include audit history.
-        """
         if self.action == "retrieve":
             return CaseDetailSerializer
         return CaseSerializer
 
     def get_queryset(self):
         """
-        Return cases with the highest version per case_id.
+        Return cases filtered by state.
 
-        List endpoint: PUBLISHED cases only
-        Retrieve endpoint: PUBLISHED and IN_REVIEW cases
-
-        Implementation:
-        1. For retrieve action, return PUBLISHED and IN_REVIEW cases without version filtering
-        2. For list action, return only highest published version per case_id
-        3. For partial_update action, return all cases (permission check happens in the method)
+        List endpoint: PUBLISHED cases only.
+        Retrieve endpoint: PUBLISHED and IN_REVIEW cases.
+        Partial update endpoint: all cases (permission check happens in partial_update).
         """
         if self.action == "partial_update":
             # PATCH endpoint: return all cases, permission check happens in partial_update method
             return Case.objects.all()
 
         if self.action == "retrieve":
-            # Detail endpoint: always show both PUBLISHED and IN_REVIEW cases
             queryset = Case.objects.filter(
                 state__in=[CaseState.PUBLISHED, CaseState.IN_REVIEW]
             )
-
         else:
             # List endpoint: only published cases
-            allowed_cases = Case.objects.filter(state=CaseState.PUBLISHED)
-
-            # Find highest version for each case_id
-            highest_versions = allowed_cases.values("case_id").annotate(
-                max_version=Max("version")
-            )
-
-            # Build a list of (case_id, version) tuples for filtering
-            case_version_pairs = [
-                (item["case_id"], item["max_version"]) for item in highest_versions
-            ]
-
-            # Filter to only include cases matching (case_id, version) pairs
-            q_objects = Q()
-            for case_id, version in case_version_pairs:
-                q_objects |= Q(case_id=case_id, version=version)
-
-            if q_objects:
-                queryset = allowed_cases.filter(q_objects)
-            else:
-                queryset = allowed_cases.none()
+            queryset = Case.objects.filter(state=CaseState.PUBLISHED)
 
         # Apply tag filtering if provided
         tags_param = self.request.query_params.get("tags", None)

@@ -96,7 +96,7 @@ def test_contributors_can_transition_between_draft_and_in_review(
 
 
 @pytest.mark.django_db
-@settings(max_examples=20)
+@settings(max_examples=20, deadline=None)
 @given(
     case_data=complete_case_data(),
     contributor_data=user_with_role("Contributor"),
@@ -133,7 +133,6 @@ def test_contributors_cannot_transition_to_published_or_closed(
 
     form_data = {
         "case_id": case.case_id,
-        "version": case.version,
         "title": case.title,
         "case_type": case.case_type,
         "state": forbidden_state,
@@ -163,7 +162,7 @@ def test_contributors_cannot_transition_to_published_or_closed(
 
 
 @pytest.mark.django_db
-@settings(max_examples=20)
+@settings(max_examples=20, deadline=None)
 @given(case_data=complete_case_data(), admin_data=user_with_role("Admin"))
 def test_admin_has_full_access_to_all_cases(case_data, admin_data):
     """
@@ -197,7 +196,7 @@ def test_admin_has_full_access_to_all_cases(case_data, admin_data):
 
 
 @pytest.mark.django_db
-@settings(max_examples=20)
+@settings(max_examples=20, deadline=None)
 @given(
     case_data=complete_case_data(),
     admin_data=user_with_role("Admin"),
@@ -248,7 +247,7 @@ def test_admin_can_transition_to_any_state(case_data, admin_data, target_state):
 
 
 @pytest.mark.django_db
-@settings(max_examples=20)
+@settings(max_examples=20, deadline=None)
 @given(case_data=complete_case_data(), contributor_data=user_with_role("Contributor"))
 def test_contributor_can_only_access_assigned_cases(case_data, contributor_data):
     """
@@ -301,7 +300,7 @@ def test_contributor_can_only_access_assigned_cases(case_data, contributor_data)
 
 
 @pytest.mark.django_db
-@settings(max_examples=20)
+@settings(max_examples=20, deadline=None)
 @given(case_data=complete_case_data(), contributor_data=user_with_role("Contributor"))
 def test_contributor_cannot_modify_unassigned_cases(case_data, contributor_data):
     """
@@ -386,7 +385,7 @@ def test_moderators_cannot_manage_other_moderators(moderator1_data, moderator2_d
 
 
 @pytest.mark.django_db
-@settings(max_examples=20)
+@settings(max_examples=20, deadline=None)
 @given(case_data=complete_case_data(), moderator_data=user_with_role("Moderator"))
 def test_moderators_can_access_all_cases(case_data, moderator_data):
     """

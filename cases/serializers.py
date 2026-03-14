@@ -70,9 +70,7 @@ class CaseSerializer(serializers.ModelSerializer):
     """
     Serializer for Case model.
 
-    Exposes all fields except:
-    - contributors (internal only)
-    - version (internal versioning detail)
+    Exposes all fields except contributors (internal only).
 
     The state field is always included to indicate case status (PUBLISHED or IN_REVIEW).
     """
@@ -126,6 +124,7 @@ class CaseSerializer(serializers.ModelSerializer):
             "key_allegations",
             "timeline",
             "evidence",
+            "notes",
             "versionInfo",
             "created_at",
             "updated_at",
@@ -135,37 +134,13 @@ class CaseSerializer(serializers.ModelSerializer):
 
 class CaseDetailSerializer(CaseSerializer):
     """
-    Serializer for Case detail view with audit history.
+    Serializer for Case detail view.
 
-    Includes audit_history field containing versionInfo from all
-    published versions with the same case_id.
+    Inherits all fields from CaseSerializer including the `notes` field.
     """
 
-    audit_history = serializers.SerializerMethodField(
-        help_text="Complete audit trail showing all published versions of this case"
-    )
-
     class Meta(CaseSerializer.Meta):
-        fields = CaseSerializer.Meta.fields + ["audit_history"]
-
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get_audit_history(self, obj):
-        """
-        Get versionInfo from all published versions with the same case_id.
-
-        Returns a list of versionInfo objects ordered by version (newest first).
-        """
-        all_versions = Case.objects.filter(
-            case_id=obj.case_id, state=CaseState.PUBLISHED
-        ).order_by("-version")
-
-        # Extract versionInfo from each version
-        audit_history = []
-        for version in all_versions:
-            if version.versionInfo:
-                audit_history.append(version.versionInfo)
-
-        return audit_history
+        pass
 
 
 class DocumentSourceSerializer(serializers.ModelSerializer):

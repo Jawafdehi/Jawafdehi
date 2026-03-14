@@ -216,9 +216,9 @@ class Command(BaseCommand):
 
             self.log_error("\n✓ Database import successful!")
             self.log_error(f"  Case ID: {db_case.case_id}")
-            self.log_error(f"  Version: {db_case.version}")
             self.log_error(f"  State: {db_case.state}")
             self.log_error(f"  Type: {db_case.case_type}")
+            self.log_error(f"  Updated at: {db_case.updated_at.isoformat()}")
 
         except Exception as e:
             self.log_error(f"\n✗ Database import failed: {e}")

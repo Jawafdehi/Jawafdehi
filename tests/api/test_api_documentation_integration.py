@@ -24,7 +24,6 @@ class TestAPIDocumentationIntegration:
         """Create a published case for testing."""
         case = create_case_with_entities(
             case_id="case-test123",
-            version=1,
             case_type=CaseType.CORRUPTION,
             state=CaseState.PUBLISHED,
             title="Test Corruption Case",
@@ -43,7 +42,6 @@ class TestAPIDocumentationIntegration:
             ],
             evidence=[{"source_id": "source:test:123", "description": "Test evidence"}],
             versionInfo={
-                "version_number": 1,
                 "action": "published",
                 "datetime": "2024-01-15T10:00:00Z",
             },
@@ -103,6 +101,7 @@ class TestAPIDocumentationIntegration:
             "key_allegations",
             "timeline",
             "evidence",
+            "notes",
             "versionInfo",
         ]
 
@@ -162,8 +161,8 @@ class TestAPIDocumentationIntegration:
         for prop in case_schema["properties"]:
             assert prop in case_data, f"Property {prop} from schema not in API response"
 
-    def test_case_detail_includes_audit_history(self, published_case):
-        """Test that case detail endpoint includes audit history as documented."""
+    def test_case_detail_includes_notes(self, published_case):
+        """Test that case detail endpoint includes notes field as documented."""
         client = Client()
 
         # Get the schema
@@ -172,16 +171,16 @@ class TestAPIDocumentationIntegration:
 
         schema = yaml.safe_load(schema_response.content)
 
-        # Verify CaseDetail schema includes audit_history
+        # Verify CaseDetail schema includes notes
         case_detail_schema = schema["components"]["schemas"]["CaseDetail"]
-        assert "audit_history" in case_detail_schema["properties"]
+        assert "notes" in case_detail_schema["properties"]
 
         # Get actual API response
         api_response = client.get(f"/api/cases/{published_case.id}/")
         assert api_response.status_code == 200
 
         case_data = api_response.json()
-        assert "audit_history" in case_data
+        assert "notes" in case_data
 
     def test_schema_documents_filtering_parameters(self):
         """Test that the schema properly documents filtering parameters."""

@@ -39,8 +39,8 @@ def test_public_api_only_shows_published_cases(case_data, state):
     """
     Feature: accountability-platform-core, Property 8: Public API only shows published cases
 
-    For any API request to list cases, only cases with state=PUBLISHED
-    and the highest version per case_id should be returned.
+    For any API request to list cases, only cases with state=PUBLISHED should be returned.
+    The detail endpoint also returns IN_REVIEW cases.
     Validates: Requirements 6.1, 8.3
     """
 
@@ -83,7 +83,7 @@ def test_public_api_only_shows_published_cases(case_data, state):
             detail_response.status_code == 200
         ), "PUBLISHED case should be accessible via detail endpoint"
     elif state == CaseState.IN_REVIEW:
-        # IN_REVIEW cases are ALWAYS accessible via detail endpoint (regardless of feature flag)
+        # IN_REVIEW cases are ALWAYS accessible via detail endpoint
         assert (
             detail_response.status_code == 200
         ), "IN_REVIEW case should always be accessible via detail endpoint"
@@ -95,53 +95,6 @@ def test_public_api_only_shows_published_cases(case_data, state):
         assert (
             detail_response.status_code == 404
         ), f"{state} case should NOT be accessible via detail endpoint"
-
-
-@pytest.mark.django_db
-@settings(max_examples=20, deadline=800)
-@given(case_data=complete_case_data())
-def test_public_api_shows_highest_version_only(case_data):
-    """
-    Feature: accountability-platform-core, Property 8: Public API only shows published cases
-
-    For any case_id with multiple published versions, only the highest version
-    should be returned by the API.
-    Validates: Requirements 6.1, 8.3
-    """
-    # Create and publish version 1
-    case_v1 = create_case_with_entities(**case_data)
-    case_v1.state = CaseState.PUBLISHED
-    case_v1.save()
-
-    case_id = case_v1.case_id
-
-    # Create and publish version 2 (same case_id)
-    case_v2 = case_v1.create_draft()
-    case_v2.title = f"{case_v1.title} - Updated"
-    case_v2.state = CaseState.PUBLISHED
-    case_v2.save()
-
-    # Make API request
-    client = APIClient()
-    response = client.get("/api/cases/")
-
-    assert response.status_code == 200
-
-    # Find cases with this case_id in response
-    matching_cases = [
-        c for c in response.data.get("results", []) if c.get("case_id") == case_id
-    ]
-
-    # Should only return one case (highest version)
-    assert (
-        len(matching_cases) == 1
-    ), f"API should return only one version per case_id, but got {len(matching_cases)}"
-
-    # Should be version 2
-    returned_case = matching_cases[0]
-    assert (
-        returned_case.get("title") == case_v2.title
-    ), f"API should return highest version (v2), but got title: {returned_case.get('title')}"
 
 
 # ============================================================================
@@ -599,10 +552,10 @@ def test_api_exposes_state_field():
 @given(case_data=complete_case_data())
 def test_public_api_exposes_case_in_review_under_the_retrieve_mode(case_data):
     """
-    Feature: IN_REVIEW cases are always accessible via detail endpoint.
+    Feature: IN_REVIEW cases are accessible via detail endpoint only.
 
-    The retrieve (detail) endpoint should always show IN_REVIEW cases,
-    and IN_REVIEW cases should NOT appear in the list endpoint.
+    The retrieve (detail) endpoint should always show IN_REVIEW cases.
+    However, IN_REVIEW cases should NOT appear in the list endpoint.
 
     Validates: PR #14 - Allow IN_REVIEW cases in detail endpoint
     """
@@ -625,14 +578,16 @@ def test_public_api_exposes_case_in_review_under_the_retrieve_mode(case_data):
         detail_response.data["case_id"] == case.case_id
     ), "Should return the correct case"
 
-    # Test 2: List endpoint should not include IN_REVIEW cases
+    # Test 2: List endpoint should NOT show IN_REVIEW cases
     list_response = client.get("/api/cases/")
     assert list_response.status_code == 200
 
     case_ids_in_list = [c.get("case_id") for c in list_response.data.get("results", [])]
+
+    # IN_REVIEW cases should NOT appear in list
     assert (
         case.case_id not in case_ids_in_list
-    ), "IN_REVIEW case should NOT appear in list"
+    ), "IN_REVIEW case should NOT appear in list endpoint"
 
 
 @pytest.mark.django_db
@@ -724,6 +679,7 @@ def test_document_source_api_only_shows_sources_referenced_by_published_cases():
         unreferenced_source.source_id not in source_ids
     ), "Source not referenced by any case should NOT appear in API"
 
+    # IN_REVIEW sources should NOT appear
     assert (
         in_review_source.source_id not in source_ids
     ), "Source referenced by in-review case should NOT appear in API"

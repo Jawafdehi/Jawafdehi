@@ -222,20 +222,16 @@ class Case(models.Model):
     """
     Core model representing a case of alleged misconduct.
 
-    Supports versioning: multiple Case records can share the same case_id
-    to represent different versions/drafts of the same case.
+    Each case has a single row identified by case_id. Edits are made in-place.
+    State transitions (submit/publish) are recorded in the versionInfo JSON field.
     """
 
-    # Versioning fields
+    # Stable public identifier
     case_id = models.CharField(
         max_length=100,
         db_index=True,
-        help_text="Unique identifier shared across versions of the same case",
-    )
-    version = models.IntegerField(
-        default=1,
-        db_index=True,
-        help_text="Version number, increments with each published update",
+        unique=True,
+        help_text="Stable unique identifier for this case",
     )
 
     # Core fields
@@ -323,15 +319,18 @@ class Case(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Notes field (markdown supported, internal use)
+    notes = models.TextField(
+        blank=True,
+        default="",
+        help_text="Internal notes about the case (markdown supported)",
+    )
+
     class Meta:
-        indexes = [
-            models.Index(fields=["case_id", "state", "version"]),
-            models.Index(fields=["state", "version"]),
-        ]
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.case_id} v{self.version} - {self.title} ({self.state})"
+        return f"{self.case_id} - {self.title} ({self.state})"
 
     def save(self, *args, **kwargs):
         """Override save to generate case_id for new cases."""
@@ -396,59 +395,11 @@ class Case(models.Model):
 
         # Update versionInfo
         self.versionInfo = {
-            "version_number": self.version,
             "action": "submitted",
             "datetime": timezone.now().isoformat(),
         }
 
         self.save()
-
-    def create_draft(self):
-        """
-        Create a new draft version from this case.
-
-        Creates a new Case record with:
-        - Same case_id
-        - Incremented version
-        - State set to DRAFT
-        - Copy of all content fields
-
-        Returns the new draft Case instance.
-        """
-        # Create new draft with incremented version
-        draft = Case(
-            case_id=self.case_id,
-            version=self.version + 1,
-            case_type=self.case_type,
-            state=CaseState.DRAFT,
-            title=self.title,
-            short_description=self.short_description,
-            thumbnail_url=self.thumbnail_url,
-            banner_url=self.banner_url,
-            case_start_date=self.case_start_date,
-            case_end_date=self.case_end_date,
-            tags=self.tags.copy() if self.tags else [],
-            description=self.description,
-            key_allegations=self.key_allegations.copy() if self.key_allegations else [],
-            timeline=self.timeline.copy() if self.timeline else [],
-            evidence=self.evidence.copy() if self.evidence else [],
-            versionInfo={
-                "version_number": self.version + 1,
-                "action": "draft_created",
-                "source_version": self.version,
-                "datetime": timezone.now().isoformat(),
-            },
-        )
-
-        draft.save()
-
-        # Copy many-to-many relationships
-        draft.alleged_entities.set(self.alleged_entities.all())
-        draft.related_entities.set(self.related_entities.all())
-        draft.locations.set(self.locations.all())
-        draft.contributors.set(self.contributors.all())
-
-        return draft
 
     def publish(self):
         """
@@ -467,7 +418,6 @@ class Case(models.Model):
 
         # Update versionInfo
         self.versionInfo = {
-            "version_number": self.version,
             "action": "published",
             "datetime": timezone.now().isoformat(),
         }
@@ -478,14 +428,13 @@ class Case(models.Model):
         """
         Soft delete the case by setting state to CLOSED.
 
-        Cases are never hard-deleted to preserve audit history.
-        Instead, the state is set to CLOSED and the record remains in the database.
+        The case record is never hard-deleted; state is set to CLOSED so it
+        remains in the database but is no longer publicly visible.
         """
         self.state = CaseState.CLOSED
 
         # Update versionInfo to track the deletion
         self.versionInfo = {
-            "version_number": self.version,
             "action": "deleted",
             "datetime": timezone.now().isoformat(),
         }
