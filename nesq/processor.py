@@ -27,6 +27,7 @@ from asgiref.sync import sync_to_async
 from nes.core.models.base import Name
 from nes.database.file_database import FileDatabase
 from nes.services.publication import PublicationService
+from nes.core.identifiers import build_entity_id_from_prefix
 
 from django.utils import timezone
 
@@ -119,6 +120,11 @@ class QueueProcessor:
         3. Calls ``publication_service.update_entity()`` to persist the change.
         4. Updates the queue item status to COMPLETED or FAILED.
 
+        For CREATE_ENTITY actions:
+        1. Reconstructs an Entity object from the payload's entity_data.
+        2. Calls ``publication_service.create_entity()`` to create the entity.
+        3. Updates the queue item status to COMPLETED or FAILED.
+
         Args:
             item: An NESQueueItem with status=APPROVED.
 
@@ -126,63 +132,15 @@ class QueueProcessor:
             True if processing succeeded, False otherwise.
         """
         try:
-            # MVP: Only ADD_NAME is supported
-            if item.action != QueueAction.ADD_NAME:
+            if item.action == QueueAction.ADD_NAME:
+                return await self._process_add_name(item)
+            elif item.action == QueueAction.CREATE_ENTITY:
+                return await self._process_create_entity(item)
+            else:
                 raise ValueError(
                     f"Unsupported action '{item.action}'. "
-                    "Only ADD_NAME is supported in this version."
+                    "Only ADD_NAME and CREATE_ENTITY are supported in this version."
                 )
-
-            augmented_description = _augment_change_description(item)
-            # NES Author.slug must match ^[a-z0-9]+(?:-[a-z0-9]+)*$
-            # Sanitize: lowercase → replace non-alnum with hyphen → collapse → strip
-            slug = item.submitted_by.username.lower()
-            slug = re.sub(r"[^a-z0-9]", "-", slug)
-            slug = re.sub(r"-{2,}", "-", slug)
-            slug = slug.strip("-")
-            author_id = f"jawafdehi:{slug}"
-
-            # Fetch existing entity
-            entity = await self.publication_service.get_entity(
-                item.payload["entity_id"]
-            )
-            if entity is None:
-                raise EntityNotFoundError(
-                    f"Entity '{item.payload['entity_id']}' not found in NES database."
-                )
-
-            # Build Name object from payload
-            name = Name(**item.payload["name"])
-
-            # Append to the appropriate list
-            is_misspelling = item.payload.get("is_misspelling", False)
-            if is_misspelling:
-                if entity.misspelled_names is None:
-                    entity.misspelled_names = []
-                entity.misspelled_names.append(name)
-            else:
-                entity.names.append(name)
-
-            # Persist via PublicationService
-            updated_entity = await self.publication_service.update_entity(
-                entity=entity,
-                author_id=author_id,
-                change_description=augmented_description,
-            )
-
-            # Mark as COMPLETED
-            item.status = QueueStatus.COMPLETED
-            item.result = {"entity_id": updated_entity.id}
-            item.processed_at = timezone.now()
-            await sync_to_async(item.save)()
-
-            logger.info(
-                "COMPLETED NESQ-%s: %s for %s",
-                item.pk,
-                item.action,
-                item.payload["entity_id"],
-            )
-            return True
 
         except Exception as e:
             # Mark as FAILED
@@ -198,6 +156,149 @@ class QueueProcessor:
                 str(e),
             )
             return False
+
+    async def _process_add_name(self, item: NESQueueItem) -> bool:
+        """Process an ADD_NAME action.
+
+        Args:
+            item: An NESQueueItem with action=ADD_NAME and status=APPROVED.
+
+        Returns:
+            True if processing succeeded, False otherwise.
+        """
+        augmented_description = _augment_change_description(item)
+        author_id = _derive_author_id(item)
+
+        # Fetch existing entity
+        entity = await self.publication_service.get_entity(item.payload["entity_id"])
+        if entity is None:
+            raise EntityNotFoundError(
+                f"Entity '{item.payload['entity_id']}' not found in NES database."
+            )
+
+        # Build Name object from payload
+        name = Name(**item.payload["name"])
+
+        # Append to the appropriate list
+        is_misspelling = item.payload.get("is_misspelling", False)
+        if is_misspelling:
+            if entity.misspelled_names is None:
+                entity.misspelled_names = []
+            entity.misspelled_names.append(name)
+        else:
+            entity.names.append(name)
+
+        # Persist via PublicationService
+        updated_entity = await self.publication_service.update_entity(
+            entity=entity,
+            author_id=author_id,
+            change_description=augmented_description,
+        )
+
+        # Mark as COMPLETED
+        item.status = QueueStatus.COMPLETED
+        item.result = {"entity_id": updated_entity.id}
+        item.processed_at = timezone.now()
+        await sync_to_async(item.save)()
+
+        logger.info(
+            "COMPLETED NESQ-%s: %s for %s",
+            item.pk,
+            item.action,
+            item.payload["entity_id"],
+        )
+        return True
+
+    async def _process_create_entity(self, item: NESQueueItem) -> bool:
+        """Process a CREATE_ENTITY action.
+
+        Args:
+            item: An NESQueueItem with action=CREATE_ENTITY and status=APPROVED.
+
+        Returns:
+            True if processing succeeded, False otherwise.
+        """
+        augmented_description = _augment_change_description(item)
+        author_id = _derive_author_id(item)
+
+        # Extract payload fields and enrich with missing metadata
+        entity_data = item.payload["entity_data"].copy()
+
+        # Get entity_prefix and slug to construct entity ID
+        entity_prefix = entity_data.get("entity_prefix")
+        entity_slug = entity_data["slug"]
+
+        # Build entity ID using the entity_prefix system
+        if not entity_prefix:
+            raise ValueError(
+                "entity_data must include 'entity_prefix' field. "
+                "The old type/sub_type system is deprecated."
+            )
+
+        entity_id = build_entity_id_from_prefix(entity_prefix, entity_slug)
+
+        # Add version_summary if missing
+        if "version_summary" not in entity_data:
+            entity_data["version_summary"] = {
+                "entity_or_relationship_id": entity_id,
+                "type": "ENTITY",
+                "version_number": 1,
+                "author": {"slug": author_id.split(":")[-1]},
+                "change_description": augmented_description,
+                "created_at": timezone.now().isoformat(),
+            }
+
+        # Add created_at if missing
+        if "created_at" not in entity_data:
+            entity_data["created_at"] = timezone.now().isoformat()
+
+        # Call PublicationService.create_entity()
+        # Extract entity_prefix for the new API
+        new_entity = await self.publication_service.create_entity(
+            entity_prefix=entity_prefix,
+            entity_data=entity_data,
+            author_id=author_id,
+            change_description=augmented_description,
+        )
+
+        # Mark as COMPLETED
+        item.status = QueueStatus.COMPLETED
+        item.result = {"entity_id": new_entity.id}
+        item.processed_at = timezone.now()
+        await sync_to_async(item.save)()
+
+        logger.info(
+            "COMPLETED NESQ-%s: %s — created entity %s",
+            item.pk,
+            item.action,
+            new_entity.id,
+        )
+        return True
+
+
+def _derive_author_id(item: NESQueueItem) -> str:
+    """Derive NES author_id from the queue item's submitter.
+
+    NES Author.slug must match ^[a-z0-9]+(?:-[a-z0-9]+)*$
+    This function sanitizes the username to comply with that format.
+
+    Args:
+        item: NESQueueItem with a submitted_by user.
+
+    Returns:
+        Author ID in the format "jawafdehi:{sanitized-username}"
+    """
+    # Sanitize: lowercase → replace non-alnum with hyphen → collapse → strip
+    slug = item.submitted_by.username.lower()
+    slug = re.sub(r"[^a-z0-9]", "-", slug)
+    slug = re.sub(r"-{2,}", "-", slug)
+    slug = slug.strip("-")
+
+    # If sanitization results in empty slug, use user ID as fallback
+    if not slug:
+        slug = f"user-{item.submitted_by.id}"
+
+    return f"jawafdehi:{slug}"
 
 
 def _augment_change_description(item: NESQueueItem) -> str:

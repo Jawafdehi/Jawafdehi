@@ -63,13 +63,14 @@ class SubmitNESChangeView(APIView):
     1. **DRF serializer** — checks request structure (action is a valid
        QueueAction, payload is a dict, change_description is non-empty).
     2. **Pydantic model** — validates payload content against the
-       action-specific schema (e.g. AddNamePayload for ADD_NAME).
+       action-specific schema (e.g. AddNamePayload for ADD_NAME,
+       CreateEntityPayload for CREATE_ENTITY).
 
     If ``auto_approve=True`` and the user is an Admin or Moderator, the
     queue item is created with status=APPROVED (skipping manual review).
     Contributors who attempt ``auto_approve=True`` receive a 403 response.
 
-    MVP: Only the ADD_NAME action is supported. Other actions return 400.
+    Supported actions: ADD_NAME, CREATE_ENTITY.
     """
 
     authentication_classes = [TokenAuthentication]
@@ -96,11 +97,13 @@ class SubmitNESChangeView(APIView):
         auto_approve = serializer.validated_data.get("auto_approve", False)
 
         # ------------------------------------------------------------------
-        # Step 2: Reject unsupported actions (MVP: ADD_NAME only)
+        # Step 2: Reject unsupported actions (MVP: ADD_NAME and CREATE_ENTITY)
         # ------------------------------------------------------------------
-        if action != QueueAction.ADD_NAME:
+        if action not in [QueueAction.ADD_NAME, QueueAction.CREATE_ENTITY]:
             return Response(
-                {"action": "Only ADD_NAME action is supported in this version."},
+                {
+                    "action": "Only ADD_NAME and CREATE_ENTITY actions are supported in this version."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

@@ -525,3 +525,163 @@ class TestProcessApprovedItems:
         assert len(result.errors) == 1
         assert result.errors[0]["item_id"] == item.id
         assert "not found" in result.errors[0]["error"].lower()
+
+
+# ============================================================================
+# QueueProcessor.process_item — CREATE_ENTITY success
+# ============================================================================
+
+VALID_CREATE_ENTITY_PAYLOAD = {
+    "entity_data": {
+        "entity_prefix": "person",
+        "slug": "test-person",
+        "names": [
+            {
+                "kind": "PRIMARY",
+                "en": {"full": "Test Person"},
+                "ne": {"full": "टेस्ट व्यक्ति"},
+            }
+        ],
+        "tags": ["test"],
+    },
+}
+
+
+@pytest.mark.django_db(transaction=True)
+class TestProcessItemCreateEntitySuccess:
+    """Test successful CREATE_ENTITY processing."""
+
+    async def test_create_entity_success(self):
+        """Process a CREATE_ENTITY item and verify COMPLETED status."""
+        user = await _create_user("sita_ce1", "sita_ce1@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.CREATE_ENTITY,
+            payload=VALID_CREATE_ENTITY_PAYLOAD,
+            change_description="Creating new test person entity",
+        )
+
+        processor = _make_processor()
+        mock_entity = MagicMock()
+        mock_entity.id = "entity:person/test-person"
+        processor.publication_service.create_entity.return_value = mock_entity
+
+        success = await processor.process_item(item)
+
+        assert success is True
+        await item.arefresh_from_db()
+        assert item.status == QueueStatus.COMPLETED
+        assert item.result == {"entity_id": "entity:person/test-person"}
+
+    async def test_create_entity_calls_publication_service(self):
+        """CREATE_ENTITY should call publication_service.create_entity with correct args."""
+        user = await _create_user("sita_ce2", "sita_ce2@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.CREATE_ENTITY,
+            payload=VALID_CREATE_ENTITY_PAYLOAD,
+            change_description="Creating entity",
+        )
+
+        processor = _make_processor()
+        mock_entity = MagicMock()
+        mock_entity.id = "entity:person/test-person"
+        processor.publication_service.create_entity.return_value = mock_entity
+
+        await processor.process_item(item)
+
+        # Verify create_entity was called
+        processor.publication_service.create_entity.assert_called_once()
+        call_kwargs = processor.publication_service.create_entity.call_args.kwargs
+
+        # Verify entity_data contains original data plus enriched fields
+        entity_data = call_kwargs["entity_data"]
+        for key, value in VALID_CREATE_ENTITY_PAYLOAD["entity_data"].items():
+            assert entity_data[key] == value
+        # Verify enriched fields were added
+        assert "version_summary" in entity_data
+        assert "created_at" in entity_data
+        # Verify version_summary has correct entity_id
+        assert (
+            entity_data["version_summary"]["entity_or_relationship_id"]
+            == "entity:person/test-person"
+        )
+        assert entity_data["version_summary"]["type"] == "ENTITY"
+        assert entity_data["version_summary"]["version_number"] == 1
+        assert call_kwargs["author_id"] == "jawafdehi:sita-ce2"
+        assert "(submitted by sita_ce2)" in call_kwargs["change_description"]
+
+    async def test_create_entity_stores_result(self):
+        """On success, item.result should contain the new entity_id."""
+        user = await _create_user("sita_ce3", "sita_ce3@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.CREATE_ENTITY,
+            payload=VALID_CREATE_ENTITY_PAYLOAD,
+            change_description="Creating entity",
+        )
+
+        processor = _make_processor()
+        mock_entity = MagicMock()
+        mock_entity.id = "entity:person/test-person"
+        processor.publication_service.create_entity.return_value = mock_entity
+
+        await processor.process_item(item)
+
+        await item.arefresh_from_db()
+        assert item.result == {"entity_id": "entity:person/test-person"}
+        assert item.processed_at is not None
+
+
+# ============================================================================
+# QueueProcessor.process_item — CREATE_ENTITY failures
+# ============================================================================
+
+
+@pytest.mark.django_db(transaction=True)
+class TestProcessItemCreateEntityFailure:
+    """Test CREATE_ENTITY failure scenarios."""
+
+    async def test_create_entity_duplicate_slug_fails(self):
+        """CREATE_ENTITY with duplicate slug should mark item as FAILED."""
+        user = await _create_user("sita_ce4", "sita_ce4@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.CREATE_ENTITY,
+            payload=VALID_CREATE_ENTITY_PAYLOAD,
+            change_description="Creating duplicate entity",
+        )
+
+        processor = _make_processor()
+        processor.publication_service.create_entity.side_effect = ValueError(
+            "Entity with slug 'test-person' and type 'person' already exists"
+        )
+
+        success = await processor.process_item(item)
+
+        assert success is False
+        await item.arefresh_from_db()
+        assert item.status == QueueStatus.FAILED
+        assert "already exists" in item.error_message
+
+    async def test_create_entity_validation_error_fails(self):
+        """CREATE_ENTITY with validation error should mark item as FAILED."""
+        user = await _create_user("sita_ce5", "sita_ce5@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.CREATE_ENTITY,
+            payload=VALID_CREATE_ENTITY_PAYLOAD,
+            change_description="Creating invalid entity",
+        )
+
+        processor = _make_processor()
+        processor.publication_service.create_entity.side_effect = ValueError(
+            "Entity must have at least one name with kind='PRIMARY'"
+        )
+
+        success = await processor.process_item(item)
+
+        assert success is False
+        await item.arefresh_from_db()
+        assert item.status == QueueStatus.FAILED
+        assert "PRIMARY" in item.error_message

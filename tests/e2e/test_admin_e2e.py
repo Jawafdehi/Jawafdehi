@@ -1107,15 +1107,14 @@ class TestDjangoAdminWorkflows:
             "Invalid entity ID format" in error_message
         ), f"Error should mention invalid format. Got: {error_message}"
 
-        # Step 2: Test invalid entity type (unsupported type)
+        # Step 2: Test invalid entity prefix
         with pytest.raises(ValidationError) as exc_info:
             field.clean('["entity:invalid-type/test-slug"]')
 
         error_message = str(exc_info.value)
         assert (
-            "entity type" in error_message.lower()
-            or "unsupported" in error_message.lower()
-        ), f"Error should mention invalid entity type. Got: {error_message}"
+            "entity prefix 'invalid-type' is not allowed" in error_message.lower()
+        ), f"Error should mention invalid entity prefix. Got: {error_message}"
 
         # Step 3: Test invalid slug format (contains invalid characters)
         with pytest.raises(ValidationError) as exc_info:

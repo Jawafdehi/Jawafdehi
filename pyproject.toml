@@ -13,8 +13,8 @@ djangorestframework = "^3.16.1"
 django-cors-headers = "^4.9.0"
 psycopg2-binary = "^2.9.11"
 python-dotenv = "^1.2.1"
+# nepal-entity-service = {path = "../nes", extras = ["api", "scraping"], develop = true}
 nepal-entity-service = {git = "https://github.com/NewNepal-org/NepalEntityService.git", extras = ["api", "scraping"]}
-# nepal-entity-service = {path = "../NepalEntityService", extras = ["api", "scraping"], develop = true}
 django-filter = "^25.2"
 drf-spectacular = "^0.29.0"
 dj-database-url = "^3.0.1"

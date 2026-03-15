@@ -55,32 +55,6 @@ def admin_user(db):
 
 
 # ============================================================================
-# QueueAction enum
-# ============================================================================
-
-
-class TestQueueAction:
-    """Tests for the QueueAction TextChoices enum."""
-
-    def test_add_name_value(self):
-        """ADD_NAME enum value should be the string 'ADD_NAME'."""
-        assert QueueAction.ADD_NAME.value == "ADD_NAME"
-
-    def test_add_name_label(self):
-        """ADD_NAME human-readable label should be 'Add Name'."""
-        assert QueueAction.ADD_NAME.label == "Add Name"
-
-    def test_choices_contains_add_name(self):
-        """QueueAction.choices should include the ADD_NAME tuple."""
-        assert ("ADD_NAME", "Add Name") in QueueAction.choices
-
-    def test_mvp_has_only_add_name(self):
-        """MVP should only have ADD_NAME — no CREATE_ENTITY or UPDATE_ENTITY."""
-        values = [choice[0] for choice in QueueAction.choices]
-        assert values == ["ADD_NAME"]
-
-
-# ============================================================================
 # QueueStatus enum
 # ============================================================================
 

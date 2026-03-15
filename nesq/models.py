@@ -16,14 +16,11 @@ User = get_user_model()
 
 
 class QueueAction(models.TextChoices):
-    """Actions that can be requested through the NES Queue System.
-
-    MVP: Only ADD_NAME is supported in this version.
-    """
+    """Actions that can be requested through the NES Queue System."""
 
     ADD_NAME = "ADD_NAME", "Add Name"
-    # Future actions (not in MVP):
-    # CREATE_ENTITY = "CREATE_ENTITY", "Create Entity"
+    CREATE_ENTITY = "CREATE_ENTITY", "Create Entity"
+    # Future actions:
     # UPDATE_ENTITY = "UPDATE_ENTITY", "Update Entity"
 
 
