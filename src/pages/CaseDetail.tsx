@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,20 +145,48 @@ const CaseDetail = () => {
     );
   }
 
+  const canonicalUrl = `https://jawafdehi.org/case/${id}`;
+  // Strip HTML tags and normalize whitespace for meta description (always English from API)
+  const plainDescription = caseData.description
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 160);
+  // Fallback to key allegations if description is empty
+  const metaDescription = plainDescription || caseData.key_allegations.slice(0, 2).join('. ').substring(0, 160);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
         <title>{caseData.title} | Jawafdehi</title>
-        <meta name="description" content={caseData.description.replace(/<[^>]*>/g, '').substring(0, 160)} />
-        <meta property="og:title" content={caseData.title} />
-        <meta property="og:description" content={caseData.description.replace(/<[^>]*>/g, '').substring(0, 160)} />
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:site_name" content="Jawafdehi Nepal" />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={`${caseData.title} | Jawafdehi`} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content="https://jawafdehi.org/favicon.png" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="article:published_time" content={caseData.created_at} />
+        <meta property="article:modified_time" content={caseData.updated_at} />
+        {caseData.tags.map((tag) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+
+        {/* Twitter / X Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content="https://jawafdehi.org/favicon.png" />
       </Helmet>
       <Header />
 
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex justify-between mb-4">
+          <div className="flex flex-col sm:flex-row justify-between mb-4">
             <Button variant="outline" asChild className="mb-2">
               <Link to="/cases">
                 <ArrowLeft className="h-4 w-4" />
@@ -199,8 +228,8 @@ const CaseDetail = () => {
             {/* NOTE: Dynamic case content from Entity API remains in English until API-side i18n is implemented */}
             <h1 className="text-4xl font-bold text-foreground mb-6">{caseData.title}</h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center text-muted-foreground">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex items-start text-muted-foreground">
                 <User className="mr-2 h-5 w-5 flex-shrink-0" />
                 <div className="text-sm flex flex-wrap gap-1">
                   {caseData.alleged_entities.map((e, index) => {
@@ -314,12 +343,12 @@ const CaseDetail = () => {
                           <div className="w-px flex-1 bg-border mt-1" />
                         )}
                       </div>
-                      <div className="flex-1 pb-6">
+                      <div className="flex-1 min-w-0 pb-6">
                         <p className="text-sm font-semibold text-foreground mb-1">
                           {formatDateWithBS(item.date)}
                         </p>
-                        <p className="text-sm font-medium text-foreground mb-1">{item.title}</p>
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                        <p className="text-sm font-medium text-foreground mb-1 break-words">{item.title}</p>
+                        <p className="text-sm text-muted-foreground break-words">{item.description}</p>
                       </div>
                     </div>
                   ))}
@@ -336,11 +365,8 @@ const CaseDetail = () => {
                 {t("caseDetail.overview")}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div
-                className="text-muted-foreground leading-relaxed prose prose-sm max-w-none [&_a]:underline [&_p]:mb-4 [&_p:last-child]:mb-0 [&_ul]:space-y-2 [&_ul]:my-4 [&_li]:ml-6 [&_li]:pl-2 [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_table]:border [&_table]:border-border [&_th]:border [&_th]:border-border [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:bg-muted [&_th]:font-semibold [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_tr:nth-child(even)]:bg-muted/50"
-                dangerouslySetInnerHTML={{ __html: caseData.description }}
-              />
+            <CardContent className="overflow-hidden">
+              <ResponsiveTable html={caseData.description} />
             </CardContent>
           </Card>
 
@@ -382,11 +408,8 @@ const CaseDetail = () => {
                   {t("caseDetail.notes")}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div
-                  className="text-muted-foreground leading-relaxed prose prose-sm max-w-none [&_a]:underline [&_p]:mb-4 [&_p:last-child]:mb-0 [&_ul]:space-y-2 [&_ul]:my-4 [&_li]:ml-6 [&_li]:pl-2 [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_table]:border [&_table]:border-border [&_th]:border [&_th]:border-border [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:bg-muted [&_th]:font-semibold [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_tr:nth-child(even)]:bg-muted/50"
-                  dangerouslySetInnerHTML={{ __html: caseData.notes }}
-                />
+              <CardContent className="overflow-hidden">
+                <ResponsiveTable html={caseData.notes} />
               </CardContent>
             </Card>
           )}

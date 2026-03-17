@@ -40,28 +40,28 @@ export function DocumentSourceCard({
   return (
     <article className="flex items-start p-4 border rounded-lg">
       <FileText className="mr-3 h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden="true" />
-      <div className="flex-1">
-        <h3 className="font-medium mb-1">
+      <div className="flex-1 min-w-0">
+        <h3 className="font-medium mb-1 break-words">
           {source?.title || t("documentSource.fallbackTitle", { id: sourceId })}
         </h3>
         
         {/* Show Source Type */}
         {sourceTypeLabel && (
-          <p className="text-sm text-muted-foreground mb-2">
+          <p className="text-sm text-muted-foreground mb-2 break-words">
             {sourceTypeLabel}
           </p>
         )}
         
         {/* Show source description if available */}
-        {source?.description && (
-          <p className="text-sm text-muted-foreground mb-2">
+        {source?.description && source.description.trim() !== '.' && source.description.trim() && (
+          <p className="text-sm text-muted-foreground mb-2 break-words">
             {source.description}
           </p>
         )}
         
         {/* Show evidence description */}
-        {evidenceDescription && (
-          <p className="text-sm text-muted-foreground mb-2">
+        {evidenceDescription && evidenceDescription.trim() !== '.' && evidenceDescription.trim() && (
+          <p className="text-sm text-muted-foreground mb-2 break-words">
             {evidenceDescription}
           </p>
         )}
@@ -86,9 +86,10 @@ export function DocumentSourceCard({
                     target="_blank" 
                     rel="noopener noreferrer"
                     aria-label={ariaLabel}
+                    className="flex items-center gap-2"
                   >
-                    <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
-                    {linkText}
+                    <ExternalLink className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                    <span className="mt-1.5">{linkText}</span>
                   </a>
                 </Button>
               );
