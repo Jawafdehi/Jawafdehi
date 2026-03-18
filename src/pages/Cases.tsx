@@ -17,6 +17,7 @@ import type { Entity } from "@/types/nes";
 import { toast } from "sonner";
 import { formatDate } from "@/utils/date";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { getAllegedEntities, getAllNonLocationEntities } from "@/utils/caseNormalization";
 
 // Retry helper for rate-limited requests
 async function retryWithBackoff<T>(
@@ -74,7 +75,10 @@ const Cases = () => {
       setCases(response.results);
 
       // Resolve entities from NES if they have nes_id
-      const allEntities = response.results.flatMap(c => [...c.alleged_entities, ...c.locations]);
+      const allEntities = response.results.flatMap(c => {
+        const nonLocationEntities = getAllNonLocationEntities(c);
+        return [...nonLocationEntities, ...c.locations];
+      });
       const entitiesWithNesId = allEntities.filter(e => e.nes_id);
       const uniqueNesIds = [...new Set(entitiesWithNesId.map(e => e.nes_id!))];
 
@@ -223,24 +227,38 @@ const Cases = () => {
               {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                   remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
               {filteredCases.map((caseItem) => {
-                // Translate entity names
-                const entityNames = caseItem.alleged_entities.map(e => {
-                  if (e.nes_id && resolvedEntities[e.nes_id]) {
-                    const entity = resolvedEntities[e.nes_id];
-                    return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
-                  }
-                  return e.display_name || e.nes_id || translateDynamicText('Unknown Entity', currentLang);
-                }).join(', ') || translateDynamicText('Unknown Entity', currentLang);
+                try {
+                  // Get alleged entities using normalized function with error handling
+                  const allegedEntities = getAllegedEntities(caseItem);
+                  
+                  // Translate entity names with error handling
+                  const entityNames = allegedEntities.map(e => {
+                    try {
+                      if (e.nes_id && resolvedEntities[e.nes_id]) {
+                        const entity = resolvedEntities[e.nes_id];
+                        return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
+                      }
+                      return e.display_name || e.nes_id || translateDynamicText('Unknown Entity', currentLang);
+                    } catch (error) {
+                      console.warn('Error processing entity:', e, error);
+                      return translateDynamicText('Unknown Entity', currentLang);
+                    }
+                  }).join(', ') || translateDynamicText('Unknown Entity', currentLang);
 
-                // Translate location names
+                // Translate location names with error handling
                 const locationNames = caseItem.locations.map(e => {
-                  if (e.nes_id && resolvedEntities[e.nes_id]) {
-                    const entity = resolvedEntities[e.nes_id];
-                    const name = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
+                  try {
+                    if (e.nes_id && resolvedEntities[e.nes_id]) {
+                      const entity = resolvedEntities[e.nes_id];
+                      const name = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
+                      return translateDynamicText(name, currentLang);
+                    }
+                    const name = e.display_name || e.nes_id || 'Unknown';
                     return translateDynamicText(name, currentLang);
+                  } catch (error) {
+                    console.warn('Error processing location:', e, error);
+                    return translateDynamicText('Unknown Location', currentLang);
                   }
-                  const name = e.display_name || e.nes_id || 'Unknown';
-                  return translateDynamicText(name, currentLang);
                 }).join(', ') || translateDynamicText('Unknown Location', currentLang);
 
                 return (
@@ -254,10 +272,29 @@ const Cases = () => {
                     status="ongoing"
                     tags={caseItem.tags || []}
                     description={caseItem.key_allegations.join('. ')}
-                    entityIds={caseItem.alleged_entities.map(e => e.id)}
+                    entityIds={allegedEntities.map(e => e.id)}
                     locationIds={caseItem.locations.map(e => e.id)}
                   />
                 );
+                } catch (error) {
+                  console.error('Error rendering case:', caseItem.id, error);
+                  // Return a fallback case card with minimal data
+                  return (
+                    <CaseCard
+                      key={caseItem.id}
+                      id={caseItem.id.toString()}
+                      title={caseItem.title || translateDynamicText('Untitled Case', currentLang)}
+                      entity={translateDynamicText('Unknown Entity', currentLang)}
+                      location={translateDynamicText('Unknown Location', currentLang)}
+                      date={formatDate(caseItem.created_at)}
+                      status="ongoing"
+                      tags={caseItem.tags || []}
+                      description={caseItem.key_allegations?.join('. ') || translateDynamicText('No description available', currentLang)}
+                      entityIds={[]}
+                      locationIds={[]}
+                    />
+                  );
+                }
               })}
             </div>
           ) : (

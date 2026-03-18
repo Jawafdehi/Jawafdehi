@@ -15,6 +15,13 @@ export type CaseType =
   | 'CORRUPTION'
   | 'PROMISES';
 
+export type EntityRelationshipType =
+  | 'alleged'
+  | 'related'
+  | 'witness'
+  | 'opposition'
+  | 'victim';
+
 export type DocumentSourceType =
   | 'LEGAL_COURT_ORDER'
   | 'LEGAL_PROCEDURAL'
@@ -50,8 +57,10 @@ export interface JawafEntity {
   id: number;
   nes_id: string | null; // Entity ID from Nepal Entity Service
   display_name: string | null; // Display name for the entity
-  alleged_cases?: number[]; // Case IDs where entity is alleged
-  related_cases?: number[]; // Case IDs where entity is related
+  type?: EntityRelationshipType; // Relationship type in unified format (alleged, related, witness, etc.)
+  notes?: string; // Additional context about the relationship
+  alleged_cases?: number[]; // Case IDs where entity is alleged (legacy - backward compatibility)
+  related_cases?: number[]; // Case IDs where entity is related (legacy - backward compatibility)
 }
 
 export interface TimelineEntry {
@@ -72,8 +81,9 @@ export interface Case {
   title: string;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
-  alleged_entities: JawafEntity[]; // Entities alleged to be involved
-  related_entities: JawafEntity[]; // Related entities
+  entities: JawafEntity[]; // Unified entities array with type field (current format)
+  alleged_entities?: JawafEntity[]; // Entities alleged to be involved (legacy format - backward compatibility)
+  related_entities?: JawafEntity[]; // Related entities (legacy format - backward compatibility)
   locations: JawafEntity[]; // Location entities
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   description: string; // Rich text description
