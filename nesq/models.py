@@ -20,8 +20,7 @@ class QueueAction(models.TextChoices):
 
     ADD_NAME = "ADD_NAME", "Add Name"
     CREATE_ENTITY = "CREATE_ENTITY", "Create Entity"
-    # Future actions:
-    # UPDATE_ENTITY = "UPDATE_ENTITY", "Update Entity"
+    UPDATE_ENTITY = "UPDATE_ENTITY", "Update Entity"
 
 
 class QueueStatus(models.TextChoices):

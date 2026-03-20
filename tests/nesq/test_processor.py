@@ -546,6 +546,17 @@ VALID_CREATE_ENTITY_PAYLOAD = {
     },
 }
 
+VALID_UPDATE_ENTITY_PAYLOAD = {
+    "entity_id": "entity:person/sher-bahadur-deuba",
+    "patch_ops": [
+        {
+            "op": "replace",
+            "path": "/short_description/en/value",
+            "value": "Updated description",
+        }
+    ],
+}
+
 
 @pytest.mark.django_db(transaction=True)
 class TestProcessItemCreateEntitySuccess:
@@ -685,3 +696,117 @@ class TestProcessItemCreateEntityFailure:
         await item.arefresh_from_db()
         assert item.status == QueueStatus.FAILED
         assert "PRIMARY" in item.error_message
+
+
+# ============================================================================
+# QueueProcessor.process_item — UPDATE_ENTITY
+# ============================================================================
+
+
+@pytest.mark.django_db(transaction=True)
+class TestProcessItemUpdateEntity:
+    """Test UPDATE_ENTITY processing with JSON Patch operations."""
+
+    async def test_update_entity_success(self):
+        """Valid patch should call update_entity and mark item COMPLETED."""
+        user = await _create_user("sita_ue1", "sita_ue1@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.UPDATE_ENTITY,
+            payload=VALID_UPDATE_ENTITY_PAYLOAD,
+            change_description="Updating entity short description",
+        )
+
+        processor = _make_processor()
+        entity = MagicMock()
+        entity.id = "entity:person/sher-bahadur-deuba"
+        entity.model_dump.return_value = {
+            "id": "entity:person/sher-bahadur-deuba",
+            "entity_prefix": "person",
+            "slug": "sher-bahadur-deuba",
+            "names": [{"kind": "PRIMARY", "en": {"full": "Sher Bahadur Deuba"}}],
+            "short_description": {"en": {"value": "Old description"}},
+            "version_summary": {
+                "id": "version:entity:person/sher-bahadur-deuba:1",
+                "entity_or_relationship_id": "entity:person/sher-bahadur-deuba",
+                "type": "ENTITY",
+                "version_number": 1,
+                "author": {"slug": "seed-author", "id": "author:seed-author"},
+                "change_description": "seed",
+                "created_at": "2025-01-01T00:00:00+00:00",
+            },
+            "created_at": "2025-01-01T00:00:00+00:00",
+        }
+        processor.publication_service.get_entity.return_value = entity
+
+        updated_entity = MagicMock()
+        updated_entity.id = "entity:person/sher-bahadur-deuba"
+        processor.publication_service.update_entity.return_value = updated_entity
+
+        success = await processor.process_item(item)
+
+        assert success is True
+        await item.arefresh_from_db()
+        assert item.status == QueueStatus.COMPLETED
+        assert item.result == {"entity_id": "entity:person/sher-bahadur-deuba"}
+        processor.publication_service.update_entity.assert_called_once()
+
+    async def test_update_entity_missing_entity_fails(self):
+        """Missing target entity should mark item FAILED."""
+        user = await _create_user("sita_ue2", "sita_ue2@example.com", "Admin")
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.UPDATE_ENTITY,
+            payload=VALID_UPDATE_ENTITY_PAYLOAD,
+            change_description="Updating missing entity",
+        )
+
+        processor = _make_processor()
+        processor.publication_service.get_entity.return_value = None
+
+        success = await processor.process_item(item)
+
+        assert success is False
+        await item.arefresh_from_db()
+        assert item.status == QueueStatus.FAILED
+        assert "not found" in item.error_message.lower()
+
+    async def test_update_entity_invalid_patch_fails(self):
+        """Invalid JSON Patch operations should mark item FAILED."""
+        user = await _create_user("sita_ue3", "sita_ue3@example.com", "Admin")
+        bad_payload = {
+            "entity_id": "entity:person/sher-bahadur-deuba",
+            "patch_ops": [{"op": "remove", "path": "/does-not-exist"}],
+        }
+        item = await _make_approved_item(
+            user,
+            action=QueueAction.UPDATE_ENTITY,
+            payload=bad_payload,
+            change_description="Applying bad patch",
+        )
+
+        processor = _make_processor()
+        entity = MagicMock()
+        entity.id = "entity:person/sher-bahadur-deuba"
+        entity.model_dump.return_value = {
+            "entity_prefix": "person",
+            "slug": "sher-bahadur-deuba",
+            "names": [{"kind": "PRIMARY", "en": {"full": "Sher Bahadur Deuba"}}],
+            "version_summary": {
+                "entity_or_relationship_id": "entity:person/sher-bahadur-deuba",
+                "type": "ENTITY",
+                "version_number": 1,
+                "author": {"slug": "seed-author"},
+                "change_description": "seed",
+                "created_at": "2025-01-01T00:00:00+00:00",
+            },
+            "created_at": "2025-01-01T00:00:00+00:00",
+        }
+        processor.publication_service.get_entity.return_value = entity
+
+        success = await processor.process_item(item)
+
+        assert success is False
+        await item.arefresh_from_db()
+        assert item.status == QueueStatus.FAILED
+        assert "Invalid JSON Patch document" in item.error_message

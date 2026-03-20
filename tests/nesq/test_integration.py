@@ -10,7 +10,7 @@ Covers (Task 11.1):
 - Auto-approve workflow for admin (status starts as APPROVED)
 - Manual approval via Django admin bulk_approve action
 - Error handling when entity not found (FAILED status)
-- Rejection of unsupported actions at API level (400)
+- Rejection of unknown actions at API level (400)
 - FIFO processing order across multiple approved items
 
 See .kiro/specs/nes-queue-system/tasks.md §11 for requirements.
@@ -399,7 +399,7 @@ class TestErrorHandling:
 
 @pytest.mark.django_db
 class TestUnsupportedActions:
-    """Test that unsupported actions are rejected at the API level."""
+    """Test that supported and unsupported actions behave correctly."""
 
     def test_create_entity_now_supported(self, contributor_client):
         """CREATE_ENTITY is now supported and creates a queue item."""
@@ -418,13 +418,32 @@ class TestUnsupportedActions:
         assert response.status_code == 201
         assert NESQueueItem.objects.count() == 1
 
-    def test_update_entity_rejected(self, contributor_client):
-        """UPDATE_ENTITY returns 400 and creates no queue item."""
+    def test_update_entity_now_supported(self, contributor_client):
+        """UPDATE_ENTITY returns 201 and creates a queue item."""
         data = {
             "action": "UPDATE_ENTITY",
+            "payload": {
+                "entity_id": SEED_ENTITY_ID,
+                "patch_ops": [
+                    {
+                        "op": "replace",
+                        "path": "/short_description/en/value",
+                        "value": "Integration update",
+                    }
+                ],
+            },
+            "change_description": "Applying UPDATE_ENTITY patch",
+        }
+        response = contributor_client.post(SUBMIT_URL, data=data, format="json")
+        assert response.status_code == 201
+        assert NESQueueItem.objects.count() == 1
+
+    def test_unknown_action_rejected(self, contributor_client):
+        """Arbitrary unknown actions still return 400."""
+        data = {
+            "action": "DELETE_ENTITY",
             "payload": {"entity_id": SEED_ENTITY_ID},
-            "change_description": "Trying UPDATE_ENTITY",
+            "change_description": "Trying unsupported action",
         }
         response = contributor_client.post(SUBMIT_URL, data=data, format="json")
         assert response.status_code == 400
-        assert NESQueueItem.objects.count() == 0

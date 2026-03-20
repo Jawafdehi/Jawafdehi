@@ -22,9 +22,11 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, List
 
+import jsonpatch
 from asgiref.sync import sync_to_async
 
 from nes.core.models.base import Name
+from nes.core.utils.entity_utils import entity_from_dict
 from nes.database.file_database import FileDatabase
 from nes.services.publication import PublicationService
 from nes.core.identifiers import build_entity_id_from_prefix
@@ -136,10 +138,12 @@ class QueueProcessor:
                 return await self._process_add_name(item)
             elif item.action == QueueAction.CREATE_ENTITY:
                 return await self._process_create_entity(item)
+            elif item.action == QueueAction.UPDATE_ENTITY:
+                return await self._process_update_entity(item)
             else:
                 raise ValueError(
                     f"Unsupported action '{item.action}'. "
-                    "Only ADD_NAME and CREATE_ENTITY are supported in this version."
+                    "Only ADD_NAME, CREATE_ENTITY, and UPDATE_ENTITY are supported in this version."
                 )
 
         except Exception as e:
@@ -274,6 +278,89 @@ class QueueProcessor:
             new_entity.id,
         )
         return True
+
+    async def _process_update_entity(self, item: NESQueueItem) -> bool:
+        """Process an UPDATE_ENTITY action using JSON Patch operations."""
+        augmented_description = _augment_change_description(item)
+        author_id = _derive_author_id(item)
+
+        # Fetch existing entity
+        entity = await self.publication_service.get_entity(item.payload["entity_id"])
+        if entity is None:
+            raise EntityNotFoundError(
+                f"Entity '{item.payload['entity_id']}' not found in NES database."
+            )
+
+        snapshot = _entity_to_patchable_dict(entity)
+
+        # Apply RFC 6902 operations to the entity snapshot.
+        try:
+            patched_snapshot = jsonpatch.apply_patch(
+                snapshot,
+                item.payload["patch_ops"],
+                in_place=False,
+            )
+        except (jsonpatch.JsonPatchException, jsonpatch.JsonPointerException) as exc:
+            raise ValueError(f"Invalid JSON Patch document: {exc}") from exc
+
+        # Re-validate against the NES entity model before persisting.
+        try:
+            patched_entity = entity_from_dict(patched_snapshot)
+        except Exception as exc:
+            raise ValueError(f"Patched entity is invalid: {exc}") from exc
+
+        updated_entity = await self.publication_service.update_entity(
+            entity=patched_entity,
+            author_id=author_id,
+            change_description=augmented_description,
+        )
+
+        item.status = QueueStatus.COMPLETED
+        item.result = {"entity_id": updated_entity.id}
+        item.processed_at = timezone.now()
+        await sync_to_async(item.save)()
+
+        logger.info(
+            "COMPLETED NESQ-%s: %s for %s",
+            item.pk,
+            item.action,
+            item.payload["entity_id"],
+        )
+        return True
+
+
+def _entity_to_patchable_dict(entity) -> Dict:
+    """Convert an NES entity model to a mutable dictionary for JSON Patch."""
+    if hasattr(entity, "model_dump"):
+        snapshot = entity.model_dump(mode="json")
+        return _sanitize_entity_snapshot(snapshot)
+
+    if hasattr(entity, "dict"):
+        snapshot = entity.dict()
+        return _sanitize_entity_snapshot(snapshot)
+
+    raise ValueError("Entity instance cannot be serialized for patching.")
+
+
+def _sanitize_entity_snapshot(snapshot: Dict) -> Dict:
+    """Remove generated identifier fields that NES validation does not accept."""
+    sanitized = dict(snapshot)
+    sanitized.pop("id", None)
+
+    version_summary = sanitized.get("version_summary")
+    if isinstance(version_summary, dict):
+        version_summary = dict(version_summary)
+        version_summary.pop("id", None)
+
+        author = version_summary.get("author")
+        if isinstance(author, dict):
+            author = dict(author)
+            author.pop("id", None)
+            version_summary["author"] = author
+
+        sanitized["version_summary"] = version_summary
+
+    return sanitized
 
 
 def _derive_author_id(item: NESQueueItem) -> str:

@@ -10,13 +10,93 @@ will be added in future releases.
 See .kiro/specs/nes-queue-system/ for full specification.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from nes.core.identifiers.validators import validate_entity_id
 from nes.core.models.base import Name
 from nes.core.utils.entity_utils import entity_from_dict
+
+UPDATE_ENTITY_BLOCKED_PATH_PREFIXES = frozenset(
+    {
+        "/id",
+        "/slug",
+        "/entity_prefix",
+        "/type",
+        "/sub_type",
+        "/entity_type",
+        "/entity_subtype",
+        "/version_summary",
+        "/created_at",
+    }
+)
+
+
+def _is_blocked_patch_path(path: str) -> bool:
+    """Return True if a JSON pointer path targets an immutable/reserved field."""
+    return any(
+        path == blocked or path.startswith(blocked + "/")
+        for blocked in UPDATE_ENTITY_BLOCKED_PATH_PREFIXES
+    )
+
+
+class JsonPatchOperation(BaseModel):
+    """Single RFC 6902 JSON Patch operation."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    op: str = Field(
+        ..., description="Patch operation: add/remove/replace/move/copy/test"
+    )
+    path: str = Field(..., description="JSON Pointer path target, e.g. '/tags/0'.")
+    from_path: str | None = Field(
+        default=None,
+        alias="from",
+        description="Required for move/copy operations.",
+    )
+    value: Any | None = Field(
+        default=None,
+        description="Required for add/replace/test operations.",
+    )
+
+    @field_validator("op")
+    @classmethod
+    def validate_op(cls, v: str) -> str:
+        normalized = v.lower()
+        allowed_ops = {"add", "remove", "replace", "move", "copy", "test"}
+        if normalized not in allowed_ops:
+            raise ValueError(
+                f"Unsupported patch operation '{v}'. Allowed ops: {sorted(allowed_ops)}"
+            )
+        return normalized
+
+    @field_validator("path")
+    @classmethod
+    def validate_path(cls, v: str) -> str:
+        if not v.startswith("/"):
+            raise ValueError("path must be a valid JSON Pointer starting with '/'.")
+        return v
+
+    @model_validator(mode="after")
+    def validate_operation_requirements(self):
+        if self.op in {"move", "copy"}:
+            if self.from_path is None:
+                raise ValueError(f"'{self.op}' operation requires 'from'.")
+            if not self.from_path.startswith("/"):
+                raise ValueError("from must be a valid JSON Pointer starting with '/'.")
+
+        if self.op in {"add", "replace", "test"} and self.value is None:
+            raise ValueError(f"'{self.op}' operation requires 'value'.")
+
+        return self
 
 
 class AddNamePayload(BaseModel):
@@ -182,6 +262,46 @@ class CreateEntityPayload(BaseModel):
         return v
 
 
+class UpdateEntityPayload(BaseModel):
+    """Payload for UPDATE_ENTITY action using RFC 6902 JSON Patch operations."""
+
+    entity_id: str = Field(
+        ...,
+        description="NES entity ID to update (e.g. 'entity:person/sher-bahadur-deuba').",
+    )
+    patch_ops: List[JsonPatchOperation] = Field(
+        ...,
+        description="RFC 6902 JSON Patch operation list.",
+    )
+
+    @field_validator("entity_id")
+    @classmethod
+    def validate_entity_id_format(cls, v: str) -> str:
+        validate_entity_id(v)
+        return v
+
+    @field_validator("patch_ops")
+    @classmethod
+    def validate_patch_ops(
+        cls, v: List[JsonPatchOperation]
+    ) -> List[JsonPatchOperation]:
+        if not v:
+            raise ValueError("patch_ops must not be empty.")
+
+        for op in v:
+            if op.op in {"add", "remove", "replace", "move", "copy"}:
+                if _is_blocked_patch_path(op.path):
+                    raise ValueError(f"Patching path '{op.path}' is not allowed.")
+
+                if op.op in {"move", "copy"} and op.from_path is not None:
+                    if _is_blocked_patch_path(op.from_path):
+                        raise ValueError(
+                            f"Patching path '{op.from_path}' is not allowed."
+                        )
+
+        return v
+
+
 def validate_action_payload(action: str, payload: Dict[str, Any]) -> BaseModel:
     """Validate a payload using the Pydantic model for the given action.
 
@@ -202,8 +322,10 @@ def validate_action_payload(action: str, payload: Dict[str, Any]) -> BaseModel:
         return AddNamePayload(**payload)
     elif action == "CREATE_ENTITY":
         return CreateEntityPayload(**payload)
+    elif action == "UPDATE_ENTITY":
+        return UpdateEntityPayload(**payload)
 
     raise ValueError(
         f"Action '{action}' is not supported in this version. "
-        "Only ADD_NAME and CREATE_ENTITY are available."
+        "Only ADD_NAME, CREATE_ENTITY, and UPDATE_ENTITY are available."
     )

@@ -31,6 +31,17 @@ VALID_ADD_NAME_PAYLOAD = {
     "name": {"kind": "ALIAS", "en": {"full": "S.B. Deuba"}},
 }
 
+VALID_UPDATE_ENTITY_PAYLOAD = {
+    "entity_id": "entity:person/sher-bahadur-deuba",
+    "patch_ops": [
+        {
+            "op": "replace",
+            "path": "/short_description/en/value",
+            "value": "Updated from API test",
+        }
+    ],
+}
+
 VALID_SUBMIT_DATA = {
     "action": "ADD_NAME",
     "payload": VALID_ADD_NAME_PAYLOAD,
@@ -151,7 +162,10 @@ class TestSubmitSuccess:
         assert item.status == QueueStatus.PENDING
         assert item.submitted_by == contributor
         assert item.reviewed_by is None
-        assert item.payload == VALID_ADD_NAME_PAYLOAD
+        assert item.payload == {
+            **VALID_ADD_NAME_PAYLOAD,
+            "is_misspelling": False,
+        }
 
     def test_response_fields(self, contributor_client):
         """Response contains exactly the expected set of fields."""
@@ -289,19 +303,45 @@ class TestUnsupportedActions:
         assert item.status == QueueStatus.PENDING
         assert item.payload["entity_data"]["entity_prefix"] == "person"
 
-    def test_update_entity_returns_400(self, contributor_client):
-        """UPDATE_ENTITY action is rejected with 400 (not supported yet).
-
-        Note: Since UPDATE_ENTITY isn't in QueueAction.choices, the DRF
-        serializer catches it first with a ChoiceField validation error.
-        """
+    def test_update_entity_now_supported(self, contributor_client):
+        """UPDATE_ENTITY action is supported and creates a queue item."""
         data = {
             "action": "UPDATE_ENTITY",
-            "payload": {"entity_id": "entity:person/test"},
+            "payload": VALID_UPDATE_ENTITY_PAYLOAD,
             "change_description": "Updating entity",
         }
         response = contributor_client.post(SUBMIT_URL, data=data, format="json")
-        assert response.status_code == 400
+        assert response.status_code == 201
+
+        resp_data = response.json()
+        assert resp_data["action"] == "UPDATE_ENTITY"
+        assert resp_data["status"] == "PENDING"
+
+        item = NESQueueItem.objects.get(pk=resp_data["id"])
+        assert item.action == QueueAction.UPDATE_ENTITY
+        assert item.payload == VALID_UPDATE_ENTITY_PAYLOAD
+
+    def test_update_entity_payload_is_canonicalized(self, contributor_client):
+        """UPDATE_ENTITY payload is stored in canonical form after validation."""
+        data = {
+            "action": "UPDATE_ENTITY",
+            "payload": {
+                "entity_id": "entity:person/sher-bahadur-deuba",
+                "patch_ops": [
+                    {
+                        "op": "ADD",
+                        "path": "/tags/-",
+                        "value": "tested-via-api",
+                    }
+                ],
+            },
+            "change_description": "Updating entity with uppercase patch op",
+        }
+        response = contributor_client.post(SUBMIT_URL, data=data, format="json")
+        assert response.status_code == 201
+
+        item = NESQueueItem.objects.get(pk=response.json()["id"])
+        assert item.payload["patch_ops"][0]["op"] == "add"
 
 
 # ============================================================================
@@ -362,6 +402,26 @@ class TestPayloadValidation:
                 "name": {"kind": "NICKNAME", "en": {"full": "Test"}},
             },
             "change_description": "Testing invalid name kind",
+        }
+        response = contributor_client.post(SUBMIT_URL, data=data, format="json")
+        assert response.status_code == 400
+        assert "payload" in response.json()
+
+    def test_update_entity_blocked_path_returns_400(self, contributor_client):
+        """UPDATE_ENTITY rejects immutable path patch requests."""
+        data = {
+            "action": "UPDATE_ENTITY",
+            "payload": {
+                "entity_id": "entity:person/sher-bahadur-deuba",
+                "patch_ops": [
+                    {
+                        "op": "replace",
+                        "path": "/slug",
+                        "value": "new-slug",
+                    }
+                ],
+            },
+            "change_description": "Attempting immutable update",
         }
         response = contributor_client.post(SUBMIT_URL, data=data, format="json")
         assert response.status_code == 400

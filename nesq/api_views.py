@@ -70,7 +70,7 @@ class SubmitNESChangeView(APIView):
     queue item is created with status=APPROVED (skipping manual review).
     Contributors who attempt ``auto_approve=True`` receive a 403 response.
 
-    Supported actions: ADD_NAME, CREATE_ENTITY.
+    Supported actions: ADD_NAME, CREATE_ENTITY, UPDATE_ENTITY.
     """
 
     authentication_classes = [TokenAuthentication]
@@ -97,12 +97,19 @@ class SubmitNESChangeView(APIView):
         auto_approve = serializer.validated_data.get("auto_approve", False)
 
         # ------------------------------------------------------------------
-        # Step 2: Reject unsupported actions (MVP: ADD_NAME and CREATE_ENTITY)
+        # Step 2: Reject unsupported actions
         # ------------------------------------------------------------------
-        if action not in [QueueAction.ADD_NAME, QueueAction.CREATE_ENTITY]:
+        if action not in [
+            QueueAction.ADD_NAME,
+            QueueAction.CREATE_ENTITY,
+            QueueAction.UPDATE_ENTITY,
+        ]:
             return Response(
                 {
-                    "action": "Only ADD_NAME and CREATE_ENTITY actions are supported in this version."
+                    "action": (
+                        "Only ADD_NAME, CREATE_ENTITY, and UPDATE_ENTITY actions "
+                        "are supported in this version."
+                    )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -111,7 +118,10 @@ class SubmitNESChangeView(APIView):
         # Step 3: Validate payload with Pydantic
         # ------------------------------------------------------------------
         try:
-            validate_action_payload(action, payload)
+            validated_payload = validate_action_payload(action, payload)
+            payload = validated_payload.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
         except PydanticValidationError as exc:
             # Use include_context=False to strip non-JSON-serializable
             # objects (e.g., raw ValueError instances) from the ctx field.

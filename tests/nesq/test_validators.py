@@ -15,7 +15,12 @@ Tests cover:
 import pytest
 from pydantic import ValidationError
 
-from nesq.validators import AddNamePayload, CreateEntityPayload, validate_action_payload
+from nesq.validators import (
+    AddNamePayload,
+    CreateEntityPayload,
+    UpdateEntityPayload,
+    validate_action_payload,
+)
 from nes.core.models.base import NameKind
 
 # ============================================================================
@@ -263,13 +268,18 @@ class TestValidateActionPayload:
         )
         assert isinstance(result, CreateEntityPayload)
 
-    def test_update_entity_action_unsupported(self):
-        """validate_action_payload raises ValueError for UPDATE_ENTITY (not in MVP)."""
-        with pytest.raises(ValueError, match="not supported"):
-            validate_action_payload(
-                action="UPDATE_ENTITY",
-                payload={},
-            )
+    def test_validate_action_payload_update_entity_support(self):
+        """validate_action_payload supports UPDATE_ENTITY patch payloads."""
+        result = validate_action_payload(
+            action="UPDATE_ENTITY",
+            payload={
+                "entity_id": VALID_PERSON_ID,
+                "patch_ops": [
+                    {"op": "add", "path": "/tags/-", "value": "prime-minister"}
+                ],
+            },
+        )
+        assert isinstance(result, UpdateEntityPayload)
 
     def test_unknown_action_unsupported(self):
         """validate_action_payload raises ValueError for arbitrary unknown actions."""
@@ -554,3 +564,112 @@ class TestCreateEntityPayloadInvalid:
             )
         errors = exc_info.value.errors()
         assert any("created_at" in str(e).lower() for e in errors)
+
+
+# ============================================================================
+# UpdateEntityPayload — Valid payloads
+# ============================================================================
+
+
+class TestUpdateEntityPayloadValid:
+    """Tests for UpdateEntityPayload with valid inputs."""
+
+    def test_valid_replace_operation(self):
+        """Accepts replace operation for mutable paths."""
+        payload = UpdateEntityPayload(
+            entity_id=VALID_PERSON_ID,
+            patch_ops=[
+                {
+                    "op": "replace",
+                    "path": "/short_description/en/value",
+                    "value": "Updated summary",
+                }
+            ],
+        )
+        assert payload.entity_id == VALID_PERSON_ID
+        assert payload.patch_ops[0].op == "replace"
+
+    def test_valid_add_to_list_operation(self):
+        """Accepts append operation using '/-' JSON Pointer."""
+        payload = UpdateEntityPayload(
+            entity_id=VALID_PERSON_ID,
+            patch_ops=[{"op": "add", "path": "/tags/-", "value": "tested"}],
+        )
+        assert payload.patch_ops[0].path == "/tags/-"
+
+    def test_valid_move_operation(self):
+        """Accepts move operation with required from path."""
+        payload = UpdateEntityPayload(
+            entity_id=VALID_PERSON_ID,
+            patch_ops=[
+                {
+                    "op": "move",
+                    "from": "/attributes/old",
+                    "path": "/attributes/new",
+                }
+            ],
+        )
+        assert payload.patch_ops[0].from_path == "/attributes/old"
+
+
+# ============================================================================
+# UpdateEntityPayload — Invalid payloads
+# ============================================================================
+
+
+class TestUpdateEntityPayloadInvalid:
+    """Tests for UpdateEntityPayload with invalid inputs."""
+
+    def test_missing_entity_id(self):
+        """Rejects missing entity_id field."""
+        with pytest.raises(ValidationError):
+            UpdateEntityPayload(
+                patch_ops=[{"op": "replace", "path": "/tags", "value": []}]
+            )
+
+    def test_empty_patch_ops(self):
+        """Rejects empty patch operation list."""
+        with pytest.raises(ValidationError) as exc_info:
+            UpdateEntityPayload(entity_id=VALID_PERSON_ID, patch_ops=[])
+        assert "patch_ops" in str(exc_info.value)
+
+    def test_invalid_op(self):
+        """Rejects unsupported operation names."""
+        with pytest.raises(ValidationError):
+            UpdateEntityPayload(
+                entity_id=VALID_PERSON_ID,
+                patch_ops=[{"op": "merge", "path": "/tags", "value": []}],
+            )
+
+    def test_missing_value_for_replace(self):
+        """Rejects replace operation without value."""
+        with pytest.raises(ValidationError):
+            UpdateEntityPayload(
+                entity_id=VALID_PERSON_ID,
+                patch_ops=[{"op": "replace", "path": "/tags"}],
+            )
+
+    def test_missing_from_for_move(self):
+        """Rejects move operation without from field."""
+        with pytest.raises(ValidationError):
+            UpdateEntityPayload(
+                entity_id=VALID_PERSON_ID,
+                patch_ops=[{"op": "move", "path": "/attributes/new"}],
+            )
+
+    def test_rejects_blocked_slug_path(self):
+        """Rejects attempts to patch immutable slug path."""
+        with pytest.raises(ValidationError) as exc_info:
+            UpdateEntityPayload(
+                entity_id=VALID_PERSON_ID,
+                patch_ops=[{"op": "replace", "path": "/slug", "value": "new-slug"}],
+            )
+        assert "not allowed" in str(exc_info.value)
+
+    def test_invalid_entity_id_format(self):
+        """Rejects malformed entity IDs."""
+        with pytest.raises(ValidationError):
+            UpdateEntityPayload(
+                entity_id="invalid-id",
+                patch_ops=[{"op": "replace", "path": "/tags", "value": []}],
+            )
