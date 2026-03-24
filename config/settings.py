@@ -287,3 +287,19 @@ JAZZMIN_SETTINGS = {
         "auth.group": "vertical_tabs",
     },
 }
+
+TINYMCE_DEFAULT_CONFIG = {
+    "theme": "silver",
+    "height": 800,
+    "width": "100%",
+    "menubar": True,
+    "browser_spellcheck": True,
+    "plugins": "advlist,autolink,lists,link,image,charmap,preview,anchor,"
+    "searchreplace,visualblocks,code,fullscreen,insertdatetime,media,table,"
+    "help,wordcount",
+    "toolbar": "undo redo | blocks | "
+    "bold italic backcolor | alignleft aligncenter "
+    "alignright alignjustify | bullist numlist outdent indent | "
+    "removeformat | code | help",
+    "license_key": "gpl",
+}

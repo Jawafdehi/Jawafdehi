@@ -43,3 +43,29 @@
 .field-state ul li label[style*="cursor: not-allowed"] {
     background-color: #f5f5f5;
 }
+
+
+/* Single-column layout for Content tab */
+#content-tab .form-group .row {
+    display: block !important;
+    flex-direction: column;
+}
+
+#content-tab .form-group .col-sm-3 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 0.5rem;
+    float: none;
+}
+
+#content-tab .form-group .col-sm-7 {
+    width: 100% !important;
+    max-width: 100% !important;
+    float: none;
+    margin-left: 0;
+}
+
+#content-tab .form-group label {
+    display: block !important;
+    margin-bottom: 0.5rem;
+}
