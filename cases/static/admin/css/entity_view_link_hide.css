@@ -1,0 +1,9 @@
+/* Hide view links for entity autocomplete fields in entity relationship inline */
+.inline-group[data-inline-type="cases.caseentityrelationship"] .related-widget-wrapper .related-widget-wrapper-link.view-related {
+    display: none !important;
+}
+
+/* Fallback selector */
+.inline-group .field-entity .related-widget-wrapper .related-widget-wrapper-link.view-related {
+    display: none !important;
+}

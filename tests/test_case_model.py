@@ -259,7 +259,11 @@ def test_soft_delete_preserves_all_data(case_data):
     case.save()
 
     original_title = case.title
-    original_alleged_entities = list(case.alleged_entities.all())
+    original_alleged_entities = list(
+        case.entity_relationships.filter(relationship_type="alleged").values_list(
+            "entity_id", flat=True
+        )
+    )
     original_key_allegations = case.key_allegations.copy()
 
     # Soft delete the case
@@ -270,8 +274,13 @@ def test_soft_delete_preserves_all_data(case_data):
     assert case.state == CaseState.CLOSED, "Soft-deleted case should have state CLOSED"
     assert case.title == original_title, "Soft-deleted case should preserve title"
     assert (
-        list(case.alleged_entities.all()) == original_alleged_entities
-    ), "Soft-deleted case should preserve alleged_entities"
+        list(
+            case.entity_relationships.filter(relationship_type="alleged").values_list(
+                "entity_id", flat=True
+            )
+        )
+        == original_alleged_entities
+    ), "Soft-deleted case should preserve alleged entities"
     assert (
         case.key_allegations == original_key_allegations
     ), "Soft-deleted case should preserve key_allegations"

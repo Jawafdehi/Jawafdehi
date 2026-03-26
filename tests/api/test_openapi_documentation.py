@@ -110,7 +110,7 @@ class TestOpenAPIDocumentation:
         assert "case_id" in case_schema["properties"]
         assert "case_type" in case_schema["properties"]
         assert "title" in case_schema["properties"]
-        assert "alleged_entities" in case_schema["properties"]
+        assert "entities" in case_schema["properties"]
         assert "evidence" in case_schema["properties"]
         assert "timeline" in case_schema["properties"]
 

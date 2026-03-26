@@ -14,7 +14,7 @@ This command will:
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from cases.models import JawafEntity
+from cases.models import CaseEntityRelationship, JawafEntity
 
 
 class Command(BaseCommand):
@@ -54,18 +54,12 @@ class Command(BaseCommand):
             self.stdout.write(f"   String representation: {entity}")
 
             # Show usage statistics
-            alleged_count = entity.cases_as_alleged.count()
-            related_count = entity.cases_as_related.count()
-            location_count = entity.cases_as_location.count()
+            case_relationship_count = entity.case_relationships.count()
             source_count = entity.document_sources.filter(is_deleted=False).count()
 
             usage_parts = []
-            if alleged_count > 0:
-                usage_parts.append(f"{alleged_count} case(s) as alleged")
-            if related_count > 0:
-                usage_parts.append(f"{related_count} case(s) as related")
-            if location_count > 0:
-                usage_parts.append(f"{location_count} case(s) as location")
+            if case_relationship_count > 0:
+                usage_parts.append(f"{case_relationship_count} case relationship(s)")
             if source_count > 0:
                 usage_parts.append(f"{source_count} source(s)")
 
@@ -151,20 +145,17 @@ class Command(BaseCommand):
                         f"Merging entity {source_entity.id} into {target_entity.id}..."
                     )
 
-                    # Update Case alleged_entities
-                    for case in source_entity.cases_as_alleged.all():
-                        case.alleged_entities.remove(source_entity)
-                        case.alleged_entities.add(target_entity)
-
-                    # Update Case related_entities
-                    for case in source_entity.cases_as_related.all():
-                        case.related_entities.remove(source_entity)
-                        case.related_entities.add(target_entity)
-
-                    # Update Case locations
-                    for case in source_entity.cases_as_location.all():
-                        case.locations.remove(source_entity)
-                        case.locations.add(target_entity)
+                    # Update unified entity relationships
+                    for relationship in CaseEntityRelationship.objects.filter(
+                        entity=source_entity
+                    ):
+                        CaseEntityRelationship.objects.get_or_create(
+                            case=relationship.case,
+                            entity=target_entity,
+                            relationship_type=relationship.relationship_type,
+                            defaults={"notes": relationship.notes},
+                        )
+                    CaseEntityRelationship.objects.filter(entity=source_entity).delete()
 
                     # Update DocumentSource related_entities
                     for source in source_entity.document_sources.all():

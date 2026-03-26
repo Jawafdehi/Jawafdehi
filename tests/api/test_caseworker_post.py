@@ -61,7 +61,7 @@ def test_post_creates_case_with_entity_relationships():
     user = create_user_with_role("bina", "bina@example.com", "Contributor")
     alleged = JawafEntity.objects.create(display_name="Prachanda")
     related = JawafEntity.objects.create(display_name="Kathmandu Metropolitan City")
-    location = JawafEntity.objects.create(display_name="Kathmandu")
+    location = JawafEntity.objects.create(nes_id="entity:location/district/kathmandu")
 
     response = _authed_client(user).post(
         URL,
@@ -69,20 +69,16 @@ def test_post_creates_case_with_entity_relationships():
             "title": "Land use concern",
             "case_type": CaseType.CORRUPTION,
             "alleged_entities": [alleged.pk],
-            "related_entities": [related.pk],
-            "locations": [location.pk],
+            "related_entities": [related.pk, location.pk],
         },
         format="json",
     )
 
     assert response.status_code == 201
-    assert [entity["id"] for entity in response.data["alleged_entities"]] == [
-        alleged.pk
-    ]
-    assert [entity["id"] for entity in response.data["related_entities"]] == [
-        related.pk
-    ]
-    assert [entity["id"] for entity in response.data["locations"]] == [location.pk]
+    alleged_ids = [e["id"] for e in response.data["entities"] if e["type"] == "alleged"]
+    related_ids = [e["id"] for e in response.data["entities"] if e["type"] == "related"]
+    assert alleged_ids == [alleged.pk]
+    assert set(related_ids) == {related.pk, location.pk}
 
 
 @pytest.mark.django_db

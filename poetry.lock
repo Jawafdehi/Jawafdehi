@@ -1793,7 +1793,7 @@ scraping = ["google-auth (>=2.23.0,<3.0.0)", "google-cloud-aiplatform (>=1.38.0,
 type = "git"
 url = "https://github.com/NewNepal-org/NepalEntityService.git"
 reference = "HEAD"
-resolved_reference = "3dc8633c6d44d3db37c1a36064dbdd5a26bc62a5"
+resolved_reference = "3940b3b0a4b0deddeec21754f987903389ab0177"
 
 [[package]]
 name = "nepali-date-utils"
@@ -2342,6 +2342,21 @@ pytest = ">=7.0.0"
 [package.extras]
 docs = ["sphinx", "sphinx_rtd_theme"]
 testing = ["Django", "django-configurations (>=2.0)"]
+
+[[package]]
+name = "pytest-timeout"
+version = "2.4.0"
+description = "pytest plugin to abort hanging tests"
+optional = false
+python-versions = ">=3.7"
+groups = ["dev"]
+files = [
+    {file = "pytest_timeout-2.4.0-py3-none-any.whl", hash = "sha256:c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2"},
+    {file = "pytest_timeout-2.4.0.tar.gz", hash = "sha256:7e68e90b01f9eff71332b25001f85c75495fc4e3a836701876183c4bcfd0540a"},
+]
+
+[package.dependencies]
+pytest = ">=7.0.0"
 
 [[package]]
 name = "python-dateutil"
@@ -3610,4 +3625,4 @@ requests = ">=2.0.0,<3.0.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "cda6fd4ce32887743c70f79ba869ea86e2c0b793af911ac868b0994985b5abd3"
+content-hash = "9f422a1cee238157ed1c8802be9c58e505230720013dda6f0b47829058b02511"

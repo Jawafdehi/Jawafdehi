@@ -8,7 +8,14 @@ import pytest
 from django.core.cache import cache
 from rest_framework.test import APIClient
 
-from cases.models import Case, CaseState, CaseType, JawafEntity
+from cases.models import (
+    Case,
+    CaseEntityRelationship,
+    CaseState,
+    CaseType,
+    JawafEntity,
+    RelationshipType,
+)
 
 
 @pytest.fixture
@@ -188,7 +195,11 @@ class TestStatisticsCounting:
             state=CaseState.PUBLISHED,
             title="Published Case",
         )
-        published_case.alleged_entities.add(entity1)
+        CaseEntityRelationship.objects.create(
+            case=published_case,
+            entity=entity1,
+            relationship_type=RelationshipType.ALLEGED,
+        )
 
         Case.objects.create(
             case_type=CaseType.CORRUPTION, state=CaseState.DRAFT, title="Draft Case"

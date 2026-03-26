@@ -74,16 +74,10 @@ class CaseEntityValidationMixin:
     def validate_related_entity_ids(self, value):
         return self._validate_entity_ids(value)
 
-    def validate_location_ids(self, value):
-        return self._validate_entity_ids(value)
-
     def validate_alleged_entities(self, value):
         return self._validate_entity_ids(value)
 
     def validate_related_entities(self, value):
-        return self._validate_entity_ids(value)
-
-    def validate_locations(self, value):
         return self._validate_entity_ids(value)
 
     def _validate_entity_ids(self, ids):
@@ -129,7 +123,6 @@ class CaseCreateSerializer(CaseEntityValidationMixin, serializers.Serializer):
     related_entities = serializers.ListField(
         child=serializers.IntegerField(), required=False
     )
-    locations = serializers.ListField(child=serializers.IntegerField(), required=False)
 
 
 class CasePatchSerializer(CaseEntityValidationMixin, serializers.Serializer):
@@ -153,8 +146,5 @@ class CasePatchSerializer(CaseEntityValidationMixin, serializers.Serializer):
         child=serializers.IntegerField(), required=False
     )
     related_entity_ids = serializers.ListField(
-        child=serializers.IntegerField(), required=False
-    )
-    location_ids = serializers.ListField(
         child=serializers.IntegerField(), required=False
     )

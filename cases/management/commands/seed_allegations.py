@@ -10,10 +10,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from cases.models import (
             Case,
+            CaseEntityRelationship,
             CaseType,
             CaseState,
             DocumentSource,
             JawafEntity,
+            RelationshipType,
         )
 
         db_settings = connection.settings_dict
@@ -39,6 +41,29 @@ class Command(BaseCommand):
         def get_entity(nes_id):
             entity, _ = JawafEntity.objects.get_or_create(nes_id=nes_id)
             return entity
+
+        def set_case_entities(
+            case, alleged_ids=None, related_ids=None, location_ids=None
+        ):
+            alleged_ids = alleged_ids or []
+            related_ids = related_ids or []
+            location_ids = location_ids or []
+
+            for nes_id in alleged_ids:
+                CaseEntityRelationship.objects.get_or_create(
+                    case=case,
+                    entity=get_entity(nes_id),
+                    relationship_type=RelationshipType.ALLEGED,
+                    defaults={"notes": ""},
+                )
+
+            for nes_id in related_ids + location_ids:
+                CaseEntityRelationship.objects.get_or_create(
+                    case=case,
+                    entity=get_entity(nes_id),
+                    relationship_type=RelationshipType.RELATED,
+                    defaults={"notes": ""},
+                )
 
         self.stdout.write("Creating document sources...")
 
@@ -202,21 +227,18 @@ class Command(BaseCommand):
             case_start_date=datetime(2018, 3, 15).date(),
             created_at=timezone.make_aware(datetime(2018, 3, 10)),
         )
-        lalita.alleged_entities.set(
-            [
-                get_entity("entity:person/balakrishna-khand"),
-                get_entity("entity:person/madhav-prasad-ghimire"),
-            ]
+        set_case_entities(
+            lalita,
+            alleged_ids=[
+                "entity:person/balakrishna-khand",
+                "entity:person/madhav-prasad-ghimire",
+            ],
+            related_ids=[
+                "entity:organization/government_body/nepal-government",
+                "entity:organization/government_body/land-revenue-office-dillibazar",
+            ],
+            location_ids=["entity:location/district/kathmandu"],
         )
-        lalita.related_entities.set(
-            [
-                get_entity("entity:organization/government_body/nepal-government"),
-                get_entity(
-                    "entity:organization/government_body/land-revenue-office-dillibazar"
-                ),
-            ]
-        )
-        lalita.locations.set([get_entity("entity:location/district/kathmandu")])
 
         # 2. Rabi Lamichhane
         rabi = Case.objects.create(
@@ -278,11 +300,14 @@ class Command(BaseCommand):
             case_start_date=datetime(2023, 5, 18).date(),
             created_at=timezone.make_aware(datetime(2023, 5, 20)),
         )
-        rabi.alleged_entities.set([get_entity("entity:person/rabi-lamichhane")])
-        rabi.related_entities.set(
-            [get_entity("entity:organization/political_party/rastriya-swatantra-party")]
+        set_case_entities(
+            rabi,
+            alleged_ids=["entity:person/rabi-lamichhane"],
+            related_ids=[
+                "entity:organization/political_party/rastriya-swatantra-party"
+            ],
+            location_ids=["entity:location/district/chitwan"],
         )
-        rabi.locations.set([get_entity("entity:location/district/chitwan")])
 
         # 3. Melamchi
         melamchi = Case.objects.create(
@@ -345,19 +370,16 @@ class Command(BaseCommand):
             case_start_date=datetime(1998, 6, 1).date(),
             created_at=timezone.make_aware(datetime(2020, 1, 1)),
         )
-        melamchi.alleged_entities.set(
-            [
-                get_entity("entity:organization/government_body/nepal-government"),
-                get_entity(
-                    "entity:organization/government_body/melamchi-water-supply-board"
-                ),
-            ]
-        )
-        melamchi.related_entities.set(
-            [get_entity("entity:organization/government_body/ministry-of-water-supply")]
-        )
-        melamchi.locations.set(
-            [get_entity("entity:location/district/kathmandu-valley")]
+        set_case_entities(
+            melamchi,
+            alleged_ids=[
+                "entity:organization/government_body/nepal-government",
+                "entity:organization/government_body/melamchi-water-supply-board",
+            ],
+            related_ids=[
+                "entity:organization/government_body/ministry-of-water-supply"
+            ],
+            location_ids=["entity:location/district/kathmandu-valley"],
         )
 
         # 4. KP Oli
@@ -422,14 +444,15 @@ class Command(BaseCommand):
             case_start_date=datetime(2017, 11, 15).date(),
             created_at=timezone.make_aware(datetime(2021, 7, 15)),
         )
-        oli.alleged_entities.set([get_entity("entity:person/kp-sharma-oli")])
-        oli.related_entities.set(
-            [
-                get_entity("entity:organization/political_party/nepal-communist-party"),
-                get_entity("entity:organization/government_body/nepal-government"),
-            ]
+        set_case_entities(
+            oli,
+            alleged_ids=["entity:person/kp-sharma-oli"],
+            related_ids=[
+                "entity:organization/political_party/nepal-communist-party",
+                "entity:organization/government_body/nepal-government",
+            ],
+            location_ids=["entity:location/nepal"],
         )
-        oli.locations.set([get_entity("entity:location/nepal")])
 
         # 5. Media Trial
         media = Case.objects.create(
@@ -495,15 +518,14 @@ class Command(BaseCommand):
             case_start_date=datetime(2022, 9, 8).date(),
             created_at=timezone.make_aware(datetime(2022, 9, 10)),
         )
-        media.alleged_entities.set([get_entity("entity:person/sandeep-lamichhane")])
-        media.related_entities.set(
-            [
-                get_entity(
-                    "entity:organization/political_party/national-independent-party"
-                )
-            ]
+        set_case_entities(
+            media,
+            alleged_ids=["entity:person/sandeep-lamichhane"],
+            related_ids=[
+                "entity:organization/political_party/national-independent-party"
+            ],
+            location_ids=["entity:location/district/kathmandu"],
         )
-        media.locations.set([get_entity("entity:location/district/kathmandu")])
 
         self.stdout.write(self.style.SUCCESS("Successfully created:"))
         self.stdout.write(f"  - {JawafEntity.objects.count()} entities")

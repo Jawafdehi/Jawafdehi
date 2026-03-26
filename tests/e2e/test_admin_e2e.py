@@ -13,7 +13,14 @@ from django.core.exceptions import ValidationError
 from django.test import Client
 
 from cases.admin import CaseAdmin
-from cases.models import Case, CaseState, CaseType, DocumentSource
+from cases.models import (
+    Case,
+    CaseEntityRelationship,
+    CaseState,
+    CaseType,
+    DocumentSource,
+    RelationshipType,
+)
 from tests.conftest import (
     create_case_with_entities,
     create_entities_from_ids,
@@ -373,7 +380,6 @@ class TestDjangoAdminWorkflows:
             "title": case.title,
             "case_type": case.case_type,
             "state": CaseState.PUBLISHED,
-            "alleged_entities": [e.id for e in case.alleged_entities.all()],
             "key_allegations": case.key_allegations,
             "description": case.description,
         }
@@ -767,7 +773,6 @@ class TestDjangoAdminWorkflows:
             "title": case.title,
             "case_type": case.case_type,
             "state": CaseState.IN_REVIEW,
-            "alleged_entities": [e.id for e in case.alleged_entities.all()],
             "key_allegations": case.key_allegations,
             "description": case.description,
         }
@@ -1068,7 +1073,12 @@ class TestDjangoAdminWorkflows:
             state=CaseState.DRAFT,
         )
         case_draft.save()
-        case_draft.alleged_entities.set(entities)
+        for entity in entities:
+            CaseEntityRelationship.objects.create(
+                case=case_draft,
+                entity=entity,
+                relationship_type=RelationshipType.ALLEGED,
+            )
 
         # Step 5: Verify case is created successfully in DRAFT state
         assert case_draft.id is not None, "Case should be saved to database"
@@ -1214,7 +1224,15 @@ class TestDjangoAdminWorkflows:
         new_entities = create_entities_from_ids(
             ["entity:person/updated-person", "entity:organization/new-org"]
         )
-        case.alleged_entities.set(new_entities)
+        case.entity_relationships.filter(
+            relationship_type=RelationshipType.ALLEGED
+        ).delete()
+        for entity in new_entities:
+            CaseEntityRelationship.objects.create(
+                case=case,
+                entity=entity,
+                relationship_type=RelationshipType.ALLEGED,
+            )
         case.full_clean()  # Should not raise
         case.save()
 
@@ -1223,9 +1241,16 @@ class TestDjangoAdminWorkflows:
 
         assert case.id == original_id, "Should be the same case instance"
         assert (
-            case.alleged_entities.count() == 2
-        ), "Case should have 2 entity IDs after update"
-        entity_nes_ids = [e.nes_id for e in case.alleged_entities.all()]
+            case.entity_relationships.filter(
+                relationship_type=RelationshipType.ALLEGED
+            ).count()
+            == 2
+        ), "Case should have 2 alleged relationships after update"
+        entity_nes_ids = list(
+            case.entity_relationships.filter(
+                relationship_type=RelationshipType.ALLEGED
+            ).values_list("entity__nes_id", flat=True)
+        )
         assert (
             "entity:person/updated-person" in entity_nes_ids
         ), "Updated entity ID should be saved"
@@ -1307,7 +1332,7 @@ class TestDjangoAdminWorkflows:
             case.id is not None
         ), "Draft case should be created without alleged_entities"
         assert case.state == CaseState.DRAFT
-        assert case.alleged_entities.count() == 0
+        assert case.entity_relationships.count() == 0
 
         # Step 2: Attempt to submit for review without alleged_entities
         case.state = CaseState.IN_REVIEW
@@ -1317,9 +1342,9 @@ class TestDjangoAdminWorkflows:
 
         error_dict = exc_info.value.message_dict
         assert (
-            "alleged_entities" in error_dict
-        ), f"Should require alleged_entities for IN_REVIEW. Got errors: {error_dict}"
-        error_message = str(error_dict["alleged_entities"])
+            "entities" in error_dict
+        ), f"Should require alleged entities for IN_REVIEW. Got errors: {error_dict}"
+        error_message = str(error_dict["entities"])
         assert (
             "IN_REVIEW or PUBLISHED" in error_message
         ), f"Error message should mention IN_REVIEW/PUBLISHED requirement. Got: {error_message}"
@@ -1329,8 +1354,10 @@ class TestDjangoAdminWorkflows:
         case.save()
 
         # Step 3: Add alleged_entities and required fields for submission
-        case.alleged_entities.set(
-            create_entities_from_ids(["entity:person/corrupt-official"])
+        alleged_entity = create_entities_from_ids(["entity:person/corrupt-official"])[0]
+        case.entity_relationships.create(
+            entity=alleged_entity,
+            relationship_type="alleged",
         )
         case.key_allegations = ["Test allegation"]
         case.description = "Test description"
@@ -1344,7 +1371,9 @@ class TestDjangoAdminWorkflows:
         assert (
             case.state == CaseState.IN_REVIEW
         ), "Case should transition to IN_REVIEW with alleged_entities"
-        assert case.alleged_entities.count() == 1
+        assert (
+            case.entity_relationships.filter(relationship_type="alleged").count() == 1
+        )
         assert case.versionInfo.get("action") == "submitted"
 
     def test_alleged_entities_required_for_published(self):
@@ -1371,7 +1400,7 @@ class TestDjangoAdminWorkflows:
         case.save()
 
         # Step 2: Remove alleged_entities and attempt to publish
-        case.alleged_entities.clear()
+        case.entity_relationships.filter(relationship_type="alleged").delete()
         case.state = CaseState.PUBLISHED
 
         with pytest.raises(ValidationError) as exc_info:
@@ -1379,16 +1408,18 @@ class TestDjangoAdminWorkflows:
 
         error_dict = exc_info.value.message_dict
         assert (
-            "alleged_entities" in error_dict
-        ), f"Should require alleged_entities for PUBLISHED. Got errors: {error_dict}"
+            "entities" in error_dict
+        ), f"Should require alleged entities for PUBLISHED. Got errors: {error_dict}"
 
         # Reset state
         case.state = CaseState.DRAFT
         case.save()
 
         # Step 3: Add alleged_entities back and publish
-        case.alleged_entities.set(
-            create_entities_from_ids(["entity:person/test-official"])
+        alleged_entity = create_entities_from_ids(["entity:person/test-official"])[0]
+        case.entity_relationships.create(
+            entity=alleged_entity,
+            relationship_type="alleged",
         )
         case.save()
 
@@ -1398,4 +1429,6 @@ class TestDjangoAdminWorkflows:
         assert (
             case.state == CaseState.PUBLISHED
         ), "Case should be published with alleged_entities"
-        assert case.alleged_entities.count() == 1
+        assert (
+            case.entity_relationships.filter(relationship_type="alleged").count() == 1
+        )

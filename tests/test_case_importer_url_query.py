@@ -5,8 +5,10 @@ Verifies that the importer correctly finds existing sources by URL
 when the url field is a JSONField containing a list.
 """
 
+import json
+
 import pytest
-from cases.models import DocumentSource
+from cases.models import CaseEntityRelationship, DocumentSource, RelationshipType
 from cases.services.case_importer import CaseImporter
 
 
@@ -129,3 +131,38 @@ class TestCaseImporterURLQuery:
         assert result.title == "Deleted Source"
         assert importer.stats["sources_created"] == 1
         assert importer.stats["sources_reused"] == 0
+
+    def test_import_case_creates_unified_entity_relationships(self, tmp_path):
+        """Importer should create unified alleged/related relationships for new cases."""
+        payload = {
+            "title": "Unified importer sync test",
+            "description": "Sample description",
+            "alleged_entities": ["Ram Bahadur Karki"],
+            "related_entities": ["Ministry of Water Supply"],
+            "locations": [],
+            "sources": [],
+            "tags": [],
+            "key_allegations": ["Sample allegation"],
+            "timeline": [],
+        }
+
+        file_path = tmp_path / "case.json"
+        file_path.write_text(json.dumps(payload), encoding="utf-8")
+
+        importer = CaseImporter()
+        case = importer.import_from_json(str(file_path), case_state="DRAFT")
+
+        assert (
+            CaseEntityRelationship.objects.filter(
+                case=case,
+                relationship_type=RelationshipType.ALLEGED,
+            ).count()
+            == 1
+        )
+        assert (
+            CaseEntityRelationship.objects.filter(
+                case=case,
+                relationship_type=RelationshipType.RELATED,
+            ).count()
+            == 1
+        )

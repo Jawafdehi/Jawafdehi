@@ -71,7 +71,7 @@ GET /api/cases/{id}/
 ```
 
 Returns detailed information about a specific case, including:
-- Complete case data
+- Complete case data with unified entity relationships
 - Evidence and timeline
 - Audit history (all published versions)
 
@@ -140,13 +140,28 @@ All responses are in JSON format with the following structure:
   "title": "Case Title",
   "case_start_date": "2024-01-15",
   "case_end_date": null,
-  "alleged_entities": [
-    "entity:person/john-doe",
-    "entity:organization/government/ministry-of-finance"
+  "entities": [
+    {
+      "id": 1,
+      "nes_id": "entity:organization/nepal-government",
+      "display_name": "Nepal Government",
+      "type": "alleged",
+      "notes": "Primary accused entity"
+    },
+    {
+      "id": 2,
+      "nes_id": "entity:person/ram-bahadur-shah",
+      "display_name": "राम बहादुर शाह",
+      "type": "witness",
+      "notes": "Key witness testimony"
+    }
   ],
-  "related_entities": [],
   "locations": [
-    "entity:location/district/kathmandu"
+    {
+      "id": 51,
+      "nes_id": "entity:location/district/kathmandu",
+      "display_name": "Kathmandu"
+    }
   ],
   "tags": ["land-encroachment", "national-interest"],
   "description": "Detailed description...",
@@ -176,6 +191,15 @@ All responses are in JSON format with the following structure:
   "updated_at": "2024-01-15T10:30:00Z"
 }
 ```
+
+**Field Notes:**
+- `entities`: Unified non-location case entities
+- `locations`: Location entities separated for UI/semantic clarity
+- `type`: One of `alleged`, `related`, `witness`, `opposition`, `victim`
+
+**Breaking change note:**
+- `alleged_entities` and `related_entities` are no longer returned in case responses.
+- Consumers should use the `entities` array and filter by `type`.
 
 ### Document Source Object
 
@@ -240,6 +264,43 @@ Examples:
 - `entity:location/district/kathmandu`
 - `entity:location/region/kathmandu-valley`
 
+## Relationship Types
+
+The unified entity-case relationships system supports five relationship types:
+
+| Type | Description | Usage |
+|------|-------------|-------|
+| `alleged` | Entities being accused of misconduct | Primary subjects of allegations |
+| `related` | Entities connected to the case | Supporting actors, beneficiaries |
+| `witness` | Entities providing testimony or evidence | Whistleblowers, informants |
+| `opposition` | Entities opposing or investigating | Oversight bodies, opposition parties |
+| `victim` | Entities harmed by the alleged misconduct | Affected communities, individuals |
+
+### Relationship Metadata
+
+Each relationship includes additional metadata:
+- `notes`: Optional text field for relationship context
+- `created_at`: Timestamp when relationship was established
+- `entity_display_name`: Human-readable entity name
+- `entity_nes_id`: Nepal Entity Service identifier (if available)
+
+## API Statistics
+
+### Statistics Endpoint
+
+**Endpoint:** `GET /api/statistics/`
+
+**Response:**
+```json
+{
+  "published_cases": 127,
+  "cases_under_investigation": 43,
+  "cases_closed": 31,
+  "entities_tracked": 89,
+  "last_updated": "2024-12-04T10:30:00Z"
+}
+```
+
 ## Error Responses
 
 The API returns standard HTTP status codes:
@@ -261,14 +322,15 @@ Currently, there are no rate limits on the public API. This may change in produc
 
 ## CORS
 
-The API allows cross-origin requests from all origins for GET, HEAD, and OPTIONS methods.
+The API uses an explicit allowlist for origins and supports credentialed requests.
+Allowed methods include `GET`, `HEAD`, `OPTIONS`, `POST`, `PUT`, `PATCH`, and `DELETE`.
 
 ## Development vs Production
 
 ### Development
 - Base URL: `http://localhost:8000`
 - Debug mode enabled
-- CORS allows all origins
+- CORS defaults to configured local frontend origins
 
 ### Production
 - Base URL: TBD
@@ -318,17 +380,17 @@ case = response.json()
 // List cases
 fetch('http://localhost:8000/api/cases/')
   .then(response => response.json())
-  .then(data => console.log(data));
-
-// Search cases
-fetch('http://localhost:8000/api/cases/?search=corruption&case_type=CORRUPTION')
-  .then(response => response.json())
-  .then(data => console.log(data.results));
+  .then(data => {
+    data.results.forEach(caseItem => {
+      console.log(`Case: ${caseItem.title}`);
+      console.log(`Type: ${caseItem.case_type}`);
+    });
+  });
 
 // Get specific case
 fetch('http://localhost:8000/api/cases/1/')
   .then(response => response.json())
-  .then(case => console.log(case));
+  .then(caseData => console.log(caseData));
 ```
 
 ## Support

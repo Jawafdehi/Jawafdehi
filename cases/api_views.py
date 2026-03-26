@@ -29,7 +29,14 @@ from .caseworker_serializers import (
     CaseCreateSerializer,
     CasePatchSerializer,
 )
-from .models import Case, CaseState, DocumentSource, JawafEntity
+from .models import (
+    Case,
+    CaseEntityRelationship,
+    CaseState,
+    DocumentSource,
+    JawafEntity,
+    RelationshipType,
+)
 from .rules.predicates import can_change_case, can_view_case
 from .serializers import (
     CaseDetailSerializer,
@@ -212,7 +219,9 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
                 ]
                 queryset = queryset.filter(id__in=case_ids_with_tag)
 
-        return queryset.order_by("-created_at")
+        return queryset.prefetch_related(
+            "entity_relationships__entity",
+        ).order_by("-created_at")
 
     def create(self, request, *args, **kwargs):
         """
@@ -250,6 +259,20 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         with transaction.atomic():
             case = form.save()
             case.contributors.add(request.user)
+
+            # Create entity relationships for alleged/related entities
+            for entity_id in serializer.validated_data.get("alleged_entities", []):
+                CaseEntityRelationship.objects.get_or_create(
+                    case=case,
+                    entity_id=entity_id,
+                    relationship_type=RelationshipType.ALLEGED,
+                )
+            for entity_id in serializer.validated_data.get("related_entities", []):
+                CaseEntityRelationship.objects.get_or_create(
+                    case=case,
+                    entity_id=entity_id,
+                    relationship_type=RelationshipType.RELATED,
+                )
 
         return Response(CaseSerializer(case).data, status=status.HTTP_201_CREATED)
 
@@ -356,13 +379,6 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
             ]
         )
 
-        # Maps writable snapshot key → Case M2M attribute name
-        m2m_fields = {
-            "alleged_entity_ids": "alleged_entities",
-            "related_entity_ids": "related_entities",
-            "location_ids": "locations",
-        }
-
         # Persist scalar field changes
         scalar_updates = {
             field: validated[field] for field in scalar_fields if field in validated
@@ -370,11 +386,28 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         if scalar_updates:
             Case.objects.filter(pk=pk).update(**scalar_updates)
 
-        # Persist M2M changes
+        # Persist entity relationship changes
         case.refresh_from_db()
-        for id_field, m2m_attr in m2m_fields.items():
-            if id_field in validated:
-                getattr(case, m2m_attr).set(validated[id_field])
+        if "alleged_entity_ids" in validated:
+            case.entity_relationships.filter(
+                relationship_type=RelationshipType.ALLEGED
+            ).delete()
+            for entity_id in validated["alleged_entity_ids"]:
+                CaseEntityRelationship.objects.create(
+                    case=case,
+                    entity_id=entity_id,
+                    relationship_type=RelationshipType.ALLEGED,
+                )
+        if "related_entity_ids" in validated:
+            case.entity_relationships.filter(
+                relationship_type=RelationshipType.RELATED
+            ).delete()
+            for entity_id in validated["related_entity_ids"]:
+                CaseEntityRelationship.objects.create(
+                    case=case,
+                    entity_id=entity_id,
+                    relationship_type=RelationshipType.RELATED,
+                )
 
         case.refresh_from_db()
         return Response(CaseSerializer(case).data, status=status.HTTP_200_OK)
@@ -399,12 +432,15 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
             "timeline": list(case.timeline) if case.timeline else [],
             "evidence": list(case.evidence) if case.evidence else [],
             "alleged_entity_ids": list(
-                case.alleged_entities.values_list("id", flat=True)
+                case.entity_relationships.filter(
+                    relationship_type=RelationshipType.ALLEGED
+                ).values_list("entity_id", flat=True)
             ),
             "related_entity_ids": list(
-                case.related_entities.values_list("id", flat=True)
+                case.entity_relationships.filter(
+                    relationship_type=RelationshipType.RELATED
+                ).values_list("entity_id", flat=True)
             ),
-            "location_ids": list(case.locations.values_list("id", flat=True)),
         }
 
 
@@ -609,10 +645,12 @@ class JawafEntityViewSet(viewsets.ReadOnlyModelViewSet):
 
             entity_ids = set()
             for case in published_cases:
-                # Add alleged entities
-                entity_ids.update(case.alleged_entities.values_list("id", flat=True))
-                # Add related entities
-                entity_ids.update(case.related_entities.values_list("id", flat=True))
+                # Add all entities from unified entities format, excluding locations
+                entity_ids.update(
+                    case.unified_entities.exclude(
+                        nes_id__startswith="entity:location/"
+                    ).values_list("id", flat=True)
+                )
 
             # Cache for 10 minutes - stale cache is acceptable
             cache.set("public_entities_list", entity_ids, timeout=600)

@@ -9,7 +9,13 @@ import pytest
 from django.core.cache import cache
 from rest_framework.test import APIClient
 
-from cases.models import Case, CaseState, JawafEntity
+from cases.models import (
+    Case,
+    CaseEntityRelationship,
+    CaseState,
+    JawafEntity,
+    RelationshipType,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +50,11 @@ def test_entity_list_only_returns_entities_in_published_cases():
         title="Published Case",
         description="Test case",
     )
-    published_case.alleged_entities.add(entity_in_published)
+    CaseEntityRelationship.objects.create(
+        case=published_case,
+        entity=entity_in_published,
+        relationship_type=RelationshipType.ALLEGED,
+    )
 
     # Create draft case with entity
     draft_case = Case.objects.create(
@@ -53,7 +63,11 @@ def test_entity_list_only_returns_entities_in_published_cases():
         title="Draft Case",
         description="Test case",
     )
-    draft_case.alleged_entities.add(entity_in_draft)
+    CaseEntityRelationship.objects.create(
+        case=draft_case,
+        entity=entity_in_draft,
+        relationship_type=RelationshipType.ALLEGED,
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -80,7 +94,9 @@ def test_entity_in_alleged_entities_is_returned():
         title="Test Case",
         description="Test",
     )
-    case.alleged_entities.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -101,7 +117,9 @@ def test_entity_in_related_entities_is_returned():
         title="Test Case",
         description="Test",
     )
-    case.related_entities.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.RELATED
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -122,7 +140,9 @@ def test_entity_in_locations_is_not_returned():
         title="Test Case",
         description="Test",
     )
-    case.locations.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.RELATED
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -145,7 +165,9 @@ def test_entity_in_multiple_cases_appears_once():
             title=f"Case {i}",
             description="Test",
         )
-        case.alleged_entities.add(entity)
+        CaseEntityRelationship.objects.create(
+            case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -168,8 +190,12 @@ def test_entity_in_both_alleged_and_related_appears_once():
         title="Test Case",
         description="Test",
     )
-    case.alleged_entities.add(entity)
-    case.related_entities.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+    )
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.RELATED
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -197,7 +223,11 @@ def test_entity_list_excludes_in_review_cases():
         title="Review Case",
         description="Test",
     )
-    review_case.alleged_entities.add(entity_in_review)
+    CaseEntityRelationship.objects.create(
+        case=review_case,
+        entity=entity_in_review,
+        relationship_type=RelationshipType.ALLEGED,
+    )
 
     # Create PUBLISHED case
     published_case = Case.objects.create(
@@ -206,7 +236,11 @@ def test_entity_list_excludes_in_review_cases():
         title="Published Case",
         description="Test",
     )
-    published_case.alleged_entities.add(entity_in_published)
+    CaseEntityRelationship.objects.create(
+        case=published_case,
+        entity=entity_in_published,
+        relationship_type=RelationshipType.ALLEGED,
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")
@@ -235,7 +269,9 @@ def test_entity_list_uses_cache():
         title="Test Case",
         description="Test",
     )
-    case.alleged_entities.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+    )
 
     client = APIClient()
 
@@ -267,7 +303,9 @@ def test_entity_list_cache_expires():
         title="Test Case",
         description="Test",
     )
-    case.alleged_entities.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+    )
 
     client = APIClient()
 
@@ -286,7 +324,9 @@ def test_entity_list_cache_expires():
         title="New Case",
         description="Test",
     )
-    new_case.alleged_entities.add(new_entity)
+    CaseEntityRelationship.objects.create(
+        case=new_case, entity=new_entity, relationship_type=RelationshipType.ALLEGED
+    )
 
     # Second request - cache miss, should include new entity
     response2 = client.get("/api/entities/")
@@ -327,7 +367,9 @@ def test_entity_list_excludes_closed_cases():
         title="Closed Case",
         description="Test",
     )
-    case.alleged_entities.add(entity)
+    CaseEntityRelationship.objects.create(
+        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+    )
 
     client = APIClient()
     response = client.get("/api/entities/")

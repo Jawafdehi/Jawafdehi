@@ -8,7 +8,14 @@ from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from cases.models import Case, CaseState, CaseType, JawafEntity
+from cases.models import (
+    Case,
+    CaseEntityRelationship,
+    CaseState,
+    CaseType,
+    JawafEntity,
+    RelationshipType,
+)
 from tests.conftest import create_user_with_role
 
 User = get_user_model()
@@ -177,10 +184,16 @@ def test_patch_replace_alleged_entity_ids():
         format="json",
     )
     assert response.status_code == 200
-    alleged_ids = [e["id"] for e in response.data["alleged_entities"]]
+    alleged_ids = [
+        e["id"]
+        for e in response.data["entities"]
+        if e["type"] == RelationshipType.ALLEGED
+    ]
     assert entity.pk in alleged_ids
     case.refresh_from_db()
-    assert case.alleged_entities.filter(pk=entity.pk).exists()
+    assert CaseEntityRelationship.objects.filter(
+        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+    ).exists()
 
 
 @pytest.mark.django_db

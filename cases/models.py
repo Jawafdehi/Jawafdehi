@@ -218,25 +218,17 @@ class JawafEntity(models.Model):
         Override delete to prevent deletion if entity is in use.
 
         Checks if entity is referenced by:
-        - Cases (as alleged_entities, related_entities, or locations)
+        - Cases (via unified entity_relationships through CaseEntityRelationship)
         - DocumentSources (as related_entities, excluding soft-deleted sources)
 
         Raises ValidationError if entity is in use.
         """
         usage = []
 
-        # Check if used in cases
-        alleged_count = self.cases_as_alleged.count()
-        if alleged_count > 0:
-            usage.append(f"alleged entity in {alleged_count} case(s)")
-
-        related_count = self.cases_as_related.count()
-        if related_count > 0:
-            usage.append(f"related entity in {related_count} case(s)")
-
-        location_count = self.cases_as_location.count()
-        if location_count > 0:
-            usage.append(f"location in {location_count} case(s)")
+        # Check if used in unified relationship system
+        case_relationship_count = self.case_relationships.count()
+        if case_relationship_count > 0:
+            usage.append(f"entity relationship in {case_relationship_count} case(s)")
 
         # Check if used in active document sources (exclude soft-deleted)
         source_count = self.document_sources.filter(is_deleted=False).count()
@@ -250,6 +242,94 @@ class JawafEntity(models.Model):
             )
 
         return super().delete(using=using, keep_parents=keep_parents)
+
+
+class RelationshipType(models.TextChoices):
+    """Enum for entity-case relationship types."""
+
+    ALLEGED = "alleged", "Alleged"
+    RELATED = "related", "Related"
+    WITNESS = "witness", "Witness"
+    OPPOSITION = "opposition", "Opposition"
+    VICTIM = "victim", "Victim"
+
+
+class CaseEntityRelationship(models.Model):
+    """
+    Through-model for Case-Entity relationships with relationship types.
+
+    This model stores typed case/entity links and relationship metadata.
+    """
+
+    case = models.ForeignKey(
+        "Case",
+        on_delete=models.CASCADE,
+        related_name="entity_relationships",
+        help_text="The case this relationship belongs to",
+    )
+    entity = models.ForeignKey(
+        JawafEntity,
+        on_delete=models.CASCADE,
+        related_name="case_relationships",
+        help_text="The entity involved in this relationship",
+    )
+    relationship_type = models.CharField(
+        max_length=20,
+        choices=RelationshipType.choices,
+        help_text="Type of relationship between case and entity",
+    )
+    notes = models.TextField(
+        blank=True,
+        default="",
+        max_length=500,
+        help_text="Optional notes about this relationship",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When this relationship was created",
+    )
+
+    class Meta:
+        verbose_name = "Case Entity Relationship"
+        verbose_name_plural = "Case Entity Relationships"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["case", "entity", "relationship_type"],
+                name="unique_case_entity_relationship_type",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["case", "relationship_type"],
+                name="case_relationship_type_idx",
+            ),
+            models.Index(
+                fields=["entity", "relationship_type"],
+                name="entity_relationship_type_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.case.case_id} - {self.entity} ({self.relationship_type})"
+
+    def clean(self):
+        """Validate relationship data."""
+        errors = {}
+
+        # Ensure case and entity are provided
+        if not self.case_id:
+            errors["case"] = "Case is required"
+        if not self.entity_id:
+            errors["entity"] = "Entity is required"
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        """Override save to validate before saving."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class CaseType(models.TextChoices):
@@ -349,23 +429,12 @@ class Case(models.Model):
     )
 
     # Entity relationships (many-to-many)
-    alleged_entities = models.ManyToManyField(
+    # New unified entities field using CaseEntityRelationship through model
+    unified_entities = models.ManyToManyField(
         JawafEntity,
-        blank=True,
-        related_name="cases_as_alleged",
-        help_text="Entities being accused",
-    )
-    related_entities = models.ManyToManyField(
-        JawafEntity,
-        blank=True,
-        related_name="cases_as_related",
-        help_text="Related entities",
-    )
-    locations = models.ManyToManyField(
-        JawafEntity,
-        blank=True,
-        related_name="cases_as_location",
-        help_text="Location entities",
+        through="CaseEntityRelationship",
+        related_name="unified_cases",
+        help_text="All entities related to this case through the unified relationship system",
     )
 
     # Content fields
@@ -413,6 +482,22 @@ class Case(models.Model):
     def __str__(self):
         return f"{self.case_id} - {self.title} ({self.state})"
 
+    def get_entities_by_type(self, relationship_type):
+        """
+        Get entities filtered by relationship type from the unified system.
+
+        Args:
+            relationship_type: RelationshipType enum value or string
+
+        Returns:
+            QuerySet of JawafEntity objects with the specified relationship type
+        """
+        entity_ids = CaseEntityRelationship.objects.filter(
+            case=self,
+            relationship_type=relationship_type,
+        ).values_list("entity_id", flat=True)
+        return JawafEntity.objects.filter(pk__in=entity_ids)
+
     def save(self, *args, **kwargs):
         """Override save to generate case_id for new cases."""
         if not self.case_id:
@@ -441,8 +526,11 @@ class Case(models.Model):
         # Strict validation for IN_REVIEW and PUBLISHED states
         if self.state in [CaseState.IN_REVIEW, CaseState.PUBLISHED]:
             # Require at least one alleged entity for published cases
-            if self.alleged_entities.count() == 0:
-                errors["alleged_entities"] = (
+            has_unified_alleged = self.entity_relationships.filter(
+                relationship_type=RelationshipType.ALLEGED
+            ).exists()
+            if not has_unified_alleged:
+                errors["entities"] = (
                     "At least one alleged entity is required for IN_REVIEW or PUBLISHED state"
                 )
 
