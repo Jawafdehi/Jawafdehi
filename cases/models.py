@@ -252,6 +252,7 @@ class RelationshipType(models.TextChoices):
     WITNESS = "witness", "Witness"
     OPPOSITION = "opposition", "Opposition"
     VICTIM = "victim", "Victim"
+    LOCATION = "location", "Location"
 
 
 class CaseEntityRelationship(models.Model):

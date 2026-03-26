@@ -285,7 +285,7 @@ class CaseImporter:
                     CaseEntityRelationship.objects.get_or_create(
                         case=case,
                         entity=entity,
-                        relationship_type=RelationshipType.RELATED,
+                        relationship_type=RelationshipType.LOCATION,
                         defaults={"notes": ""},
                     )
 
