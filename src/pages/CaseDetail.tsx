@@ -62,7 +62,7 @@ const CaseDetail = () => {
         setResolvedSources(sourcesMap);
 
         // Resolve entities from NES if they have nes_id
-        const allEntities = [...data.alleged_entities, ...data.related_entities, ...data.locations];
+        const allEntities = data.entities || [];
         const entitiesWithNesId = allEntities.filter(e => e.nes_id);
         const uniqueNesIds = [...new Set(entitiesWithNesId.map(e => e.nes_id!))];
 
@@ -232,7 +232,7 @@ const CaseDetail = () => {
               <div className="flex items-start text-muted-foreground">
                 <User className="mr-2 h-5 w-5 flex-shrink-0" />
                 <div className="text-sm flex flex-wrap gap-1">
-                  {caseData.alleged_entities.map((e, index) => {
+                  {caseData.entities.filter(e => e.type === 'alleged').map((e, index, arr) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
                     let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
                     displayName = translateDynamicText(displayName, currentLang);
@@ -241,7 +241,7 @@ const CaseDetail = () => {
                         <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
                           {displayName}
                         </Link>
-                        {index < caseData.alleged_entities.length - 1 && ', '}
+                        {index < arr.length - 1 && ', '}
                       </span>
                     );
                   })}
@@ -250,19 +250,22 @@ const CaseDetail = () => {
               <div className="flex items-center text-muted-foreground">
                 <MapPin className="mr-2 h-5 w-5" />
                 <div className="text-sm flex flex-wrap gap-1">
-                  {caseData.locations.length > 0 ? caseData.locations.map((e, index) => {
-                    const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
-                    displayName = translateDynamicText(displayName, currentLang);
-                    return (
-                      <span key={e.id}>
-                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
-                          {displayName}
-                        </Link>
-                        {index < caseData.locations.length - 1 && ', '}
-                      </span>
-                    );
-                  }) : 'N/A'}
+                  {(() => {
+                    const locations = caseData.entities.filter(e => e.type === 'related' && e.nes_id?.includes('location'));
+                    return locations.length > 0 ? locations.map((e, index) => {
+                      const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
+                      let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                      displayName = translateDynamicText(displayName, currentLang);
+                      return (
+                        <span key={e.id}>
+                          <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
+                            {displayName}
+                          </Link>
+                          {index < locations.length - 1 && ', '}
+                        </span>
+                      );
+                    }) : 'N/A';
+                  })()}
                 </div>
               </div>
               <div className="flex items-center text-muted-foreground">
@@ -300,14 +303,14 @@ const CaseDetail = () => {
           </Card>
 
           {/* Related Entities */}
-          {caseData.related_entities.length > 0 && (
+          {caseData.entities.filter(e => e.type === 'related' && !e.nes_id?.includes('location')).length > 0 && (
             <Card className="mb-8">
               <CardHeader>
                 <CardTitle>{t("caseDetail.partiesInvolved")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground">
-                  {caseData.related_entities.map((e, index) => {
+                  {caseData.entities.filter(e => e.type === 'related' && !e.nes_id?.includes('location')).map((e, index, arr) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
                     let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
                     displayName = translateDynamicText(displayName, currentLang);
@@ -316,7 +319,7 @@ const CaseDetail = () => {
                         <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
                           {displayName}
                         </Link>
-                        {index < caseData.related_entities.length - 1 && ', '}
+                        {index < arr.length - 1 && ', '}
                       </span>
                     );
                   })}

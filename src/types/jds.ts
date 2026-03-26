@@ -50,6 +50,8 @@ export interface JawafEntity {
   id: number;
   nes_id: string | null; // Entity ID from Nepal Entity Service
   display_name: string | null; // Display name for the entity
+  type?: string; // Relationship type: 'alleged', 'related', 'witness', etc.
+  notes?: string; // Additional notes about the relationship
   alleged_cases?: number[]; // Case IDs where entity is alleged
   related_cases?: number[]; // Case IDs where entity is related
 }
@@ -72,9 +74,7 @@ export interface Case {
   title: string;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
-  alleged_entities: JawafEntity[]; // Entities alleged to be involved
-  related_entities: JawafEntity[]; // Related entities
-  locations: JawafEntity[]; // Location entities
+  entities: JawafEntity[]; // Unified entity relationships with type field
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   description: string; // Rich text description
   key_allegations: string[]; // List of key allegation statements

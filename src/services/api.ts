@@ -392,7 +392,7 @@ export async function getEntityCases(idOrSlug: string): Promise<Case[]> {
  * Get entity IDs associated with cases
  *
  * This function retrieves all cases and extracts unique entity IDs
- * from alleged_entities and related_entities fields.
+ * from the unified entities field.
  *
  * Returns a list of entity IDs that have associated cases.
  *
@@ -414,27 +414,16 @@ export async function getEntityIdsWithCases(): Promise<string[]> {
         console.log(`Case ${index + 1}:`, {
           id: caseItem.id,
           title: caseItem.title,
-          alleged_entities: caseItem.alleged_entities.length,
-          related_entities: caseItem.related_entities.length
+          entities: caseItem.entities?.length || 0
         });
 
-        // Add alleged entities
-        caseItem.alleged_entities.forEach(entity => {
+        // Add all entities from unified entities array
+        caseItem.entities?.forEach(entity => {
           if (entity.nes_id) {
-            console.log(`  Adding alleged entity: ${entity.nes_id}`);
+            console.log(`  Adding entity (${entity.type}): ${entity.nes_id}`);
             entityIds.add(entity.nes_id);
           } else {
-            console.log(`  Skipping alleged entity without nes_id:`, entity);
-          }
-        });
-
-        // Add related entities
-        caseItem.related_entities.forEach(entity => {
-          if (entity.nes_id) {
-            console.log(`  Adding related entity: ${entity.nes_id}`);
-            entityIds.add(entity.nes_id);
-          } else {
-            console.log(`  Skipping related entity without nes_id:`, entity);
+            console.log(`  Skipping entity without nes_id:`, entity);
           }
         });
       });

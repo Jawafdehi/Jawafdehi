@@ -173,7 +173,7 @@ export async function getCaseById(id: number): Promise<CaseDetail> {
 
 /**
  * Filter cases to find those associated with a specific entity ID.
- * Returns all cases where the entity is in alleged_entities or related_entities.
+ * Returns all cases where the entity is in the entities array.
  */
 export async function getCasesByEntity(entityId: string, params?: CaseSearchParams): Promise<Case[]> {
   try {
@@ -181,10 +181,9 @@ export async function getCasesByEntity(entityId: string, params?: CaseSearchPara
       params,
     });
     
-    // Filter cases that include the entity in alleged_entities or related_entities
+    // Filter cases that include the entity in the unified entities array
     const filteredCases = response.data.results.filter(caseItem => 
-      caseItem.alleged_entities.some(e => e.nes_id === entityId) || 
-      caseItem.related_entities.some(e => e.nes_id === entityId)
+      caseItem.entities?.some(e => e.nes_id === entityId)
     );
     
     return filteredCases;
@@ -201,19 +200,10 @@ export async function getJawafEntityById(entityId: number): Promise<import('@/ty
   try {
     const response = await apiClient.get<PaginatedCaseList>('/cases/');
     
-    // Search through all cases to find the entity
+    // Search through all cases to find the entity in the unified entities array
     for (const caseItem of response.data.results) {
-      // Check alleged entities
-      const allegedEntity = caseItem.alleged_entities.find(e => e.id === entityId);
-      if (allegedEntity) return allegedEntity;
-      
-      // Check related entities
-      const relatedEntity = caseItem.related_entities.find(e => e.id === entityId);
-      if (relatedEntity) return relatedEntity;
-      
-      // Check location entities
-      const locationEntity = caseItem.locations.find(e => e.id === entityId);
-      if (locationEntity) return locationEntity;
+      const entity = caseItem.entities?.find(e => e.id === entityId);
+      if (entity) return entity;
     }
     
     return null;
@@ -312,21 +302,4 @@ export async function submitFeedback(feedback: FeedbackSubmission): Promise<Feed
   }
 }
 
-// ============================================================================
-// Backward Compatibility Aliases
-// ============================================================================
 
-/**
- * @deprecated Use getCases instead
- */
-export const getAllegations = getCases;
-
-/**
- * @deprecated Use getCaseById instead
- */
-export const getAllegationById = getCaseById;
-
-/**
- * @deprecated Use getCasesByEntity instead
- */
-export const getAllegationsByEntity = getCasesByEntity;

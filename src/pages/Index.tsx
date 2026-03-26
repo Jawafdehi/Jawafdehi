@@ -42,8 +42,12 @@ const Index = () => {
     if (!casesData?.results) return [];
 
     return casesData.results.slice(0, 3).map((caseItem) => {
-      const primaryEntity = caseItem.alleged_entities[0]?.display_name || "Unknown Entity";
-      const primaryLocation = caseItem.locations[0]?.display_name || "Unknown Location";
+      // Get alleged entities and locations from unified entities array
+      const allegedEntities = caseItem.entities?.filter(e => e.type === 'alleged') || [];
+      const locationEntities = caseItem.entities?.filter(e => e.type === 'related' && e.nes_id?.includes('location')) || [];
+      
+      const primaryEntity = allegedEntities[0]?.display_name || "Unknown Entity";
+      const primaryLocation = locationEntities[0]?.display_name || "Unknown Location";
       const formattedDate = caseItem.case_start_date
         ? formatDate(caseItem.case_start_date, 'PPP')
         : formatDate(caseItem.created_at, 'PPP');
@@ -57,8 +61,8 @@ const Index = () => {
         status: "ongoing" as const, // All published cases shown as ongoing
         description: caseItem.description.replace(/<[^>]*>/g, '').substring(0, 200), // Strip HTML and truncate
         tags: caseItem.tags,
-        entityIds: caseItem.alleged_entities.map(e => e.id),
-        locationIds: caseItem.locations.map(l => l.id),
+        entityIds: allegedEntities.map(e => e.id),
+        locationIds: locationEntities.map(l => l.id),
       };
     });
   }, [casesData]);

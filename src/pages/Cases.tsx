@@ -74,7 +74,7 @@ const Cases = () => {
       setCases(response.results);
 
       // Resolve entities from NES if they have nes_id
-      const allEntities = response.results.flatMap(c => [...c.alleged_entities, ...c.locations]);
+      const allEntities = response.results.flatMap(c => c.entities || []);
       const entitiesWithNesId = allEntities.filter(e => e.nes_id);
       const uniqueNesIds = [...new Set(entitiesWithNesId.map(e => e.nes_id!))];
 
@@ -223,8 +223,12 @@ const Cases = () => {
               {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                   remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
               {filteredCases.map((caseItem) => {
+                // Get alleged and location entities from unified entities array
+                const allegedEntities = caseItem.entities?.filter(e => e.type === 'alleged') || [];
+                const locationEntities = caseItem.entities?.filter(e => e.type === 'related' && e.nes_id?.includes('location')) || [];
+                
                 // Translate entity names
-                const entityNames = caseItem.alleged_entities.map(e => {
+                const entityNames = allegedEntities.map(e => {
                   if (e.nes_id && resolvedEntities[e.nes_id]) {
                     const entity = resolvedEntities[e.nes_id];
                     return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
@@ -233,7 +237,7 @@ const Cases = () => {
                 }).join(', ') || translateDynamicText('Unknown Entity', currentLang);
 
                 // Translate location names
-                const locationNames = caseItem.locations.map(e => {
+                const locationNames = locationEntities.map(e => {
                   if (e.nes_id && resolvedEntities[e.nes_id]) {
                     const entity = resolvedEntities[e.nes_id];
                     const name = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
@@ -254,8 +258,8 @@ const Cases = () => {
                     status="ongoing"
                     tags={caseItem.tags || []}
                     description={caseItem.key_allegations.join('. ')}
-                    entityIds={caseItem.alleged_entities.map(e => e.id)}
-                    locationIds={caseItem.locations.map(e => e.id)}
+                    entityIds={allegedEntities.map(e => e.id)}
+                    locationIds={locationEntities.map(e => e.id)}
                   />
                 );
               })}
