@@ -13,11 +13,13 @@ interface CaseCardProps {
   status: "ongoing" | "resolved" | "under-investigation";
   tags?: string[];
   description: string;
+  allegations?: string[]; // Key allegations array
   entityIds?: number[]; // Jawaf entity IDs
   locationIds?: number[]; // Jawaf entity IDs
+  thumbnailUrl?: string; //Thumbnail image
 }
 
-export const CaseCard = ({ id, title, entity, location, date, status, tags = [], description, entityIds, locationIds }: CaseCardProps) => {
+export const CaseCard = ({ id, title, entity, location, date, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl }: CaseCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -36,6 +38,15 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
 
   return (
     <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50 cursor-pointer" onClick={handleCardClick}>
+      {thumbnailUrl && (
+        <div className="w-full h-40 overflow-hidden rounded-t-lg">
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <CardHeader>
         <div className="flex items-start justify-between gap-2 mb-2">
           <Badge className={statusConfig[status].color}>{statusConfig[status].label}</Badge>
@@ -57,7 +68,15 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
         <h3 className="text-lg font-semibold text-foreground line-clamp-2">{title}</h3>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{description}</p>
+        {allegations && allegations.length > 0 ? (
+          <ul className="list-disc list-inside mb-4 space-y-1">
+            <li className="text-sm text-muted-foreground">
+              <span>{allegations[0]}</span>
+            </li>
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground mb-4">{description}</p>
+        )}
         <div className="space-y-2">
           <div className="flex items-center text-sm text-muted-foreground">
             <User className="mr-2 h-4 w-4 flex-shrink-0" />
