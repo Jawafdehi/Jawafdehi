@@ -460,6 +460,7 @@
   },
   "entityCard": {
     "alleged": "आरोपित",
+    "location": "स्थान",
     "related": "सम्बन्धित",
     "cases": "मुद्दाहरू",
     "unknown": "अज्ञात"

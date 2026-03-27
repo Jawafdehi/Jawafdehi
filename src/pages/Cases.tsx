@@ -225,7 +225,7 @@ const Cases = () => {
               {filteredCases.map((caseItem) => {
                 // Get alleged and location entities from unified entities array
                 const allegedEntities = caseItem.entities?.filter(e => e.type === 'alleged') || [];
-                const locationEntities = caseItem.entities?.filter(e => e.type === 'related' && e.nes_id?.includes('location')) || [];
+                const locationEntities = caseItem.entities?.filter(e => e.type === 'location') || [];
                 
                 // Translate entity names
                 const entityNames = allegedEntities.map(e => {

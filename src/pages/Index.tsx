@@ -44,7 +44,7 @@ const Index = () => {
     return casesData.results.slice(0, 3).map((caseItem) => {
       // Get alleged entities and locations from unified entities array
       const allegedEntities = caseItem.entities?.filter(e => e.type === 'alleged') || [];
-      const locationEntities = caseItem.entities?.filter(e => e.type === 'related' && e.nes_id?.includes('location')) || [];
+      const locationEntities = caseItem.entities?.filter(e => e.type === 'location') || [];
       
       const primaryEntity = allegedEntities[0]?.display_name || "Unknown Entity";
       const primaryLocation = locationEntities[0]?.display_name || "Unknown Location";
