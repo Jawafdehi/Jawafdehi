@@ -17,6 +17,7 @@ COPY manage.py ./
 COPY config ./config
 COPY cases ./cases
 COPY nesq ./nesq
+COPY ngm ./ngm
 COPY static ./static
 
 # Collect static files
