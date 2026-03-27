@@ -1,0 +1,72 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="module aligned">
+  <h1>Confirm Entity Merge</h1>
+  <p>
+    This action will merge <strong>{{ impact.entities|length }}</strong> entities into
+    target entity <strong>ID {{ impact.target_entity.id }}</strong>.
+  </p>
+  <p><strong>This action cannot be undone.</strong></p>
+
+  <h2>Merge Target</h2>
+  <ul>
+    <li>ID: {{ impact.target_entity.id }}</li>
+    <li>NES ID: {{ impact.merged_nes_id|default:"(not set)" }}</li>
+    <li>Display Name: {{ impact.merged_display_name|default:"(not set)" }}</li>
+  </ul>
+
+  <h2>Entities Selected</h2>
+  <table class="adminlist">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>NES ID</th>
+        <th>Display Name</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entity in impact.entities %}
+      <tr>
+        <td>{{ entity.id }}</td>
+        <td>{{ entity.nes_id|default:"(not set)" }}</td>
+        <td>{{ entity.display_name|default:"(not set)" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Impact Summary</h2>
+  <ul>
+    <li>Affected case relationships: {{ impact.relationship_count }}</li>
+    <li>Affected unique cases: {{ impact.affected_case_ids|length }}</li>
+    <li>Affected document sources: {{ impact.source_count }}</li>
+  </ul>
+
+  {% if impact.relationship_type_counts %}
+  <h3>Relationship Types Affected</h3>
+  <ul>
+    {% for relationship_type, count in impact.relationship_type_counts.items %}
+    <li>{{ relationship_type }}: {{ count }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{{ action_name }}">
+    <input type="hidden" name="confirm_merge" value="1">
+
+    {% for entity_id in selected_entity_ids %}
+    <input type="hidden" name="selected_entity_ids" value="{{ entity_id }}">
+    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ entity_id }}">
+    {% endfor %}
+
+    <div class="submit-row">
+      <a href="../" class="button cancel-link">Cancel</a>
+      <input type="submit" value="Confirm merge" class="default" />
+    </div>
+  </form>
+</div>
+{% endblock %}

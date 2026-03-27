@@ -1,11 +1,14 @@
 from django.contrib import admin
+from django.contrib import messages
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth import get_user_model
 from django import forms
 from django.db import models
 from django.utils.html import format_html
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.forms.models import BaseInlineFormSet
+from django.template.response import TemplateResponse
 from tinymce.widgets import TinyMCE
 from .models import (
     Case,
@@ -17,6 +20,7 @@ from .models import (
     CaseEntityRelationship,
     RelationshipType,
 )
+from .services import EntityMergeError, analyze_merge_impact, merge_entities_by_ids
 from .widgets import (
     MultiTextField,
     MultiTimelineField,
@@ -1064,6 +1068,8 @@ class JawafEntityAdmin(admin.ModelAdmin):
         "display_name",
     ]
 
+    actions = ["merge_selected_entities"]
+
     readonly_fields = [
         "created_at",
         "updated_at",
@@ -1091,6 +1097,76 @@ class JawafEntityAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    def get_actions(self, request):
+        """Only show merge action to moderators and admins."""
+        actions = super().get_actions(request)
+        if not is_admin_or_moderator(request.user):
+            actions.pop("merge_selected_entities", None)
+        return actions
+
+    def merge_selected_entities(self, request, queryset):
+        """Admin action to merge selected entities with confirmation."""
+        if not is_admin_or_moderator(request.user):
+            raise PermissionDenied("You do not have permission to merge entities.")
+
+        selected_ids = list(queryset.values_list("id", flat=True))
+
+        if "confirm_merge" in request.POST:
+            selected_ids = [
+                int(entity_id)
+                for entity_id in request.POST.getlist("selected_entity_ids")
+                if entity_id
+            ]
+
+            if len(selected_ids) < 2:
+                self.message_user(
+                    request,
+                    "Select at least 2 entities to merge.",
+                    level=messages.ERROR,
+                )
+                return None
+
+            try:
+                result = merge_entities_by_ids(selected_ids)
+                self.message_user(
+                    request,
+                    (
+                        f"Successfully merged {result['selected_entities_count']} entities "
+                        f"into entity {result['target_entity'].id}. "
+                        f"Updated {result['affected_case_count']} case(s) and "
+                        f"{result['affected_source_count']} source(s)."
+                    ),
+                    level=messages.SUCCESS,
+                )
+            except EntityMergeError as exc:
+                self.message_user(request, str(exc), level=messages.ERROR)
+
+            return None
+
+        try:
+            impact = analyze_merge_impact(selected_ids)
+        except EntityMergeError as exc:
+            self.message_user(request, str(exc), level=messages.ERROR)
+            return None
+
+        context = {
+            **self.admin_site.each_context(request),
+            "opts": self.model._meta,
+            "title": "Confirm entity merge",
+            "action_name": "merge_selected_entities",
+            "action_checkbox_name": ACTION_CHECKBOX_NAME,
+            "selected_entity_ids": selected_ids,
+            "impact": impact,
+        }
+
+        return TemplateResponse(
+            request,
+            "admin/cases/jawafentity/merge_confirm.html",
+            context,
+        )
+
+    merge_selected_entities.short_description = "Merge selected entities"
 
 
 # ============================================================================
