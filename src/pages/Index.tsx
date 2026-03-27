@@ -9,11 +9,16 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { getCases, getStatistics } from "@/services/jds-api";
-import { useMemo } from "react";
-import { formatDate } from "@/utils/date";
+import { getEntityById } from "@/services/api";
+import { useMemo, useState, useEffect } from "react";
+import { formatDateWithBS } from "@/utils/date";
+import type { Entity } from "@/types/nes";
+import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 const Index = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
+  const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
 
   // Fetch real statistics from API
   const { data: stats, isError: statsError, isLoading: statsLoading } = useQuery({
@@ -37,6 +42,35 @@ const Index = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Resolve location entities from NES
+  useEffect(() => {
+    if (!casesData?.results) return;
+
+    const resolveEntities = async () => {
+      const allEntities = casesData.results.flatMap(c => c.entities || []);
+      const locationEntities = allEntities.filter(e => e.type === 'related' && e.nes_id?.includes('location'));
+      const uniqueNesIds = [...new Set(locationEntities.map(e => e.nes_id!).filter(Boolean))];
+
+      const entityPromises = uniqueNesIds.map(async (nesId) => {
+        try {
+          const entity = await getEntityById(nesId);
+          return { id: nesId, entity };
+        } catch {
+          return null;
+        }
+      });
+
+      const entities = await Promise.all(entityPromises);
+      const entitiesMap = entities.reduce((acc, item) => {
+        if (item) acc[item.id] = item.entity;
+        return acc;
+      }, {} as Record<string, Entity>);
+      setResolvedEntities(entitiesMap);
+    };
+
+    resolveEntities();
+  }, [casesData]);
+
   // Transform API cases to CaseCard format
   const featuredCases = useMemo(() => {
     if (!casesData?.results) return [];
@@ -45,27 +79,40 @@ const Index = () => {
       // Get alleged entities and locations from unified entities array
       const allegedEntities = caseItem.entities?.filter(e => e.type === 'alleged') || [];
       const locationEntities = caseItem.entities?.filter(e => e.type === 'related' && e.nes_id?.includes('location')) || [];
-      
+
       const primaryEntity = allegedEntities[0]?.display_name || "Unknown Entity";
-      const primaryLocation = locationEntities[0]?.display_name || "Unknown Location";
+
+      // Translate location names using NES resolution
+      const locationNames = locationEntities.map(e => {
+        if (e.nes_id && resolvedEntities[e.nes_id]) {
+          const entity = resolvedEntities[e.nes_id];
+          const name = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
+          return translateDynamicText(name, currentLang);
+        }
+        const name = e.display_name || e.nes_id || 'Unknown';
+        return translateDynamicText(name, currentLang);
+      }).join(', ') || translateDynamicText('Unknown Location', currentLang);
+
       const formattedDate = caseItem.case_start_date
-        ? formatDate(caseItem.case_start_date, 'PPP')
-        : formatDate(caseItem.created_at, 'PPP');
+        ? formatDateWithBS(caseItem.case_start_date, 'PPP')
+        : formatDateWithBS(caseItem.created_at, 'PPP');
 
       return {
         id: caseItem.id.toString(),
         title: caseItem.title,
         entity: primaryEntity,
-        location: primaryLocation,
+        location: locationNames,
         date: formattedDate,
         status: "ongoing" as const, // All published cases shown as ongoing
-        description: caseItem.description.replace(/<[^>]*>/g, '').substring(0, 200), // Strip HTML and truncate
+        allegations: caseItem.key_allegations,
+        description: caseItem.description.replace(/<[^>]*>/g, '').substring(0, 200),
+        thumbnailUrl: caseItem.thumbnail_url ?? undefined,
         tags: caseItem.tags,
         entityIds: allegedEntities.map(e => e.id),
         locationIds: locationEntities.map(l => l.id),
       };
     });
-  }, [casesData]);
+  }, [casesData, resolvedEntities, currentLang]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
