@@ -15,6 +15,12 @@ export type CaseType =
   | 'CORRUPTION'
   | 'PROMISES';
 
+export type CaseState =
+  | 'DRAFT'
+  | 'IN_REVIEW'
+  | 'PUBLISHED'
+  | 'CLOSED';
+
 export type DocumentSourceType =
   | 'LEGAL_COURT_ORDER'
   | 'LEGAL_PROCEDURAL'
@@ -71,6 +77,7 @@ export interface Case {
   id: number;
   case_id: string; // Unique identifier shared across versions
   case_type: CaseType;
+  state: CaseState; // Current state in the workflow
   title: string;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format

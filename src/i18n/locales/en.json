@@ -119,6 +119,7 @@
     "contactDesc": "You can also reach us via email or WhatsApp for any inquiries or to provide additional information.",
     "emailLabel": "Email",
     "whatsappLabel": "WhatsApp",
+    "inReviewBanner": "This case is currently under review by Jawafdehi. Information may be incomplete or subject to revision.",
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",
