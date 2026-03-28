@@ -104,6 +104,7 @@ export interface Case {
   documents?: string[];
   timeline?: TimelineEvent[];
   status: string;
+  state?: import('@/types/jds').CaseState; // Workflow state from JDS
 }
 
 export interface TimelineEvent {
@@ -381,6 +382,7 @@ export async function getEntityCases(idOrSlug: string): Promise<Case[]> {
         description: t.description
       })),
       status: 'ongoing', // Published cases
+      state: c.state, // Propagate workflow state from JDS
     }));
   } catch (error) {
     console.warn(`Cases not available from JDS API (entity: ${idOrSlug})`);
