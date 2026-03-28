@@ -126,7 +126,7 @@ def create_case_with_entities(**kwargs):
     for nes_id in alleged_entity_ids:
         entity, _ = JawafEntity.objects.get_or_create(nes_id=nes_id)
         CaseEntityRelationship.objects.get_or_create(
-            case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+            case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
         )
     for nes_id in related_entity_ids:
         entity, _ = JawafEntity.objects.get_or_create(nes_id=nes_id)

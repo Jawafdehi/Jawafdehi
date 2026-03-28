@@ -248,6 +248,7 @@ class RelationshipType(models.TextChoices):
     """Enum for entity-case relationship types."""
 
     ALLEGED = "alleged", "Alleged"
+    ACCUSED = "accused", "Accused"
     RELATED = "related", "Related"
     WITNESS = "witness", "Witness"
     OPPOSITION = "opposition", "Opposition"
@@ -526,13 +527,13 @@ class Case(models.Model):
 
         # Strict validation for IN_REVIEW and PUBLISHED states
         if self.state in [CaseState.IN_REVIEW, CaseState.PUBLISHED]:
-            # Require at least one alleged entity for published cases
+            # Require at least one accused entity for published cases
             has_unified_alleged = self.entity_relationships.filter(
-                relationship_type=RelationshipType.ALLEGED
+                relationship_type=RelationshipType.ACCUSED
             ).exists()
             if not has_unified_alleged:
                 errors["entities"] = (
-                    "At least one alleged entity is required for IN_REVIEW or PUBLISHED state"
+                    "At least one accused entity is required for IN_REVIEW or PUBLISHED state"
                 )
 
             if not self.key_allegations or len(self.key_allegations) == 0:

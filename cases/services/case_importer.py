@@ -249,7 +249,7 @@ class CaseImporter:
                     CaseEntityRelationship.objects.get_or_create(
                         case=case,
                         entity=entity,
-                        relationship_type=RelationshipType.ALLEGED,
+                        relationship_type=RelationshipType.ACCUSED,
                         defaults={"notes": ""},
                     )
 

@@ -86,7 +86,7 @@ def test_entity_alleged_in_published_case():
         description="Test description",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -109,7 +109,7 @@ def test_entity_alleged_in_multiple_published_cases():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case1, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case1, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     case2 = Case.objects.create(
@@ -119,7 +119,7 @@ def test_entity_alleged_in_multiple_published_cases():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case2, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case2, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -143,7 +143,7 @@ def test_entity_alleged_in_draft_case_not_included():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -165,7 +165,7 @@ def test_entity_alleged_in_closed_case_not_included():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -291,7 +291,7 @@ def test_entity_alleged_not_in_related_cases():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -314,7 +314,7 @@ def test_entity_both_alleged_and_related_in_same_case():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
     CaseEntityRelationship.objects.create(
         case=case, entity=entity, relationship_type=RelationshipType.RELATED
@@ -340,7 +340,7 @@ def test_entity_both_alleged_and_location_in_same_case():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
     CaseEntityRelationship.objects.create(
         case=case, entity=entity, relationship_type=RelationshipType.RELATED
@@ -372,7 +372,7 @@ def test_entity_in_multiple_cases_with_different_roles():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case1, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case1, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     # Case 2: Entity is related
@@ -421,7 +421,7 @@ def test_entity_with_mix_of_published_and_draft_cases():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=published_case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=published_case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     # Draft case
@@ -432,7 +432,7 @@ def test_entity_with_mix_of_published_and_draft_cases():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=draft_case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=draft_case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     # Closed case
@@ -470,7 +470,7 @@ def test_in_review_cases_excluded_from_entity_detail_case_lists():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -498,7 +498,7 @@ def test_alleged_cases_is_list_of_integers():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -549,7 +549,7 @@ def test_entity_list_includes_case_fields():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     client = APIClient()
@@ -576,7 +576,7 @@ def test_entity_list_shows_correct_case_ids():
         description="Test",
     )
     CaseEntityRelationship.objects.create(
-        case=case1, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case1, entity=entity, relationship_type=RelationshipType.ACCUSED
     )
 
     # Related case

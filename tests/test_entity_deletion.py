@@ -34,7 +34,7 @@ class TestEntityDeletionProtection:
         assert not JawafEntity.objects.filter(id=entity_id).exists()
 
     def test_cannot_delete_entity_used_as_alleged_entity(self):
-        """Cannot delete entity if it's an alleged entity in any case."""
+        """Cannot delete entity if it's an accused entity in any case."""
         case = create_case_with_entities(
             title="Test Case",
             alleged_entities=["entity:person/accused"],
@@ -44,7 +44,9 @@ class TestEntityDeletionProtection:
         )
 
         entity = (
-            case.entity_relationships.filter(relationship_type="alleged").first().entity
+            case.entity_relationships.filter(relationship_type=RelationshipType.ACCUSED)
+            .first()
+            .entity
         )
 
         with pytest.raises(ValidationError) as exc_info:
@@ -186,7 +188,7 @@ class TestEntityDeletionProtection:
         )
 
         relationship = case.entity_relationships.filter(
-            relationship_type="alleged"
+            relationship_type=RelationshipType.ACCUSED
         ).first()
         entity = relationship.entity
         entity_id = entity.id

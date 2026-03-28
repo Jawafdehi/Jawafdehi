@@ -1357,7 +1357,7 @@ class TestDjangoAdminWorkflows:
         alleged_entity = create_entities_from_ids(["entity:person/corrupt-official"])[0]
         case.entity_relationships.create(
             entity=alleged_entity,
-            relationship_type="alleged",
+            relationship_type=RelationshipType.ACCUSED,
         )
         case.key_allegations = ["Test allegation"]
         case.description = "Test description"
@@ -1372,7 +1372,10 @@ class TestDjangoAdminWorkflows:
             case.state == CaseState.IN_REVIEW
         ), "Case should transition to IN_REVIEW with alleged_entities"
         assert (
-            case.entity_relationships.filter(relationship_type="alleged").count() == 1
+            case.entity_relationships.filter(
+                relationship_type=RelationshipType.ACCUSED
+            ).count()
+            == 1
         )
         assert case.versionInfo.get("action") == "submitted"
 
@@ -1400,7 +1403,9 @@ class TestDjangoAdminWorkflows:
         case.save()
 
         # Step 2: Remove alleged_entities and attempt to publish
-        case.entity_relationships.filter(relationship_type="alleged").delete()
+        case.entity_relationships.filter(
+            relationship_type=RelationshipType.ACCUSED
+        ).delete()
         case.state = CaseState.PUBLISHED
 
         with pytest.raises(ValidationError) as exc_info:
@@ -1419,7 +1424,7 @@ class TestDjangoAdminWorkflows:
         alleged_entity = create_entities_from_ids(["entity:person/test-official"])[0]
         case.entity_relationships.create(
             entity=alleged_entity,
-            relationship_type="alleged",
+            relationship_type=RelationshipType.ACCUSED,
         )
         case.save()
 
@@ -1430,5 +1435,8 @@ class TestDjangoAdminWorkflows:
             case.state == CaseState.PUBLISHED
         ), "Case should be published with alleged_entities"
         assert (
-            case.entity_relationships.filter(relationship_type="alleged").count() == 1
+            case.entity_relationships.filter(
+                relationship_type=RelationshipType.ACCUSED
+            ).count()
+            == 1
         )

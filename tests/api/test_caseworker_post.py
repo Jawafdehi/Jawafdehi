@@ -1,13 +1,18 @@
-"""
-Tests for POST /api/cases/ draft creation endpoint.
-"""
+"""Tests for POST /api/cases/ draft creation endpoint."""
 
 import pytest
 
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from cases.models import Case, CaseState, CaseType, JawafEntity
+from cases.models import (
+    Case,
+    CaseEntityRelationship,
+    CaseState,
+    CaseType,
+    JawafEntity,
+    RelationshipType,
+)
 from tests.conftest import create_user_with_role
 
 URL = "/api/cases/"
@@ -75,10 +80,15 @@ def test_post_creates_case_with_entity_relationships():
     )
 
     assert response.status_code == 201
-    alleged_ids = [e["id"] for e in response.data["entities"] if e["type"] == "alleged"]
+    alleged_ids = [e["id"] for e in response.data["entities"] if e["type"] == "accused"]
     related_ids = [e["id"] for e in response.data["entities"] if e["type"] == "related"]
     assert alleged_ids == [alleged.pk]
     assert set(related_ids) == {related.pk, location.pk}
+    assert CaseEntityRelationship.objects.filter(
+        case_id=response.data["id"],
+        entity=alleged,
+        relationship_type=RelationshipType.ACCUSED,
+    ).exists()
 
 
 @pytest.mark.django_db

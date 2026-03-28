@@ -51,7 +51,7 @@ class JawafEntitySerializer(serializers.ModelSerializer):
         # Get cases where this entity has an 'alleged' relationship
         cases = Case.objects.filter(
             entity_relationships__entity=obj,
-            entity_relationships__relationship_type=RelationshipType.ALLEGED,
+            entity_relationships__relationship_type=RelationshipType.ACCUSED,
             state=CaseState.PUBLISHED,
         )
 
@@ -70,7 +70,7 @@ class JawafEntitySerializer(serializers.ModelSerializer):
         # Get alleged case IDs to exclude
         alleged_case_ids = Case.objects.filter(
             entity_relationships__entity=obj,
-            entity_relationships__relationship_type=RelationshipType.ALLEGED,
+            entity_relationships__relationship_type=RelationshipType.ACCUSED,
             state=CaseState.PUBLISHED,
         ).values_list("id", flat=True)
 

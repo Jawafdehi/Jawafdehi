@@ -272,13 +272,13 @@ class CaseEntityRelationshipInlineFormSet(BaseInlineFormSet):
             form.cleaned_data
             and not form.cleaned_data.get("DELETE")
             and form.cleaned_data.get("entity")
-            and form.cleaned_data.get("relationship_type") == RelationshipType.ALLEGED
+            and form.cleaned_data.get("relationship_type") == RelationshipType.ACCUSED
             for form in self.forms
         )
         if not has_alleged:
             raise ValidationError(
-                "At least one alleged entity relationship is required for IN_REVIEW or PUBLISHED state. "
-                "Please add alleged entities using the 'Case Entity Relationships' section below."
+                "At least one accused entity relationship is required for IN_REVIEW or PUBLISHED state. "
+                "Please add accused entities using the 'Case Entity Relationships' section below."
             )
 
 

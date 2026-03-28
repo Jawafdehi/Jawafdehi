@@ -104,7 +104,7 @@ def test_patch_multi_operation_end_to_end_persists_all_changes():
     assert set(
         CaseEntityRelationship.objects.filter(
             case=case,
-            relationship_type=RelationshipType.ALLEGED,
+            relationship_type=RelationshipType.ACCUSED,
         ).values_list("entity_id", flat=True)
     ) == {
         alleged_1.id,

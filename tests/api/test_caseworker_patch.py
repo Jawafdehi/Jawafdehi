@@ -187,12 +187,12 @@ def test_patch_replace_alleged_entity_ids():
     alleged_ids = [
         e["id"]
         for e in response.data["entities"]
-        if e["type"] == RelationshipType.ALLEGED
+        if e["type"] == RelationshipType.ACCUSED
     ]
     assert entity.pk in alleged_ids
     case.refresh_from_db()
     assert CaseEntityRelationship.objects.filter(
-        case=case, entity=entity, relationship_type=RelationshipType.ALLEGED
+        case=case, entity=entity, relationship_type=RelationshipType.ACCUSED
     ).exists()
 
 

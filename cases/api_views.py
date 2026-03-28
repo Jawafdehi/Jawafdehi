@@ -265,7 +265,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
                 CaseEntityRelationship.objects.get_or_create(
                     case=case,
                     entity_id=entity_id,
-                    relationship_type=RelationshipType.ALLEGED,
+                    relationship_type=RelationshipType.ACCUSED,
                 )
             for entity_id in serializer.validated_data.get("related_entities", []):
                 CaseEntityRelationship.objects.get_or_create(
@@ -390,13 +390,13 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         case.refresh_from_db()
         if "alleged_entity_ids" in validated:
             case.entity_relationships.filter(
-                relationship_type=RelationshipType.ALLEGED
+                relationship_type=RelationshipType.ACCUSED
             ).delete()
             for entity_id in validated["alleged_entity_ids"]:
                 CaseEntityRelationship.objects.create(
                     case=case,
                     entity_id=entity_id,
-                    relationship_type=RelationshipType.ALLEGED,
+                    relationship_type=RelationshipType.ACCUSED,
                 )
         if "related_entity_ids" in validated:
             case.entity_relationships.filter(
@@ -433,7 +433,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
             "evidence": list(case.evidence) if case.evidence else [],
             "alleged_entity_ids": list(
                 case.entity_relationships.filter(
-                    relationship_type=RelationshipType.ALLEGED
+                    relationship_type=RelationshipType.ACCUSED
                 ).values_list("entity_id", flat=True)
             ),
             "related_entity_ids": list(

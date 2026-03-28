@@ -11,7 +11,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from hypothesis import given, settings
 
-from cases.models import Case, CaseState, CaseType
+from cases.models import Case, CaseState, CaseType, RelationshipType
 from tests.conftest import create_case_with_entities
 from tests.strategies import minimal_case_data, complete_case_data
 
@@ -164,6 +164,12 @@ def test_case_requires_at_least_one_alleged_entity():
     case.state = CaseState.IN_REVIEW
     with pytest.raises(ValidationError):
         case.validate()
+
+
+def test_relationship_type_includes_accused_choice():
+    """Relationship types should expose ACCUSED as an available choice."""
+    assert RelationshipType.ACCUSED == "accused"
+    assert RelationshipType.ACCUSED in RelationshipType.values
 
 
 @pytest.mark.django_db

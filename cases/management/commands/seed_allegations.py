@@ -53,7 +53,7 @@ class Command(BaseCommand):
                 CaseEntityRelationship.objects.get_or_create(
                     case=case,
                     entity=get_entity(nes_id),
-                    relationship_type=RelationshipType.ALLEGED,
+                    relationship_type=RelationshipType.ACCUSED,
                     defaults={"notes": ""},
                 )
 

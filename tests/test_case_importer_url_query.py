@@ -133,7 +133,7 @@ class TestCaseImporterURLQuery:
         assert importer.stats["sources_reused"] == 0
 
     def test_import_case_creates_unified_entity_relationships(self, tmp_path):
-        """Importer should create unified alleged/related relationships for new cases."""
+        """Importer should create unified accused/related relationships for new cases."""
         payload = {
             "title": "Unified importer sync test",
             "description": "Sample description",
@@ -155,7 +155,7 @@ class TestCaseImporterURLQuery:
         assert (
             CaseEntityRelationship.objects.filter(
                 case=case,
-                relationship_type=RelationshipType.ALLEGED,
+                relationship_type=RelationshipType.ACCUSED,
             ).count()
             == 1
         )
