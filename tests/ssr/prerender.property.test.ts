@@ -21,10 +21,10 @@ function injectIntoTemplate(
   const json = JSON.stringify(dehydratedState).replace(/<\//g, '<\\/');
   const stateScript = `<script id="__REACT_QUERY_STATE__" type="application/json">${json}</script>`;
   return template
-    .replace('<!--app-html-->', appHtml)
-    .replace('<!--helmet-title-->', title)
-    .replace('<!--helmet-meta-->', meta)
-    .replace('<!--dehydrated-state-->', stateScript);
+    .replace('<!--app-html-->', () => appHtml)
+    .replace('<!--helmet-title-->', () => title)
+    .replace('<!--helmet-meta-->', () => meta)
+    .replace('<!--dehydrated-state-->', () => stateScript);
 }
 
 const TEMPLATE = `<!doctype html>

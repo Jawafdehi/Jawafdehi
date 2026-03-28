@@ -103,10 +103,10 @@ function injectIntoTemplate(template: string, result: RenderResult): string {
   const stateScript = `<script id="__REACT_QUERY_STATE__" type="application/json">${json}</script>`;
 
   return template
-    .replace('<!--app-html-->', html)
-    .replace('<!--helmet-title-->', title)
-    .replace('<!--helmet-meta-->', meta)
-    .replace('<!--dehydrated-state-->', stateScript);
+    .replace('<!--app-html-->', () => html)
+    .replace('<!--helmet-title-->', () => title)
+    .replace('<!--helmet-meta-->', () => meta)
+    .replace('<!--dehydrated-state-->', () => stateScript);
 }
 
 async function main() {

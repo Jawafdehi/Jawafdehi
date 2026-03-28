@@ -7,7 +7,7 @@ describe('Property 13: Worker returns correct pre-rendered HTML for known routes
     await fc.assert(
       fc.asyncProperty(
         fc.webUrl(),
-        fc.integer({ min: 200, max: 399 }),
+        fc.constantFrom(200, 201, 202, 206, 301, 302, 307, 308, 400, 401, 403),
         fc.string(),
         async (url, status, body) => {
           const request = new Request(url);
