@@ -125,7 +125,6 @@ class TestAPIDocumentationIntegration:
             "title",
             "description",
             "url",
-            "related_entities",
         ]
 
         for field in expected_fields:

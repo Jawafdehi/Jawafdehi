@@ -152,6 +152,14 @@ def test_evidence_requires_valid_source_references(case_data, source_data):
         assert (
             evidence_item["source_id"] == source.source_id
         ), "Evidence source_id should match created source"
+        # Detail endpoint enriches evidence with nested source details
+        assert "source" in evidence_item, "Detail endpoint should include nested source"
+        assert (
+            evidence_item["source"] is not None
+        ), "Source should not be None when it exists"
+        assert evidence_item["source"]["title"] == source.title
+        assert "source_type" in evidence_item["source"]
+        assert "url" in evidence_item["source"]
 
 
 @pytest.mark.django_db
@@ -394,6 +402,10 @@ def test_published_cases_display_complete_data(case_data, source_data):
         for evidence_item in returned_case["evidence"]:
             assert "source_id" in evidence_item, "Evidence should include source_id"
             assert "description" in evidence_item, "Evidence should include description"
+            # Detail endpoint includes nested source details
+            assert (
+                "source" in evidence_item
+            ), "Detail endpoint should include nested source"
 
     # Verify tags are included
     assert "tags" in returned_case, "Response should include tags"

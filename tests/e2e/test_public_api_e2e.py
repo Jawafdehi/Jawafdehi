@@ -177,6 +177,12 @@ class TestPublicAPIWorkflows:
         assert "source_id" in evidence
         assert "description" in evidence
         assert evidence["source_id"] == self.corruption_source.source_id
+        # Detail endpoint enriches evidence with nested source details
+        assert "source" in evidence
+        assert evidence["source"] is not None
+        assert evidence["source"]["title"] == self.corruption_source.title
+        assert "source_type" in evidence["source"]
+        assert "url" in evidence["source"]
 
     def test_only_published_cases_accessible(self):
         """
@@ -420,8 +426,6 @@ class TestPublicAPIWorkflows:
         source_detail = response.data
         assert source_detail["title"] == "Land Registry Document"
         assert source_detail["description"] is not None
-        assert "related_entities" in source_detail
-        assert len(source_detail["related_entities"]) > 0
 
         # Verify draft source is not accessible directly
         response = self.client.get(f"/api/sources/{draft_source.id}/")

@@ -255,8 +255,45 @@ class CaseDetailSerializer(CaseSerializer):
     """
     Serializer for Case detail view.
 
-    Inherits all fields from CaseSerializer including the `notes` field.
+    Extends CaseSerializer by enriching each evidence entry with a nested
+    `source` object containing title, source_type, and url from the linked
+    DocumentSource. When the referenced source does not exist or has been
+    soft-deleted, `source` is null so the response remains stable.
     """
+
+    evidence = serializers.SerializerMethodField(
+        help_text="List of evidence entries enriched with source details"
+    )
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_evidence(self, obj):
+        """Return evidence entries enriched with data from the linked DocumentSource."""
+        raw_evidence = obj.evidence or []
+        if not raw_evidence:
+            return []
+
+        source_ids = [e["source_id"] for e in raw_evidence if "source_id" in e]
+        sources = {
+            s.source_id: DocumentSourceSerializer(s, context=self.context).data
+            for s in DocumentSource.objects.filter(
+                source_id__in=source_ids, is_deleted=False
+            ).prefetch_related("uploaded_files")
+        }
+
+        return [
+            entry
+            | {
+                "source": (
+                    {
+                        k: sources[entry["source_id"]][k]
+                        for k in ["title", "source_type", "url"]
+                    }
+                    if entry.get("source_id") in sources
+                    else None
+                )
+            }
+            for entry in raw_evidence
+        ]
 
     class Meta(CaseSerializer.Meta):
         pass
@@ -269,7 +306,6 @@ class DocumentSourceSerializer(serializers.ModelSerializer):
     Used for public API access to sources associated with published cases.
     """
 
-    related_entities = JawafEntitySerializer(many=True, read_only=True)
     url = serializers.SerializerMethodField(
         help_text="List of URLs for this source, including uploaded file URL when available"
     )
@@ -322,7 +358,6 @@ class DocumentSourceSerializer(serializers.ModelSerializer):
             "description",
             "source_type",
             "url",
-            "related_entities",
             "created_at",
             "updated_at",
         ]
