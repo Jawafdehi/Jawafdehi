@@ -31,11 +31,25 @@ interface PaginatedCaseList {
 const API_BASE = 'https://portal.jawafdehi.org/api';
 const CONCURRENCY = 5;
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 async function fetchAllCases(): Promise<PaginatedCaseList['results']> {
   const all: PaginatedCaseList['results'] = [];
   let url: string | null = `${API_BASE}/cases/`;
   while (url) {
-    const res = await fetch(url);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
     if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
     const data: PaginatedCaseList = await res.json();
     all.push(...data.results);
@@ -91,7 +105,6 @@ async function main() {
   }
 
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
-  // @ts-expect-error -- entry-server.js is generated at build time, not resolvable during type-checking
   const { render } = await import('../dist/server/entry-server.js') as {
     render: (url: string) => Promise<RenderResult>;
   };
@@ -119,9 +132,20 @@ async function main() {
     apiReachable = false;
   }
 
-  // Collect unique entity IDs
+  // Collect unique entity IDs — validate against safe whitelist to prevent path traversal
+  const SAFE_ID_RE = /^[A-Za-z0-9_-]+$/;
   const entityIds = apiReachable
-    ? [...new Set(cases.flatMap(c => c.entities.map(e => e.nes_id).filter((id): id is string => id != null)))]
+    ? [...new Set(
+        cases
+          .flatMap(c => c.entities.map(e => e.nes_id).filter((id): id is string => id != null))
+          .filter(id => {
+            if (!SAFE_ID_RE.test(id)) {
+              console.warn(`[pre-render] WARNING: Skipping entity with unsafe id: ${JSON.stringify(id)}`);
+              return false;
+            }
+            return true;
+          })
+      )]
     : [];
 
   // Render static routes
@@ -134,6 +158,7 @@ async function main() {
     } catch (err) {
       console.error(`[pre-render] ERROR rendering ${route.path}:`, err);
       if (err instanceof Error) console.error(err.stack);
+      process.exit(1);
     }
   }
 
@@ -144,8 +169,9 @@ async function main() {
 
   // Render case routes
   await withConcurrency(cases, CONCURRENCY, async (caseItem) => {
-    const path = `/case/${caseItem.id}`;
-    const outFile = join(ROOT, `dist/case/${caseItem.id}/index.html`);
+    const caseId = String(caseItem.id);
+    const path = `/case/${encodeURIComponent(caseId)}`;
+    const outFile = join(ROOT, 'dist', 'case', caseId, 'index.html');
     try {
       const result = await render(path);
       const html = injectIntoTemplate(template, result);
@@ -174,8 +200,8 @@ async function main() {
 
   // Render entity routes
   await withConcurrency(entityIds, CONCURRENCY, async (entityId) => {
-    const path = `/entity/${entityId}`;
-    const outFile = join(ROOT, `dist/entity/${entityId}/index.html`);
+    const path = `/entity/${encodeURIComponent(entityId)}`;
+    const outFile = join(ROOT, 'dist', 'entity', entityId, 'index.html');
     try {
       const result = await render(path);
       const html = injectIntoTemplate(template, result);

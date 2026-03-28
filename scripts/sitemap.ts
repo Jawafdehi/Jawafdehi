@@ -18,7 +18,7 @@ interface PaginatedCaseList {
   results: CaseSummary[];
 }
 
-const STATIC_ROUTES = ['/', '/about', '/cases', '/entities', '/updates', '/information'];
+const STATIC_ROUTES = ['/', '/about', '/cases', '/entities', '/updates', '/information', '/feedback', '/report'];
 
 function toYMD(isoDate: string): string {
   return isoDate.substring(0, 10);
