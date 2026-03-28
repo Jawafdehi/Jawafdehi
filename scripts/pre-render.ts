@@ -14,7 +14,16 @@ interface RouteConfig {
 
 interface RenderResult {
   html: string;
-  helmetContext: { helmet?: { title?: { toString(): string }; meta?: { toString(): string } } };
+  helmetContext: {
+    helmet?: {
+      title?: { toString(): string };
+      meta?: { toString(): string };
+      link?: { toString(): string };
+      script?: { toString(): string };
+      style?: { toString(): string };
+      noscript?: { toString(): string };
+    }
+  };
   dehydratedState: unknown;
 }
 
@@ -81,8 +90,15 @@ async function writeHtml(outFile: string, content: string): Promise<void> {
 
 function injectIntoTemplate(template: string, result: RenderResult): string {
   const { html, helmetContext, dehydratedState } = result;
-  const title = helmetContext.helmet?.title?.toString() ?? '';
-  const meta = helmetContext.helmet?.meta?.toString() ?? '';
+  const h = helmetContext.helmet;
+  const title = h?.title?.toString() ?? '';
+  const meta = [
+    h?.meta?.toString() ?? '',
+    h?.link?.toString() ?? '',
+    h?.script?.toString() ?? '',
+    h?.style?.toString() ?? '',
+    h?.noscript?.toString() ?? '',
+  ].filter(s => s.trim()).join('\n    ');
   const json = JSON.stringify(dehydratedState).replace(/<\//g, '<\\/');
   const stateScript = `<script id="__REACT_QUERY_STATE__" type="application/json">${json}</script>`;
 
@@ -177,24 +193,9 @@ async function main() {
       const html = injectIntoTemplate(template, result);
       await writeHtml(outFile, html);
       console.log(`[pre-render] ✓ ${path}`);
-    } catch (err: unknown) {
-      const status = (err as { statusCode?: number })?.statusCode;
-      if (status === 404) {
-        try {
-          const result = await render('/not-found');
-          const html = injectIntoTemplate(template, result);
-          await writeHtml(outFile, html);
-          console.log(`[pre-render] ✓ ${path} (404 → NotFound)`);
-        } catch (e) {
-          console.error(`[pre-render] ERROR rendering NotFound for ${path}:`, e);
-          if (e instanceof Error) console.error(e.stack);
-        }
-      } else if (status && status >= 500) {
-        console.warn(`[pre-render] WARNING: Skipping ${path} (${status}):`, err);
-      } else {
-        console.error(`[pre-render] ERROR rendering ${path}:`, err);
-        if (err instanceof Error) console.error(err.stack);
-      }
+    } catch (err) {
+      console.error(`[pre-render] ERROR rendering ${path}:`, err);
+      if (err instanceof Error) console.error(err.stack);
     }
   });
 
