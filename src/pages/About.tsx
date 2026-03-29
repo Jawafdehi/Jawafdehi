@@ -1,6 +1,6 @@
+import { Footer } from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Eye, Target, Users } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -149,6 +149,8 @@ const About = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

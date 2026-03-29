@@ -1,3 +1,4 @@
+import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { updates } from "@/data/updates";
@@ -6,7 +7,6 @@ import { ArrowLeft, Calendar, FileText, Download } from "lucide-react";
 import Markdown from "react-markdown";
 import NotFound from "./NotFound";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 
 const stripMarkdown = (markdown: string) => {
@@ -139,7 +139,9 @@ const UpdateDetail = () => {
                 </div>
             </main>
 
-            <Footer />
+      <Footer />
+
+      
         </div>
     );
 };

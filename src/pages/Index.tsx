@@ -1,5 +1,5 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { Archive, Scale, Sparkles, ArrowRight, Search, SendHorizonal } from "lucide-react";
@@ -309,43 +309,23 @@ const Index = () => {
         </section>
 
         {/* ── Trust strip ── */}
-        <section className="bg-primary/5 border-b border-border py-4">
+        <section className="bg-primary/5 border-b border-border py-5">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm">
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-base">🇳🇵</span>
-                <span>Built by Nepali, for Nepali</span>
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-emerald-600 font-bold text-base">∞</span>
-                <span>Free forever — no subscriptions, no paywalls</span>
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-base">🔓</span>
-                <span>All data in the public domain</span>
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-base">📜</span>
-                <span>Records are never deleted</span>
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-base">✅</span>
-                <span>Every AI-generated summary is reviewed for factual accuracy</span>
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-base">⚙️</span>
-                <span>All technology is open source</span>
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-              <div className="flex items-center gap-2 text-foreground/70">
-                <span className="text-base">🤝</span>
-                <span>100% volunteer-powered</span>
-              </div>
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-y-3 gap-x-8 text-sm">
+              {[
+                { icon: "🇳🇵", text: "Built by Nepali, for Nepali" },
+                { icon: "∞", text: "Free forever — no paywall", iconClass: "text-emerald-600 font-bold" },
+                { icon: "🔓", text: "All data in the public domain" },
+                { icon: "📜", text: "Records are never deleted" },
+                { icon: "✅", text: "Human-reviewed summaries" },
+                { icon: "⚙️", text: "All technology is open source" },
+                { icon: "🤝", text: "100% volunteer-powered" },
+              ].map(({ icon, text, iconClass }) => (
+                <div key={text} className="flex items-center gap-2 text-foreground/70">
+                  <span className={`text-base flex-shrink-0 ${iconClass ?? ""}`}>{icon}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -445,6 +425,8 @@ const Index = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

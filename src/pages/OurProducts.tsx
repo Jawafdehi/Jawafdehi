@@ -1,5 +1,5 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 import { Helmet } from "react-helmet-async";
 import { Database, Code2, LayoutDashboard, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,8 +31,8 @@ const PRODUCTS = [
   },
   {
     icon: Database,
-    name: "NES Database",
-    href: "https://github.com/Jawafdehi/NepalEntityService-database",
+    name: "NGM Archive",
+    href: "https://ngm.jawafdehi.org",
     description:
       "Open source database schema and seed data for the Nepal Entity Service. Community-driven migrations with full audit trails.",
     tags: ["Open Schema", "Community Migrations", "GitHub"],
@@ -128,7 +128,9 @@ const OurProducts = () => (
       </section>
     </main>
 
-    <Footer />
+      <Footer />
+
+
   </div>
 );
 

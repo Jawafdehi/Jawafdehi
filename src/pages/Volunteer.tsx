@@ -1,5 +1,5 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import {
@@ -216,7 +216,9 @@ const Volunteer = () => (
       </section>
     </main>
 
-    <Footer />
+      <Footer />
+
+
   </div>
 );
 

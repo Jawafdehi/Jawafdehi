@@ -1,5 +1,5 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 import { Helmet } from "react-helmet-async";
 import { Archive, Scale, Sparkles, Users, Globe, GitBranch, CheckCircle2, Infinity as InfinityIcon } from "lucide-react";
 
@@ -112,6 +112,8 @@ const Commitment = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

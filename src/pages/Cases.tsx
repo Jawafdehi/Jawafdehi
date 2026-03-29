@@ -1,8 +1,8 @@
+import { Footer } from "@/components/Footer";
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { CaseCard } from "@/components/CaseCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -286,6 +286,8 @@ const Cases = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

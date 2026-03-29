@@ -149,10 +149,13 @@ export const Header = () => {
                 >
                   — Our Team
                 </Link>
-                <NavLink to="/updates" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
-                  {t("nav.updates")}
-                </NavLink>
-
+                <Link
+                  to="/products"
+                  className="text-lg font-medium text-foreground/60 hover:text-primary transition-colors py-2 pl-4"
+                  onClick={() => setIsOpen(false)}
+                >
+                  — Our Products
+                </Link>
                 <div className="pt-4 space-y-3 border-t border-border">
                   <Button asChild className="w-full" onClick={() => setIsOpen(false)}>
                     <Link to="/cases">{t("header.viewCases")}</Link>

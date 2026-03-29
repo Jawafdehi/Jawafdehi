@@ -31,7 +31,7 @@ i18n
         translation: neTranslations,
       },
     },
-    fallbackLng: 'ne', // Nepali is the default language
+    fallbackLng: 'en', // English is the default language
     detection: languageDetectorOptions,
     interpolation: {
       escapeValue: false, // React already escapes values

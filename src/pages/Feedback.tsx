@@ -1,7 +1,7 @@
+import { Footer } from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { FeedbackForm } from "@/components/FeedbackForm";
@@ -38,6 +38,8 @@ export default function Feedback() {
       </main>
 
       <Footer />
+
+
     </div>
   );
 }
