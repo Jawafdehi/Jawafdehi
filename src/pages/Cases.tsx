@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
@@ -12,107 +12,48 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Search, Filter, AlertCircle } from "lucide-react";
 import { getCases } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
-import type { Case } from "@/types/jds";
-import type { Entity } from "@/types/nes";
-import { toast } from "sonner";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import { formatDate } from "@/utils/date";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
-
-// Retry helper for rate-limited requests
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries = 3,
-  initialDelay = 1000
-): Promise<T> {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error: unknown) {
-      const typedError = error as { statusCode?: number; message?: string };
-      const isRateLimited = typedError.statusCode === 429 || typedError.message?.includes('429');
-      const isLastAttempt = i === maxRetries - 1;
-
-      if (isRateLimited && !isLastAttempt) {
-        const delay = initialDelay * Math.pow(2, i);
-        console.log(`Rate limited. Retrying in ${delay}ms... (attempt ${i + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      throw error;
-    }
-  }
-  throw new Error('Max retries exceeded');
-}
 
 const Cases = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
-  const [cases, setCases] = useState<Case[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
 
-  useEffect(() => {
-    fetchCases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: casesData, isLoading: loading, isError, refetch } = useQuery({
+    queryKey: ['cases', { page: 1 }],
+    queryFn: () => getCases({ page: 1 }),
+    staleTime: 5 * 60 * 1000,
+    retry: 3,
+  });
 
-  const fetchCases = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await retryWithBackoff(
-        () => getCases({
-          page: 1
-        }),
-        3,
-        2000
-      );
-      setCases(response.results);
+  const cases = casesData?.results ?? [];
 
-      // Resolve entities from NES if they have nes_id
-      const allEntities = response.results.flatMap(c => c.entities || []);
-      const entitiesWithNesId = allEntities.filter(e => e.nes_id);
-      const uniqueNesIds = [...new Set(entitiesWithNesId.map(e => e.nes_id!))];
+  const uniqueNesIds = [...new Set(
+    cases.flatMap(c => c.entities || []).filter(e => e.nes_id).map(e => e.nes_id!)
+  )];
 
-      const entityPromises = uniqueNesIds.map(async (nesId) => {
-        try {
-          const entity = await getEntityById(nesId);
-          return { id: nesId, entity };
-        } catch {
-          return null;
-        }
-      });
+  const entityQueries = useQueries({
+    queries: uniqueNesIds.map((nesId) => ({
+      queryKey: ['nes-entity', nesId],
+      queryFn: () => getEntityById(nesId),
+      staleTime: 10 * 60 * 1000,
+      retry: false,
+    })),
+  });
 
-      const entities = await Promise.all(entityPromises);
-      const entitiesMap = entities.reduce((acc, item) => {
-        if (item) acc[item.id] = item.entity;
-        return acc;
-      }, {} as Record<string, Entity>);
-      setResolvedEntities(entitiesMap);
-    } catch (err: unknown) {
-      const typedError = err as { statusCode?: number; message?: string };
-      console.error("Failed to fetch cases:", err);
-      const isRateLimited = typedError.statusCode === 429 || typedError.message?.includes('429');
-      const errorMessage = isRateLimited
-        ? t("cases.tooManyRequests")
-        : t("cases.failedToLoad");
-      setError(errorMessage);
-      toast.error(errorMessage);
-      setCases([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const resolvedEntities = Object.fromEntries(
+    uniqueNesIds.map((nesId, i) => [nesId, entityQueries[i]?.data]).filter(([, v]) => v)
+  );
 
   const filteredCases = cases.filter((caseItem) => {
     const matchesSearch =
       caseItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       caseItem.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all"; // Status filtering removed from API
+    const matchesStatus = statusFilter === "all";
     const matchesType = typeFilter === "all" || caseItem.case_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -190,7 +131,6 @@ const Cases = () => {
                   setStatusFilter("all");
                   setTypeFilter("all");
                   setSearchQuery("");
-                  fetchCases();
                 }}
               >
                 <Filter className="mr-2 h-4 w-4" />
@@ -207,12 +147,12 @@ const Cases = () => {
           </div>
 
           {/* Cases Grid */}
-          {error ? (
+          {isError ? (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
-                <span>{error}</span>
-                <Button variant="outline" size="sm" onClick={fetchCases} className="ml-4">
+                <span>{t("cases.failedToLoad")}</span>
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-4">
                   {t("cases.retry")}
                 </Button>
               </AlertDescription>
@@ -279,7 +219,7 @@ const Cases = () => {
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg mb-4">
-                {error ? t("cases.unableToLoad") : t("cases.noCasesFound")}
+                {isError ? t("cases.unableToLoad") : t("cases.noCasesFound")}
               </p>
               <Button
                 variant="outline"
@@ -287,10 +227,9 @@ const Cases = () => {
                   setStatusFilter("all");
                   setTypeFilter("all");
                   setSearchQuery("");
-                  fetchCases();
                 }}
               >
-                {error ? t("cases.tryAgain") : t("cases.clearAllFilters")}
+                {isError ? t("cases.tryAgain") : t("cases.clearAllFilters")}
               </Button>
             </div>
           )}
