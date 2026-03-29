@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
-import { Archive, Scale, Sparkles, Users, Globe, GitBranch, CheckCircle2, Infinity } from "lucide-react";
+import { Archive, Scale, Sparkles, Users, Globe, GitBranch, CheckCircle2, Infinity as InfinityIcon } from "lucide-react";
 
 const COMMITMENTS = [
   {
@@ -30,7 +30,7 @@ const COMMITMENTS = [
     body: "All of the software we build — from the case archive to the AI research tools — is open source and freely available. Any organization in any country can take our work and adapt it for their own accountability needs.",
   },
   {
-    icon: Infinity,
+    icon: InfinityIcon,
     title: "Free, forever",
     body: "This platform will never charge for access. No subscriptions. No paywalls. No premium tiers. Public accountability infrastructure should be free to everyone who needs it.",
   },

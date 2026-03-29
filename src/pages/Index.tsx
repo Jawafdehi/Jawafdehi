@@ -131,7 +131,7 @@ const Index = () => {
 
               {/* Left — headline + stats + CTAs */}
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/80 mb-8">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/80 mb-5">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
                   CIAA Cases &nbsp;·&nbsp; Official Documents &nbsp;·&nbsp; Verified Facts
                 </div>
@@ -149,12 +149,12 @@ const Index = () => {
                   Accountability has no Expiry.
                 </p>
 
-                <p className="text-base text-white/65 mb-8 leading-relaxed">
+                <p className="text-base text-white/65 mb-5 leading-relaxed">
                   Every CIAA case documented, simplified, and permanently accessible. Original filings, legal timelines, and verified facts — AI-assisted, human-reviewed, free forever.
                 </p>
 
                 {/* Inline stats */}
-                <div className="flex flex-wrap gap-8 mb-9">
+                <div className="flex flex-wrap gap-8 mb-6">
                   <div>
                     <div className="text-3xl font-bold text-white tabular-nums">{getStatValue(stats?.published_cases)}</div>
                     <div className="text-sm text-white/50 mt-0.5">Cases Documented</div>
