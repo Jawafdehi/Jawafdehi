@@ -1,6 +1,6 @@
 process.env.SSR = 'true';
 
-import { readFile, writeFile, mkdir } from 'fs/promises';
+import { readFile, writeFile, mkdir, cp } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -110,6 +110,11 @@ function injectIntoTemplate(template: string, result: RenderResult): string {
 }
 
 async function main() {
+  // Copy client assets (JS/CSS/etc.) from dist/client/ into dist/ so they're
+  // reachable at the same absolute paths referenced in index.html (e.g. /assets/index-[hash].js)
+  await cp(join(ROOT, 'dist/client'), join(ROOT, 'dist'), { recursive: true });
+  console.log('[pre-render] Copied dist/client → dist/');
+
   // Read template
   const templatePath = join(ROOT, 'dist/client/index.html');
   let template: string;
