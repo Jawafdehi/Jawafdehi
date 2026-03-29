@@ -13,10 +13,10 @@ This directory contains the API client and adapters for the Nepal Entity Service
 Set the backend API URL in your `.env` file:
 
 ```env
-VITE_NES_API_BASE_URL=https://nes.newnepal.org/api
+VITE_NES_API_BASE_URL=https://nes.jawafdehi.org/api
 ```
 
-**Default:** `https://nes.newnepal.org/api`
+**Default:** `https://nes.jawafdehi.org/api`
 
 For local development:
 ```env
@@ -313,9 +313,9 @@ See `/src/types/nes.ts` for complete type definitions.
 
 ## References
 
-- **Backend Types:** https://github.com/NewNepal-org/nes-tundikhel/blob/main/src/common/nes-types.ts
-- **Live Reference:** https://tundikhel.nes.newnepal.org
-- **Core NES:** https://github.com/NewNepal-org/nes
+- **Backend Types:** https://github.com/Jawafdehi/nes-tundikhel/blob/main/src/common/nes-types.ts
+- **Live Reference:** https://tundikhel.jawafdehi.org
+- **Core NES:** https://github.com/Jawafdehi/nes
 
 ---
 

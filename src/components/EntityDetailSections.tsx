@@ -309,7 +309,7 @@ export function EntityDetailSections({ entity }: EntityDetailSectionsProps) {
                     className="font-mono"
                   >
                     <a 
-                      href={`https://tundikhel.newnepal.org/#/entity/${entity.id.replace(/^entity:/, '')}`}
+                      href={`https://tundikhel.jawafdehi.org/#/entity/${entity.id.replace(/^entity:/, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

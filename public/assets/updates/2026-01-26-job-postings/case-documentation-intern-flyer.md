@@ -30,9 +30,9 @@ We're looking for a detail-oriented researcher to help build a comprehensive, sy
 
 1. **Jawafdehi.org**: The primary platform. [Learn more here.](https://docs.google.com/document/d/11ZF3_kXLbvzyjXKn1F1x17wj0wyzypjJg7XMijifRVA/)
 
-2. **Nepal Entity Service (NES)**: Contribute to building Nepal's open database of public entities - government officials, organizations, and institutions. Learn more at [nes.newnepal.org](https://nes.newnepal.org)
+2. **Nepal Entity Service (NES)**: Contribute to building Nepal's open database of public entities - government officials, organizations, and institutions. Learn more at [nes.jawafdehi.org](https://nes.jawafdehi.org)
 
-3. **Nepal Government Modernization (NGM)**: Work with judicial data from Nepal's court system, extracting and structuring case information and legal proceedings. Learn more on [GitHub](https://github.com/NewNepal-org/ngm)
+3. **Nepal Government Modernization (NGM)**: Work with judicial data from Nepal's court system, extracting and structuring case information and legal proceedings. Learn more on [GitHub](https://github.com/Jawafdehi/ngm)
 
 ---
 
@@ -118,8 +118,8 @@ We're looking for a detail-oriented researcher to help build a comprehensive, sy
 ## Learn More
 
 - **Website:** [jawafdehi.org](https://jawafdehi.org)
-- **Nepal Entity Service:** [nes.newnepal.org](https://nes.newnepal.org)
-- **GitHub:** [github.com/NewNepal-org](https://github.com/NewNepal-org)
+- **Nepal Entity Service:** [nes.jawafdehi.org](https://nes.jawafdehi.org)
+- **GitHub:** [github.com/Jawafdehi](https://github.com/Jawafdehi)
 
 ---
 

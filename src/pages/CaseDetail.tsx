@@ -252,7 +252,7 @@ const CaseDetail = () => {
               <div className="flex items-start text-muted-foreground">
                 <User className="mr-2 h-5 w-5 flex-shrink-0" />
                 <div className="text-sm flex flex-wrap gap-1">
-                  {caseData.entities.filter(e => e.type === 'alleged').map((e, index, arr) => {
+                  {caseData.entities.filter(e => e.type === 'accused').map((e, index, arr) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
                     let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
                     displayName = translateDynamicText(displayName, currentLang);

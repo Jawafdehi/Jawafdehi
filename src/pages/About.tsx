@@ -30,7 +30,7 @@ const teamMembers: TeamMember[] = [
       ne: "दामोदर दाहाल",
     },
     thumb: "https://s3.jawafdehi.org/team/damodar.jpeg",
-    description: "Founder, NewNepal.org; Master's in International Relations, Harvard University Extension School; Software Engineer @ Amazon Web Services",
+    description: "Founder, Jawafdehi.org; Master's in International Relations, Harvard University Extension School; Software Engineer @ Amazon Web Services",
     contacts: [
       { type: "email", value: "damo94761@gmail.com" },
       { type: "linkedin", value: "https://www.linkedin.com/in/damo-da/" },
@@ -145,7 +145,7 @@ const About = () => {
                     <span key={index}>
                       {part}
                       <a
-                        href="https://github.com/NewNepal-org"
+                        href="https://github.com/Jawafdehi"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
@@ -355,7 +355,7 @@ const About = () => {
                 <div className="text-muted-foreground">
                   <p className="mb-2">
                     <strong className="text-foreground">
-                      <a href="https://nes.newnepal.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      <a href="https://nes.jawafdehi.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                         NES
                       </a>
                     </strong> - Nepal Entity Service provides structured data on politicians, political parties, government leaders, and locations, designed to be reusable across different services.
@@ -369,7 +369,7 @@ const About = () => {
                 <div className="text-muted-foreground">
                   <p>
                     <strong className="text-foreground">
-                      <a href="https://github.com/NewNepal-org/NepalEntityService-database" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      <a href="https://github.com/Jawafdehi/NepalEntityService-database" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                         NES Database
                       </a>
                     </strong> - Open source database schema and data for Nepal Entity Service.

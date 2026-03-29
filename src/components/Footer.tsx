@@ -67,16 +67,6 @@ export const Footer = () => {
                   Let's Build Nepal (LBN)
                 </a>
               </li>
-              <li>
-                <a
-                  href="https://NewNepal.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  NewNepal.org
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -95,7 +85,7 @@ export const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://github.com/NewNepal-org/Jawafdehi"
+                  href="https://github.com/Jawafdehi/Jawafdehi"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-colors"

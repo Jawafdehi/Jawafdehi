@@ -203,10 +203,6 @@
       "lbn": {
         "title": "Let's Build Nepal (LBN)",
         "description": "A civic tech organization focused on building technology solutions for social good in Nepal. LBN brings technical expertise and development resources to the platform."
-      },
-      "newnepal": {
-        "title": "NewNepal.org",
-        "description": "A civil society initiative working towards a more transparent and accountable Nepal. NewNepal.org provides investigative support and policy advocacy expertise."
       }
     },
     "whatWeDo": {
@@ -461,7 +457,7 @@
     }
   },
   "entityCard": {
-    "alleged": "Alleged",
+    "alleged": "Accused",
     "location": "Location",
     "related": "Related",
     "cases": "Cases",
@@ -478,9 +474,9 @@
   "entityDetail": {
     "entityNotFound": "Entity not found.",
     "backToEntities": "Back to Entities",
-    "allegedCases": "Alleged Cases",
+    "allegedCases": "Accused Cases",
     "relatedCases": "Related Cases",
-    "noAllegedCases": "No alleged cases found.",
+    "noAllegedCases": "No accused cases found.",
     "noRelatedCases": "No related cases found.",
     "loading": "Loading entity details...",
     "activeCases": "Active Cases",
@@ -547,11 +543,11 @@
     "candidate": "Candidate",
     "party": "Party",
     "constituency": "Constituency",
-    "totalAllegations": "Total Allegations",
+    "totalAllegations": "Total Accusations",
     "cases": "Cases",
     "entityDetails": "Entity Details",
     "noNesDataAlert": "This entity does not have detailed profile information available yet. Only basic information from case records is shown.",
-    "allegedCasesDescription": "Cases where this entity is alleged to be involved",
+    "allegedCasesDescription": "Cases where this entity is accused of involvement",
     "relatedCasesDescription": "Cases where this entity is mentioned or related",
     "bell": "Bell",
     "bellInsideCircle": "Bell inside a circle",

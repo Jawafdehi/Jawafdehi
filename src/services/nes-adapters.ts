@@ -5,7 +5,7 @@
  * into UI-friendly formats, including merging evidence and sources.
  * 
  * References:
- * - Backend types: https://github.com/NewNepal-org/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
+ * - Backend types: https://github.com/Jawafdehi/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
  */
 
 import type { Entity, Attribution } from '@/types/nes';

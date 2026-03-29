@@ -235,12 +235,12 @@ const Cases = () => {
               {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                   remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
               {filteredCases.map((caseItem) => {
-                // Get alleged and location entities from unified entities array
-                const allegedEntities = caseItem.entities?.filter(e => e.type === 'alleged') || [];
+                // Get accused and location entities from unified entities array
+                const accusedEntities = caseItem.entities?.filter(e => e.type === 'accused') || [];
                 const locationEntities = caseItem.entities?.filter(e => e.type === 'location') || [];
                 
                 // Translate entity names
-                const entityNames = allegedEntities.map(e => {
+                const entityNames = accusedEntities.map(e => {
                   if (e.nes_id && resolvedEntities[e.nes_id]) {
                     const entity = resolvedEntities[e.nes_id];
                     return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
@@ -270,7 +270,7 @@ const Cases = () => {
                     status="ongoing"
                     tags={caseItem.tags || []}
                     description={caseItem.key_allegations.join('. ')}
-                    entityIds={allegedEntities.map(e => e.id)}
+                    entityIds={accusedEntities.map(e => e.id)}
                     locationIds={locationEntities.map(e => e.id)}
                   />
                 );

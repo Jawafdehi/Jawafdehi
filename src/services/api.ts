@@ -4,12 +4,12 @@
  * This module provides typed API functions to interact with the NES backend.
  *
  * References:
- * - Backend types: https://github.com/NewNepal-org/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
- * - Live reference: https://tundikhel.nes.newnepal.org
- * - Core NES: https://github.com/NewNepal-org/NepalEntityService
+ * - Backend types: https://github.com/Jawafdehi/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
+ * - Live reference: https://tundikhel.nes.jawafdehi.org
+ * - Core NES: https://github.com/Jawafdehi/NepalEntityService
  *
  * Environment Variables:
- * - VITE_NES_API_BASE_URL: Base URL for the NES API (default: https://nes.newnepal.org/api)
+ * - VITE_NES_API_BASE_URL: Base URL for the NES API (default: https://nes.jawafdehi.org/api)
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -27,7 +27,7 @@ import type {
 // API Configuration
 // ============================================================================
 
-const API_BASE_URL = import.meta.env.VITE_NES_API_BASE_URL || 'https://nes.newnepal.org/api';
+const API_BASE_URL = import.meta.env.VITE_NES_API_BASE_URL || 'https://nes.jawafdehi.org/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
