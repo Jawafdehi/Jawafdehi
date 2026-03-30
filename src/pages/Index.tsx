@@ -48,7 +48,7 @@ const TypingDots = () => (
 );
 
 const Index = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const currentLang = i18n.language;
   const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
   const [chatPhase, setChatPhase] = useState(0);
@@ -104,6 +104,8 @@ const Index = () => {
   useEffect(() => {
     if (!casesData?.results) return;
 
+    let isMounted = true;
+
     const resolveEntities = async () => {
       const allEntities = casesData.results.flatMap(c => c.entities || []);
       const locationEntities = allEntities.filter(e => e.type === 'location');
@@ -119,14 +121,23 @@ const Index = () => {
       });
 
       const entities = await Promise.all(entityPromises);
-      const entitiesMap = entities.reduce((acc, item) => {
-        if (item) acc[item.id] = item.entity;
-        return acc;
-      }, {} as Record<string, Entity>);
-      setResolvedEntities(entitiesMap);
+      
+      // Only update state if component is still mounted
+      if (isMounted) {
+        const entitiesMap = entities.reduce((acc, item) => {
+          if (item) acc[item.id] = item.entity;
+          return acc;
+        }, {} as Record<string, Entity>);
+        setResolvedEntities(entitiesMap);
+      }
     };
 
     resolveEntities();
+
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+    };
   }, [casesData]);
 
   // Transform API cases to CaseCard format
