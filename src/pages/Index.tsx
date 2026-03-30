@@ -54,22 +54,30 @@ const Index = () => {
   const [chatPhase, setChatPhase] = useState(0);
 
   useEffect(() => {
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    let timeouts: ReturnType<typeof setTimeout>[] = [];
+    let loopTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const runLoop = () => {
       setChatPhase(0);
+      // Clear any existing timeouts before creating new ones
+      timeouts.forEach(clearTimeout);
+      timeouts = [];
+      
       SEQUENCE.forEach(([delay, phase]) => {
         timeouts.push(setTimeout(() => setChatPhase(phase), delay));
       });
-      timeouts.push(setTimeout(runLoop, LOOP_AFTER));
+      loopTimeout = setTimeout(runLoop, LOOP_AFTER);
     };
 
     // Small initial delay before first run
     const start = setTimeout(runLoop, 400);
 
+    // Cleanup function to clear all timeouts
     return () => {
       clearTimeout(start);
+      if (loopTimeout) clearTimeout(loopTimeout);
       timeouts.forEach(clearTimeout);
+      timeouts = [];
     };
   }, []);
 
