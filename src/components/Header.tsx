@@ -91,14 +91,14 @@ export const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* AI teaser */}
-          <span className="flex items-center gap-1.5 text-sm text-amber-600/80 cursor-default select-none">
+          {/* AI Search */}
+          <Link
+            to="/caseworker/login"
+            className="flex items-center gap-1.5 text-sm text-amber-600/80 hover:text-amber-700 transition-colors"
+          >
             <Sparkles className="h-3.5 w-3.5" />
             <span>AI Search</span>
-            <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium leading-none">
-              Soon
-            </span>
-          </span>
+          </Link>
         </nav>
 
         {/* Desktop Actions */}
@@ -160,10 +160,14 @@ export const Header = () => {
                   <Button asChild className="w-full" onClick={() => setIsOpen(false)}>
                     <Link to="/cases">{t("header.viewCases")}</Link>
                   </Button>
-                  <div className="flex items-center justify-center gap-2 py-2 text-sm text-amber-600/80">
+                  <Link
+                    to="/caseworker/login"
+                    className="flex items-center justify-center gap-2 py-2 text-sm text-amber-600/80 hover:text-amber-700 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
                     <Sparkles className="h-4 w-4" />
-                    <span>AI Search — Coming Soon</span>
-                  </div>
+                    <span>AI Search</span>
+                  </Link>
                 </div>
               </nav>
             </SheetContent>

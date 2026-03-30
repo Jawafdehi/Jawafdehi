@@ -22,6 +22,10 @@ import Feedback from "./pages/Feedback";
 import Updates from "./pages/Updates";
 import UpdateDetail from "./pages/UpdateDetail";
 import NotFound from "./pages/NotFound";
+import { CaseworkerAuthProvider } from "./context/CaseworkerAuthContext";
+import CaseworkerLogin from "./pages/CaseworkerLogin";
+import CaseworkerDashboard from "./pages/CaseworkerDashboard";
+import CaseworkerSettings from "./pages/CaseworkerSettings";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +54,19 @@ const App = () => (
           <Route path="/team" element={<OurTeam />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/products" element={<OurProducts />} />
+          {/* Caseworker portal */}
+          <Route
+            path="/caseworker/*"
+            element={
+              <CaseworkerAuthProvider>
+                <Routes>
+                  <Route path="login" element={<CaseworkerLogin />} />
+                  <Route path="dashboard" element={<CaseworkerDashboard />} />
+                  <Route path="settings" element={<CaseworkerSettings />} />
+                </Routes>
+              </CaseworkerAuthProvider>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
