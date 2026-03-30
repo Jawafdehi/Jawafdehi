@@ -89,7 +89,7 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
         </CardHeader>
         <CardContent className="flex-grow">
           {allegations && allegations.length > 0 ? (
-            <ul className="list-disc list-inside mb-3 space-y-0.5">
+            <ul className="list-disc list-inside mb-4 space-y-0.5">
               <li className="text-sm text-muted-foreground">
                 <span>{allegations[0]}</span>
               </li>
@@ -97,7 +97,7 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
           ) : (
             <p className="text-sm text-muted-foreground mb-3">{description}</p>
           )}
-          <div className="space-y-1">
+          <div className="space-y-1 mt-3">
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="mr-2 h-4 w-4 flex-shrink-0" />
               {entityIds && entityIds.length > 0 ? (

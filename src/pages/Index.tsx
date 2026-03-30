@@ -142,9 +142,7 @@ const Index = () => {
         return translateDynamicText(name, currentLang);
       }).join(', ') || translateDynamicText('Unknown Location', currentLang);
 
-      const formattedDate = caseItem.case_start_date
-        ? formatDateWithBS(caseItem.case_start_date, 'PPP')
-        : formatDateWithBS(caseItem.created_at, 'PPP');
+      const formattedDate = formatDateWithBS(caseItem.created_at, 'PPP');
 
       return {
         id: caseItem.id.toString(),
@@ -154,6 +152,7 @@ const Index = () => {
         date: formattedDate,
         status: "ongoing" as const, // All published cases shown as ongoing
         description: caseItem.description.replace(/<[^>]*>/g, '').substring(0, 200),
+        allegations: caseItem.key_allegations, // Pass key allegations to CaseCard
         thumbnailUrl: caseItem.thumbnail_url ?? undefined,
         tags: caseItem.tags,
         entityIds: accusedEntities.map(e => e.id),

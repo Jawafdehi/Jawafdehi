@@ -254,12 +254,11 @@ const Cases = () => {
                     title={caseItem.title}
                     entity={entityNames}
                     location={locationNames}
-                    date={caseItem.case_start_date
-                      ? formatDateWithBS(caseItem.case_start_date, 'PPP')
-                      : formatDateWithBS(caseItem.created_at, 'PPP')}
+                    date={formatDateWithBS(caseItem.created_at, 'PPP')}
                     status="ongoing"
                     tags={caseItem.tags || []}
-                    description={caseItem.key_allegations.join('. ')}
+                    description={caseItem.description.replace(/<[^>]*>/g, '').substring(0, 200)}
+                    allegations={caseItem.key_allegations}
                     entityIds={accusedEntities.map(e => e.id)}
                     locationIds={locationEntities.map(e => e.id)}
                     thumbnailUrl={caseItem.thumbnail_url ?? undefined}
