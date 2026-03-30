@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from cases.views import index, docs
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path("", index, name="index"),
@@ -34,4 +35,16 @@ urlpatterns = [
     path("api/", include("cases.urls")),
     path("api/", include("nesq.urls")),
     path("api/", include("ngm.urls")),
+    # Caseworker Agent routes
+    path("api/caseworker/", include("caseworker.urls")),
+    path(
+        "api/caseworker/auth/token/",
+        TokenObtainPairView.as_view(),
+        name="cw-token-obtain",
+    ),
+    path(
+        "api/caseworker/auth/token/refresh/",
+        TokenRefreshView.as_view(),
+        name="cw-token-refresh",
+    ),
 ]
