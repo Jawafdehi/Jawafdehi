@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, User } from "lucide-react";
@@ -22,6 +23,15 @@ interface CaseCardProps {
 export const CaseCard = ({ id, title, entity, location, date, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl }: CaseCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Check if we have a valid thumbnail URL
+  const hasValidThumbnail = thumbnailUrl && thumbnailUrl.trim() !== '';
+  const [imageSrc, setImageSrc] = useState(hasValidThumbnail ? thumbnailUrl : null);
+  
+  // Handle image load errors by hiding the image
+  const handleImageError = () => {
+    setImageSrc(null);
+  };
 
   const statusConfig = {
     ongoing: { label: t("caseCard.status.ongoing"), color: "bg-alert text-alert-foreground" },
@@ -38,15 +48,23 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
 
   return (
     <Card className="relative h-full transition-all hover:shadow-lg hover:border-primary/50 cursor-pointer overflow-hidden group" onClick={handleCardClick}>
-      {thumbnailUrl && (
+      {/* Conditionally render image only when valid thumbnail exists */}
+      {imageSrc ? (
         <>
-          <div
-            className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-            style={{ backgroundImage: `url(${thumbnailUrl})` }}
+          <img
+            src={imageSrc}
+            alt={`Thumbnail for ${title}`}
+            loading="lazy"
+            decoding="async"
+            onError={handleImageError}
+            className="absolute inset-0 z-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {/* Reduced opacity and removed blur to make image details more clearly visible */}
-          <div className="absolute inset-0 z-0 bg-background/60" />
+          {/* Semi-transparent white overlay for text readability */}
+          <div className="absolute inset-0 z-[1] bg-white/70" />
         </>
+      ) : (
+        /* White background when no thumbnail */
+        <div className="absolute inset-0 z-0 bg-white" />
       )}
       <div className="relative z-10 flex flex-col h-full">
         <CardHeader>
@@ -71,15 +89,15 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
         </CardHeader>
         <CardContent className="flex-grow">
           {allegations && allegations.length > 0 ? (
-            <ul className="list-disc list-inside mb-4 space-y-1">
+            <ul className="list-disc list-inside mb-3 space-y-0.5">
               <li className="text-sm text-muted-foreground">
                 <span>{allegations[0]}</span>
               </li>
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground mb-4">{description}</p>
+            <p className="text-sm text-muted-foreground mb-3">{description}</p>
           )}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="mr-2 h-4 w-4 flex-shrink-0" />
               {entityIds && entityIds.length > 0 ? (
