@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { Skill, MCPServer, Summary, Draft, LLMProvider, CaseworkerUser } from "@/types/caseworker";
 
-const BASE_URL = import.meta.env.VITE_CASEWORKER_API_URL ?? `${import.meta.env.VITE_API_BASE_URL ?? ""}/caseworker`;
+const BASE_URL = `${import.meta.env.VITE_JDS_API_BASE_URL || 'https://portal.jawafdehi.org/api'}/caseworker`;
 
 const client = axios.create({ baseURL: BASE_URL });
 
