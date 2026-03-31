@@ -24,6 +24,14 @@ export const teamMembers: TeamMember[] = [
     ],
   },
   {
+    displayName: { en: "Nischal Dahal", ne: "निश्चल दाहाल" },
+    thumb: "https://jawafdehi.org/assets/teammembers/nischal.png",
+    description: "Volunteer, Jawafdehi.org and Let's Build Nepal",
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/nischaldahal/" },
+    ],
+  },
+  {
     displayName: { en: "Shishir Bashyal", ne: "शिशिर बस्याल" },
     thumb: "https://s3.jawafdehi.org/team/shishir.jpeg",
     description: "CEO, Proma.ai; Volunteer, Let's Build Nepal",
@@ -62,6 +70,74 @@ export const teamMembers: TeamMember[] = [
     description: "PhD Student in Earth Systems Science, Stanford University",
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
+    ],
+  },
+  {
+    displayName: { en: "Raghu Sharma", ne: "रघु शर्मा" },
+    thumb: "https://avatars.githubusercontent.com/Srmaraghu",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/Srmaraghu" },
+    ],
+  },
+  {
+    displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
+    thumb: "https://avatars.githubusercontent.com/notashwinii",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/notashwinii" },
+    ],
+  },
+  {
+    displayName: { en: "Niroj Aryal", ne: "निरोज अर्याल" },
+    thumb: undefined,
+    description: "Case Documentation Intern, Jawafdehi.org",
+    contacts: [],
+  },
+  {
+    displayName: { en: "Rujit Kafle", ne: "रुजित काफ्ले" },
+    thumb: undefined,
+    description: "Case Documentation Intern, Jawafdehi.org",
+    contacts: [],
+  },
+  {
+    displayName: { en: "Gaurav Karki", ne: "गौरव कार्की" },
+    thumb: "https://avatars.githubusercontent.com/gaurav-karki",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/gaurav-karki" },
+    ],
+  },
+  {
+    displayName: { en: "Deep Chaulagain", ne: "दीप चौलागाईं" },
+    thumb: "https://avatars.githubusercontent.com/deepgeek101",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/deepgeek101" },
+    ],
+  },
+  {
+    displayName: { en: "Aakash Poudel", ne: "आकाश पौडेल" },
+    thumb: "https://avatars.githubusercontent.com/aakash2060",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/aakash2060" },
+    ],
+  },
+  {
+    displayName: { en: "Kushal KC", ne: "कुशल केसी" },
+    thumb: "https://avatars.githubusercontent.com/kushal-kc15",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/kushal-kc15" },
+    ],
+  },
+  {
+    displayName: { en: "Samyam Jung Thapa", ne: "सम्याम जंग थापा" },
+    thumb: "https://avatars.githubusercontent.com/sjungthapa",
+    description: "Software Engineer Intern, Jawafdehi.org",
+    contacts: [
+      { type: "github", value: "https://github.com/sjungthapa" },
     ],
   },
 ];
