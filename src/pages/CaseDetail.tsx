@@ -1,5 +1,4 @@
 import { Footer } from "@/components/Footer";
-import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
@@ -15,9 +14,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar, MapPin, User, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MessageCircle, StickyNote } from "lucide-react";
 import { getCaseById, getDocumentSourceById } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
-import type { CaseDetail as CaseDetailType, DocumentSource } from "@/types/jds";
+import type { DocumentSource } from "@/types/jds";
 import type { Entity } from "@/types/nes";
-import { toast } from "sonner";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatDateWithBS, formatCaseDateRange } from "@/utils/date";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
@@ -27,74 +26,54 @@ const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const { id } = useParams();
-  const [caseData, setCaseData] = useState<CaseDetailType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [resolvedSources, setResolvedSources] = useState<Record<number, DocumentSource>>({});
-  const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
+  const caseId = id ? parseInt(id) : undefined;
 
-  useEffect(() => {
-    const fetchCase = async () => {
-      if (!id) return;
+  // Fetch case data
+  const { data: caseData, isLoading, isError } = useQuery({
+    queryKey: ['case', caseId],
+    queryFn: () => getCaseById(caseId!),
+    enabled: caseId != null,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      setLoading(true);
-      setError(null);
+  // Fetch all evidence sources in parallel once we have case data
+  const sourceQueries = useQueries({
+    queries: (caseData?.evidence ?? []).map((evidence) => ({
+      queryKey: ['source', evidence.source_id],
+      queryFn: () => getDocumentSourceById(evidence.source_id),
+      staleTime: 10 * 60 * 1000,
+      retry: false,
+    })),
+  });
 
-      try {
-        const data = await getCaseById(parseInt(id));
-        setCaseData(data);
+  // Fetch all NES entities in parallel
+  const uniqueNesIds = caseData
+    ? [...new Set(caseData.entities.filter(e => e.nes_id).map(e => e.nes_id!))]
+    : [];
 
-        // Resolve evidence sources
-        const sourcePromises = data.evidence.map(async (evidence) => {
-          try {
-            const source = await getDocumentSourceById(evidence.source_id);
-            return { id: evidence.source_id, source };
-          } catch {
-            return null;
-          }
-        });
+  const entityQueries = useQueries({
+    queries: uniqueNesIds.map((nesId) => ({
+      queryKey: ['nes-entity', nesId],
+      queryFn: () => getEntityById(nesId),
+      staleTime: 10 * 60 * 1000,
+      retry: false,
+    })),
+  });
 
-        const sources = await Promise.all(sourcePromises);
-        const sourcesMap = sources.reduce((acc, item) => {
-          if (item) acc[item.id] = item.source;
-          return acc;
-        }, {} as Record<number, DocumentSource>);
-        setResolvedSources(sourcesMap);
+  // Build lookup maps
+  const resolvedSources: Record<number, DocumentSource> = {};
+  (caseData?.evidence ?? []).forEach((evidence, i) => {
+    const data = sourceQueries[i]?.data;
+    if (data) resolvedSources[evidence.source_id] = data;
+  });
 
-        // Resolve entities from NES if they have nes_id
-        const allEntities = data.entities || [];
-        const entitiesWithNesId = allEntities.filter(e => e.nes_id);
-        const uniqueNesIds = [...new Set(entitiesWithNesId.map(e => e.nes_id!))];
+  const resolvedEntities: Record<string, Entity> = {};
+  uniqueNesIds.forEach((nesId, i) => {
+    const data = entityQueries[i]?.data;
+    if (data) resolvedEntities[nesId] = data;
+  });
 
-        const entityPromises = uniqueNesIds.map(async (nesId) => {
-          try {
-            const entity = await getEntityById(nesId);
-            return { id: nesId, entity };
-          } catch {
-            return null;
-          }
-        });
-
-        const entities = await Promise.all(entityPromises);
-        const entitiesMap = entities.reduce((acc, item) => {
-          if (item) acc[item.id] = item.entity;
-          return acc;
-        }, {} as Record<string, Entity>);
-        setResolvedEntities(entitiesMap);
-
-      } catch (err) {
-        console.error("Failed to fetch case:", err);
-        setError(t("caseDetail.failedToLoad"));
-        toast.error(t("caseDetail.failedToLoad"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCase();
-  }, [id, t]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
@@ -120,7 +99,7 @@ const CaseDetail = () => {
     );
   }
 
-  if (error || !caseData) {
+  if (isError || !caseData) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
@@ -135,7 +114,7 @@ const CaseDetail = () => {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                {error || t("caseDetail.notFound")}
+                {isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
               </AlertDescription>
             </Alert>
           </div>
@@ -146,13 +125,21 @@ const CaseDetail = () => {
   }
 
   const canonicalUrl = `https://jawafdehi.org/case/${id}`;
-  // Strip HTML tags and normalize whitespace for meta description (always English from API)
   const plainDescription = caseData.description
     .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;/g, '–')
+    .replace(/&mdash;/g, '—')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/&#\d+;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .substring(0, 160);
-  // Fallback to key allegations if description is empty
   const metaDescription = plainDescription || caseData.key_allegations.slice(0, 2).join('. ').substring(0, 160);
 
   return (
@@ -161,26 +148,22 @@ const CaseDetail = () => {
         <title>{caseData.title} | Jawafdehi</title>
         <meta name="description" content={metaDescription} />
         <link rel="canonical" href={canonicalUrl} />
-
-        {/* Open Graph */}
         <meta property="og:site_name" content="Jawafdehi Nepal" />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:title" content={`${caseData.title} | Jawafdehi`} />
         <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content="https://jawafdehi.org/favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
         <meta property="og:locale" content="en_US" />
         <meta property="article:published_time" content={caseData.created_at} />
         <meta property="article:modified_time" content={caseData.updated_at} />
         {caseData.tags.map((tag) => (
           <meta key={tag} property="article:tag" content={tag} />
         ))}
-
-        {/* Twitter / X Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
         <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content="https://jawafdehi.org/favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
       </Helmet>
       <Header />
 
@@ -195,14 +178,9 @@ const CaseDetail = () => {
                 </span>
               </Link>
             </Button>
-
-            <ReportCaseDialog
-              caseId={id || ""}
-              caseTitle={caseData.title}
-            />
+            <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
           </div>
 
-          {/* Disclaimer Banner */}
           <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
@@ -210,7 +188,6 @@ const CaseDetail = () => {
             </AlertDescription>
           </Alert>
 
-          {/* In Review Warning Banner */}
           {caseData.state === 'IN_REVIEW' && (
             <Alert className="mb-6 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
               <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
@@ -220,7 +197,6 @@ const CaseDetail = () => {
             </Alert>
           )}
 
-          {/* Case Header */}
           <div className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <Badge className="bg-alert text-alert-foreground">
@@ -230,12 +206,9 @@ const CaseDetail = () => {
                 {caseData.case_type === 'CORRUPTION' ? t("cases.type.corruption") : t("cases.type.brokenPromise")}
               </Badge>
               {caseData.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
+                <Badge key={tag} variant="secondary">{tag}</Badge>
               ))}
             </div>
-            {/* NOTE: Dynamic case content from Entity API remains in English until API-side i18n is implemented */}
             <h1 className="text-4xl font-bold text-foreground mb-6">{caseData.title}</h1>
 
             {caseData.banner_url && (
@@ -256,9 +229,7 @@ const CaseDetail = () => {
                     displayName = translateDynamicText(displayName, currentLang);
                     return (
                       <span key={e.id}>
-                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
-                          {displayName}
-                        </Link>
+                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
                         {index < arr.length - 1 && ', '}
                       </span>
                     );
@@ -276,9 +247,7 @@ const CaseDetail = () => {
                       displayName = translateDynamicText(displayName, currentLang);
                       return (
                         <span key={e.id}>
-                          <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
-                            {displayName}
-                          </Link>
+                          <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
                           {index < locations.length - 1 && ', '}
                         </span>
                       );
@@ -298,7 +267,6 @@ const CaseDetail = () => {
 
           <Separator className="mb-8" />
 
-          {/* Key Allegations */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -320,7 +288,6 @@ const CaseDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Related Entities */}
           {caseData.entities.filter(e => e.type === 'related').length > 0 && (
             <Card className="mb-8">
               <CardHeader>
@@ -334,9 +301,7 @@ const CaseDetail = () => {
                     displayName = translateDynamicText(displayName, currentLang);
                     return (
                       <span key={index}>
-                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
-                          {displayName}
-                        </Link>
+                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
                         {index < arr.length - 1 && ', '}
                       </span>
                     );
@@ -346,7 +311,6 @@ const CaseDetail = () => {
             </Card>
           )}
 
-          {/* Timeline */}
           {caseData.timeline.length > 0 && (
             <Card className="mb-8">
               <CardHeader>
@@ -365,9 +329,7 @@ const CaseDetail = () => {
                         )}
                       </div>
                       <div className="flex-1 min-w-0 pb-6">
-                        <p className="text-sm font-semibold text-foreground mb-1">
-                          {formatDateWithBS(item.date)}
-                        </p>
+                        <p className="text-sm font-semibold text-foreground mb-1">{formatDateWithBS(item.date)}</p>
                         <p className="text-sm font-medium text-foreground mb-1 break-words">{item.title}</p>
                         <p className="text-sm text-muted-foreground break-words">{item.description}</p>
                       </div>
@@ -378,7 +340,6 @@ const CaseDetail = () => {
             </Card>
           )}
 
-          {/* Overview */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -391,7 +352,6 @@ const CaseDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Evidence */}
           {caseData.evidence.length > 0 && (
             <Card className="mb-8">
               <CardHeader>
@@ -420,7 +380,6 @@ const CaseDetail = () => {
 
           <Separator className="my-8" />
 
-          {/* Notes */}
           {caseData.notes && (
             <Card className="mb-8">
               <CardHeader>
@@ -435,7 +394,6 @@ const CaseDetail = () => {
             </Card>
           )}
 
-          {/* Contact and Edit Section */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="font-semibold text-lg">{t("caseDetail.contact")}</h3>
@@ -450,7 +408,6 @@ const CaseDetail = () => {
                 </div>
               </div>
             </div>
-
             <Button variant="outline" size="lg" asChild className="shrink-0">
               <a
                 href={`https://portal.jawafdehi.org/admin/cases/case/${id}/change/`}
@@ -459,9 +416,7 @@ const CaseDetail = () => {
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="h-4 w-4" />
-                <span className="mt-1.5">
-                  {t("caseDetail.editCase")}
-                </span>
+                <span className="mt-1.5">{t("caseDetail.editCase")}</span>
               </a>
             </Button>
           </div>

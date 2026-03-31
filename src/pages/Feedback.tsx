@@ -12,8 +12,20 @@ export default function Feedback() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
-        <title>Feedback | Jawafdehi</title>
-        <meta name="description" content={t("feedback.description")} />
+        <title>Submit Feedback | Jawafdehi Nepal</title>
+        <meta name="description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
+        <link rel="canonical" href="https://jawafdehi.org/feedback" />
+        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://jawafdehi.org/feedback" />
+        <meta property="og:title" content="Submit Feedback | Jawafdehi Nepal" />
+        <meta property="og:description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
+        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Submit Feedback | Jawafdehi Nepal" />
+        <meta name="twitter:description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
+        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
       </Helmet>
       <Header />
 

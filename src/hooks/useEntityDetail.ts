@@ -1,23 +1,12 @@
 /**
  * useEntityDetail Hook
- * 
- * Fetch comprehensive entity details including:
- * - Profile data
- * - Relationships
- * - Version history
- * - Allegations
- * - Cases
- * - Sources (evidence + attributions)
+ *
+ * Fetch comprehensive entity details including profile, alleged cases, and related cases.
+ * Uses React Query for SSR-compatible data fetching.
  */
 
-import { useState, useEffect } from 'react';
-import { 
-  getEntityById,
-  getEntityAllegations,
-  getEntityCases,
-  type Allegation as PAPAllegation,
-  type Case as PAPCase,
-} from '@/services/api';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { getEntityById, type Allegation as PAPAllegation } from '@/services/api';
 import { getCaseById } from '@/services/jds-api';
 import type { Entity } from '@/types/nes';
 import type { Case as JDSCase } from '@/types/jds';
@@ -28,7 +17,6 @@ interface UseEntityDetailOptions {
   entitySlug?: string;
   allegedCaseIds?: number[];
   relatedCaseIds?: number[];
-  autoFetch?: boolean;
 }
 
 interface UseEntityDetailReturn {
@@ -38,79 +26,61 @@ interface UseEntityDetailReturn {
   relatedCases: JDSCase[];
   loading: boolean;
   error: Error | null;
-  refetch: () => Promise<void>;
 }
 
 export function useEntityDetail(options: UseEntityDetailOptions = {}): UseEntityDetailReturn {
-  const { entityId, entityType, entitySlug, allegedCaseIds = [], relatedCaseIds = [], autoFetch = true } = options;
+  const { entityId, entityType, entitySlug, allegedCaseIds = [], relatedCaseIds = [] } = options;
 
-  const [entity, setEntity] = useState<Entity | null>(null);
-  const [allegations, setAllegations] = useState<PAPAllegation[]>([]);
-  const [allegedCases, setAllegedCases] = useState<JDSCase[]>([]);
-  const [relatedCases, setRelatedCases] = useState<JDSCase[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  // Resolve the NES entity ID
+  const nesEntityId = entityType && entitySlug
+    ? `entity:${entityType}/${entitySlug}`
+    : entityId;
 
-  const fetchEntityDetail = async () => {
-    setLoading(true);
-    setError(null);
+  const { data: entity = null, isLoading: entityLoading, error: entityError } = useQuery({
+    queryKey: ['nes-entity', nesEntityId],
+    queryFn: () => getEntityById(nesEntityId!),
+    enabled: !!nesEntityId,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  });
 
-    try {
-      // 1. Fetch entity profile (if entityId is provided)
-      let entityData: Entity | null = null;
-      if (entityType && entitySlug) {
-        // Construct NES entity ID format: entity:type/slug
-        const nesEntityId = `entity:${entityType}/${entitySlug}`;
-        entityData = await getEntityById(nesEntityId);
-      } else if (entityId) {
-        entityData = await getEntityById(entityId);
-      }
-      
-      if (entityData) {
-        setEntity(entityData);
-      }
+  const allegedCaseQueries = useQueries({
+    queries: allegedCaseIds.map((id) => ({
+      queryKey: ['case', id],
+      queryFn: () => getCaseById(id),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })),
+  });
 
-      // 2. Fetch cases by IDs from the provided arrays
-      const allegedCasesPromises = allegedCaseIds.map(id => getCaseById(id).catch(() => null));
-      const relatedCasesPromises = relatedCaseIds.map(id => getCaseById(id).catch(() => null));
+  const relatedCaseQueries = useQueries({
+    queries: relatedCaseIds.map((id) => ({
+      queryKey: ['case', id],
+      queryFn: () => getCaseById(id),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })),
+  });
 
-      const [allegedCasesData, relatedCasesData] = await Promise.all([
-        Promise.all(allegedCasesPromises),
-        Promise.all(relatedCasesPromises),
-      ]);
+  const allegedCases = allegedCaseQueries
+    .map((q) => q.data)
+    .filter((c): c is JDSCase => c != null);
 
-      // Filter out null values (failed fetches)
-      const validAllegedCases = allegedCasesData.filter((c): c is JDSCase => c !== null);
-      const validRelatedCases = relatedCasesData.filter((c): c is JDSCase => c !== null);
+  const relatedCases = relatedCaseQueries
+    .map((q) => q.data)
+    .filter((c): c is JDSCase => c != null);
 
-      // 3. Set all data
-      setAllegations([]);
-      setAllegedCases(validAllegedCases);
-      setRelatedCases(validRelatedCases);
-
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to fetch entity details');
-      setError(error);
-      setEntity(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (autoFetch) {
-      fetchEntityDetail();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityId, entityType, entitySlug, autoFetch]);
+  const loading =
+    (!!nesEntityId && entityLoading) ||
+    allegedCaseQueries.some((q) => q.isLoading) ||
+    relatedCaseQueries.some((q) => q.isLoading);
 
   return {
     entity,
-    allegations,
+    allegations: [],
     allegedCases,
     relatedCases,
     loading,
-    error,
-    refetch: fetchEntityDetail,
+    error: entityError as Error | null,
   };
 }

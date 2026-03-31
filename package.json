@@ -6,15 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "preview": "vite preview",
-    "predeploy": "npm run lint && npm run build",
-    "deploy": "gh-pages -d dist"
+    "predeploy": "bun run lint && bun run build",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -93,6 +93,7 @@
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "fast-check": "^4.6.0",
     "globals": "^15.15.0",
     "lovable-tagger": "^1.1.11",
     "playwright": "^1.57.0",

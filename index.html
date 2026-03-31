@@ -2,23 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jawafdehi Nepal | Transparency & Anti-Corruption</title>
-    <meta name="description" content="Jawafdehi documents corruption cases in Nepal. Browse verified cases, track accountability, and promote transparency." />
-    <meta name="author" content="Jawafdehi Initiatives" />
-
-    <meta property="og:title" content="Jawafdehi Nepal" />
-    <meta property="og:description" content="Documenting corruption cases to hold Nepali public entities accountable. A civic tech initiative for transparency." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://jawafdehi.org/favicon.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <!-- <meta name="twitter:site" content="@Lovable" /> -->
-    <meta property="twitter:image" content="https://jawafdehi.org/favicon.png" />
+    <!--helmet-title-->
+    <!--helmet-meta-->
+    <!-- fallback static meta for non-JS crawlers -->
+    <meta name="author" content="Let's Build Nepal & NewNepal.org" />
   </head>
 
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root"><!--app-html--></div>
+    <!--dehydrated-state-->
+    <script type="module" src="/src/entry-client.tsx"></script>
   </body>
 </html>

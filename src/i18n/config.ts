@@ -4,6 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector/cjs';
 import enTranslations from './locales/en.json';
 import neTranslations from './locales/ne.json';
 
+const isSSR = typeof window === 'undefined';
+
 // Language detection configuration
 const languageDetectorOptions = {
   // Order of detection methods
@@ -19,8 +21,11 @@ const languageDetectorOptions = {
   checkWhitelist: true,
 };
 
+if (!isSSR) {
+  i18n.use(LanguageDetector);
+}
+
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
@@ -31,8 +36,8 @@ i18n
         translation: neTranslations,
       },
     },
-    fallbackLng: 'en', // English is the default language
-    detection: languageDetectorOptions,
+    fallbackLng: 'ne', // Nepali is the default language
+    ...(isSSR ? { lng: 'ne' } : { detection: languageDetectorOptions }),
     interpolation: {
       escapeValue: false, // React already escapes values
     },
