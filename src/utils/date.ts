@@ -77,12 +77,12 @@ function convertToBS(dateString: string | null | undefined) {
 
 // ── Combined AD + BS formatting ──────────────────────────────────────────
 
-/** Format a date as "AD date (BS date)". */
+/** Format a date as "AD date | BS date". */
 export function formatDateWithBS(dateString: string | null | undefined, fmt = 'PP'): string {
   if (!dateString) return 'N/A';
   const ad = formatDate(dateString, fmt);
   const bs = convertToBS(dateString);
-  return bs ? `${ad} (${bs.formatted})` : ad;
+  return bs ? `${ad} | ${bs.formatted}` : ad;
 }
 
 /** Format a start/end date range with BS dates, or show "Ongoing". */

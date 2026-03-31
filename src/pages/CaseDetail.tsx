@@ -1,8 +1,8 @@
+import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { Button } from "@/components/ui/button";
@@ -94,7 +94,7 @@ const CaseDetail = () => {
             </div>
           </div>
         </main>
-        <Footer />
+  
       </div>
     );
   }
@@ -119,7 +119,7 @@ const CaseDetail = () => {
             </Alert>
           </div>
         </main>
-        <Footer />
+  
       </div>
     );
   }
@@ -210,6 +210,14 @@ const CaseDetail = () => {
               ))}
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-6">{caseData.title}</h1>
+
+            {caseData.banner_url && (
+              <img
+                src={caseData.banner_url}
+                alt={caseData.title}
+                className="w-full h-64 object-cover rounded-lg mb-6"
+              />
+            )}
 
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-start text-muted-foreground">
@@ -416,6 +424,8 @@ const CaseDetail = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

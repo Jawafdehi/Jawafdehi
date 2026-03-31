@@ -1,8 +1,8 @@
+import { Footer } from "@/components/Footer";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { CaseCard } from "@/components/CaseCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Search, Filter, AlertCircle } from "lucide-react";
 import { getCases } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { formatDate } from "@/utils/date";
+import { formatDateWithBS } from "@/utils/date";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 const Cases = () => {
@@ -206,12 +206,14 @@ const Cases = () => {
                     title={caseItem.title}
                     entity={entityNames}
                     location={locationNames}
-                    date={formatDate(caseItem.created_at)}
+                    date={formatDateWithBS(caseItem.created_at, 'PPP')}
                     status="ongoing"
                     tags={caseItem.tags || []}
-                    description={caseItem.key_allegations.join('. ')}
+                    description={caseItem.description.replace(/<[^>]*>/g, '').substring(0, 200)}
+                    allegations={caseItem.key_allegations}
                     entityIds={accusedEntities.map(e => e.id)}
                     locationIds={locationEntities.map(e => e.id)}
+                    thumbnailUrl={caseItem.thumbnail_url ?? undefined}
                   />
                 );
               })}
@@ -237,6 +239,8 @@ const Cases = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { Footer } from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { updates } from "@/data/updates";
@@ -5,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { format } from "date-fns";
 import { CalendarIcon, ChevronRight } from "lucide-react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 
 const Updates = () => {
@@ -64,7 +64,9 @@ const Updates = () => {
                 </div>
             </main>
 
-            <Footer />
+      <Footer />
+
+      
         </div>
     );
 };

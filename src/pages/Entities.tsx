@@ -1,9 +1,9 @@
+import { Footer } from "@/components/Footer";
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import EntityCard from "@/components/EntityCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -232,6 +232,8 @@ const Entities = () => {
       </main>
 
       <Footer />
+
+
     </div>
   );
 };

@@ -6,6 +6,11 @@ import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import Entities from "./pages/Entities";
 import About from "./pages/About";
+import Commitment from "./pages/Commitment";
+import OurProcess from "./pages/OurProcess";
+import OurTeam from "./pages/OurTeam";
+import Volunteer from "./pages/Volunteer";
+import OurProducts from "./pages/OurProducts";
 import Information from "./pages/Information";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
@@ -35,6 +40,11 @@ const App = () => (
       <Route path="/updates/:id" element={<UpdateDetail />} />
       <Route path="/information" element={<Information />} />
       <Route path="/about" element={<About />} />
+      <Route path="/commitment" element={<Commitment />} />
+      <Route path="/our-process" element={<OurProcess />} />
+      <Route path="/team" element={<OurTeam />} />
+      <Route path="/volunteer" element={<Volunteer />} />
+      <Route path="/products" element={<OurProducts />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -81,6 +81,8 @@ export interface Case {
   title: string;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
+  thumbnail_url?: string | null; // URL for case card thumbnail image
+  banner_url?: string | null; // URL for wide banner image on case detail page
   entities: JawafEntity[]; // Unified entity relationships with type field
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   description: string; // Rich text description

@@ -4,7 +4,7 @@
  * Fetch and manage entity list with search, filtering, and pagination
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getEntities, searchEntities, EntitySearchParams, EntityListResponse } from '@/services/api';
 import type { Entity } from '@/types/nes';
 
@@ -42,7 +42,7 @@ export function useEntityList(options: UseEntityListOptions = {}): UseEntityList
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
-  const fetchEntities = async () => {
+  const fetchEntities = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -72,13 +72,13 @@ export function useEntityList(options: UseEntityListOptions = {}): UseEntityList
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, page, limit, entity_type, sub_type]);
 
   useEffect(() => {
     if (autoFetch) {
       fetchEntities();
     }
-  }, [query, page, limit, entity_type, sub_type, autoFetch]);
+  }, [fetchEntities, autoFetch]);
 
   return {
     entities,
