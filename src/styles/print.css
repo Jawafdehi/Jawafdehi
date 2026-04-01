@@ -11,7 +11,10 @@
   [role="dialog"],
   .print-hide,
   [data-radix-popper-content-wrapper],
-  [data-radix-portal] {
+  [data-radix-portal],
+  [data-sonner-toaster],
+  .sonner-toast,
+  .toaster {
     display: none !important;
   }
 
@@ -23,14 +26,29 @@
     padding: 0;
   }
 
-  /* Optimize page layout */
+  /* Optimize page layout - use full width */
   .print-content {
     display: block !important;
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     margin: 0 !important;
-    padding: 20mm !important;
+    padding: 10mm !important;
     page-break-inside: avoid;
+  }
+
+  /* Remove container max-width constraints for print */
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 10mm !important;
+    padding-right: 10mm !important;
+  }
+
+  /* Ensure main content uses full width */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
   }
 
   /* Typography optimization */
@@ -174,14 +192,14 @@
     page-break-inside: avoid;
   }
 
-  /* Ensure proper margins for multi-page content */
+  /* Reduce page margins for more content space */
   @page {
-    margin: 20mm;
+    margin: 12mm;
     size: A4;
   }
 
   @page :first {
-    margin-top: 20mm;
+    margin-top: 12mm;
   }
 
   /* Prevent content cutoff */
