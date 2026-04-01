@@ -214,7 +214,17 @@ const CaseDetail = () => {
             <div className="mb-8">
               <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
                 <Badge className="bg-alert text-alert-foreground">
-                  {t("caseDetail.status.ongoing")}
+                  {(() => {
+                    // Map caseData.state to translation key
+                    const stateMap: Record<string, string> = {
+                      'DRAFT': 'caseDetail.status.underInvestigation',
+                      'IN_REVIEW': 'caseDetail.status.underInvestigation',
+                      'PUBLISHED': 'caseDetail.status.ongoing',
+                      'CLOSED': 'caseDetail.status.resolved'
+                    };
+                    const statusKey = caseData.state ? stateMap[caseData.state] : 'caseDetail.status.ongoing';
+                    return t(statusKey || 'caseDetail.status.ongoing');
+                  })()}
                 </Badge>
                 <Badge variant="outline" className={caseData.case_type === 'CORRUPTION' ? 'bg-destructive/20 text-destructive' : 'bg-orange-500/20 text-orange-700'}>
                   {caseData.case_type === 'CORRUPTION' ? t("cases.type.corruption") : t("cases.type.brokenPromise")}
