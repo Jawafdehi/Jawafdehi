@@ -1,0 +1,233 @@
+/* Print Styles for Case Detail Page */
+
+@media print {
+  /* Hide all non-content elements */
+  header,
+  nav,
+  footer,
+  .no-print,
+  button,
+  [role="button"],
+  [role="dialog"],
+  .print-hide,
+  [data-radix-popper-content-wrapper],
+  [data-radix-portal] {
+    display: none !important;
+  }
+
+  /* Hide specific UI elements */
+  .share-button,
+  .report-dialog,
+  .back-button,
+  .edit-button,
+  .contact-section {
+    display: none !important;
+  }
+
+  /* Show only printable content */
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Optimize page layout */
+  .print-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 20mm !important;
+    page-break-inside: avoid;
+  }
+
+  /* Typography optimization */
+  h1 {
+    font-size: 24pt !important;
+    margin-bottom: 12pt !important;
+    page-break-after: avoid;
+  }
+
+  h2, h3 {
+    font-size: 18pt !important;
+    margin-top: 12pt !important;
+    margin-bottom: 8pt !important;
+    page-break-after: avoid;
+  }
+
+  p, li {
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Ensure Nepali fonts render correctly */
+  * {
+    font-family: "Noto Sans Devanagari", "Noto Sans", Arial, sans-serif !important;
+  }
+
+  /* Card and section styling */
+  .card {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 12pt !important;
+  }
+
+  /* Badge styling for print */
+  .badge {
+    border: 1px solid #333 !important;
+    padding: 2pt 6pt !important;
+    display: inline-block !important;
+    margin-right: 4pt !important;
+  }
+
+  /* Links - Remove entity IDs and fix overflow */
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+    word-break: break-all !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Don't show URLs after links in print */
+  a[href]:after {
+    content: none !important;
+  }
+
+  /* Fix long URLs in evidence cards */
+  .evidence-card a,
+  .evidence-card span {
+    word-break: break-all !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    display: inline-block !important;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  table, th, td {
+    border: 1px solid #ddd !important;
+  }
+
+  th, td {
+    padding: 8pt !important;
+    text-align: left !important;
+    word-break: break-word !important;
+  }
+
+  /* Timeline styling */
+  .timeline-item {
+    page-break-inside: avoid;
+    margin-bottom: 8pt !important;
+  }
+
+  /* Evidence cards */
+  .evidence-card {
+    page-break-inside: avoid;
+    margin-bottom: 8pt !important;
+    border: 1px solid #ddd !important;
+    padding: 8pt !important;
+  }
+
+  /* Fix URL overflow in evidence */
+  .evidence-card * {
+    word-break: break-all !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  /* Remove shadows and effects */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Separator */
+  hr {
+    border: none !important;
+    border-top: 1px solid #ddd !important;
+    margin: 12pt 0 !important;
+  }
+
+  /* Alert/Banner styling */
+  .alert {
+    border: 1px solid #ddd !important;
+    padding: 8pt !important;
+    margin-bottom: 8pt !important;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure proper margins for multi-page content */
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  @page :first {
+    margin-top: 20mm;
+  }
+
+  /* Prevent content cutoff */
+  .print-content > * {
+    max-width: 100%;
+    overflow: visible !important;
+  }
+
+  /* Fix word breaking for all text */
+  * {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+}
+
+/* Debug mode - highlight printable area (remove in production) */
+.print-debug .print-content {
+  outline: 2px dashed #ff0000;
+  outline-offset: 4px;
+}
+
+.print-debug .no-print {
+  opacity: 0.3;
+  position: relative;
+}
+
+.print-debug .no-print::after {
+  content: "NOT PRINTED";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 9999;
+}
