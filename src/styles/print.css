@@ -15,15 +15,6 @@
     display: none !important;
   }
 
-  /* Hide specific UI elements */
-  .share-button,
-  .report-dialog,
-  .back-button,
-  .edit-button,
-  .contact-section {
-    display: none !important;
-  }
-
   /* Show only printable content */
   body {
     background: white !important;
