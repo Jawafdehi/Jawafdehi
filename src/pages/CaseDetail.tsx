@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,8 @@ import { formatDateWithBS, formatCaseDateRange } from "@/utils/date";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import "@/styles/print.css";
+
 
 const CaseDetail = () => {
   const { t, i18n } = useTranslation();
@@ -169,8 +172,8 @@ const CaseDetail = () => {
 
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex flex-col sm:flex-row justify-between mb-4">
-            <Button variant="outline" asChild className="mb-2">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 mb-4 no-print">
+            <Button variant="outline" asChild>
               <Link to="/cases">
                 <ArrowLeft className="h-4 w-4" />
                 <span className="mt-[5px]">
@@ -178,10 +181,19 @@ const CaseDetail = () => {
                 </span>
               </Link>
             </Button>
-            <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
+
+            <div className="flex gap-2">
+              <ShareButton
+                url={canonicalUrl}
+                title={caseData.title}
+                description={plainDescription}
+              />
+              
+              <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
+            </div>
           </div>
 
-          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 no-print">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
               {t("footer.disclaimer")}
@@ -189,7 +201,7 @@ const CaseDetail = () => {
           </Alert>
 
           {caseData.state === 'IN_REVIEW' && (
-            <Alert className="mb-6 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
+            <Alert className="mb-6 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800 no-print">
               <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
               <AlertDescription className="text-yellow-800 dark:text-yellow-200 text-sm">
                 {t("caseDetail.inReviewBanner")}
@@ -197,18 +209,20 @@ const CaseDetail = () => {
             </Alert>
           )}
 
-          <div className="mb-8">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Badge className="bg-alert text-alert-foreground">
-                {t("caseDetail.status.ongoing")}
-              </Badge>
-              <Badge variant="outline" className={caseData.case_type === 'CORRUPTION' ? 'bg-destructive/20 text-destructive' : 'bg-orange-500/20 text-orange-700'}>
-                {caseData.case_type === 'CORRUPTION' ? t("cases.type.corruption") : t("cases.type.brokenPromise")}
-              </Badge>
-              {caseData.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">{tag}</Badge>
-              ))}
-            </div>
+          {/* PRINTABLE CONTENT STARTS HERE */}
+          <div id="print-content" className="print-content">
+            <div className="mb-8">
+              <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
+                <Badge className="bg-alert text-alert-foreground">
+                  {t("caseDetail.status.ongoing")}
+                </Badge>
+                <Badge variant="outline" className={caseData.case_type === 'CORRUPTION' ? 'bg-destructive/20 text-destructive' : 'bg-orange-500/20 text-orange-700'}>
+                  {caseData.case_type === 'CORRUPTION' ? t("cases.type.corruption") : t("cases.type.brokenPromise")}
+                </Badge>
+                {caseData.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">{tag}</Badge>
+                ))}
+              </div>
             <h1 className="text-4xl font-bold text-foreground mb-6">{caseData.title}</h1>
 
             {caseData.banner_url && (
@@ -394,7 +408,11 @@ const CaseDetail = () => {
             </Card>
           )}
 
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+          </div>
+          {/* PRINTABLE CONTENT ENDS HERE */}
+
+          {/* Contact and Edit Section - NOT PRINTED */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 no-print">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="font-semibold text-lg">{t("caseDetail.contact")}</h3>
               <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-muted-foreground">
