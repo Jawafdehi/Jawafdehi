@@ -202,7 +202,7 @@ const Cases = () => {
                 return (
                   <CaseCard
                     key={caseItem.id}
-                    id={caseItem.id.toString()}
+                    identifier={caseItem.slug || caseItem.id.toString()}
                     title={caseItem.title}
                     entity={entityNames}
                     location={locationNames}

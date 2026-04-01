@@ -81,9 +81,11 @@ export interface EvidenceEntry {
 export interface Case {
   id: number;
   case_id: string; // Unique identifier shared across versions
+  slug: string | null;
   case_type: CaseType;
   state: CaseState; // Current state in the workflow
   title: string;
+  short_description?: string;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
   thumbnail_url?: string | null; // URL for case card thumbnail image
@@ -92,6 +94,9 @@ export interface Case {
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   description: string; // Rich text description
   key_allegations: string[]; // List of key allegation statements
+  court_cases?: string[];
+  missing_details?: string;
+  bigo?: number | null;
   timeline: TimelineEntry[];
   evidence: EvidenceEntry[];
   notes: string; // Internal notes (HTML from TinyMCE)
