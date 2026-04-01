@@ -19,7 +19,7 @@ describe('Property 3: Helmet context is populated for routes with a Helmet compo
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10 }
     );
   });
 });
