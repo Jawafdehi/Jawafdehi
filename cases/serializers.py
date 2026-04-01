@@ -28,59 +28,39 @@ class JawafEntitySerializer(serializers.ModelSerializer):
     Uses the unified system to get case relationships.
     """
 
-    alleged_cases = serializers.SerializerMethodField(
-        help_text="List of case IDs where this entity is alleged"
-    )
     related_cases = serializers.SerializerMethodField(
-        help_text="List of case IDs where this entity is related or a location"
+        help_text="List of related case entries with case_id, relation_type, and notes"
     )
 
     class Meta:
         model = JawafEntity
-        fields = ["id", "nes_id", "display_name", "alleged_cases", "related_cases"]
-
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get_alleged_cases(self, obj):
-        """
-        Get list of case IDs where this entity is alleged.
-
-        Only includes PUBLISHED cases. Uses the unified relationship system.
-        """
-        from .models import RelationshipType
-
-        # Get cases where this entity has an 'alleged' relationship
-        cases = Case.objects.filter(
-            entity_relationships__entity=obj,
-            entity_relationships__relationship_type=RelationshipType.ACCUSED,
-            state=CaseState.PUBLISHED,
-        )
-
-        return list(cases.values_list("id", flat=True))
+        fields = ["id", "nes_id", "display_name", "related_cases"]
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_related_cases(self, obj):
         """
-        Get list of case IDs where this entity is related.
+        Get related case entries for this entity.
 
         Only includes PUBLISHED cases. Uses the unified relationship system.
-        Excludes cases where entity is already alleged (to avoid duplicates).
+        Each entry includes relation metadata required by the frontend.
         """
-        from .models import RelationshipType
+        relationships = (
+            CaseEntityRelationship.objects.filter(
+                entity=obj,
+                case__state=CaseState.PUBLISHED,
+            )
+            .select_related("case")
+            .order_by("-case_id", "relationship_type")
+        )
 
-        # Get alleged case IDs to exclude
-        alleged_case_ids = Case.objects.filter(
-            entity_relationships__entity=obj,
-            entity_relationships__relationship_type=RelationshipType.ACCUSED,
-            state=CaseState.PUBLISHED,
-        ).values_list("id", flat=True)
-
-        # Get related cases from unified system
-        related_cases = Case.objects.filter(
-            entity_relationships__entity=obj,
-            entity_relationships__relationship_type=RelationshipType.RELATED,
-            state=CaseState.PUBLISHED,
-        ).exclude(id__in=alleged_case_ids)
-        return list(related_cases.values_list("id", flat=True))
+        return [
+            {
+                "case_id": relationship.case_id,
+                "relation_type": relationship.relationship_type,
+                "notes": relationship.notes,
+            }
+            for relationship in relationships
+        ]
 
 
 class CaseEntityRelationshipSerializer(serializers.ModelSerializer):
