@@ -82,8 +82,7 @@ export default function EntityProfile() {
             jawafEntityId={jawafEntity.id}
             jawafEntityName={jawafEntity.display_name}
             hasNesData={!!jawafEntity.nes_id}
-            allegedCaseIds={jawafEntity.alleged_cases || []}
-            relatedCaseIds={jawafEntity.related_cases || []}
+            relatedCaseEntries={jawafEntity.related_cases || []}
           />
         )}
       </main>

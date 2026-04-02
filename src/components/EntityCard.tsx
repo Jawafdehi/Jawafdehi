@@ -56,6 +56,14 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
     primaryName = jawafEntity.nes_id;
   }
 
+  const relationEntries = jawafEntity.related_cases || [];
+  const accusedCount = relationEntries.filter(
+    (entry) => entry.relation_type === 'accused' || entry.relation_type === 'alleged'
+  ).length;
+  const relatedCount = relationEntries.filter(
+    (entry) => entry.relation_type !== 'accused' && entry.relation_type !== 'alleged'
+  ).length;
+
   return (
     <Link to={`/entity/${jawafEntity.id}`}>
       <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
@@ -104,14 +112,14 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
             )}
 
             <div className="flex gap-2 mt-3 flex-wrap">
-              {jawafEntity.alleged_cases && jawafEntity.alleged_cases.length > 0 && (
+              {accusedCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
-                  {jawafEntity.alleged_cases.length} {t('entityCard.alleged')}
+                  {accusedCount} {t('entityCard.alleged')}
                 </Badge>
               )}
-              {jawafEntity.related_cases && jawafEntity.related_cases.length > 0 && (
+              {relatedCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {jawafEntity.related_cases.length} {t('entityCard.related')}
+                  {relatedCount} {t('entityCard.related')}
                 </Badge>
               )}
             </div>

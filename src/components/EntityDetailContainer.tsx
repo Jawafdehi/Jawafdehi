@@ -18,7 +18,7 @@ import { AlertCircle, FileText, Building2, User, Mail, Phone, Globe } from 'luci
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from '@/utils/nes-helpers';
-import type { Case as JDSCase } from '@/types/jds';
+import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 import { formatDate } from '@/utils/date';
 
 interface EntityDetailContainerProps {
@@ -28,8 +28,12 @@ interface EntityDetailContainerProps {
   jawafEntityId?: number;
   jawafEntityName?: string | null;
   hasNesData?: boolean;
-  allegedCaseIds?: number[];
-  relatedCaseIds?: number[];
+  relatedCaseEntries?: EntityCaseRelationship[];
+}
+
+interface GroupedCaseRelation {
+  caseItem: JDSCase;
+  relations: Array<{ relationType: string; notes: string }>;
 }
 
 export function EntityDetailContainer({
@@ -39,27 +43,58 @@ export function EntityDetailContainer({
   jawafEntityId,
   jawafEntityName,
   hasNesData = true,
-  allegedCaseIds = [],
-  relatedCaseIds = [],
+  relatedCaseEntries = [],
 }: EntityDetailContainerProps) {
   const { t } = useTranslation();
   const {
     entity,
     allegations,
-    allegedCases,
-    relatedCases,
+    relatedCaseDetails,
     loading,
     error,
   } = useEntityDetail({
     entityId,
     entityType,
     entitySlug,
-    allegedCaseIds,
-    relatedCaseIds,
+    relatedCaseEntries,
   });
 
-  // Combine alleged and related cases
-  const allCases = [...allegedCases, ...relatedCases];
+  const relationGroups = new Map<number, GroupedCaseRelation>();
+  for (const detail of relatedCaseDetails) {
+    const existing = relationGroups.get(detail.caseItem.id);
+    if (!existing) {
+      relationGroups.set(detail.caseItem.id, {
+        caseItem: detail.caseItem,
+        relations: [{ relationType: detail.relationType, notes: detail.notes }],
+      });
+      continue;
+    }
+
+    existing.relations.push({ relationType: detail.relationType, notes: detail.notes });
+  }
+
+  const groupedCaseRelations = Array.from(relationGroups.values());
+  const accusedCaseRelations = groupedCaseRelations.filter((item) =>
+    item.relations.some((relation) => relation.relationType === 'accused' || relation.relationType === 'alleged')
+  );
+  const nonAccusedCaseRelations = groupedCaseRelations.filter((item) =>
+    item.relations.every((relation) => relation.relationType !== 'accused' && relation.relationType !== 'alleged')
+  );
+  const allCases = groupedCaseRelations.map((item) => item.caseItem);
+
+  const getRelationLabel = (relationType: string) => {
+    const relationKeyMap: Record<string, string> = {
+      accused: 'entityDetail.relationTypeAccused',
+      alleged: 'entityDetail.relationTypeAlleged',
+      related: 'entityDetail.relationTypeRelated',
+      witness: 'entityDetail.relationTypeWitness',
+      opposition: 'entityDetail.relationTypeOpposition',
+      victim: 'entityDetail.relationTypeVictim',
+      location: 'entityDetail.relationTypeLocation',
+    };
+
+    return t(relationKeyMap[relationType] || 'entityDetail.relationTypeUnknown');
+  };
 
   if (loading) {
     return (
@@ -193,7 +228,7 @@ export function EntityDetailContainer({
             <div className="flex md:flex-col gap-4 md:min-w-[200px]">
               <Card className="flex-1 bg-muted/50">
                 <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold text-primary">{allegedCases.length}</div>
+                  <div className="text-3xl font-bold text-primary">{accusedCaseRelations.length}</div>
                   <div className="text-sm text-muted-foreground">{t('entityDetail.totalAllegations')}</div>
                 </CardContent>
               </Card>
@@ -245,13 +280,13 @@ export function EntityDetailContainer({
           {/* Alleged Cases */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{t("entityDetail.allegedCases")} ({allegedCases.length})</CardTitle>
+              <CardTitle>{t("entityDetail.allegedCases")} ({accusedCaseRelations.length})</CardTitle>
               <p className="text-sm text-muted-foreground">{t('entityDetail.allegedCasesDescription')}</p>
             </CardHeader>
             <CardContent>
-              {allegedCases.length > 0 ? (
+              {accusedCaseRelations.length > 0 ? (
                 <div className="space-y-4">
-                  {allegedCases.map((caseItem: JDSCase) => (
+                  {accusedCaseRelations.map(({ caseItem, relations }) => (
                     <div key={caseItem.id} className="border-b border-border pb-4 last:border-0">
                       <div className="flex justify-between items-start mb-2">
                         <Link to={`/case/${caseItem.id}`} className="font-medium hover:text-primary hover:underline">
@@ -266,10 +301,26 @@ export function EntityDetailContainer({
                       </p>
                       <div className="flex gap-2 mt-2">
                         <Badge variant="outline">{caseItem.case_type}</Badge>
+                        {relations.map((relation, index) => (
+                          <Badge key={`${caseItem.id}-rel-${index}`} variant="destructive">
+                            {getRelationLabel(relation.relationType)}
+                          </Badge>
+                        ))}
                         {caseItem.tags?.slice(0, 2).map((tag: string) => (
                           <Badge key={tag} variant="secondary">{tag}</Badge>
                         ))}
                       </div>
+                      {relations.some((relation) => relation.notes) && (
+                        <div className="mt-2 space-y-1">
+                          {relations
+                            .filter((relation) => relation.notes)
+                            .map((relation, index) => (
+                              <p key={`${caseItem.id}-note-${index}`} className="text-xs text-muted-foreground">
+                                {getRelationLabel(relation.relationType)}: {relation.notes}
+                              </p>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -282,13 +333,13 @@ export function EntityDetailContainer({
           {/* Related Cases */}
           <Card>
             <CardHeader>
-              <CardTitle>{t("entityDetail.relatedCases")} ({relatedCases.length})</CardTitle>
+              <CardTitle>{t("entityDetail.relatedCases")} ({nonAccusedCaseRelations.length})</CardTitle>
               <p className="text-sm text-muted-foreground">{t('entityDetail.relatedCasesDescription')}</p>
             </CardHeader>
             <CardContent>
-              {relatedCases.length > 0 ? (
+              {nonAccusedCaseRelations.length > 0 ? (
                 <div className="space-y-4">
-                  {relatedCases.map((caseItem: JDSCase) => (
+                  {nonAccusedCaseRelations.map(({ caseItem, relations }) => (
                     <div key={caseItem.id} className="border-b border-border pb-4 last:border-0">
                       <div className="flex justify-between items-start mb-2">
                         <Link to={`/case/${caseItem.id}`} className="font-medium hover:text-primary hover:underline">
@@ -303,10 +354,26 @@ export function EntityDetailContainer({
                       </p>
                       <div className="flex gap-2 mt-2">
                         <Badge variant="outline">{caseItem.case_type}</Badge>
+                        {relations.map((relation, index) => (
+                          <Badge key={`${caseItem.id}-rel-${index}`} variant="secondary">
+                            {getRelationLabel(relation.relationType)}
+                          </Badge>
+                        ))}
                         {caseItem.tags?.slice(0, 2).map((tag: string) => (
                           <Badge key={tag} variant="secondary">{tag}</Badge>
                         ))}
                       </div>
+                      {relations.some((relation) => relation.notes) && (
+                        <div className="mt-2 space-y-1">
+                          {relations
+                            .filter((relation) => relation.notes)
+                            .map((relation, index) => (
+                              <p key={`${caseItem.id}-note-${index}`} className="text-xs text-muted-foreground">
+                                {getRelationLabel(relation.relationType)}: {relation.notes}
+                              </p>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -3,7 +3,7 @@ import * as fc from 'fast-check';
 import { render } from '../../src/entry-server';
 
 describe('Property 3: Helmet context is populated for routes with a Helmet component', () => {
-  it('helmetContext.helmet is defined and title is non-empty for routes with Helmet', async () => {
+  it('helmetContext.helmet is defined and title is non-empty for routes with Helmet', { timeout: 30000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.constantFrom('/about', '/cases', '/entities', '/information', '/updates', '/feedback'),

@@ -58,8 +58,13 @@ export interface JawafEntity {
   display_name: string | null; // Display name for the entity
   type?: string; // Relationship type: 'accused', 'alleged', 'related', 'witness', 'location', etc.
   notes?: string; // Additional notes about the relationship
-  alleged_cases?: number[]; // Case IDs where entity is alleged
-  related_cases?: number[]; // Case IDs where entity is related
+  related_cases?: EntityCaseRelationship[]; // Unified case links with relation metadata
+}
+
+export interface EntityCaseRelationship {
+  case_id: number;
+  relation_type: string;
+  notes: string;
 }
 
 export interface TimelineEntry {
