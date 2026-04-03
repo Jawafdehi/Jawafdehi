@@ -44,6 +44,7 @@ export interface FeedbackSubmission {
   description: string;
   relatedPage?: string;
   contactInfo?: ContactInfo;
+  attachment?: File;
 }
 
 export interface FeedbackResponse {
@@ -295,6 +296,20 @@ export async function getStatistics(): Promise<CaseStatistics> {
  */
 export async function submitFeedback(feedback: FeedbackSubmission): Promise<FeedbackResponse> {
   try {
+    if (feedback.attachment) {
+      // Use multipart/form-data when a file is attached
+      const formData = new FormData();
+      formData.append('feedbackType', feedback.feedbackType);
+      formData.append('subject', feedback.subject);
+      formData.append('description', feedback.description);
+      if (feedback.relatedPage) formData.append('relatedPage', feedback.relatedPage);
+      if (feedback.contactInfo) formData.append('contactInfo', JSON.stringify(feedback.contactInfo));
+      formData.append('attachment', feedback.attachment);
+      const response = await apiClient.post<FeedbackResponse>('/feedback/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    }
     const response = await apiClient.post<FeedbackResponse>('/feedback/', feedback);
     return response.data;
   } catch (error) {

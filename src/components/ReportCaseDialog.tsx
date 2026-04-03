@@ -46,6 +46,7 @@ export function ReportCaseDialog({ caseId, caseTitle }: ReportCaseDialogProps) {
                         initialSubject={`Correction/Addition Inquiry: ${caseTitle}`}
                         initialRelatedPage={`Case Detail: ${caseId} (${caseTitle})`}
                         showFeedbackTypeSelector={false}
+                        allowAttachment={true}
                         onSuccess={() => setOpen(false)}
                     />
                 </div>

@@ -430,7 +430,11 @@
       "rateLimit": "Too Many Submissions",
       "server": "Server error. Please try again later.",
       "network": "Network error. Please check your connection and try again."
-    }
+    },
+    "attachment": "Attachment",
+    "attachmentOptional": "optional",
+    "attachmentMaxSize": "Maximum file size: 10 MB",
+    "attachmentTooLarge": "File is too large. Maximum size is 10 MB."
   },
   "notFound": {
     "title": "404",
