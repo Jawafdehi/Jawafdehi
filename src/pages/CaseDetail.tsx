@@ -29,14 +29,13 @@ import "@/styles/print.css";
 const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
-  const { id } = useParams();
-  const caseId = id ? parseInt(id) : undefined;
+  const { id: caseIdentifier } = useParams();
 
   // Fetch case data
   const { data: caseData, isLoading, isError } = useQuery({
-    queryKey: ['case', caseId],
-    queryFn: () => getCaseById(caseId!),
-    enabled: caseId != null,
+    queryKey: ['case', caseIdentifier],
+    queryFn: () => getCaseById(caseIdentifier!),
+    enabled: !!caseIdentifier,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -128,7 +127,8 @@ const CaseDetail = () => {
     );
   }
 
-  const canonicalUrl = `https://jawafdehi.org/case/${id}`;
+  const publicCasePath = caseData.slug || caseIdentifier;
+  const canonicalUrl = `https://jawafdehi.org/case/${publicCasePath}`;
   const plainDescription = caseData.description
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/g, ' ')
@@ -182,9 +182,8 @@ const CaseDetail = () => {
                 </span>
               </Link>
             </Button>
-
             <div className="flex gap-2">
-              <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
+              <ReportCaseDialog caseId={publicCasePath || ""} caseTitle={caseData.title} />
             </div>
           </div>
 
@@ -292,6 +291,42 @@ const CaseDetail = () => {
           </div>
 
           <Separator className="mb-8" />
+
+          {(caseData.court_cases?.length || caseData.missing_details || caseData.bigo != null || caseData.slug) && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Case Metadata</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {caseData.slug && (
+                  <div>
+                    <span className="font-medium">Slug:</span> {caseData.slug}
+                  </div>
+                )}
+                {!!caseData.court_cases?.length && (
+                  <div>
+                    <p className="font-medium mb-1">Court Cases</p>
+                    <ul className="list-disc list-inside text-muted-foreground">
+                      {caseData.court_cases.map((courtCase) => (
+                        <li key={courtCase}>{courtCase}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {caseData.bigo != null && (
+                  <div>
+                    <span className="font-medium">Bigo:</span> {caseData.bigo}
+                  </div>
+                )}
+                {caseData.missing_details && (
+                  <div>
+                    <p className="font-medium mb-1">Missing Details</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{caseData.missing_details}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="mb-8">
             <CardHeader>
@@ -455,7 +490,7 @@ const CaseDetail = () => {
             </div>
             <Button variant="outline" size="lg" asChild className="shrink-0">
               <a
-                href={`https://portal.jawafdehi.org/admin/cases/case/${id}/change/`}
+                href={`https://portal.jawafdehi.org/admin/cases/case/${caseData.id}/change/`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"

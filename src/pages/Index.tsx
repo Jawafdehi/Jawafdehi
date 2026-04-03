@@ -164,7 +164,7 @@ const Index = () => {
       const formattedDate = formatDateWithBS(caseItem.created_at, 'PPP');
 
       return {
-        id: caseItem.id.toString(),
+        identifier: caseItem.slug || caseItem.id.toString(),
         title: caseItem.title,
         entity: primaryEntity,
         location: locationNames,
@@ -482,7 +482,7 @@ const Index = () => {
             {featuredCases.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {featuredCases.map((caseItem) => (
-                  <CaseCard key={caseItem.id} {...caseItem} />
+                  <CaseCard key={caseItem.identifier} {...caseItem} />
                 ))}
               </div>
             ) : (

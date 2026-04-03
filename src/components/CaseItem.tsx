@@ -85,7 +85,7 @@ const CaseItem = ({ case: caseData }: CaseItemProps) => {
         )}
 
         <Link 
-          to={`/case/${caseData.id}`}
+          to={`/case/${caseData.slug || caseData.id}`}
           className="inline-block text-sm text-primary hover:underline mt-2"
         >
           View Full Case Details →
