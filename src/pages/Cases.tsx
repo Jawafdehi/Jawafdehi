@@ -16,6 +16,11 @@ import { useQuery, useQueries } from "@tanstack/react-query";
 import { formatDateWithBS } from "@/utils/date";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
+const STATUS_TO_STATE: Record<string, string> = {
+  ongoing: "PUBLISHED",
+  "under-investigation": "IN_REVIEW",
+  resolved: "CLOSED",
+};
 const Cases = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
@@ -53,7 +58,7 @@ const Cases = () => {
     const matchesSearch =
       caseItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       caseItem.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all";
+    const matchesStatus = statusFilter === "all" || caseItem.state === STATUS_TO_STATE[statusFilter];
     const matchesType = typeFilter === "all" || caseItem.case_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
