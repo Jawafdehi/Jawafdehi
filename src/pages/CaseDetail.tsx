@@ -21,6 +21,7 @@ import type { Entity } from "@/types/nes";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatDateWithBS, formatCaseDateRange } from "@/utils/date";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
+import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import "@/styles/print.css";
@@ -465,6 +466,13 @@ const CaseDetail = () => {
               </a>
             </Button>
           </div>
+
+          {/* Public Discussion / Comments Section */}
+          <DisqusComments
+            caseId={id || ""}
+            caseTitle={caseData.title}
+            caseUrl={canonicalUrl}
+          />
         </div>
       </main>
 

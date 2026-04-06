@@ -124,6 +124,12 @@
       "ongoing": "Ongoing",
       "resolved": "Resolved",
       "underInvestigation": "Under Investigation"
+    },
+    "comments": {
+      "title": "Public Discussion",
+      "loading": "Loading comments...",
+      "joinDiscussion": "Join the discussion and share your thoughts on this case.",
+      "loadComments": "Load Comments"
     }
   },
   "documentSource": {

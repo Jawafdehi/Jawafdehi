@@ -124,6 +124,12 @@
       "ongoing": "चलिरहेको",
       "resolved": "समाधान भएको",
       "underInvestigation": "अनुसन्धानमा"
+    },
+    "comments": {
+      "title": "सार्वजनिक छलफल",
+      "loading": "टिप्पणीहरू लोड हुँदैछ...",
+      "joinDiscussion": "यस मुद्दामा आफ्नो विचार साझा गर्न छलफलमा सामेल हुनुहोस्।",
+      "loadComments": "टिप्पणीहरू लोड गर्नुहोस्"
     }
   },
   "documentSource": {
