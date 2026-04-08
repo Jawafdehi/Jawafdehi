@@ -33,7 +33,7 @@ interface PaginatedCaseList {
   results: Array<{
     id: number;
     updated_at: string;
-    entities: Array<{ nes_id: string | null }>;
+    entities: Array<{ id: number; nes_id: string | null }>;
   }>;
 }
 
@@ -126,6 +126,7 @@ async function main() {
   }
 
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
+  // @ts-expect-error: module only exists after `vite build --ssr`
   const { render } = await import('../dist/server/entry-server.js') as {
     render: (url: string) => Promise<RenderResult>;
   };
@@ -140,6 +141,11 @@ async function main() {
     { path: '/information', outFile: join(ROOT, 'dist/information/index.html') },
     { path: '/feedback', outFile: join(ROOT, 'dist/feedback/index.html') },
     { path: '/report', outFile: join(ROOT, 'dist/report/index.html') },
+    { path: '/team', outFile: join(ROOT, 'dist/team/index.html') },
+    { path: '/products', outFile: join(ROOT, 'dist/products/index.html') },
+    { path: '/commitment', outFile: join(ROOT, 'dist/commitment/index.html') },
+    { path: '/our-process', outFile: join(ROOT, 'dist/our-process/index.html') },
+    { path: '/volunteer', outFile: join(ROOT, 'dist/volunteer/index.html') },
   ];
 
   // Fetch cases and entity IDs
@@ -153,19 +159,11 @@ async function main() {
     apiReachable = false;
   }
 
-  // Collect unique entity IDs — validate against safe whitelist to prevent path traversal
-  const SAFE_ID_RE = /^[A-Za-z0-9_-]+$/;
+  // Collect unique entity IDs — use numeric JDS entity IDs for /entity/:id routes
   const entityIds = apiReachable
     ? [...new Set(
         cases
-          .flatMap(c => c.entities.map(e => e.nes_id).filter((id): id is string => id != null))
-          .filter(id => {
-            if (!SAFE_ID_RE.test(id)) {
-              console.warn(`[pre-render] WARNING: Skipping entity with unsafe id: ${JSON.stringify(id)}`);
-              return false;
-            }
-            return true;
-          })
+          .flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
       )]
     : [];
 
@@ -206,8 +204,8 @@ async function main() {
 
   // Render entity routes
   await withConcurrency(entityIds, CONCURRENCY, async (entityId) => {
-    const path = `/entity/${encodeURIComponent(entityId)}`;
-    const outFile = join(ROOT, 'dist', 'entity', entityId, 'index.html');
+    const path = `/entity/${entityId}`;
+    const outFile = join(ROOT, 'dist', 'entity', String(entityId), 'index.html');
     try {
       const result = await render(path);
       const html = injectIntoTemplate(template, result);
@@ -218,6 +216,22 @@ async function main() {
       if (err instanceof Error) console.error(err.stack);
     }
   });
+
+  // Render update detail routes (static data — IDs are known at build time)
+  const updateIds = ['2026-01-26-job-postings', '2026-01-04-second-national-strategy-feedback'];
+  for (const updateId of updateIds) {
+    const path = `/updates/${updateId}`;
+    const outFile = join(ROOT, 'dist', 'updates', updateId, 'index.html');
+    try {
+      const result = await render(path);
+      const html = injectIntoTemplate(template, result);
+      await writeHtml(outFile, html);
+      console.log(`[pre-render] ✓ ${path}`);
+    } catch (err) {
+      console.warn(`[pre-render] WARNING: Skipping update ${updateId}:`, err);
+      if (err instanceof Error) console.error(err.stack);
+    }
+  }
 
   console.log('[pre-render] Done.');
 }

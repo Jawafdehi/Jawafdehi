@@ -10,7 +10,7 @@ const API_BASE = 'https://portal.jawafdehi.org/api';
 interface CaseSummary {
   id: number;
   updated_at: string;
-  entities: Array<{ nes_id: string | null }>;
+  entities: Array<{ id: number; nes_id: string | null }>;
 }
 
 interface PaginatedCaseList {
@@ -18,7 +18,8 @@ interface PaginatedCaseList {
   results: CaseSummary[];
 }
 
-const STATIC_ROUTES = ['/', '/about', '/cases', '/entities', '/updates', '/information', '/feedback', '/report'];
+const STATIC_ROUTES = ['/', '/about', '/cases', '/entities', '/updates', '/information', '/feedback', '/report', '/team', '/products', '/commitment', '/our-process', '/volunteer'];
+const UPDATE_IDS = ['2026-01-26-job-postings', '2026-01-04-second-national-strategy-feedback'];
 
 function toYMD(isoDate: string): string {
   return isoDate.substring(0, 10);
@@ -57,11 +58,12 @@ async function main() {
   }
 
   const entityIds = [...new Set(
-    cases.flatMap(c => c.entities.map(e => e.nes_id).filter((id): id is string => id != null))
+    cases.flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
   )];
 
   const entries: string[] = [
     ...STATIC_ROUTES.map(r => urlEntry(`${CANONICAL}${r}`, today)),
+    ...UPDATE_IDS.map(id => urlEntry(`${CANONICAL}/updates/${id}`, today)),
     ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.id}`, toYMD(c.updated_at))),
     ...entityIds.map(id => urlEntry(`${CANONICAL}/entity/${id}`, today)),
   ];

@@ -17,7 +17,8 @@ const JDS_API_BASE_URL =
   'https://portal.jawafdehi.org/api';
 
 export default function EntityProfile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
   const { id: encodedId } = useParams();
 
   const numericId = encodedId ? parseInt(decodeURIComponent(encodedId), 10) : NaN;
@@ -36,24 +37,36 @@ export default function EntityProfile() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {jawafEntity && (
-        <Helmet>
-          <title>{jawafEntity.display_name} | Jawafdehi Nepal</title>
-          <meta name="description" content={`View profile and corruption allegations for ${jawafEntity.display_name} on Jawafdehi — Nepal's open accountability database.`} />
-          <link rel="canonical" href={`https://jawafdehi.org/entity/${jawafEntity.id}`} />
-          <meta property="og:site_name" content="Jawafdehi Nepal" />
-          <meta property="og:type" content="profile" />
-          <meta property="og:url" content={`https://jawafdehi.org/entity/${jawafEntity.id}`} />
-          <meta property="og:title" content={`${jawafEntity.display_name} | Jawafdehi Nepal`} />
-          <meta property="og:description" content={`View profile and corruption allegations for ${jawafEntity.display_name} on Jawafdehi — Nepal's open accountability database.`} />
-          <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
-          <meta property="og:locale" content="en_US" />
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={`${jawafEntity.display_name} | Jawafdehi Nepal`} />
-          <meta name="twitter:description" content={`View profile and corruption allegations for ${jawafEntity.display_name} on Jawafdehi — Nepal's open accountability database.`} />
-          <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
-        </Helmet>
-      )}
+      {jawafEntity && (() => {
+        const isNepali = currentLang === 'ne';
+        const entityName = jawafEntity.display_name || '';
+        const pageTitle = isNepali
+          ? `${entityName} भ्रष्टाचारका मुद्धाहरु | जवाफदेही`
+          : `${entityName} - Corruption Cases | Jawafdehi`;
+        const pageDescription = isNepali
+          ? `${entityName} सँग सम्बन्धित भ्रष्टाचारका मुद्दाहरू हेर्नुहोस् — जवाफदेही नेपालको खुला जवाफदेहिता डेटाबेस।`
+          : `View corruption cases and allegations involving ${entityName} on Jawafdehi — Nepal's open accountability database.`;
+        const canonicalUrl = `https://jawafdehi.org/entity/${jawafEntity.id}`;
+        return (
+          <Helmet>
+            <title>{pageTitle}</title>
+            <meta name="description" content={pageDescription} />
+            <link rel="canonical" href={canonicalUrl} />
+            <meta property="og:site_name" content="Jawafdehi Nepal" />
+            <meta property="og:type" content="profile" />
+            <meta property="og:url" content={canonicalUrl} />
+            <meta property="og:title" content={pageTitle} />
+            <meta property="og:description" content={pageDescription} />
+            <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+            <meta property="og:locale" content={isNepali ? 'ne_NP' : 'en_US'} />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={pageTitle} />
+            <meta name="twitter:description" content={pageDescription} />
+            <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+            <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
+          </Helmet>
+        );
+      })()}
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8">

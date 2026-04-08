@@ -43,10 +43,18 @@ const OurProducts = () => (
   <div className="min-h-screen flex flex-col bg-background">
     <Helmet>
       <title>Our Products — Jawafdehi</title>
-      <meta
-        name="description"
-        content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services."
-      />
+      <meta name="description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
+      <link rel="canonical" href="https://jawafdehi.org/products" />
+      <meta property="og:site_name" content="Jawafdehi Nepal" />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://jawafdehi.org/products" />
+      <meta property="og:title" content="Our Products — Jawafdehi" />
+      <meta property="og:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
+      <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Our Products — Jawafdehi" />
+      <meta name="twitter:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
+      <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
     </Helmet>
     <Header />
 

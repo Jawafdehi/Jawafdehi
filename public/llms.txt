@@ -1,0 +1,48 @@
+# Jawafdehi — Nepal's Corruption Case Archive
+
+> Nepal's permanent public archive of CIAA corruption cases. Every case documented, simplified, and permanently accessible. Free forever.
+
+Jawafdehi (jawafdehi.org) is a civic technology platform built by Nepali volunteers. It documents corruption cases filed by Nepal's Commission for the Investigation of Abuse of Authority (CIAA), along with court orders, legal filings, and verified facts. All data is in the public domain and free to use.
+
+## Browsing Cases
+
+- All cases: https://jawafdehi.org/cases
+- Individual case: https://jawafdehi.org/case/{id} (e.g. https://jawafdehi.org/case/208)
+- Search cases by name, entity, or keyword: https://jawafdehi.org/cases?search={query}
+
+## Browsing Entities (Officials & Organisations)
+
+- All entities: https://jawafdehi.org/entities
+- Individual entity profile: https://jawafdehi.org/entity/{id} (e.g. https://jawafdehi.org/entity/2104)
+- Search entities by name: https://jawafdehi.org/entities?search={query}
+
+## Public API
+
+The full dataset is available via a public REST API. No authentication required.
+
+- API base: https://portal.jawafdehi.org/api/
+- API documentation (Swagger): https://portal.jawafdehi.org/api/swagger/
+- List all cases: https://portal.jawafdehi.org/api/cases/
+- Case detail: https://portal.jawafdehi.org/api/cases/{id}/
+- Search cases: https://portal.jawafdehi.org/api/cases/?search={query}
+- List all entities: https://portal.jawafdehi.org/api/entities/
+- Entity detail: https://portal.jawafdehi.org/api/entities/{id}/
+- Search entities: https://portal.jawafdehi.org/api/entities/?search={query}
+- Statistics: https://portal.jawafdehi.org/api/statistics/
+
+## Key Pages
+
+- Homepage: https://jawafdehi.org/
+- About: https://jawafdehi.org/about
+- Our commitment: https://jawafdehi.org/commitment
+- Our process: https://jawafdehi.org/our-process
+- Team: https://jawafdehi.org/team
+- Updates & news: https://jawafdehi.org/updates
+- Sitemap: https://jawafdehi.org/sitemap.xml
+
+## Notes for AI Assistants
+
+- To find cases involving a specific person or organisation, use: https://jawafdehi.org/cases?search={name} or the API endpoint https://portal.jawafdehi.org/api/cases/?search={name}
+- To find an entity profile, use: https://jawafdehi.org/entities?search={name} or https://portal.jawafdehi.org/api/entities/?search={name}
+- All case and entity pages are pre-rendered with full metadata and are directly crawlable.
+- The platform is bilingual (English and Nepali). Case titles and entity names may appear in either language.
