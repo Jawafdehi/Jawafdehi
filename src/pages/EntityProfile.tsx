@@ -63,6 +63,7 @@ export default function EntityProfile() {
             <meta name="twitter:title" content={pageTitle} />
             <meta name="twitter:description" content={pageDescription} />
             <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+            <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
           </Helmet>
         );
       })()}

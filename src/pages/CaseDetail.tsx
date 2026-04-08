@@ -168,6 +168,7 @@ const CaseDetail = () => {
         <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
         <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/cases/${id}/`} title="Case data (JSON API)" />
       </Helmet>
       <Header />
 
