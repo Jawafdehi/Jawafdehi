@@ -82,6 +82,14 @@ export const teamMembers: TeamMember[] = [
     ],
   },
   {
+    displayName: { en: "Sujata Pokharel", ne: "सुजाता पोखरेल" },
+    thumb: "/assets/teammembers/sujata.png",
+    description: "Volunteer (Social Media), Jawafdehi.org",
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/sujata-pokharel-293348249/" },
+    ],
+  },
+  {
     displayName: { en: "Raghu Sharma", ne: "रघु शर्मा" },
     thumb: "/assets/teammembers/raghu.png",
     description: "Software Engineer Intern, Jawafdehi.org",
