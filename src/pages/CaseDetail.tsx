@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -24,6 +25,7 @@ import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { trackEvent } from "@/utils/analytics";
 import "@/styles/print.css";
 
 
@@ -64,6 +66,13 @@ const CaseDetail = () => {
       retry: false,
     })),
   });
+
+  // Track case view event when case data is loaded
+  useEffect(() => {
+    if (caseData && id) {
+      trackEvent('case_view', { case_id: id });
+    }
+  }, [caseData, id]);
 
   // Build lookup maps
   const resolvedSources: Record<number, DocumentSource> = {};

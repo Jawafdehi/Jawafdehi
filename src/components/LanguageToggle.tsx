@@ -7,13 +7,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { trackEvent } from "@/utils/analytics";
 
 export const LanguageToggle = () => {
   const { i18n, t } = useTranslation();
   const currentLanguage = i18n.language || "ne";
 
   const handleLanguageChange = (lang: "en" | "ne") => {
+    const previousLang = currentLanguage;
     i18n.changeLanguage(lang);
+    trackEvent('language_switch', { from_lang: previousLang, to_lang: lang });
     // Language preference is automatically persisted via localStorage by i18next-browser-languagedetector
   };
 
