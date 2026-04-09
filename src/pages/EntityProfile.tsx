@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -11,6 +12,7 @@ import { AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import type { JawafEntity } from "@/types/jds";
+import { trackEvent } from "@/utils/analytics";
 
 const JDS_API_BASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_JDS_API_BASE_URL) ||
@@ -20,6 +22,7 @@ export default function EntityProfile() {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const { id: encodedId } = useParams();
+  const trackedEntityIdRef = useRef<string | null>(null);
 
   const numericId = encodedId ? parseInt(decodeURIComponent(encodedId), 10) : NaN;
   const validId = !isNaN(numericId);
@@ -34,6 +37,20 @@ export default function EntityProfile() {
     staleTime: 5 * 60 * 1000,
     retry: false,
   });
+
+  // Track entity view event when entity data is loaded
+  useEffect(() => {
+    const entityId = jawafEntity?.id?.toString();
+    if (!entityId || trackedEntityIdRef.current === entityId) {
+      return;
+    }
+
+    trackEvent('entity_view', {
+      entity_type: jawafEntity.type || 'unknown',
+      entity_id: entityId,
+    });
+    trackedEntityIdRef.current = entityId;
+  }, [jawafEntity]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

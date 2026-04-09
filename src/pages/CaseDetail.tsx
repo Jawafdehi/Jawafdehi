@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -24,6 +25,7 @@ import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { trackEvent } from "@/utils/analytics";
 import "@/styles/print.css";
 
 
@@ -32,6 +34,7 @@ const CaseDetail = () => {
   const currentLang = i18n.language;
   const { id } = useParams();
   const caseId = id ? parseInt(id) : undefined;
+  const trackedCaseIdRef = useRef<string | null>(null);
 
   // Fetch case data
   const { data: caseData, isLoading, isError } = useQuery({
@@ -64,6 +67,21 @@ const CaseDetail = () => {
       retry: false,
     })),
   });
+
+  // Track once per loaded case id to avoid duplicates while excluding error/404 views
+  useEffect(() => {
+    const loadedCaseId = caseData?.id?.toString();
+    if (!id || !loadedCaseId || isError) {
+      return;
+    }
+
+    if (loadedCaseId !== id || trackedCaseIdRef.current === loadedCaseId) {
+      return;
+    }
+
+    trackEvent('case_view', { case_id: loadedCaseId });
+    trackedCaseIdRef.current = loadedCaseId;
+  }, [id, caseData?.id, isError]);
 
   // Build lookup maps
   const resolvedSources: Record<number, DocumentSource> = {};

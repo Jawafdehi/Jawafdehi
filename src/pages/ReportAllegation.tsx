@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { AlertCircle, Upload, Download, FileText, Mail } from "lucide-react";
+import { trackEvent } from "@/utils/analytics";
 
 export default function ReportAllegation() {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ export default function ReportAllegation() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    trackEvent('allegation_submitted');
     toast({
       title: t("report.submitted.title"),
       description: t("report.submitted.description"),
