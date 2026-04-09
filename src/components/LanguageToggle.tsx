@@ -13,10 +13,13 @@ export const LanguageToggle = () => {
   const { i18n, t } = useTranslation();
   const currentLanguage = i18n.language || "ne";
 
-  const handleLanguageChange = (lang: "en" | "ne") => {
-    const previousLang = currentLanguage;
-    i18n.changeLanguage(lang);
-    trackEvent('language_switch', { from_lang: previousLang, to_lang: lang });
+  const handleLanguageChange = async (lang: "en" | "ne") => {
+    if (lang === currentLanguage) {
+      return;
+    }
+
+    await i18n.changeLanguage(lang);
+    trackEvent('language_switch', { from_lang: currentLanguage, to_lang: lang });
     // Language preference is automatically persisted via localStorage by i18next-browser-languagedetector
   };
 
