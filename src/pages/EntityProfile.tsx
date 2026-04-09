@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -22,6 +22,7 @@ export default function EntityProfile() {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const { id: encodedId } = useParams();
+  const seenEntityViewIds = useRef<Set<string>>(new Set());
 
   const numericId = encodedId ? parseInt(decodeURIComponent(encodedId), 10) : NaN;
   const validId = !isNaN(numericId);
@@ -39,12 +40,16 @@ export default function EntityProfile() {
 
   // Track entity view event when entity data is loaded
   useEffect(() => {
-    if (jawafEntity) {
-      trackEvent('entity_view', {
-        entity_type: jawafEntity.type || 'unknown',
-        entity_slug: jawafEntity.id.toString(),
-      });
+    const entityId = jawafEntity?.id?.toString();
+    if (!entityId || seenEntityViewIds.current.has(entityId)) {
+      return;
     }
+
+    trackEvent('entity_view', {
+      entity_type: jawafEntity.type || 'unknown',
+      entity_slug: entityId,
+    });
+    seenEntityViewIds.current.add(entityId);
   }, [jawafEntity]);
 
   return (
