@@ -19,7 +19,7 @@ declare global {
 // Event type definitions for type-safety
 export type AnalyticsEvent =
   | { name: 'case_view'; params: { case_id: string } }
-  | { name: 'entity_view'; params: { entity_type: string; entity_slug: string } }
+  | { name: 'entity_view'; params: { entity_type: string; entity_id: string } }
   | { name: 'language_switch'; params: { from_lang: string; to_lang: string } }
   | { name: 'allegation_submitted'; params?: Record<string, never> };
 

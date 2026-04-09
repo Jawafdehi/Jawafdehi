@@ -34,7 +34,7 @@ const CaseDetail = () => {
   const currentLang = i18n.language;
   const { id } = useParams();
   const caseId = id ? parseInt(id) : undefined;
-  const trackedCaseIdsRef = useRef<Set<string>>(new Set());
+  const trackedCaseIdRef = useRef<string | null>(null);
 
   // Fetch case data
   const { data: caseData, isLoading, isError } = useQuery({
@@ -68,14 +68,14 @@ const CaseDetail = () => {
     })),
   });
 
-  // Track case view event once per case id to avoid duplicates on refetch
+  // Track once per id change to avoid duplicates on refetch while allowing revisits
   useEffect(() => {
-    if (!id || trackedCaseIdsRef.current.has(id)) {
+    if (!id || trackedCaseIdRef.current === id) {
       return;
     }
 
     trackEvent('case_view', { case_id: id });
-    trackedCaseIdsRef.current.add(id);
+    trackedCaseIdRef.current = id;
   }, [id]);
 
   // Build lookup maps
