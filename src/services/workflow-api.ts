@@ -59,6 +59,7 @@ export async function listWorkflowRuns(
     params.has_failed = "false";
   } else if (filter === "complete") {
     params.is_complete = "true";
+    params.has_failed = "false";
   } else if (filter === "failed") {
     params.has_failed = "true";
   }

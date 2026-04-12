@@ -45,7 +45,7 @@ export async function handleInterceptorError(error: AxiosError, client: AxiosIns
   const originalRequest = error.config as RetryableAxiosRequestConfig | undefined;
 
   // Reject immediately if no config, or if the refresh request itself failed
-  if (!originalRequest || originalRequest.url?.includes("/auth/token/refresh/")) {
+  if (!originalRequest || originalRequest.url?.includes("/auth/token/")) {
     return Promise.reject(error);
   }
 
