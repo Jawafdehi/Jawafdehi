@@ -72,12 +72,12 @@ export async function listWorkflowRuns(
     params.page = String(page);
   }
 
-  const { data } = await client.get("/runs/", { params });
+  const { data } = await client.get<WorkflowRunListResponse>("/runs/", { params });
   return data;
 }
 
 export async function getWorkflowRunDetail(runId: string): Promise<WorkflowRunDetail> {
-  const { data } = await client.get(`/runs/${runId}/`);
+  const { data } = await client.get<WorkflowRunDetail>(`/runs/${runId}/`);
   return data;
 }
 
@@ -161,7 +161,7 @@ export function computeStepStatuses(run: WorkflowRunDetail): StepDisplayInfo[] {
 
     if (record?.status === "complete") {
       status = "complete";
-    } else if (!foundActiveStep) {
+    } else if (!foundActiveStep && !(run.is_complete && !run.has_failed)) {
       foundActiveStep = true;
       status = run.has_failed ? "failed" : "in-progress";
     } else {
