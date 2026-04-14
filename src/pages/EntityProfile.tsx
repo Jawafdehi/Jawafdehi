@@ -48,9 +48,10 @@ export default function EntityProfile() {
     trackEvent('entity_view', {
       entity_type: jawafEntity.type || 'unknown',
       entity_id: entityId,
+      slug: `/entity/${encodedId}`,
     });
     trackedEntityIdRef.current = entityId;
-  }, [jawafEntity]);
+  }, [jawafEntity, encodedId]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -79,7 +79,7 @@ const CaseDetail = () => {
       return;
     }
 
-    trackEvent('case_view', { case_id: loadedCaseId });
+    trackEvent('case_view', { case_id: loadedCaseId, slug: `/case/${id}` });
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, isError]);
 

@@ -18,8 +18,8 @@ declare global {
 
 // Event type definitions for type-safety
 export type AnalyticsEvent =
-  | { name: 'case_view'; params: { case_id: string } }
-  | { name: 'entity_view'; params: { entity_type: string; entity_id: string } }
+  | { name: 'case_view'; params: { case_id: string; slug: string } }
+  | { name: 'entity_view'; params: { entity_type: string; entity_id: string; slug: string } }
   | { name: 'language_switch'; params: { from_lang: string; to_lang: string } }
   | { name: 'allegation_submitted'; params?: Record<string, never> };
 
@@ -34,7 +34,7 @@ type AnalyticsEventParams<T extends AnalyticsEvent['name']> =
  * 
  * @example
  * // Track a case view
- * trackEvent('case_view', { case_id: '123' });
+ * trackEvent('case_view', { case_id: '123', slug: '/case/123' });
  * 
  * @example
  * // Track language switch
