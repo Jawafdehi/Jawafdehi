@@ -21,6 +21,7 @@ import Feedback from "./pages/Feedback";
 import Updates from "./pages/Updates";
 import UpdateDetail from "./pages/UpdateDetail";
 import NotFound from "./pages/NotFound";
+import GuestChat from "./pages/GuestChat";
 import { CaseworkerAuthProvider } from "./context/CaseworkerAuthContext";
 import CaseworkerLogin from "./pages/CaseworkerLogin";
 import CaseworkerDashboard from "./pages/CaseworkerDashboard";
@@ -36,6 +37,7 @@ const App = () => (
       <Route path="/case/:id" element={<CaseDetail />} />
       <Route path="/entities" element={<Entities />} />
       <Route path="/entity/:id" element={<EntityProfile />} />
+      <Route path="/ask" element={<GuestChat />} />
       <Route path="/report" element={<ReportAllegation />} />
       <Route path="/entity-response/:id" element={<EntityResponse />} />
       <Route path="/moderation" element={<ModerationDashboard />} />
