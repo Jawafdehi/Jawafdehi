@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Header } from "@/components/Header";
+import { GuestCaseChatDrawer } from "@/components/guest/GuestCaseChatDrawer";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, MapPin, User, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MessageCircle, StickyNote } from "lucide-react";
+import { Calendar, MapPin, User, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MessageCircle, MessageSquareText, StickyNote } from "lucide-react";
 import { getCaseById, getDocumentSourceById } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
 import type { DocumentSource } from "@/types/jds";
@@ -26,6 +27,7 @@ import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { trackEvent } from "@/utils/analytics";
+import { cn } from "@/lib/utils";
 import "@/styles/print.css";
 
 
@@ -35,8 +37,8 @@ const CaseDetail = () => {
   const { id } = useParams();
   const caseId = id ? parseInt(id) : undefined;
   const trackedCaseIdRef = useRef<string | null>(null);
+  const [isAskDrawerOpen, setIsAskDrawerOpen] = useState(false);
 
-  // Fetch case data
   const { data: caseData, isLoading, isError } = useQuery({
     queryKey: ['case', caseId],
     queryFn: () => getCaseById(caseId!),
@@ -44,7 +46,6 @@ const CaseDetail = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch all evidence sources in parallel once we have case data
   const sourceQueries = useQueries({
     queries: (caseData?.evidence ?? []).map((evidence) => ({
       queryKey: ['source', evidence.source_id],
@@ -54,7 +55,6 @@ const CaseDetail = () => {
     })),
   });
 
-  // Fetch all NES entities in parallel
   const uniqueNesIds = caseData
     ? [...new Set(caseData.entities.filter(e => e.nes_id).map(e => e.nes_id!))]
     : [];
@@ -68,7 +68,6 @@ const CaseDetail = () => {
     })),
   });
 
-  // Track once per loaded case id to avoid duplicates while excluding error/404 views
   useEffect(() => {
     const loadedCaseId = caseData?.id?.toString();
     if (!id || !loadedCaseId || isError) {
@@ -83,7 +82,6 @@ const CaseDetail = () => {
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, isError]);
 
-  // Build lookup maps
   const resolvedSources: Record<number, DocumentSource> = {};
   (caseData?.evidence ?? []).forEach((evidence, i) => {
     const data = sourceQueries[i]?.data;
@@ -95,6 +93,12 @@ const CaseDetail = () => {
     const data = entityQueries[i]?.data;
     if (data) resolvedEntities[nesId] = data;
   });
+
+  const chatSources = (caseData?.evidence ?? []).map((evidence) => ({
+    sourceId: evidence.source_id,
+    source: resolvedSources[evidence.source_id] ?? null,
+    evidenceDescription: evidence.description,
+  }));
 
   if (isLoading) {
     return (
@@ -192,7 +196,7 @@ const CaseDetail = () => {
       <Header />
 
       <main className="flex-1 py-12">
-        <div className="container mx-auto px-4 max-w-5xl">
+        <div className={cn("container mx-auto px-4", isAskDrawerOpen ? "max-w-[1500px]" : "max-w-5xl")}>
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 mb-4 no-print">
             <Button variant="outline" asChild>
               <Link to="/cases">
@@ -204,40 +208,47 @@ const CaseDetail = () => {
             </Button>
 
             <div className="flex gap-2">
+              <Button
+                variant={isAskDrawerOpen ? "secondary" : "outline"}
+                onClick={() => setIsAskDrawerOpen((current) => !current)}
+                className="gap-1.5 px-2.5"
+              >
+                <MessageSquareText className="h-4 w-4" />
+                <span className="mt-[5px]">{isAskDrawerOpen ? "Hide chat" : "Ask Jawafdehi"}</span>
+              </Button>
               <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
             </div>
           </div>
 
-          {/* Floating share sidebar - desktop only */}
-          <FloatingShareSidebar
-            url={canonicalUrl}
-            title={caseData.title}
-            description={plainDescription}
-          />
+          <div className={cn("grid gap-8", isAskDrawerOpen && "xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_520px] xl:items-start")}>
+            <div className={cn("min-w-0", isAskDrawerOpen && "order-2 xl:order-1")}>
+              <FloatingShareSidebar
+                url={canonicalUrl}
+                title={caseData.title}
+                description={plainDescription}
+              />
 
-          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 no-print">
-            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
-              {t("footer.disclaimer")}
-            </AlertDescription>
-          </Alert>
+              <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 no-print">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
+                  {t("footer.disclaimer")}
+                </AlertDescription>
+              </Alert>
 
-          {caseData.state === 'IN_REVIEW' && (
-            <Alert className="mb-6 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800 no-print">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              <AlertDescription className="text-yellow-800 dark:text-yellow-200 text-sm">
-                {t("caseDetail.inReviewBanner")}
-              </AlertDescription>
-            </Alert>
-          )}
+              {caseData.state === 'IN_REVIEW' && (
+                <Alert className="mb-6 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800 no-print">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <AlertDescription className="text-yellow-800 dark:text-yellow-200 text-sm">
+                    {t("caseDetail.inReviewBanner")}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-          {/* PRINTABLE CONTENT STARTS HERE */}
-          <div id="print-content" className="print-content">
+              <div id="print-content" className="print-content">
             <div className="mb-8">
               <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
                 <Badge className="bg-alert text-alert-foreground">
                   {(() => {
-                    // Map caseData.state to translation key
                     const stateMap: Record<string, string> = {
                       'DRAFT': 'caseDetail.status.underInvestigation',
                       'IN_REVIEW': 'caseDetail.status.underInvestigation',
@@ -441,57 +452,68 @@ const CaseDetail = () => {
           )}
 
           </div>
-          {/* PRINTABLE CONTENT ENDS HERE */}
 
-          {/* Share This Case Section - Bottom of article */}
-          <div 
-            id="bottom-share-section"
-            className="flex flex-col items-center gap-4 py-8 mb-8 border-y border-border no-print"
-          >
-            <p className="text-sm font-medium text-muted-foreground">
-              {t("share.shareThisCase")}
-            </p>
-            <InlineShareButtons
-              url={canonicalUrl}
-              title={caseData.title}
-              description={plainDescription}
-            />
-          </div>
-
-          {/* Contact and Edit Section - NOT PRINTED */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 no-print">
-            <div className="space-y-2 text-center md:text-left">
-              <h3 className="font-semibold text-lg">{t("caseDetail.contact")}</h3>
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Mail className="h-4 w-4" />
-                  <span className="mt-1">{t("caseDetail.emailLabel")}: {JAWAFDEHI_EMAIL}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageCircle className="h-4 w-4" />
-                  <span className="mt-1">{t("caseDetail.whatsappLabel")}: {JAWAFDEHI_WHATSAPP_NUMBER}</span>
-                </div>
-              </div>
-            </div>
-            <Button variant="outline" size="lg" asChild className="shrink-0">
-              <a
-                href={`https://portal.jawafdehi.org/admin/cases/case/${id}/change/`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
+              <div 
+                id="bottom-share-section"
+                className="flex flex-col items-center gap-4 py-8 mb-8 border-y border-border no-print"
               >
-                <ExternalLink className="h-4 w-4" />
-                <span className="mt-1.5">{t("caseDetail.editCase")}</span>
-              </a>
-            </Button>
-          </div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("share.shareThisCase")}
+                </p>
+                <InlineShareButtons
+                  url={canonicalUrl}
+                  title={caseData.title}
+                  description={plainDescription}
+                />
+              </div>
 
-          {/* Public Discussion / Comments Section */}
-          <DisqusComments
-            caseId={id || ""}
-            caseTitle={caseData.title}
-            caseUrl={canonicalUrl}
-          />
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 no-print">
+                <div className="space-y-2 text-center md:text-left">
+                  <h3 className="font-semibold text-lg">{t("caseDetail.contact")}</h3>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      <span className="mt-1">{t("caseDetail.emailLabel")}: {JAWAFDEHI_EMAIL}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageCircle className="h-4 w-4" />
+                      <span className="mt-1">{t("caseDetail.whatsappLabel")}: {JAWAFDEHI_WHATSAPP_NUMBER}</span>
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" size="lg" asChild className="shrink-0">
+                  <a
+                    href={`https://portal.jawafdehi.org/admin/cases/case/${id}/change/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="mt-1.5">{t("caseDetail.editCase")}</span>
+                  </a>
+                </Button>
+              </div>
+
+              <DisqusComments
+                caseId={id || ""}
+                caseTitle={caseData.title}
+                caseUrl={canonicalUrl}
+              />
+            </div>
+
+            {isAskDrawerOpen ? (
+              <div className="order-1 min-w-0 xl:order-2 xl:sticky xl:top-24 xl:h-[calc(100vh-8rem)]">
+                <GuestCaseChatDrawer
+                  caseId={caseData.id}
+                  caseTitle={caseData.title}
+                  caseData={caseData}
+                  sources={chatSources}
+                  open={isAskDrawerOpen}
+                  onOpenChange={setIsAskDrawerOpen}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
       </main>
 
