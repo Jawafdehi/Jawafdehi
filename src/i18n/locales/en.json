@@ -189,8 +189,9 @@
     "title": "Ask Jawafdehi",
     "newChat": "New chat",
     "prompts": {
-      "rabiLamichhane": "Is there any case related to Rabi Lamichhane?",
-      "registeredIn2082": "How many cases have been registered in 2082 BS?"
+      "procurementCorruption": "What kind of procurement-related corruption take place in Nepal?",
+      "ciaaProcess": "Show me how CIAA handles corruption cases in Nepal.",
+      "bigCorruptionCases": "Show me some big corruption cases in Nepal."
     },
     "errors": {
       "loadFailed": "We could not load public case results right now. Please try again."
