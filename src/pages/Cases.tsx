@@ -15,13 +15,36 @@ import { getEntityById } from "@/services/api";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { formatDateWithBS } from "@/utils/date";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import type { Case } from "@/types/jds";
+
+/**
+ * Categorizes a case based on its date fields
+ * @param caseItem - The case object with date fields
+ * @returns Status category: 'ongoing' | 'closed' | 'others'
+ */
+function getCaseStatus(caseItem: Case): 'ongoing' | 'closed' | 'others' {
+  const { case_start_date, case_end_date } = caseItem;
+  
+  // Safely handle null, undefined, and empty strings
+  const hasStartDate = case_start_date && case_start_date.trim() !== '';
+  const hasEndDate = case_end_date && case_end_date.trim() !== '';
+  
+  if (hasStartDate && !hasEndDate) {
+    return 'ongoing';
+  }
+  
+  if (hasStartDate && hasEndDate) {
+    return 'closed';
+  }
+  
+  return 'others';
+}
 
 const Cases = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'ongoing' | 'closed' | 'others'>('all');
 
   const { data: casesData, isLoading: loading, isError, refetch } = useQuery({
     queryKey: ['cases', { page: 1 }],
@@ -53,9 +76,11 @@ const Cases = () => {
     const matchesSearch =
       caseItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       caseItem.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all";
-    const matchesType = typeFilter === "all" || caseItem.case_type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    
+    const caseStatus = getCaseStatus(caseItem);
+    const matchesStatus = statusFilter === "all" || caseStatus === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -99,28 +124,15 @@ const Cases = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as 'all' | 'ongoing' | 'closed' | 'others')}>
                   <SelectTrigger>
                     <SelectValue placeholder={t("cases.filterByStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("cases.allStatuses")}</SelectItem>
                     <SelectItem value="ongoing">{t("cases.status.ongoing")}</SelectItem>
-                    <SelectItem value="under-investigation">{t("cases.status.underInvestigation")}</SelectItem>
-                    <SelectItem value="resolved">{t("cases.status.resolved")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex-1">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("cases.filterByType")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("cases.allTypes")}</SelectItem>
-                    <SelectItem value="CORRUPTION">{t("cases.type.corruption")}</SelectItem>
-                    <SelectItem value="PROMISES">{t("cases.type.brokenPromise")}</SelectItem>
+                    <SelectItem value="closed">{t("cases.status.closed")}</SelectItem>
+                    <SelectItem value="others">{t("cases.status.others")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -129,7 +141,6 @@ const Cases = () => {
                 variant="outline"
                 onClick={() => {
                   setStatusFilter("all");
-                  setTypeFilter("all");
                   setSearchQuery("");
                 }}
               >
@@ -227,7 +238,6 @@ const Cases = () => {
                 variant="outline"
                 onClick={() => {
                   setStatusFilter("all");
-                  setTypeFilter("all");
                   setSearchQuery("");
                 }}
               >
