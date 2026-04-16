@@ -84,6 +84,7 @@ export interface Case {
   case_type: CaseType;
   state: CaseState; // Current state in the workflow
   title: string;
+  short_description?: string | null;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
   thumbnail_url?: string | null; // URL for case card thumbnail image
@@ -95,6 +96,7 @@ export interface Case {
   timeline: TimelineEntry[];
   evidence: EvidenceEntry[];
   notes: string; // Internal notes (HTML from TinyMCE)
+  bigo?: number | null;
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
 }
