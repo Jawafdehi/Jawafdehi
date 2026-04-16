@@ -89,7 +89,9 @@
     "status": {
       "ongoing": "चलिरहेको",
       "underInvestigation": "अनुसन्धानमा",
-      "resolved": "समाधान भएको"
+      "resolved": "समाधान भएको",
+      "closed": "बन्द भएको",
+      "others": "अन्य"
     },
     "type": {
       "corruption": "भ्रष्टाचार",

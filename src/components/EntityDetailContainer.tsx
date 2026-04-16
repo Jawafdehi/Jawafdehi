@@ -300,7 +300,6 @@ export function EntityDetailContainer({
                         {caseItem.key_allegations?.join('. ') || caseItem.description}
                       </p>
                       <div className="flex gap-2 mt-2">
-                        <Badge variant="outline">{caseItem.case_type}</Badge>
                         {relations.map((relation, index) => (
                           <Badge key={`${caseItem.id}-rel-${index}`} variant="destructive">
                             {getRelationLabel(relation.relationType)}
@@ -353,7 +352,6 @@ export function EntityDetailContainer({
                         {caseItem.key_allegations?.join('. ') || caseItem.description}
                       </p>
                       <div className="flex gap-2 mt-2">
-                        <Badge variant="outline">{caseItem.case_type}</Badge>
                         {relations.map((relation, index) => (
                           <Badge key={`${caseItem.id}-rel-${index}`} variant="secondary">
                             {getRelationLabel(relation.relationType)}

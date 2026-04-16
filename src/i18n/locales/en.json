@@ -89,7 +89,9 @@
     "status": {
       "ongoing": "Ongoing",
       "underInvestigation": "Under Investigation",
-      "resolved": "Resolved"
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "others": "Others"
     },
     "type": {
       "corruption": "Corruption",
