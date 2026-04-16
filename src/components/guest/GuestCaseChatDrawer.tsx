@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { Sparkles, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BotTypingBubble } from "@/components/guest/BotTypingBubble";
@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { askGuestCaseQuestion } from "@/services/guest-chat-adapter";
+import { useGuestCaseChat } from "@/hooks/useGuestCaseChat";
 import type { CaseDetail, DocumentSource } from "@/types/jds";
-import type { GuestCaseChatMessage } from "@/types/guest-chat";
 
 interface GuestCaseChatDrawerProps {
   caseId: number;
@@ -43,35 +42,6 @@ export function GuestCaseChatDrawer({
     ],
     [t]
   );
-  const [messages, setMessages] = useState<GuestCaseChatMessage[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [followups, setFollowups] = useState<string[]>(defaultSuggestedQuestions);
-  const previousDefaultSuggestedQuestionsRef = useRef(defaultSuggestedQuestions);
-
-  useEffect(() => {
-    setMessages([]);
-    setError(null);
-    setIsSubmitting(false);
-    setFollowups(defaultSuggestedQuestions);
-    previousDefaultSuggestedQuestionsRef.current = defaultSuggestedQuestions;
-  }, [caseId, caseTitle]);
-
-  useEffect(() => {
-    const previousDefaultSuggestedQuestions =
-      previousDefaultSuggestedQuestionsRef.current;
-
-    setFollowups((current) =>
-      current.length === 0 ||
-      current.every((prompt) =>
-        previousDefaultSuggestedQuestions.includes(prompt)
-      )
-        ? defaultSuggestedQuestions
-        : current
-    );
-
-    previousDefaultSuggestedQuestionsRef.current = defaultSuggestedQuestions;
-  }, [defaultSuggestedQuestions]);
 
   const caseContext = useMemo(
     () => ({
@@ -81,62 +51,14 @@ export function GuestCaseChatDrawer({
     }),
     [caseData.key_allegations.length, caseData.timeline.length, sources.length]
   );
-
-  const submitQuestion = async (question: string) => {
-    const loadingMessageId = `assistant-loading-${Date.now()}`;
-    const userMessage: GuestCaseChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: question,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((current) => [
-      ...current,
-      userMessage,
-      {
-        id: loadingMessageId,
-        role: "assistant",
-        content: "",
-        timestamp: new Date().toISOString(),
-        origin: "public-read-adapter",
-        isLoading: true,
-      },
-    ]);
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const result = await askGuestCaseQuestion({ caseId, question });
-      setMessages((current) => [
-        ...current.filter((message) => message.id !== loadingMessageId),
-        {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: result.answer,
-          timestamp: new Date().toISOString(),
-          citations: result.citations,
-          origin: result.origin,
-        },
-      ]);
-      setFollowups(result.followups.length > 0 ? result.followups : defaultSuggestedQuestions);
-    } catch {
-      setError(t("guestCaseChatDrawer.errors.answerFailed"));
-      setMessages((current) => [
-        ...current.filter((message) => message.id !== loadingMessageId),
-        {
-          id: `assistant-error-${Date.now()}`,
-          role: "assistant",
-          content: t("guestCaseChatDrawer.errors.answerFailedMessage"),
-          timestamp: new Date().toISOString(),
-          origin: "public-read-adapter",
-          isError: true,
-        },
-      ]);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const { messages, followups, error, isSubmitting, submitQuestion } =
+    useGuestCaseChat({
+      caseId,
+      caseTitle,
+      caseData,
+      sourceEntries: sources,
+      defaultSuggestedQuestions,
+    });
 
   if (!open) {
     return null;
