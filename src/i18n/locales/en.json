@@ -26,7 +26,14 @@
     "githubRepo": "GitHub Repository",
     "siteStatus": "Site Status",
     "disclaimer": "The information provided on this website is for informative purposes only. We are not a judiciary body and do not have legal authority to prosecute or adjudicate cases. Our platform serves to document and raise awareness about corruption allegations and public accountability.",
-    "copyright": "© {{year}} Jawafdehi Nepal. All rights reserved."
+    "copyright": "© {{year}} Jawafdehi Nepal. All rights reserved.",
+    "social": {
+      "facebook": "Facebook",
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn",
+      "whatsapp": "WhatsApp",
+      "linktree": "Linktree"
+    }
   },
   "home": {
     "hero": {
@@ -126,6 +133,12 @@
       "ongoing": "Ongoing",
       "resolved": "Resolved",
       "underInvestigation": "Under Investigation"
+    },
+    "comments": {
+      "title": "Public Discussion",
+      "loading": "Loading comments...",
+      "joinDiscussion": "Join the discussion and share your thoughts on this case.",
+      "loadComments": "Load Comments"
     }
   },
   "documentSource": {

@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FaFacebook, FaYoutube, FaLinkedin, FaWhatsapp } from "react-icons/fa";
+import { SiLinktree } from "react-icons/si";
+import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 
 export const Footer = () => {
   const { t } = useTranslation();
@@ -134,6 +137,54 @@ export const Footer = () => {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-border">
+          {/* Social links */}
+          <div className="flex justify-center gap-5 mb-4">
+            <a
+              href={JAWAFDEHI_SOCIALS.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("footer.social.facebook")}
+            >
+              <FaFacebook className="h-5 w-5" />
+            </a>
+            <a
+              href={JAWAFDEHI_SOCIALS.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("footer.social.youtube")}
+            >
+              <FaYoutube className="h-5 w-5" />
+            </a>
+            <a
+              href={JAWAFDEHI_SOCIALS.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("footer.social.linkedin")}
+            >
+              <FaLinkedin className="h-5 w-5" />
+            </a>
+            <a
+              href={JAWAFDEHI_SOCIALS.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("footer.social.whatsapp")}
+            >
+              <FaWhatsapp className="h-5 w-5" />
+            </a>
+            <a
+              href={JAWAFDEHI_SOCIALS.linktree}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("footer.social.linktree")}
+            >
+              <SiLinktree className="h-5 w-5" />
+            </a>
+          </div>
           <p className="text-xs text-muted-foreground italic text-center max-w-4xl mx-auto mb-3">
             {t("footer.disclaimer")}
           </p>

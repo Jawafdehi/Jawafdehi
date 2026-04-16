@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Footer } from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -21,8 +22,10 @@ import type { Entity } from "@/types/nes";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatDateWithBS, formatCaseDateRange } from "@/utils/date";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
+import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { trackEvent } from "@/utils/analytics";
 import "@/styles/print.css";
 
 
@@ -31,6 +34,7 @@ const CaseDetail = () => {
   const currentLang = i18n.language;
   const { id } = useParams();
   const caseId = id ? parseInt(id) : undefined;
+  const trackedCaseIdRef = useRef<string | null>(null);
 
   // Fetch case data
   const { data: caseData, isLoading, isError } = useQuery({
@@ -63,6 +67,21 @@ const CaseDetail = () => {
       retry: false,
     })),
   });
+
+  // Track once per loaded case id to avoid duplicates while excluding error/404 views
+  useEffect(() => {
+    const loadedCaseId = caseData?.id?.toString();
+    if (!id || !loadedCaseId || isError) {
+      return;
+    }
+
+    if (loadedCaseId !== id || trackedCaseIdRef.current === loadedCaseId) {
+      return;
+    }
+
+    trackEvent('case_view', { case_id: loadedCaseId, slug: `/case/${id}` });
+    trackedCaseIdRef.current = loadedCaseId;
+  }, [id, caseData?.id, isError]);
 
   // Build lookup maps
   const resolvedSources: Record<number, DocumentSource> = {};
@@ -168,6 +187,7 @@ const CaseDetail = () => {
         <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
         <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/cases/${id}/`} title="Case data (JSON API)" />
       </Helmet>
       <Header />
 
@@ -465,6 +485,13 @@ const CaseDetail = () => {
               </a>
             </Button>
           </div>
+
+          {/* Public Discussion / Comments Section */}
+          <DisqusComments
+            caseId={id || ""}
+            caseTitle={caseData.title}
+            caseUrl={canonicalUrl}
+          />
         </div>
       </main>
 

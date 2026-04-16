@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePluginRadar } from "vite-plugin-radar";
+import { JAWAFDEHI_GA_MEASUREMENT_ID } from "./src/config/analytics-config";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, isSsrBuild }) => {
@@ -16,9 +17,10 @@ export default defineConfig(({ mode, isSsrBuild }) => {
     plugins: [
       react(),
       mode === "development" && componentTagger(),
-      VitePluginRadar({
+      // Only enable analytics in production with a configured GA ID
+      mode === "production" && JAWAFDEHI_GA_MEASUREMENT_ID && VitePluginRadar({
         analytics: {
-          id: "G-ZDV84KYJDJ",
+          id: JAWAFDEHI_GA_MEASUREMENT_ID,
         },
       }),
     ].filter(Boolean),

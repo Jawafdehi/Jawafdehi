@@ -197,6 +197,33 @@ const Index = () => {
         <meta name="twitter:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
         <meta name="twitter:description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
         <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Jawafdehi",
+          "alternateName": "Jawafdehi Nepal",
+          "url": "https://jawafdehi.org",
+          "description": "Nepal's permanent public archive of CIAA corruption cases — every filing, every document, forever.",
+          "inLanguage": ["en", "ne"],
+          "potentialAction": [
+            {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://jawafdehi.org/cases?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            },
+            {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://jawafdehi.org/entities?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          ]
+        })}</script>
       </Helmet>
       <Header />
 

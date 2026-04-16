@@ -37,10 +37,18 @@ const OurTeam = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
         <title>Our Team — Jawafdehi</title>
-        <meta
-          name="description"
-          content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive."
-        />
+        <meta name="description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
+        <link rel="canonical" href="https://jawafdehi.org/team" />
+        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://jawafdehi.org/team" />
+        <meta property="og:title" content="Our Team — Jawafdehi" />
+        <meta property="og:description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
+        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Our Team — Jawafdehi" />
+        <meta name="twitter:description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
+        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
       </Helmet>
       <Header />
 

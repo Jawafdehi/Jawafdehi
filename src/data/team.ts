@@ -82,8 +82,16 @@ export const teamMembers: TeamMember[] = [
     ],
   },
   {
+    displayName: { en: "Sujata Pokharel", ne: "सुजाता पोखरेल" },
+    thumb: "/assets/teammembers/sujata.png",
+    description: "Volunteer (Social Media), Jawafdehi.org",
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/sujata-pokharel-293348249/" },
+    ],
+  },
+  {
     displayName: { en: "Raghu Sharma", ne: "रघु शर्मा" },
-    thumb: "https://avatars.githubusercontent.com/Srmaraghu",
+    thumb: "/assets/teammembers/raghu.png",
     description: "Software Engineer Intern, Jawafdehi.org",
     contacts: [
       { type: "github", value: "https://github.com/Srmaraghu" },
@@ -91,7 +99,7 @@ export const teamMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
-    thumb: "https://avatars.githubusercontent.com/notashwinii",
+    thumb: "/assets/teammembers/ashwini.png",
     description: "Software Engineer Intern, Jawafdehi.org",
     contacts: [
       { type: "github", value: "https://github.com/notashwinii" },
@@ -99,7 +107,7 @@ export const teamMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Niroj Aryal", ne: "निरोज अर्याल" },
-    thumb: undefined,
+    thumb: "/assets/teammembers/niroj.jpeg",
     description: "Case Documentation Intern, Jawafdehi.org",
     contacts: [],
   },
@@ -113,7 +121,7 @@ export const teamMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Gaurav Karki", ne: "गौरव कार्की" },
-    thumb: "https://avatars.githubusercontent.com/gaurav-karki",
+    thumb: "/assets/teammembers/gaurav.jpg",
     description: "Software Engineer Intern, Jawafdehi.org",
     contacts: [
       { type: "github", value: "https://github.com/gaurav-karki" },
