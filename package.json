@@ -55,7 +55,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.2.0",
-    "disqus-react": "^1.1.5",
+    "disqus-react": "^1.1.7",
     "embla-carousel-react": "^8.6.0",
     "gh-pages": "^6.3.0",
     "i18next": "^25.6.3",

@@ -14,6 +14,11 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["'Roboto'", "'Segoe UI'", "'Vesper Libre'", "sans-serif"],
+        heading: ["'Montserrat'", "'Segoe UI'", "'Vesper Libre'", "sans-serif"],
+        devanagari: ["'Noto Sans Devanagari'", "'Vesper Libre'", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +62,7 @@ export default {
           foreground: "hsl(var(--success-foreground))",
         },
         navy: {
+          DEFAULT: "hsl(var(--navy))",
           dark: "hsl(var(--navy-dark))",
           light: "hsl(var(--navy-light))",
         },

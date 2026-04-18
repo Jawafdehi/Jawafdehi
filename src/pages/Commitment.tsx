@@ -68,7 +68,7 @@ const Commitment = () => {
 
       <main className="flex-1">
         {/* Header */}
-        <section className="bg-primary py-16 md:py-24">
+        <section className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-widest text-primary-foreground/50 mb-4">

@@ -7,11 +7,19 @@
   40%            { transform: translateY(-6px); opacity: 1; }
 }
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/*
+  Design system — all colors in HSL.
+  Brand palette (from official brand guide):
+    Primary Blue  #2BA4C8  hsl(194 65% 48%)
+    Dark Navy     #003D5C  hsl(200 100% 18%)
+    Hover Navy    #0C6B93  hsl(198 85% 31%)
+    Teal/Success  #1D9E75  hsl(161 69% 37%)
+    Light Blue bg #E6F1FB  hsl(209 72% 94%)
+    Body text     #2C2C2A  hsl(60 2% 17%)
+    Muted text    #888780  hsl(55 3% 52%)
 */
 
-/* Nepali font - Vesper Libre */
+/* Vesper Libre — local Devanagari serif fallback */
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Regular.ttf') format('truetype');
@@ -19,7 +27,6 @@ All colors MUST be HSL.
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Medium.ttf') format('truetype');
@@ -27,7 +34,6 @@ All colors MUST be HSL.
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Bold.ttf') format('truetype');
@@ -35,7 +41,6 @@ All colors MUST be HSL.
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Black.ttf') format('truetype');
@@ -47,88 +52,90 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 215 25% 15%;
+    --foreground: 60 2% 17%;        /* #2C2C2A — brand body text */
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 60 2% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 60 2% 17%;
 
-    /* Navy blue - trust and authority */
-    --primary: 215 85% 25%;
+    /* Primary Blue #2BA4C8 — CTAs, buttons, links, accents */
+    --primary: 194 65% 48%;
     --primary-foreground: 0 0% 100%;
 
-    /* Light slate - secondary surfaces */
-    --secondary: 215 20% 95%;
-    --secondary-foreground: 215 25% 15%;
+    /* Light Blue #E6F1FB — secondary surfaces, card headers */
+    --secondary: 209 72% 94%;
+    --secondary-foreground: 200 100% 18%;
 
-    --muted: 215 20% 96%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 209 40% 97%;
+    --muted-foreground: 55 3% 52%;  /* #888780 */
 
-    --accent: 215 20% 92%;
-    --accent-foreground: 215 25% 15%;
+    --accent: 209 72% 94%;          /* #E6F1FB */
+    --accent-foreground: 200 100% 18%;
 
-    /* Amber - urgent/corruption indicator */
-    --destructive: 25 95% 53%;
+    /* Amber — pending/warning indicator */
+    --destructive: 36 87% 62%;      /* #F0AD4E */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 215 85% 25%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 194 65% 48%;
 
     --radius: 0.5rem;
 
-    /* Custom PAP colors */
-    --alert: 25 95% 53%;
+    --alert: 36 87% 62%;
     --alert-foreground: 0 0% 100%;
-    
-    --success: 142 76% 36%;
+
+    /* Teal/Success #1D9E75 — guilty verdicts, positive outcomes */
+    --success: 161 69% 37%;
     --success-foreground: 0 0% 100%;
-    
-    --navy-dark: 215 85% 20%;
-    --navy-light: 215 85% 30%;
-    
-    --slate-50: 215 20% 98%;
-    --slate-100: 215 20% 95%;
-    --slate-200: 215 20% 90%;
-    --slate-700: 215 25% 27%;
-    --slate-800: 215 30% 20%;
+
+    /* Brand navy palette */
+    --navy: 200 100% 18%;           /* #003D5C — header/footer bg */
+    --navy-dark: 198 85% 31%;       /* #0C6B93 — button hover, dark accents */
+    --navy-light: 209 72% 94%;      /* #E6F1FB — light blue backgrounds */
+
+    --slate-50: 210 30% 98%;
+    --slate-100: 209 72% 94%;
+    --slate-200: 210 20% 90%;
+    --slate-700: 210 15% 30%;
+    --slate-800: 210 20% 20%;
   }
 
   .dark {
-    --background: 215 30% 8%;
-    --foreground: 215 20% 95%;
+    --background: 200 50% 6%;
+    --foreground: 210 20% 95%;
 
-    --card: 215 30% 10%;
-    --card-foreground: 215 20% 95%;
+    --card: 200 45% 8%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 215 30% 10%;
-    --popover-foreground: 215 20% 95%;
+    --popover: 200 45% 8%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 215 85% 50%;
+    --primary: 194 65% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 25% 15%;
-    --secondary-foreground: 215 20% 95%;
+    --secondary: 200 30% 15%;
+    --secondary-foreground: 210 20% 95%;
 
-    --muted: 215 25% 15%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 200 30% 15%;
+    --muted-foreground: 210 15% 60%;
 
-    --accent: 215 25% 18%;
-    --accent-foreground: 215 20% 95%;
+    --accent: 200 30% 18%;
+    --accent-foreground: 210 20% 95%;
 
-    --destructive: 25 95% 53%;
+    --destructive: 36 87% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 25% 18%;
-    --input: 215 25% 18%;
-    --ring: 215 85% 50%;
+    --border: 200 25% 18%;
+    --input: 200 25% 18%;
+    --ring: 194 65% 55%;
 
-    --alert: 25 95% 53%;
+    --alert: 36 87% 62%;
     --alert-foreground: 0 0% 100%;
-    
-    --success: 142 76% 36%;
+
+    --success: 161 69% 42%;
     --success-foreground: 0 0% 100%;
   }
 }
@@ -140,6 +147,21 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Vesper Libre', serif;
+    font-family: 'Roboto', 'Segoe UI', 'Vesper Libre', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #2C2C2A;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', 'Segoe UI', 'Vesper Libre', sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #003D5C;
+  }
+
+  /* Devanagari text */
+  :lang(ne), .devanagari {
+    font-family: 'Noto Sans Devanagari', 'Vesper Libre', sans-serif;
   }
 }

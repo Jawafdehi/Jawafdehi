@@ -35,11 +35,11 @@ export const Header = () => {
   const isAboutActive = location.pathname === "/about";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background backdrop-blur supports-[backdrop-filter]:bg-background/95">
+      <div className="container mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
         <Link to="/" className="flex items-center space-x-2.5">
-          <img src="/favicon.png" alt="Jawafdehi Logo" className="h-9 w-9" />
-          <span className="text-lg font-bold text-foreground tracking-tight">
+          <img src="/logo.png" alt="Jawafdehi Logo" className="h-[72px] w-[72px]" />
+          <span className="text-lg font-bold text-foreground tracking-tight font-heading">
             Jawafdehi.org
           </span>
         </Link>
@@ -94,7 +94,7 @@ export const Header = () => {
           {/* AI Search */}
           <Link
             to="/caseworker/login"
-            className="flex items-center gap-1.5 text-sm text-amber-600/80 hover:text-amber-700 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-amber-600/90 hover:text-amber-700 transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>AI Search</span>
@@ -104,7 +104,7 @@ export const Header = () => {
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center space-x-3">
           <LanguageToggle />
-          <Button asChild>
+          <Button asChild className="bg-primary hover:bg-navy-dark text-white font-semibold">
             <Link to="/cases">{t("header.viewCases")}</Link>
           </Button>
         </div>
@@ -121,7 +121,7 @@ export const Header = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <SheetHeader>
-                <SheetTitle>Jawafdehi.org</SheetTitle>
+                <SheetTitle className="font-heading">Jawafdehi.org</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col space-y-4 mt-8">
                 <NavLink to="/" end className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
@@ -157,7 +157,7 @@ export const Header = () => {
                   — Our Products
                 </Link>
                 <div className="pt-4 space-y-3 border-t border-border">
-                  <Button asChild className="w-full" onClick={() => setIsOpen(false)}>
+                  <Button asChild className="w-full bg-primary hover:bg-navy-dark text-white font-semibold" onClick={() => setIsOpen(false)}>
                     <Link to="/cases">{t("header.viewCases")}</Link>
                   </Button>
                   <Link
