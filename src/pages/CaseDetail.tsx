@@ -176,7 +176,7 @@ const CaseDetail = () => {
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:title" content={`${caseData.title} | Jawafdehi`} />
         <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/logo.PNG" />
         <meta property="og:locale" content="en_US" />
         <meta property="article:published_time" content={caseData.created_at} />
         <meta property="article:modified_time" content={caseData.updated_at} />
@@ -186,7 +186,7 @@ const CaseDetail = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
         <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/logo.PNG" />
         <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/cases/${id}/`} title="Case data (JSON API)" />
       </Helmet>
       <Header />

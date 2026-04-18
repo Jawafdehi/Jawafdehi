@@ -19,12 +19,12 @@ const About = () => {
         <meta property="og:url" content="https://jawafdehi.org/about" />
         <meta property="og:title" content="About | Jawafdehi Nepal" />
         <meta property="og:description" content="Learn about Jawafdehi — Nepal's open corruption accountability platform. Meet the team behind Let's Build Nepal and NewNepal.org working to promote transparency." />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/logo.PNG" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="About | Jawafdehi Nepal" />
         <meta name="twitter:description" content="Learn about Jawafdehi — Nepal's open corruption accountability platform. Meet the team behind Let's Build Nepal and NewNepal.org working to promote transparency." />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/logo.PNG" />
       </Helmet>
       <Header />
 

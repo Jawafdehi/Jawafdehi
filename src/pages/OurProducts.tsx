@@ -50,11 +50,11 @@ const OurProducts = () => (
       <meta property="og:url" content="https://jawafdehi.org/products" />
       <meta property="og:title" content="Our Products — Jawafdehi" />
       <meta property="og:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
-      <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta property="og:image" content="https://jawafdehi.org/logo.PNG" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Our Products — Jawafdehi" />
       <meta name="twitter:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
-      <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta name="twitter:image" content="https://jawafdehi.org/logo.PNG" />
     </Helmet>
     <Header />
 

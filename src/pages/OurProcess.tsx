@@ -72,11 +72,11 @@ const OurProcess = () => (
       <meta property="og:url" content="https://jawafdehi.org/our-process" />
       <meta property="og:title" content="Our Process — Jawafdehi" />
       <meta property="og:description" content="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive." />
-      <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta property="og:image" content="https://jawafdehi.org/logo.PNG" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Our Process — Jawafdehi" />
       <meta name="twitter:description" content="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive." />
-      <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta name="twitter:image" content="https://jawafdehi.org/logo.PNG" />
     </Helmet>
     <Header />
 

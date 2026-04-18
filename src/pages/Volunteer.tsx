@@ -73,11 +73,11 @@ const Volunteer = () => (
       <meta property="og:url" content="https://jawafdehi.org/volunteer" />
       <meta property="og:title" content="Volunteer with Us — Jawafdehi" />
       <meta property="og:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
-      <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta property="og:image" content="https://jawafdehi.org/logo.PNG" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Volunteer with Us — Jawafdehi" />
       <meta name="twitter:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
-      <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+      <meta name="twitter:image" content="https://jawafdehi.org/logo.PNG" />
     </Helmet>
     <Header />
 

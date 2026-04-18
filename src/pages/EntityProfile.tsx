@@ -75,12 +75,12 @@ export default function EntityProfile() {
             <meta property="og:url" content={canonicalUrl} />
             <meta property="og:title" content={pageTitle} />
             <meta property="og:description" content={pageDescription} />
-            <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+            <meta property="og:image" content="https://jawafdehi.org/logo.PNG" />
             <meta property="og:locale" content={isNepali ? 'ne_NP' : 'en_US'} />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content={pageTitle} />
             <meta name="twitter:description" content={pageDescription} />
-            <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+            <meta name="twitter:image" content="https://jawafdehi.org/logo.PNG" />
             <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
           </Helmet>
         );
