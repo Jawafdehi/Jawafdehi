@@ -7,6 +7,7 @@ import { Calendar, MapPin, User } from "lucide-react";
 
 interface CaseCardProps {
   id: string;
+  slug: string; // URL-friendly slug for navigation
   title: string;
   entity: string;
   location: string;
@@ -20,7 +21,7 @@ interface CaseCardProps {
   thumbnailUrl?: string; //Thumbnail image
 }
 
-export const CaseCard = ({ id, title, entity, location, date, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, location, date, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl }: CaseCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   
@@ -42,7 +43,7 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
   const handleCardClick = (e: React.MouseEvent) => {
     // Only navigate if not clicking on an inner link
     if (!(e.target as HTMLElement).closest("a")) {
-      navigate(`/case/${id}`);
+      navigate(`/case/${slug}`);
     }
   };
 

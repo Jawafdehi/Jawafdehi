@@ -81,6 +81,7 @@ export interface EvidenceEntry {
 export interface Case {
   id: number;
   case_id: string; // Unique identifier shared across versions
+  slug: string; // URL-friendly slug (e.g., 'case-078-WC-0123-sunil-poudel')
   case_type: CaseType;
   state: CaseState; // Current state in the workflow
   title: string;
@@ -99,7 +100,9 @@ export interface Case {
   updated_at: string; // ISO datetime
 }
 
-export type CaseDetail = Case;
+export interface CaseDetail extends Case {
+  bigo: number | null; // Embezzled/irregular amount in NPR (null if not applicable)
+}
 
 export interface DocumentSource {
   id: number;
