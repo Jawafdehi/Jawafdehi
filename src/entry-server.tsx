@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import type { HelmetServerState } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider, dehydrate } from '@tanstack/react-query';
 import App from './App';
+import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getCases, getStatistics } from './services/jds-api';
 import axios from 'axios';
@@ -68,13 +69,15 @@ export async function render(url: string): Promise<RenderResult> {
   await prefetch(url, queryClient);
 
   const html = renderToString(
-    <HelmetProvider context={helmetContext}>
-      <QueryClientProvider client={queryClient}>
-        <StaticRouter location={url}>
-          <App />
-        </StaticRouter>
-      </QueryClientProvider>
-    </HelmetProvider>
+    <ThemeProvider>
+      <HelmetProvider context={helmetContext}>
+        <QueryClientProvider client={queryClient}>
+          <StaticRouter location={url}>
+            <App />
+          </StaticRouter>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ThemeProvider>
   );
 
   const dehydratedState = dehydrate(queryClient);

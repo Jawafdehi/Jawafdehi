@@ -8,78 +8,24 @@ import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getCases, getStatistics } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatDateWithBS } from "@/utils/date";
 import type { Entity } from "@/types/nes";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { useTranslation } from "react-i18next";
 
-// Animated chat phases:
-// 0 = reset/empty
-// 1 = user msg 1
-// 2 = typing indicator
-// 3 = AI response 1
-// 4 = user msg 2
-// 5 = typing indicator
-// 6 = AI response 2
-const SEQUENCE: [number, number][] = [
-  [700,   1],
-  [1700,  2],
-  [3100,  3],
-  [4500,  4],
-  [5400,  5],
-  [6900,  6],
-];
-const LOOP_AFTER = 10500;
-
-const TypingDots = () => (
-  <div className="flex items-center gap-1 px-4 py-3">
-    {[0, 1, 2].map((i) => (
-      <span
-        key={i}
-        className="h-2 w-2 rounded-full bg-slate-400"
-        style={{
-          animation: "bounce 1.2s ease-in-out infinite",
-          animationDelay: `${i * 0.2}s`,
-        }}
-      />
-    ))}
-  </div>
-);
+type DemoPhase = "typing" | "loading" | "answer";
 
 const Index = () => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const currentLang = i18n.language;
   const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
-  const [chatPhase, setChatPhase] = useState(0);
-
-  useEffect(() => {
-    let timeouts: ReturnType<typeof setTimeout>[] = [];
-    let loopTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    const runLoop = () => {
-      setChatPhase(0);
-      // Clear any existing timeouts before creating new ones
-      timeouts.forEach(clearTimeout);
-      timeouts = [];
-      
-      SEQUENCE.forEach(([delay, phase]) => {
-        timeouts.push(setTimeout(() => setChatPhase(phase), delay));
-      });
-      loopTimeout = setTimeout(runLoop, LOOP_AFTER);
-    };
-
-    // Small initial delay before first run
-    const start = setTimeout(runLoop, 400);
-
-    // Cleanup function to clear all timeouts
-    return () => {
-      clearTimeout(start);
-      if (loopTimeout) clearTimeout(loopTimeout);
-      timeouts.forEach(clearTimeout);
-      timeouts = [];
-    };
-  }, []);
+  const [demoTypedQuestion, setDemoTypedQuestion] = useState("");
+  const [demoSubmittedQuestion, setDemoSubmittedQuestion] = useState("");
+  const [demoPhase, setDemoPhase] = useState<DemoPhase>("typing");
+  const demoQuestion = t("guestChat.prompts.ciaaProcess");
+  const demoAnswer =
+    "CIAA appears mainly at the investigation and charge-filing stage of corruption cases. The pattern usually looks like this: a complaint or allegation is examined by CIAA, CIAA investigates the alleged irregularity, and, if it considers the evidence sufficient, it files an आरोपपत्र / charge sheet in the Special Court. After that, the public record shifts toward court proceedings, decisions, and source-based updates. The archive also shows that this process does not always move quickly or consistently. In some cases, CIAA investigation is described as stalled, delayed, or politically contested. So CIAA appears less as the entire end-to-end corruption system and more as the body that investigates, decides whether to prosecute, and brings major corruption allegations into court.";
 
   const { data: stats, isError: statsError, isLoading: statsLoading } = useQuery({
     queryKey: ['statistics'],
@@ -139,6 +85,45 @@ const Index = () => {
       isMounted = false;
     };
   }, [casesData]);
+
+  useEffect(() => {
+    let typingInterval: ReturnType<typeof setInterval> | null = null;
+    let submitTimeout: ReturnType<typeof setTimeout> | null = null;
+    let answerTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    setDemoPhase("typing");
+    setDemoSubmittedQuestion("");
+    setDemoTypedQuestion("");
+
+    let currentIndex = 0;
+    typingInterval = setInterval(() => {
+      currentIndex += 1;
+      setDemoTypedQuestion(demoQuestion.slice(0, currentIndex));
+
+      if (currentIndex >= demoQuestion.length) {
+        if (typingInterval) {
+          clearInterval(typingInterval);
+          typingInterval = null;
+        }
+
+        submitTimeout = setTimeout(() => {
+          setDemoSubmittedQuestion(demoQuestion);
+          setDemoTypedQuestion("");
+          setDemoPhase("loading");
+
+          answerTimeout = setTimeout(() => {
+            setDemoPhase("answer");
+          }, 1200);
+        }, 450);
+      }
+    }, 38);
+
+    return () => {
+      if (typingInterval) clearInterval(typingInterval);
+      if (submitTimeout) clearTimeout(submitTimeout);
+      if (answerTimeout) clearTimeout(answerTimeout);
+    };
+  }, [demoQuestion]);
 
   // Transform API cases to CaseCard format
   const featuredCases = useMemo(() => {
@@ -233,7 +218,7 @@ const Index = () => {
           <div className="absolute inset-0 bg-grid-white/[0.04] bg-[size:24px_24px]" />
 
           <div className="container mx-auto px-4 relative">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 gap-12 items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-stretch">
 
               {/* Left — headline + stats + CTAs */}
               <div>
@@ -285,127 +270,109 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Right — animated AI chat mock */}
-              <div className="relative block">
-                {/* Coming soon badge */}
-                <div className="absolute -top-3 right-0 lg:-right-3 z-10 flex items-center gap-1.5 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  AI Search — Coming Soon
+              {/* Right — Ask Jawafdehi preview */}
+              <div className="relative block lg:h-full">
+                <div className="absolute -top-3 right-0 lg:right-2 z-10 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-lg ring-1 ring-primary/10">
+                  Demo
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur overflow-hidden shadow-2xl ring-1 ring-white/5">
-                  {/* Window chrome */}
-                  <div className="border-b border-white/10 px-4 py-3 flex items-center gap-3">
-                    <div className="flex gap-1.5">
-                      <div className="h-3 w-3 rounded-full bg-slate-700" />
-                      <div className="h-3 w-3 rounded-full bg-slate-700" />
-                      <div className="h-3 w-3 rounded-full bg-slate-700" />
-                    </div>
-                    <div className="flex items-center gap-1.5 ml-1">
-                      <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                      <span className="text-xs text-slate-400 font-medium">Jawafdehi AI — Case Research</span>
+                <div className="ml-auto flex h-full max-w-[660px] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-background/95 shadow-2xl ring-1 ring-white/10 backdrop-blur">
+                  <div className="border-b border-border/60 px-4 py-3.5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/15 bg-primary/10">
+                          <img
+                            src="/assets/bot.svg"
+                            alt={t("guestCommon.assistantAlt")}
+                            className="h-10 w-10"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Public case archive
+                          </p>
+                          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                            {t("guestChat.title")}
+                          </h2>
+                        </div>
+                      </div>
+                      <Button asChild variant="outline" size="sm" className="hidden rounded-full sm:inline-flex">
+                        <Link to="/ask">Try it yourself</Link>
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Chat messages — fixed height, all slots always in DOM */}
-                  <div className="p-5 flex flex-col gap-3 h-[320px] overflow-hidden">
-                    {/* Spacer pushes messages to bottom */}
-                    <div className="flex-1" />
-
-                    {/* User message 1 */}
-                    <div
-                      className="flex justify-end transition-all duration-500"
-                      style={{
-                        opacity: chatPhase >= 1 ? 1 : 0,
-                        transform: chatPhase >= 1 ? "translateY(0)" : "translateY(6px)",
-                      }}
-                    >
-                      <div className="bg-primary rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[82%]">
-                        <p className="text-sm text-white leading-relaxed">
-                          Who has the most CIAA cases in Bagmati Province?
-                        </p>
+                  <div className="flex flex-1 flex-col justify-center p-4 md:p-5">
+                    <div className="space-y-2.5">
+                      <div className="flex min-h-[72px] items-start justify-end">
+                        <div
+                          className="max-w-[82%] rounded-[24px] bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm transition-opacity duration-200"
+                          style={{ opacity: demoSubmittedQuestion ? 1 : 0 }}
+                          aria-hidden={!demoSubmittedQuestion}
+                        >
+                          {demoSubmittedQuestion || demoQuestion}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* AI response 1 — typing dots overlay same slot */}
-                    <div
-                      className="flex justify-start transition-all duration-500"
-                      style={{
-                        opacity: chatPhase >= 2 ? 1 : 0,
-                        transform: chatPhase >= 2 ? "translateY(0)" : "translateY(6px)",
-                      }}
-                    >
-                      <div className="bg-slate-700/80 rounded-2xl rounded-tl-sm max-w-[88%] min-w-[72px]">
-                        {chatPhase === 2 ? (
-                          <TypingDots />
-                        ) : (
-                          <div className="px-4 py-3">
-                            <p className="text-sm text-slate-200 leading-relaxed">
-                              Based on the archive,{" "}
-                              <span className="text-amber-400 font-semibold">12 officials</span> in
-                              Bagmati have 3 or more CIAA cases, primarily involving land
-                              acquisition irregularities and financial misconduct.
-                            </p>
+                      <div className="min-h-[264px]">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-opacity duration-200"
+                            style={{ opacity: demoPhase === "loading" || demoPhase === "answer" ? 1 : 0 }}
+                            aria-hidden={demoPhase === "typing"}
+                          >
+                            <img
+                              src="/assets/bot.svg"
+                              alt={t("guestCommon.assistantAlt")}
+                              className="h-7 w-7"
+                            />
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* User message 2 */}
-                    <div
-                      className="flex justify-end transition-all duration-500"
-                      style={{
-                        opacity: chatPhase >= 4 ? 1 : 0,
-                        transform: chatPhase >= 4 ? "translateY(0)" : "translateY(6px)",
-                      }}
-                    >
-                      <div className="bg-primary rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[82%]">
-                        <p className="text-sm text-white leading-relaxed">
-                          Show me the court documents for the top case
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* AI response 2 — typing dots overlay same slot */}
-                    <div
-                      className="flex justify-start transition-all duration-500"
-                      style={{
-                        opacity: chatPhase >= 5 ? 1 : 0,
-                        transform: chatPhase >= 5 ? "translateY(0)" : "translateY(6px)",
-                      }}
-                    >
-                      <div className="bg-slate-700/80 rounded-2xl rounded-tl-sm max-w-[88%] min-w-[72px]">
-                        {chatPhase === 5 ? (
-                          <TypingDots />
-                        ) : (
-                          <div className="px-4 py-3 space-y-2">
-                            <p className="text-sm text-slate-200 leading-relaxed">
-                              Found{" "}
-                              <span className="text-amber-400 font-semibold">4 court documents</span>{" "}
-                              for case JWF-2023-0089:
-                            </p>
-                            <div className="space-y-1">
-                              {["CIAA Filing — 12 Mar 2023", "Court Order — 28 Apr 2023", "Verdict — 14 Sep 2023"].map((doc) => (
-                                <div key={doc} className="flex items-center gap-2 text-xs text-slate-400">
-                                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                                  {doc}
-                                </div>
+                          {demoPhase === "loading" ? (
+                            <div
+                              role="status"
+                              aria-live="polite"
+                              aria-atomic="true"
+                              className="inline-flex items-center gap-2 self-start rounded-[24px] border border-border/70 bg-card px-4 py-4 shadow-sm transition-opacity duration-200"
+                              style={{ opacity: 1 }}
+                            >
+                              <span className="sr-only">{t("guestCommon.assistantTyping")}</span>
+                              {[0, 1, 2].map((index) => (
+                                <span
+                                  key={index}
+                                  aria-hidden="true"
+                                  className="h-2.5 w-2.5 rounded-full bg-muted-foreground/45 animate-pulse"
+                                  style={{ animationDelay: `${index * 180}ms`, animationDuration: "1.1s" }}
+                                />
                               ))}
                             </div>
-                          </div>
-                        )}
+                          ) : demoPhase === "answer" ? (
+                            <div
+                              className="min-w-0 flex-1 rounded-[24px] border border-border/70 bg-card p-4 shadow-sm transition-opacity duration-200"
+                              style={{ opacity: 1 }}
+                            >
+                              <p className="text-sm leading-6 text-foreground">
+                                {demoAnswer}
+                              </p>
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Input bar */}
-                  <div className="border-t border-white/10 px-4 py-3 flex items-center gap-3">
-                    <div className="flex-1 rounded-lg bg-slate-800 px-4 py-2.5 flex items-center gap-2">
-                      <p className="text-sm text-slate-500 flex-1">Ask about any CIAA case...</p>
-                      <span className="h-4 w-0.5 bg-slate-500 rounded animate-pulse" />
-                    </div>
-                    <div className="h-9 w-9 rounded-lg bg-primary/50 flex items-center justify-center flex-shrink-0">
-                      <SendHorizonal className="h-4 w-4 text-white/50" />
+                  <div className="border-t border-border/60 bg-background/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                    <div className="rounded-[24px] border border-border/80 bg-card p-2.5 shadow-sm">
+                      <div className="flex items-end gap-3">
+                        <div className="min-h-[24px] flex-1 py-1 text-sm leading-6 text-muted-foreground">
+                          {demoTypedQuestion || t("guestChatInput.askQuestionPlaceholder")}
+                        </div>
+                        <div className="flex h-8 w-[106px] shrink-0 items-center justify-center rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground">
+                          <SendHorizonal className="mr-1.5 h-4 w-4" />
+                          {demoPhase === "loading"
+                            ? t("guestChatInput.searching")
+                            : t("guestChatInput.submit")}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

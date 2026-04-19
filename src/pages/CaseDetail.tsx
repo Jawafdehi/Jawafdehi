@@ -209,12 +209,12 @@ const CaseDetail = () => {
 
             <div className="flex gap-2">
               <Button
-                variant={isAskDrawerOpen ? "secondary" : "outline"}
+                variant={isAskDrawerOpen ? "secondary" : "default"}
                 onClick={() => setIsAskDrawerOpen((current) => !current)}
-                className="gap-1.5 px-2.5"
+                className="inline-flex items-center gap-2"
               >
                 <MessageSquareText className="h-4 w-4" />
-                <span className="mt-[5px]">
+                <span>
                   {isAskDrawerOpen
                     ? t("caseDetail.hideChat")
                     : t("caseDetail.askJawafdehi")}

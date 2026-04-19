@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Menu, ChevronDown, Users, Info, Package, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
@@ -92,6 +93,7 @@ export const Header = () => {
           </DropdownMenu>
 
           <LanguageToggle />
+          <ThemeToggle />
         </nav>
 
         {/* Desktop Actions */}
@@ -110,6 +112,7 @@ export const Header = () => {
         {/* Mobile Menu */}
         <div className="flex lg:hidden items-center space-x-2">
           <LanguageToggle />
+          <ThemeToggle />
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">

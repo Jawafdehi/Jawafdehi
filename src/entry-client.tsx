@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { hydrate } from '@tanstack/react-query';
 import App from './App';
+import { ThemeProvider } from './components/ThemeProvider';
 import './index.css';
 import './i18n/config';
 
@@ -24,11 +25,13 @@ if (stateEl?.textContent) {
 
 hydrateRoot(
   document.getElementById('root')!,
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
-  </HelmetProvider>
+  <ThemeProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </ThemeProvider>
 );
