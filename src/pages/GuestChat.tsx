@@ -141,9 +141,14 @@ export default function GuestChat() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-                        {t("guestChat.title")}
-                      </h1>
+                      <div className="flex items-center justify-center gap-3">
+                        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+                          {t("guestChat.title")}
+                        </h1>
+                        <span className="rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                          Demo
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -227,6 +232,7 @@ export default function GuestChat() {
                   }
                   submitLabel={t("guestChatInput.submit")}
                   loadingLabel={t("guestChatInput.searching")}
+                  disabled
                   isSubmitting={isLoading}
                   onSubmit={handleSubmit}
                 />
