@@ -2,7 +2,8 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
-import { Archive, Scale, Sparkles, ArrowRight, Search, SendHorizonal } from "lucide-react";
+import { HeroChatDemo } from "@/components/home/HeroChatDemo";
+import { Archive, Scale, Sparkles, ArrowRight, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
@@ -14,18 +15,10 @@ import type { Entity } from "@/types/nes";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { useTranslation } from "react-i18next";
 
-type DemoPhase = "typing" | "loading" | "answer";
-
 const Index = () => {
   const { i18n, t } = useTranslation();
   const currentLang = i18n.language;
   const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
-  const [demoTypedQuestion, setDemoTypedQuestion] = useState("");
-  const [demoSubmittedQuestion, setDemoSubmittedQuestion] = useState("");
-  const [demoPhase, setDemoPhase] = useState<DemoPhase>("typing");
-  const demoQuestion = t("guestChat.prompts.ciaaProcess");
-  const demoAnswer =
-    "CIAA appears mainly at the investigation and charge-filing stage of corruption cases. The pattern usually looks like this: a complaint or allegation is examined by CIAA, CIAA investigates the alleged irregularity, and, if it considers the evidence sufficient, it files an आरोपपत्र / charge sheet in the Special Court. After that, the public record shifts toward court proceedings, decisions, and source-based updates. The archive also shows that this process does not always move quickly or consistently. In some cases, CIAA investigation is described as stalled, delayed, or politically contested. So CIAA appears less as the entire end-to-end corruption system and more as the body that investigates, decides whether to prosecute, and brings major corruption allegations into court.";
 
   const { data: stats, isError: statsError, isLoading: statsLoading } = useQuery({
     queryKey: ['statistics'],
@@ -85,45 +78,6 @@ const Index = () => {
       isMounted = false;
     };
   }, [casesData]);
-
-  useEffect(() => {
-    let typingInterval: ReturnType<typeof setInterval> | null = null;
-    let submitTimeout: ReturnType<typeof setTimeout> | null = null;
-    let answerTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    setDemoPhase("typing");
-    setDemoSubmittedQuestion("");
-    setDemoTypedQuestion("");
-
-    let currentIndex = 0;
-    typingInterval = setInterval(() => {
-      currentIndex += 1;
-      setDemoTypedQuestion(demoQuestion.slice(0, currentIndex));
-
-      if (currentIndex >= demoQuestion.length) {
-        if (typingInterval) {
-          clearInterval(typingInterval);
-          typingInterval = null;
-        }
-
-        submitTimeout = setTimeout(() => {
-          setDemoSubmittedQuestion(demoQuestion);
-          setDemoTypedQuestion("");
-          setDemoPhase("loading");
-
-          answerTimeout = setTimeout(() => {
-            setDemoPhase("answer");
-          }, 1200);
-        }, 450);
-      }
-    }, 38);
-
-    return () => {
-      if (typingInterval) clearInterval(typingInterval);
-      if (submitTimeout) clearTimeout(submitTimeout);
-      if (answerTimeout) clearTimeout(answerTimeout);
-    };
-  }, [demoQuestion]);
 
   // Transform API cases to CaseCard format
   const featuredCases = useMemo(() => {
@@ -218,10 +172,10 @@ const Index = () => {
           <div className="absolute inset-0 bg-grid-white/[0.04] bg-[size:24px_24px]" />
 
           <div className="container mx-auto px-4 relative">
-            <div className="grid grid-cols-1 gap-12 items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-stretch">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-stretch">
 
               {/* Left — headline + stats + CTAs */}
-              <div>
+              <div className="flex h-full flex-col justify-center">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/80 mb-5">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
                   CIAA Cases &nbsp;·&nbsp; Official Documents &nbsp;·&nbsp; Verified Facts
@@ -270,113 +224,7 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Right — Ask Jawafdehi preview */}
-              <div className="relative block lg:h-full">
-                <div className="absolute -top-3 right-0 lg:right-2 z-10 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-lg ring-1 ring-primary/10">
-                  Demo
-                </div>
-
-                <div className="ml-auto flex h-full max-w-[660px] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-background/95 shadow-2xl ring-1 ring-white/10 backdrop-blur">
-                  <div className="border-b border-border/60 px-4 py-3.5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/15 bg-primary/10">
-                          <img
-                            src="/assets/bot.svg"
-                            alt={t("guestCommon.assistantAlt")}
-                            className="h-10 w-10"
-                          />
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Public case archive
-                          </p>
-                          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                            {t("guestChat.title")}
-                          </h2>
-                        </div>
-                      </div>
-                      <Button asChild variant="outline" size="sm" className="hidden rounded-full sm:inline-flex">
-                        <Link to="/ask">Try it yourself</Link>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 flex-col justify-center p-4 md:p-5">
-                    <div className="space-y-2.5">
-                      <div className="flex min-h-[72px] items-start justify-end">
-                        <div
-                          className="max-w-[82%] rounded-[24px] bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm transition-opacity duration-200"
-                          style={{ opacity: demoSubmittedQuestion ? 1 : 0 }}
-                          aria-hidden={!demoSubmittedQuestion}
-                        >
-                          {demoSubmittedQuestion || demoQuestion}
-                        </div>
-                      </div>
-
-                      <div className="min-h-[264px]">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-opacity duration-200"
-                            style={{ opacity: demoPhase === "loading" || demoPhase === "answer" ? 1 : 0 }}
-                            aria-hidden={demoPhase === "typing"}
-                          >
-                            <img
-                              src="/assets/bot.svg"
-                              alt={t("guestCommon.assistantAlt")}
-                              className="h-7 w-7"
-                            />
-                          </div>
-                          {demoPhase === "loading" ? (
-                            <div
-                              role="status"
-                              aria-live="polite"
-                              aria-atomic="true"
-                              className="inline-flex items-center gap-2 self-start rounded-[24px] border border-border/70 bg-card px-4 py-4 shadow-sm transition-opacity duration-200"
-                              style={{ opacity: 1 }}
-                            >
-                              <span className="sr-only">{t("guestCommon.assistantTyping")}</span>
-                              {[0, 1, 2].map((index) => (
-                                <span
-                                  key={index}
-                                  aria-hidden="true"
-                                  className="h-2.5 w-2.5 rounded-full bg-muted-foreground/45 animate-pulse"
-                                  style={{ animationDelay: `${index * 180}ms`, animationDuration: "1.1s" }}
-                                />
-                              ))}
-                            </div>
-                          ) : demoPhase === "answer" ? (
-                            <div
-                              className="min-w-0 flex-1 rounded-[24px] border border-border/70 bg-card p-4 shadow-sm transition-opacity duration-200"
-                              style={{ opacity: 1 }}
-                            >
-                              <p className="text-sm leading-6 text-foreground">
-                                {demoAnswer}
-                              </p>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-border/60 bg-background/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-                    <div className="rounded-[24px] border border-border/80 bg-card p-2.5 shadow-sm">
-                      <div className="flex items-end gap-3">
-                        <div className="min-h-[24px] flex-1 py-1 text-sm leading-6 text-muted-foreground">
-                          {demoTypedQuestion || t("guestChatInput.askQuestionPlaceholder")}
-                        </div>
-                        <div className="flex h-8 w-[106px] shrink-0 items-center justify-center rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground">
-                          <SendHorizonal className="mr-1.5 h-4 w-4" />
-                          {demoPhase === "loading"
-                            ? t("guestChatInput.searching")
-                            : t("guestChatInput.submit")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <HeroChatDemo />
             </div>
           </div>
         </section>
