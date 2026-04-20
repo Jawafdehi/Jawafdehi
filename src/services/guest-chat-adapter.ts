@@ -823,6 +823,17 @@ function findRelevantSources(
   sources: GuestCaseSourceEntry[]
 ): GuestCaseChatCitation[] {
   const normalizedQuestion = normalize(question);
+  const asksForChargeSheet =
+    normalizedQuestion.includes("charge sheet") ||
+    normalizedQuestion.includes("आरोपपत्र");
+  const asksForTimeline =
+    normalizedQuestion.includes("timeline") ||
+    normalizedQuestion.includes("समयरेखा");
+  const asksForSources =
+    normalizedQuestion.includes("source") ||
+    normalizedQuestion.includes("evidence") ||
+    normalizedQuestion.includes("स्रोत") ||
+    normalizedQuestion.includes("प्रमाण");
 
   const matches = sources.filter(({ source, evidenceDescription }) => {
     const haystack = normalize(
@@ -840,19 +851,15 @@ function findRelevantSources(
       return false;
     }
 
-    if (normalizedQuestion.includes("charge sheet")) {
-      return haystack.includes("charge sheet");
+    if (asksForChargeSheet) {
+      return haystack.includes("charge sheet") || haystack.includes("आरोपपत्र");
     }
 
-    if (normalizedQuestion.includes("timeline")) {
+    if (asksForTimeline) {
       return false;
     }
 
-    if (
-      normalizedQuestion.includes("source") ||
-      normalizedQuestion.includes("evidence") ||
-      normalizedQuestion.includes("स्रोत")
-    ) {
+    if (asksForSources) {
       return true;
     }
 
@@ -864,6 +871,47 @@ function findRelevantSources(
     sourceTitle: source?.title || `Source ${sourceId}`,
     reason: evidenceDescription || source?.description || undefined,
   }));
+}
+
+function isCaseAllegationQuestion(normalizedQuestion: string) {
+  return (
+    normalizedQuestion.includes("allegation") ||
+    normalizedQuestion.includes("आरोप")
+  );
+}
+
+function isCaseTimelineQuestion(normalizedQuestion: string) {
+  return (
+    normalizedQuestion.includes("timeline") ||
+    normalizedQuestion.includes("happened first") ||
+    normalizedQuestion.includes("समयरेखा")
+  );
+}
+
+function isCaseSourceQuestion(normalizedQuestion: string) {
+  return (
+    normalizedQuestion.includes("source") ||
+    normalizedQuestion.includes("evidence") ||
+    normalizedQuestion.includes("स्रोत") ||
+    normalizedQuestion.includes("प्रमाण")
+  );
+}
+
+function isCaseRelatedEntitiesQuestion(normalizedQuestion: string) {
+  return (
+    normalizedQuestion.includes("related entit") ||
+    normalizedQuestion.includes("who") ||
+    normalizedQuestion.includes("सम्बन्धित व्यक्ति") ||
+    normalizedQuestion.includes("सम्बन्धित संस्था") ||
+    normalizedQuestion.includes("को हुन्")
+  );
+}
+
+function isCaseChargeSheetQuestion(normalizedQuestion: string) {
+  return (
+    normalizedQuestion.includes("charge sheet") ||
+    normalizedQuestion.includes("आरोपपत्र")
+  );
 }
 
 function buildEntityAskAnswer(
@@ -1060,12 +1108,12 @@ export async function askGuestCaseQuestion(params: {
 
   let answer = `This public case record is titled "${caseData.title}". `;
 
-  if (normalizedQuestion.includes("allegation")) {
+  if (isCaseAllegationQuestion(normalizedQuestion)) {
     answer =
       caseData.key_allegations.length > 0
         ? `The key public allegations are: ${caseData.key_allegations.join(" ")}`
         : "This public case page does not list any key allegations yet.";
-  } else if (normalizedQuestion.includes("timeline") || normalizedQuestion.includes("happened first")) {
+  } else if (isCaseTimelineQuestion(normalizedQuestion)) {
     answer =
       caseData.timeline.length > 0
         ? `The public timeline begins with ${caseData.timeline[0].date}: ${caseData.timeline[0].title}. ${caseData.timeline
@@ -1073,28 +1121,26 @@ export async function askGuestCaseQuestion(params: {
             .map((entry) => `${entry.date}: ${entry.title}.`)
             .join(" ")}`
         : "This public case page does not include a timeline yet.";
-  } else if (
-    normalizedQuestion.includes("source") ||
-    normalizedQuestion.includes("evidence") ||
-    normalizedQuestion.includes("स्रोत")
-  ) {
+  } else if (isCaseSourceQuestion(normalizedQuestion)) {
     answer =
       sourceEntries.length > 0
         ? `This case currently references ${sourceEntries.length} public source${sourceEntries.length === 1 ? "" : "s"}: ${sourceEntries
             .map(({ source, sourceId }) => source?.title || `Source ${sourceId}`)
             .join(", ")}.`
         : "This public case page does not list any document sources yet.";
-  } else if (normalizedQuestion.includes("related entit") || normalizedQuestion.includes("who")) {
+  } else if (isCaseRelatedEntitiesQuestion(normalizedQuestion)) {
     answer =
       caseData.entities.length > 0
         ? `The related public entities listed on this case are ${caseData.entities
             .map((entity) => entity.display_name || entity.nes_id || "Unnamed entity")
             .join(", ")}.`
         : "This public case page does not list related entities yet.";
-  } else if (normalizedQuestion.includes("charge sheet")) {
+  } else if (isCaseChargeSheetQuestion(normalizedQuestion)) {
     const chargeSheet = sourceEntries.find(({ source, evidenceDescription }) =>
-      normalize(`${source?.title || ""} ${source?.description || ""} ${evidenceDescription || ""}`).includes(
-        "charge sheet"
+      ["charge sheet", "आरोपपत्र"].some((term) =>
+        normalize(
+          `${source?.title || ""} ${source?.description || ""} ${evidenceDescription || ""}`
+        ).includes(normalize(term))
       )
     );
     answer = chargeSheet?.source
