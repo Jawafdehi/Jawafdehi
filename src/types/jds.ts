@@ -100,8 +100,14 @@ export interface Case {
   updated_at: string; // ISO datetime
 }
 
+export interface CourtCase {
+  court: "supreme" | "special";
+  case_number: string;
+}
+
 export interface CaseDetail extends Case {
   bigo: number | null; // Embezzled/irregular amount in NPR (null if not applicable)
+  court_cases: CourtCase[] | null;
 }
 
 export interface DocumentSource {
