@@ -446,6 +446,18 @@ const CaseDetail = () => {
                   </span>
                 </div>
               )}
+              {caseData.court_cases != null && caseData.court_cases.length > 0 && (
+                <div className="flex items-start text-muted-foreground">
+                  <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
+                  <div className="text-sm">
+                    {caseData.court_cases.map((courtCase, index) => (
+                      <div key={index}>
+                        {courtCase.court === "supreme" ? "Supreme Court" : "Special Court"}: {courtCase.case_number}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
