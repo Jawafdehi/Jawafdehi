@@ -1,7 +1,8 @@
 export type GuestTopicId =
   | "procurement_corruption"
   | "big_corruption_cases"
-  | "ciaa_process";
+  | "ciaa_process"
+  | "cases_registered_2081_2082_bs";
 
 export interface GuestTopicKnowledge {
   id: GuestTopicId;
@@ -114,5 +115,24 @@ export const GUEST_TOPIC_KNOWLEDGE: GuestTopicKnowledge[] = [
       "Based on this public archive, CIAA-related case records usually show a pattern of complaint, investigation or charge filing, and then court or public-source updates.",
     introNe:
       "यस सार्वजनिक अभिलेखका आधारमा अख्तियारसम्बन्धी मुद्दाहरूमा सामान्यतया उजुरी, अनुसन्धान वा अभियोग दर्ता, त्यसपछि अदालत वा सार्वजनिक स्रोतबाट आउने अद्यावधिकहरू देखिन्छन्।",
+  },
+  {
+    id: "cases_registered_2081_2082_bs",
+    keywordsEn: [
+      "how many corruption cases were registered in the year 2081/82 bs",
+      "how many corruption cases were registered in 2081/82 bs",
+      "2081/82 bs cases",
+      "2081/82 corruption cases",
+      "registered in 2081/82 bs",
+      "year 2081/82 bs",
+    ],
+    keywordsNe: [
+      "२०८१/८२ बीएसमा कति भ्रष्टाचार मुद्दा दर्ता भएका थिए",
+      "२०८१/८२ सालमा दर्ता भएका भ्रष्टाचार मुद्दा",
+      "२०८१/८२ सालका भ्रष्टाचार मुद्दा",
+      "२०८१/८२ बि.सं.",
+    ],
+    followupsEn: [],
+    followupsNe: [],
   },
 ];

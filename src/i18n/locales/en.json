@@ -192,7 +192,8 @@
     "prompts": {
       "procurementCorruption": "What kind of procurement-related corruption take place in Nepal?",
       "ciaaProcess": "Show me how CIAA handles corruption cases in Nepal.",
-      "bigCorruptionCases": "Show me some big corruption cases in Nepal."
+      "bigCorruptionCases": "Show me some big corruption cases in Nepal.",
+      "casesRegistered20812082Bs": "How many corruption cases were registered in the year 2081/82 BS?"
     },
     "errors": {
       "loadFailed": "We could not load public case results right now. Please try again."

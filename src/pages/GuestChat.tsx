@@ -65,6 +65,7 @@ export default function GuestChat() {
     t("guestChat.prompts.procurementCorruption"),
     t("guestChat.prompts.ciaaProcess"),
     t("guestChat.prompts.bigCorruptionCases"),
+    t("guestChat.prompts.casesRegistered20812082Bs"),
   ];
   const {
     response,
@@ -182,9 +183,11 @@ export default function GuestChat() {
                           answer={turn.response.answer.text}
                           resultCount={turn.response.case_results.length}
                         />
-                        <div className="ml-12">
-                          <GuestCaseResultList results={turn.response.case_results} />
-                        </div>
+                        {turn.response.case_results.length > 0 ? (
+                          <div className="ml-12">
+                            <GuestCaseResultList results={turn.response.case_results} />
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   ))}
@@ -205,9 +208,11 @@ export default function GuestChat() {
                         answer={response.answer.text}
                         resultCount={response.case_results.length}
                       />
-                      <div className="ml-12">
-                        <GuestCaseResultList results={response.case_results} />
-                      </div>
+                      {response.case_results.length > 0 ? (
+                        <div className="ml-12">
+                          <GuestCaseResultList results={response.case_results} />
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

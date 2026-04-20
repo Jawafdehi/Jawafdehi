@@ -21,6 +21,7 @@ const DEFAULT_FOLLOWUPS_NE = [
   "पहिलो मुद्दाका मुख्य आरोप के हुन्?",
   "पहिलो मुद्दासँग कुन सार्वजनिक स्रोतहरू जोडिएका छन्?",
 ];
+const CIAA_TRACKER_2081_2082_TOTAL_CASES = 135;
 
 export interface GuestCaseSourceEntry {
   sourceId: number;
@@ -762,6 +763,17 @@ function buildBigCasesAnswer(caseResults: GuestCaseResultItem[], language: Guest
   };
 }
 
+function buildCasesRegistered20812082Answer(language: GuestLanguage): GuestAskResponse["answer"] {
+  return {
+    kind: "case_collection",
+    text:
+      language === "ne"
+        ? `आर्थिक वर्ष २०८१/८२ मा जम्मा ${CIAA_TRACKER_2081_2082_TOTAL_CASES} वटा भ्रष्टाचार मुद्दा दर्ता भएका थिए।\n\nती ६ प्रकारमा देखिन्छन्:\n- घुस (रिसवत) सँग सम्बन्धित मुद्दा: ३७\n- गैरकानुनी लाभ वा हानि नोक्सानी गरी भ्रष्टाचार गरेका मुद्दा: ३४\n- नक्कली शैक्षिक प्रमाणपत्रसम्बन्धी मुद्दा: २७\n- सार्वजनिक सम्पत्ति हानि नोक्सानीसम्बन्धी मुद्दा: २४\n- गैरकानुनी आम्दानीसम्बन्धी मुद्दा: ८\n- सम्पत्ति शुद्धीकरणसम्बन्धी मुद्दा: ५`
+        : `There were total ${CIAA_TRACKER_2081_2082_TOTAL_CASES} corruption cases registered in the year 2081/82 BS.\n\nThere were 6 categories:\n- Bribery cases: 37\n- Illegal benefit or loss cases: 34\n- Fake education certificate cases: 27\n- Public asset damage cases: 24\n- Illegal income cases: 8\n- Money laundering cases: 5`,
+    confidence: "high",
+  };
+}
+
 function buildCiaaAnswer(caseResults: GuestCaseResultItem[], language: GuestLanguage): GuestAskResponse["answer"] {
   return {
     kind: "institutional_explainer",
@@ -996,6 +1008,17 @@ export async function askGuestQuestion(
 
   if (!detectedTopic) {
     return buildEntitySearchResponse(query, publicCases, language);
+  }
+
+  if (detectedTopic.topicId === "cases_registered_2081_2082_bs") {
+    return {
+      query,
+      answer: buildCasesRegistered20812082Answer(language),
+      entity_matches: [],
+      case_results: [],
+      suggested_followups: getTopicFollowups(detectedTopic.topicId, language),
+      answerOrigin: "public-read-adapter",
+    };
   }
 
   const topicMatches = getTopTopicCases(publicCases, detectedTopic.topicId);
