@@ -45,13 +45,11 @@ export const GUEST_TOPIC_KNOWLEDGE: GuestTopicKnowledge[] = [
       "लागत अनुमान",
     ],
     followupsEn: [
-      "Show me the strongest procurement-related cases",
-      "Which sources support the first procurement case?",
+    
       "What patterns repeat across these procurement cases?",
     ],
     followupsNe: [
-      "सबैभन्दा सम्बन्धित खरिदसम्बन्धी मुद्दा देखाऊ",
-      "पहिलो मुद्दालाई कुन स्रोतहरूले समर्थन गर्छन्?",
+   
       "यी खरिदसम्बन्धी मुद्दाहरूमा दोहोरिने ढाँचा के छन्?",
     ],
   },
@@ -74,14 +72,10 @@ export const GUEST_TOPIC_KNOWLEDGE: GuestTopicKnowledge[] = [
       "मुख्य भ्रष्टाचार मुद्दा",
     ],
     followupsEn: [
-      "Open the biggest case",
-      "Why is the top case significant?",
-      "Show me another large corruption case",
+     
     ],
     followupsNe: [
-      "सबैभन्दा ठूलो मुद्दा खोल",
-      "पहिलो मुद्दा किन महत्वपूर्ण छ?",
-      "अर्को ठूलो भ्रष्टाचार मुद्दा देखाऊ",
+    
     ],
   },
   {
@@ -102,13 +96,11 @@ export const GUEST_TOPIC_KNOWLEDGE: GuestTopicKnowledge[] = [
       "छानबिन प्रक्रिया",
     ],
     followupsEn: [
-      "Show me CIAA-related public cases",
-      "Which case mentions a CIAA investigation?",
+     
       "Show me a case where the investigation stalled",
     ],
     followupsNe: [
-      "अख्तियारसँग सम्बन्धित सार्वजनिक मुद्दा देखाऊ",
-      "कुन मुद्दामा अख्तियारको अनुसन्धान उल्लेख छ?",
+     
       "अनुसन्धान रोकिएको मुद्दा देखाऊ",
     ],
     introEn:
