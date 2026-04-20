@@ -38,6 +38,7 @@ const CaseDetail = () => {
   const caseId = id ? parseInt(id) : undefined;
   const trackedCaseIdRef = useRef<string | null>(null);
   const [isAskDrawerOpen, setIsAskDrawerOpen] = useState(false);
+  const [showAskPopup, setShowAskPopup] = useState(false);
 
   const { data: caseData, isLoading, isError } = useQuery({
     queryKey: ['case', caseId],
@@ -81,6 +82,24 @@ const CaseDetail = () => {
     trackEvent('case_view', { case_id: loadedCaseId, slug: `/case/${id}` });
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, isError]);
+
+  useEffect(() => {
+    if (isAskDrawerOpen) {
+      setShowAskPopup(false);
+      return;
+    }
+
+    const handleScroll = () => {
+      setShowAskPopup(window.scrollY > 40);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isAskDrawerOpen]);
 
   const resolvedSources: Record<number, DocumentSource> = {};
   (caseData?.evidence ?? []).forEach((evidence, i) => {
@@ -208,18 +227,6 @@ const CaseDetail = () => {
             </Button>
 
             <div className="flex gap-2">
-              <Button
-                variant={isAskDrawerOpen ? "secondary" : "default"}
-                onClick={() => setIsAskDrawerOpen((current) => !current)}
-                className="inline-flex items-center gap-2"
-              >
-                <MessageSquareText className="h-4 w-4" />
-                <span>
-                  {isAskDrawerOpen
-                    ? t("caseDetail.hideChat")
-                    : t("caseDetail.askJawafdehi")}
-                </span>
-              </Button>
               <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
             </div>
           </div>
@@ -520,6 +527,34 @@ const CaseDetail = () => {
           </div>
         </div>
       </main>
+
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-x-4 bottom-5 z-40 flex justify-center transition-all duration-300 no-print sm:inset-x-auto sm:right-6 sm:justify-end xl:right-10",
+          showAskPopup && !isAskDrawerOpen
+            ? "translate-y-0 opacity-100"
+            : "translate-y-4 opacity-0"
+        )}
+        aria-hidden={!showAskPopup || isAskDrawerOpen}
+      >
+        <button
+          type="button"
+          onClick={() => setIsAskDrawerOpen(true)}
+          className="pointer-events-auto flex w-full max-w-[24rem] items-center gap-3 rounded-full border border-primary/20 bg-background/95 px-3 py-3 text-left shadow-[0_18px_40px_rgba(15,23,42,0.14)] ring-1 ring-primary/10 backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:w-auto sm:min-w-[22rem]"
+        >
+          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+            <MessageCircle className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-foreground">
+              {t("caseDetail.askPopupTitle")}
+            </span>
+            <span className="block truncate text-xs text-muted-foreground">
+              {t("caseDetail.askPopupDescription")}
+            </span>
+          </span>
+        </button>
+      </div>
 
       <Footer />
 

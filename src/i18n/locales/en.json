@@ -129,6 +129,8 @@
     "whatsappLabel": "WhatsApp",
     "hideChat": "Hide chat",
     "askJawafdehi": "Ask Jawafdehi",
+    "askPopupTitle": "Ask Jawafdehi about this case",
+    "askPopupDescription": "Get a quick summary, timeline, or source-based answer.",
     "inReviewBanner": "This case is currently under review by Jawafdehi. Information may be incomplete or subject to revision.",
     "status": {
       "ongoing": "Ongoing",
