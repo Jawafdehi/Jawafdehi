@@ -80,7 +80,7 @@ interface SectionHeaderProps {
  * Displays a badge with tier-specific colors and document count.
  * Used as AccordionTrigger content.
  */
-const SectionHeader: React.FC<SectionHeaderProps> = ({ group, count, t }) => {
+const SectionHeader = ({ group, count, t }: SectionHeaderProps): JSX.Element => {
   const config = {
     primary: {
       bgColor: 'bg-[#E6F1FB] dark:bg-blue-950/30',
@@ -178,6 +178,9 @@ const CaseDetail = () => {
     const data = entityQueries[i]?.data;
     if (data) resolvedEntities[nesId] = data;
   });
+
+  // Check if all source queries have finished loading
+  const allSourcesLoaded = sourceQueries.length === 0 || sourceQueries.every(q => !q.isLoading);
 
   // Group evidence by tier
   const groupedEvidence: Record<EvidenceGroup, EvidenceEntry[]> = {
@@ -541,39 +544,47 @@ const CaseDetail = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Accordion type="multiple" defaultValue={renderOrder} className="w-full">
-                    {renderOrder.map((group) => {
-                      const evidenceInGroup = groupedEvidence[group];
-                      if (evidenceInGroup.length === 0) return null;
+                  {!allSourcesLoaded ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
+                  ) : (
+                    <Accordion type="multiple" defaultValue={renderOrder} className="w-full">
+                      {renderOrder.map((group) => {
+                        const evidenceInGroup = groupedEvidence[group];
+                        if (evidenceInGroup.length === 0) return null;
 
-                      return (
-                        <AccordionItem key={group} value={group}>
-                          <AccordionTrigger>
-                            <SectionHeader
-                              group={group}
-                              count={evidenceInGroup.length}
-                              t={t}
-                            />
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="space-y-3">
-                              {evidenceInGroup.map((evidence, index) => {
-                                const source = resolvedSources[evidence.source_id] ?? null;
-                                return (
-                                  <DocumentSourceCard
-                                    key={`${evidence.source_id}-${index}`}
-                                    source={source}
-                                    sourceId={evidence.source_id}
-                                    evidenceDescription={evidence.description}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      );
-                    })}
-                  </Accordion>
+                        return (
+                          <AccordionItem key={group} value={group}>
+                            <AccordionTrigger>
+                              <SectionHeader
+                                group={group}
+                                count={evidenceInGroup.length}
+                                t={t}
+                              />
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-3">
+                                {evidenceInGroup.map((evidence, index) => {
+                                  const source = resolvedSources[evidence.source_id] ?? null;
+                                  return (
+                                    <DocumentSourceCard
+                                      key={`${evidence.source_id}-${index}`}
+                                      source={source}
+                                      sourceId={evidence.source_id}
+                                      evidenceDescription={evidence.description}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
+                  )}
                 </CardContent>
               </Card>
             )}
