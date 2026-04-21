@@ -11,6 +11,7 @@ import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
 import { InlineShareButtons } from "@/components/InlineShareButtons";
 import { CaseDetailBanner } from "@/components/CaseDetailBanner";
 import { CaseTimeline } from "@/components/CaseTimeline";
+import { CaseEntityChips } from "@/components/CaseEntityChips";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -339,26 +340,16 @@ const CaseDetail = () => {
                     </Card>
 
                     {caseData.entities.filter(e => e.type === 'related').length > 0 && (
-                      <Card className="mb-8">
-                        <CardHeader>
-                          <CardTitle>{t("caseDetail.partiesInvolved")}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-sm text-muted-foreground">
-                            {caseData.entities.filter(e => e.type === 'related').map((e, index, arr) => {
-                              const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                              let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
-                              displayName = translateDynamicText(displayName, currentLang);
-                              return (
-                                <span key={index}>
-                                  <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
-                                  {index < arr.length - 1 && ', '}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <section className="mb-8">
+                        <h2 className="mb-5 text-2xl font-semibold text-foreground">
+                          {t("caseDetail.partiesInvolved")}
+                        </h2>
+                        <CaseEntityChips
+                          entities={caseData.entities.filter(e => e.type === 'related')}
+                          resolvedEntities={resolvedEntities}
+                          language={currentLang}
+                        />
+                      </section>
                     )}
 
                     <Card className="mb-8">
