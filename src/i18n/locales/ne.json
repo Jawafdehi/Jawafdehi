@@ -173,6 +173,8 @@
     "allegationCount": "{{count}} आरोपहरू",
     "timelineCount": "{{count}} समयरेखा बुँदाहरू",
     "sourceCount": "{{count}} स्रोतहरू",
+    "chatTab": "च्याट",
+    "timelineTab": "समयरेखा",
     "disclaimer": "एआईद्वारा तयार गरिएको सामग्रीमा त्रुटि हुन सक्छ। मूल स्रोतसँग मिलाएर हेर्नुहोस्।",
     "prompts": {
       "keyAllegations": "मुख्य आरोपहरू के हुन्?",

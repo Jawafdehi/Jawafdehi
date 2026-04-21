@@ -311,7 +311,7 @@ const CaseDetail = () => {
 
                 <div className={cn(
                   "grid gap-8 print:block",
-                  caseData.timeline.length > 0 && "lg:grid-cols-[minmax(0,1fr)_16rem] xl:grid-cols-[minmax(0,1fr)_18rem]"
+                  caseData.timeline.length > 0 && !isAskDrawerOpen && "lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]"
                 )}>
                   <div className="min-w-0">
                     <Card className="mb-8">
@@ -416,7 +416,10 @@ const CaseDetail = () => {
                   <CaseTimeline
                     timeline={caseData.timeline}
                     title={t("caseDetail.timeline")}
-                    className="mb-8 lg:sticky lg:top-24 lg:self-start print:static print:mb-8"
+                    className={cn(
+                      "print:static print:mb-8",
+                      isAskDrawerOpen ? "hidden print:block" : "mb-8 lg:sticky lg:top-24 lg:self-start"
+                    )}
                   />
                 </div>
               </div>

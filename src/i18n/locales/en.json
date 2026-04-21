@@ -173,6 +173,8 @@
     "allegationCount": "{{count}} allegations",
     "timelineCount": "{{count}} timeline items",
     "sourceCount": "{{count}} sources",
+    "chatTab": "Chat",
+    "timelineTab": "Timeline",
     "disclaimer": "AI-generated content may contain errors. Verify with original sources.",
     "prompts": {
       "keyAllegations": "What are the key allegations?",
