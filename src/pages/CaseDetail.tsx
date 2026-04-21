@@ -225,8 +225,14 @@ const CaseDetail = () => {
             <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
           </div>
 
-          <div className={cn("grid gap-8", isAskDrawerOpen && "xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_520px] xl:items-start")}>
-            <div className={cn("min-w-0", isAskDrawerOpen && "order-2 xl:order-1")}>
+          <div className={cn(
+            "grid gap-8 transition-[grid-template-columns] duration-300 ease-out",
+            isAskDrawerOpen && "xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_520px] xl:items-start"
+          )}>
+            <div className={cn(
+              "min-w-0 transition-all duration-300 ease-out",
+              isAskDrawerOpen && "order-2 xl:order-1"
+            )}>
               <FloatingShareSidebar
                 url={canonicalUrl}
                 title={caseData.title}
@@ -310,7 +316,7 @@ const CaseDetail = () => {
                 <Separator className="mb-8 hidden print:block" />
 
                 <div className={cn(
-                  "grid gap-8 print:block",
+                  "grid gap-8 transition-[grid-template-columns] duration-300 ease-out print:block",
                   caseData.timeline.length > 0 && !isAskDrawerOpen && "lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]"
                 )}>
                   <div className="min-w-0">
@@ -473,7 +479,7 @@ const CaseDetail = () => {
             </div>
 
             {isAskDrawerOpen ? (
-              <div className="order-1 min-w-0 xl:order-2 xl:sticky xl:top-24 xl:h-[calc(100vh-8rem)]">
+              <div className="order-1 min-w-0 animate-in fade-in-0 slide-in-from-right-4 duration-300 xl:order-2 xl:sticky xl:top-24 xl:h-[calc(100vh-8rem)]">
                 <GuestCaseChatDrawer
                   caseId={caseData.id}
                   caseTitle={caseData.title}
