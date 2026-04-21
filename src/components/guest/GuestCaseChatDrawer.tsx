@@ -67,6 +67,7 @@ export function GuestCaseChatDrawer({
   }
 
   const hasMessages = messages.length > 0;
+  const hasTimeline = caseData.timeline.length > 0;
 
   return (
     <aside className="flex h-full min-h-[720px] transform-gpu flex-col overflow-hidden rounded-[28px] border border-border/70 bg-card shadow-sm transition-all duration-300 ease-out no-print xl:h-[calc(100vh-8rem)]">
@@ -117,16 +118,18 @@ export function GuestCaseChatDrawer({
       </div>
 
       <Tabs defaultValue="chat" className="flex min-h-0 flex-1 flex-col">
-        <div className="border-b border-border/70 px-5 py-3">
-          <TabsList className="grid w-full grid-cols-2 rounded-full transition-colors duration-200">
-            <TabsTrigger value="chat" className="rounded-full transition-all duration-200">
-              {t("guestCaseChatDrawer.chatTab")}
-            </TabsTrigger>
-            <TabsTrigger value="timeline" className="rounded-full transition-all duration-200">
-              {t("guestCaseChatDrawer.timelineTab")}
-            </TabsTrigger>
-          </TabsList>
-        </div>
+        {hasTimeline ? (
+          <div className="border-b border-border/70 px-5 py-3">
+            <TabsList className="grid w-full grid-cols-2 rounded-full transition-colors duration-200">
+              <TabsTrigger value="chat" className="rounded-full transition-all duration-200">
+                {t("guestCaseChatDrawer.chatTab")}
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="rounded-full transition-all duration-200">
+                {t("guestCaseChatDrawer.timelineTab")}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        ) : null}
 
         <TabsContent value="chat" className="mt-0 min-h-0 flex-1 flex-col data-[state=active]:flex data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-200 data-[state=inactive]:hidden">
           <ScrollArea className="min-h-0 flex-1 px-5 py-5">
@@ -236,15 +239,17 @@ export function GuestCaseChatDrawer({
           </div>
         </TabsContent>
 
-        <TabsContent value="timeline" className="mt-0 min-h-0 flex-1 data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-200 data-[state=inactive]:hidden">
-          <ScrollArea className="h-full px-6 py-5">
-            <CaseTimeline
-              timeline={caseData.timeline}
-              title={t("caseDetail.timeline")}
-              className="pb-3"
-            />
-          </ScrollArea>
-        </TabsContent>
+        {hasTimeline ? (
+          <TabsContent value="timeline" className="mt-0 min-h-0 flex-1 data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-200 data-[state=inactive]:hidden">
+            <ScrollArea className="h-full px-6 py-5">
+              <CaseTimeline
+                timeline={caseData.timeline}
+                title={t("caseDetail.timeline")}
+                className="pb-3"
+              />
+            </ScrollArea>
+          </TabsContent>
+        ) : null}
       </Tabs>
     </aside>
   );
