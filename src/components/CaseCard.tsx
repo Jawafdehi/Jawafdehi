@@ -43,7 +43,8 @@ export const CaseCard = ({ id, slug, title, entity, location, date, status, tags
   const handleCardClick = (e: React.MouseEvent) => {
     // Only navigate if not clicking on an inner link
     if (!(e.target as HTMLElement).closest("a")) {
-      const caseIdentifier = slug && slug !== "null" ? slug : id;
+      const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
+      const caseIdentifier = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : id;
       navigate(`/case/${caseIdentifier}`);
     }
   };

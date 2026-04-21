@@ -14,10 +14,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, MapPin, User, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MessageCircle, StickyNote, DollarSign } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Calendar, MapPin, User, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MessageCircle, StickyNote, Banknote } from "lucide-react";
 import { getCaseById, getDocumentSourceById } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
-import type { DocumentSource } from "@/types/jds";
+import type { DocumentSource, EvidenceEntry } from "@/types/jds";
 import type { Entity } from "@/types/nes";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatDateWithBS, formatCaseDateRange } from "@/utils/date";
@@ -77,6 +78,7 @@ interface SectionHeaderProps {
 /**
  * Section header component for evidence tier grouping.
  * Displays a badge with tier-specific colors and document count.
+ * Used as AccordionTrigger content.
  */
 const SectionHeader: React.FC<SectionHeaderProps> = ({ group, count, t }) => {
   const config = {
@@ -100,7 +102,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ group, count, t }) => {
   const { bgColor, textColor, labelKey } = config[group];
 
   return (
-    <div className="flex items-center gap-3 mb-3 pb-2 border-b border-border">
+    <div className="flex items-center gap-3 w-full">
       <span className={`px-3 py-1 rounded-full text-sm font-semibold ${bgColor} ${textColor}`}>
         {t(labelKey)}
       </span>
@@ -178,7 +180,7 @@ const CaseDetail = () => {
   });
 
   // Group evidence by tier
-  const groupedEvidence: Record<EvidenceGroup, typeof caseData.evidence> = {
+  const groupedEvidence: Record<EvidenceGroup, EvidenceEntry[]> = {
     primary: [],
     legal: [],
     secondary: []
@@ -410,9 +412,9 @@ const CaseDetail = () => {
                 </div>
                 {caseData.bigo != null && caseData.bigo > 0 && (
                   <div className="flex items-center text-muted-foreground">
-                    <DollarSign className="mr-2 h-5 w-5" />
+                    <Banknote className="mr-2 h-5 w-5" />
                     <span className="text-sm">
-                      {t("caseDetail.embezzledAmount")}: {caseData.bigo.toLocaleString()}
+                      {t("caseDetail.embezzledAmount")}: NPR {caseData.bigo.toLocaleString()}
                     </span>
                   </div>
                 )}
@@ -420,11 +422,20 @@ const CaseDetail = () => {
                   <div className="flex items-start text-muted-foreground">
                     <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
                     <div className="text-sm">
-                      {caseData.court_cases.map((entry, index) => {
-                        const [court, caseNumber] = entry.split(":");
+                      {caseData.court_cases.map((entry) => {
+                        const separatorIndex = entry.indexOf(":");
+                        if (separatorIndex <= 0) return null;
+
+                        const court = entry.slice(0, separatorIndex).trim();
+                        const caseNumber = entry.slice(separatorIndex + 1).trim();
+                        if (!caseNumber) return null;
+
+                        const courtLabel = court === "supreme" || court === "special"
+                          ? t(`courtCase.${court}`)
+                          : court;
                         return (
-                          <div key={index}>
-                            {t(`courtCase.${court}`)}: {caseNumber}
+                          <div key={`${court}-${caseNumber}`}>
+                            {courtLabel}: {caseNumber}
                           </div>
                         );
                       })}
@@ -530,35 +541,39 @@ const CaseDetail = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
+                  <Accordion type="multiple" defaultValue={renderOrder} className="w-full">
                     {renderOrder.map((group) => {
                       const evidenceInGroup = groupedEvidence[group];
                       if (evidenceInGroup.length === 0) return null;
 
                       return (
-                        <div key={group}>
-                          <SectionHeader
-                            group={group}
-                            count={evidenceInGroup.length}
-                            t={t}
-                          />
-                          <div className="space-y-3">
-                            {evidenceInGroup.map((evidence, index) => {
-                              const source = resolvedSources[evidence.source_id] ?? null;
-                              return (
-                                <DocumentSourceCard
-                                  key={`${evidence.source_id}-${index}`}
-                                  source={source}
-                                  sourceId={evidence.source_id}
-                                  evidenceDescription={evidence.description}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
+                        <AccordionItem key={group} value={group}>
+                          <AccordionTrigger>
+                            <SectionHeader
+                              group={group}
+                              count={evidenceInGroup.length}
+                              t={t}
+                            />
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-3">
+                              {evidenceInGroup.map((evidence, index) => {
+                                const source = resolvedSources[evidence.source_id] ?? null;
+                                return (
+                                  <DocumentSourceCard
+                                    key={`${evidence.source_id}-${index}`}
+                                    source={source}
+                                    sourceId={evidence.source_id}
+                                    evidenceDescription={evidence.description}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
                       );
                     })}
-                  </div>
+                  </Accordion>
                 </CardContent>
               </Card>
             )}
