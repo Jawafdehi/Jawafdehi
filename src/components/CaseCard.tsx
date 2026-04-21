@@ -47,93 +47,109 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
   };
 
   return (
-    <Card className="relative h-full transition-all hover:shadow-lg hover:border-primary/50 cursor-pointer overflow-hidden group" onClick={handleCardClick}>
-      {/* Conditionally render image only when valid thumbnail exists */}
-      {imageSrc ? (
-        <>
-          <img
-            src={imageSrc}
-            alt={`Thumbnail for ${title}`}
-            loading="lazy"
-            decoding="async"
-            onError={handleImageError}
-            className="absolute inset-0 z-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {/* Semi-transparent white overlay for text readability */}
-          <div className="absolute inset-0 z-[1] bg-white/70" />
-        </>
-      ) : (
-        /* White background when no thumbnail */
-        <div className="absolute inset-0 z-0 bg-white" />
-      )}
-      <div className="relative z-10 flex flex-col h-full">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <Badge className={statusConfig[status].color}>{statusConfig[status].label}</Badge>
-            <div className="flex flex-wrap gap-1">
-              {tags?.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs shadow-sm bg-background/50 backdrop-blur-md">
-                  {tag}
-                </Badge>
-              ))}
-              {tags && tags.length > 2 && (
-                <Badge variant="secondary" className="text-xs shadow-sm bg-background/50 backdrop-blur-md">
-                  +{tags.length - 2}
-                </Badge>
-              )}
-            </div>
+    <Card
+      className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)]"
+      onClick={handleCardClick}
+    >
+      <div className="relative h-52 overflow-hidden">
+        {imageSrc ? (
+          <>
+            <img
+              src={imageSrc}
+              alt={`Thumbnail for ${title}`}
+              loading="lazy"
+              decoding="async"
+              onError={handleImageError}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-slate-900/5 to-white/10" />
+          </>
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-slate-200 via-slate-100 to-white" />
+        )}
+
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+          <Badge className={`${statusConfig[status].color} shrink-0 rounded-full border-0 px-3 py-1 text-xs font-medium shadow-sm`}>
+            {statusConfig[status].label}
+          </Badge>
+
+          <div className="flex flex-wrap justify-end gap-1">
+            {tags?.slice(0, 2).map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs shadow-sm bg-background/50 backdrop-blur-md">
+                {tag}
+              </Badge>
+            ))}
+            {tags && tags.length > 2 && (
+              <Badge variant="secondary" className="text-xs shadow-sm bg-background/50 backdrop-blur-md">
+                +{tags.length - 2}
+              </Badge>
+            )}
           </div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col bg-card">
+        <CardHeader className="space-y-2 px-5 pb-0 pt-5">
           {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
               remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
-          <h3 className="text-lg font-semibold text-foreground line-clamp-2">{title}</h3>
+          <h3 className="line-clamp-2 text-lg font-semibold text-foreground">
+            {title}
+          </h3>
         </CardHeader>
-        <CardContent className="flex-grow">
+
+        <CardContent className="flex flex-1 flex-col px-5 pb-0 pt-4">
           {allegations && allegations.length > 0 ? (
-            <ul className="list-disc list-inside mb-4 space-y-0.5">
-              <li className="text-sm text-muted-foreground">
-                <span>{allegations[0]}</span>
-              </li>
-            </ul>
+            <p className="line-clamp-3 text-sm text-muted-foreground">
+              {allegations[0]}
+            </p>
           ) : (
-            <p className="text-sm text-muted-foreground mb-3">{description}</p>
+            <p className="line-clamp-3 text-sm text-muted-foreground">{description}</p>
           )}
-          <div className="space-y-1 mt-3">
-            <div className="flex items-center text-sm text-muted-foreground">
-              <User className="mr-2 h-4 w-4 flex-shrink-0" />
-              {entityIds && entityIds.length > 0 ? (
-                <Link
-                  to={`/entity/${entityIds[0]}`}
-                  className="line-clamp-1 hover:text-primary hover:underline transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {entity}
-                </Link>
-              ) : (
-                <span className="line-clamp-1">{entity}</span>
-              )}
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
-              {locationIds && locationIds.length > 0 ? (
-                <Link
-                  to={`/entity/${locationIds[0]}`}
-                  className="hover:text-primary hover:underline transition-colors line-clamp-1"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {location}
-                </Link>
-              ) : (
-                <span className="line-clamp-1">{location}</span>
-              )}
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>{date}</span>
+
+          <div className="mt-5 border-t border-border/70 pt-4">
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center">
+                <User className="mr-2 h-4 w-4 flex-shrink-0" />
+                {entityIds && entityIds.length > 0 ? (
+                  <Link
+                    to={`/entity/${entityIds[0]}`}
+                    className="line-clamp-1 hover:text-primary hover:underline transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {entity}
+                  </Link>
+                ) : (
+                  <span className="line-clamp-1">{entity}</span>
+                )}
+              </div>
+
+              <div className="flex items-center">
+                <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
+                {locationIds && locationIds.length > 0 ? (
+                  <Link
+                    to={`/entity/${locationIds[0]}`}
+                    className="line-clamp-1 hover:text-primary hover:underline transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {location}
+                  </Link>
+                ) : (
+                  <span className="line-clamp-1">{location}</span>
+                )}
+              </div>
+
+              <div className="flex items-center">
+                <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span>{date}</span>
+              </div>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="mt-auto">
-          <span className="text-sm font-medium text-primary hover:underline">{t("common.viewDetails")}</span>
+
+        <CardFooter className="mt-auto px-5 pb-5 pt-4">
+          <span className="flex w-full items-center justify-center rounded-2xl bg-muted px-4 py-3 text-sm font-medium text-foreground transition-colors group-hover:bg-muted/80">
+            {t("common.viewDetails")}
+          </span>
         </CardFooter>
       </div>
     </Card>
