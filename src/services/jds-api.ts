@@ -163,9 +163,9 @@ export async function getCases(params?: CaseSearchParams): Promise<PaginatedCase
  * Retrieve detailed information about a specific published case.
  * Includes complete case data and audit history.
  */
-export async function getCaseById(id: number): Promise<CaseDetail> {
+export async function getCaseById(id: string | number): Promise<CaseDetail> {
   try {
-    const response = await apiClient.get<CaseDetail>(`/cases/${id}/`);
+    const response = await apiClient.get<CaseDetail>(`/cases/${encodeURIComponent(String(id))}/`);
     return response.data;
   } catch (error) {
     handleApiError(error, `/cases/${id}/`);

@@ -129,6 +129,7 @@
     "emailLabel": "इमेल",
     "whatsappLabel": "व्हाट्सएप",
     "inReviewBanner": "यो मुद्दा वर्तमानमा जवाफदेहीले समीक्षा गरिरहेको छ। जानकारी अधूरो वा संशोधनको अधीनमा हुन सक्छ।",
+    "embezzledAmount": "हिनामिना / अनियमित रकम",
     "status": {
       "ongoing": "चलिरहेको",
       "resolved": "समाधान भएको",
@@ -139,7 +140,18 @@
       "loading": "टिप्पणीहरू लोड हुँदैछ...",
       "joinDiscussion": "यस मुद्दामा आफ्नो विचार साझा गर्न छलफलमा सामेल हुनुहोस्।",
       "loadComments": "टिप्पणीहरू लोड गर्नुहोस्"
+    },
+    "evidenceGroups": {
+      "primary": "प्राथमिक प्रमाण",
+      "legal": "कानूनी कागजातहरू",
+      "secondary": "द्वितीयक स्रोतहरू",
+      "documentCount_one": "{{count}} प्रमाण",
+      "documentCount_other": "{{count}} प्रमाणहरू"
     }
+  },
+  "courtCase": {
+    "supreme": "सर्वोच्च अदालत",
+    "special": "विशेष अदालत"
   },
   "documentSource": {
     "fallbackTitle": "स्रोत {{id}}",
