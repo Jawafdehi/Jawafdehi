@@ -145,9 +145,13 @@
       "primary": "प्राथमिक प्रमाण",
       "legal": "कानूनी कागजातहरू",
       "secondary": "द्वितीयक स्रोतहरू",
-      "documentCount": "{{count}} कागजात",
-      "documentCount_plural": "{{count}} कागजातहरू"
+      "documentCount_one": "{{count}} प्रमाण",
+      "documentCount_other": "{{count}} प्रमाणहरू"
     }
+  },
+  "courtCase": {
+    "supreme": "सर्वोच्च अदालत",
+    "special": "विशेष अदालत"
   },
   "documentSource": {
     "fallbackTitle": "स्रोत {{id}}",

@@ -7,7 +7,7 @@ import { Calendar, MapPin, User } from "lucide-react";
 
 interface CaseCardProps {
   id: string;
-  slug: string; // URL-friendly slug for navigation
+  slug?: string | null; // URL-friendly slug for navigation
   title: string;
   entity: string;
   location: string;

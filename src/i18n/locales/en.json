@@ -145,9 +145,13 @@
       "primary": "Primary Evidence",
       "legal": "Legal Documents",
       "secondary": "Secondary Sources",
-      "documentCount": "{{count}} document",
-      "documentCount_plural": "{{count}} documents"
+      "documentCount_one": "{{count}} proof",
+      "documentCount_other": "{{count}} proofs"
     }
+  },
+  "courtCase": {
+    "supreme": "Supreme Court",
+    "special": "Special Court"
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
