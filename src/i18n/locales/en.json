@@ -195,8 +195,9 @@
     "metaDescription": "Ask questions about Jawafdehi cases.",
     "title": "Ask Jawafdehi",
     "newChat": "New chat",
+    "demoBadge": "Demo",
     "prompts": {
-      "procurementCorruption": "What kind of procurement-related corruption take place in Nepal?",
+      "procurementCorruption": "What kinds of procurement-related corruption take place in Nepal?",
       "ciaaProcess": "Show me how CIAA handles corruption cases in Nepal.",
       "bigCorruptionCases": "Show me some big corruption cases in Nepal.",
       "casesRegistered20812082Bs": "How many corruption cases were registered in the year 2081/82 BS?"
@@ -204,6 +205,31 @@
     "errors": {
       "loadFailed": "We could not load public case results right now. Please try again."
     }
+  },
+  "heroChatDemo": {
+    "subtitle": "Public case archive",
+    "demoCta": "Demo",
+    "answerIntro": "CIAA typically becomes visible to the public during investigation and court filing. Earlier complaint stages are often not publicly documented.",
+    "answerSummary": "In short: the public usually sees the case clearly only once CIAA has investigated enough to file it in court.",
+    "tryItYourself": "Try it yourself",
+    "timeline": [
+      {
+        "title": "Complaint registered",
+        "detail": "A complaint is filed, but most reports are not publicly accessible unless the case escalates."
+      },
+      {
+        "title": "CIAA investigates",
+        "detail": "CIAA collects documents, interviews officials, and may track assets or financial records."
+      },
+      {
+        "title": "Charge sheet filed",
+        "detail": "If the case is strong enough, CIAA files a formal charge sheet in the Special Court."
+      },
+      {
+        "title": "Court process follows",
+        "detail": "After filing, the case moves through hearings, rulings, appeals, delays, or long pauses."
+      }
+    ]
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
@@ -524,7 +550,12 @@
     "changeLanguage": "Change language",
     "english": "English",
     "nepali": "नेपाली (Nepali)",
+    "loading": "Loading…",
     "viewDetails": "View Details →"
+  },
+  "themeToggle": {
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme"
   },
   "caseCard": {
     "status": {

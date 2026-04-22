@@ -7,29 +7,6 @@ import { Button } from "@/components/ui/button";
 
 type DemoPhase = "typing" | "loading" | "answer";
 
-const DEMO_TIMELINE = [
-  {
-    title: "Complaint registered",
-    detail: "A complaint is filed, but most reports are not publicly accessible unless the case escalates.",
-   
-  },
-  {
-    title: "CIAA investigates",
-    detail: "CIAA collects documents, interviews officials, and may track assets or financial records.",
-   
-  },
-  {
-    title: "Charge sheet filed",
-    detail: "If the case is strong enough, CIAA files a formal charge sheet in the Special Court.",
-   
-  },
-  {
-    title: "Court process follows",
-    detail: "After filing, the case moves through hearings, rulings, appeals, delays, or long pauses.",
-   
-  },
-] as const;
-
 export function HeroChatDemo() {
   const { t } = useTranslation();
   const [demoTypedQuestion, setDemoTypedQuestion] = useState("");
@@ -37,6 +14,9 @@ export function HeroChatDemo() {
   const [demoPhase, setDemoPhase] = useState<DemoPhase>("typing");
   const [revealedSteps, setRevealedSteps] = useState(0);
   const demoQuestion = t("guestChat.prompts.ciaaProcess");
+  const demoTimeline = t("heroChatDemo.timeline", {
+    returnObjects: true,
+  }) as Array<{ title: string; detail: string }>;
 
   useEffect(() => {
     let typingInterval: ReturnType<typeof setInterval> | null = null;
@@ -89,7 +69,7 @@ export function HeroChatDemo() {
 
     const revealInterval = setInterval(() => {
       currentStep += 1;
-      if (currentStep >= DEMO_TIMELINE.length) {
+      if (currentStep >= demoTimeline.length) {
         clearInterval(revealInterval);
         return;
       }
@@ -97,7 +77,7 @@ export function HeroChatDemo() {
     }, 220);
 
     return () => clearInterval(revealInterval);
-  }, [demoPhase]);
+  }, [demoPhase, demoTimeline.length]);
 
   return (
     <div className="relative block lg:flex lg:h-full">
@@ -113,7 +93,9 @@ export function HeroChatDemo() {
                 />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Public case archive</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t("heroChatDemo.subtitle")}
+                </p>
                 <h2 className="text-lg font-semibold tracking-tight text-foreground">
                   {t("guestChat.title")}
                 </h2>
@@ -125,7 +107,7 @@ export function HeroChatDemo() {
               size="sm"
               className="hidden rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 sm:inline-flex"
             >
-              <Link to="/cases">Demo</Link>
+              <Link to="/cases">{t("heroChatDemo.demoCta")}</Link>
             </Button>
           </div>
         </div>
@@ -179,11 +161,11 @@ export function HeroChatDemo() {
                   ) : demoPhase === "answer" ? (
                     <div className="flex min-h-[220px] flex-col rounded-[24px] border border-border/70 bg-card p-4 shadow-sm">
                       <p className="mb-3 text-sm leading-6 text-foreground">
-                        CIAA typically becomes visible to the public during investigation and court filing. Earlier complaint stages are often not publicly documented.
+                        {t("heroChatDemo.answerIntro")}
                       </p>
 
                       <div className="flex flex-1 flex-col gap-2.5">
-                        {DEMO_TIMELINE.map((step, index) => {
+                        {demoTimeline.map((step, index) => {
                           const isVisible = revealedSteps > index;
                           const isActive = revealedSteps === index + 1;
 
@@ -224,7 +206,7 @@ export function HeroChatDemo() {
                       </div>
 
                       <p className="mt-3 text-xs leading-5 text-foreground/80">
-                        In short: the public usually sees the case clearly only once CIAA has investigated enough to file it in court.
+                        {t("heroChatDemo.answerSummary")}
                       </p>
                     </div>
                   ) : <div aria-hidden="true" className="min-h-[220px]" />}
@@ -242,8 +224,7 @@ export function HeroChatDemo() {
               </div>
               <Button asChild variant="primary" >
                 <Link to="/ask">
-                 
-                  Try it yourself
+                  {t("heroChatDemo.tryItYourself")}
                 </Link>
               </Button>
             </div>
