@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, Filter, AlertCircle } from "lucide-react";
+import { Search, AlertCircle } from "lucide-react";
 import { getCases } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
 import { useQuery, useQueries } from "@tanstack/react-query";
@@ -86,56 +86,45 @@ const Cases = () => {
           </div>
 
           {/* Search and Filter Section */}
-          <div className="mb-8 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <div className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative flex-[1.5]">
+              <label htmlFor="case-search" className="sr-only">
+                {t("cases.searchPlaceholder")}
+              </label>
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
+                id="case-search"
                 placeholder={t("cases.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12"
+                className="h-11 rounded-full pl-11"
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("cases.filterByStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("cases.allStatuses")}</SelectItem>
-                    <SelectItem value="ongoing">{t("cases.status.ongoing")}</SelectItem>
-                    <SelectItem value="under-investigation">{t("cases.status.underInvestigation")}</SelectItem>
-                    <SelectItem value="resolved">{t("cases.status.resolved")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-[1.15]">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="case-status-filter" aria-label={t("cases.filterByStatus")} className="h-11 rounded-full px-4">
+                  <SelectValue placeholder={t("cases.filterByStatus")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("cases.allStatuses")}</SelectItem>
+                  <SelectItem value="ongoing">{t("cases.status.ongoing")}</SelectItem>
+                  <SelectItem value="under-investigation">{t("cases.status.underInvestigation")}</SelectItem>
+                  <SelectItem value="resolved">{t("cases.status.resolved")}</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <div className="flex-1">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("cases.filterByType")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("cases.allTypes")}</SelectItem>
-                    <SelectItem value="CORRUPTION">{t("cases.type.corruption")}</SelectItem>
-                    <SelectItem value="PROMISES">{t("cases.type.brokenPromise")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger id="case-type-filter" aria-label={t("cases.filterByType")} className="h-11 rounded-full px-4">
+                  <SelectValue placeholder={t("cases.filterByType")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("cases.allTypes")}</SelectItem>
+                  <SelectItem value="CORRUPTION">{t("cases.type.corruption")}</SelectItem>
+                  <SelectItem value="PROMISES">{t("cases.type.brokenPromise")}</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setTypeFilter("all");
-                  setSearchQuery("");
-                }}
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                {t("cases.clearFilters")}
-              </Button>
             </div>
           </div>
 
