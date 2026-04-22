@@ -44,7 +44,7 @@ function getFallbackIcon(jawafEntity: JawafEntity, entity: Entity | null) {
     return <MapPin className="h-5 w-5" />;
   }
 
-  if (entity?.type === "organization") {
+  if (entity?.type === "organization" || jawafEntity.type === "organization") {
     return <Building2 className="h-5 w-5" />;
   }
 
