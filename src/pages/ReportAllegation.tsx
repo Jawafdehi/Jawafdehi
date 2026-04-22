@@ -39,7 +39,7 @@ export default function ReportAllegation() {
       <Header />
 
       <main className="flex-1">
-        <div className="container mx-auto px-4 py-12 max-w-3xl">
+        <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
           <Card>
             <CardHeader>
               <CardTitle className="text-3xl">{t("report.title")}</CardTitle>

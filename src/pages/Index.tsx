@@ -168,7 +168,7 @@ const Index = () => {
 
       <main className="flex-1">
         {/* ── Hero ── */}
-        <section className="relative bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-20 md:py-28 overflow-hidden">
+        <section className="relative bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.04] bg-[size:24px_24px]" />
 
           <div className="container mx-auto px-4 relative">
@@ -265,7 +265,7 @@ const Index = () => {
         </section>
 
         {/* ── Three Pillars ── */}
-        <section className="py-20 bg-background border-b border-border">
+        <section className="py-12 md:py-20 bg-background border-b border-border">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               <div className="space-y-4">
@@ -307,7 +307,7 @@ const Index = () => {
         </section>
 
         {/* ── Recently Documented Cases ── */}
-        <section className="py-16 bg-muted/20">
+        <section className="py-12 md:py-16 bg-muted/20">
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-10">
               <div>

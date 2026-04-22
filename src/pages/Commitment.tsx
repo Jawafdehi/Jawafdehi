@@ -85,7 +85,7 @@ const Commitment = () => {
         </section>
 
         {/* Mission */}
-        <section className="py-14 border-b border-border">
+        <section className="py-12 md:py-14 border-b border-border">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
               <h2 className="text-2xl font-bold text-foreground mb-5">Our Mission</h2>
@@ -100,7 +100,7 @@ const Commitment = () => {
         </section>
 
         {/* Commitments grid */}
-        <section className="py-16">
+        <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {COMMITMENTS.map(({ icon: Icon, title, body }) => (

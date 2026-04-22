@@ -115,7 +115,7 @@ const Volunteer = () => (
       </section>
 
       {/* Who we're looking for */}
-      <section className="py-16 border-b border-border">
+      <section className="py-12 md:py-16 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-foreground mb-2">Who we're looking for</h2>
@@ -166,7 +166,7 @@ const Volunteer = () => (
       </section>
 
       {/* Teams */}
-      <section className="py-16 border-b border-border">
+      <section className="py-12 md:py-16 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="mb-10">
             <h2 className="text-2xl font-bold text-foreground mb-2">Our Volunteer Teams</h2>
@@ -198,7 +198,7 @@ const Volunteer = () => (
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-muted/20">
+      <section className="py-12 md:py-16 bg-muted/20">
         <div className="container mx-auto px-4 text-center">
           <Heart className="h-8 w-8 text-primary mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-foreground mb-3">Ready to contribute?</h2>

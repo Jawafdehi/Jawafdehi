@@ -77,7 +77,7 @@ const OurProducts = () => (
       </section>
 
       {/* Products */}
-      <section className="py-16 border-b border-border">
+      <section className="py-12 md:py-16 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="mb-10">
             <h2 className="text-2xl font-bold text-foreground mb-2">The Stack</h2>
@@ -119,7 +119,7 @@ const OurProducts = () => (
       </section>
 
       {/* Open source CTA */}
-      <section className="py-16 bg-muted/20">
+      <section className="py-12 md:py-16 bg-muted/20">
         <div className="container mx-auto px-4 text-center">
           <Github className="h-8 w-8 text-primary mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-foreground mb-3">Everything is on GitHub</h2>

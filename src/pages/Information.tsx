@@ -31,7 +31,7 @@ const Information = () => {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-20">
+        <section className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
@@ -45,7 +45,7 @@ const Information = () => {
         </section>
 
         {/* What is Corruption Section */}
-        <section className="py-16">
+        <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center gap-3 mb-6">
@@ -98,7 +98,7 @@ const Information = () => {
         </section>
 
         {/* Our Vetting Process */}
-        <section className="py-16 bg-muted/30">
+        <section className="py-12 md:py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center gap-3 mb-6">
@@ -203,7 +203,7 @@ const Information = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-16">
+        <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-foreground mb-8">{t("information.faq.title")}</h2>

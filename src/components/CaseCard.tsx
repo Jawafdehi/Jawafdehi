@@ -81,7 +81,7 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
         </div>
 
         <div className="flex flex-1 flex-col bg-card">
-          <CardHeader className="space-y-2 px-5 pb-0 pt-5">
+          <CardHeader className="space-y-2 px-4 pb-0 pt-4 sm:px-5 sm:pt-5">
             {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                 remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
             <h3 className="line-clamp-2 text-lg font-semibold text-foreground">
@@ -91,7 +91,7 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
             </h3>
           </CardHeader>
 
-          <CardContent className="flex flex-1 flex-col px-5 pb-0 pt-4">
+          <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4 sm:px-5">
             {allegations && allegations.length > 0 ? (
               <p className="line-clamp-3 text-sm text-muted-foreground">
                 {allegations[0]}
@@ -138,7 +138,7 @@ export const CaseCard = ({ id, title, entity, location, date, status, tags = [],
             </div>
           </CardContent>
 
-          <CardFooter className="mt-auto px-5 pb-5 pt-4">
+          <CardFooter className="mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
             <Link
               to={`/case/${id}`}
               className="flex w-full items-center justify-center rounded-2xl bg-muted px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

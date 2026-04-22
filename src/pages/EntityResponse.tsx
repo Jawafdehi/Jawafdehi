@@ -32,7 +32,7 @@ export default function EntityResponse() {
       <Header />
 
       <main className="flex-1">
-        <div className="container mx-auto px-4 py-12 max-w-3xl">
+        <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
           <Button variant="ghost" asChild className="mb-6">
             <Link to={`/entity/${id}`}>← Back to Entity Profile</Link>
           </Button>

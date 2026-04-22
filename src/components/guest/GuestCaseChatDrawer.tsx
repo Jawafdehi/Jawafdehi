@@ -119,7 +119,7 @@ export function GuestCaseChatDrawer({
 
       <Tabs defaultValue="chat" className="flex min-h-0 flex-1 flex-col">
         {hasTimeline ? (
-          <div className="border-b border-border/70 px-5 py-3">
+          <div className="border-b border-border/70 px-4 py-3 sm:px-5">
             <TabsList className="grid w-full grid-cols-2 rounded-full transition-colors duration-200">
               <TabsTrigger value="chat" className="rounded-full transition-all duration-200">
                 {t("guestCaseChatDrawer.chatTab")}
@@ -132,7 +132,7 @@ export function GuestCaseChatDrawer({
         ) : null}
 
         <TabsContent value="chat" className="mt-0 min-h-0 flex-1 flex-col data-[state=active]:flex data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-200 data-[state=inactive]:hidden">
-          <ScrollArea className="min-h-0 flex-1 px-5 py-5">
+          <ScrollArea className="min-h-0 flex-1 px-4 py-4 sm:px-5 sm:py-5">
             {!hasMessages ? (
               <div className="flex min-h-full flex-col items-center justify-center px-4 py-8 text-center">
                 <div className="w-full max-w-md space-y-6">
@@ -222,7 +222,7 @@ export function GuestCaseChatDrawer({
             )}
           </ScrollArea>
 
-          <div className="border-t border-border/70 px-5 py-4">
+          <div className="border-t border-border/70 px-4 py-4 sm:px-5">
             {error ? (
               <p className="mb-3 text-sm text-destructive">{error}</p>
             ) : null}
@@ -241,7 +241,7 @@ export function GuestCaseChatDrawer({
 
         {hasTimeline ? (
           <TabsContent value="timeline" className="mt-0 min-h-0 flex-1 data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-200 data-[state=inactive]:hidden">
-            <ScrollArea className="h-full px-6 py-5">
+            <ScrollArea className="h-full px-4 py-4 sm:px-6 sm:py-5">
               <CaseTimeline
                 timeline={caseData.timeline}
                 title={t("caseDetail.timeline")}

@@ -78,7 +78,7 @@ const Cases = () => {
       </Helmet>
       <Header />
 
-      <main className="flex-1 py-12">
+      <main className="flex-1 py-8 md:py-12">
         <div className="container mx-auto px-4">
           <div className="mb-10">
             <h1 className="text-4xl font-bold text-foreground mb-3">{t("cases.title")}</h1>

@@ -124,7 +124,7 @@ const CaseDetail = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 py-12">
+        <main className="flex-1 py-8 md:py-12">
           <div className="container mx-auto px-4 max-w-5xl">
             <Skeleton className="h-10 w-32 mb-6" />
             <div className="space-y-8">
@@ -150,7 +150,7 @@ const CaseDetail = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 py-12">
+        <main className="flex-1 py-8 md:py-12">
           <div className="container mx-auto px-4 max-w-5xl">
             <Button variant="ghost" asChild className="mb-6">
               <Link to="/cases">
