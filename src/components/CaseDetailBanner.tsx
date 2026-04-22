@@ -40,6 +40,7 @@ export function CaseDetailBanner({
   const statusLabel = t(statusKey || "caseDetail.status.ongoing");
   const caseTypeLabel = caseData.case_type === "CORRUPTION" ? t("cases.type.corruption") : t("cases.type.brokenPromise");
   const dateRange = formatCaseDateRange(caseData.case_start_date, caseData.case_end_date, t("cases.status.ongoing"));
+  const notAvailableLabel = t("common.notAvailable");
 
   const getEntityDisplayName = (caseEntity: JawafEntity) => {
     const entity = caseEntity.nes_id ? resolvedEntities[caseEntity.nes_id] : null;
@@ -115,6 +116,7 @@ export function CaseDetailBanner({
           <div className="flex items-start gap-3">
             <User className="mt-0.5 h-4 w-4 flex-shrink-0 text-white/70" />
             <div className="flex flex-wrap gap-1">
+              <span className="sr-only">{t("entityCard.alleged")}: </span>
               {accusedEntities.length > 0
                 ? accusedEntities.map((entity, index) => (
                     <span key={entity.id}>
@@ -124,13 +126,14 @@ export function CaseDetailBanner({
                       {index < accusedEntities.length - 1 && ", "}
                     </span>
                   ))
-                : "N/A"}
+                : notAvailableLabel}
             </div>
           </div>
 
           <div className="flex items-start gap-3">
             <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-white/70" />
             <div className="flex flex-wrap gap-1">
+              <span className="sr-only">{t("entityCard.location")}: </span>
               {locationEntities.length > 0
                 ? locationEntities.map((entity, index) => (
                     <span key={entity.id}>
@@ -140,7 +143,7 @@ export function CaseDetailBanner({
                       {index < locationEntities.length - 1 && ", "}
                     </span>
                   ))
-                : "N/A"}
+                : notAvailableLabel}
             </div>
           </div>
 
