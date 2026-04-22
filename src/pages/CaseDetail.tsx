@@ -318,21 +318,26 @@ const CaseDetail = () => {
                   caseData.timeline.length > 0 && !isAskDrawerOpen && "lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]"
                 )}>
                   <div className="min-w-0">
-                    <Card className="mb-8">
-                      <CardHeader>
-                        <CardTitle className="flex items-center">
-                          <AlertTriangle className="mr-2 h-5 w-5" />
+                    <Card className="mb-6 sm:mb-8">
+                      <CardHeader className="px-4 py-4 sm:px-6 sm:py-6">
+                        <CardTitle className="flex items-center text-xl sm:text-2xl">
+                          <AlertTriangle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           {t("caseDetail.allegations")}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-3">
+                      <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+                        <ul className="space-y-3 sm:space-y-4">
                           {caseData.key_allegations.map((allegation, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10 text-destructive text-sm font-semibold mr-3 mt-0.5 flex-shrink-0">
+                            <li
+                              key={index}
+                              className="flex items-start gap-3 rounded-2xl bg-muted/35 p-3 sm:bg-transparent sm:p-0"
+                            >
+                              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-xs font-semibold text-destructive sm:h-6 sm:w-6 sm:text-sm">
                                 {index + 1}
                               </span>
-                              <span className="text-muted-foreground">{allegation}</span>
+                              <p className="text-sm leading-7 text-foreground sm:text-base">
+                                {allegation}
+                              </p>
                             </li>
                           ))}
                         </ul>

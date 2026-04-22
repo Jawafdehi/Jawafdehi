@@ -32,7 +32,7 @@ export function CaseTimeline({ timeline, title, className }: CaseTimelineProps) 
             <p className="text-xs font-semibold text-primary print:text-sm print:text-foreground">
               {formatDateWithBS(item.date)}
             </p>
-            <p className="mt-1 text-sm font-medium leading-snug text-foreground">
+            <p className="mt-1 text-sm font-medium leading-snug text-muted-foreground print:text-foreground">
               {item.title}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground print:text-sm">
