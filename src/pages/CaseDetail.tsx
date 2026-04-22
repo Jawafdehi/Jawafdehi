@@ -392,20 +392,16 @@ const CaseDetail = () => {
                       </Card>
                     )}
 
-                    <Separator className="my-8" />
-
                     {caseData.notes && (
-                      <Card className="mb-8">
-                        <CardHeader>
-                          <CardTitle className="flex items-center">
-                            <StickyNote className="mr-2 h-5 w-5" />
+                      <section className="mb-8 border-t border-border pt-5">
+                        <h2 className="mb-3 flex items-center text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                          <StickyNote className="mr-2 h-4 w-4" />
                             {t("caseDetail.notes")}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="overflow-hidden">
+                        </h2>
+                        <div className="overflow-hidden text-sm leading-7 text-muted-foreground">
                           <ResponsiveTable html={caseData.notes} />
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </section>
                     )}
                   </div>
 
