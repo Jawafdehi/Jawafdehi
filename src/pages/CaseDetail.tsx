@@ -8,7 +8,6 @@ import { GuestCaseChatDrawer } from "@/components/guest/GuestCaseChatDrawer";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
-import { InlineShareButtons } from "@/components/InlineShareButtons";
 import { CaseDetailBanner } from "@/components/CaseDetailBanner";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { CaseEntityChips } from "@/components/CaseEntityChips";
@@ -414,20 +413,6 @@ const CaseDetail = () => {
                     )}
                   />
                 </div>
-              </div>
-
-              <div 
-                id="bottom-share-section"
-                className="flex flex-col items-center gap-4 py-8 mb-8 border-y border-border no-print"
-              >
-                <p className="text-sm font-medium text-muted-foreground">
-                  {t("share.shareThisCase")}
-                </p>
-                <InlineShareButtons
-                  url={canonicalUrl}
-                  title={caseData.title}
-                  description={plainDescription}
-                />
               </div>
 
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 no-print">
