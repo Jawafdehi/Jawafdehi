@@ -6,6 +6,7 @@ export const LanguageToggle = () => {
   const { i18n, t } = useTranslation();
   const currentLanguage = i18n.language?.startsWith("en") ? "en" : "ne";
   const nextLanguage = currentLanguage === "en" ? "ne" : "en";
+  const nextLanguageLabel = nextLanguage === "en" ? t("common.english") : t("common.nepali");
 
   const handleLanguageChange = async (lang: "en" | "ne") => {
     if (lang === currentLanguage) {
@@ -25,8 +26,8 @@ export const LanguageToggle = () => {
     <button
       type="button"
       onClick={() => handleLanguageChange(nextLanguage)}
-      aria-label={`${t("common.changeLanguage")}: ${currentLanguage === "en" ? t("common.english") : t("common.nepali")}`}
-      title={t("common.changeLanguage")}
+      aria-label={`${t("common.changeLanguage")}: ${nextLanguageLabel}`}
+      title={`${t("common.changeLanguage")}: ${nextLanguageLabel}`}
       className="relative inline-flex h-8 w-[78px] items-center rounded-full border border-primary/40 bg-background px-1 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <span
