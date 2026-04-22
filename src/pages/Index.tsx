@@ -202,15 +202,15 @@ const Index = () => {
                 <div className="flex flex-wrap gap-8 mb-6">
                   <div>
                     <div className="text-3xl font-bold text-white tabular-nums">{getStatValue(stats?.published_cases)}</div>
-                    <div className="text-sm text-white/50 mt-0.5">Cases Documented</div>
+                    <div className="text-sm text-white/65 mt-0.5">Cases Documented</div>
                   </div>
                   <div className="border-l border-white/20 pl-8">
                     <div className="text-3xl font-bold text-white tabular-nums">{getStatValue(stats?.entities_tracked)}</div>
-                    <div className="text-sm text-white/50 mt-0.5">Officials &amp; Entities Tracked</div>
+                    <div className="text-sm text-white/65 mt-0.5">Officials &amp; Entities Tracked</div>
                   </div>
                   <div className="border-l border-white/20 pl-8">
                     <div className="text-3xl font-bold text-amber-400">Free</div>
-                    <div className="text-sm text-white/50 mt-0.5">Forever. No paywall. Ever.</div>
+                    <div className="text-sm text-white/65 mt-0.5">Forever. No paywall. Ever.</div>
                   </div>
                 </div>
 

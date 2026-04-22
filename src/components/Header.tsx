@@ -37,6 +37,12 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+      >
+        Skip to content
+      </a>
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center space-x-2.5">
           <img src="/favicon.png" alt="Jawafdehi Logo" className="h-9 w-9" />
@@ -63,7 +69,7 @@ export const Header = () => {
           {/* About dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger
-              className={`flex items-center gap-1 text-sm font-medium transition-colors outline-none ${
+              className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                 isAboutActive ? "text-primary" : "text-foreground/70 hover:text-foreground"
               }`}
             >

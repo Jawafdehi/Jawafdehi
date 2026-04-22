@@ -46,5 +46,13 @@ i18n
     },
   });
 
-export default i18n;
+if (!isSSR) {
+  const syncDocumentLanguage = (language: string) => {
+    document.documentElement.lang = language.startsWith('en') ? 'en' : 'ne';
+  };
 
+  syncDocumentLanguage(i18n.language || i18n.resolvedLanguage || 'ne');
+  i18n.on('languageChanged', syncDocumentLanguage);
+}
+
+export default i18n;

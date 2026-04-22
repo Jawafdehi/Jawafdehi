@@ -1,8 +1,8 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import Entities from "./pages/Entities";
@@ -29,10 +29,23 @@ import CaseworkerSettings from "./pages/CaseworkerSettings";
 
 const GuestChat = lazy(() => import("./pages/GuestChat"));
 
+const MainContentTarget = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const previousMain = document.getElementById("main-content");
+    previousMain?.removeAttribute("id");
+    document.querySelector("main")?.setAttribute("id", "main-content");
+  }, [location.pathname]);
+
+  return null;
+};
+
 const App = () => (
   <TooltipProvider>
     <Toaster />
     <Sonner />
+    <MainContentTarget />
     <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<Index />} />
