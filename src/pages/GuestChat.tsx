@@ -147,7 +147,7 @@ export default function GuestChat() {
                           {t("guestChat.title")}
                         </h1>
                         <span className="rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                          Demo
+                          {t("guestChat.demoBadge")}
                         </span>
                       </div>
                     </div>
