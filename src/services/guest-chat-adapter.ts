@@ -990,6 +990,7 @@ async function buildEntitySearchResponse(
           const matchedEntities = caseItem.entities.filter(
             (entity) =>
               normalize(entity.display_name || "") === normalizedPhrase ||
+              normalize(entity.nes_id || "").includes(normalizedPhrase) ||
               entityMatches.some((match) => match.nes_id === entity.nes_id)
           );
 
