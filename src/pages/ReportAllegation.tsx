@@ -38,7 +38,7 @@ export default function ReportAllegation() {
       </Helmet>
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
           <Card>
             <CardHeader>

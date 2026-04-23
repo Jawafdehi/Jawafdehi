@@ -174,7 +174,7 @@ const Index = () => {
       </Helmet>
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* ── Hero ── */}
         <section className="relative bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.04] bg-[size:24px_24px]" />

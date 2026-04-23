@@ -41,7 +41,7 @@ export const Header = () => {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
       >
-        Skip to content
+        {t("nav.skipToContent")}
       </a>
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center space-x-2.5">
@@ -54,13 +54,13 @@ export const Header = () => {
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center space-x-7">
           <NavLink to="/our-process" className={navLinkClass}>
-            Our Process
+            {t("nav.ourProcess")}
           </NavLink>
           <NavLink to="/volunteer" className={navLinkClass}>
-            Volunteer
+            {t("nav.volunteer")}
           </NavLink>
           <NavLink to="/commitment" className={navLinkClass}>
-            Our Commitment
+            {t("nav.ourCommitment")}
           </NavLink>
 
           {/* About dropdown */}
@@ -77,19 +77,19 @@ export const Header = () => {
               <DropdownMenuItem asChild>
                 <Link to="/about" className="flex items-center gap-2 cursor-pointer">
                   <Info className="h-4 w-4 text-muted-foreground" />
-                  About Jawafdehi
+                  {t("nav.about")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/team" className="flex items-center gap-2 cursor-pointer">
                   <Users className="h-4 w-4 text-muted-foreground" />
-                  Our Team
+                  {t("nav.team")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/products" className="flex items-center gap-2 cursor-pointer">
                   <Package className="h-4 w-4 text-muted-foreground" />
-                  Our Products
+                  {t("nav.products")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -138,13 +138,13 @@ export const Header = () => {
                   {t("nav.home")}
                 </NavLink>
                 <NavLink to="/our-process" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
-                  Our Process
+                  {t("nav.ourProcess")}
                 </NavLink>
                 <NavLink to="/volunteer" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
-                  Volunteer
+                  {t("nav.volunteer")}
                 </NavLink>
                 <NavLink to="/commitment" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
-                  Our Commitment
+                  {t("nav.ourCommitment")}
                 </NavLink>
                 <NavLink to="/about" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
                   {t("nav.about")}
@@ -154,14 +154,14 @@ export const Header = () => {
                   className="text-lg font-medium text-foreground/60 hover:text-primary transition-colors py-2 pl-4"
                   onClick={() => setIsOpen(false)}
                 >
-                  — Our Team
+                  — {t("nav.team")}
                 </Link>
                 <Link
                   to="/products"
                   className="text-lg font-medium text-foreground/60 hover:text-primary transition-colors py-2 pl-4"
                   onClick={() => setIsOpen(false)}
                 >
-                  — Our Products
+                  — {t("nav.products")}
                 </Link>
                 <Link
                   to="/updates"

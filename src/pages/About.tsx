@@ -28,7 +28,7 @@ const About = () => {
       </Helmet>
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
           <div className="container mx-auto px-4">

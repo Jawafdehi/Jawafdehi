@@ -30,7 +30,7 @@ const Updates = () => {
       </Helmet>
             <Header />
 
-            <main className="flex-1 py-8 md:py-12">
+            <main id="main-content" className="flex-1 py-8 md:py-12">
                 <div className="container max-w-5xl mx-auto space-y-8 px-4 animate-fade-in">
                     <div className="space-y-4">
                         <h1 className="text-3xl font-bold tracking-tight">{t("updates.title")}</h1>

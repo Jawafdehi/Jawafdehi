@@ -118,7 +118,7 @@ export default function GuestChat() {
 
       <Header />
 
-      <main className="container mx-auto h-[calc(100vh-5rem)] px-4 py-6 md:h-[calc(100vh-5.5rem)] md:py-8">
+      <main id="main-content" className="container mx-auto h-[calc(100vh-5rem)] px-4 py-6 md:h-[calc(100vh-5.5rem)] md:py-8">
         <div className="mx-auto flex h-full max-w-[768px] flex-col">
           {hasConversation ? (
             <div className="mb-4">

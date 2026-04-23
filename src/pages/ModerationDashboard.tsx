@@ -96,7 +96,7 @@ export default function ModerationDashboard() {
       </Helmet>
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Moderation Dashboard</h1>

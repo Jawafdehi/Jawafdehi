@@ -40,7 +40,7 @@ const UpdateDetail = () => {
             </Helmet>
             <Header />
 
-            <main className="flex-1 py-8 md:py-12">
+            <main id="main-content" className="flex-1 py-8 md:py-12">
                 <div className="container max-w-5xl mx-auto px-4 animate-fade-in">
                     <div className="mb-8">
                         <Button

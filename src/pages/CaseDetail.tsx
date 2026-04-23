@@ -144,7 +144,7 @@ const CaseDetail = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 py-8 md:py-12">
+        <main id="main-content" className="flex-1 py-8 md:py-12">
           <div className="container mx-auto px-4 max-w-5xl">
             <Skeleton className="h-10 w-32 mb-6" />
             <div className="space-y-8">
@@ -170,7 +170,7 @@ const CaseDetail = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 py-8 md:py-12">
+        <main id="main-content" className="flex-1 py-8 md:py-12">
           <div className="container mx-auto px-4 max-w-5xl">
             <Button variant="ghost" asChild className="mb-6">
               <Link to="/cases">
@@ -241,7 +241,7 @@ const CaseDetail = () => {
         actions={<ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />}
       />
 
-      <main className="flex-1 py-8">
+      <main id="main-content" className="flex-1 py-8">
         <div className="container mx-auto max-w-8xl px-4">
           <div className={cn(
             "grid gap-8 transition-[grid-template-columns] duration-300 ease-out",
