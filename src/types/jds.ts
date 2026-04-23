@@ -96,6 +96,7 @@ export interface Case {
   timeline: TimelineEntry[];
   evidence: EvidenceEntry[];
   notes: string; // Internal notes (HTML from TinyMCE)
+  missing_details?: string | null;
   bigo?: number | null;
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime

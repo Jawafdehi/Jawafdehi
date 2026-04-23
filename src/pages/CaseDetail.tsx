@@ -396,11 +396,23 @@ const CaseDetail = () => {
                       </Card>
                     )}
 
+                    {caseData.missing_details && (
+                      <section className="mb-8 border-t border-border pt-5">
+                        <h2 className="mb-3 flex items-center text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                          <Info className="mr-2 h-4 w-4" />
+                          {t("caseDetail.missingDetails")}
+                        </h2>
+                        <div className="overflow-hidden text-sm leading-7 text-muted-foreground">
+                          <ResponsiveTable html={caseData.missing_details} />
+                        </div>
+                      </section>
+                    )}
+
                     {caseData.notes && (
                       <section className="mb-8 border-t border-border pt-5">
                         <h2 className="mb-3 flex items-center text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                           <StickyNote className="mr-2 h-4 w-4" />
-                            {t("caseDetail.notes")}
+                          {t("caseDetail.notes")}
                         </h2>
                         <div className="overflow-hidden text-sm leading-7 text-muted-foreground">
                           <ResponsiveTable html={caseData.notes} />

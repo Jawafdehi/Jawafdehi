@@ -119,6 +119,7 @@
     "timeline": "Case Timeline",
     "partiesInvolved": "Related Persons/Organizations",
     "evidence": "Evidence & Sources",
+    "missingDetails": "Missing Details",
     "notes": "Notes",
     "failedToLoad": "Failed to load case details",
     "notFound": "Case not found",
