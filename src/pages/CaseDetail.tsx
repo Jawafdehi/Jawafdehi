@@ -483,7 +483,7 @@ const CaseDetail = () => {
           type="button"
           onClick={() => setIsAskDrawerOpen(true)}
           tabIndex={isAskPopupVisible ? 0 : -1}
-          className="pointer-events-auto flex w-full max-w-[24rem] items-center gap-3 rounded-full border border-primary/20 bg-background/95 px-3 py-3 text-left shadow-[0_18px_40px_rgba(15,23,42,0.14)] ring-1 ring-primary/10 backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:w-auto sm:min-w-[22rem]"
+          className="pointer-events-auto flex w-full max-w-[24rem] items-center gap-3 rounded-full border border-primary  bg-background/95 px-3 py-3 text-left shadow-[0_18px_40px_rgba(15,23,42,0.14),0_0_0_1px_rgba(37,99,235,0.06),0_0_24px_rgba(37,99,235,0.12)] ring-1 ring-primary backdrop-blur transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_22px_44px_rgba(15,23,42,0.16),0_0_0_1px_rgba(37,99,235,0.08),0_0_30px_rgba(37,99,235,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:shadow-[0_22px_44px_rgba(15,23,42,0.16),0_0_0_1px_rgba(37,99,235,0.1),0_0_0_6px_rgba(37,99,235,0.14),0_0_34px_rgba(37,99,235,0.2)] supports-[backdrop-filter]:bg-background/90 sm:w-auto sm:min-w-[22rem]"
         >
           <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
             <MessageCircle className="h-5 w-5" />

@@ -322,7 +322,7 @@ const Index = () => {
                 <h2 className="text-2xl font-bold text-foreground">Recently Documented Cases</h2>
                 <p className="text-muted-foreground mt-1">Latest cases added to the archive</p>
               </div>
-              <Button variant="ghost" asChild className="hidden sm:flex">
+              <Button variant="outline" asChild className="hidden sm:flex">
                 <Link to="/cases">
                   View all cases <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
