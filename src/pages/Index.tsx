@@ -223,7 +223,7 @@ const Index = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button size="lg" asChild className="bg-white text-primary hover:bg-white/90 font-semibold">
+                    <Button variant="default" asChild className="font-semibold">
                     <Link to="/cases">
                       <Search className="mr-2 h-5 w-5" />
                       Browse Cases
