@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, ChevronDown, Users, Info, Package, MessageCircle } from "lucide-react";
+import { Menu, ChevronDown, Users, Info, Package, MessageCircle, Newspaper } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,9 +53,6 @@ export const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center space-x-7">
-          <NavLink to="/cases" className={navLinkClass}>
-            {t("nav.cases")}
-          </NavLink>
           <NavLink to="/our-process" className={navLinkClass}>
             Our Process
           </NavLink>
@@ -93,6 +90,12 @@ export const Header = () => {
                 <Link to="/products" className="flex items-center gap-2 cursor-pointer">
                   <Package className="h-4 w-4 text-muted-foreground" />
                   Our Products
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/updates" className="flex items-center gap-2 cursor-pointer">
+                  <Newspaper className="h-4 w-4 text-muted-foreground" />
+                  {t("nav.updates")}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -134,9 +137,6 @@ export const Header = () => {
                 <NavLink to="/" end className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
                   {t("nav.home")}
                 </NavLink>
-                <NavLink to="/cases" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
-                  {t("nav.cases")}
-                </NavLink>
                 <NavLink to="/our-process" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
                   Our Process
                 </NavLink>
@@ -162,6 +162,13 @@ export const Header = () => {
                   onClick={() => setIsOpen(false)}
                 >
                   — Our Products
+                </Link>
+                <Link
+                  to="/updates"
+                  className="text-lg font-medium text-foreground/60 hover:text-primary transition-colors py-2 pl-4"
+                  onClick={() => setIsOpen(false)}
+                >
+                  — {t("nav.updates")}
                 </Link>
                 <div className="pt-4 space-y-3 border-t border-border">
                   <Button asChild variant="primary" className="w-full" onClick={() => setIsOpen(false)}>
