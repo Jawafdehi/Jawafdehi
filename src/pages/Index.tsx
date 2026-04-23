@@ -191,7 +191,7 @@ const Index = () => {
                 </p>
 
                 <p className="text-amber-300/90 font-semibold tracking-wide mb-6 text-base italic">
-                  Accountability has no Expiry.
+                  Accountability has no expiry.
                 </p>
 
                 <p className="text-base text-white/65 mb-5 leading-relaxed">

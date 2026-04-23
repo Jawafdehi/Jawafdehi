@@ -19,7 +19,7 @@ export const Footer = () => {
               <span className="text-base font-bold text-foreground">Jawafdehi.org</span>
             </Link>
             <p className="text-sm font-medium text-foreground mb-1 italic">
-              Accountability has no Expiry.
+              Accountability has no expiry.
             </p>
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed mb-5">
               Nepal's permanent public archive of CIAA corruption cases — free forever, built by Nepali volunteers.
