@@ -1008,6 +1008,7 @@ async function buildEntitySearchResponse(
               : language === "ne"
               ? "सार्वजनिक इकाइ डाइरेक्टरीमार्फत मिलान भयो"
               : "Matched through the public entity directory",
+            undefined,
             matchedEntities.map((entity) => entity.display_name || entity.nes_id || "Unnamed entity"),
             matchedEntities.map((entity) => entity.id)
           );
