@@ -763,7 +763,7 @@ function buildBigCasesAnswer(caseResults: GuestCaseResultItem[], language: Guest
       language === "ne"
         ? `मैले सार्वजनिक अभिलेखबाट ठूलो बिगो, धेरै स्रोत, र गम्भीर आरोपका संकेत भएका भ्रष्टाचार मुद्दाहरू छानेको छु। माथिका प्रमुख उदाहरणहरूमा ${highlightedCases} पर्छन्।`
         : `I ranked these as the largest or most significant public corruption cases using disputed amount where available, plus source volume and allegation depth. The related examples include ${highlightedCases}.`,
-    confidence: caseResults.length > 0 ? "medium" : "low",
+    confidence: "medium",
   };
 }
 
@@ -942,7 +942,7 @@ function buildEntityAskAnswer(
         language === "ne"
           ? `हो, ${entityMatches[0].display_name} सँग सम्बन्धित ${caseResults.length} वटा प्रकाशित सार्वजनिक मुद्दा भेटिए।`
           : `Yes. I found ${caseResults.length} published case${caseResults.length === 1 ? "" : "s"} related to ${entityMatches[0].display_name}.`,
-      confidence: caseResults.length > 0 ? "high" : "medium",
+      confidence: "high",
     };
   }
 
