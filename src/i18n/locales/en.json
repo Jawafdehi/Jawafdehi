@@ -160,7 +160,8 @@
     "askCasePlaceholder": "Ask a question about this case..."
   },
   "guestAnswerBlock": {
-    "resultSummary": "{{count}} matching public case results shown below."
+    "resultSummary_one": "{{count}} matching public case result shown below.",
+    "resultSummary_other": "{{count}} matching public case results shown below."
   },
   "guestCaseResults": {
     "empty": "No public cases matched this question yet.",

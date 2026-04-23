@@ -160,7 +160,8 @@
     "askCasePlaceholder": "यस मुद्दाबारे प्रश्न सोध्नुहोस्..."
   },
   "guestAnswerBlock": {
-    "resultSummary": "तल {{count}} मिल्दो सार्वजनिक मुद्दा नतिजाहरू देखाइएका छन्।"
+    "resultSummary_one": "तल {{count}} मिल्दो सार्वजनिक मुद्दा नतिजा देखाइएको छ।",
+    "resultSummary_other": "तल {{count}} मिल्दो सार्वजनिक मुद्दा नतिजाहरू देखाइएका छन्।"
   },
   "guestCaseResults": {
     "empty": "यो प्रश्नसँग अझै कुनै सार्वजनिक मुद्दा मिलेन।",
