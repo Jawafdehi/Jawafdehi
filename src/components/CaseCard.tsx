@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, User } from "lucide-react";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
@@ -131,7 +132,7 @@ export const CaseCard = ({ id, title, entity, entityNames, location, date, statu
             )}
 
             <div className="mt-5 border-t border-border/70 pt-4">
-              <div className="space-y-2 text-sm leading-7 text-muted-foreground">
+              <div className="space-y-2 text-sm leading-5 text-muted-foreground">
                 <div className="flex min-w-0 items-center">
                   <User className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
                   {entityIds && entityIds.length > 0 ? (
@@ -172,12 +173,9 @@ export const CaseCard = ({ id, title, entity, entityNames, location, date, statu
           </CardContent>
 
           <CardFooter className="mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
-            <Link
-              to={`/case/${id}`}
-              className="flex w-full items-center justify-center rounded-2xl bg-muted px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {t("common.viewDetails")}
-            </Link>
+            <Button variant="primary" asChild className="w-full rounded-2xl py-3">
+              <Link to={`/case/${id}`}>{t("common.viewDetails")}</Link>
+            </Button>
           </CardFooter>
         </div>
       </article>
