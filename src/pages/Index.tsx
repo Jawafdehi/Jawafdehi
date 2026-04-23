@@ -87,7 +87,14 @@ const Index = () => {
       const accusedEntities = caseItem.entities?.filter(e => e.type === 'accused') || [];
       const locationEntities = caseItem.entities?.filter(e => e.type === 'location') || [];
 
-      const primaryEntity = accusedEntities[0]?.display_name || "Unknown Entity";
+      const entityNames = accusedEntities.map(e => {
+        if (e.nes_id && resolvedEntities[e.nes_id]) {
+          const entity = resolvedEntities[e.nes_id];
+          return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
+        }
+        return e.display_name || e.nes_id || translateDynamicText('Unknown Entity', currentLang);
+      });
+      const primaryEntity = entityNames[0] || "Unknown Entity";
 
       // Translate location names using NES resolution
       const locationNames = locationEntities.map(e => {
@@ -106,6 +113,7 @@ const Index = () => {
         id: caseItem.id.toString(),
         title: caseItem.title,
         entity: primaryEntity,
+        entityNames,
         location: locationNames,
         date: formattedDate,
         status: "ongoing" as const, // All published cases shown as ongoing
