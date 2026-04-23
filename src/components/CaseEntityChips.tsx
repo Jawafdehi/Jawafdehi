@@ -62,7 +62,13 @@ export function CaseEntityChips({ entities, resolvedEntities, language }: CaseEn
     }
 
     const updateAlignment = () => {
-      const firstItemTop = container.children[0]?.getBoundingClientRect().top;
+      const firstChild = container.children[0];
+      if (!firstChild) {
+        setShouldCenter(false);
+        return;
+      }
+
+      const firstItemTop = firstChild.getBoundingClientRect().top;
       const wraps = Array.from(container.children).some(
         (child) => child.getBoundingClientRect().top > firstItemTop
       );
