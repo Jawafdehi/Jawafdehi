@@ -60,12 +60,6 @@ export function DocumentSourceCard({
                   </Badge>
                 )}
               </div>
-
-              {source?.description && source.description.trim() !== '.' && source.description.trim() && (
-                <p className="mt-1 text-sm leading-5 text-muted-foreground break-words">
-                  {source.description}
-                </p>
-              )}
             </div>
 
             {hasUrls && (
@@ -93,6 +87,12 @@ export function DocumentSourceCard({
               </div>
             )}
           </div>
+
+          {source?.description && source.description.trim() !== '.' && source.description.trim() && (
+            <p className="mt-1 text-sm leading-5 text-muted-foreground break-words">
+              {source.description}
+            </p>
+          )}
 
           {evidenceDescription && evidenceDescription.trim() !== '.' && evidenceDescription.trim() && (
             <p className="mt-2 text-sm leading-6 text-muted-foreground break-words">
