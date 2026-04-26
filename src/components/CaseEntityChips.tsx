@@ -70,7 +70,7 @@ export function CaseEntityChips({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-start">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-start">
         {displayedEntities.map((jawafEntity) => {
           const entity = jawafEntity.nes_id ? resolvedEntities[jawafEntity.nes_id] ?? null : null;
           const displayName = getDisplayName(jawafEntity, entity, language);
@@ -99,7 +99,7 @@ export function CaseEntityChips({
       </div>
       
       {hasMore && (
-        <div className="flex justify-start px-3">
+        <div className="flex justify-center sm:justify-start px-3">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-xs font-semibold text-primary hover:underline transition-all"
