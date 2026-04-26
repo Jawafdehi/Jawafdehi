@@ -73,9 +73,11 @@ const Cases = () => {
   );
 
   const filteredCases = cases.filter((caseItem) => {
+    const query = searchQuery.toLowerCase();
     const matchesSearch =
-      caseItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      caseItem.description.toLowerCase().includes(searchQuery.toLowerCase());
+      caseItem.title.toLowerCase().includes(query) ||
+      caseItem.description.toLowerCase().includes(query) ||
+      (caseItem.tags || []).some(tag => tag.toLowerCase().includes(query));
     
     const caseStatus = getCaseStatus(caseItem);
     const matchesStatus = statusFilter === "all" || caseStatus === statusFilter;
