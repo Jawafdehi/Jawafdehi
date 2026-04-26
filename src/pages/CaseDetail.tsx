@@ -31,21 +31,30 @@ import { trackEvent } from "@/utils/analytics";
 import { cn } from "@/lib/utils";
 import "@/styles/print.css";
 
-function getRelatedSectionEntities(entities: JawafEntity[]) {
-  const seen = new Set<number>();
-  const orderedEntities = [
-    ...entities.filter((entity) => entity.type === "accused"),
-    ...entities.filter((entity) => entity.type === "related"),
-  ];
+const RELATION_PRIORITY: Record<string, number> = {
+  accused: 1,
+  alleged: 2,
+  victim: 3,
+  witness: 4,
+  related: 5,
+  opposition: 6,
+  location: 7,
+  unknown: 10,
+};
 
-  return orderedEntities.filter((entity) => {
-    if (seen.has(entity.id)) {
-      return false;
-    }
+function getGroupedEntities(entities: JawafEntity[]) {
+  const seen = new Set<number>();
+  return entities.reduce((groups, entity) => {
+    if (seen.has(entity.id) || entity.type === "location") return groups;
 
     seen.add(entity.id);
-    return true;
-  });
+    const type = entity.type || "unknown";
+
+    if (!groups[type]) groups[type] = [];
+    groups[type].push(entity);
+
+    return groups;
+  }, {} as Record<string, JawafEntity[]>);
 }
 
 const CaseDetail = () => {
@@ -130,9 +139,11 @@ const CaseDetail = () => {
     if (data) resolvedEntities[nesId] = data;
   });
 
-  const relatedSectionEntities = caseData
-    ? getRelatedSectionEntities(caseData.entities)
-    : [];
+  const groupedEntities = caseData
+    ? getGroupedEntities(caseData.entities)
+    : {};
+
+  const hasInvolvedParties = Object.keys(groupedEntities).length > 0;
 
   const chatSources = (caseData?.evidence ?? []).map((evidence) => ({
     sourceId: evidence.source_id,
@@ -364,16 +375,37 @@ const CaseDetail = () => {
                       </CardContent>
                     </Card>
 
-                    {relatedSectionEntities.length > 0 && (
+                    {hasInvolvedParties && (
                       <section className="mb-8">
                         <h2 className="mb-5 text-2xl font-semibold text-foreground">
                           {t("caseDetail.partiesInvolved")}
                         </h2>
-                        <CaseEntityChips
-                          entities={relatedSectionEntities}
-                          resolvedEntities={resolvedEntities}
-                          language={currentLang}
-                        />
+                        
+                        <div className="space-y-8">
+                          {Object.entries(groupedEntities)
+                            .sort(([typeA], [typeB]) => (RELATION_PRIORITY[typeA] || 99) - (RELATION_PRIORITY[typeB] || 99))
+                            .map(([type, entities]) => {
+                            // Define order and labels for types
+                            const typeKey = `caseDetail.relationTypes.${type}`;
+                            const label = t(typeKey, { defaultValue: t("caseDetail.relationTypes.unknown") });
+
+                            return (
+                              <div key={type} className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                                    {label}
+                                  </h3>
+                                  <div className="h-px w-full bg-border/60" />
+                                </div>
+                                <CaseEntityChips
+                                  entities={entities}
+                                  resolvedEntities={resolvedEntities}
+                                  language={currentLang}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
                       </section>
                     )}
 

@@ -12,6 +12,7 @@ interface CaseEntityChipsProps {
   entities: JawafEntity[];
   resolvedEntities: Record<string, Entity>;
   language: string;
+  initialLimit?: number;
 }
 
 function getEntityImage(entity: Entity | null) {
@@ -51,71 +52,62 @@ function getFallbackIcon(jawafEntity: JawafEntity, entity: Entity | null) {
   return <User className="h-5 w-5" />;
 }
 
-export function CaseEntityChips({ entities, resolvedEntities, language }: CaseEntityChipsProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [shouldCenter, setShouldCenter] = useState(false);
+export function CaseEntityChips({ 
+  entities, 
+  resolvedEntities, 
+  language, 
+  initialLimit = 12 
+}: CaseEntityChipsProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const displayedEntities = isExpanded ? entities : entities.slice(0, initialLimit);
+  const hasMore = entities.length > initialLimit;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-
-    const updateAlignment = () => {
-      const firstChild = container.children[0];
-      if (!firstChild) {
-        setShouldCenter(false);
-        return;
-      }
-
-      const firstItemTop = firstChild.getBoundingClientRect().top;
-      const wraps = Array.from(container.children).some(
-        (child) => child.getBoundingClientRect().top > firstItemTop
-      );
-      setShouldCenter(wraps);
-    };
-
-    updateAlignment();
-    const resizeObserver = new ResizeObserver(updateAlignment);
-    resizeObserver.observe(container);
-
-    return () => resizeObserver.disconnect();
-  }, [entities.length]);
 
   if (entities.length === 0) {
     return null;
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("flex flex-wrap gap-4", shouldCenter ? "justify-center" : "justify-start")}
-    >
-      {entities.map((jawafEntity) => {
-        const entity = jawafEntity.nes_id ? resolvedEntities[jawafEntity.nes_id] ?? null : null;
-        const displayName = getDisplayName(jawafEntity, entity, language);
-        const imageUrl = getEntityImage(entity);
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-start">
+        {displayedEntities.map((jawafEntity) => {
+          const entity = jawafEntity.nes_id ? resolvedEntities[jawafEntity.nes_id] ?? null : null;
+          const displayName = getDisplayName(jawafEntity, entity, language);
+          const imageUrl = getEntityImage(entity);
 
-        return (
-          <Link
-            key={jawafEntity.id}
-            to={`/entity/${jawafEntity.id}`}
-            className="group flex w-[8.5rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/40"
+          return (
+            <Link
+              key={jawafEntity.id}
+              to={`/entity/${jawafEntity.id}`}
+              className="group flex w-[8.5rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
+            >
+              <Avatar className="h-16 w-16 border border-border/80 shadow-sm transition-transform group-hover:scale-105">
+                {imageUrl ? (
+                  <AvatarImage src={imageUrl} alt={displayName} className="object-cover" />
+                ) : null}
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  {getFallbackIcon(jawafEntity, entity)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="line-clamp-2 text-xs font-medium leading-tight text-foreground group-hover:text-primary transition-colors">
+                {displayName}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+      
+      {hasMore && (
+        <div className="flex justify-start px-3">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-xs font-semibold text-primary hover:underline transition-all"
           >
-            <Avatar className="h-16 w-16 border border-border/80 shadow-sm">
-              {imageUrl ? (
-                <AvatarImage src={imageUrl} alt={displayName} className="object-cover" />
-              ) : null}
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                {getFallbackIcon(jawafEntity, entity)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary">
-              {displayName}
-            </span>
-          </Link>
-        );
-      })}
+            {isExpanded ? (language === "ne" ? "थोरै हेर्नुहोस्" : "View less") : (language === "ne" ? `थप ${entities.length - initialLimit} हेर्नुहोस्` : `View ${entities.length - initialLimit} more`)}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

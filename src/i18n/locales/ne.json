@@ -123,7 +123,17 @@
     "overview": "मुद्दा अवलोकन",
     "allegations": "मुख्य आरोपहरू",
     "timeline": "मुद्दा समयरेखा",
-    "partiesInvolved": "सम्बन्धीत व्यक्ति/संस्थाहरू",
+    "partiesInvolved": "सम्बद्ध व्यक्ति/संस्थाहरू",
+    "relationTypes": {
+      "accused": "अभियुक्त",
+      "alleged": "कथित अभियुक्त",
+      "related": "सम्बद्ध निकायहरू",
+      "witness": "साक्षीहरू",
+      "opposition": "विपक्षी",
+      "victim": "पीडित",
+      "location": "स्थानहरू",
+      "unknown": "अन्य सम्बद्ध पक्षहरू"
+    },
     "evidence": "प्रमाण र स्रोतहरू",
     "missingDetails": "हराइरहेका विवरणहरू",
     "notes": "टिप्पणीहरू",

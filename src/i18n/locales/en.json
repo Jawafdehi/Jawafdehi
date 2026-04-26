@@ -123,7 +123,17 @@
     "overview": "Case Overview",
     "allegations": "Key Allegations",
     "timeline": "Case Timeline",
-    "partiesInvolved": "Related Persons/Organizations",
+    "partiesInvolved": "Involved Parties",
+    "relationTypes": {
+      "accused": "Accused",
+      "alleged": "Alleged",
+      "related": "Related Entities",
+      "witness": "Witnesses",
+      "opposition": "Opposition",
+      "victim": "Victims",
+      "location": "Locations",
+      "unknown": "Other Related Parties"
+    },
     "evidence": "Evidence & Sources",
     "missingDetails": "Missing Details",
     "notes": "Notes",
