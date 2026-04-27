@@ -125,12 +125,7 @@ const CaseDetail = () => {
     return () => clearTimeout(timer);
   }, [isAskDrawerOpen]);
 
-  useEffect(() => {
-    if (isAskDrawerOpen) {
-      setShowAskPopup(false);
-      return;
-    }
-  }, [isAskDrawerOpen]);
+
 
   const resolvedSources: Record<number, DocumentSource> = {};
   (caseData?.evidence ?? []).forEach((evidence, i) => {
