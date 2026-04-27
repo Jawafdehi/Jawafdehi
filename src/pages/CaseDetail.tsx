@@ -38,7 +38,6 @@ const RELATION_PRIORITY: Record<string, number> = {
   witness: 4,
   related: 5,
   opposition: 6,
-  location: 7,
   unknown: 10,
 };
 
