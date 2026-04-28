@@ -83,11 +83,15 @@ export function CaseEntityChips({
           const displayName = getDisplayName(jawafEntity, entity, language);
           const imageUrl = getEntityImage(entity);
 
+          const strippedNotes = jawafEntity.notes
+            ? jawafEntity.notes.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+            : "";
+
           return (
             <Link
               key={jawafEntity.id}
               to={`/entity/${jawafEntity.id}`}
-              className="group flex w-[8.5rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
+              className="group flex w-[11rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
             >
               <Avatar className="h-16 w-16 border border-border/80 shadow-sm transition-transform group-hover:scale-105">
                 {imageUrl ? (
@@ -97,9 +101,14 @@ export function CaseEntityChips({
                   {getFallbackIcon(jawafEntity, entity)}
                 </AvatarFallback>
               </Avatar>
-              <span className="line-clamp-2 text-xs font-medium leading-tight text-foreground group-hover:text-primary transition-colors">
+              <span className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
                 {displayName}
               </span>
+              {strippedNotes && (
+                <span className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                  {strippedNotes}
+                </span>
+              )}
             </Link>
           );
         })}
