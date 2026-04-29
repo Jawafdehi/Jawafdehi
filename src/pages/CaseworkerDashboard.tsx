@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCaseworkerAuth } from "@/context/CaseworkerAuthContext";
-import { listSkills, listDrafts, generateSummary } from "@/services/caseworker-api";
-import type { Skill, Draft, ChatMessage, ChatTab } from "@/types/caseworker";
+import { listPrompts, listDrafts, generateSummary } from "@/services/caseworker-api";
+import type { Prompt, Draft, ChatMessage, ChatTab } from "@/types/caseworker";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +12,8 @@ const CaseworkerDashboard = () => {
   const { user, isAdmin, logout } = useCaseworkerAuth();
   const navigate = useNavigate();
 
-  const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [allPrompts, setAllPrompts] = useState<Prompt[]>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [recentDrafts, setRecentDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(false);
   const [userInput, setUserInput] = useState("");
@@ -37,13 +37,13 @@ const CaseworkerDashboard = () => {
     return m ? m[1] : null;
   };
 
-  const extractSkillName = (text: string) => {
+  const extractPromptName = (text: string) => {
     const m = text.match(/^\/(\w+(?:-\w+)*)/i);
     return m ? m[1] : null;
   };
 
-  const findSkillByName = (name: string) =>
-    allSkills.find(
+  const findPromptByName = (name: string) =>
+    allPrompts.find(
       (s) =>
         s.name.toLowerCase() === name.toLowerCase() ||
         (s.display_name && s.display_name.toLowerCase() === name.toLowerCase())
@@ -67,10 +67,10 @@ const CaseworkerDashboard = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [skillsData, draftsData] = await Promise.all([listSkills(), listDrafts()]);
-        const skills = Array.isArray(skillsData) ? skillsData : skillsData.results ?? [];
+        const [promptsData, draftsData] = await Promise.all([listPrompts(), listDrafts()]);
+        const prompts = Array.isArray(promptsData) ? promptsData : promptsData.results ?? [];
         const drafts = draftsData.results ?? [];
-        setAllSkills(skills);
+        setAllPrompts(prompts);
         setRecentDrafts(drafts.slice(0, 5));
       } catch (e: unknown) {
         addMessage("error", (e as Error).message ?? "Failed to load data");
@@ -119,38 +119,38 @@ const CaseworkerDashboard = () => {
     addMessage("user", input, true);
 
     try {
-      const skillName = extractSkillName(input);
+      const promptName = extractPromptName(input);
 
-      if (skillName) {
-        const skill = findSkillByName(skillName);
-        if (!skill) {
+      if (promptName) {
+        const prompt = findPromptByName(promptName);
+        if (!prompt) {
           addMessage(
             "error",
-            `Skill "${skillName}" not found. Available: ${allSkills.map((s) => s.name).join(", ") || "none"}`
+            `Prompt "${promptName}" not found. Available: ${allPrompts.map((s) => s.name).join(", ") || "none"}`
           );
           return;
         }
-        setSelectedSkill(skill);
-        addMessage("info", `Using skill: ${skill.display_name ?? skill.name}`);
+        setSelectedPrompt(prompt);
+        addMessage("info", `Using prompt: ${prompt.display_name ?? prompt.name}`);
 
         const rest = input.replace(/^\/\w+(?:-\w+)*\s*/, "").trim();
         const caseNumber = extractCaseNumber(rest) ?? "general";
         addMessage("info", `Processing${caseNumber !== "general" ? ` case ${caseNumber}` : ""}…`);
 
-        const summary = await generateSummary(caseNumber, skill.id, rest);
+        const summary = await generateSummary(caseNumber, prompt.id, rest);
         addMessage("assistant", summary.content);
       } else {
-        const generalSkill = allSkills.find((s) => s.name === "general" || s.name === "general-qa");
-        if (generalSkill) {
+        const generalPrompt = allPrompts.find((s) => s.name === "general" || s.name === "general-qa");
+        if (generalPrompt) {
           addMessage("info", "Processing your message…");
-          const summary = await generateSummary("general", generalSkill.id, input);
+          const summary = await generateSummary("general", generalPrompt.id, input);
           addMessage("assistant", summary.content);
         } else {
           addMessage(
             "info",
-            allSkills.length > 0
-              ? `Use /${allSkills[0].name} to invoke a skill, or configure a "general" skill in Settings.`
-              : "No skills configured. Visit Settings to add one."
+            allPrompts.length > 0
+              ? `Use /${allPrompts[0].name} to invoke a prompt, or configure a "general" prompt in Settings.`
+              : "No prompts configured. Visit Settings to add one."
           );
         }
       }
@@ -271,12 +271,12 @@ const CaseworkerDashboard = () => {
                 <div className="text-center text-muted-foreground py-16 space-y-2">
                   <p className="text-base font-medium">Start a conversation</p>
                   <p className="text-sm">
-                    Use <code className="bg-muted px-1 rounded">/skill-name</code> to invoke a skill,
+                    Use <code className="bg-muted px-1 rounded">/prompt-name</code> to invoke a prompt,
                     or just type freely.
                   </p>
-                  {allSkills.length > 0 && (
+                  {allPrompts.length > 0 && (
                     <div className="mt-4 space-y-1">
-                      {allSkills.map((s) => (
+                      {allPrompts.map((s) => (
                         <div key={s.id} className="text-xs text-muted-foreground">
                           <span className="font-mono text-primary">/{s.name}</span> — {s.description}
                         </div>
@@ -332,12 +332,12 @@ const CaseworkerDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-4">
-            {/* selected skill */}
-            {selectedSkill && (
+            {/* selected prompt */}
+            {selectedPrompt && (
               <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Active Skill</p>
-                <p className="font-medium text-sm">{selectedSkill.display_name ?? selectedSkill.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{selectedSkill.description}</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Active Prompt</p>
+                <p className="font-medium text-sm">{selectedPrompt.display_name ?? selectedPrompt.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{selectedPrompt.description}</p>
               </div>
             )}
 

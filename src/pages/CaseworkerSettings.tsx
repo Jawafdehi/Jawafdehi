@@ -1,29 +1,44 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useCaseworkerAuth } from "@/context/CaseworkerAuthContext";
-import {
-  listSkills, createSkill, updateSkill, deleteSkill,
-  listLLMProviders, createLLMProvider, updateLLMProvider, testLLMConnection,
-  listMCPServers, createMCPServer, testMCPConnection,
-} from "@/services/caseworker-api";
-import type { Skill, LLMProvider, MCPServer } from "@/types/caseworker";
+import { ArrowLeft, Check, Edit2, Plus, RefreshCw, Trash2, X, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCaseworkerAuth } from "@/context/CaseworkerAuthContext";
 import {
-  ArrowLeft, Plus, Trash2, Edit2, Check, X, RefreshCw, Zap,
-} from "lucide-react";
+  createLLMProvider,
+  createMCPServer,
+  createPrompt,
+  createPublicChatConfig,
+  createSkill,
+  deletePrompt,
+  deleteSkill,
+  listLLMProviders,
+  listMCPServers,
+  listPrompts,
+  listPublicChatConfigs,
+  listSkills,
+  testLLMConnection,
+  testMCPConnection,
+  updateLLMProvider,
+  updatePrompt,
+  updatePublicChatConfig,
+  updateSkill,
+} from "@/services/caseworker-api";
+import type { LLMProvider, MCPServer, Prompt, PublicChatConfig, Skill } from "@/types/caseworker";
 
-// ── small helpers ─────────────────────────────────────────────────────────────
+type Tab = "prompts" | "skills" | "public-chat" | "llm" | "mcp";
 
-type Tab = "skills" | "llm" | "mcp";
+function rows<T>(data: { results?: T[] } | T[]): T[] {
+  return Array.isArray(data) ? data : data.results ?? [];
+}
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-border shadow-sm">
-      <div className="px-5 py-4 border-b border-border">
+    <div className="rounded-xl border border-border bg-white shadow-sm">
+      <div className="border-b border-border px-5 py-4">
         <h2 className="font-semibold text-foreground">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
@@ -31,66 +46,76 @@ function SectionCard({ title, children }: { title: string; children: React.React
   );
 }
 
-// ── Skills tab ────────────────────────────────────────────────────────────────
-
-function SkillsTab() {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [editing, setEditing] = useState<Skill | null>(null);
+function PromptsTab({ skills }: { skills: Skill[] }) {
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [editing, setEditing] = useState<Prompt | null>(null);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState<Partial<Skill>>({});
+  const [form, setForm] = useState<Partial<Prompt>>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
-    listSkills().then((d) => setSkills(Array.isArray(d) ? d : d.results ?? []));
+    listPrompts().then((data) => setPrompts(rows(data)));
   }, []);
 
-  const blank = (): Partial<Skill> => ({
-    name: "", display_name: "", description: "", prompt: "",
-    model: "claude-opus-4-6", temperature: 0.7, max_tokens: 2000,
+  const blank = (): Partial<Prompt> => ({
+    name: "",
+    display_name: "",
+    description: "",
+    prompt: "",
+    skills: [],
+    model: "claude-opus-4-6",
+    temperature: 0.2,
+    max_tokens: 1000,
   });
-
-  const startCreate = () => { setForm(blank()); setCreating(true); setEditing(null); };
-  const startEdit = (s: Skill) => { setForm(s); setEditing(s); setCreating(false); };
-  const cancel = () => { setCreating(false); setEditing(null); setForm({}); setError(""); };
 
   const save = async () => {
     setError("");
     try {
       if (creating) {
-        const created = await createSkill(form);
-        setSkills((p) => [...p, created]);
+        const created = await createPrompt(form);
+        setPrompts((current) => [...current, created]);
       } else if (editing) {
-        const updated = await updateSkill(editing.id, form);
-        setSkills((p) => p.map((s) => (s.id === updated.id ? updated : s)));
+        const updated = await updatePrompt(editing.id, form);
+        setPrompts((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       }
-      cancel();
-    } catch (e: unknown) {
-      setError((e as Error).message ?? "Save failed");
+      setCreating(false);
+      setEditing(null);
+      setForm({});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
     }
   };
 
   const remove = async (id: number) => {
-    try {
-      await deleteSkill(id);
-      setSkills((p) => p.filter((s) => s.id !== id));
-    } catch (e: unknown) {
-      setError((e as Error).message ?? "Delete failed");
-    }
+    await deletePrompt(id);
+    setPrompts((current) => current.filter((item) => item.id !== id));
   };
 
-  const isOpen = creating || !!editing;
+  const toggleSkill = (id: number) => {
+    const selected = form.skills ?? [];
+    setForm((current) => ({
+      ...current,
+      skills: selected.includes(id)
+        ? selected.filter((skillId) => skillId !== id)
+        : [...selected, id],
+    }));
+  };
+
+  const isOpen = creating || Boolean(editing);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{skills.length} skill{skills.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={startCreate}><Plus className="h-4 w-4 mr-1" /> New Skill</Button>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{prompts.length} prompt{prompts.length !== 1 ? "s" : ""} configured</p>
+        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); }}>
+          <Plus className="mr-1 h-4 w-4" /> New Prompt
+        </Button>
       </div>
 
-      {isOpen && (
-        <div className="border border-border rounded-xl p-4 space-y-3 bg-muted/20">
-          <p className="font-medium text-sm">{creating ? "Create Skill" : "Edit Skill"}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {isOpen ? (
+        <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+          <p className="text-sm font-medium">{creating ? "Create Prompt" : "Edit Prompt"}</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label htmlFor="skill-name">Name (slug)</Label>
               <Input id="skill-name" value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="case-summarizer" />
@@ -130,13 +155,26 @@ function SkillsTab() {
               </div>
             </div>
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {skills.length > 0 ? (
+            <div className="space-y-2">
+              <Label>Loaded Skills</Label>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {skills.map((skill) => (
+                  <label key={skill.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                    <input type="checkbox" checked={(form.skills ?? []).includes(skill.id)} onChange={() => toggleSkill(skill.id)} />
+                    {skill.display_name ?? skill.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <div className="flex gap-2">
-            <Button size="sm" onClick={save}><Check className="h-4 w-4 mr-1" /> Save</Button>
-            <Button size="sm" variant="ghost" onClick={cancel}><X className="h-4 w-4 mr-1" /> Cancel</Button>
+            <Button size="sm" onClick={save}><Check className="mr-1 h-4 w-4" /> Save</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setCreating(false); setEditing(null); setForm({}); }}><X className="mr-1 h-4 w-4" /> Cancel</Button>
           </div>
         </div>
-      )}
+      ) : null}
 
       {skills.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">No skills yet. Create one to get started.</p>
@@ -165,7 +203,90 @@ function SkillsTab() {
   );
 }
 
-// ── LLM Providers tab ─────────────────────────────────────────────────────────
+function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: LLMProvider[] }) {
+  const [configs, setConfigs] = useState<PublicChatConfig[]>([]);
+  const [form, setForm] = useState<Partial<PublicChatConfig>>({});
+  const active = configs[0] ?? null;
+
+  useEffect(() => {
+    listPublicChatConfigs().then((data) => {
+      const loaded = rows(data);
+      setConfigs(loaded);
+      if (loaded[0]) setForm(loaded[0]);
+    });
+  }, []);
+
+  const save = async () => {
+    const saved = active
+      ? await updatePublicChatConfig(active.id, form)
+      : await createPublicChatConfig({
+          name: "default",
+          is_active: true,
+          enabled: true,
+          quota_scope: "ip_session",
+          quota_limit: 10,
+          quota_window_seconds: 86400,
+          max_question_chars: 1000,
+          max_history_turns: 6,
+          max_history_chars: 4000,
+          max_mcp_results: 5,
+          max_tool_calls: 3,
+          max_evidence_chars: 8000,
+          ...form,
+        });
+    setConfigs([saved]);
+    setForm(saved);
+  };
+
+  const numberField = (field: keyof PublicChatConfig, label: string) => (
+    <div className="space-y-1">
+      <Label>{label}</Label>
+      <Input type="number" min={1} value={Number(form[field] ?? 1)} onChange={(event) => setForm((current) => ({ ...current, [field]: Number(event.target.value) }))} />
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label>Prompt</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.prompt ?? ""} onChange={(event) => setForm((current) => ({ ...current, prompt: event.target.value ? Number(event.target.value) : undefined }))}>
+            <option value="">Select prompt</option>
+            {prompts.map((prompt) => <option key={prompt.id} value={prompt.id}>{prompt.display_name ?? prompt.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label>LLM Provider</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.llm_provider ?? ""} onChange={(event) => setForm((current) => ({ ...current, llm_provider: event.target.value ? Number(event.target.value) : null }))}>
+            <option value="">Use active provider</option>
+            {providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.provider_type} - {provider.model}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label>Quota Scope</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.quota_scope ?? "ip_session"} onChange={(event) => setForm((current) => ({ ...current, quota_scope: event.target.value as PublicChatConfig["quota_scope"] }))}>
+            <option value="ip_session">IP + Session</option>
+            <option value="session">Session</option>
+            <option value="ip">IP</option>
+          </select>
+        </div>
+        <label className="flex items-center gap-2 pt-7 text-sm">
+          <input type="checkbox" checked={form.enabled ?? true} onChange={(event) => setForm((current) => ({ ...current, enabled: event.target.checked }))} />
+          Enabled
+        </label>
+        {numberField("quota_limit", "Quota Limit")}
+        {numberField("quota_window_seconds", "Quota Window Seconds")}
+        {numberField("max_question_chars", "Max Question Characters")}
+        {numberField("max_history_turns", "Max History Turns")}
+        {numberField("max_history_chars", "Max History Characters")}
+        {numberField("max_mcp_results", "Max MCP Results")}
+        {numberField("max_tool_calls", "Max Tool Calls")}
+        {numberField("max_evidence_chars", "Max Evidence Characters")}
+      </div>
+      <Button size="sm" onClick={save}><Check className="mr-1 h-4 w-4" /> Save Public Chat Config</Button>
+    </div>
+  );
+}
 
 function LLMTab() {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
@@ -174,61 +295,41 @@ function LLMTab() {
   const [form, setForm] = useState<Partial<LLMProvider> & { api_key?: string }>({});
   const [testing, setTesting] = useState<number | null>(null);
   const [status, setStatus] = useState<Record<number, boolean | null>>({});
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    listLLMProviders().then((d) => setProviders(d.results ?? []));
+    listLLMProviders().then((data) => setProviders(data.results ?? []));
   }, []);
 
-  const blank = () => ({
-    provider_type: "anthropic" as const,
-    model: "claude-opus-4-6",
-    temperature: 0.7,
-    max_tokens: 2000,
-    is_active: true,
-    api_key: "",
-  });
-
-  const startCreate = () => { setForm(blank()); setCreating(true); setEditing(null); };
-  const startEdit = (p: LLMProvider) => { setForm({ ...p, api_key: "" }); setEditing(p); setCreating(false); };
-  const cancel = () => { setCreating(false); setEditing(null); setForm({}); setError(""); };
-
+  const blank = () => ({ provider_type: "anthropic" as const, model: "claude-opus-4-6", temperature: 0.7, max_tokens: 2000, is_active: true, api_key: "" });
   const save = async () => {
-    setError("");
-    try {
-      if (creating) {
-        const created = await createLLMProvider(form as Partial<LLMProvider> & { api_key: string });
-        setProviders((p) => [...p, created]);
-      } else if (editing) {
-        const updated = await updateLLMProvider(editing.id, form as Partial<LLMProvider>);
-        setProviders((p) => p.map((x) => (x.id === updated.id ? updated : x)));
-      }
-      cancel();
-    } catch (e: unknown) {
-      setError((e as Error).message ?? "Save failed");
-    }
+    const saved = creating
+      ? await createLLMProvider(form as Partial<LLMProvider> & { api_key: string })
+      : editing
+        ? await updateLLMProvider(editing.id, form)
+        : null;
+    if (saved) setProviders((current) => creating ? [...current, saved] : current.map((item) => item.id === saved.id ? saved : item));
+    setCreating(false);
+    setEditing(null);
+    setForm({});
   };
 
   const test = async (id: number) => {
     setTesting(id);
     try {
-      const { connected } = await testLLMConnection(id);
-      setStatus((p) => ({ ...p, [id]: connected }));
+      const result = await testLLMConnection(id);
+      setStatus((current) => ({ ...current, [id]: result.connected }));
     } catch {
-      setStatus((p) => ({ ...p, [id]: false }));
+      setStatus((current) => ({ ...current, [id]: false }));
     } finally {
       setTesting(null);
     }
   };
 
-  const providerTypes = ["anthropic", "openai", "google", "ollama", "azure", "custom"] as const;
-  const isOpen = creating || !!editing;
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{providers.length} provider{providers.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={startCreate}><Plus className="h-4 w-4 mr-1" /> Add Provider</Button>
+        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); }}><Plus className="mr-1 h-4 w-4" /> Add Provider</Button>
       </div>
 
       {isOpen && (
@@ -302,41 +403,31 @@ function LLMTab() {
   );
 }
 
-// ── MCP Servers tab ───────────────────────────────────────────────────────────
-
 function MCPTab() {
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<Partial<MCPServer> & { auth_token?: string }>({});
   const [testing, setTesting] = useState<number | null>(null);
   const [status, setStatus] = useState<Record<number, boolean | null>>({});
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    listMCPServers().then((d) => setServers(d.results ?? []));
+    listMCPServers().then((data) => setServers(data.results ?? []));
   }, []);
 
-  const blank = () => ({ name: "", display_name: "", url: "", auth_type: "bearer" as const, auth_token: "" });
-  const cancel = () => { setCreating(false); setForm({}); setError(""); };
-
   const save = async () => {
-    setError("");
-    try {
-      const created = await createMCPServer(form as Partial<MCPServer> & { auth_token: string });
-      setServers((p) => [...p, created]);
-      cancel();
-    } catch (e: unknown) {
-      setError((e as Error).message ?? "Save failed");
-    }
+    const created = await createMCPServer(form as Partial<MCPServer> & { auth_token: string });
+    setServers((current) => [...current, created]);
+    setCreating(false);
+    setForm({});
   };
 
   const test = async (id: number) => {
     setTesting(id);
     try {
-      const { connected } = await testMCPConnection(id);
-      setStatus((p) => ({ ...p, [id]: connected }));
+      const result = await testMCPConnection(id);
+      setStatus((current) => ({ ...current, [id]: result.connected }));
     } catch {
-      setStatus((p) => ({ ...p, [id]: false }));
+      setStatus((current) => ({ ...current, [id]: false }));
     } finally {
       setTesting(null);
     }
@@ -344,9 +435,9 @@ function MCPTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{servers.length} server{servers.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); }}><Plus className="h-4 w-4 mr-1" /> Add Server</Button>
+        <Button size="sm" onClick={() => { setCreating(true); setForm({ name: "", display_name: "", url: "", auth_type: "bearer", auth_token: "" }); }}><Plus className="mr-1 h-4 w-4" /> Add Server</Button>
       </div>
 
       {creating && (
@@ -388,49 +479,43 @@ function MCPTab() {
             <Button size="sm" variant="ghost" onClick={cancel}><X className="h-4 w-4 mr-1" /> Cancel</Button>
           </div>
         </div>
-      )}
-
-      {servers.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-8">No MCP servers configured.</p>
-      ) : (
-        <div className="space-y-2">
-          {servers.map((s) => (
-            <div key={s.id} className="flex items-center justify-between gap-2 p-3 border border-border rounded-lg">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm">{s.display_name ?? s.name}</p>
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    s.status === "connected" ? "bg-emerald-100 text-emerald-700"
-                    : s.status === "error" ? "bg-red-100 text-red-700"
-                    : "bg-muted text-muted-foreground"
-                  }`}>{s.status}</span>
-                  {status[s.id] === true && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Zap className="h-3 w-3" /> OK</span>}
-                  {status[s.id] === false && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">Failed</span>}
-                </div>
-                <p className="text-xs text-muted-foreground font-mono truncate">{s.url}</p>
-              </div>
-              <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => test(s.id)} disabled={testing === s.id}>
-                <RefreshCw className={`h-3 w-3 mr-1 ${testing === s.id ? "animate-spin" : ""}`} /> Test
-              </Button>
-            </div>
-          ))}
+      ) : null}
+      {servers.map((server) => (
+        <div key={server.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
+          <div>
+            <p className="text-sm font-medium">{server.display_name ?? server.name}</p>
+            <p className="font-mono text-xs text-muted-foreground">{server.url}</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => test(server.id)} disabled={testing === server.id}>
+            {status[server.id] === true ? <Zap className="mr-1 h-3 w-3" /> : <RefreshCw className={`mr-1 h-3 w-3 ${testing === server.id ? "animate-spin" : ""}`} />}
+            Test
+          </Button>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
-const CaseworkerSettings = () => {
+export default function CaseworkerSettings() {
   const { isAdmin } = useCaseworkerAuth();
-  const [tab, setTab] = useState<Tab>("skills");
+  const [tab, setTab] = useState<Tab>("prompts");
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [providers, setProviders] = useState<LLMProvider[]>([]);
+
+  useEffect(() => {
+    Promise.all([listSkills(), listPrompts(), listLLMProviders()]).then(([skillsData, promptsData, providersData]) => {
+      setSkills(rows(skillsData));
+      setPrompts(rows(promptsData));
+      setProviders(providersData.results ?? []);
+    });
+  }, []);
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-muted/20 flex flex-col">
+      <div className="flex min-h-screen flex-col bg-muted/20">
         <Header />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <p className="text-muted-foreground">Access denied. Administrator role required.</p>
         </div>
       </div>
@@ -438,50 +523,49 @@ const CaseworkerSettings = () => {
   }
 
   const tabs: { id: Tab; label: string }[] = [
+    { id: "prompts", label: "Prompts" },
     { id: "skills", label: "Skills" },
+    { id: "public-chat", label: "Public Chat" },
     { id: "llm", label: "LLM Providers" },
     { id: "mcp", label: "MCP Servers" },
   ];
 
   return (
-    <div className="min-h-screen bg-muted/20 flex flex-col">
+    <div className="flex min-h-screen flex-col bg-muted/20">
       <Header />
-      <div className="flex-1 container mx-auto px-4 py-6 max-w-4xl">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="container mx-auto max-w-4xl flex-1 px-4 py-6">
+        <div className="mb-6 flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/caseworker/dashboard"><ArrowLeft className="h-4 w-4 mr-1" /> Dashboard</Link>
+            <Link to="/caseworker/dashboard"><ArrowLeft className="mr-1 h-4 w-4" /> Dashboard</Link>
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-            <p className="text-sm text-muted-foreground">Configure skills, LLM providers, and MCP servers</p>
+            <p className="text-sm text-muted-foreground">Configure prompts, skills, public chat limits, LLM providers, and MCP servers</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-5 border-b border-border">
-          {tabs.map((t) => (
+        <div className="mb-5 flex gap-1 border-b border-border">
+          {tabs.map((item) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-4 py-2 text-sm font-medium transition border-b-2 -mb-px ${
-                tab === t.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${
+                tab === item.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t.label}
+              {item.label}
             </button>
           ))}
         </div>
 
-        <SectionCard title={tabs.find((t) => t.id === tab)!.label}>
-          {tab === "skills" && <SkillsTab />}
-          {tab === "llm" && <LLMTab />}
-          {tab === "mcp" && <MCPTab />}
+        <SectionCard title={tabs.find((item) => item.id === tab)?.label ?? "Settings"}>
+          {tab === "prompts" ? <PromptsTab skills={skills} /> : null}
+          {tab === "skills" ? <SkillsTab /> : null}
+          {tab === "public-chat" ? <PublicChatTab prompts={prompts} providers={providers} /> : null}
+          {tab === "llm" ? <LLMTab /> : null}
+          {tab === "mcp" ? <MCPTab /> : null}
         </SectionCard>
       </div>
     </div>
   );
-};
-
-export default CaseworkerSettings;
+}

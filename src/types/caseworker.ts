@@ -10,7 +10,19 @@ export interface Skill {
   name: string;
   display_name: string | null;
   description: string;
+  content: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Prompt {
+  id: number;
+  name: string;
+  display_name: string | null;
+  description: string;
   prompt: string;
+  skills: number[];
   model: string;
   temperature: number;
   max_tokens: number;
@@ -32,8 +44,8 @@ export interface MCPServer {
 export interface Summary {
   id: number;
   case_number: string;
-  skill: number | null;
-  skill_name: string | null;
+  prompt: number | null;
+  prompt_name: string | null;
   content: string;
   created_at: string;
   updated_at: string;
@@ -48,8 +60,8 @@ export interface DraftVersion {
 export interface Draft {
   id: number;
   case_number: string;
-  skill: number | null;
-  skill_name: string | null;
+  prompt: number | null;
+  prompt_name: string | null;
   content: string;
   status: "draft" | "posted" | "archived";
   external_reference_id: string | null;
@@ -65,6 +77,26 @@ export interface LLMProvider {
   temperature: number;
   max_tokens: number;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PublicChatConfig {
+  id: number;
+  name: string;
+  is_active: boolean;
+  enabled: boolean;
+  prompt: number;
+  llm_provider: number | null;
+  quota_scope: "ip_session" | "session" | "ip";
+  quota_limit: number;
+  quota_window_seconds: number;
+  max_question_chars: number;
+  max_history_turns: number;
+  max_history_chars: number;
+  max_mcp_results: number;
+  max_tool_calls: number;
+  max_evidence_chars: number;
   created_at: string;
   updated_at: string;
 }

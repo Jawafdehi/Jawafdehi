@@ -1,5 +1,14 @@
 import axios from "axios";
-import type { Skill, MCPServer, Summary, Draft, LLMProvider, CaseworkerUser } from "@/types/caseworker";
+import type {
+  Prompt,
+  Skill,
+  MCPServer,
+  Summary,
+  Draft,
+  LLMProvider,
+  CaseworkerUser,
+  PublicChatConfig,
+} from "@/types/caseworker";
 
 const BASE_URL = `${import.meta.env.VITE_JDS_API_BASE_URL || 'https://portal.jawafdehi.org/api'}/caseworker`;
 
@@ -54,6 +63,27 @@ export async function getMe(): Promise<CaseworkerUser> {
   return data;
 }
 
+// Prompts
+
+export async function listPrompts(): Promise<{ results: Prompt[] } | Prompt[]> {
+  const { data } = await client.get("/prompts/");
+  return data;
+}
+
+export async function createPrompt(payload: Partial<Prompt>) {
+  const { data } = await client.post("/prompts/", payload);
+  return data as Prompt;
+}
+
+export async function updatePrompt(id: number, payload: Partial<Prompt>) {
+  const { data } = await client.patch(`/prompts/${id}/`, payload);
+  return data as Prompt;
+}
+
+export async function deletePrompt(id: number) {
+  await client.delete(`/prompts/${id}/`);
+}
+
 // Skills
 
 export async function listSkills(): Promise<{ results: Skill[] } | Skill[]> {
@@ -77,10 +107,10 @@ export async function deleteSkill(id: number) {
 
 // Summaries
 
-export async function generateSummary(caseNumber: string, skillId: number, query: string): Promise<Summary> {
+export async function generateSummary(caseNumber: string, promptId: number, query: string): Promise<Summary> {
   const { data } = await client.post("/summaries/generate/", {
     case_number: caseNumber,
-    skill_id: skillId,
+    prompt_id: promptId,
     query,
   });
   return data;
@@ -98,10 +128,10 @@ export async function listDrafts(): Promise<{ results: Draft[] }> {
   return data;
 }
 
-export async function createDraft(caseNumber: string, skillId: number | null, content: string): Promise<Draft> {
+export async function createDraft(caseNumber: string, promptId: number | null, content: string): Promise<Draft> {
   const { data } = await client.post("/drafts/", {
     case_number: caseNumber,
-    skill: skillId,
+    prompt: promptId,
     content,
   });
   return data;
@@ -139,12 +169,33 @@ export async function createLLMProvider(payload: Partial<LLMProvider> & { api_ke
 }
 
 export async function updateLLMProvider(id: number, payload: Partial<LLMProvider> & { api_key?: string }): Promise<LLMProvider> {
-  const { data } = await client.patch(`/llm-providers/${id}/`, payload);
+  const nextPayload = { ...payload };
+  if (nextPayload.api_key === "") {
+    delete nextPayload.api_key;
+  }
+  const { data } = await client.patch(`/llm-providers/${id}/`, nextPayload);
   return data;
 }
 
 export async function testLLMConnection(id: number): Promise<{ connected: boolean }> {
   const { data } = await client.post(`/llm-providers/${id}/test_connection/`);
+  return data;
+}
+
+// Public Chat Config
+
+export async function listPublicChatConfigs(): Promise<{ results: PublicChatConfig[] } | PublicChatConfig[]> {
+  const { data } = await client.get("/public-chat-configs/");
+  return data;
+}
+
+export async function createPublicChatConfig(payload: Partial<PublicChatConfig>): Promise<PublicChatConfig> {
+  const { data } = await client.post("/public-chat-configs/", payload);
+  return data;
+}
+
+export async function updatePublicChatConfig(id: number, payload: Partial<PublicChatConfig>): Promise<PublicChatConfig> {
+  const { data } = await client.patch(`/public-chat-configs/${id}/`, payload);
   return data;
 }
 
