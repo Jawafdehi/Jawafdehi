@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { AlertCircle, PencilLine } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,8 @@ interface GuestChatTurn {
   question: string;
   response: PublicChatResponse;
 }
+
+const PUBLIC_CHAT_TURNS_KEY = "jawafdehi_public_chat_turns";
 
 function GuestPromptGrid({
   prompts,
@@ -60,7 +62,17 @@ export default function GuestChat() {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [submittedQuestion, setSubmittedQuestion] = useState("");
-  const [history, setHistory] = useState<GuestChatTurn[]>([]);
+  const [history, setHistory] = useState<GuestChatTurn[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+    try {
+      const raw = window.sessionStorage.getItem(PUBLIC_CHAT_TURNS_KEY);
+      return raw ? (JSON.parse(raw) as GuestChatTurn[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const seededQuestion = searchParams.get("q") || "";
   const suggestedPrompts = [
     t("guestChat.prompts.procurementCorruption"),
@@ -76,6 +88,13 @@ export default function GuestChat() {
     resetConversation: resetGuestAsk,
   } = usePublicChat(i18n.language);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.sessionStorage.setItem(PUBLIC_CHAT_TURNS_KEY, JSON.stringify(history));
+  }, [history]);
+
   const handleSubmit = async (question: string) => {
     if (isLoading) {
       return;
@@ -86,28 +105,32 @@ export default function GuestChat() {
       { role: "assistant" as const, content: turn.response.answer_text },
     ]);
 
-    if (response && submittedQuestion) {
+    setSubmittedQuestion(question);
+    const nextResponse = await submitQuestion(question, requestHistory);
+    if (nextResponse) {
       setHistory((current) => [
         ...current,
         {
           id: `turn-${Date.now()}`,
-          question: submittedQuestion,
-          response,
+          question,
+          response: nextResponse,
         },
       ]);
+      setSubmittedQuestion("");
     }
-
-    setSubmittedQuestion(question);
-    await submitQuestion(question, requestHistory);
   };
 
   const resetConversation = () => {
     setSubmittedQuestion("");
     setHistory([]);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(PUBLIC_CHAT_TURNS_KEY);
+    }
     resetGuestAsk();
   };
 
-  const hasConversation = response || isLoading || history.length > 0;
+  const latestResponse = history.length > 0 ? history[history.length - 1].response : response;
+  const hasConversation = isLoading || history.length > 0 || Boolean(submittedQuestion) || Boolean(error);
 
   return (
     <div className="min-h-screen bg-background">
@@ -146,9 +169,6 @@ export default function GuestChat() {
                         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
                           {t("guestChat.title")}
                         </h1>
-                        <span className="rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                          {t("guestChat.demoBadge")}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -164,7 +184,9 @@ export default function GuestChat() {
               {error ? (
                 <Alert variant="destructive" className="mt-6">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{t("guestChat.errors.loadFailed")}</AlertDescription>
+                  <AlertDescription>
+                    {error instanceof Error ? error.message : t("guestChat.errors.loadFailed")}
+                  </AlertDescription>
                 </Alert>
               ) : null}
 
@@ -205,25 +227,8 @@ export default function GuestChat() {
                     </div>
                   ) : null}
 
-                  {isLoading && !response ? (
+                  {isLoading ? (
                     <BotTypingBubble />
-                  ) : response ? (
-                    <div className="space-y-4">
-                      <GuestAnswerBlock
-                        answer={response.answer_text}
-                        resultCount={response.related_cases.length}
-                      />
-                      {response.sources.length > 0 ? (
-                        <div className="ml-12">
-                          <PublicChatSources sources={response.sources} />
-                        </div>
-                      ) : null}
-                      {response.related_cases.length > 0 ? (
-                        <div className="ml-12">
-                          <PublicChatRelatedCases cases={response.related_cases} />
-                        </div>
-                      ) : null}
-                    </div>
                   ) : null}
                 </div>
               ) : null}
@@ -231,9 +236,9 @@ export default function GuestChat() {
 
             <div className="border-t border-border/60 bg-background/95 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <div className="mx-auto w-full max-w-[736px] space-y-3">
-                {response ? (
+                {latestResponse ? (
                   <GuestPromptGrid
-                    prompts={response.follow_up_questions}
+                    prompts={latestResponse.follow_up_questions}
                     onPromptClick={handleSubmit}
                     compact
                   />

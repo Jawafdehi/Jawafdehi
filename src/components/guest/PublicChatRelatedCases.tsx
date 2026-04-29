@@ -8,11 +8,15 @@ interface PublicChatRelatedCasesProps {
   cases: PublicChatRelatedCase[];
 }
 
-function casePath(url: string) {
+function casePath(caseItem: PublicChatRelatedCase) {
+  const url = caseItem.url || (caseItem.slug ? `/case/${caseItem.slug}` : "");
   if (url.startsWith("/")) {
     return url;
   }
-  return `/case/${url}`;
+  if (url) {
+    return `/case/${url}`;
+  }
+  return `/case/${caseItem.id}`;
 }
 
 export function PublicChatRelatedCases({ cases }: PublicChatRelatedCasesProps) {
@@ -46,10 +50,15 @@ export function PublicChatRelatedCases({ cases }: PublicChatRelatedCasesProps) {
               <h3 className="text-base font-semibold leading-6 text-foreground">
                 {caseItem.title}
               </h3>
+              {caseItem.short_description ? (
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {caseItem.short_description}
+                </p>
+              ) : null}
               <Button
                 variant="ghost"
                 className="h-auto rounded-xl px-0 py-0 text-primary hover:bg-transparent hover:text-primary/80"
-                onClick={() => navigate(casePath(caseItem.url))}
+                onClick={() => navigate(casePath(caseItem))}
               >
                 <FileText className="mr-2 h-4 w-4" />
                 {t("guestCaseResults.openCase")}

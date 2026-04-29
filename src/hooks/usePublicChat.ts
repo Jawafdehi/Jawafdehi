@@ -1,5 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { askPublicQuestion } from "@/services/public-chat";
+import {
+  askPublicQuestion,
+  getPublicChatSessionId,
+  resetPublicChatSession,
+} from "@/services/public-chat";
 import type { PublicChatHistoryItem } from "@/types/public-chat";
 
 interface SubmitQuestionInput {
@@ -14,6 +18,7 @@ export function usePublicChat(language?: string) {
         question,
         history,
         language,
+        sessionId: getPublicChatSessionId(),
       }),
   });
 
@@ -25,11 +30,16 @@ export function usePublicChat(language?: string) {
     }
   };
 
+  const resetConversation = () => {
+    resetPublicChatSession();
+    mutation.reset();
+  };
+
   return {
     response: mutation.data ?? null,
     error: mutation.error ?? null,
     isLoading: mutation.isPending,
     submitQuestion,
-    resetConversation: mutation.reset,
+    resetConversation,
   };
 }
