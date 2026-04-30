@@ -152,6 +152,7 @@
     "askPopupDescription": "Get a quick summary, timeline, or source-based answer.",
     "inReviewBanner": "This case is currently under review by Jawafdehi. Information may be incomplete or subject to revision.",
     "embezzledAmount": "Embezzled / Irregular Amount",
+    "courtCases": "Related Court Cases",
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",
@@ -754,5 +755,9 @@
     "shareOnReddit": "Share on Reddit",
     "shareOnMessenger": "Share on Messenger",
     "shareOnThreads": "Share on Threads"
+  },
+  "courts": {
+    "supreme": "Supreme Court",
+    "special": "Special Court"
   }
 }

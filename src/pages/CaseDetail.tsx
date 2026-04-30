@@ -16,14 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MapPin, MessageCircle, StickyNote, User, DollarSign } from "lucide-react";
+import { Calendar, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MapPin, MessageCircle, StickyNote, User, Banknote } from "lucide-react";
 import { getCaseById, getDocumentSourceById } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
 import type { DocumentSource, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/nes";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRange } from "@/utils/date";
-import { formatBigo } from "@/utils/bigo";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
@@ -440,22 +439,10 @@ const CaseDetail = () => {
               </div>
               {caseData.bigo != null && caseData.bigo > 0 && (
                 <div className="flex items-center text-muted-foreground">
-                  <DollarSign className="mr-2 h-5 w-5" />
+                  <Banknote className="mr-2 h-5 w-5" />
                   <span className="text-sm">
-                    {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo)}
+                    {t("caseDetail.embezzledAmount")}: NPR {caseData.bigo.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                   </span>
-                </div>
-              )}
-              {caseData.court_cases != null && caseData.court_cases.length > 0 && (
-                <div className="flex items-start text-muted-foreground">
-                  <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
-                  <div className="text-sm">
-                    {caseData.court_cases.map((courtCase, index) => (
-                      <div key={index}>
-                        {courtCase.court === "supreme" ? "Supreme Court" : "Special Court"}: {courtCase.case_number}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>

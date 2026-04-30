@@ -152,6 +152,7 @@
     "askPopupDescription": "छोटो सार, समयरेखा, वा स्रोतमा आधारित उत्तर पाउनुहोस्।",
     "inReviewBanner": "यो मुद्दा वर्तमानमा जवाफदेहीले समीक्षा गरिरहेको छ। जानकारी अधूरो वा संशोधनको अधीनमा हुन सक्छ।",
     "embezzledAmount": "हिनामिना / अनियमित रकम",
+    "courtCases": "सम्बन्धित अदालती मुद्दाहरू",
     "status": {
       "ongoing": "चलिरहेको",
       "resolved": "समाधान भएको",
@@ -165,10 +166,10 @@
     },
     "evidenceGroups": {
       "primary": "प्राथमिक प्रमाण",
-      "legal": "कानूनी कागजातहरू",
+      "legal": "कानूनी प्रमाण",
       "secondary": "द्वितीयक स्रोतहरू",
-      "documentCount": "{{count}} कागजात",
-      "documentCount_plural": "{{count}} कागजातहरू"
+      "documentCount": "{{count}} प्रमाण",
+      "documentCount_plural": "{{count}} प्रमाणहरू"
     }
   },
   "guestCommon": {
@@ -752,5 +753,9 @@
     "shareOnReddit": "Reddit मा साझेदारी गर्नुहोस्",
     "shareOnMessenger": "Messenger मा साझेदारी गर्नुहोस्",
     "shareOnThreads": "Threads मा साझेदारी गर्नुहोस्"
+  },
+  "courts": {
+    "supreme": "सर्वोच्च अदालत",
+    "special": "विशेष अदालत"
   }
 }

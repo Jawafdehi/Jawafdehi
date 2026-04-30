@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChevronRight, MapPin } from "lucide-react";
+import { Banknote, Calendar, ChevronRight, Gavel, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/nes";
@@ -143,6 +143,39 @@ export function CaseDetailBanner({
               {t("caseDetail.period")}: {dateRange}
             </span>
           </div>
+          {caseData.bigo != null && caseData.bigo > 0 && (
+            <div className="flex items-center gap-3">
+              <Banknote className="h-4 w-4 flex-shrink-0 text-white/70" />
+              <span>
+                {t("caseDetail.embezzledAmount")}: NPR {caseData.bigo.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
+          {caseData.court_cases != null && caseData.court_cases.length > 0 && (
+            <div className="flex items-center gap-3">
+              <Gavel className="h-4 w-4 flex-shrink-0 text-white/70" />
+              <span>
+                {t("caseDetail.courtCases")}:{" "}
+                {caseData.court_cases.map((courtCase, index) => {
+                  // Parse court identifier (e.g., "supreme:12345" or "special:081-CR-0122")
+                  const [courtId, caseNumber] = courtCase.split(":");
+                  const courtNameMap: Record<string, { en: string; ne: string }> = {
+                    supreme: { en: "Supreme Court", ne: "सर्वोच्च अदालत" },
+                    special: { en: "Special Court", ne: "विशेष अदालत" },
+                  };
+                  const courtName = courtNameMap[courtId]?.[currentLang] || courtId;
+                  const displayText = `${courtName} ${caseNumber}`;
+                  
+                  return (
+                    <span key={index}>
+                      {displayText}
+                      {index < caseData.court_cases!.length - 1 && ", "}
+                    </span>
+                  );
+                })}
+              </span>
+            </div>
+          )}
         </div>
 
         {actions ? (
