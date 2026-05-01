@@ -159,6 +159,17 @@ describe("DisqusComments", () => {
       expect(section?.getAttribute("aria-labelledby")).toBe("comments-heading");
     });
 
+    it("should expose a stable id for comment jump links", () => {
+      render(
+        <I18nextProvider i18n={i18n}>
+          <DisqusComments {...defaultProps} />
+        </I18nextProvider>
+      );
+
+      const section = document.querySelector(".disqus-comments");
+      expect(section?.getAttribute("id")).toBe("case-comments-section");
+    });
+
     it("should have print:hidden class for print exclusion", () => {
       render(
         <I18nextProvider i18n={i18n}>

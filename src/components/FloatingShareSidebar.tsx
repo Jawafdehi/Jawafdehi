@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link2, Check, Share2, QrCode, Printer, Download } from "lucide-react";
+import { Link2, Check, Share2, QrCode, Printer, Download, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -27,6 +27,10 @@ import {
   MessengerIcon,
   ThreadsIcon,
 } from "./SocialIcons";
+import {
+  CASE_COMMENTS_SECTION_ID,
+  scrollToCommentsSection,
+} from "./floatingShareSidebarPosition";
 
 interface FloatingShareSidebarProps {
   url: string;
@@ -90,6 +94,11 @@ export const FloatingShareSidebar = ({
     }
   };
 
+  const handleOpenComments = () => {
+    if (scrollToCommentsSection()) return;
+    window.location.hash = CASE_COMMENTS_SECTION_ID;
+  };
+
   const handlePrint = () => {
     setMoreDialogOpen(false);
     // Wait longer for dialog to fully unmount before printing
@@ -134,22 +143,19 @@ export const FloatingShareSidebar = ({
       key: "facebook" as const,
       icon: FacebookIcon,
       label: "Facebook",
-      color: "text-[#1877F2]",
-      bg: "hover:bg-blue-50 dark:hover:bg-blue-950",
+      buttonClass: "bg-[#1877F2] text-white hover:bg-[#166FE5]",
     },
     {
       key: "twitter" as const,
       icon: XTwitterIcon,
       label: "X",
-      color: "text-black dark:text-white",
-      bg: "hover:bg-gray-100 dark:hover:bg-gray-800",
+      buttonClass: "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90",
     },
     {
       key: "linkedin" as const,
       icon: LinkedInIcon,
       label: "LinkedIn",
-      color: "text-[#0A66C2]",
-      bg: "hover:bg-blue-50 dark:hover:bg-blue-950",
+      buttonClass: "bg-[#0A66C2] text-white hover:bg-[#085AAB]",
     },
   ];
 
@@ -203,71 +209,85 @@ export const FloatingShareSidebar = ({
   return (
     <TooltipProvider>
       <div
-        className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-2 p-2 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg animate-in slide-in-from-left-4 fade-in duration-300 no-print"
+        className="mb-4 rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur-sm animate-in slide-in-from-top-2 fade-in duration-300 no-print"
         role="region"
         aria-label={t("share.share")}
       >
-        {primaryPlatforms.map(({ key, icon: Icon, label, color, bg }) => (
-          <Tooltip key={key} delayDuration={200}>
+        <div className="flex items-center justify-end gap-1 overflow-x-auto sm:gap-2">
+          <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className={`transition-all ${bg}`}
-                onClick={() => handleShare(key)}
-                aria-label={t(`share.shareOn${label.replace(" ", "")}`)}
+                className="h-10 w-12 shrink-0 rounded-md border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950"
+                onClick={handleOpenComments}
+                aria-label={t("caseDetail.comments.title")}
               >
-                <Icon className={`h-5 w-5 ${color}`} />
+                <MessageSquare className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{label}</p>
+            <TooltipContent>
+              <p>{t("caseDetail.comments.title")}</p>
             </TooltipContent>
           </Tooltip>
-        ))}
 
-        {/* Copy Link */}
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="transition-all hover:bg-muted"
-              onClick={handleCopyLink}
-              aria-label={t("share.copyLink")}
-            >
-              {copied ? (
-                <Check className="h-5 w-5 text-green-600" />
-              ) : (
-                <Link2 className="h-5 w-5" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{copied ? t("share.copied") : t("share.copyLink")}</p>
-          </TooltipContent>
-        </Tooltip>
+          {primaryPlatforms.map(({ key, icon: Icon, label, buttonClass }) => (
+            <Tooltip key={key} delayDuration={200}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="icon"
+                  className={`h-10 w-12 shrink-0 rounded-md border-0 transition-all ${buttonClass}`}
+                  onClick={() => handleShare(key)}
+                  aria-label={t(`share.shareOn${label.replace(" ", "")}`)}
+                >
+                  <Icon className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
 
-        {/* Divider */}
-        <div className="h-px bg-border my-1" />
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-12 shrink-0 rounded-md border border-border/60 bg-background transition-all hover:bg-muted"
+                onClick={handleCopyLink}
+                aria-label={t("share.copyLink")}
+              >
+                {copied ? (
+                  <Check className="h-5 w-5 text-green-600" />
+                ) : (
+                  <Link2 className="h-5 w-5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{copied ? t("share.copied") : t("share.copyLink")}</p>
+            </TooltipContent>
+          </Tooltip>
 
-        {/* More Options */}
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="transition-all hover:bg-muted"
-              onClick={() => setMoreDialogOpen(true)}
-              aria-label={t("share.moreOptions")}
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{t("share.moreOptions")}</p>
-          </TooltipContent>
-        </Tooltip>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-12 shrink-0 rounded-md border border-border/60 bg-[#8DC63F] text-white transition-all hover:bg-[#7FB737]"
+                onClick={() => setMoreDialogOpen(true)}
+                aria-label={t("share.moreOptions")}
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("share.moreOptions")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       {/* More Options Dialog with Backdrop Blur */}
