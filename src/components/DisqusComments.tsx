@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
-import { CASE_COMMENTS_SECTION_ID } from "./floatingShareSidebarPosition";
+import { CASE_COMMENTS_SECTION_ID } from "./caseShareUtils";
 
 interface DisqusCommentsProps {
   caseId: string;

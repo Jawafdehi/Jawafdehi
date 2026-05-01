@@ -5,11 +5,11 @@ const SIDEBAR_GAP = 12;
 const MIN_SAFE_LEFT = 12;
 export const CASE_COMMENTS_SECTION_ID = "case-comments-section";
 
-export type FloatingShareSidebarPlacement =
+export type CaseShareBarPlacement =
   | { mode: "sidebar"; left: number }
   | { mode: "top" };
 
-export const getFloatingShareSidebarLeftOffset = (viewportWidth: number): number | null => {
+export const getCaseShareBarLeftOffset = (viewportWidth: number): number | null => {
   if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) {
     return null;
   }
@@ -21,9 +21,9 @@ export const getFloatingShareSidebarLeftOffset = (viewportWidth: number): number
   return sidebarLeft >= MIN_SAFE_LEFT ? Math.round(sidebarLeft) : null;
 };
 
-export const getFloatingShareSidebarPlacement = (
+export const getCaseShareBarPlacement = (
   viewportWidth: number,
-): FloatingShareSidebarPlacement => {
+): CaseShareBarPlacement => {
   void viewportWidth;
   return { mode: "top" };
 };

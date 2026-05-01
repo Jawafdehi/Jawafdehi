@@ -30,21 +30,21 @@ import {
 import {
   CASE_COMMENTS_SECTION_ID,
   scrollToCommentsSection,
-} from "./floatingShareSidebarPosition";
+} from "./caseShareUtils";
 
-interface FloatingShareSidebarProps {
+interface CaseShareBarProps {
   url: string;
   title: string;
   description?: string;
   scrollThreshold?: number;
 }
 
-export const FloatingShareSidebar = ({
+export const CaseShareBar = ({
   url,
   title,
   description = "",
   scrollThreshold = 220,
-}: FloatingShareSidebarProps) => {
+}: CaseShareBarProps) => {
   const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [copied, setCopied] = useState(false);

@@ -1,32 +1,32 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   CASE_COMMENTS_SECTION_ID,
-  getFloatingShareSidebarLeftOffset,
-  getFloatingShareSidebarPlacement,
+  getCaseShareBarLeftOffset,
+  getCaseShareBarPlacement,
   scrollToCommentsSection,
-} from "@/components/floatingShareSidebarPosition";
+} from "@/components/caseShareUtils";
 
-describe("getFloatingShareSidebarLeftOffset", () => {
+describe("getCaseShareBarLeftOffset", () => {
   it("returns null when there is no safe outer margin", () => {
-    expect(getFloatingShareSidebarLeftOffset(1440)).toBeNull();
+    expect(getCaseShareBarLeftOffset(1440)).toBeNull();
   });
 
   it("returns the minimum safe offset at the desktop threshold", () => {
-    expect(getFloatingShareSidebarLeftOffset(1536)).toBe(12);
+    expect(getCaseShareBarLeftOffset(1536)).toBe(12);
   });
 
   it("keeps the rail in the side gutter on wider screens", () => {
-    expect(getFloatingShareSidebarLeftOffset(1920)).toBe(204);
+    expect(getCaseShareBarLeftOffset(1920)).toBe(204);
   });
 });
 
-describe("getFloatingShareSidebarPlacement", () => {
+describe("getCaseShareBarPlacement", () => {
   it("falls back to top bar when sidebar gutter is unavailable", () => {
-    expect(getFloatingShareSidebarPlacement(1440)).toEqual({ mode: "top" });
+    expect(getCaseShareBarPlacement(1440)).toEqual({ mode: "top" });
   });
 
   it("keeps using top bar even on wide screens", () => {
-    expect(getFloatingShareSidebarPlacement(1920)).toEqual({ mode: "top" });
+    expect(getCaseShareBarPlacement(1920)).toEqual({ mode: "top" });
   });
 });
 
