@@ -157,8 +157,21 @@ export function CaseDetailBanner({
               <span>
                 {t("caseDetail.courtCases")}:{" "}
                 {caseData.court_cases.map((courtCase, index) => {
-                  // Parse court identifier (e.g., "supreme:12345" or "special:081-CR-0122")
-                  const [courtId, caseNumber] = courtCase.split(":");
+                  // Parse court identifier defensively - split only on first colon
+                  const colonIndex = courtCase.indexOf(":");
+                  if (colonIndex === -1) {
+                    // No colon found - skip this entry
+                    return null;
+                  }
+                  
+                  const courtId = courtCase.substring(0, colonIndex).trim();
+                  const caseNumber = courtCase.substring(colonIndex + 1).trim();
+                  
+                  // Skip if either part is empty
+                  if (!courtId || !caseNumber) {
+                    return null;
+                  }
+                  
                   const courtNameMap: Record<string, { en: string; ne: string }> = {
                     supreme: { en: "Supreme Court", ne: "सर्वोच्च अदालत" },
                     special: { en: "Special Court", ne: "विशेष अदालत" },
@@ -172,7 +185,7 @@ export function CaseDetailBanner({
                       {index < caseData.court_cases!.length - 1 && ", "}
                     </span>
                   );
-                })}
+                }).filter(Boolean)}
               </span>
             </div>
           )}

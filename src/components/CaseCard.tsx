@@ -56,6 +56,10 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, date,
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
 
+  // Normalize case identifier once for all navigation paths
+  const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
+  const caseIdentifier = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : id;
+
   // Check if we have a valid thumbnail URL
   const hasValidThumbnail = thumbnailUrl && thumbnailUrl.trim() !== '';
   const [imageSrc, setImageSrc] = useState(hasValidThumbnail ? thumbnailUrl : null);
@@ -74,8 +78,6 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, date,
   const handleCardClick = (e: React.MouseEvent) => {
     // Only navigate if not clicking on an inner link
     if (!(e.target as HTMLElement).closest("a")) {
-      const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
-      const caseIdentifier = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : id;
       navigate(`/case/${caseIdentifier}`);
     }
   };
@@ -138,7 +140,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, date,
                 remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
             <h3 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground">
               <Link 
-                to={`/case/${slug && slug !== "null" ? slug : id}`} 
+                to={`/case/${caseIdentifier}`} 
                 className="rounded-sm outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -201,7 +203,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, date,
 
           <CardFooter className="mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
             <Button variant="primary" asChild className="w-full rounded-2xl py-3">
-              <Link to={`/case/${slug && slug !== "null" ? slug : id}`} onClick={(e) => e.stopPropagation()}>{t("common.viewDetails")}</Link>
+              <Link to={`/case/${caseIdentifier}`} onClick={(e) => e.stopPropagation()}>{t("common.viewDetails")}</Link>
             </Button>
           </CardFooter>
         </div>

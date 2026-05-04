@@ -234,16 +234,16 @@ const CaseDetail = () => {
   }));
 
   // Group evidence by tier
-  const groupedEvidence: Record<EvidenceGroup, typeof caseData.evidence> = {
+  const groupedEvidence: Record<EvidenceGroup, Array<typeof caseData.evidence[0] & { originalIndex: number }>> = {
     primary: [],
     legal: [],
     secondary: []
   };
 
-  (caseData?.evidence ?? []).forEach((evidence) => {
+  (caseData?.evidence ?? []).forEach((evidence, index) => {
     const source = resolvedSources[evidence.source_id];
     const group = getEvidenceGroup(source?.source_type);
-    groupedEvidence[group].push(evidence);
+    groupedEvidence[group].push({ ...evidence, originalIndex: index });
   });
 
   // Render order: primary -> legal -> secondary
@@ -400,7 +400,7 @@ const CaseDetail = () => {
                 <div className="text-sm flex flex-wrap gap-1">
                   {caseData.entities.filter(e => e.type === 'accused').map((e, index, arr) => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || t('common.notAvailable');
                     displayName = translateDynamicText(displayName, currentLang);
                     return (
                       <span key={e.id}>
@@ -418,7 +418,7 @@ const CaseDetail = () => {
                     const locations = caseData.entities.filter(e => e.type === 'location');
                     return locations.length > 0 ? locations.map((e, index) => {
                       const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                      let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
+                      let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || t('common.notAvailable');
                       displayName = translateDynamicText(displayName, currentLang);
                       return (
                         <span key={e.id}>
@@ -426,7 +426,7 @@ const CaseDetail = () => {
                           {index < locations.length - 1 && ', '}
                         </span>
                       );
-                    }) : 'N/A';
+                    }) : t('common.notAvailable');
                   })()}
                 </div>
               </div>
@@ -565,14 +565,12 @@ const CaseDetail = () => {
                         <div className="space-y-3">
                           {evidenceInGroup.map((evidence, index) => {
                             const source = resolvedSources[evidence.source_id] ?? null;
-                            // Calculate global item number across all groups
-                            const globalIndex = caseData.evidence.findIndex(e => e.source_id === evidence.source_id);
                             return (
                               <DocumentSourceCard
                                 key={`${evidence.source_id}-${index}`}
                                 source={source}
                                 sourceId={evidence.source_id}
-                                itemNumber={globalIndex + 1}
+                                itemNumber={evidence.originalIndex + 1}
                                 evidenceDescription={evidence.description}
                               />
                             );
