@@ -479,7 +479,7 @@ function MCPTab() {
             <Button size="sm" variant="ghost" onClick={cancel}><X className="h-4 w-4 mr-1" /> Cancel</Button>
           </div>
         </div>
-      ) : null}
+      ) }
       {servers.map((server) => (
         <div key={server.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
           <div>
