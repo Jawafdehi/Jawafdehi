@@ -68,6 +68,13 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
     max_tokens: 1000,
   });
 
+  const startEdit = (p: Prompt) => {
+    setEditing(p);
+    setCreating(false);
+    setForm(p);
+    setError("");
+  };
+
   const save = async () => {
     setError("");
     try {
@@ -87,8 +94,12 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
   };
 
   const remove = async (id: number) => {
-    await deletePrompt(id);
-    setPrompts((current) => current.filter((item) => item.id !== id));
+    try {
+      await deletePrompt(id);
+      setPrompts((current) => current.filter((item) => item.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    }
   };
 
   const toggleSkill = (id: number) => {
@@ -107,7 +118,7 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{prompts.length} prompt{prompts.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); }}>
+        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); setError(""); }}>
           <Plus className="mr-1 h-4 w-4" /> New Prompt
         </Button>
       </div>
@@ -117,21 +128,21 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
           <p className="text-sm font-medium">{creating ? "Create Prompt" : "Edit Prompt"}</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="skill-name">Name (slug)</Label>
-              <Input id="skill-name" value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="case-summarizer" />
+              <Label htmlFor="prompt-name">Name (slug)</Label>
+              <Input id="prompt-name" value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="case-summarizer" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="skill-display-name">Display Name</Label>
-              <Input id="skill-display-name" value={form.display_name ?? ""} onChange={(e) => setForm((p) => ({ ...p, display_name: e.target.value }))} placeholder="Case Summarizer" />
+              <Label htmlFor="prompt-display-name">Display Name</Label>
+              <Input id="prompt-display-name" value={form.display_name ?? ""} onChange={(e) => setForm((p) => ({ ...p, display_name: e.target.value }))} placeholder="Case Summarizer" />
             </div>
             <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor="skill-description">Description</Label>
-              <Input id="skill-description" value={form.description ?? ""} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+              <Label htmlFor="prompt-description">Description</Label>
+              <Input id="prompt-description" value={form.description ?? ""} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
             </div>
             <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor="skill-prompt">System Prompt</Label>
+              <Label htmlFor="prompt-content">System Prompt</Label>
               <Textarea
-                id="skill-prompt"
+                id="prompt-content"
                 value={form.prompt ?? ""}
                 onChange={(e) => setForm((p) => ({ ...p, prompt: e.target.value }))}
                 rows={5}
@@ -141,17 +152,17 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
               <p className="text-xs text-muted-foreground">Use <code className="bg-muted px-0.5 rounded">{"{case_data}"}</code> and <code className="bg-muted px-0.5 rounded">{"{query}"}</code> as placeholders.</p>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="skill-model">Model</Label>
-              <Input id="skill-model" value={form.model ?? ""} onChange={(e) => setForm((p) => ({ ...p, model: e.target.value }))} placeholder="claude-opus-4-6" />
+              <Label htmlFor="prompt-model">Model</Label>
+              <Input id="prompt-model" value={form.model ?? ""} onChange={(e) => setForm((p) => ({ ...p, model: e.target.value }))} placeholder="claude-3-5-sonnet-20241022" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="skill-temperature">Temperature</Label>
-                <Input id="skill-temperature" type="number" min={0} max={2} step={0.1} value={form.temperature ?? 0.7} onChange={(e) => setForm((p) => ({ ...p, temperature: parseFloat(e.target.value) }))} />
+                <Label htmlFor="prompt-temperature">Temperature</Label>
+                <Input id="prompt-temperature" type="number" min={0} max={2} step={0.1} value={form.temperature ?? 0.7} onChange={(e) => setForm((p) => ({ ...p, temperature: parseFloat(e.target.value) }))} />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="skill-max-tokens">Max Tokens</Label>
-                <Input id="skill-max-tokens" type="number" min={100} max={100000} value={form.max_tokens ?? 2000} onChange={(e) => setForm((p) => ({ ...p, max_tokens: parseInt(e.target.value) }))} />
+                <Label htmlFor="prompt-max-tokens">Max Tokens</Label>
+                <Input id="prompt-max-tokens" type="number" min={100} max={100000} value={form.max_tokens ?? 2000} onChange={(e) => setForm((p) => ({ ...p, max_tokens: parseInt(e.target.value) }))} />
               </div>
             </div>
           </div>
@@ -171,7 +182,138 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button size="sm" onClick={save}><Check className="mr-1 h-4 w-4" /> Save</Button>
-            <Button size="sm" variant="ghost" onClick={() => { setCreating(false); setEditing(null); setForm({}); }}><X className="mr-1 h-4 w-4" /> Cancel</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setCreating(false); setEditing(null); setForm({}); setError(""); }}><X className="mr-1 h-4 w-4" /> Cancel</Button>
+          </div>
+        </div>
+      ) : null}
+
+      {prompts.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-8">No prompts yet. Create one to get started.</p>
+      ) : (
+        <div className="space-y-2">
+          {prompts.map((p) => (
+            <div key={p.id} className="flex items-start justify-between gap-2 p-3 border border-border rounded-lg">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{p.display_name ?? p.name}</p>
+                <p className="text-xs text-muted-foreground font-mono">/{p.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.description}</p>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Edit ${p.display_name ?? p.name}`} onClick={() => startEdit(p)}>
+                  <Edit2 className="h-3.5 w-3.5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" aria-label={`Delete ${p.display_name ?? p.name}`} onClick={() => remove(p.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SkillsTab() {
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [editing, setEditing] = useState<Skill | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState<Partial<Skill>>({});
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    listSkills().then((data) => setSkills(rows(data)));
+  }, []);
+
+  const blank = (): Partial<Skill> => ({
+    name: "",
+    display_name: "",
+    description: "",
+    content: "",
+    is_active: true,
+  });
+
+  const startEdit = (s: Skill) => {
+    setEditing(s);
+    setCreating(false);
+    setForm(s);
+    setError("");
+  };
+
+  const save = async () => {
+    setError("");
+    try {
+      if (creating) {
+        const created = await createSkill(form);
+        setSkills((current) => [...current, created]);
+      } else if (editing) {
+        const updated = await updateSkill(editing.id, form);
+        setSkills((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      }
+      setCreating(false);
+      setEditing(null);
+      setForm({});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    }
+  };
+
+  const remove = async (id: number) => {
+    try {
+      await deleteSkill(id);
+      setSkills((current) => current.filter((item) => item.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    }
+  };
+
+  const isOpen = creating || Boolean(editing);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{skills.length} skill{skills.length !== 1 ? "s" : ""} configured</p>
+        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); setError(""); }}>
+          <Plus className="mr-1 h-4 w-4" /> New Skill
+        </Button>
+      </div>
+
+      {isOpen ? (
+        <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+          <p className="text-sm font-medium">{creating ? "Create Skill" : "Edit Skill"}</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="skill-name">Name (slug)</Label>
+              <Input id="skill-name" value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="case-researcher" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="skill-display-name">Display Name</Label>
+              <Input id="skill-display-name" value={form.display_name ?? ""} onChange={(e) => setForm((p) => ({ ...p, display_name: e.target.value }))} placeholder="Case Researcher" />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="skill-description">Description</Label>
+              <Input id="skill-description" value={form.description ?? ""} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="skill-content">Skill Definition (Markdown/Instructions)</Label>
+              <Textarea
+                id="skill-content"
+                value={form.content ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
+                rows={8}
+                placeholder="Instructions for the agent on how to use this skill..."
+                className="font-mono text-xs"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.is_active ?? true} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} />
+              Active
+            </label>
+          </div>
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          <div className="flex gap-2">
+            <Button size="sm" onClick={save}><Check className="mr-1 h-4 w-4" /> Save</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setCreating(false); setEditing(null); setForm({}); setError(""); }}><X className="mr-1 h-4 w-4" /> Cancel</Button>
           </div>
         </div>
       ) : null}
@@ -203,6 +345,7 @@ function PromptsTab({ skills }: { skills: Skill[] }) {
   );
 }
 
+
 function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: LLMProvider[] }) {
   const [configs, setConfigs] = useState<PublicChatConfig[]>([]);
   const [form, setForm] = useState<Partial<PublicChatConfig>>({});
@@ -220,20 +363,20 @@ function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: L
     const saved = active
       ? await updatePublicChatConfig(active.id, form)
       : await createPublicChatConfig({
-          name: "default",
-          is_active: true,
-          enabled: true,
-          quota_scope: "ip_session",
-          quota_limit: 10,
-          quota_window_seconds: 86400,
-          max_question_chars: 1000,
-          max_history_turns: 6,
-          max_history_chars: 4000,
-          max_mcp_results: 5,
-          max_tool_calls: 3,
-          max_evidence_chars: 8000,
-          ...form,
-        });
+        name: "default",
+        is_active: true,
+        enabled: true,
+        quota_scope: "ip_session",
+        quota_limit: 10,
+        quota_window_seconds: 86400,
+        max_question_chars: 1000,
+        max_history_turns: 6,
+        max_history_chars: 4000,
+        max_mcp_results: 5,
+        max_tool_calls: 3,
+        max_evidence_chars: 8000,
+        ...form,
+      });
     setConfigs([saved]);
     setForm(saved);
   };
@@ -288,6 +431,8 @@ function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: L
   );
 }
 
+const providerTypes: LLMProvider["provider_type"][] = ["anthropic", "openai", "google", "ollama", "azure", "custom"];
+
 function LLMTab() {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
   const [creating, setCreating] = useState(false);
@@ -295,22 +440,41 @@ function LLMTab() {
   const [form, setForm] = useState<Partial<LLMProvider> & { api_key?: string }>({});
   const [testing, setTesting] = useState<number | null>(null);
   const [status, setStatus] = useState<Record<number, boolean | null>>({});
+  const [error, setError] = useState("");
 
   useEffect(() => {
     listLLMProviders().then((data) => setProviders(data.results ?? []));
   }, []);
 
-  const blank = () => ({ provider_type: "anthropic" as const, model: "claude-opus-4-6", temperature: 0.7, max_tokens: 2000, is_active: true, api_key: "" });
-  const save = async () => {
-    const saved = creating
-      ? await createLLMProvider(form as Partial<LLMProvider> & { api_key: string })
-      : editing
-        ? await updateLLMProvider(editing.id, form)
-        : null;
-    if (saved) setProviders((current) => creating ? [...current, saved] : current.map((item) => item.id === saved.id ? saved : item));
+  const blank = (): Partial<LLMProvider> & { api_key: string } => ({ provider_type: "anthropic", model: "claude-3-5-sonnet-20241022", temperature: 0.7, max_tokens: 2000, is_active: true, api_key: "" });
+
+  const startEdit = (p: LLMProvider) => {
+    setEditing(p);
+    setCreating(false);
+    setForm(p);
+    setError("");
+  };
+
+  const cancel = () => {
     setCreating(false);
     setEditing(null);
     setForm({});
+    setError("");
+  };
+
+  const save = async () => {
+    setError("");
+    try {
+      const saved = creating
+        ? await createLLMProvider(form as Partial<LLMProvider> & { api_key: string })
+        : editing
+          ? await updateLLMProvider(editing.id, form)
+          : null;
+      if (saved) setProviders((current) => creating ? [...current, saved] : current.map((item) => item.id === saved.id ? saved : item));
+      cancel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    }
   };
 
   const test = async (id: number) => {
@@ -325,11 +489,13 @@ function LLMTab() {
     }
   };
 
+  const isOpen = creating || Boolean(editing);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{providers.length} provider{providers.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); }}><Plus className="mr-1 h-4 w-4" /> Add Provider</Button>
+        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); setError(""); }}><Plus className="mr-1 h-4 w-4" /> Add Provider</Button>
       </div>
 
       {isOpen && (
@@ -349,7 +515,7 @@ function LLMTab() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="llm-model">Model</Label>
-              <Input id="llm-model" value={form.model ?? ""} onChange={(e) => setForm((p) => ({ ...p, model: e.target.value }))} placeholder="claude-opus-4-6" />
+              <Input id="llm-model" value={form.model ?? ""} onChange={(e) => setForm((p) => ({ ...p, model: e.target.value }))} placeholder="claude-3-5-sonnet-20241022" />
             </div>
             <div className="space-y-1 sm:col-span-2">
               <Label htmlFor="llm-api-key">API Key</Label>
@@ -363,6 +529,10 @@ function LLMTab() {
               <Label htmlFor="llm-max-tokens">Max Tokens</Label>
               <Input id="llm-max-tokens" type="number" min={100} value={form.max_tokens ?? 2000} onChange={(e) => setForm((p) => ({ ...p, max_tokens: parseInt(e.target.value) }))} />
             </div>
+            <label className="flex items-center gap-2 text-sm pt-2">
+              <input type="checkbox" checked={form.is_active ?? true} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} />
+              Active
+            </label>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-2">
@@ -381,7 +551,7 @@ function LLMTab() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm capitalize">{p.provider_type}</p>
-                  {p.is_active && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Active</span>}
+                  {p.is_active && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Active</span>}
                   {status[p.id] === true && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Zap className="h-3 w-3" /> Connected</span>}
                   {status[p.id] === false && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">Failed</span>}
                 </div>
@@ -409,16 +579,27 @@ function MCPTab() {
   const [form, setForm] = useState<Partial<MCPServer> & { auth_token?: string }>({});
   const [testing, setTesting] = useState<number | null>(null);
   const [status, setStatus] = useState<Record<number, boolean | null>>({});
+  const [error, setError] = useState("");
 
   useEffect(() => {
     listMCPServers().then((data) => setServers(data.results ?? []));
   }, []);
 
-  const save = async () => {
-    const created = await createMCPServer(form as Partial<MCPServer> & { auth_token: string });
-    setServers((current) => [...current, created]);
+  const cancel = () => {
     setCreating(false);
     setForm({});
+    setError("");
+  };
+
+  const save = async () => {
+    setError("");
+    try {
+      const created = await createMCPServer(form as Partial<MCPServer> & { auth_token: string });
+      setServers((current) => [...current, created]);
+      cancel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    }
   };
 
   const test = async (id: number) => {
@@ -437,7 +618,7 @@ function MCPTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{servers.length} server{servers.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={() => { setCreating(true); setForm({ name: "", display_name: "", url: "", auth_type: "bearer", auth_token: "" }); }}><Plus className="mr-1 h-4 w-4" /> Add Server</Button>
+        <Button size="sm" onClick={() => { setCreating(true); setForm({ name: "", display_name: "", url: "", auth_type: "bearer", auth_token: "" }); setError(""); }}><Plus className="mr-1 h-4 w-4" /> Add Server</Button>
       </div>
 
       {creating && (
@@ -479,7 +660,7 @@ function MCPTab() {
             <Button size="sm" variant="ghost" onClick={cancel}><X className="h-4 w-4 mr-1" /> Cancel</Button>
           </div>
         </div>
-      ) }
+      )}
       {servers.map((server) => (
         <div key={server.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
           <div>
@@ -549,9 +730,8 @@ export default function CaseworkerSettings() {
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
-              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${
-                tab === item.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${tab === item.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               {item.label}
             </button>
