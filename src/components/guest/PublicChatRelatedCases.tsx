@@ -9,13 +9,6 @@ interface PublicChatRelatedCasesProps {
 }
 
 function casePath(caseItem: PublicChatRelatedCase) {
-  const url = caseItem.url || (caseItem.slug ? `/case/${caseItem.slug}` : "");
-  if (url.startsWith("/")) {
-    return url;
-  }
-  if (url) {
-    return `/case/${url}`;
-  }
   return `/case/${caseItem.id}`;
 }
 
