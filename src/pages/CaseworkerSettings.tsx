@@ -390,6 +390,8 @@ function PublicChatTab({
         knowledge_rag_enabled: false,
         knowledge_collections: [],
         max_knowledge_results: 5,
+        llm_provider: null,
+        classifier_llm_provider: null,
         ...form,
       });
     setConfigs([saved]);
@@ -424,10 +426,17 @@ function PublicChatTab({
           </select>
         </div>
         <div className="space-y-1">
-          <Label>LLM Provider</Label>
+          <Label>Answer Provider</Label>
           <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.llm_provider ?? ""} onChange={(event) => setForm((current) => ({ ...current, llm_provider: event.target.value ? Number(event.target.value) : null }))}>
-            <option value="">Use active provider</option>
-            {providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.provider_type} - {provider.model}</option>)}
+            <option value="">Use default active provider</option>
+            {providers.map((provider) => <option key={provider.id} value={provider.id}>{providerLabel(provider)}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label>Classifier Provider</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.classifier_llm_provider ?? ""} onChange={(event) => setForm((current) => ({ ...current, classifier_llm_provider: event.target.value ? Number(event.target.value) : null }))}>
+            <option value="">Use answer/default provider</option>
+            {providers.map((provider) => <option key={provider.id} value={provider.id}>{providerLabel(provider)}</option>)}
           </select>
         </div>
         <div className="space-y-1">
@@ -487,26 +496,50 @@ function PublicChatTab({
 }
 
 const providerTypes: LLMProvider["provider_type"][] = ["anthropic", "openai", "google", "ollama", "azure", "custom"];
+const structuredOutputModes: LLMProvider["structured_output_mode"][] = ["auto", "provider_native", "tool_calling"];
+
+function providerLabel(provider: LLMProvider) {
+  const label = provider.display_name || provider.name;
+  return `${label} (${provider.provider_type} - ${provider.model})`;
+}
 
 function LLMTab() {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<LLMProvider | null>(null);
   const [form, setForm] = useState<Partial<LLMProvider> & { api_key?: string }>({});
+  const [extraConfigText, setExtraConfigText] = useState("{}");
   const [testing, setTesting] = useState<number | null>(null);
   const [status, setStatus] = useState<Record<number, boolean | null>>({});
+  const [statusError, setStatusError] = useState<Record<number, string>>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
     listLLMProviders().then((data) => setProviders(data.results ?? []));
   }, []);
 
-  const blank = (): Partial<LLMProvider> & { api_key: string } => ({ provider_type: "anthropic", model: "claude-3-5-sonnet-20241022", temperature: 0.7, max_tokens: 2000, is_active: true, api_key: "" });
+  const blank = (): Partial<LLMProvider> & { api_key: string } => ({
+    name: "anthropic-default",
+    display_name: "Anthropic Default",
+    provider_type: "anthropic",
+    model: "claude-3-5-sonnet-20241022",
+    base_url: "",
+    api_version: "",
+    deployment_name: "",
+    extra_config: {},
+    temperature: 0.7,
+    max_tokens: 2000,
+    is_active: true,
+    is_default: false,
+    structured_output_mode: "auto",
+    api_key: "",
+  });
 
   const startEdit = (p: LLMProvider) => {
     setEditing(p);
     setCreating(false);
     setForm(p);
+    setExtraConfigText(JSON.stringify(p.extra_config ?? {}, null, 2));
     setError("");
   };
 
@@ -514,16 +547,29 @@ function LLMTab() {
     setCreating(false);
     setEditing(null);
     setForm({});
+    setExtraConfigText("{}");
     setError("");
   };
 
   const save = async () => {
     setError("");
     try {
+      let extra_config: Record<string, unknown> = {};
+      try {
+        const parsed = JSON.parse(extraConfigText || "{}") as unknown;
+        if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+          throw new Error("Extra config must be a JSON object.");
+        }
+        extra_config = parsed as Record<string, unknown>;
+      } catch {
+        setError("Extra config must be valid JSON object syntax.");
+        return;
+      }
+      const payload = { ...form, extra_config };
       const saved = creating
-        ? await createLLMProvider(form as Partial<LLMProvider> & { api_key: string })
+        ? await createLLMProvider(payload as Partial<LLMProvider> & { api_key: string })
         : editing
-          ? await updateLLMProvider(editing.id, form)
+          ? await updateLLMProvider(editing.id, payload)
           : null;
       if (saved) setProviders((current) => creating ? [...current, saved] : current.map((item) => item.id === saved.id ? saved : item));
       cancel();
@@ -537,8 +583,10 @@ function LLMTab() {
     try {
       const result = await testLLMConnection(id);
       setStatus((current) => ({ ...current, [id]: result.connected }));
+      setStatusError((current) => ({ ...current, [id]: result.error ?? "" }));
     } catch {
       setStatus((current) => ({ ...current, [id]: false }));
+      setStatusError((current) => ({ ...current, [id]: "Connection test request failed." }));
     } finally {
       setTesting(null);
     }
@@ -550,13 +598,21 @@ function LLMTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{providers.length} provider{providers.length !== 1 ? "s" : ""} configured</p>
-        <Button size="sm" onClick={() => { setForm(blank()); setCreating(true); setEditing(null); setError(""); }}><Plus className="mr-1 h-4 w-4" /> Add Provider</Button>
+        <Button size="sm" onClick={() => { setForm(blank()); setExtraConfigText("{}"); setCreating(true); setEditing(null); setError(""); }}><Plus className="mr-1 h-4 w-4" /> Add Provider</Button>
       </div>
 
       {isOpen && (
         <div className="border border-border rounded-xl p-4 space-y-3 bg-muted/20">
           <p className="font-medium text-sm">{creating ? "Add LLM Provider" : "Edit LLM Provider"}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="llm-name">Name</Label>
+              <Input id="llm-name" value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="openai-public-answer" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="llm-display-name">Display Name</Label>
+              <Input id="llm-display-name" value={form.display_name ?? ""} onChange={(e) => setForm((p) => ({ ...p, display_name: e.target.value }))} placeholder="OpenAI Public Answer" />
+            </div>
             <div className="space-y-1">
               <Label htmlFor="llm-provider-type">Provider</Label>
               <select
@@ -577,6 +633,29 @@ function LLMTab() {
               <Input id="llm-api-key" type="password" value={form.api_key ?? ""} onChange={(e) => setForm((p) => ({ ...p, api_key: e.target.value }))} placeholder={editing ? "Leave blank to keep existing" : "sk-..."} />
             </div>
             <div className="space-y-1">
+              <Label htmlFor="llm-base-url">Base URL / Endpoint</Label>
+              <Input id="llm-base-url" value={form.base_url ?? ""} onChange={(e) => setForm((p) => ({ ...p, base_url: e.target.value }))} placeholder="https://api.openai.com/v1" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="llm-deployment">Deployment Name</Label>
+              <Input id="llm-deployment" value={form.deployment_name ?? ""} onChange={(e) => setForm((p) => ({ ...p, deployment_name: e.target.value }))} placeholder="Azure deployment name" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="llm-api-version">API Version</Label>
+              <Input id="llm-api-version" value={form.api_version ?? ""} onChange={(e) => setForm((p) => ({ ...p, api_version: e.target.value }))} placeholder="2024-08-01-preview" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="llm-structured-mode">Structured Output</Label>
+              <select
+                id="llm-structured-mode"
+                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
+                value={form.structured_output_mode ?? "auto"}
+                onChange={(e) => setForm((p) => ({ ...p, structured_output_mode: e.target.value as LLMProvider["structured_output_mode"] }))}
+              >
+                {structuredOutputModes.map((mode) => <option key={mode} value={mode}>{mode}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="llm-temperature">Temperature</Label>
               <Input id="llm-temperature" type="number" min={0} max={2} step={0.1} value={form.temperature ?? 0.7} onChange={(e) => setForm((p) => ({ ...p, temperature: parseFloat(e.target.value) }))} />
             </div>
@@ -588,6 +667,14 @@ function LLMTab() {
               <input type="checkbox" checked={form.is_active ?? true} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} />
               Active
             </label>
+            <label className="flex items-center gap-2 text-sm pt-2">
+              <input type="checkbox" checked={form.is_default ?? false} onChange={(e) => setForm((p) => ({ ...p, is_default: e.target.checked }))} />
+              Default Provider
+            </label>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="llm-extra-config">Extra Config JSON</Label>
+              <Textarea id="llm-extra-config" value={extraConfigText} onChange={(e) => setExtraConfigText(e.target.value)} rows={4} placeholder='{"timeout": 30}' />
+            </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-2">
@@ -605,12 +692,17 @@ function LLMTab() {
             <div key={p.id} className="flex items-center justify-between gap-2 p-3 border border-border rounded-lg">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm capitalize">{p.provider_type}</p>
+                  <p className="font-medium text-sm">{p.display_name || p.name}</p>
+                  {p.is_default && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">Default</span>}
                   {p.is_active && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Active</span>}
                   {status[p.id] === true && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Zap className="h-3 w-3" /> Connected</span>}
                   {status[p.id] === false && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">Failed</span>}
                 </div>
-                <p className="text-xs text-muted-foreground font-mono">{p.model}</p>
+                <p className="text-xs text-muted-foreground font-mono">{p.provider_type} / {p.model}</p>
+                {p.base_url && <p className="text-xs text-muted-foreground font-mono truncate">{p.base_url}</p>}
+                {status[p.id] === false && statusError[p.id] && (
+                  <p className="mt-1 text-xs text-red-700">{statusError[p.id]}</p>
+                )}
               </div>
               <div className="flex gap-1 shrink-0">
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => test(p.id)} disabled={testing === p.id}>
