@@ -13,7 +13,7 @@ export function formatIndianNumber(value: number): string {
   
   // Convert to string and split into integer and decimal parts
   const parts = absValue.toString().split(".");
-  let integerPart = parts[0];
+  const integerPart = parts[0];
   const decimalPart = parts[1];
   
   // Indian numbering: last 3 digits, then groups of 2
