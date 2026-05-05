@@ -15,6 +15,7 @@ import {
   createSkill,
   deletePrompt,
   deleteSkill,
+  listKnowledgeCollections,
   listLLMProviders,
   listMCPServers,
   listPrompts,
@@ -27,7 +28,7 @@ import {
   updatePublicChatConfig,
   updateSkill,
 } from "@/services/caseworker-api";
-import type { LLMProvider, MCPServer, Prompt, PublicChatConfig, Skill } from "@/types/caseworker";
+import type { KnowledgeCollection, LLMProvider, MCPServer, Prompt, PublicChatConfig, Skill } from "@/types/caseworker";
 
 type Tab = "prompts" | "skills" | "public-chat" | "llm" | "mcp";
 
@@ -346,10 +347,21 @@ function SkillsTab() {
 }
 
 
-function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: LLMProvider[] }) {
+function PublicChatTab({
+  prompts,
+  providers,
+  knowledgeCollections,
+}: {
+  prompts: Prompt[];
+  providers: LLMProvider[];
+  knowledgeCollections: KnowledgeCollection[];
+}) {
   const [configs, setConfigs] = useState<PublicChatConfig[]>([]);
   const [form, setForm] = useState<Partial<PublicChatConfig>>({});
   const active = configs[0] ?? null;
+  const publicCollections = knowledgeCollections.filter(
+    (collection) => collection.access_level === "public" && collection.is_active,
+  );
 
   useEffect(() => {
     listPublicChatConfigs().then((data) => {
@@ -375,6 +387,9 @@ function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: L
         max_mcp_results: 5,
         max_tool_calls: 3,
         max_evidence_chars: 8000,
+        knowledge_rag_enabled: false,
+        knowledge_collections: [],
+        max_knowledge_results: 5,
         ...form,
       });
     setConfigs([saved]);
@@ -387,6 +402,16 @@ function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: L
       <Input type="number" min={1} value={Number(form[field] ?? 1)} onChange={(event) => setForm((current) => ({ ...current, [field]: Number(event.target.value) }))} />
     </div>
   );
+
+  const toggleKnowledgeCollection = (id: number) => {
+    const selected = form.knowledge_collections ?? [];
+    setForm((current) => ({
+      ...current,
+      knowledge_collections: selected.includes(id)
+        ? selected.filter((collectionId) => collectionId !== id)
+        : [...selected, id],
+    }));
+  };
 
   return (
     <div className="space-y-4">
@@ -417,6 +442,10 @@ function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: L
           <input type="checkbox" checked={form.enabled ?? true} onChange={(event) => setForm((current) => ({ ...current, enabled: event.target.checked }))} />
           Enabled
         </label>
+        <label className="flex items-center gap-2 pt-7 text-sm">
+          <input type="checkbox" checked={form.knowledge_rag_enabled ?? false} onChange={(event) => setForm((current) => ({ ...current, knowledge_rag_enabled: event.target.checked }))} />
+          Knowledge RAG Enabled
+        </label>
         {numberField("quota_limit", "Quota Limit")}
         {numberField("quota_window_seconds", "Quota Window Seconds")}
         {numberField("max_question_chars", "Max Question Characters")}
@@ -425,6 +454,32 @@ function PublicChatTab({ prompts, providers }: { prompts: Prompt[]; providers: L
         {numberField("max_mcp_results", "Max MCP Results")}
         {numberField("max_tool_calls", "Max Tool Calls")}
         {numberField("max_evidence_chars", "Max Evidence Characters")}
+        {numberField("max_knowledge_results", "Max Knowledge Results")}
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Public Knowledge Collections</Label>
+          {publicCollections.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">
+              No active public knowledge collections configured.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {publicCollections.map((collection) => (
+                <label key={collection.id} className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={(form.knowledge_collections ?? []).includes(collection.id)}
+                    onChange={() => toggleKnowledgeCollection(collection.id)}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="block font-medium">{collection.display_name}</span>
+                    <span className="block text-xs font-mono text-muted-foreground">{collection.name}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <Button size="sm" onClick={save}><Check className="mr-1 h-4 w-4" /> Save Public Chat Config</Button>
     </div>
@@ -683,12 +738,14 @@ export default function CaseworkerSettings() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [providers, setProviders] = useState<LLMProvider[]>([]);
+  const [knowledgeCollections, setKnowledgeCollections] = useState<KnowledgeCollection[]>([]);
 
   useEffect(() => {
-    Promise.all([listSkills(), listPrompts(), listLLMProviders()]).then(([skillsData, promptsData, providersData]) => {
+    Promise.all([listSkills(), listPrompts(), listLLMProviders(), listKnowledgeCollections()]).then(([skillsData, promptsData, providersData, knowledgeData]) => {
       setSkills(rows(skillsData));
       setPrompts(rows(promptsData));
       setProviders(providersData.results ?? []);
+      setKnowledgeCollections(rows(knowledgeData));
     });
   }, []);
 
@@ -741,7 +798,7 @@ export default function CaseworkerSettings() {
         <SectionCard title={tabs.find((item) => item.id === tab)?.label ?? "Settings"}>
           {tab === "prompts" ? <PromptsTab skills={skills} /> : null}
           {tab === "skills" ? <SkillsTab /> : null}
-          {tab === "public-chat" ? <PublicChatTab prompts={prompts} providers={providers} /> : null}
+          {tab === "public-chat" ? <PublicChatTab prompts={prompts} providers={providers} knowledgeCollections={knowledgeCollections} /> : null}
           {tab === "llm" ? <LLMTab /> : null}
           {tab === "mcp" ? <MCPTab /> : null}
         </SectionCard>
