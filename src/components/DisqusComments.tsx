@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
+import { CASE_COMMENTS_SECTION_ID } from "./caseShareUtils";
 
 interface DisqusCommentsProps {
   caseId: string;
@@ -80,6 +81,7 @@ export function DisqusComments({ caseId, caseTitle, caseUrl }: DisqusCommentsPro
   return (
     <section
       ref={sectionRef}
+      id={CASE_COMMENTS_SECTION_ID}
       className="mt-12 mb-8 disqus-comments print:hidden rounded-2xl border border-border/70 bg-card/40 p-6 sm:p-8 shadow-sm"
       aria-labelledby="comments-heading"
     >

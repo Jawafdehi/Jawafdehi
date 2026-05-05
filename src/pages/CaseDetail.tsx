@@ -7,7 +7,7 @@ import { Header } from "@/components/Header";
 import { GuestCaseChatDrawer } from "@/components/guest/GuestCaseChatDrawer";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
-import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
+import { CaseShareBar } from "@/components/CaseShareBar";
 import { CaseDetailBanner } from "@/components/CaseDetailBanner";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { CaseEntityChips } from "@/components/CaseEntityChips";
@@ -262,7 +262,7 @@ const CaseDetail = () => {
               "min-w-0 transition-all duration-300 ease-out",
               isAskDrawerOpen && "order-2 xl:order-1"
             )}>
-              <FloatingShareSidebar
+              <CaseShareBar
                 url={canonicalUrl}
                 title={caseData.title}
                 description={plainDescription}
