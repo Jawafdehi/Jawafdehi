@@ -8,9 +8,11 @@ import type {
   LLMProvider,
   CaseworkerUser,
   PublicChatConfig,
+  KnowledgeCollection,
 } from "@/types/caseworker";
 
-const BASE_URL = `${import.meta.env.VITE_JDS_API_BASE_URL || 'https://portal.jawafdehi.org/api'}/caseworker`;
+const API_BASE_URL = import.meta.env.VITE_JDS_API_BASE_URL || "https://portal.jawafdehi.org/api";
+const BASE_URL = `${API_BASE_URL}/caseworker`;
 
 const client = axios.create({ baseURL: BASE_URL });
 
@@ -196,6 +198,13 @@ export async function createPublicChatConfig(payload: Partial<PublicChatConfig>)
 
 export async function updatePublicChatConfig(id: number, payload: Partial<PublicChatConfig>): Promise<PublicChatConfig> {
   const { data } = await client.patch(`/public-chat-configs/${id}/`, payload);
+  return data;
+}
+
+// Knowledge
+
+export async function listKnowledgeCollections(): Promise<{ results: KnowledgeCollection[] } | KnowledgeCollection[]> {
+  const { data } = await client.get(`${API_BASE_URL}/knowledge/collections/`);
   return data;
 }
 
