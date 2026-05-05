@@ -179,7 +179,7 @@ export async function updateLLMProvider(id: number, payload: Partial<LLMProvider
   return data;
 }
 
-export async function testLLMConnection(id: number): Promise<{ connected: boolean }> {
+export async function testLLMConnection(id: number): Promise<{ connected: boolean; error?: string }> {
   const { data } = await client.post(`/llm-providers/${id}/test_connection/`);
   return data;
 }
