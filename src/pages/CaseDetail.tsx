@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MapPin, MessageCircle, StickyNote, User } from "lucide-react";
+import { Calendar, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MapPin, MessageCircle, StickyNote, User, Banknote } from "lucide-react";
 import { getCaseById, getDocumentSourceById } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
 import type { DocumentSource, JawafEntity } from "@/types/jds";
@@ -29,6 +29,7 @@ import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { trackEvent } from "@/utils/analytics";
 import { cn } from "@/lib/utils";
+import { formatNPR } from "@/utils/number";
 import "@/styles/print.css";
 
 const RELATION_PRIORITY: Record<string, number> = {
@@ -56,11 +57,93 @@ function getGroupedEntities(entities: JawafEntity[]) {
   }, {} as Record<string, JawafEntity[]>);
 }
 
+// Evidence tier grouping types and constants
+type EvidenceGroup = 'primary' | 'legal' | 'secondary';
+
+const PRIMARY_TYPES: readonly string[] = [
+  'OFFICIAL_GOVERNMENT',
+  'FINANCIAL_FORENSIC',
+  'INTERNAL_CORPORATE',
+  'INVESTIGATIVE_REPORT'
+] as const;
+
+const LEGAL_TYPES: readonly string[] = [
+  'LEGAL_COURT_ORDER',
+  'LEGAL_PROCEDURAL',
+  'LEGISLATIVE_DOC'
+] as const;
+
+const SECONDARY_TYPES: readonly string[] = [
+  'MEDIA_NEWS',
+  'PUBLIC_COMPLAINT',
+  'SOCIAL_MEDIA',
+  'OTHER_VISUAL'
+] as const;
+
+/**
+ * Classifies a document source into an evidentiary tier based on source_type.
+ * 
+ * @param sourceType - The source_type field from DocumentSource (can be null/undefined)
+ * @returns The evidence group: 'primary', 'legal', or 'secondary'
+ */
+function getEvidenceGroup(sourceType: string | null | undefined): EvidenceGroup {
+  if (!sourceType) return 'secondary';
+  
+  if (PRIMARY_TYPES.includes(sourceType)) return 'primary';
+  if (LEGAL_TYPES.includes(sourceType)) return 'legal';
+  if (SECONDARY_TYPES.includes(sourceType)) return 'secondary';
+  
+  // Unknown source_type defaults to secondary
+  return 'secondary';
+}
+
+interface SectionHeaderProps {
+  group: EvidenceGroup;
+  count: number;
+  t: (key: string, options?: { count?: number }) => string;
+}
+
+/**
+ * Section header component for evidence tier grouping.
+ * Displays a badge with tier-specific colors and document count.
+ */
+const SectionHeader: React.FC<SectionHeaderProps> = ({ group, count, t }) => {
+  const config = {
+    primary: {
+      bgColor: 'bg-[#E6F1FB] dark:bg-blue-950/30',
+      textColor: 'text-[#0C447C] dark:text-blue-300',
+      labelKey: 'caseDetail.evidenceGroups.primary'
+    },
+    legal: {
+      bgColor: 'bg-[#EEEDFE] dark:bg-purple-950/30',
+      textColor: 'text-[#3C3489] dark:text-purple-300',
+      labelKey: 'caseDetail.evidenceGroups.legal'
+    },
+    secondary: {
+      bgColor: 'bg-[#F1EFE8] dark:bg-gray-800/30',
+      textColor: 'text-[#5F5E5A] dark:text-gray-300',
+      labelKey: 'caseDetail.evidenceGroups.secondary'
+    }
+  };
+
+  const { bgColor, textColor, labelKey } = config[group];
+
+  return (
+    <div className="flex items-center gap-3 mb-3 pb-2 border-b border-border">
+      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${bgColor} ${textColor}`}>
+        {t(labelKey)}
+      </span>
+      <span className="text-sm text-muted-foreground">
+        {t('caseDetail.evidenceGroups.documentCount', { count })}
+      </span>
+    </div>
+  );
+};
+
 const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const { id } = useParams();
-  const caseId = id ? parseInt(id) : undefined;
   const trackedCaseIdRef = useRef<string | null>(null);
   const [isAskDrawerOpen, setIsAskDrawerOpen] = useState(false);
   const [showAskPopup, setShowAskPopup] = useState(true);
@@ -68,9 +151,9 @@ const CaseDetail = () => {
   const [isIntroFinished, setIsIntroFinished] = useState(false);
 
   const { data: caseData, isLoading, isError } = useQuery({
-    queryKey: ['case', caseId],
-    queryFn: () => getCaseById(caseId!),
-    enabled: caseId != null,
+    queryKey: ['case', id],
+    queryFn: () => getCaseById(id!),
+    enabled: id != null,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -150,6 +233,22 @@ const CaseDetail = () => {
     source: resolvedSources[evidence.source_id] ?? null,
     evidenceDescription: evidence.description,
   }));
+
+  // Group evidence by tier
+  const groupedEvidence: Record<EvidenceGroup, Array<typeof caseData.evidence[0] & { originalIndex: number }>> = {
+    primary: [],
+    legal: [],
+    secondary: []
+  };
+
+  (caseData?.evidence ?? []).forEach((evidence, index) => {
+    const source = resolvedSources[evidence.source_id];
+    const group = getEvidenceGroup(source?.source_type);
+    groupedEvidence[group].push({ ...evidence, originalIndex: index });
+  });
+
+  // Render order: primary -> legal -> secondary
+  const renderOrder: EvidenceGroup[] = ['primary', 'legal', 'secondary'];
 
   if (isLoading) {
     return (
@@ -296,51 +395,59 @@ const CaseDetail = () => {
                     />
                   )}
 
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="flex items-start text-muted-foreground">
-                      <User className="mr-2 h-5 w-5 flex-shrink-0" />
-                      <div className="text-sm flex flex-wrap gap-1">
-                        {caseData.entities.filter(e => e.type === 'accused').map((e, index, arr) => {
-                          const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                          let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
-                          displayName = translateDynamicText(displayName, currentLang);
-                          return (
-                            <span key={e.id}>
-                              <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
-                              {index < arr.length - 1 && ', '}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="mr-2 h-5 w-5" />
-                      <div className="text-sm flex flex-wrap gap-1">
-                        {(() => {
-                          const locations = caseData.entities.filter(e => e.type === 'location');
-                          return locations.length > 0 ? locations.map((e, index) => {
-                            const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
-                            let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || 'Unknown';
-                            displayName = translateDynamicText(displayName, currentLang);
-                            return (
-                              <span key={e.id}>
-                                <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
-                                {index < locations.length - 1 && ', '}
-                              </span>
-                            );
-                          }) : 'N/A';
-                        })()}
-                      </div>
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <Calendar className="mr-2 h-5 w-5" />
-                      <span className="text-sm">
-                        {t("caseDetail.period")}:{" "}
-                        {formatCaseDateRange(caseData.case_start_date, caseData.case_end_date, t("cases.status.ongoing"))}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex items-start text-muted-foreground">
+                <User className="mr-2 h-5 w-5 flex-shrink-0" />
+                <div className="text-sm flex flex-wrap gap-1">
+                  {caseData.entities.filter(e => e.type === 'accused').map((e, index, arr) => {
+                    const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
+                    let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || t('common.notAvailable');
+                    displayName = translateDynamicText(displayName, currentLang);
+                    return (
+                      <span key={e.id}>
+                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
+                        {index < arr.length - 1 && ', '}
                       </span>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
+              </div>
+              <div className="flex items-center text-muted-foreground">
+                <MapPin className="mr-2 h-5 w-5" />
+                <div className="text-sm flex flex-wrap gap-1">
+                  {(() => {
+                    const locations = caseData.entities.filter(e => e.type === 'location');
+                    return locations.length > 0 ? locations.map((e, index) => {
+                      const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
+                      let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || t('common.notAvailable');
+                      displayName = translateDynamicText(displayName, currentLang);
+                      return (
+                        <span key={e.id}>
+                          <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
+                          {index < locations.length - 1 && ', '}
+                        </span>
+                      );
+                    }) : t('common.notAvailable');
+                  })()}
+                </div>
+              </div>
+              <div className="flex items-center text-muted-foreground">
+                <Calendar className="mr-2 h-5 w-5" />
+                <span className="text-sm">
+                  {t("caseDetail.period")}:{" "}
+                  {formatCaseDateRange(caseData.case_start_date, caseData.case_end_date, t("cases.status.ongoing"))}
+                </span>
+              </div>
+              {caseData.bigo != null && caseData.bigo > 0 && (
+                <div className="flex items-center text-muted-foreground">
+                  <Banknote className="mr-2 h-5 w-5" />
+                  <span className="text-sm">
+                    {t("caseDetail.embezzledAmount")}: {formatNPR(caseData.bigo)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
 
                 <Separator className="mb-8 hidden print:block" />
 
@@ -435,32 +542,48 @@ const CaseDetail = () => {
                       </CardContent>
                     </Card>
 
-                    {caseData.evidence.length > 0 && (
-                      <Card className="mb-8">
-                        <CardHeader>
-                          <CardTitle className="flex items-center">
-                            <FileText className="mr-2 h-5 w-5" />
-                            {t("caseDetail.evidence")}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div>
-                            {caseData.evidence.map((evidence, index) => {
-                              const source = resolvedSources[evidence.source_id] ?? null;
-                              return (
-                                <DocumentSourceCard
-                                  key={`${evidence.source_id}-${index}`}
-                                  source={source}
-                                  sourceId={evidence.source_id}
-                                  itemNumber={index + 1}
-                                  evidenceDescription={evidence.description}
-                                />
-                              );
-                            })}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
+          {caseData.evidence.length > 0 && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  {t("caseDetail.evidence")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {renderOrder.map((group) => {
+                    const evidenceInGroup = groupedEvidence[group];
+                    if (evidenceInGroup.length === 0) return null;
+
+                    return (
+                      <div key={group}>
+                        <SectionHeader 
+                          group={group} 
+                          count={evidenceInGroup.length} 
+                          t={t} 
+                        />
+                        <div>
+                          {evidenceInGroup.map((evidence, index) => {
+                            const source = resolvedSources[evidence.source_id] ?? null;
+                            return (
+                              <DocumentSourceCard
+                                key={`${evidence.source_id}-${index}`}
+                                source={source}
+                                sourceId={evidence.source_id}
+                                itemNumber={evidence.originalIndex + 1}
+                                evidenceDescription={evidence.description}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
                     {caseData.missing_details && (
                       <section className="mb-8 border-t border-border pt-5">

@@ -217,6 +217,7 @@ const Cases = () => {
                   <CaseCard
                     key={caseItem.id}
                     id={caseItem.id.toString()}
+                    slug={caseItem.slug}
                     title={caseItem.title}
                     entity={entityDisplayName}
                     entityNames={entityNames}
