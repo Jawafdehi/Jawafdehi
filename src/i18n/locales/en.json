@@ -503,10 +503,11 @@
     "viewSource": "View Source",
     "viewSourceN": "View Source {{n}}",
     "opensInNewTab": "(opens in a new tab)",
-    "roles": {
-      "RAW": "RAW",
-      "MARKDOWN": "Markdown",
-      "PERMALINK": "Permalink"
+    "role": {
+      "raw": "View original",
+      "permalink": "Permalink",
+      "markdown": "Show markdown transcript",
+      "markdownN": "Show markdown transcript {{n}}"
     }
   },
   "sourceType": {

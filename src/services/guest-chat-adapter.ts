@@ -845,7 +845,9 @@ function findRelevantSources(
         source?.title,
         source?.description,
         evidenceDescription,
-        Array.isArray(source?.url) ? source?.url.join(" ") : "",
+        Array.isArray(source?.urls)
+          ? source.urls.map((u) => u?.link).filter(Boolean).join(" ")
+          : "",
       ]
         .filter(Boolean)
         .join(" ")

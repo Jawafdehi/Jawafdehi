@@ -503,10 +503,11 @@
     "viewSource": "स्रोत हेर्नुहोस्",
     "viewSourceN": "स्रोत {{n}} हेर्नुहोस्",
     "opensInNewTab": "(नयाँ ट्याबमा खुल्छ)",
-    "roles": {
-      "RAW": "RAW",
-      "MARKDOWN": "Markdown",
-      "PERMALINK": "स्थायी लिङ्क"
+    "role": {
+      "raw": "मूल हेर्नुहोस्",
+      "permalink": "स्थायी लिङ्क",
+      "markdown": "मार्कडाउन ट्रान्सक्रिप्ट हेर्नुहोस्",
+      "markdownN": "मार्कडाउन ट्रान्सक्रिप्ट {{n}} हेर्नुहोस्"
     }
   },
   "sourceType": {

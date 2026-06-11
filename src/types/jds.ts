@@ -160,8 +160,11 @@ export interface CaseDetail extends Case {
 
 export type SourceLinkRole = 'RAW' | 'MARKDOWN' | 'PERMALINK';
 
-/** A single URL entry which may be a plain string or a {link, role} dict. */
-export type SourceUrlEntry = string | { link: string; role?: SourceLinkRole | null };
+/** A source link with an explicit role (the `urls` field shape). */
+export interface SourceLink {
+  link: string;
+  role: SourceLinkRole;
+}
 
 export interface DocumentSource {
   id: number;
@@ -169,7 +172,7 @@ export interface DocumentSource {
   title: string;
   description: string;
   source_type: DocumentSourceType | string | null; // DocumentSourceType for known values; plain string covers legacy/unknown backend values; null if not classified
-  url?: SourceUrlEntry[] | null; // Array of URLs/URL-dicts for this source (may be missing or null during migration)
+  urls?: SourceLink[] | null; // Link dicts with explicit role (RAW/MARKDOWN/PERMALINK); includes uploaded-file URL when present
   related_entities: JawafEntity[]; // Related entities
   created_at: string;
   updated_at: string;
