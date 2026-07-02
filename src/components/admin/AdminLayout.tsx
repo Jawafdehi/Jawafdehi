@@ -7,7 +7,11 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
-import { hasAdminAccess } from "@/lib/roles";
+import {
+  hasAdminAccess,
+  hasNesWriteAccess,
+  hasNgmWriteAccess,
+} from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import {
   Building2,
@@ -26,14 +30,17 @@ import {
 // authority; this gate (hasAdminAccess, see lib/roles) just keeps role-less
 // users out of a UI that would 403 on every call.
 
-// Sidebar groups. `roles` (when set) narrows a link to those roles; links
-// without it show for anyone who cleared the panel gate.
+// Sidebar groups. A link shows for anyone who cleared the panel gate unless it
+// narrows itself: `roles` (case-insensitive membership) or `canAccess` (an
+// arbitrary predicate over the user's roles, used for the write-gated sections
+// whose backend role set is more than a flat name match — see lib/roles).
 interface NavItem {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
   end?: boolean;
   roles?: string[];
+  canAccess?: (roles: string[]) => boolean;
 }
 interface NavGroup {
   heading: string;
@@ -46,16 +53,28 @@ const NAV: NavGroup[] = [
     items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true }],
   },
   {
+    // NES writes are gated on NES_Contributor / NES_Admin (+ superuser) by the
+    // backend (entities/permissions.py); platform readonly/caseworker/moderator
+    // are NOT accepted, so don't offer the (write) Entities section to them.
     heading: "Entities",
-    items: [{ to: "/admin/entities", label: "Entities", icon: Network }],
+    items: [
+      {
+        to: "/admin/entities",
+        label: "Entities",
+        icon: Network,
+        canAccess: hasNesWriteAccess,
+      },
+    ],
   },
   {
+    // Data Lake (court/material/firm) writes are gated on the NGM role set
+    // (courts/permissions.py HasNgmRole): Admin/Moderator/Caseworker + NGM tiers.
     heading: "Data Lake",
     items: [
-      { to: "/admin/datalake/courtcases", label: "Court cases", icon: Gavel },
-      { to: "/admin/datalake/courts", label: "Courts", icon: Building2 },
-      { to: "/admin/datalake/firms", label: "Blocklisted firms", icon: Building2 },
-      { to: "/admin/datalake/materials", label: "Materials", icon: ScrollText },
+      { to: "/admin/datalake/courtcases", label: "Court cases", icon: Gavel, canAccess: hasNgmWriteAccess },
+      { to: "/admin/datalake/courts", label: "Courts", icon: Building2, canAccess: hasNgmWriteAccess },
+      { to: "/admin/datalake/firms", label: "Blocklisted firms", icon: Building2, canAccess: hasNgmWriteAccess },
+      { to: "/admin/datalake/materials", label: "Materials", icon: ScrollText, canAccess: hasNgmWriteAccess },
     ],
   },
   {
@@ -84,9 +103,11 @@ function Sidebar({ roles }: { roles: string[] }) {
   return (
     <nav className="flex flex-col gap-5 p-4">
       {NAV.map((group) => {
-        const visible = group.items.filter(
-          (it) => !it.roles || it.roles.some((r) => lower.includes(r)),
-        );
+        const visible = group.items.filter((it) => {
+          if (it.roles && !it.roles.some((r) => lower.includes(r.toLowerCase()))) return false;
+          if (it.canAccess && !it.canAccess(roles)) return false;
+          return true;
+        });
         if (!visible.length) return null;
         return (
           <div key={group.heading} className="space-y-1">
