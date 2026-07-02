@@ -31,8 +31,13 @@ export default function FormPageShell({
 }: FormPageShellProps) {
   if (loading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
+      <div
+        className="flex min-h-[40vh] items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <span className="sr-only">Loading…</span>
       </div>
     );
   }

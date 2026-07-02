@@ -152,7 +152,7 @@ const allRels = [
 
 ### Allegation & Case Endpoints
 
-**Note:** The entity API provides entity data only. Allegations and cases will be handled by a separate API (Jawafdehi) to be integrated later.
+**Note:** Case and allegation handling is integrated via `jds-api.ts` and `casework-api.ts` (and the `/admin` panel), all on the unified `/api` surface through the shared `http` client. This section documents the entity endpoints; see those modules for case/allegation CRUD.
 
 ```typescript
 const allegations = await getEntityAllegations('entity-slug');

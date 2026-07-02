@@ -45,6 +45,7 @@ export default function CourtForm() {
         }),
       listPath: LIST_PATH,
       resourceLabel: "court",
+      recordKey: identifier,
     });
 
   const canSave = !saving && str(form.identifier).trim() !== "";
@@ -52,6 +53,9 @@ export default function CourtForm() {
   const onSubmit = handleSubmit(canSave, async () => {
     const payload: CourtWrite = {
       ...form,
+      // identifier is the natural key and immutable after create — trim so a
+      // stray leading/trailing space isn't baked into the record permanently.
+      identifier: str(form.identifier).trim(),
       full_name_english: form.full_name_english || null,
       full_name_nepali: form.full_name_nepali || null,
       court_type: form.court_type || null,

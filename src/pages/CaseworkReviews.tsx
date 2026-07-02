@@ -65,6 +65,9 @@ export default function CaseworkReviews() {
   const [submitting, setSubmitting] = useState(false);
   const [rerunningSlug, setRerunningSlug] = useState<string | null>(null);
   const [err, setErr] = useState("");
+  // Separate from `err` (which renders under the submit input) so a regrade-all
+  // failure surfaces next to the Regrade-all button, not the submit form.
+  const [regradeErr, setRegradeErr] = useState("");
   const [conflictId, setConflictId] = useState<number | null>(null);
 
   // Load the first page of cases. When called by polling (isPoll), only merge the
@@ -156,7 +159,7 @@ export default function CaseworkReviews() {
   // newly-queued runs appear.
   const onRegradeAll = async () => {
     setRegrading(true);
-    setErr("");
+    setRegradeErr("");
     try {
       const res = await regradeAll();
       toast({
@@ -165,7 +168,7 @@ export default function CaseworkReviews() {
       });
       await loadFirst(true);
     } catch (e: unknown) {
-      setErr(apiErrorMessage(e, "Regrade-all failed."));
+      setRegradeErr(apiErrorMessage(e, "Regrade-all failed."));
     } finally {
       setRegrading(false);
     }
@@ -185,20 +188,25 @@ export default function CaseworkReviews() {
             </p>
           </div>
           {isModerator && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={regrading}
-              title="Queue a fresh review for every reviewable case against the current rules"
-              onClick={onRegradeAll}
-            >
-              {regrading ? (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              ) : (
-                <Repeat className="mr-1 h-4 w-4" />
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={regrading}
+                title="Queue a fresh review for every reviewable case against the current rules"
+                onClick={onRegradeAll}
+              >
+                {regrading ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Repeat className="mr-1 h-4 w-4" />
+                )}
+                Regrade all
+              </Button>
+              {regradeErr && (
+                <p className="text-sm text-red-600 text-right">{regradeErr}</p>
               )}
-              Regrade all
-            </Button>
+            </div>
           )}
         </div>
 

@@ -175,15 +175,17 @@ export async function listCourtCases<T = Record<string, unknown>>(
   return data;
 }
 
-export async function listCourts<T = Record<string, unknown>>(): Promise<Paginated<T>> {
-  const { data } = await client.get<Paginated<T>>("/api/courts/");
+export async function listCourts<T = Record<string, unknown>>(
+  params: Record<string, unknown> = {},
+): Promise<Paginated<T>> {
+  const { data } = await client.get<Paginated<T>>("/api/courts/", { params });
   return data;
 }
 
-export async function listBlacklistedFirms<T = Record<string, unknown>>(): Promise<
-  Paginated<T>
-> {
-  const { data } = await client.get<Paginated<T>>("/api/firms/");
+export async function listBlacklistedFirms<T = Record<string, unknown>>(
+  params: Record<string, unknown> = {},
+): Promise<Paginated<T>> {
+  const { data } = await client.get<Paginated<T>>("/api/firms/", { params });
   return data;
 }
 

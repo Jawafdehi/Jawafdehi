@@ -172,7 +172,7 @@ export async function getEntities(params?: EntitySearchParams): Promise<EntityLi
     });
     return response.data;
   } catch (error) {
-    handleApiError(error, '/entities');
+    handleApiError(error, '/api/entities');
   }
 }
 
@@ -225,7 +225,7 @@ export async function getEntityById(idOrSlug: string): Promise<Entity> {
     return response.data;
   } catch (error) {
     const encodedId = encodeURIComponent(idOrSlug);
-    handleApiError(error, `/entities/${encodedId}`);
+    handleApiError(error, `/api/entities/${encodedId}`);
   }
 }
 
@@ -420,7 +420,7 @@ export async function healthCheck(): Promise<{ status: string }> {
     const response = await http.get('/api/health', { timeout: 30000 });
     return response.data;
   } catch (error) {
-    handleApiError(error, '/health');
+    handleApiError(error, '/api/health');
   }
 }
 

@@ -316,8 +316,9 @@ export async function submitFeedback(feedback: FeedbackSubmission): Promise<Feed
       if (feedback.relatedPage) formData.append('relatedPage', feedback.relatedPage);
       if (feedback.contactInfo) formData.append('contactInfo', JSON.stringify(feedback.contactInfo));
       formData.append('attachment', feedback.attachment);
+      // Let axios derive the multipart Content-Type from the FormData so it
+      // includes the required boundary (an explicit header omits it).
       const response = await http.post<FeedbackResponse>('/api/feedback/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 10000,
       });
       return response.data;

@@ -44,6 +44,9 @@ export default function MaterialFileUpload({
   const [materialType, setMaterialType] = useState<string>("document");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped after a successful upload to remount the uncontrolled <input
+  // type="file"> so its displayed filename clears with the state.
+  const [inputKey, setInputKey] = useState(0);
 
   const upload = async () => {
     if (!file) return;
@@ -63,6 +66,7 @@ export default function MaterialFileUpload({
       );
       toast({ title: "File uploaded", description: file.name });
       setFile(null);
+      setInputKey((k) => k + 1);
       onUploaded?.(res);
     } catch (err) {
       setError(adminErrorMessage(err, "Upload failed"));
@@ -79,6 +83,7 @@ export default function MaterialFileUpload({
       </p>
 
       <input
+        key={inputKey}
         type="file"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-slate-200"

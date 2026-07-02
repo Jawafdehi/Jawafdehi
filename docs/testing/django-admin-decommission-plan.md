@@ -50,7 +50,7 @@ replaced, the form cannot be deleted.
 | `CaseViewSet.create()` | `form = CaseAdminForm(data=…, request=request)` `api_views.py:351` | **Replace** with serializer + `Case.validate()` (Task A1) |
 | Django admin `CaseAdmin` | `form = CaseAdminForm`, inlines, `save_related` gate `admin.py:426,702` | **Delete** custom form/inlines → stock `ModelAdmin` or unregister (Task D) |
 | Django admin `DocumentSourceAdmin` | `form = DocumentSourceAdminForm` `admin.py:874` | **Delete** custom form → stock (Task D) |
-| Custom widgets | `ToastUIEditorWidget`, `MultiTimelineField`, `MultiEvidenceField`, `MultiCourtCaseField`, `MultiTextField`, Nepali date | only used by the admin forms | **Delete** with the forms (Task D) |
+| Custom widgets | `ToastUIEditorWidget`, `MultiTimelineField`, `MultiEvidenceField`, `MultiCourtCaseField`, `MultiTextField`, Nepali date (only used by the admin forms) | **Delete** with the forms (Task D) |
 | `CaseViewSet.partial_update()` | pure serializer + model rules already | keep; **extend** transitions (Task A2) |
 
 > Note the irony in the create docstring: *"delegating validation to the

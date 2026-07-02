@@ -20,6 +20,8 @@ const columns: Column<Row>[] = [
   { header: "Type", cell: (r) => str(r.court_type) },
 ];
 
+const PAGE_SIZE = 25;
+
 export default function Courts() {
   const navigate = useNavigate();
   return (
@@ -27,6 +29,7 @@ export default function Courts() {
       title="Courts"
       description="Courts. Create and edit court records."
       columns={columns}
+      pageSize={PAGE_SIZE}
       rowKey={(r) => str(r.identifier)}
       onRowClick={(r) => {
         const id = str(r.identifier);
@@ -37,7 +40,9 @@ export default function Courts() {
           <Plus className="mr-1 h-4 w-4" /> New Court
         </Button>
       }
-      fetchPage={() => listCourts<Row>()}
+      fetchPage={(page) =>
+        listCourts<Row>({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })
+      }
     />
   );
 }

@@ -18,6 +18,7 @@
 // SSO/OIDC-only — the dev-auth branch is inert without the flag.
 import axios, { type AxiosInstance } from "axios";
 import { getAccessToken } from "./oidc";
+import { DEV_AUTH_ENABLED, DEV_AUTH_CSRF_KEY } from "./dev-auth-constants";
 
 // Resolve the monolith origin. An explicit override wins; else same-origin.
 export const API_BASE_URL: string = (() => {
@@ -27,12 +28,18 @@ export const API_BASE_URL: string = (() => {
   return "";
 })();
 
-const DEV_AUTH_ENABLED = import.meta.env.VITE_DEV_AUTH === "true";
-const CSRF_STORAGE_KEY = "jawafdehi.devAuth.csrf";
 const UNSAFE_METHODS = new Set(["post", "put", "patch", "delete"]);
 
+// Default request timeout (ms). Bounds every call — most importantly the SSR
+// prefetches in entry-server.tsx, where a stalled backend would otherwise block
+// server rendering indefinitely. Per-call `timeout` overrides still win.
+const DEFAULT_TIMEOUT_MS = 30_000;
+
 /** The shared axios instance. Import this (or the `http` alias) everywhere. */
-export const http: AxiosInstance = axios.create({ baseURL: API_BASE_URL });
+export const http: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: DEFAULT_TIMEOUT_MS,
+});
 
 http.interceptors.request.use(async (config) => {
   const token = await getAccessToken();
@@ -42,7 +49,7 @@ http.interceptors.request.use(async (config) => {
     // DEV_AUTH session: no bearer — ride the session cookie + CSRF on writes.
     config.withCredentials = true;
     const method = (config.method || "get").toLowerCase();
-    const csrf = window.localStorage.getItem(CSRF_STORAGE_KEY);
+    const csrf = window.localStorage.getItem(DEV_AUTH_CSRF_KEY);
     if (csrf && UNSAFE_METHODS.has(method)) {
       config.headers["X-CSRFToken"] = csrf;
     }

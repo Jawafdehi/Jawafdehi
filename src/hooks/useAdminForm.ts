@@ -24,6 +24,11 @@ interface UseAdminFormOptions<T> {
   listPath: string;
   // Human label for toasts + fallback error messages (e.g. "court").
   resourceLabel: string;
+  // Identity of the record being edited (e.g. the route PK). Included in the
+  // load effect's deps so navigating between two edit routes on the SAME mounted
+  // component (React Router reuses the instance) re-fetches the new record
+  // instead of keeping the previous one's field values.
+  recordKey?: string;
 }
 
 interface UseAdminFormResult {
@@ -46,6 +51,7 @@ export function useAdminForm<T>({
   hydrate,
   listPath,
   resourceLabel,
+  recordKey,
 }: UseAdminFormOptions<T>): UseAdminFormResult {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(editing);
@@ -79,7 +85,7 @@ export function useAdminForm<T>({
     return () => {
       alive = false;
     };
-  }, [editing, resourceLabel]);
+  }, [editing, resourceLabel, recordKey]);
 
   const handleSubmit = useCallback(
     (canSave: boolean, save: () => Promise<void>) =>

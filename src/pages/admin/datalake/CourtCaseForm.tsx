@@ -82,6 +82,7 @@ export default function CourtCaseForm() {
         }),
       listPath: LIST_PATH,
       resourceLabel: "case",
+      recordKey: `${params.court ?? ""}/${params.caseNumber ?? ""}`,
     });
 
   const nesIdValid = !form.nes_id || isValidEntityIri(form.nes_id);

@@ -62,6 +62,7 @@ export default function FirmForm() {
         }),
       listPath: LIST_PATH,
       resourceLabel: "firm",
+      recordKey: id,
     });
 
   const canSave = !saving && str(form.firm_name).trim() !== "";

@@ -16,6 +16,8 @@ const columns: Column<Row>[] = [
   { header: "Blocklisted", cell: (r) => str(r.blacklist_date_ad ?? r.blacklist_date_bs) },
 ];
 
+const PAGE_SIZE = 25;
+
 // F7 — blocklisted firms list. Firms are keyed by their numeric `id` (the model
 // PK); firm names are not unique, so the row/route key is the id.
 export default function Firms() {
@@ -25,6 +27,7 @@ export default function Firms() {
       title="Blocklisted firms"
       description="Blocklisted firms. Create and edit firm records."
       columns={columns}
+      pageSize={PAGE_SIZE}
       rowKey={(r) => str(r.id)}
       onRowClick={(r) => {
         const id = str(r.id);
@@ -35,7 +38,9 @@ export default function Firms() {
           <Plus className="mr-1 h-4 w-4" /> New Firm
         </Button>
       }
-      fetchPage={() => listBlacklistedFirms<Row>()}
+      fetchPage={(page) =>
+        listBlacklistedFirms<Row>({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })
+      }
     />
   );
 }

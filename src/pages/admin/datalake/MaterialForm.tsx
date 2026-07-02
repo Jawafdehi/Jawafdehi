@@ -220,8 +220,15 @@ export default function MaterialForm() {
         (() => {
           const parts = iri ? parseMaterialIri(iri) : null;
           const lastSlash = refPath.lastIndexOf("/");
-          const source = parts?.source ?? refPath.slice(0, lastSlash);
-          const ident = parts?.ident ?? refPath.slice(lastSlash + 1);
+          // Fall back to splitting refPath ONLY when it actually contains a
+          // slash — otherwise slice(0, -1) would silently truncate and ident
+          // would be the whole (wrong) string, passing the non-empty guard.
+          const fallback =
+            lastSlash > 0
+              ? { source: refPath.slice(0, lastSlash), ident: refPath.slice(lastSlash + 1) }
+              : { source: "", ident: "" };
+          const source = parts?.source ?? fallback.source;
+          const ident = parts?.ident ?? fallback.ident;
           if (!source || !ident) return null;
           return (
             <MaterialFileUpload

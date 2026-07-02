@@ -11,12 +11,15 @@
 // user (and the CSRF token) in localStorage so a page reload stays logged in
 // without a token, and so admin-api.ts can attach X-CSRFToken to writes.
 import { http, API_BASE_URL } from "./http";
+import {
+  DEV_AUTH_ENABLED,
+  DEV_AUTH_USER_KEY as STORAGE_KEY,
+  DEV_AUTH_CSRF_KEY as CSRF_KEY,
+} from "./dev-auth-constants";
 import type { CaseworkUser } from "@/types/casework";
 
-export const DEV_AUTH_ENABLED = import.meta.env.VITE_DEV_AUTH === "true";
-
-const STORAGE_KEY = "jawafdehi.devAuth.user";
-const CSRF_KEY = "jawafdehi.devAuth.csrf";
+// Re-exported for existing importers (CaseworkAuthContext, CaseworkLogin).
+export { DEV_AUTH_ENABLED };
 
 // Dev-login runs the unified client with `withCredentials` forced per-call, so
 // the browser includes the sessionid cookie even before any token exists
