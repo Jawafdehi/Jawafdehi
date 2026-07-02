@@ -131,8 +131,8 @@ const App = () => (
             <Route path="/saptahik" element={<WeeklyMeetings />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/cancel" element={<PaymentCancelled />} />
-            <Route path="/success" element={<PaymentSuccess />} />
+            <Route path="/donate/cancel" element={<PaymentCancelled />} />
+            <Route path="/donate/success" element={<PaymentSuccess />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
