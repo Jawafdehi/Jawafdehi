@@ -56,4 +56,30 @@ describe('jsonLdToEntity', () => {
     expect(() => jsonLdToEntity(null)).not.toThrow();
     expect(jsonLdToEntity(null).names).toEqual([]);
   });
+
+  it('provides a type-valid version_summary placeholder', () => {
+    const e = jsonLdToEntity(person);
+    expect(e.version_summary.type).toBe('ENTITY');
+    expect(e.version_summary.version_number).toBe(0);
+    expect(e.version_summary.author.id).toBe('');
+  });
+
+  describe('description mapping -> LangText { value }', () => {
+    it('maps a plain schema.org string description', () => {
+      const e = jsonLdToEntity({ ...person, description: 'A short bio' });
+      expect(e.description?.en?.value).toBe('A short bio');
+    });
+    it('maps an { en, ne } string object description', () => {
+      const e = jsonLdToEntity({ ...person, description: { en: 'bio', ne: 'परिचय' } });
+      expect(e.description?.en?.value).toBe('bio');
+      expect(e.description?.ne?.value).toBe('परिचय');
+    });
+    it('passes through an already-nested { en: { value } } description', () => {
+      const e = jsonLdToEntity({ ...person, description: { en: { value: 'nested' } } });
+      expect(e.description?.en?.value).toBe('nested');
+    });
+    it('is null when absent', () => {
+      expect(jsonLdToEntity(person).description).toBeNull();
+    });
+  });
 });

@@ -33,6 +33,27 @@ interface EntityJsonLd {
   [k: string]: unknown;
 }
 
+// schema.org `description` is usually a plain string, occasionally a { en, ne } object (whose
+// values may themselves be strings or {value}). The SPA's LangText nests values as { en: { value } },
+// so getDescription() reads `.en.value`; map both forms or descriptions render blank.
+function toLangText(raw: unknown): Entity['description'] {
+  const pick = (v: unknown): string | undefined =>
+    typeof v === 'string' ? v : (v as { value?: string } | null | undefined)?.value ?? undefined;
+  if (typeof raw === 'string') return raw ? { en: { value: raw } } : null;
+  if (raw && typeof raw === 'object') {
+    const d = raw as { en?: unknown; ne?: unknown };
+    const enVal = pick(d.en);
+    const neVal = pick(d.ne);
+    if (enVal || neVal) {
+      return {
+        ...(enVal ? { en: { value: enVal } } : {}),
+        ...(neVal ? { ne: { value: neVal } } : {}),
+      };
+    }
+  }
+  return null;
+}
+
 // Prefer the type embedded in the IRI path (.../entity/<type>/<slug>) — it is exactly the SPA's
 // EntityType enum — and fall back to the schema.org @type for anything unexpected.
 function entityTypeFromJsonLd(iri: string, atType: string): EntityType {
@@ -57,13 +78,12 @@ export function jsonLdToEntity(input: unknown): Entity {
       ? [{ kind: 'PRIMARY', ...(en ? { en: { full: en } } : {}), ...(ne ? { ne: { full: ne } } : {}) }]
       : [];
 
-  const description =
-    raw?.description && typeof raw.description === 'object'
-      ? (raw.description as Entity['description'])
-      : null;
+  const description = toLangText(raw.description);
+  const createdAt = typeof raw.dateCreated === 'string' ? raw.dateCreated : '';
 
-  // Cast at the boundary: JSON-LD carries no version_summary, and the case/entity views never read
-  // it. Empty collections keep the array-iterating consumers (pictures/contacts/...) safe.
+  // Empty collections keep the array-iterating consumers (pictures/contacts/...) safe. JSON-LD
+  // carries no version history, so version_summary is a neutral placeholder (version 0, no author)
+  // — filled rather than cast away so the Entity contract stays fully type-checked.
   return {
     id: iri,
     slug,
@@ -77,8 +97,17 @@ export function jsonLdToEntity(input: unknown): Entity {
     sub_type: null,
     short_description: null,
     description,
-    created_at: typeof raw?.dateCreated === 'string' ? raw.dateCreated : '',
-  } as Entity;
+    created_at: createdAt,
+    version_summary: {
+      entity_or_relationship_id: iri,
+      type: 'ENTITY',
+      version_number: 0,
+      author: { slug: '', name: null, id: '' },
+      change_description: '',
+      created_at: createdAt,
+      id: '',
+    },
+  };
 }
 
 // ============================================================================
