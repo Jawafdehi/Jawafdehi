@@ -52,7 +52,10 @@ function getPartiesByRole(courtCase: CourtCase): {
   const plaintiffs: string[] = [];
   const defendants: string[] = [];
 
-  for (const entity of courtCase.entities) {
+  // `entities` is only populated on the assembled "full" court case; the core
+  // shape used on the case-detail page omits it. Default to [] so the string
+  // plaintiff/defendant fallback below still renders instead of crashing.
+  for (const entity of courtCase.entities ?? []) {
     const side = entity.side?.toLowerCase();
     if (side === "plaintiff" || side === "वादी") {
       plaintiffs.push(entity.name);
@@ -194,13 +197,13 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
             );
           })()}
 
-          {/* Hearings collapsible */}
-          {courtCase.hearings.length > 0 && (
+          {/* Hearings collapsible — absent on the core shape (case-detail page). */}
+          {(courtCase.hearings?.length ?? 0) > 0 && (
             <Collapsible className="mt-3">
               <CollapsibleTrigger className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
                 <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
                 <span>
-                  {t("caseDetail.courtHearings", "Hearings")} ({courtCase.hearings.length})
+                  {t("caseDetail.courtHearings", "Hearings")} ({courtCase.hearings?.length ?? 0})
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
@@ -223,7 +226,7 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
                       </tr>
                     </thead>
                     <tbody>
-                      {[...courtCase.hearings]
+                      {[...(courtCase.hearings ?? [])]
                         .sort((a, b) => a.hearing_date_ad.localeCompare(b.hearing_date_ad))
                         .map((hearing: CourtCaseHearing) => (
                           <tr key={hearing.id} className="border-b border-border/50 last:border-0">

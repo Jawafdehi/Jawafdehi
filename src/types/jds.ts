@@ -158,8 +158,11 @@ export interface CourtCase {
   verdict_date_ad: string | null;
   verdict_judge: string | null;
   status: string;
-  hearings: CourtCaseHearing[];
-  entities: CourtCaseEntity[];
+  // Sub-resources present only on the assembled "full" shape (getCourtCaseFull).
+  // The composite-key core endpoint (getCourtCase) omits them entirely, so every
+  // reader must treat them as optional and default to [].
+  hearings?: CourtCaseHearing[];
+  entities?: CourtCaseEntity[];
 }
 
 export interface Case {
