@@ -45,6 +45,10 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
 const GuestChat = lazy(() => import("./pages/GuestChat"));
 const Donate = lazy(() => import("./pages/Donate"));
+// Post-donation return targets (/donate/success, /donate/cancel) — not
+// pre-rendered, so lazy() per the split policy above.
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const DataQuality = lazy(() => import("./pages/DataQuality"));
 const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
@@ -149,6 +153,8 @@ const App = () => (
             <Route path="/saptahik" element={<WeeklyMeetings />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/donate/cancel" element={<PaymentCancelled />} />
+            <Route path="/donate/success" element={<PaymentSuccess />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
