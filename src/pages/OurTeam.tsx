@@ -87,8 +87,8 @@ const OurTeam = () => {
 
         {/* Team sections */}
         {[
-          { id: "us-board", heading: "US Board", data: usBoard },
           { id: "nepal-board", heading: "Nepal Board", data: nepalBoard },
+          { id: "us-board", heading: "US Board", data: usBoard },
           { id: "members", heading: "Current Members", data: members },
           { id: "past-members", heading: "Past Members", data: pastMembers },
         ].map(({ id, heading, data }) => (
