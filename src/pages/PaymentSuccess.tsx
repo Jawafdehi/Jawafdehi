@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
 import { Archive, HeartHandshake, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,10 @@ export default function PaymentSuccess() {
         <link rel="canonical" href="https://jawafdehi.org/success" />
       </Helmet>
 
-      <div className="relative isolate h-[calc(100svh-76px)] overflow-hidden">
+      <div className="relative isolate min-h-[calc(100svh-76px)] overflow-hidden">
         <PaymentSuccessBackground />
 
-        <section className="container relative z-10 mx-auto flex h-full flex-col items-center px-4 pb-4 pt-4 md:px-6 md:pb-8 md:pt-6">
+        <section className="container relative z-10 mx-auto flex min-h-[calc(100svh-76px)] flex-col items-center px-4 pb-4 pt-4 md:px-6 md:pb-8 md:pt-6">
           <div className="mx-auto flex w-full max-w-5xl flex-1 -translate-y-10 flex-col items-center justify-center text-center md:-translate-y-16">
             <HeartHandshake
               aria-hidden="true"
