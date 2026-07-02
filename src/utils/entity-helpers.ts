@@ -31,8 +31,8 @@ export const humanizeEntityType = (raw: string | null | undefined): string => {
 };
 
 // Get primary name in specified language
-export const getPrimaryName = (names: Name[], lang: 'en' | 'ne' = 'en'): string => {
-  const primaryName = names.find(n => n.kind === 'PRIMARY');
+export const getPrimaryName = (names: Name[] | null | undefined, lang: 'en' | 'ne' = 'en'): string => {
+  const primaryName = names?.find(n => n.kind === 'PRIMARY');
   if (!primaryName) return '';
   
   if (lang === 'ne' && primaryName.ne?.full) {
@@ -43,8 +43,8 @@ export const getPrimaryName = (names: Name[], lang: 'en' | 'ne' = 'en'): string 
 };
 
 // Get any name by kind
-export const getNameByKind = (names: Name[], kind: string, lang: 'en' | 'ne' = 'en'): string => {
-  const name = names.find(n => n.kind === kind);
+export const getNameByKind = (names: Name[] | null | undefined, kind: string, lang: 'en' | 'ne' = 'en'): string => {
+  const name = names?.find(n => n.kind === kind);
   if (!name) return '';
   
   if (lang === 'ne' && name.ne?.full) {

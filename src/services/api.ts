@@ -9,6 +9,7 @@
  */
 
 import { http, extractErrorMessage } from './http';
+import { jsonLdToEntity } from './entity-adapters';
 import { getCasesByEntity } from '@/services/jds-api';
 import type {
   Person,
@@ -208,10 +209,12 @@ export async function getEntityById(idOrSlug: string): Promise<Entity> {
   try {
     // URL-encode the entity ID to handle the entity:type/slug format
     const encodedId = encodeURIComponent(idOrSlug);
-    const response = await http.get<Entity>(`/api/entities/${encodedId}`, {
+    // The API returns schema.org JSON-LD; adapt it to the SPA's Entity shape so
+    // consumers (case entity chips, entity pages) can read names[]/pictures[] etc.
+    const response = await http.get<unknown>(`/api/entities/${encodedId}`, {
       timeout: 30000,
     });
-    return response.data;
+    return jsonLdToEntity(response.data);
   } catch (error) {
     const encodedId = encodeURIComponent(idOrSlug);
     handleApiError(error, `/api/entities/${encodedId}`);
