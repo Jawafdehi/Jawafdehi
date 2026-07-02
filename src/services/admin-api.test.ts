@@ -51,8 +51,6 @@ import {
   listCases,
   patchCase,
   deleteCase,
-  createSource,
-  buildSourceFormData,
 } from "./admin-api";
 
 beforeEach(() => {
@@ -111,13 +109,6 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     });
   });
 
-  it("posts a source create as multipart FormData to /api/sources/", async () => {
-    await createSource({ title: "Report" });
-    expect(calls[0].method).toBe("post");
-    expect(calls[0].url).toBe("/api/sources/");
-    expect(calls[0].body).toBeInstanceOf(FormData);
-  });
-
   it("routes the entity picker (searchEntities) to /api/entities (not /api/nes)", async () => {
     await searchEntities("ram", 10);
     expect(calls[0]).toMatchObject({ method: "get", url: "/api/entities" });
@@ -154,36 +145,6 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     const fd = calls[0].body as FormData;
     expect(fd.get("role")).toBe("RAW");
     expect(fd.get("material_type")).toBe("official_report");
-    expect(fd.get("file")).toBeInstanceOf(File);
-  });
-});
-
-// TASK B — the source multipart body is the load-bearing write contract.
-describe("buildSourceFormData", () => {
-  it("puts scalar fields as form fields and JSON-encodes urls", () => {
-    const fd = buildSourceFormData({
-      title: "Charge sheet",
-      source_type: "LEGAL_PROCEDURAL",
-      urls: [{ link: "https://x/1", role: "PERMALINK" }],
-    });
-    expect(fd.get("title")).toBe("Charge sheet");
-    expect(fd.get("source_type")).toBe("LEGAL_PROCEDURAL");
-    expect(fd.get("urls")).toBe(
-      JSON.stringify([{ link: "https://x/1", role: "PERMALINK" }]),
-    );
-    // No file provided -> no file field.
-    expect(fd.get("file")).toBeNull();
-  });
-
-  it("omits empty/nullish fields and attaches a file when given", () => {
-    const file = new File(["data"], "doc.pdf", { type: "application/pdf" });
-    const fd = buildSourceFormData(
-      { title: "Doc", description: "", source_type: null },
-      file,
-    );
-    expect(fd.get("title")).toBe("Doc");
-    expect(fd.get("description")).toBeNull();
-    expect(fd.get("source_type")).toBeNull();
     expect(fd.get("file")).toBeInstanceOf(File);
   });
 });

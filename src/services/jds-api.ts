@@ -19,10 +19,7 @@ import type {
   CaseDetail,
   CaseSearchParams,
   CaseStatistics,
-  DocumentSource,
-  DocumentSourceSearchParams,
   PaginatedCaseList,
-  PaginatedDocumentSourceList,
 } from '@/types/jds';
 
 // ============================================================================
@@ -194,62 +191,6 @@ export async function getCasesByEntity(entityId: string, params?: CaseSearchPara
     return filteredCases;
   } catch (error) {
     handleApiError(error, '/cases/');
-  }
-}
-
-/**
- * Get a Jawaf entity by its database ID.
- * Searches through cases to find the entity with the matching ID.
- */
-export async function getJawafEntityById(entityId: number): Promise<import('@/types/jds').JawafEntity | null> {
-  try {
-    const response = await http.get<PaginatedCaseList>('/api/cases/', {
-      timeout: 10000,
-    });
-
-    // Search through all cases to find the entity in the unified entities array
-    for (const caseItem of response.data.results) {
-      const entity = caseItem.entities?.find(e => e.id === entityId);
-      if (entity) return entity;
-    }
-    
-    return null;
-  } catch (error) {
-    handleApiError(error, '/cases/');
-  }
-}
-
-// ============================================================================
-// Document Source API Functions
-// ============================================================================
-
-/**
- * Retrieve a paginated list of document sources.
- * Only sources associated with published cases are accessible.
- */
-export async function getDocumentSources(params?: DocumentSourceSearchParams): Promise<PaginatedDocumentSourceList> {
-  try {
-    const response = await http.get<PaginatedDocumentSourceList>('/api/sources/', {
-      params,
-      timeout: 10000,
-    });
-    return response.data;
-  } catch (error) {
-    handleApiError(error, '/sources/');
-  }
-}
-
-/**
- * Retrieve detailed information about a specific document source.
- */
-export async function getDocumentSourceById(id: number): Promise<DocumentSource> {
-  try {
-    const response = await http.get<DocumentSource>(`/api/sources/${id}/`, {
-      timeout: 10000,
-    });
-    return response.data;
-  } catch (error) {
-    handleApiError(error, `/sources/${id}/`);
   }
 }
 

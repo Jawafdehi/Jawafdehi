@@ -123,8 +123,8 @@ const Index = () => {
         allegations: caseItem.key_allegations, // Pass key allegations to CaseCard
         thumbnailUrl: caseItem.thumbnail_url ?? undefined,
         tags: caseItem.tags,
-        entityIds: namedEntities.map(e => e.id),
-        locationIds: locationEntities.map(l => l.id),
+        entityIds: namedEntities.map(e => e.nes_id).filter((id): id is string => Boolean(id)),
+        locationIds: locationEntities.map(l => l.nes_id).filter((id): id is string => Boolean(id)),
       };
     });
   }, [casesData, resolvedEntities, currentLang]);

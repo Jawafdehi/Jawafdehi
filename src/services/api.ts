@@ -4,8 +4,8 @@
  * This module provides typed API functions to interact with the entity backend.
  *
  * Entities live on the consolidated monolith under the unified `/api`
- * root (`/api/entities`, `/api/relationships`). Auth, base-URL resolution, and
- * error extraction are handled by the shared `http` client (./http).
+ * root (`/api/entities`). Auth, base-URL resolution, and error extraction are
+ * handled by the shared `http` client (./http).
  */
 
 import { http, extractErrorMessage } from './http';
@@ -31,11 +31,6 @@ export interface EntityListResponse {
   has_more?: boolean;
 }
 
-export interface RelationshipListResponse {
-  relationships: Relationship[];
-  total?: number;
-}
-
 export interface VersionListResponse {
   versions: VersionSummary[];
   entity_id: string;
@@ -48,19 +43,15 @@ export interface VersionListResponse {
 export interface EntitySearchParams {
   query?: string;       // Search query
   entity_type?: string; // Entity type: person, organization, location
-  sub_type?: string;    // Entity subtype
-  attributes?: Record<string, unknown>; // Filter by attributes (JSON object)
+  /** @deprecated Not sent to the backend (no such filter); accepted for caller
+   * ergonomics but ignored by getEntities. */
+  sub_type?: string;
+  /** @deprecated Not sent to the backend (no such filter); accepted for caller
+   * ergonomics but ignored by getEntities. */
+  attributes?: Record<string, unknown>;
   limit?: number;       // Maximum number of results (default: 100, max: 1000)
   offset?: number;      // Number of results to skip (default: 0)
-  entity_ids?: string[]; // Filter by specific entity IDs (for batch retrieval)
-}
-
-export interface RelationshipSearchParams {
-  source_id?: string;   // Source entity ID
-  target_id?: string;   // Target entity ID
-  type?: string;        // Relationship type
-  limit?: number;       // Maximum number of results
-  offset?: number;      // Number of results to skip
+  entity_ids?: string[]; // Filter by specific entity IDs (batch retrieval; sent as `ids`)
 }
 
 // ============================================================================
@@ -156,14 +147,12 @@ export async function getEntities(params?: EntitySearchParams): Promise<EntityLi
 
     if (params?.query) queryParams.query = params.query;
     if (params?.entity_type) queryParams.entity_type = params.entity_type;
-    if (params?.sub_type) queryParams.sub_type = params.sub_type;
-    if (params?.attributes) queryParams.attributes = JSON.stringify(params.attributes);
     if (params?.limit) queryParams.limit = params.limit;
     if (params?.offset !== undefined) queryParams.offset = params.offset;
 
-    // Handle entity_ids for batch retrieval
+    // Batch retrieval: the backend reads the `ids` param (entities/views.py).
     if (params?.entity_ids && params.entity_ids.length > 0) {
-      queryParams['entity-id'] = params.entity_ids.join(',');
+      queryParams.ids = params.entity_ids.join(',');
     }
 
     const response = await http.get<EntityListResponse>('/api/entities', {
@@ -268,42 +257,6 @@ export async function getEntityVersions(idOrSlug: string): Promise<VersionListRe
 }
 
 // ============================================================================
-// Relationship Endpoints
-// ============================================================================
-
-/**
- * Get relationships with optional filters
- *
- * Backend endpoint: GET /relationships?source_id={id}&target_id={id}&type={type}
- *
- * @param params - Relationship search parameters
- * @returns Promise<RelationshipListResponse>
- *
- * @example
- * ```typescript
- * // Get all relationships where entity is the source
- * const rels = await getRelationships({ source_id: 'entity-slug' });
- *
- * // Get all relationships where entity is the target
- * const rels = await getRelationships({ target_id: 'entity-slug' });
- * ```
- */
-export async function getRelationships(
-  params?: RelationshipSearchParams
-): Promise<RelationshipListResponse> {
-  try {
-    const response = await http.get<RelationshipListResponse>('/api/relationships', {
-      params,
-      timeout: 30000,
-    });
-    return response.data;
-  } catch (error) {
-    console.warn('Relationships endpoint returned error, returning empty list');
-    return { relationships: [] };
-  }
-}
-
-// ============================================================================
 // Allegation & Case API Functions
 // ============================================================================
 // Note: the entity API provides entity data only. Allegations and cases will be
@@ -330,7 +283,7 @@ export async function getEntityAllegations(idOrSlug: string): Promise<Allegation
       status: 'ongoing', // Cases are published cases
       severity: jdsCase.case_type, // Map type to severity
       summary: jdsCase.key_allegations.join('; '),
-      evidence: (jdsCase.evidence ?? []).map(e => e.description),
+      evidence: (jdsCase.evidence ?? []).map(e => e.additional_details),
       date: jdsCase.created_at,
     }));
   } catch (error) {
@@ -357,7 +310,7 @@ export async function getEntityCases(idOrSlug: string): Promise<Case[]> {
       // `c` is list-sourced, so the full `description` is absent; fall back to
       // `short_description` (and ultimately '') for the required PAP field.
       description: c.description ?? c.short_description ?? '',
-      documents: (c.evidence ?? []).map(e => e.source_id.toString()),
+      documents: (c.evidence ?? []).map(e => e.material_iri),
       timeline: (c.timeline ?? []).map(t => ({
         date: t.date,
         event: t.title,

@@ -10,17 +10,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { useGuestCaseChat } from "@/hooks/useGuestCaseChat";
-import type { CaseDetail, DocumentSource } from "@/types/jds";
+import type { GuestCaseSourceEntry } from "@/services/guest-chat-adapter";
+import type { CaseDetail } from "@/types/jds";
 
 interface GuestCaseChatDrawerProps {
   caseId: number;
   caseTitle: string;
   caseData: CaseDetail;
-  sources: Array<{
-    sourceId: number;
-    source: DocumentSource | null;
-    evidenceDescription?: string;
-  }>;
+  sources: GuestCaseSourceEntry[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

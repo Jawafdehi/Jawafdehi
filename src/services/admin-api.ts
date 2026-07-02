@@ -8,7 +8,7 @@
 //     /api/entities...     entities (JSON-LD read/write + reindex)
 //     /api/courtcases...   court cases (composite-key read/write)
 //     /api/courts, /api/firms, /api/materials   data-lake records
-//     /api/cases, /api/sources   Jawafdehi cases / document sources
+//     /api/cases                 Jawafdehi cases (evidence references materials)
 //
 // Auth is OIDC/Zitadel only (DRF token auth was dropped in the monolith): every
 // request carries `Authorization: Bearer <access>` from the shared oidc.ts.
@@ -317,9 +317,9 @@ export async function deleteMaterial(
 }
 
 // ---------------------------------------------------------------------------
-// Jawafdehi — corruption cases (DISTINCT from data-lake court cases) + sources.
-// Full CRUD: cases are keyed by slug, updated via RFC-6902 PATCH; sources are
-// keyed by numeric id and created via multipart (optional file upload).
+// Jawafdehi — corruption cases (DISTINCT from data-lake court cases).
+// Full CRUD: cases are keyed by slug, updated via RFC-6902 PATCH. Case evidence
+// references materials by @id IRI (managed via the materials write surface).
 // ---------------------------------------------------------------------------
 
 export async function listCases<T = Record<string, unknown>>(
@@ -376,82 +376,10 @@ export async function deleteCase(slug: string): Promise<void> {
   await client.delete(`/api/cases/${encodeURIComponent(slug)}/`);
 }
 
-export async function listSources<T = Record<string, unknown>>(
-  params: Record<string, unknown> = {},
-): Promise<Paginated<T>> {
-  const { data } = await client.get<Paginated<T>>("/api/sources/", { params });
-  return data;
-}
-
-export async function getSource<T = Record<string, unknown>>(
-  id: number | string,
-): Promise<T> {
-  const { data } = await client.get<T>(`/api/sources/${id}/`);
-  return data;
-}
-
-// Build the multipart body for a source create/update. Scalar fields ride as
-// form fields; `urls` (link-role dicts) is JSON-encoded; an optional File is
-// attached under `file`. Kept a standalone helper so it's unit-testable without
-// the network (the FormData shape is the load-bearing contract).
-export interface SourceWriteFields {
-  title: string;
-  description?: string;
-  source_type?: string | null;
-  urls?: { link: string; role: string }[] | null;
-  [k: string]: unknown;
-}
-
-export function buildSourceFormData(
-  fields: SourceWriteFields,
-  file?: File | null,
-): FormData {
-  const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) {
-    if (v == null || v === "") continue;
-    if (k === "urls") {
-      fd.append("urls", JSON.stringify(v));
-    } else if (Array.isArray(v) || typeof v === "object") {
-      fd.append(k, JSON.stringify(v));
-    } else {
-      fd.append(k, String(v));
-    }
-  }
-  if (file) fd.append("file", file);
-  return fd;
-}
-
-// CREATE a document source. Multipart so an optional file can be uploaded
-// alongside the metadata. axios sets the multipart boundary from the FormData.
-export async function createSource<T = Record<string, unknown>>(
-  fields: SourceWriteFields,
-  file?: File | null,
-): Promise<T> {
-  const { data } = await client.post<T>(
-    "/api/sources/",
-    buildSourceFormData(fields, file),
-  );
-  return data;
-}
-
-// UPDATE a source. Also multipart (a replacement file may be attached). Uses
-// PATCH so partial field updates don't wipe unspecified fields.
-export async function updateSource<T = Record<string, unknown>>(
-  id: number | string,
-  fields: SourceWriteFields,
-  file?: File | null,
-): Promise<T> {
-  const { data } = await client.patch<T>(
-    `/api/sources/${id}/`,
-    buildSourceFormData(fields, file),
-  );
-  return data;
-}
-
-// Soft-delete a source (204).
-export async function deleteSource(id: number | string): Promise<void> {
-  await client.delete(`/api/sources/${id}/`);
-}
+// NOTE: Case "document sources" (the former /api/sources CRUD) were removed with
+// the "cases own no documents" ADR. Case evidence now references MATERIALS by
+// their @id IRI; manage evidence documents via the materials write surface
+// above (createMaterial / replaceMaterial / uploadMaterialFile / deleteMaterial).
 
 // ---------------------------------------------------------------------------
 // Data Lake — courts + blocklisted firms write surface (data-lake role). Flat /api/

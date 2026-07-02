@@ -307,8 +307,8 @@ function CaseResults({
             tags={caseItem.tags || []}
             description={(caseItem.short_description ?? '').replace(/<[^>]*>/g, '').substring(0, 200)}
             allegations={caseItem.key_allegations}
-            entityIds={(caseItem.entities?.filter(e => e.type === 'accused') || []).map(e => e.id)}
-            locationIds={(caseItem.entities?.filter(e => e.type === 'location') || []).map(e => e.id)}
+            entityIds={(caseItem.entities?.filter(e => e.type === 'accused') || []).map(e => e.nes_id).filter((id): id is string => Boolean(id))}
+            locationIds={(caseItem.entities?.filter(e => e.type === 'location') || []).map(e => e.nes_id).filter((id): id is string => Boolean(id))}
             thumbnailUrl={caseItem.thumbnail_url ?? undefined}
             viewMode={viewMode}
           />

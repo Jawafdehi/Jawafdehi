@@ -7,6 +7,7 @@ import type { Entity } from "@/types/entity";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { cn } from "@/lib/utils";
+import { entityPath } from "@/lib/entity-links";
 
 interface CaseEntityChipsProps {
   entities: JawafEntity[];
@@ -78,7 +79,7 @@ export function CaseEntityChips({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-start">
-        {displayedEntities.map((jawafEntity) => {
+        {displayedEntities.map((jawafEntity, index) => {
           const entity = jawafEntity.nes_id ? resolvedEntities[jawafEntity.nes_id] ?? null : null;
           const displayName = getDisplayName(jawafEntity, entity, language);
           const imageUrl = getEntityImage(entity);
@@ -87,13 +88,13 @@ export function CaseEntityChips({
             ? jawafEntity.notes.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
             : "";
           const strippedNotes = rawNotes ? translateDynamicText(rawNotes, language) : "";
+          // Case entities are keyed on their NES @id IRI (the backend no longer
+          // returns a numeric id). Fall back to display_name/index for id-less binds.
+          const key = jawafEntity.nes_id ?? `${jawafEntity.display_name ?? 'entity'}-${index}`;
+          const to = entityPath(jawafEntity.nes_id) ?? undefined;
 
-          return (
-            <Link
-              key={jawafEntity.id}
-              to={`/entity/${jawafEntity.id}`}
-              className="group flex w-[11rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
-            >
+          const inner = (
+            <>
               <Avatar className="h-16 w-16 border border-border/80 shadow-sm transition-transform group-hover:scale-105">
                 {imageUrl ? (
                   <AvatarImage src={imageUrl} alt={displayName} className="object-cover" />
@@ -110,6 +111,27 @@ export function CaseEntityChips({
                   {strippedNotes}
                 </span>
               )}
+            </>
+          );
+
+          if (!to) {
+            return (
+              <div
+                key={key}
+                className="group flex w-[11rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center"
+              >
+                {inner}
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={key}
+              to={to}
+              className="group flex w-[11rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
+            >
+              {inner}
             </Link>
           );
         })}

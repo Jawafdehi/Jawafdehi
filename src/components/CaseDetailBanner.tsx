@@ -11,6 +11,7 @@ import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
+import { entityPath } from "@/lib/entity-links";
 
 interface CaseDetailBannerProps {
   caseData: CaseDetail;
@@ -125,14 +126,22 @@ export function CaseDetailBanner({
             <div className="flex flex-wrap gap-1">
               <span className="sr-only">{t("entityCard.location")}: </span>
               {locationEntities.length > 0
-                ? locationEntities.map((entity, index) => (
-                  <span key={entity.id}>
-                    <Link to={`/entity/${entity.id}`} className="text-white hover:underline">
-                      {getEntityDisplayName(entity)}
-                    </Link>
-                    {index < locationEntities.length - 1 && ", "}
-                  </span>
-                ))
+                ? locationEntities.map((entity, index) => {
+                  const key = entity.nes_id ?? `${entity.display_name ?? 'location'}-${index}`;
+                  const to = entityPath(entity.nes_id);
+                  return (
+                    <span key={key}>
+                      {to ? (
+                        <Link to={to} className="text-white hover:underline">
+                          {getEntityDisplayName(entity)}
+                        </Link>
+                      ) : (
+                        <span>{getEntityDisplayName(entity)}</span>
+                      )}
+                      {index < locationEntities.length - 1 && ", "}
+                    </span>
+                  );
+                })
                 : notAvailableLabel}
             </div>
           </div>

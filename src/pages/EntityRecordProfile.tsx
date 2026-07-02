@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
 
 import { http } from "@/services/http";
+import { entityPath } from "@/lib/entity-links";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -48,13 +49,6 @@ interface EntityRecord {
   [key: string]: unknown;
 }
 
-// Entity IRI -> relative SPA path the /entity/* route resolves.
-const ENTITY_MARKER = "/entity/";
-function entityPath(iri: string | undefined): string | null {
-  if (!iri) return null;
-  const i = iri.indexOf(ENTITY_MARKER);
-  return i === -1 ? null : `/entity/${iri.slice(i + ENTITY_MARKER.length)}`;
-}
 // Human label from the last segment of an IRI (when we can't resolve the name).
 function iriLabel(iri: string | undefined): string {
   if (!iri) return "";

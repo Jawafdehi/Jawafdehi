@@ -60,7 +60,10 @@ export const DocumentSourceTypeKeys: Record<DocumentSourceType, string> = {
 // ============================================================================
 
 export interface JawafEntity {
-  id: number;
+  // Numeric primary key is NOT returned by the backend for case-bound entities
+  // (the case serializer keys entity binds on `nes_id`); optional for the rare
+  // callers that still carry a synthesized id. Prefer `nes_id` for lookups/links.
+  id?: number;
   nes_id: string | null; // Entity ID from Nepal Entity Service
   display_name: string | null; // Display name for the entity
   type?: string; // Relationship type: 'accused', 'alleged', 'related', 'witness', 'location', 'respondent', 'petitioner', etc.
@@ -83,9 +86,30 @@ export interface TimelineEntry {
   end_date_bs?: string; // Bikram Sambat date (YYYY-MM-DD) for the span's end
 }
 
+/**
+ * Resolved material embedded on each case-detail evidence entry.
+ *
+ * The case DETAIL serializer enriches every CaseMaterialReference with the
+ * resolved NGM material: `{display_name, material_type, urls}` (a stub with
+ * null fields / empty urls when the material can't be resolved). `urls` is the
+ * roled link list (RAW/PERMALINK/MARKDOWN/…). See cases/serializers.py
+ * CaseDetailSerializer.get_evidence.
+ */
+export interface EvidenceMaterial {
+  display_name: string | null;
+  material_type: string | null;
+  urls: SourceLink[];
+}
+
+/**
+ * A case evidence entry: a reference to a material (`material_iri`) plus a
+ * per-case note (`additional_details`). The DETAIL endpoint additionally embeds
+ * the resolved `material`; the LIST endpoint omits it.
+ */
 export interface EvidenceEntry {
-  source_id: number;
-  description: string;
+  material_iri: string;
+  additional_details: string;
+  material?: EvidenceMaterial;
 }
 
 export interface CourtCaseHearing {
@@ -140,7 +164,6 @@ export interface CourtCase {
 
 export interface Case {
   id: number;
-  case_id: string; // Unique identifier shared across versions
   slug: string | null; // URL-friendly slug; older cases may not have one yet
   case_type: CaseType;
   state: CaseState; // Current state in the workflow
@@ -189,17 +212,10 @@ export interface SourceLink {
   role: SourceLinkRole;
 }
 
-export interface DocumentSource {
-  id: number;
-  source_id: string;
-  title: string;
-  description: string;
-  source_type: DocumentSourceType | string | null; // DocumentSourceType for known values; plain string covers legacy/unknown backend values; null if not classified
-  urls?: SourceLink[] | null; // Link dicts with explicit role (RAW/MARKDOWN/PERMALINK/SOURCE_PAGE/ALTERNATE); includes uploaded-file URL when present
-  related_entities: JawafEntity[]; // Related entities
-  created_at: string;
-  updated_at: string;
-}
+// NOTE: The standalone DocumentSource resource (and its /api/sources routes)
+// was removed with the "cases own no documents" ADR. Case evidence now
+// references MATERIALS by @id IRI; the resolved material is embedded on each
+// evidence entry (see EvidenceMaterial / EvidenceEntry above).
 
 // ============================================================================
 // API Response Types
@@ -212,13 +228,6 @@ export interface PaginatedCaseList {
   results: Case[];
 }
 
-export interface PaginatedDocumentSourceList {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: DocumentSource[];
-}
-
 // ============================================================================
 // Search/Filter Parameters
 // ============================================================================
@@ -227,10 +236,6 @@ export interface CaseSearchParams {
   case_type?: CaseType;
   tags?: string;
   search?: string;
-  page?: number;
-}
-
-export interface DocumentSourceSearchParams {
   page?: number;
 }
 

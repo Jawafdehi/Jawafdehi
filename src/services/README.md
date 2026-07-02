@@ -14,7 +14,7 @@ This directory contains the API client and adapters for the entity backend integ
 `http` client (`src/services/http.ts`), which resolves the monolith origin from
 `VITE_JAWAFDEHI_API_BASE_URL` (or falls back to same-origin) and handles auth
 and error extraction. Entities are served under the unified `/api` root
-(`/api/entities`, `/api/relationships`).
+(`/api/entities`).
 
 For local development, set the override in your `.env`:
 ```env
@@ -37,10 +37,12 @@ List or search entities with optional filters.
 **Parameters:**
 - `query?: string` - Text query to search in entity names
 - `entity_type?: string` - Filter by entity type (person, organization, location)
-- `sub_type?: string` - Filter by entity subtype
-- `attributes?: Record<string, any>` - Filter by attributes (JSON object)
 - `limit?: number` - Maximum number of results (default: 100, max: 1000)
 - `offset?: number` - Number of results to skip (default: 0)
+- `entity_ids?: string[]` - Batch retrieval by @id IRI (sent as the `ids` param)
+
+> Note: `sub_type` / `attributes` are accepted on the params object for caller
+> ergonomics but are NOT sent to the backend (no such filter exists there).
 
 **Returns:** `Promise<EntityListResponse>`
 
@@ -57,16 +59,9 @@ const results = await getEntities({
   offset: 0
 });
 
-// Filter by type and subtype
-const parties = await getEntities({
-  entity_type: 'organization',
-  sub_type: 'political_party',
-  limit: 20
-});
-
-// Filter by attributes
-const ncMembers = await getEntities({
-  attributes: { party: 'nepali-congress' }
+// Batch retrieval by @id IRI
+const batch = await getEntities({
+  entity_ids: ['entity:person/ram', 'entity:organization/acme'],
 });
 ```
 
@@ -111,41 +106,6 @@ Get version history for an entity.
 **Example:**
 ```typescript
 const versions = await getEntityVersions('pushpa-kamal-dahal-prachanda');
-```
-
----
-
-### Relationship Endpoints
-
-#### `getRelationships(params?)`
-Get relationships with optional filters.
-
-**Backend Endpoint:** `GET /relationships`
-
-**Parameters:**
-- `source_id?: string` - Filter by source entity
-- `target_id?: string` - Filter by target entity
-- `type?: string` - Filter by relationship type
-- `limit?: number` - Maximum number of results
-- `offset?: number` - Number of results to skip
-
-**Example:**
-```typescript
-// Get relationships where entity is source
-const sourceRels = await getRelationships({
-  source_id: 'entity-slug'
-});
-
-// Get relationships where entity is target
-const targetRels = await getRelationships({
-  target_id: 'entity-slug'
-});
-
-// Get all relationships for an entity
-const allRels = [
-  ...(await getRelationships({ source_id: 'entity-slug' })).relationships,
-  ...(await getRelationships({ target_id: 'entity-slug' })).relationships
-];
 ```
 
 ---
@@ -249,17 +209,6 @@ curl -X GET "http://localhost:8000/api/entity/pushpa-kamal-dahal-prachanda" \
 ### Get Entity Versions
 ```bash
 curl -X GET "http://localhost:8000/api/entity/pushpa-kamal-dahal-prachanda/versions" \
-  -H "Content-Type: application/json"
-```
-
-### Get Relationships
-```bash
-# As source
-curl -X GET "http://localhost:8000/api/relationship?source_id=entity-slug" \
-  -H "Content-Type: application/json"
-
-# As target
-curl -X GET "http://localhost:8000/api/relationship?target_id=entity-slug" \
   -H "Content-Type: application/json"
 ```
 
