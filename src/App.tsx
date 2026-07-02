@@ -1,4 +1,4 @@
-import { Suspense, lazy, type ReactNode } from "react";
+import { Suspense, lazy } from "react";
 import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +8,17 @@ import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { SentryErrorFallback } from "@/components/SentryErrorFallback";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
+// Eagerly imported pages.
+//
+// Split policy: this app has NO runtime SSR — HTML is produced at BUILD TIME by
+// scripts/pre-render.ts (the Cloudflare Worker only serves static assets + a SPA
+// fallback). React 18's renderToString does NOT await React.lazy/Suspense, so a
+// lazily-imported page would pre-render as the "Loading…" fallback, shipping
+// empty HTML + wrong Helmet meta for that route. Therefore every PRE-RENDERED
+// route (see PRE_RENDERED_STATIC_ROUTES in src/data/site-routes.ts, plus the
+// dynamic /case/:id, /entity/:id and /updates/:slug routes) MUST stay eager.
+// Routes NOT pre-rendered are client-rendered regardless, so they are lazy()
+// below to keep them out of the public entry chunk.
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import Entities from "./pages/Entities";
@@ -21,64 +32,34 @@ import WeeklyMeetings from "./pages/WeeklyMeetings";
 import Information from "./pages/Information";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
-import EntityRecordProfile from "./pages/EntityRecordProfile";
-import MaterialProfile from "./pages/MaterialProfile";
-import CourtCaseProfile from "./pages/CourtCaseProfile";
-import EntityResponse from "./pages/EntityResponse";
-import ModerationDashboard from "./pages/ModerationDashboard";
 import Feedback from "./pages/Feedback";
 import Updates from "./pages/Updates";
 import UpdateDetail from "./pages/UpdateDetail";
-import UpdatePreview from "./pages/UpdatePreview";
-import EmbedCaseCard from "./pages/EmbedCaseCard";
 import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
-import Materials from "./pages/Materials";
-import CourtCases from "./pages/CourtCases";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
-// Unified admin panel — mounted at /admin (folds in the old /portal casework).
-import { AuthProvider } from "react-oidc-context";
-import { getUserManager, onSigninCallback } from "./services/oidc";
-import { CaseworkAuthProvider } from "./context/CaseworkAuthContext";
-import AdminLayout from "@/components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/Dashboard";
-import EntitiesList from "./pages/admin/entities/EntitiesList";
-import EntityCreate from "./pages/admin/entities/EntityCreate";
-import EntityEdit from "./pages/admin/entities/EntityEdit";
-// Admin data-lake pages. Aliased where the default-export name collides with a
-// public browse page already imported above (Materials, CourtCases).
-import AdminCourtCases from "./pages/admin/datalake/CourtCases";
-import CourtCaseForm from "./pages/admin/datalake/CourtCaseForm";
-import AdminMaterials from "./pages/admin/datalake/Materials";
-import MaterialForm from "./pages/admin/datalake/MaterialForm";
-import Courts from "./pages/admin/datalake/Courts";
-import CourtForm from "./pages/admin/datalake/CourtForm";
-import Firms from "./pages/admin/datalake/Firms";
-import FirmForm from "./pages/admin/datalake/FirmForm";
-import AdminCases from "./pages/admin/jawafdehi/AdminCases";
-import AdminCaseForm from "./pages/admin/jawafdehi/AdminCaseForm";
-import Moderation from "./pages/admin/casework/Moderation";
-import CaseworkLogin from "./pages/CaseworkLogin";
-import CaseworkCallback from "./pages/CaseworkCallback";
-import CaseworkReviews from "./pages/CaseworkReviews";
-import CaseworkReviewDetail from "./pages/CaseworkReviewDetail";
-import CaseworkRules from "./pages/CaseworkRules";
-import CaseworkHow from "./pages/CaseworkHow";
 
+// Lazily imported pages. These routes are not pre-rendered, so client-side code
+// splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
 const GuestChat = lazy(() => import("./pages/GuestChat"));
 const Donate = lazy(() => import("./pages/Donate"));
 const DataQuality = lazy(() => import("./pages/DataQuality"));
+const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
+const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
+const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
+const EntityResponse = lazy(() => import("./pages/EntityResponse"));
+const ModerationDashboard = lazy(() => import("./pages/ModerationDashboard"));
+const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
+const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
+const Materials = lazy(() => import("./pages/Materials"));
+const CourtCases = lazy(() => import("./pages/CourtCases"));
 
-// Wraps the portal in the OIDC AuthProvider. Built as a component (not a spread
-// of a config object) so the UserManager is only constructed when this renders
-// — under <ClientOnly>, i.e. on the client after hydration, never during SSR.
-const PortalAuthProvider = ({ children }: { children: ReactNode }) => (
-  <AuthProvider userManager={getUserManager()} onSigninCallback={onSigninCallback}>
-    {children}
-  </AuthProvider>
-);
+// The entire /admin/* subtree — including the OIDC client, admin CRUD forms and
+// casework pages — lives behind this single lazy boundary. /admin is auth-gated
+// and never pre-rendered, so none of it belongs in the public entry chunk.
+const AdminApp = lazy(() => import("./AdminApp"));
 
 // Back-compat redirect: /portal/<rest> -> /admin/<rest> (preserving query).
 const PortalRedirect = () => {
@@ -114,66 +95,14 @@ const App = () => (
 
           {/* Unified admin panel — standalone full-screen, mounted at /admin.
               Folds in the former /portal casework pages. Auth: OIDC + an
-              internal role (gated by AdminLayout). login/callback sit OUTSIDE
-              AdminLayout so the auth gate doesn't bounce the entry points. */}
+              internal role (gated inside AdminApp). The whole subtree is
+              lazy-loaded and wrapped in <ClientOnly> so the OIDC UserManager
+              is only constructed on the client after hydration. */}
           <Route
             path="/admin/*"
             element={
               <ClientOnly>
-                <PortalAuthProvider>
-                  <CaseworkAuthProvider>
-                    <Routes>
-                      <Route path="login" element={<CaseworkLogin />} />
-                      <Route path="callback" element={<CaseworkCallback />} />
-                      <Route element={<AdminLayout />}>
-                        <Route path="" element={<AdminDashboard />} />
-                        {/* Entities — create/edit before the list so the literal
-                            "new" and "edit" segments win over the splat. */}
-                        <Route path="entities/new" element={<EntityCreate />} />
-                        <Route path="entities/edit/*" element={<EntityEdit />} />
-                        <Route path="entities" element={<EntitiesList />} />
-                        {/* Data Lake */}
-                        <Route path="datalake/courtcases/new" element={<CourtCaseForm />} />
-                        <Route
-                          path="datalake/courtcases/:court/:caseNumber/edit"
-                          element={<CourtCaseForm />}
-                        />
-                        <Route path="datalake/courtcases" element={<AdminCourtCases />} />
-                        <Route path="datalake/courts/new" element={<CourtForm />} />
-                        <Route
-                          path="datalake/courts/:identifier/edit"
-                          element={<CourtForm />}
-                        />
-                        <Route path="datalake/courts" element={<Courts />} />
-                        <Route path="datalake/firms/new" element={<FirmForm />} />
-                        <Route path="datalake/firms/:id/edit" element={<FirmForm />} />
-                        <Route path="datalake/firms" element={<Firms />} />
-                        <Route path="datalake/materials/new" element={<MaterialForm />} />
-                        <Route path="datalake/materials/edit/*" element={<MaterialForm />} />
-                        <Route path="datalake/materials" element={<AdminMaterials />} />
-                        {/* Jawafdehi — create/edit before the list so the
-                            literal "new" segment wins over the :slug/:id param. */}
-                        <Route path="jawafdehi/cases/new" element={<AdminCaseForm />} />
-                        <Route
-                          path="jawafdehi/cases/:slug/edit"
-                          element={<AdminCaseForm />}
-                        />
-                        <Route path="jawafdehi/cases" element={<AdminCases />} />
-                        {/* Document Sources removed: the "cases own no documents"
-                            ADR collapsed sources into Data Lake materials, so there
-                            is no /api/sources/ write endpoint. Evidence is linked as
-                            material IRIs on the case; manage docs under Data Lake →
-                            Materials. */}
-                        {/* Casework (folded in from /portal) */}
-                        <Route path="reviews" element={<CaseworkReviews />} />
-                        <Route path="reviews/:id" element={<CaseworkReviewDetail />} />
-                        <Route path="rules" element={<CaseworkRules />} />
-                        <Route path="how" element={<CaseworkHow />} />
-                        <Route path="moderation" element={<Moderation />} />
-                      </Route>
-                    </Routes>
-                  </CaseworkAuthProvider>
-                </PortalAuthProvider>
+                <AdminApp />
               </ClientOnly>
             }
           />
