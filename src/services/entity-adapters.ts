@@ -8,7 +8,78 @@
  * - Backend types: https://github.com/Jawafdehi/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
  */
 
-import type { Entity, Attribution } from '@/types/entity';
+import type { Entity, Attribution, Name, EntityType } from '@/types/entity';
+
+// ============================================================================
+// schema.org JSON-LD -> Entity adapter
+// ============================================================================
+
+// The v2 API serves entities as schema.org JSON-LD ({ "@id", "@type", name: {en, ne}, ... }),
+// but the SPA's Entity model is the NES shape (names: Name[], pictures: [], contacts: [], ...).
+// Without this adaptation, consumers that read entity.names (e.g. getPrimaryName) throw
+// "Cannot read properties of undefined (reading 'find')" and take the whole case page down.
+// Map the fields the UI actually reads (name -> names[], @id/@type -> type, empty arrays for the
+// collections it iterates) and drop the rest of the schema.org payload, which the case/entity
+// views don't consume.
+type JsonLdName = string | { en?: string | null; ne?: string | null } | null | undefined;
+
+interface EntityJsonLd {
+  '@id'?: string;
+  '@type'?: string;
+  id?: string;
+  name?: JsonLdName;
+  description?: unknown;
+  dateCreated?: string;
+  [k: string]: unknown;
+}
+
+// Prefer the type embedded in the IRI path (.../entity/<type>/<slug>) — it is exactly the SPA's
+// EntityType enum — and fall back to the schema.org @type for anything unexpected.
+function entityTypeFromJsonLd(iri: string, atType: string): EntityType {
+  const fromIri = iri.match(/\/entity\/(person|organization|location)\//)?.[1];
+  if (fromIri) return fromIri as EntityType;
+  if (/organization/i.test(atType)) return 'organization';
+  if (/place|location|city|country|state|administrativearea/i.test(atType)) return 'location';
+  return 'person';
+}
+
+export function jsonLdToEntity(input: unknown): Entity {
+  const raw = (input ?? {}) as EntityJsonLd;
+  const iri = raw['@id'] ?? raw.id ?? '';
+  const slug = iri.split('/').filter(Boolean).pop() ?? iri;
+  const type = entityTypeFromJsonLd(iri, String(raw?.['@type'] ?? ''));
+
+  const rawName = raw?.name;
+  const en = typeof rawName === 'string' ? rawName : rawName?.en ?? undefined;
+  const ne = typeof rawName === 'string' ? undefined : rawName?.ne ?? undefined;
+  const names: Name[] =
+    en || ne
+      ? [{ kind: 'PRIMARY', ...(en ? { en: { full: en } } : {}), ...(ne ? { ne: { full: ne } } : {}) }]
+      : [];
+
+  const description =
+    raw?.description && typeof raw.description === 'object'
+      ? (raw.description as Entity['description'])
+      : null;
+
+  // Cast at the boundary: JSON-LD carries no version_summary, and the case/entity views never read
+  // it. Empty collections keep the array-iterating consumers (pictures/contacts/...) safe.
+  return {
+    id: iri,
+    slug,
+    type,
+    names,
+    pictures: [],
+    contacts: [],
+    identifiers: [],
+    tags: [],
+    attributions: [],
+    sub_type: null,
+    short_description: null,
+    description,
+    created_at: typeof raw?.dateCreated === 'string' ? raw.dateCreated : '',
+  } as Entity;
+}
 
 // ============================================================================
 // Evidence & Sources Types
