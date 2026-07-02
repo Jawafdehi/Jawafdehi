@@ -6,7 +6,7 @@ import { PRE_RENDERED_STATIC_ROUTES, UPDATE_ROUTE_ENTRIES } from '../src/data/si
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const CANONICAL = 'https://jawafdehi.org';
-const API_BASE = 'https://portal.jawafdehi.org/api';
+const API_BASE = 'https://api.jawafdehi.org/api';
 
 interface EntitySummary {
   id: number;

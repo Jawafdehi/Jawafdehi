@@ -8,7 +8,7 @@ interface Env {
   };
 }
 
-const JDS_API_BASE = 'https://portal.jawafdehi.org/api';
+const JDS_API_BASE = 'https://api.jawafdehi.org/api';
 
 const MAX_LATEST_VIDEOS = 6;
 
@@ -23,7 +23,7 @@ interface FeedVideo {
 
 function securityHeaders(): Record<string, string> {
   return {
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://portal.jawafdehi.org https://jawafdehi.org https://nes.jawafdehi.org https://auth.jawafdehi.org; worker-src blob:;",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.jawafdehi.org https://portal.jawafdehi.org https://jawafdehi.org https://nes.jawafdehi.org https://auth.jawafdehi.org; worker-src blob:;",
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
@@ -36,7 +36,7 @@ function securityHeadersAllowFrame(): Record<string, string> {
   return headers;
 }
 
-const CMS_ADMIN_ORIGIN = 'https://portal.jawafdehi.org';
+const CMS_ADMIN_ORIGIN = 'https://api.jawafdehi.org';
 
 // Headers for the Wagtail headless preview route. Unlike the embed widget
 // (framable anywhere), the preview shows an unsaved draft, so we scope framing

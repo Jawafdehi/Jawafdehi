@@ -48,7 +48,7 @@ interface PaginatedCaseList {
   }>;
 }
 
-const API_BASE = 'https://portal.jawafdehi.org/api';
+const API_BASE = 'https://api.jawafdehi.org/api';
 const CONCURRENCY = 5;
 
 const FETCH_TIMEOUT_MS = 10_000;
