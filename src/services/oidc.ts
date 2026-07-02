@@ -25,8 +25,11 @@ function createUserManager(): UserManager {
   userManager = new UserManager({
     authority,
     client_id,
-    redirect_uri: `${origin}/portal/callback`,
-    post_logout_redirect_uri: `${origin}/portal/login`,
+    // NOTE: the admin panel was moved from /portal to /admin. These redirect
+    // URIs must be registered on the Zitadel OIDC app (add
+    // `${origin}/admin/callback` and post-logout `${origin}/admin/login`).
+    redirect_uri: `${origin}/admin/callback`,
+    post_logout_redirect_uri: `${origin}/admin/login`,
     response_type: "code",
     scope: scope.join(" "),
     // Pull the flattened `roles` claim (and profile) from the userinfo endpoint
@@ -46,7 +49,7 @@ export function getUserManager(): UserManager {
 }
 
 export function onSigninCallback(): void {
-  // Strip the ?code&state query params so a refresh on /portal/callback does
+  // Strip the ?code&state query params so a refresh on /admin/callback does
   // not re-process a spent authorization code. Path-level navigation is done
   // by the CaseworkCallback component (which is React Router-aware).
   window.history.replaceState({}, document.title, window.location.pathname);

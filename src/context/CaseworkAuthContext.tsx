@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import type { CaseworkUser } from "@/types/casework";
 import { getUserManager } from "@/services/oidc";
+import { isAdmin as rolesIsAdmin, isModerator as rolesIsModerator } from "@/lib/roles";
+import {
+  DEV_AUTH_ENABLED,
+  getStoredDevUser,
+  devLogin as devLoginRequest,
+  devLogout as devLogoutRequest,
+} from "@/services/dev-auth";
 
 interface AuthContextValue {
   user: CaseworkUser | null;
@@ -10,6 +17,15 @@ interface AuthContextValue {
   login: () => void;
   logout: () => void;
   isAdmin: boolean;
+  // True when the user holds admin OR moderator — the UI gate for privileged
+  // actions (state transitions, moderation queue, regrade-all). The API is the
+  // authorization authority; this only decides which controls the UI offers.
+  isModerator: boolean;
+  // DEV-ONLY: whether the username/password login form is available (VITE_DEV_AUTH).
+  devAuthEnabled: boolean;
+  // DEV-ONLY: authenticate with username/password (Django session). Throws on
+  // bad credentials so the login form can surface the error.
+  devLogin: (username: string, password: string) => Promise<void>;
 }
 
 const CaseworkAuthContext = createContext<AuthContextValue | null>(null);
@@ -37,10 +53,18 @@ function toCaseworkUser(
 export function CaseworkAuthProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
 
-  const user = useMemo(
+  // DEV-ONLY session user (username/password). Rehydrated from localStorage so a
+  // reload stays logged in. When present it takes precedence over OIDC.
+  const [devUser, setDevUser] = useState<CaseworkUser | null>(() =>
+    getStoredDevUser(),
+  );
+
+  const oidcUser = useMemo(
     () => (auth.isAuthenticated ? toCaseworkUser(auth.user?.profile) : null),
     [auth.isAuthenticated, auth.user?.profile],
   );
+
+  const user = devUser ?? oidcUser;
 
   const login = () => {
     auth.signinRedirect({
@@ -48,7 +72,20 @@ export function CaseworkAuthProvider({ children }: { children: React.ReactNode }
     });
   };
 
+  const devLogin = async (username: string, password: string) => {
+    const u = await devLoginRequest(username, password);
+    setDevUser(u);
+  };
+
   const logout = () => {
+    if (devUser) {
+      // End the dev session and drop the local snapshot; stay in the SPA.
+      devLogoutRequest().finally(() => {
+        setDevUser(null);
+        window.location.assign("/admin/login");
+      });
+      return;
+    }
     getUserManager().signoutRedirect();
   };
 
@@ -60,7 +97,10 @@ export function CaseworkAuthProvider({ children }: { children: React.ReactNode }
         error: auth.error?.message ?? null,
         login,
         logout,
-        isAdmin: !!user?.is_admin,
+        isAdmin: rolesIsAdmin(user?.roles),
+        isModerator: rolesIsModerator(user?.roles),
+        devAuthEnabled: DEV_AUTH_ENABLED,
+        devLogin,
       }}
     >
       {children}

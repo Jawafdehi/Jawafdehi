@@ -9,8 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Filter } from "lucide-react";
 import { getEntityById } from "@/services/api";
+import { http } from "@/services/http";
 import { toast } from "sonner";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import type { Entity } from "@/services/api";
 import type { JawafEntity } from "@/types/jds";
@@ -36,10 +36,6 @@ interface JawafEntityPage {
   results: JawafEntity[];
 }
 
-const JDS_API_BASE_URL = () =>
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_JDS_API_BASE_URL) ||
-  'https://portal.jawafdehi.org/api';
-
 const Entities = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,8 +53,8 @@ const Entities = () => {
   const { data, isLoading: loading, isError } = useQuery({
     queryKey: ['jds-entities', page],
     queryFn: async () => {
-      const response = await axios.get<JawafEntityPage>(
-        `${JDS_API_BASE_URL()}/entities/`,
+      const response = await http.get<JawafEntityPage>(
+        `/api/entities/`,
         { params: { page } }
       );
       const jawafEntities = response.data.results || [];

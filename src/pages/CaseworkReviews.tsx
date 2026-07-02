@@ -5,13 +5,16 @@ import {
   listReviewsGrouped,
   submitReview,
   buildSubmitPayload,
+  regradeAll,
   apiErrorMessage,
 } from "@/services/casework-api";
 import type { GroupedCase, ReviewListItem, ReviewerInfo } from "@/types/casework";
+import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
+import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dispositionColor, statusColor, fmtDate, fmtDur, scoreBand } from "@/lib/casework-ui";
-import { Loader2, Plus, RefreshCw } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Repeat } from "lucide-react";
 
 const PAGE_SIZE = 20;
 
@@ -50,7 +53,9 @@ function reviewerLabels(reviewers: ReviewerInfo[] | null): string[] {
 
 export default function CaseworkReviews() {
   const navigate = useNavigate();
+  const { isModerator } = useCaseworkAuth();
   const [groups, setGroups] = useState<GroupedCase[]>([]);
+  const [regrading, setRegrading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [count, setCount] = useState(0);
@@ -60,6 +65,9 @@ export default function CaseworkReviews() {
   const [submitting, setSubmitting] = useState(false);
   const [rerunningSlug, setRerunningSlug] = useState<string | null>(null);
   const [err, setErr] = useState("");
+  // Separate from `err` (which renders under the submit input) so a regrade-all
+  // failure surfaces next to the Regrade-all button, not the submit form.
+  const [regradeErr, setRegradeErr] = useState("");
   const [conflictId, setConflictId] = useState<number | null>(null);
 
   // Load the first page of cases. When called by polling (isPoll), only merge the
@@ -122,7 +130,7 @@ export default function CaseworkReviews() {
     setConflictId(null);
     try {
       const review = await submitReview(payload);
-      navigate(`/portal/reviews/${review.id}`);
+      navigate(`/admin/reviews/${review.id}`);
       return true;
     } catch (e: unknown) {
       setErr(apiErrorMessage(e, fallback));
@@ -146,17 +154,60 @@ export default function CaseworkReviews() {
     if (!ok) setRerunningSlug(null);
   };
 
+  // F9 — regrade all reviewable cases against the current rules (admin/
+  // moderator). POSTs /api/casework/reviews/regrade-all/; refresh page 1 so the
+  // newly-queued runs appear.
+  const onRegradeAll = async () => {
+    setRegrading(true);
+    setRegradeErr("");
+    try {
+      const res = await regradeAll();
+      toast({
+        title: "Regrade queued",
+        description: `${res.regrading} case${res.regrading === 1 ? "" : "s"} queued for regrade.`,
+      });
+      await loadFirst(true);
+    } catch (e: unknown) {
+      setRegradeErr(apiErrorMessage(e, "Regrade-all failed."));
+    } finally {
+      setRegrading(false);
+    }
+  };
+
   const shownReviews = groups.reduce((n, g) => n + (g.executions?.length ?? 0), 0);
 
   return (
     <CaseworkLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-xl font-bold">Case reviews</h1>
-          <p className="text-sm text-muted-foreground">
-            Submit a case slug, court case number, or case URL to run a multi-dimensional
-            quality review.
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold">Case reviews</h1>
+            <p className="text-sm text-muted-foreground">
+              Submit a case slug, court case number, or case URL to run a multi-dimensional
+              quality review.
+            </p>
+          </div>
+          {isModerator && (
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={regrading}
+                title="Queue a fresh review for every reviewable case against the current rules"
+                onClick={onRegradeAll}
+              >
+                {regrading ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Repeat className="mr-1 h-4 w-4" />
+                )}
+                Regrade all
+              </Button>
+              {regradeErr && (
+                <p className="text-sm text-red-600 text-right">{regradeErr}</p>
+              )}
+            </div>
+          )}
         </div>
 
         <form onSubmit={onSubmit} className="flex gap-2 items-start">
@@ -175,7 +226,7 @@ export default function CaseworkReviews() {
                     <button
                       type="button"
                       className="underline font-medium"
-                      onClick={() => navigate(`/portal/reviews/${conflictId}`)}
+                      onClick={() => navigate(`/admin/reviews/${conflictId}`)}
                     >
                       View existing review
                     </button>
@@ -237,7 +288,7 @@ export default function CaseworkReviews() {
                     <ReviewRow
                       key={r.id}
                       review={r}
-                      onClick={() => navigate(`/portal/reviews/${r.id}`)}
+                      onClick={() => navigate(`/admin/reviews/${r.id}`)}
                     />
                   ))}
                 </ul>

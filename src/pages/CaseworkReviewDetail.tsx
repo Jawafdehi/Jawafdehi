@@ -37,7 +37,7 @@ export default function CaseworkReviewDetail() {
     setRerunning(true);
     try {
       const fresh = await submitReview({ slug: review.slug });
-      navigate(`/portal/reviews/${fresh.id}`);
+      navigate(`/admin/reviews/${fresh.id}`);
     } finally {
       setRerunning(false);
     }
@@ -117,7 +117,7 @@ export default function CaseworkReviewDetail() {
     <CaseworkLayout>
       <div className="space-y-5">
         <button
-          onClick={() => navigate("/portal/reviews")}
+          onClick={() => navigate("/admin/reviews")}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
           <ArrowLeft className="h-4 w-4" /> All reviews

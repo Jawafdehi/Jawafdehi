@@ -19,15 +19,15 @@ const CaseworkCallback = () => {
       const saved = typeof auth.user?.state === "string" ? auth.user.state : "";
       const dest =
         saved &&
-        !saved.startsWith("/portal/login") &&
-        !saved.startsWith("/portal/callback")
+        !saved.startsWith("/admin/login") &&
+        !saved.startsWith("/admin/callback")
           ? saved
-          : "/portal/reviews";
+          : "/admin/reviews";
       navigate(dest, { replace: true });
     } else if (auth.error || !hadAuthParams) {
       // A real sign-in failure, or a stray visit with no pending sign-in. Don't
       // bounce during the brief window where the sign-in is still settling.
-      navigate("/portal/login", { replace: true });
+      navigate("/admin/login", { replace: true });
     }
   }, [
     auth.isLoading,

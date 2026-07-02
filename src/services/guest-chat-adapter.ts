@@ -1,7 +1,7 @@
 import { GUEST_TOPIC_KNOWLEDGE, type GuestTopicId } from "@/data/guest-knowledge";
 import { searchEntities } from "@/services/api";
-import { getCaseById, getCases, getDocumentSourceById } from "@/services/jds-api";
-import type { Case, CaseDetail, DocumentSource } from "@/types/jds";
+import { getCaseById, getCases } from "@/services/jds-api";
+import type { Case, CaseDetail, EvidenceMaterial } from "@/types/jds";
 import { stripMarkdown } from "@/utils/markdown";
 import type {
   GuestAskResponse,
@@ -24,8 +24,10 @@ const DEFAULT_FOLLOWUPS_NE = [
 const CIAA_TRACKER_2081_2082_TOTAL_CASES = 135;
 
 export interface GuestCaseSourceEntry {
-  sourceId: number;
-  source: DocumentSource | null;
+  // The material @id IRI identifies the evidence source (materials replaced the
+  // former numeric DocumentSource id per the "cases own no documents" ADR).
+  sourceId: string;
+  source: EvidenceMaterial | null;
   evidenceDescription?: string;
 }
 
@@ -800,24 +802,13 @@ function getTopicFollowups(topicId: GuestTopicId, language: GuestLanguage): stri
 
 async function resolveCaseSources(caseId: number) {
   const caseData = await getCaseById(caseId);
-  const sourceEntries = await Promise.all(
-    caseData.evidence.map(async (entry) => {
-      try {
-        const source = await getDocumentSourceById(entry.source_id);
-        return {
-          sourceId: entry.source_id,
-          source,
-          evidenceDescription: entry.description,
-        };
-      } catch {
-        return {
-          sourceId: entry.source_id,
-          source: null,
-          evidenceDescription: entry.description,
-        };
-      }
-    })
-  );
+  // The case DETAIL response embeds the resolved material on each evidence
+  // entry, so no per-source fetch is needed (the /api/sources route is gone).
+  const sourceEntries: GuestCaseSourceEntry[] = caseData.evidence.map((entry) => ({
+    sourceId: entry.material_iri,
+    source: entry.material ?? null,
+    evidenceDescription: entry.additional_details,
+  }));
 
   return { caseData, sourceEntries };
 }
@@ -842,8 +833,7 @@ function findRelevantSources(
   const matches = sources.filter(({ source, evidenceDescription }) => {
     const haystack = normalize(
       [
-        source?.title,
-        source?.description,
+        source?.display_name,
         evidenceDescription,
         Array.isArray(source?.urls)
           ? source.urls.map((u) => u?.link).filter(Boolean).join(" ")
@@ -874,8 +864,8 @@ function findRelevantSources(
 
   return matches.slice(0, 3).map(({ sourceId, source, evidenceDescription }) => ({
     sourceId,
-    sourceTitle: source?.title || `Source ${sourceId}`,
-    reason: evidenceDescription || source?.description || undefined,
+    sourceTitle: source?.display_name || `Source ${sourceId}`,
+    reason: evidenceDescription || undefined,
   }));
 }
 
@@ -1155,10 +1145,10 @@ export async function askGuestCaseQuestion(params: {
       sourceEntries.length > 0
         ? language === "ne"
           ? `यस मुद्दामा अहिले ${sourceEntries.length} वटा सार्वजनिक स्रोत उल्लेख छन्: ${sourceEntries
-              .map(({ source, sourceId }) => source?.title || `स्रोत ${sourceId}`)
+              .map(({ source, sourceId }) => source?.display_name || `स्रोत ${sourceId}`)
               .join(", ")}।`
           : `This case currently references ${sourceEntries.length} public source${sourceEntries.length === 1 ? "" : "s"}: ${sourceEntries
-              .map(({ source, sourceId }) => source?.title || `Source ${sourceId}`)
+              .map(({ source, sourceId }) => source?.display_name || `Source ${sourceId}`)
               .join(", ")}.`
         : language === "ne"
         ? "यो सार्वजनिक मुद्दा पृष्ठमा कागजात स्रोतहरू अझै सूचीबद्ध छैनन्।"
@@ -1180,14 +1170,16 @@ export async function askGuestCaseQuestion(params: {
     const chargeSheet = sourceEntries.find(({ source, evidenceDescription }) =>
       ["charge sheet", "आरोपपत्र"].some((term) =>
         normalize(
-          `${source?.title || ""} ${source?.description || ""} ${evidenceDescription || ""}`
+          `${source?.display_name || ""} ${evidenceDescription || ""}`
         ).includes(normalize(term))
       )
     );
+    const chargeSheetName = chargeSheet?.source?.display_name
+      || (chargeSheet ? (language === "ne" ? `स्रोत ${chargeSheet.sourceId}` : `Source ${chargeSheet.sourceId}`) : "");
     answer = chargeSheet?.source
       ? language === "ne"
-        ? `${chargeSheet.source.title} यो सार्वजनिक मुद्दासँग सम्बन्धित आरोपपत्रको सबैभन्दा प्रत्यक्ष स्रोत हो।`
-        : `${chargeSheet.source.title} is the source most directly related to the charge sheet for this public case.`
+        ? `${chargeSheetName} यो सार्वजनिक मुद्दासँग सम्बन्धित आरोपपत्रको सबैभन्दा प्रत्यक्ष स्रोत हो।`
+        : `${chargeSheetName} is the source most directly related to the charge sheet for this public case.`
       : language === "ne"
       ? "यो मुद्दा पृष्ठमा आरोपपत्रलाई स्पष्ट रूपमा उल्लेख गर्ने सार्वजनिक स्रोत मैले भेटिनँ।"
       : "I could not identify a public source on this case page that explicitly mentions a charge sheet.";

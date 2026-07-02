@@ -1,12 +1,38 @@
-import type { Entity, Name, Contact, LangText, ContactType } from '@/types/nes';
+import type { Entity, Name, Contact, LangText, ContactType } from '@/types/entity';
 
 /**
- * Helper functions to work with NES entity data structures
+ * Helper functions to work with entity data structures
  */
 
+/**
+ * Humanize a schema.org `@type` token into a readable label.
+ *
+ * Entity types arrive as raw schema.org tokens, sometimes comma-joined and/or
+ * namespaced — e.g. "AdministrativeArea,jawafdehi:RuralMunicipality",
+ * "EducationalOrganization", "jawafdehi:District". We pick the MOST SPECIFIC type
+ * (the last token — the namespaced/jawafdehi-specific one is more descriptive than
+ * the generic schema.org base), strip the namespace prefix, and split CamelCase.
+ *
+ * "AdministrativeArea,jawafdehi:RuralMunicipality" -> "Rural Municipality"
+ * "EducationalOrganization"                          -> "Educational Organization"
+ */
+export const humanizeEntityType = (raw: string | null | undefined): string => {
+  if (!raw) return 'Entity';
+  const tokens = raw.split(',').map((t) => t.trim()).filter(Boolean);
+  if (tokens.length === 0) return 'Entity';
+  // Most specific token wins (the trailing one); drop any "namespace:" prefix.
+  const specific = tokens[tokens.length - 1];
+  const bare = specific.includes(':') ? specific.split(':').pop()! : specific;
+  // Split CamelCase / PascalCase into spaced words.
+  return bare
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+};
+
 // Get primary name in specified language
-export const getPrimaryName = (names: Name[], lang: 'en' | 'ne' = 'en'): string => {
-  const primaryName = names.find(n => n.kind === 'PRIMARY');
+export const getPrimaryName = (names: Name[] | null | undefined, lang: 'en' | 'ne' = 'en'): string => {
+  const primaryName = names?.find(n => n.kind === 'PRIMARY');
   if (!primaryName) return '';
   
   if (lang === 'ne' && primaryName.ne?.full) {
@@ -17,8 +43,8 @@ export const getPrimaryName = (names: Name[], lang: 'en' | 'ne' = 'en'): string 
 };
 
 // Get any name by kind
-export const getNameByKind = (names: Name[], kind: string, lang: 'en' | 'ne' = 'en'): string => {
-  const name = names.find(n => n.kind === kind);
+export const getNameByKind = (names: Name[] | null | undefined, kind: string, lang: 'en' | 'ne' = 'en'): string => {
+  const name = names?.find(n => n.kind === kind);
   if (!name) return '';
   
   if (lang === 'ne' && name.ne?.full) {

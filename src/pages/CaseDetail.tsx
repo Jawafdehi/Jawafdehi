@@ -26,10 +26,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Banknote, Calendar, FileText, AlertTriangle, ArrowLeft, ExternalLink, AlertCircle, Info, Mail, MapPin, MessageCircle, Scale, StickyNote, User, Share2 } from "lucide-react";
-import { getCaseById, getCaseByCourtRef, getCourtCase, getDocumentSourceById } from "@/services/jds-api";
+import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
+import { API_BASE_URL } from "@/services/http";
+import { getCourtCase } from "@/services/datalake-api";
 import { getEntityById } from "@/services/api";
-import type { CourtCase, DocumentSource, JawafEntity } from "@/types/jds";
-import type { Entity } from "@/types/nes";
+import type { CourtCase, JawafEntity } from "@/types/jds";
+import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRange } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
@@ -40,6 +42,7 @@ import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { trackEvent } from "@/utils/analytics";
 import { cn } from "@/lib/utils";
+import { entityPath } from "@/lib/entity-links";
 import { formatBigo } from "@/utils/number";
 import { resolveLegacyCaseSlug } from "@/utils/legacyCaseMap";
 import { isCourtCaseRef } from "@/utils/courtCaseRef";
@@ -57,11 +60,14 @@ const RELATION_PRIORITY: Record<string, number> = {
 };
 
 function getGroupedEntities(entities: JawafEntity[]) {
-  const seen = new Set<number>();
+  // Case entities are keyed on their NES @id IRI (the backend no longer returns
+  // a numeric id). Fall back to display_name so id-less binds still dedupe.
+  const seen = new Set<string>();
   return entities.reduce((groups, entity) => {
-    if (seen.has(entity.id) || entity.type === "location") return groups;
+    const key = entity.nes_id ?? entity.display_name ?? "";
+    if ((key && seen.has(key)) || entity.type === "location") return groups;
 
-    seen.add(entity.id);
+    if (key) seen.add(key);
     const type = entity.type || "unknown";
 
     if (!groups[type]) groups[type] = [];
@@ -187,22 +193,13 @@ const CaseDetail = () => {
   const visibleAccusedEntities = collapsedAccused ? bannerEntities.slice(0, BANNER_ACCUSED_LIMIT) : bannerEntities;
   const hiddenAccusedCount = accusedCount - visibleAccusedEntities.length;
 
-  const sourceQueries = useQueries({
-    queries: (caseData?.evidence ?? []).map((evidence) => ({
-      queryKey: ['source', evidence.source_id],
-      queryFn: () => getDocumentSourceById(evidence.source_id),
-      staleTime: 10 * 60 * 1000,
-      retry: false,
-    })),
-  });
-
   const uniqueNesIds = caseData
     ? [...new Set(caseData.entities.filter(e => e.nes_id).map(e => e.nes_id!))]
     : [];
 
   const entityQueries = useQueries({
     queries: uniqueNesIds.map((nesId) => ({
-      queryKey: ['nes-entity', nesId],
+      queryKey: ['entity-record', nesId],
       queryFn: () => getEntityById(nesId),
       staleTime: 10 * 60 * 1000,
       retry: false,
@@ -232,12 +229,6 @@ const CaseDetail = () => {
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, isError]);
 
-  const resolvedSources: Record<number, DocumentSource> = {};
-  (caseData?.evidence ?? []).forEach((evidence, i) => {
-    const data = sourceQueries[i]?.data;
-    if (data) resolvedSources[evidence.source_id] = data;
-  });
-
   const resolvedEntities: Record<string, Entity> = {};
   uniqueNesIds.forEach((nesId, i) => {
     const data = entityQueries[i]?.data;
@@ -258,8 +249,7 @@ const CaseDetail = () => {
   };
 
   (caseData?.evidence ?? []).forEach((evidence, index) => {
-    const source = resolvedSources[evidence.source_id];
-    const group = getEvidenceGroup(source?.source_type);
+    const group = getEvidenceGroup(evidence.material?.material_type);
     groupedEvidence[group].push({ ...evidence, originalIndex: index });
   });
 
@@ -353,7 +343,7 @@ const CaseDetail = () => {
         <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
         <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
-        <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/cases/${id}/`} title="Case data (JSON API)" />
+        <link rel="alternate" type="application/json" href={`${API_BASE_URL}/api/cases/${id}/`} title="Case data (JSON API)" />
         <link rel="alternate" type="application/json+oembed" href={`https://jawafdehi.org/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`} title={`${caseData.title} oEmbed`} />
       </Helmet>
       <CaseDetailBanner
@@ -410,9 +400,15 @@ const CaseDetail = () => {
                     const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
                     let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || t('common.notAvailable');
                     displayName = translateDynamicText(displayName, currentLang);
+                    const key = e.nes_id ?? `${e.display_name ?? 'entity'}-${index}`;
+                    const to = entityPath(e.nes_id);
                     return (
-                      <span key={e.id}>
-                        <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
+                      <span key={key}>
+                        {to ? (
+                          <Link to={to} className="text-primary hover:underline">{displayName}</Link>
+                        ) : (
+                          <span className="text-foreground">{displayName}</span>
+                        )}
                         {index < arr.length - 1 && ', '}
                       </span>
                     );
@@ -433,9 +429,15 @@ const CaseDetail = () => {
                       const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
                       let displayName = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id || t('common.notAvailable');
                       displayName = translateDynamicText(displayName, currentLang);
+                      const key = e.nes_id ?? `${e.display_name ?? 'location'}-${index}`;
+                      const to = entityPath(e.nes_id);
                       return (
-                        <span key={e.id}>
-                          <Link to={`/entity/${e.id}`} className="text-primary hover:underline">{displayName}</Link>
+                        <span key={key}>
+                          {to ? (
+                            <Link to={to} className="text-primary hover:underline">{displayName}</Link>
+                          ) : (
+                            <span className="text-foreground">{displayName}</span>
+                          )}
                           {index < locations.length - 1 && ', '}
                         </span>
                       );
@@ -576,6 +578,7 @@ const CaseDetail = () => {
                                   courtCaseId={courtCaseId}
                                   courtCase={query?.data as CourtCase | undefined}
                                   isLoading={query?.isLoading ?? false}
+                                  linkToDetail
                                 />
                               );
                             })}
@@ -594,18 +597,15 @@ const CaseDetail = () => {
                         </CardHeader>
                         <CardContent>
                           <div>
-                            {caseData.evidence.map((evidence, index) => {
-                              const source = resolvedSources[evidence.source_id] ?? null;
-                              return (
-                                <DocumentSourceCard
-                                  key={`${evidence.source_id}-${index}`}
-                                  source={source}
-                                  sourceId={evidence.source_id}
-                                  itemNumber={index + 1}
-                                  evidenceDescription={evidence.description}
-                                />
-                              );
-                            })}
+                            {caseData.evidence.map((evidence, index) => (
+                              <DocumentSourceCard
+                                key={`${evidence.material_iri}-${index}`}
+                                material={evidence.material ?? null}
+                                materialIri={evidence.material_iri}
+                                itemNumber={index + 1}
+                                evidenceDescription={evidence.additional_details}
+                              />
+                            ))}
                           </div>
                         </CardContent>
                       </Card>
@@ -654,7 +654,7 @@ const CaseDetail = () => {
                 </div>
                 <Button variant="outline" size="lg" asChild className="shrink-0">
                   <a
-                    href={`https://portal.jawafdehi.org/admin/cases/case/${id}/change/`}
+                    href={`${API_BASE_URL}/admin/cases/case/${id}/change/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"

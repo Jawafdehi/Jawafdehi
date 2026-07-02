@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CountUp from "react-countup";
 
 import { SearchBar } from "@/components/ui/search-bar";
@@ -8,12 +8,14 @@ import { cn } from "@/lib/utils";
 type HeroProps = {
   casesDocumented: string;
   officialsAndEntitiesTracked: string;
-  accessModel?: string;
+  courtRecords: string;
+  materials: string;
 };
 
 type HeroStat = {
   label: string;
   value: string;
+  href?: string;
 };
 
 type HeroMapImage = {
@@ -44,29 +46,34 @@ const heroMapImages: HeroMapImage[] = [
 export function Hero({
   casesDocumented,
   officialsAndEntitiesTracked,
-  accessModel = "Free",
+  courtRecords,
+  materials,
 }: Readonly<HeroProps>) {
   const navigate = useNavigate();
   const [archiveQuery, setArchiveQuery] = useState("");
 
+  // All four stats link to the Data Quality dashboard, which explains what each
+  // dataset tracks and how complete it is.
   const heroStats: HeroStat[] = [
-    { value: casesDocumented, label: "Cases documented" },
+    { value: casesDocumented, label: "Cases documented", href: "/data-quality" },
     {
       value: officialsAndEntitiesTracked,
       label: "Officials & entities tracked",
+      href: "/data-quality",
     },
-    { value: accessModel, label: "Forever. No paywall. Ever." },
+    { value: courtRecords, label: "Court records", href: "/data-quality" },
+    { value: materials, label: "Materials", href: "/data-quality" },
   ];
 
   const goToSearch = (query: string) => {
     const trimmedQuery = query.trim();
 
     if (!trimmedQuery) {
-      navigate("/search?type=case");
+      navigate("/search");
       return;
     }
 
-    const params = new URLSearchParams({ q: trimmedQuery, type: "case" });
+    const params = new URLSearchParams({ q: trimmedQuery });
     navigate(`/search?${params.toString()}`);
   };
 
@@ -123,25 +130,42 @@ export function Hero({
 
 function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
   return (
-    <div className="mt-10 grid w-full max-w-[min(100%,42rem)] grid-cols-3 gap-4 sm:gap-5 md:max-w-2xl md:gap-0">
-      {stats.map(({ value, label }, index) => (
-        <div
-          key={label}
-          className={cn(
-            "min-w-0 text-left",
-            "md:px-6 md:text-center",
-            index > 0 && "md:border-l md:border-border",
-          )}
-        >
-          <p className="text-[clamp(1.35rem,5vw,1.75rem)] font-extrabold leading-none text-primary tabular-nums md:text-3xl">
-            <HeroStatValue value={value} />
-          </p>
+    <div className="mt-10 grid w-full max-w-[min(100%,42rem)] grid-cols-2 gap-4 sm:gap-5 md:max-w-3xl md:grid-cols-4 md:gap-0">
+      {stats.map(({ value, label, href }, index) => {
+        const content = (
+          <>
+            <p className="text-[clamp(1.35rem,5vw,1.75rem)] font-extrabold leading-none text-primary tabular-nums md:text-3xl">
+              <HeroStatValue value={value} />
+            </p>
 
-          <p className="mt-2 text-[clamp(0.72rem,2.6vw,0.9rem)] leading-5 text-muted-foreground">
-            {label}
-          </p>
-        </div>
-      ))}
+            <p className="mt-2 text-[clamp(0.72rem,2.6vw,0.9rem)] leading-5 text-muted-foreground">
+              {label}
+            </p>
+          </>
+        );
+
+        return (
+          <div
+            key={label}
+            className={cn(
+              "min-w-0 text-left",
+              "md:px-6 md:text-center",
+              index > 0 && "md:border-l md:border-border",
+            )}
+          >
+            {href ? (
+              <Link
+                to={href}
+                className="group block rounded-md transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                {content}
+              </Link>
+            ) : (
+              content
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

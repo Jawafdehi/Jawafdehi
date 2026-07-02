@@ -37,7 +37,7 @@ describe("archive search params", () => {
     const params = new URLSearchParams("page=4&sort=newest");
 
     expect(setArchiveSearchParam(params, "page", 1).toString()).toBe(
-      "sort=newest&type=case",
+      "sort=newest&type=all",
     );
   });
 
@@ -51,16 +51,16 @@ describe("archive search params", () => {
     );
   });
 
-  it("defaults missing and invalid record types to cases", () => {
+  it("defaults missing and invalid record types to all", () => {
     const params = new URLSearchParams(
       "page=abc&type=unknown&entity_type=person&entity_type=office",
     );
 
     expect(normalizeArchiveSearchParams(params).toString()).toBe(
-      "type=case&entity_type=person&entity_type=office",
+      "type=all&entity_type=person&entity_type=office",
     );
     expect(normalizeArchiveSearchParams(new URLSearchParams()).toString()).toBe(
-      "type=case",
+      "type=all",
     );
   });
 });

@@ -34,7 +34,9 @@ export interface GuestAskResponse {
 }
 
 export interface GuestCaseChatCitation {
-  sourceId: number;
+  // Material @id IRI of the cited evidence source (materials replaced numeric
+  // DocumentSource ids per the "cases own no documents" ADR).
+  sourceId: string;
   sourceTitle: string;
   reason?: string;
 }

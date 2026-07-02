@@ -1,6 +1,6 @@
 /**
  * Merged Entity Model
- * Combines Tundikhel NES schema with PAP requirements
+ * Combines the Tundikhel entity schema with PAP requirements
  */
 
 export interface MergedEntity {

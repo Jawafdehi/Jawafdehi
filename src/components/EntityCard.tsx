@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Building2, User, MapPin } from "lucide-react";
 import { Entity } from "@/services/api";
-import { getPrimaryName, getAttribute } from "@/utils/nes-helpers";
+import { getPrimaryName, getAttribute } from "@/utils/entity-helpers";
 import type { JawafEntity } from "@/types/jds";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 interface EntityCardProps {
-  entity?: Entity; // NES entity data (optional)
+  entity?: Entity; // entity record data (optional)
   jawafEntity: JawafEntity; // JDS entity data (required)
 }
 
@@ -18,7 +18,7 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
   const { i18n, t } = useTranslation();
   const currentLang = (i18n.language || 'ne') as 'en' | 'ne';
 
-  // Use display_name from JawafEntity if available, otherwise use NES entity name
+  // Use display_name from JawafEntity if available, otherwise use entity record name
   let primaryName = jawafEntity.display_name || t('entityCard.unknown');
   let alternateName: string | null = null;
   let position: string | null = null;
@@ -27,7 +27,7 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
   let isOrganization = false;
   let profilePicUrl: string | null = null;
 
-  // If NES entity data is available, use it for rich display
+  // If entity record data is available, use it for rich display
   if (entity) {
     primaryName = getPrimaryName(entity.names, currentLang) || getPrimaryName(entity.names, 'en') || primaryName;
     alternateName = currentLang === 'ne'

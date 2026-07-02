@@ -5,7 +5,7 @@
  * Only live/published pages are returned by the API.
  */
 
-import axios, { AxiosInstance } from "axios";
+import { http } from "./http";
 
 import type {
   Article,
@@ -14,14 +14,8 @@ import type {
   WagtailListResponse,
 } from "@/types/cms";
 
-const JDS_API_BASE_URL =
-  import.meta.env.VITE_JDS_API_BASE_URL || "https://portal.jawafdehi.org/api";
-
-const cmsClient: AxiosInstance = axios.create({
-  baseURL: `${JDS_API_BASE_URL}/cms/v2`,
-  headers: { "Content-Type": "application/json" },
-  timeout: 10000,
-});
+// Wagtail API v2 is mounted under the unified monolith root at `/api/cms/v2`.
+const CMS_BASE = "/api/cms/v2";
 
 const ARTICLE_TYPE = "content.ArticlePage";
 const LIST_FIELDS = "title,category,date,excerpt,thumbnail";
@@ -39,16 +33,18 @@ export async function getArticles(
   if (category) {
     params.category = category;
   }
-  const res = await cmsClient.get<WagtailListResponse<ArticleListItem>>("/pages/", {
-    params,
-  });
+  const res = await http.get<WagtailListResponse<ArticleListItem>>(
+    `${CMS_BASE}/pages/`,
+    { params, timeout: 10000 },
+  );
   return res.data.items;
 }
 
 /** Fetch a single published article by its slug, or null if not found. */
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const res = await cmsClient.get<WagtailListResponse<Article>>("/pages/", {
+  const res = await http.get<WagtailListResponse<Article>>(`${CMS_BASE}/pages/`, {
     params: { type: ARTICLE_TYPE, slug, fields: "*" },
+    timeout: 10000,
   });
   return res.data.items[0] ?? null;
 }
@@ -66,9 +62,10 @@ export async function getArticlePreview(
   contentType: string,
   token: string,
 ): Promise<Article | null> {
-  const res = await cmsClient.get<Article>("/page_preview/0/", {
+  const res = await http.get<Article>(`${CMS_BASE}/page_preview/0/`, {
     params: { content_type: contentType, token, fields: "*" },
     headers: { Accept: "application/json" },
+    timeout: 10000,
   });
   return res.data ?? null;
 }

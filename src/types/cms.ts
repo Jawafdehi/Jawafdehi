@@ -1,6 +1,6 @@
 /**
  * Types for the Wagtail headless CMS (API v2) that serves Updates/News articles.
- * Endpoint base: `${VITE_JDS_API_BASE_URL}/cms/v2`.
+ * Mounted on the unified monolith at `/api/cms/v2` (see services/cms-api.ts).
  */
 
 export type ArticleCategory = "UPDATE" | "NEWS";

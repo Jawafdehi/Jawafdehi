@@ -1,0 +1,27 @@
+# Frontend dev-server image for the local compose stack.
+#
+# Runs the Vite dev server (hot reload) and proxies /api, /admin, /static to the
+# consolidated monolith. NOT a production image — the production build deploys to
+# Cloudflare via `bun run deploy` (see package.json). For a prod-style container
+# you'd want a multi-stage build + static server instead.
+#
+# The source tree is bind-mounted in compose, so this image only needs the
+# toolchain + installed node_modules; code changes are picked up live.
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+# Install dependencies first for layer caching. Only the lockfiles + manifest are
+# needed; the rest of the source is bind-mounted at runtime.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Bring in the source for first run (compose overlays a bind mount over this in
+# dev, but copying keeps the image runnable on its own).
+COPY . .
+
+EXPOSE 40114
+
+# host/proxy targets are env-driven (see vite.config.ts): VITE_DEV_HOST=0.0.0.0
+# and VITE_API_PROXY_TARGET=http://platform:8080 are set by compose.
+CMD ["npm", "run", "dev"]

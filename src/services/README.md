@@ -1,26 +1,24 @@
-# NES API Integration
+# Entity API Integration
 
-This directory contains the API client and adapters for the Nepal Entity Service (NES) backend integration.
+This directory contains the API client and adapters for the entity backend integration.
 
 ## Files
 
-- **`api.ts`** - Main API client with typed functions for all NES endpoints
-- **`nes-adapters.ts`** - Data transformation utilities (e.g., merging evidence and sources)
+- **`api.ts`** - Main API client with typed functions for all entity endpoints
+- **`entity-adapters.ts`** - Data transformation utilities (e.g., merging evidence and sources)
 - **`README.md`** - This file
 
-## Environment Variables
+## Base URL
 
-Set the backend API URL in your `.env` file:
+`api.ts` no longer owns a base URL or axios instance. It shares the unified
+`http` client (`src/services/http.ts`), which resolves the monolith origin from
+`VITE_JAWAFDEHI_API_BASE_URL` (or falls back to same-origin) and handles auth
+and error extraction. Entities are served under the unified `/api` root
+(`/api/entities`).
 
+For local development, set the override in your `.env`:
 ```env
-VITE_NES_API_BASE_URL=https://nes.jawafdehi.org/api
-```
-
-**Default:** `https://nes.jawafdehi.org/api`
-
-For local development:
-```env
-VITE_NES_API_BASE_URL=http://localhost:8000/api
+VITE_JAWAFDEHI_API_BASE_URL=http://127.0.0.1:48010
 ```
 
 ## API Reference
@@ -39,10 +37,12 @@ List or search entities with optional filters.
 **Parameters:**
 - `query?: string` - Text query to search in entity names
 - `entity_type?: string` - Filter by entity type (person, organization, location)
-- `sub_type?: string` - Filter by entity subtype
-- `attributes?: Record<string, any>` - Filter by attributes (JSON object)
 - `limit?: number` - Maximum number of results (default: 100, max: 1000)
 - `offset?: number` - Number of results to skip (default: 0)
+- `entity_ids?: string[]` - Batch retrieval by @id IRI (sent as the `ids` param)
+
+> Note: `sub_type` / `attributes` are accepted on the params object for caller
+> ergonomics but are NOT sent to the backend (no such filter exists there).
 
 **Returns:** `Promise<EntityListResponse>`
 
@@ -59,16 +59,9 @@ const results = await getEntities({
   offset: 0
 });
 
-// Filter by type and subtype
-const parties = await getEntities({
-  entity_type: 'organization',
-  sub_type: 'political_party',
-  limit: 20
-});
-
-// Filter by attributes
-const ncMembers = await getEntities({
-  attributes: { party: 'nepali-congress' }
+// Batch retrieval by @id IRI
+const batch = await getEntities({
+  entity_ids: ['entity:person/ram', 'entity:organization/acme'],
 });
 ```
 
@@ -101,7 +94,7 @@ Get single entity by ID or slug.
 const entity = await getEntityById('pushpa-kamal-dahal-prachanda');
 ```
 
-**Throws:** `NESApiError` with status 404 if entity not found
+**Throws:** `EntityApiError` with status 404 if entity not found
 
 ---
 
@@ -117,44 +110,9 @@ const versions = await getEntityVersions('pushpa-kamal-dahal-prachanda');
 
 ---
 
-### Relationship Endpoints
-
-#### `getRelationships(params?)`
-Get relationships with optional filters.
-
-**Backend Endpoint:** `GET /relationships`
-
-**Parameters:**
-- `source_id?: string` - Filter by source entity
-- `target_id?: string` - Filter by target entity
-- `type?: string` - Filter by relationship type
-- `limit?: number` - Maximum number of results
-- `offset?: number` - Number of results to skip
-
-**Example:**
-```typescript
-// Get relationships where entity is source
-const sourceRels = await getRelationships({
-  source_id: 'entity-slug'
-});
-
-// Get relationships where entity is target
-const targetRels = await getRelationships({
-  target_id: 'entity-slug'
-});
-
-// Get all relationships for an entity
-const allRels = [
-  ...(await getRelationships({ source_id: 'entity-slug' })).relationships,
-  ...(await getRelationships({ target_id: 'entity-slug' })).relationships
-];
-```
-
----
-
 ### Allegation & Case Endpoints
 
-**Note:** The NES API provides entity data only. Allegations and cases will be handled by a separate API (Jawafdehi) to be integrated later.
+**Note:** Case and allegation handling is integrated via `jds-api.ts` and `casework-api.ts` (and the `/admin` panel), all on the unified `/api` surface through the shared `http` client. This section documents the entity endpoints; see those modules for case/allegation CRUD.
 
 ```typescript
 const allegations = await getEntityAllegations('entity-slug');
@@ -206,7 +164,7 @@ GET /health
 The `mergeEvidenceAndSources()` function combines entity attributions into a unified "Evidence & Sources" list for UI display.
 
 ```typescript
-import { mergeEvidenceAndSources } from '@/services/nes-adapters';
+import { mergeEvidenceAndSources } from '@/services/entity-adapters';
 
 const entity = await getEntityById('some-slug');
 const sources = mergeEvidenceAndSources(entity);
@@ -254,17 +212,6 @@ curl -X GET "http://localhost:8000/api/entity/pushpa-kamal-dahal-prachanda/versi
   -H "Content-Type: application/json"
 ```
 
-### Get Relationships
-```bash
-# As source
-curl -X GET "http://localhost:8000/api/relationship?source_id=entity-slug" \
-  -H "Content-Type: application/json"
-
-# As target
-curl -X GET "http://localhost:8000/api/relationship?target_id=entity-slug" \
-  -H "Content-Type: application/json"
-```
-
 ### Filter by Type
 ```bash
 curl -X GET "http://localhost:8000/api/entity?type=person&page=1&limit=20" \
@@ -275,15 +222,15 @@ curl -X GET "http://localhost:8000/api/entity?type=person&page=1&limit=20" \
 
 ## Error Handling
 
-All API functions throw `NESApiError` on failure:
+All API functions throw `EntityApiError` on failure:
 
 ```typescript
-import { NESApiError } from '@/services/api';
+import { EntityApiError } from '@/services/api';
 
 try {
   const entity = await getEntityById('some-slug');
 } catch (error) {
-  if (error instanceof NESApiError) {
+  if (error instanceof EntityApiError) {
     console.error(`API Error: ${error.message}`);
     console.error(`Status: ${error.statusCode}`);
     console.error(`Endpoint: ${error.endpoint}`);
@@ -329,9 +276,9 @@ const entity = await getEntityById(id);
 const name = entity.names.PRIMARY; // ❌ Wrong structure
 ```
 
-**New Way (NES types):**
+**New Way (entity types):**
 ```typescript
-import { getPrimaryName } from '@/utils/nes-helpers';
+import { getPrimaryName } from '@/utils/entity-helpers';
 
 const entity = await getEntityById(id);
 const name = getPrimaryName(entity.names, 'en'); // ✅ Correct
@@ -352,7 +299,7 @@ const name = getPrimaryName(entity.names, 'en'); // ✅ Correct
 
 ### Helper Functions
 
-Use helper functions from `/src/utils/nes-helpers.ts`:
+Use helper functions from `/src/utils/entity-helpers.ts`:
 - `getPrimaryName(names, lang)` - Get primary name
 - `getEmail(contacts)` - Get email contact
 - `getPhone(contacts)` - Get phone contact

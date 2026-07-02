@@ -6,6 +6,7 @@ import { FaFacebook, FaYoutube, FaLinkedin, FaWhatsapp } from "react-icons/fa";
 import { SiLinktree } from "react-icons/si";
 
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
+import { API_BASE_URL } from "@/services/http";
 import { cn } from "@/lib/utils";
 
 type FooterLink = {
@@ -136,7 +137,7 @@ export const Footer = () => {
   ];
 
   const resourceLinks: FooterLink[] = [
-    { label: t("footer.contributorPortal"), to: "https://portal.jawafdehi.org", external: true },
+    { label: t("footer.contributorPortal"), to: `${API_BASE_URL}/admin`, external: true },
     { label: t("footer.githubRepo"), to: "https://github.com/Jawafdehi/Jawafdehi", external: true },
     { label: t("footer.siteStatus"), to: "https://status.jawafdehi.org/status/public", external: true },
     { label: t("footer.privacy"), to: "/privacy" },

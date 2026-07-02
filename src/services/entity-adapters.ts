@@ -1,14 +1,114 @@
 /**
- * NES Data Adapters
- * 
- * This module provides adapter functions to transform NES backend data
+ * Entity Data Adapters
+ *
+ * This module provides adapter functions to transform entity backend data
  * into UI-friendly formats, including merging evidence and sources.
- * 
+ *
  * References:
  * - Backend types: https://github.com/Jawafdehi/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
  */
 
-import type { Entity, Attribution } from '@/types/nes';
+import type { Entity, Attribution, Name, EntityType } from '@/types/entity';
+
+// ============================================================================
+// schema.org JSON-LD -> Entity adapter
+// ============================================================================
+
+// The v2 API serves entities as schema.org JSON-LD ({ "@id", "@type", name: {en, ne}, ... }),
+// but the SPA's Entity model is the NES shape (names: Name[], pictures: [], contacts: [], ...).
+// Without this adaptation, consumers that read entity.names (e.g. getPrimaryName) throw
+// "Cannot read properties of undefined (reading 'find')" and take the whole case page down.
+// Map the fields the UI actually reads (name -> names[], @id/@type -> type, empty arrays for the
+// collections it iterates) and drop the rest of the schema.org payload, which the case/entity
+// views don't consume.
+type JsonLdName = string | { en?: string | null; ne?: string | null } | null | undefined;
+
+interface EntityJsonLd {
+  '@id'?: string;
+  '@type'?: string;
+  id?: string;
+  name?: JsonLdName;
+  description?: unknown;
+  dateCreated?: string;
+  [k: string]: unknown;
+}
+
+// schema.org `description` is usually a plain string, occasionally a { en, ne } object (whose
+// values may themselves be strings or {value}). The SPA's LangText nests values as { en: { value } },
+// so getDescription() reads `.en.value`; map both forms or descriptions render blank.
+function toLangText(raw: unknown): Entity['description'] {
+  const pick = (v: unknown): string | undefined =>
+    typeof v === 'string' ? v : (v as { value?: string } | null | undefined)?.value ?? undefined;
+  if (typeof raw === 'string') return raw ? { en: { value: raw } } : null;
+  if (raw && typeof raw === 'object') {
+    const d = raw as { en?: unknown; ne?: unknown };
+    const enVal = pick(d.en);
+    const neVal = pick(d.ne);
+    if (enVal || neVal) {
+      return {
+        ...(enVal ? { en: { value: enVal } } : {}),
+        ...(neVal ? { ne: { value: neVal } } : {}),
+      };
+    }
+  }
+  return null;
+}
+
+// Prefer the type embedded in the IRI path (.../entity/<type>/<slug>) — it is exactly the SPA's
+// EntityType enum — and fall back to the schema.org @type for anything unexpected.
+function entityTypeFromJsonLd(iri: string, atType: string): EntityType {
+  const fromIri = iri.match(/\/entity\/(person|organization|location)\//)?.[1];
+  if (fromIri) return fromIri as EntityType;
+  if (/organization/i.test(atType)) return 'organization';
+  if (/place|location|city|country|state|administrativearea/i.test(atType)) return 'location';
+  return 'person';
+}
+
+export function jsonLdToEntity(input: unknown): Entity {
+  const raw = (input ?? {}) as EntityJsonLd;
+  const iri = raw['@id'] ?? raw.id ?? '';
+  const slug = iri.split('/').filter(Boolean).pop() ?? iri;
+  const type = entityTypeFromJsonLd(iri, String(raw?.['@type'] ?? ''));
+
+  const rawName = raw?.name;
+  const en = typeof rawName === 'string' ? rawName : rawName?.en ?? undefined;
+  const ne = typeof rawName === 'string' ? undefined : rawName?.ne ?? undefined;
+  const names: Name[] =
+    en || ne
+      ? [{ kind: 'PRIMARY', ...(en ? { en: { full: en } } : {}), ...(ne ? { ne: { full: ne } } : {}) }]
+      : [];
+
+  const description = toLangText(raw.description);
+  const createdAt = typeof raw.dateCreated === 'string' ? raw.dateCreated : '';
+
+  // Empty collections keep the array-iterating consumers (pictures/contacts/...) safe. JSON-LD
+  // carries no version history, so version_summary is a neutral placeholder (version 0, no author)
+  // — filled rather than cast away so the Entity contract stays fully type-checked.
+  return {
+    id: iri,
+    slug,
+    type,
+    names,
+    pictures: [],
+    contacts: [],
+    identifiers: [],
+    tags: [],
+    attributions: [],
+    sub_type: null,
+    short_description: null,
+    description,
+    created_at: createdAt,
+    version_summary: {
+      entity_or_relationship_id: iri,
+      type: 'ENTITY',
+      version_number: 0,
+      author: { slug: '', name: null, id: '' },
+      change_description: '',
+      created_at: createdAt,
+      id: '',
+    },
+  };
+}
 
 // ============================================================================
 // Evidence & Sources Types
@@ -51,7 +151,7 @@ export interface EvidenceAndSource {
  * 
  * Into a unified "Evidence & Sources" list for UI display.
  * 
- * @param entity - Entity object from NES backend
+ * @param entity - Entity object from the entity backend
  * @returns Array of merged evidence and source items
  * 
  * @example
@@ -68,7 +168,7 @@ export function mergeEvidenceAndSources(entity: Entity): EvidenceAndSource[] {
   const merged: EvidenceAndSource[] = [];
   
   // Process attributions (source references)
-  // Attribution in NES has: title (LangText1) and details (LangText | null)
+  // Attribution has: title (LangText1) and details (LangText | null)
   if (entity.attributions && entity.attributions.length > 0) {
     entity.attributions.forEach((attribution: Attribution, index: number) => {
       const source: EvidenceAndSource = {

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Scale, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -77,26 +78,56 @@ interface CourtCaseCardProps {
   courtCaseId: string;
   courtCase?: CourtCase;
   isLoading: boolean;
+  // When true, the header links to the data-lake court-case detail page
+  // (/courtcase/<court>/<case_number>). Off on the detail page itself.
+  linkToDetail?: boolean;
 }
 
-export function CourtCaseCard({ courtCaseId, courtCase, isLoading }: CourtCaseCardProps) {
+// The /courtcase/* detail path for a `<court>:<case_number>` id (or null if the
+// id isn't in that composite form).
+function courtCaseDetailPath(courtCaseId: string): string | null {
+  const colonIdx = courtCaseId.indexOf(":");
+  if (colonIdx === -1) return null;
+  const court = courtCaseId.slice(0, colonIdx);
+  const caseNumber = courtCaseId.slice(colonIdx + 1);
+  if (!court || !caseNumber) return null;
+  return `/courtcase/${court}/${encodeURIComponent(caseNumber)}`;
+}
+
+export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail }: CourtCaseCardProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
   const { courtName, caseNumber } = parseCourtIdentifier(courtCaseId, lang);
+  const detailPath = linkToDetail ? courtCaseDetailPath(courtCaseId) : null;
+
+  const header = (
+    <>
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Scale className="h-4 w-4 shrink-0 text-muted-foreground" />
+        {courtName}
+      </div>
+      {caseNumber && (
+        <div className="pl-6 text-xs font-mono text-muted-foreground">
+          {t("caseDetail.courtCaseNumber", "Case No.")}: {caseNumber}
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div className="rounded-lg border border-border p-4">
-      {/* Court name + case number header */}
+      {/* Court name + case number header (links to the detail page when asked). */}
       <div className="mb-3 space-y-0.5">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Scale className="h-4 w-4 shrink-0 text-muted-foreground" />
-          {courtName}
-        </div>
-        {caseNumber && (
-          <div className="pl-6 text-xs font-mono text-muted-foreground">
-            {t("caseDetail.courtCaseNumber", "Case No.")}: {caseNumber}
-          </div>
+        {detailPath ? (
+          <Link
+            to={detailPath}
+            className="block rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {header}
+          </Link>
+        ) : (
+          header
         )}
       </div>
 

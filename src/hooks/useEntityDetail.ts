@@ -8,7 +8,7 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { getEntityById, type Allegation as PAPAllegation } from '@/services/api';
 import { getCaseById } from '@/services/jds-api';
-import type { Entity } from '@/types/nes';
+import type { Entity } from '@/types/entity';
 import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 
 interface UseEntityDetailOptions {
@@ -35,13 +35,13 @@ interface UseEntityDetailReturn {
 export function useEntityDetail(options: UseEntityDetailOptions = {}): UseEntityDetailReturn {
   const { entityId, entityType, entitySlug, relatedCaseEntries = [] } = options;
 
-  // Resolve the NES entity ID
+  // Resolve the entity record ID
   const nesEntityId = entityType && entitySlug
     ? `entity:${entityType}/${entitySlug}`
     : entityId;
 
   const { data: entity = null, isLoading: entityLoading, error: entityError } = useQuery({
-    queryKey: ['nes-entity', nesEntityId],
+    queryKey: ['entity-record', nesEntityId],
     queryFn: () => getEntityById(nesEntityId!),
     enabled: !!nesEntityId,
     staleTime: 10 * 60 * 1000,

@@ -47,6 +47,7 @@ const desktopNavWidthClass: Record<string, string> = {
   volunteer: "min-w-[6.25rem]",
   commitment: "min-w-[8.75rem]",
   about: "min-w-[5.75rem]",
+  archive: "min-w-[5.75rem]",
 };
 
 const useIsomorphicLayoutEffect =
@@ -68,6 +69,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [pillStyle, setPillStyle] = useState<PillStyle>({
     opacity: 0,
     transform: "translateX(0px)",
@@ -79,9 +81,18 @@ export function Navbar() {
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
       { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
-      { key: "cases", label: t("nav.cases"), to: "/search" },
       { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
       { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
+    ],
+    [t],
+  );
+
+  // Unified public archive: full search + the data-lake single-type browse views.
+  const archiveNavItems = useMemo<NavItem[]>(
+    () => [
+      { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
+      { key: "materials", label: t("nav.materials", "Governance materials"), to: "/materials" },
+      { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
     ],
     [t],
   );
@@ -103,8 +114,13 @@ export function Navbar() {
     if (["/about", "/team", "/products", "/saptahik", "/updates"].includes(path) || path.startsWith("/updates/")) {
       return "about";
     }
-    if (path === "/cases" || path === "/search" || path.startsWith("/case/")) {
-      return "cases";
+    if (
+      ["/cases", "/search", "/materials", "/courtcases"].includes(path) ||
+      path.startsWith("/case/") ||
+      path.startsWith("/material/") ||
+      path.startsWith("/courtcase/")
+    ) {
+      return "archive";
     }
 
     return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
@@ -235,6 +251,36 @@ export function Navbar() {
                 {item.label}
               </NavLink>
             ))}
+
+            <DropdownMenu open={archiveOpen} onOpenChange={setArchiveOpen}>
+              <DropdownMenuTrigger
+                ref={setNavRef("archive")}
+                onPointerEnter={() => setHoveredKey("archive")}
+                className={cn(
+                  "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  desktopNavWidthClass.archive,
+                  (activeKey === "archive" || archiveOpen) && "text-foreground/82",
+                )}
+              >
+                {t("nav.archive", "Archive")}
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                    archiveOpen && "rotate-180",
+                  )}
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="center"
+                className="mt-3 w-52 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+              >
+                {archiveNavItems.map((item) => (
+                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
+                    <Link to={item.to}>{item.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
               <DropdownMenuTrigger
@@ -380,6 +426,17 @@ export function Navbar() {
 
                 <nav className="mt-8 flex flex-col gap-2">
                   {navItems.map((item) => (
+                    <NavLink
+                      key={item.key}
+                      to={item.to}
+                      end={item.exact}
+                      className={mobileNavLinkClass}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                  {archiveNavItems.map((item) => (
                     <NavLink
                       key={item.key}
                       to={item.to}

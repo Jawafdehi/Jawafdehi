@@ -3,8 +3,8 @@ import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import type {
-  DocumentSource,
   DocumentSourceType,
+  EvidenceMaterial,
   SourceLink,
   SourceLinkRole,
 } from "@/types/jds";
@@ -12,8 +12,13 @@ import { DocumentSourceTypeKeys } from "@/types/jds";
 import { getSourceTypeBadgeClass } from "@/utils/source-type-badge";
 
 interface DocumentSourceCardProps {
-  source: DocumentSource | null;
-  sourceId: number;
+  /**
+   * The resolved material embedded on the case-detail evidence entry
+   * (`{display_name, material_type, urls}`), or null when not yet available.
+   */
+  material: EvidenceMaterial | null;
+  /** The material @id IRI; used for a stable fallback title/key. */
+  materialIri: string;
   itemNumber: number;
   evidenceDescription?: string;
 }
@@ -44,16 +49,16 @@ const normalizeRole = (
 };
 
 /**
- * Build a clean, role-tagged list of links from a source's `urls` field.
+ * Build a clean, role-tagged list of links from a material's `urls` field.
  *
  * `urls` is the canonical source of links: each entry is a `{link, role}` dict
  * with an explicit role (RAW/MARKDOWN/PERMALINK). Invalid or non-http(s)
  * entries are dropped.
  */
-const resolveLinks = (source: DocumentSource | null): SourceLink[] => {
-  if (!source || !Array.isArray(source.urls)) return [];
+const resolveLinks = (material: EvidenceMaterial | null): SourceLink[] => {
+  if (!material || !Array.isArray(material.urls)) return [];
 
-  return source.urls
+  return material.urls
     .filter((u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link))
     .map((u) => ({ link: u.link.trim(), role: normalizeRole(u.role, u.link) }));
 };
@@ -112,22 +117,26 @@ const partitionLinks = (links: SourceLink[]) => {
 };
 
 export function DocumentSourceCard({
-  source,
-  sourceId,
+  material,
+  materialIri,
   itemNumber,
   evidenceDescription,
 }: DocumentSourceCardProps) {
   const { t } = useTranslation();
-  const links = resolveLinks(source);
+  const links = resolveLinks(material);
   const { primaryLinks, alternateLinks, markdownLinks } = partitionLinks(links);
 
+  // The material's type drives the source-type badge/tiering (it carries the
+  // same DocumentSourceType vocabulary as the former DocumentSource.source_type).
+  const materialType = material?.material_type ?? null;
+
   // Get source type label with i18n support and fallback for legacy types
-  const sourceTypeLabel = source?.source_type
-    ? DocumentSourceTypeKeys[source.source_type as DocumentSourceType]
-      ? t(DocumentSourceTypeKeys[source.source_type as DocumentSourceType])
-      : source.source_type
+  const sourceTypeLabel = materialType
+    ? DocumentSourceTypeKeys[materialType as DocumentSourceType]
+      ? t(DocumentSourceTypeKeys[materialType as DocumentSourceType])
+      : materialType
     : null;
-  const sourceTypeClass = getSourceTypeBadgeClass(source?.source_type);
+  const sourceTypeClass = getSourceTypeBadgeClass(materialType);
 
   // Only number a given role's links when there's more than one of that role,
   // so a lone "View original" doesn't get an awkward "1" suffix.
@@ -148,7 +157,7 @@ export function DocumentSourceCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-medium leading-snug text-foreground break-words">
-                  {source?.title || t("documentSource.fallbackTitle", { id: sourceId })}
+                  {material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}
                 </h3>
                 {sourceTypeLabel && (
                   <Badge variant="outline" className={`rounded-full px-2 py-0.5 text-xs font-medium ${sourceTypeClass}`}>
@@ -186,12 +195,6 @@ export function DocumentSourceCard({
               </div>
             )}
           </div>
-
-          {source?.description && source.description.trim() !== '.' && source.description.trim() && (
-            <p className="mt-1 text-sm leading-5 text-muted-foreground break-words">
-              {source.description}
-            </p>
-          )}
 
           {evidenceDescription && evidenceDescription.trim() !== '.' && evidenceDescription.trim() && (
             <p className="mt-2 text-sm leading-6 text-muted-foreground break-words">
