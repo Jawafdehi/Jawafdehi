@@ -14,7 +14,8 @@ export default function PaymentSuccess() {
           name="description"
           content="Thank you for supporting Jawafdehi. Your contribution helps keep Nepal's accountability archive free, open, and permanent."
         />
-        <link rel="canonical" href="https://jawafdehi.org/success" />
+        <meta name="robots" content="noindex" />
+        <link rel="canonical" href="https://jawafdehi.org/donate/success" />
       </Helmet>
 
       <div className="relative isolate min-h-[calc(100svh-76px)] overflow-hidden">

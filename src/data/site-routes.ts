@@ -45,6 +45,8 @@ export type StaticSiteRoute = {
   keywords: string[];
   icon: SearchIconName;
   sitemapTitle: string;
+  excludeFromSearch?: boolean;
+  excludeFromSitemap?: boolean;
 };
 
 export type UpdateRouteEntry = {
@@ -126,6 +128,26 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     sitemapTitle: "Donate — Jawafdehi",
   },
   {
+    path: "/donate/success",
+    titleKey: "nav.donate",
+    descriptionKey: "searchCommand.descriptions.donate",
+    keywords: ["donate", "donation", "support", "success", "payment"],
+    icon: "HeartHandshake",
+    sitemapTitle: "Donation Success — Jawafdehi",
+    excludeFromSearch: true,
+    excludeFromSitemap: true,
+  },
+  {
+    path: "/donate/cancel",
+    titleKey: "nav.donate",
+    descriptionKey: "searchCommand.descriptions.donate",
+    keywords: ["donate", "donation", "support", "cancel", "payment"],
+    icon: "HeartHandshake",
+    sitemapTitle: "Donation Cancelled — Jawafdehi",
+    excludeFromSearch: true,
+    excludeFromSitemap: true,
+  },
+  {
     path: "/about",
     titleKey: "nav.about",
     descriptionKey: "searchCommand.descriptions.about",
@@ -204,6 +226,14 @@ export const PRE_RENDERED_STATIC_ROUTES = [
 // individual articles should source these from the CMS API (`getArticles`).
 export const UPDATE_ROUTE_ENTRIES: readonly UpdateRouteEntry[] = [];
 
+export function shouldIncludeStaticRouteInSearch(route: StaticSiteRoute): boolean {
+  return route.excludeFromSearch !== true;
+}
+
+export function shouldIncludeStaticRouteInSitemap(route: StaticSiteRoute): boolean {
+  return route.excludeFromSitemap !== true;
+}
+
 export function staticRouteToSearchEntry(route: StaticSiteRoute): SearchIndexEntry {
   return {
     path: route.path,
@@ -228,7 +258,9 @@ export function updateRouteToSearchEntry(update: UpdateRouteEntry): SearchIndexE
 
 export function buildFallbackSearchIndexEntries(): SearchIndexEntry[] {
   return [
-    ...PRE_RENDERED_STATIC_ROUTES.map(staticRouteToSearchEntry),
+    ...PRE_RENDERED_STATIC_ROUTES
+      .filter(shouldIncludeStaticRouteInSearch)
+      .map(staticRouteToSearchEntry),
     ...UPDATE_ROUTE_ENTRIES.map(updateRouteToSearchEntry),
   ];
 }

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import {
   PRE_RENDERED_STATIC_ROUTES,
   UPDATE_ROUTE_ENTRIES,
+  shouldIncludeStaticRouteInSearch,
   staticRouteToSearchEntry,
   updateRouteToSearchEntry,
   type SearchIndexEntry,
@@ -325,7 +326,7 @@ async function main() {
       const html = injectIntoTemplate(template, result);
       await writeHtml(route.outFile, html);
       const routeConfig = PRE_RENDERED_STATIC_ROUTES.find((item) => item.path === route.path);
-      if (routeConfig) {
+      if (routeConfig && shouldIncludeStaticRouteInSearch(routeConfig)) {
         searchEntries.push(withSearchLines(staticRouteToSearchEntry(routeConfig), result.html));
       }
       console.log(`[pre-render] ✓ ${route.path} → ${route.outFile}`);

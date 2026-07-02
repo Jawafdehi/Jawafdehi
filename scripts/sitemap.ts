@@ -1,7 +1,11 @@
 import { writeFile, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { PRE_RENDERED_STATIC_ROUTES, UPDATE_ROUTE_ENTRIES } from '../src/data/site-routes.ts';
+import {
+  PRE_RENDERED_STATIC_ROUTES,
+  UPDATE_ROUTE_ENTRIES,
+  shouldIncludeStaticRouteInSitemap,
+} from '../src/data/site-routes.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -88,7 +92,9 @@ async function main() {
   )];
 
   const entries: string[] = [
-    ...PRE_RENDERED_STATIC_ROUTES.map(r => urlEntry(`${CANONICAL}${r.path}`, today, r.sitemapTitle)),
+    ...PRE_RENDERED_STATIC_ROUTES
+      .filter(shouldIncludeStaticRouteInSitemap)
+      .map(r => urlEntry(`${CANONICAL}${r.path}`, today, r.sitemapTitle)),
     ...UPDATE_ROUTE_ENTRIES.map(u => urlEntry(`${CANONICAL}/updates/${u.id}`, today, u.title)),
     ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.id}`, toYMD(c.updated_at), c.title ? `${c.title} — Jawafdehi` : undefined)),
     ...entityIds.map(id => {
