@@ -15,7 +15,9 @@ function parseTail(tail: string): { court: string; caseNumber: string } | null {
   const i = tail.indexOf("/");
   if (i === -1) return null;
   const court = tail.slice(0, i);
-  const caseNumber = decodeURIComponent(tail.slice(i + 1).replace(/\/+$/, ""));
+  // useParams()/splat is already URL-decoded by React Router; a second
+  // decodeURIComponent would throw URIError on any literal "%" in a case number.
+  const caseNumber = tail.slice(i + 1).replace(/\/+$/, "");
   if (!court || !caseNumber) return null;
   return { court, caseNumber };
 }

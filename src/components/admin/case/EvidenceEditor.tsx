@@ -52,7 +52,7 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
     try {
       const page = await listMaterials<Record<string, unknown>>({
         search: query.trim(),
-        page_size: 15,
+        limit: 15,
       });
       setResults(page.results ?? []);
     } catch (err) {
