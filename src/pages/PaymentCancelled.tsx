@@ -16,7 +16,7 @@ export default function PaymentCancelled() {
           name="description"
           content="Your Jawafdehi donation payment was cancelled. No payment was processed and you were not charged."
         />
-        <link rel="canonical" href="https://jawafdehi.org/cancel" />
+        <link rel="canonical" href="https://jawafdehi.org/donate/cancel" />
       </Helmet>
 
       <div className="relative isolate min-h-[calc(100svh-76px)] overflow-hidden">
