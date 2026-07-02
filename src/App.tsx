@@ -43,6 +43,8 @@ import CaseworkReviews from "./pages/CaseworkReviews";
 import CaseworkReviewDetail from "./pages/CaseworkReviewDetail";
 import CaseworkRules from "./pages/CaseworkRules";
 import CaseworkHow from "./pages/CaseworkHow";
+import PaymentCancelled from "./pages/PaymentCancelled";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 const GuestChat = lazy(() => import("./pages/GuestChat"));
 const Donate = lazy(() => import("./pages/Donate"));
@@ -129,6 +131,8 @@ const App = () => (
             <Route path="/saptahik" element={<WeeklyMeetings />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cancel" element={<PaymentCancelled />} />
+            <Route path="/success" element={<PaymentSuccess />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
