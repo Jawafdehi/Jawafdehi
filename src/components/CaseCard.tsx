@@ -24,6 +24,7 @@ interface CaseCardProps {
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   thumbnailUrl?: string; //Thumbnail image
+  bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
   viewMode?: "grid" | "list";
   hideDescription?: boolean;
 }
@@ -53,7 +54,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, viewMode = "grid", hideDescription }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, bannerUrl, viewMode = "grid", hideDescription }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -65,13 +66,18 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Check if we have a valid thumbnail URL
-  const hasValidThumbnail = thumbnailUrl && thumbnailUrl.trim() !== '';
-  const [imageSrc, setImageSrc] = useState(hasValidThumbnail ? thumbnailUrl : null);
+  // Candidate images, best first: thumbnail, then banner. Cases sometimes carry
+  // a non-image thumbnail URL (an article/page link), so a load error must fall
+  // through to the banner before giving up on the gradient placeholder.
+  const imageCandidates = [thumbnailUrl, bannerUrl]
+    .map((url) => url?.trim())
+    .filter((url): url is string => Boolean(url));
+  const [imageIndex, setImageIndex] = useState(0);
+  const imageSrc = imageCandidates[imageIndex] ?? null;
 
-  // Handle image load errors by hiding the image
+  // Handle image load errors by advancing to the next candidate (or hiding).
   const handleImageError = () => {
-    setImageSrc(null);
+    setImageIndex((i) => i + 1);
   };
 
   const statusConfig = {

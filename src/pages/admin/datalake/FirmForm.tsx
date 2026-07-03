@@ -147,8 +147,9 @@ export default function FirmForm() {
           idBase="bl"
           adValue={str(form.blacklist_date_ad)}
           bsValue={str(form.blacklist_date_bs)}
-          onAdChange={(v) => set("blacklist_date_ad", v)}
-          onBsChange={(v) => set("blacklist_date_bs", v)}
+          onChange={({ ad, bs }) =>
+            setForm((f) => ({ ...f, blacklist_date_ad: ad, blacklist_date_bs: bs }))
+          }
         />
 
         <DatePairInput
@@ -156,8 +157,9 @@ export default function FirmForm() {
           idBase="eu"
           adValue={str(form.effective_until_ad)}
           bsValue={str(form.effective_until_bs)}
-          onAdChange={(v) => set("effective_until_ad", v)}
-          onBsChange={(v) => set("effective_until_bs", v)}
+          onChange={({ ad, bs }) =>
+            setForm((f) => ({ ...f, effective_until_ad: ad, effective_until_bs: bs }))
+          }
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

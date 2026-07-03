@@ -7,13 +7,17 @@ import { adStringToBSString } from "@/utils/bs-calendar";
 // with dates repeats. Both are real calendar pickers: AD via the shadcn
 // Calendar, BS via @sbmdkl/nepali-datepicker-reactjs. Picking in one calendar
 // auto-fills the other; the caller still owns both string values.
+//
+// One user action emits ONE onChange carrying the whole {ad, bs} pair. (The
+// previous per-field callback API fired twice per pick; a consumer that
+// recomputed derived state from props on each call — the timeline editor — had
+// the second call overwrite the first, silently dropping half the pair.)
 interface DatePairInputProps {
   label: string;
   idBase: string;
   adValue: string; // AD "YYYY-MM-DD" or ""
   bsValue: string; // BS "YYYY-MM-DD" or ""
-  onAdChange: (value: string) => void;
-  onBsChange: (value: string) => void;
+  onChange: (pair: { ad: string; bs: string }) => void;
   disabled?: boolean;
 }
 
@@ -22,28 +26,25 @@ export default function DatePairInput({
   idBase,
   adValue,
   bsValue,
-  onAdChange,
-  onBsChange,
+  onChange,
   disabled,
 }: DatePairInputProps) {
-  // Pick AD → set AD, and derive BS (skip if the AD value is out of the BS
-  // table's range, leaving whatever BS the user had).
+  // Pick AD → set AD, and derive BS (if the AD value is out of the BS table's
+  // range, keep whatever BS the user had). Clearing AD clears BS too.
   const handleAd = (value: string) => {
-    onAdChange(value);
     if (value === "") {
-      onBsChange("");
+      onChange({ ad: "", bs: "" });
       return;
     }
     const bs = adStringToBSString(value);
-    if (bs) onBsChange(bs);
+    onChange({ ad: value, bs: bs ?? bsValue });
   };
 
   // Pick BS → set BS, and mirror the paired Gregorian date the picker already
   // computed. Propagate an empty adDate too (clearing BS clears AD) so the pair
   // can't be left mismatched.
   const handleBs = ({ bsDate, adDate }: { bsDate: string; adDate: string }) => {
-    onBsChange(bsDate);
-    onAdChange(adDate || "");
+    onChange({ ad: adDate || "", bs: bsDate });
   };
 
   return (

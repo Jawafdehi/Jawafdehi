@@ -48,3 +48,29 @@ export const MATERIAL_TYPES = [
   { token: "official_report", label: "Official report" },
   { token: "document", label: "Generic document" },
 ] as const;
+
+// `jawafdehi:sourceType` values persisted on material JSON-LD docs (the keys of
+// the backend's JAWAF_SOURCE_TYPE_TO_MATERIAL map, materials/jsonld.py). The
+// key is a free extension field — the API doesn't validate it — so this list
+// exists to keep the vocabulary from drifting in hand-edited docs.
+export const MATERIAL_SOURCE_TYPES = [
+  { token: "CIAA_PRESS_RELEASE", label: "CIAA press release" },
+  { token: "AG_ABHIYOG_PATRA", label: "AG charge sheet (अभियोगपत्र)" },
+  { token: "OAG_AUDIT_REPORT", label: "OAG audit report" },
+  { token: "COURT_ORDER", label: "Court order / verdict" },
+  { token: "COURT_FILING_OTHER", label: "Other court filing" },
+  { token: "LAW_OR_BILL", label: "Law or bill" },
+  { token: "NEWS", label: "News coverage" },
+  { token: "SOCIAL_MEDIA", label: "Social media" },
+  { token: "MISC", label: "Miscellaneous" },
+] as const;
+
+// Link roles for a material's associatedMedia entries (`jawafdehi:linkRole`) —
+// the DocumentSource link-role vocabulary.
+export const MATERIAL_LINK_ROLES = [
+  "RAW",
+  "PERMALINK",
+  "MARKDOWN",
+  "SOURCE_PAGE",
+  "ALTERNATE",
+] as const;
