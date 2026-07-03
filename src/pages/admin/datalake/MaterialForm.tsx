@@ -78,8 +78,11 @@ interface MediaRow {
 }
 
 function mediaRows(doc: Doc): MediaRow[] {
-  const media = doc.associatedMedia;
-  if (!Array.isArray(media)) return [];
+  // JSON-LD allows a single object where a list is expected; normalize so a
+  // lone media entry is editable instead of being invisible (and then dropped
+  // by the next save).
+  const raw = doc.associatedMedia;
+  const media = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? [raw] : [];
   return media.map((entry) => {
     const e = (entry && typeof entry === "object" ? entry : {}) as Doc;
     const url =

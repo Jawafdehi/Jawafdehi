@@ -44,6 +44,12 @@ export default function BSDatePicker({
   const normalizedValue = normalizeBSDateString(value) ?? "";
 
   const handleChange = ({ bsDate, adDate }: { bsDate: string; adDate: string }) => {
+    // The library has no clear affordance today, but if it ever emits an empty
+    // date, propagate it as an explicit clear instead of swallowing it below.
+    if (bsDate === "") {
+      if (normalizedValue !== "") onChange({ bsDate: "", adDate: "" });
+      return;
+    }
     const bs = normalizeBSDateString(bsDate);
     // Drop unparseable emissions (the library's NaN artifacts) and mount echoes
     // of the value we already hold — see the component comment.
