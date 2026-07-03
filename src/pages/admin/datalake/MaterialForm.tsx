@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useMatch, useNavigate } from "react-router-dom";
 import {
   createMaterial,
   replaceMaterial,
@@ -113,9 +113,12 @@ function mediaEntry(row: MediaRow): Doc {
 // splat) the existing doc is loaded and PUT-replaced; @id is locked.
 export default function MaterialForm() {
   const navigate = useNavigate();
-  // The "*" splat param is the material IRI tail (source/ident) in edit mode.
-  const params = useParams();
-  const refPath = params["*"] ?? "";
+  // The edit route's "*" splat is the material IRI tail (source/ident). Match
+  // it explicitly rather than reading useParams()["*"]: this form also serves
+  // the /new route, where the "*" of the ANCESTOR /admin/* route leaks through
+  // the merged params and would put the create form into edit mode.
+  const editMatch = useMatch("/admin/datalake/materials/edit/*");
+  const refPath = editMatch?.params["*"] ?? "";
   const editing = refPath !== "";
 
   const [materialType, setMaterialType] = useState<string>("document");
