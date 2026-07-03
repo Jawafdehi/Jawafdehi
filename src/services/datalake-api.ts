@@ -16,6 +16,7 @@
 
 import { http, extractErrorMessage } from './http';
 import { JDSApiError } from './jds-api';
+import { parseCourtCaseRef as parseRefParts } from '@/utils/courtCaseRef';
 import type { CourtCase, CourtCaseHearing, CourtCaseEntity } from '@/types/jds';
 
 // A material @id IRI path component (`<source>/<ident>`) or a full IRI. The detail
@@ -70,14 +71,15 @@ export async function getMaterial(iriOrTail: string): Promise<Material> {
 }
 
 /**
- * Parse a court-case ref into its composite key. Refs travel as `<court>:<number>`
- * (e.g. `special:081-CR-0060`, the form `Case.court_cases[]` carries); a bare number
- * with no court prefix is returned with an empty court.
+ * Parse a court-case ref into its composite key. Refs travel as the canonical
+ * @id IRI (`https://<host>/courtcase/special/081-cr-0060`, the form
+ * `Case.court_cases[]` carries) or the legacy `<court>:<number>` short form; a
+ * bare number with no court prefix is returned with an empty court.
  */
 export function parseCourtCaseRef(ref: string): { court: string; caseNumber: string } {
-  const idx = ref.indexOf(':');
-  if (idx === -1) return { court: '', caseNumber: ref };
-  return { court: ref.slice(0, idx), caseNumber: ref.slice(idx + 1) };
+  const parts = parseRefParts(ref);
+  if (parts) return { court: parts.court, caseNumber: parts.caseNumber };
+  return { court: '', caseNumber: ref };
 }
 
 /**

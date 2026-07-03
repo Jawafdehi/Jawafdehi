@@ -26,3 +26,65 @@ export function isCourtCaseRef(id: string | undefined): boolean {
 export function courtRefCandidates(ref: string): string[] {
   return COURT_IDENTIFIERS.map((court) => `${court}:${ref}`);
 }
+
+// Canonical court-case @id IRI (the form `Case.court_cases[]` carries):
+// https://<host>/courtcase/<court>/<case_number>
+const COURTCASE_IRI_RE = /^https?:\/\/[^/]+\/courtcase\/([^/]+)\/([^/]+)\/?$/;
+
+export interface CourtCaseRefParts {
+  court: string;
+  caseNumber: string;
+}
+
+/**
+ * Parse a court-case reference in either form — the canonical @id IRI
+ * (`https://<host>/courtcase/special/081-cr-0116`) or the legacy
+ * `<court>:<case_number>` short form. Returns null when it is neither.
+ */
+export function parseCourtCaseRef(
+  ref: string | null | undefined,
+): CourtCaseRefParts | null {
+  if (!ref) return null;
+  const trimmed = ref.trim();
+  const iri = COURTCASE_IRI_RE.exec(trimmed);
+  if (iri) {
+    return {
+      court: decodeURIComponent(iri[1]),
+      caseNumber: decodeURIComponent(iri[2]),
+    };
+  }
+  if (trimmed.includes('://')) return null;
+  const idx = trimmed.indexOf(':');
+  if (idx === -1) return null;
+  const court = trimmed.slice(0, idx).trim();
+  const caseNumber = trimmed.slice(idx + 1).trim();
+  if (!court || !caseNumber) return null;
+  return { court, caseNumber };
+}
+
+/**
+ * Compact `<court>:<CASE-NUMBER>` spelling for a ref in either form (IRIs are
+ * lowercase; case numbers read naturally uppercased). Null when unparseable.
+ */
+export function shortCourtCaseRef(ref: string | null | undefined): string | null {
+  const parts = parseCourtCaseRef(ref);
+  return parts ? `${parts.court}:${parts.caseNumber.toUpperCase()}` : null;
+}
+
+// The platform identity authority for @id IRIs. This is the IRI NAMESPACE
+// (the same value in every environment), not the serving host.
+export const COURTCASE_IRI_BASE = 'https://jawafdehi.org';
+
+/**
+ * Build the canonical court-case @id IRI (lowercased) from a ref in either
+ * input form — a short `<court>:<number>` editor chip or an already-full IRI.
+ * The API accepts canonical IRIs only, so the editor converts on submit.
+ * Null when unparseable.
+ */
+export function courtCaseInputToIri(ref: string | null | undefined): string | null {
+  const parts = parseCourtCaseRef(ref);
+  if (!parts) return null;
+  const court = parts.court.toLowerCase();
+  const caseNumber = parts.caseNumber.toLowerCase();
+  return `${COURTCASE_IRI_BASE}/courtcase/${court}/${caseNumber}`;
+}

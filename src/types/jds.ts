@@ -179,7 +179,7 @@ export interface Case {
   entities: JawafEntity[]; // Unified entity relationships with type field
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   key_allegations: string[]; // List of key allegation statements
-  court_cases: string[]; // Court case IDs (e.g., "special:081-CR-0060")
+  court_cases: string[]; // Canonical court-case @id IRIs (e.g., "https://jawafdehi.org/courtcase/special/081-cr-0060"); legacy "<court>:<number>" tolerated on read
   bigo?: number | null;
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime

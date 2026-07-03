@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { formatCaseDateRange } from "@/utils/date";
+import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
@@ -165,28 +166,24 @@ export function CaseDetailBanner({
               <span>
                 {t("caseDetail.courtCases")}:{" "}
                 {caseData.court_cases.map((courtCase, index) => {
-                  // Parse court identifier defensively - split only on first colon
-                  const colonIndex = courtCase.indexOf(":");
-                  if (colonIndex === -1) {
-                    // No colon found - skip this entry
+                  // Refs arrive as the canonical @id IRI or the legacy
+                  // `<court>:<number>` form; skip anything unparseable.
+                  const parts = parseCourtCaseRef(courtCase);
+                  if (!parts) {
                     return null;
                   }
-                  
-                  const courtId = courtCase.substring(0, colonIndex).trim();
-                  const caseNumber = courtCase.substring(colonIndex + 1).trim();
-                  
-                  // Skip if either part is empty
-                  if (!courtId || !caseNumber) {
-                    return null;
-                  }
-                  
+
+                  const courtId = parts.court.toLowerCase();
+                  // IRIs carry the number lowercased; display it uppercase.
+                  const caseNumber = parts.caseNumber.toUpperCase();
+
                   const courtNameMap: Record<string, { en: string; ne: string }> = {
                     supreme: { en: "Supreme Court", ne: "सर्वोच्च अदालत" },
                     special: { en: "Special Court", ne: "विशेष अदालत" },
                   };
                   const courtName = courtNameMap[courtId]?.[currentLang] || courtId;
                   const displayText = `${caseNumber} (${courtName})`;
-                  
+
                   return (
                     <span key={index}>
                       {displayText}

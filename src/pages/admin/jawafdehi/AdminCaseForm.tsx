@@ -37,6 +37,7 @@ import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
 import DatePairInput from "@/components/admin/DatePairInput";
+import { courtCaseInputToIri, shortCourtCaseRef } from "@/utils/courtCaseRef";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,7 +159,11 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     thumbnail_url: str(c.thumbnail_url),
     banner_url: str(c.banner_url),
     tags: strList(c.tags),
-    court_cases: strList(c.court_cases),
+    // Stored refs are canonical @id IRIs; edit them in the compact
+    // `<court>:<CASE-NUMBER>` form (converted back to IRIs on submit — the
+    // API accepts IRIs only). Both `form` and `original` come through this
+    // mapping, so the diff comparison stays consistent.
+    court_cases: strList(c.court_cases).map((ref) => shortCourtCaseRef(ref) ?? ref),
     case_start_date: str(c.case_start_date),
     case_start_date_bs: str(c.case_start_date_bs),
     case_end_date: str(c.case_end_date),
@@ -244,6 +249,11 @@ export default function AdminCaseForm() {
   const entityRowsValid = form.entities.every(
     (r) => r.nes_id.trim() === "" || isValidEntityRow(r),
   );
+  // An invalid court-case chip would 422 the whole PATCH (they are sent
+  // verbatim rather than silently dropped) — block save until fixed.
+  const courtCaseRowsValid = form.court_cases.every(
+    (c) => c.trim() === "" || isValidCourtCaseRef(c),
+  );
   const canSave =
     !saving &&
     form.title.trim() !== "" &&
@@ -252,7 +262,8 @@ export default function AdminCaseForm() {
     bigoValid &&
     datesValid &&
     timelineRowsValid &&
-    entityRowsValid;
+    entityRowsValid &&
+    courtCaseRowsValid;
 
   // Build the RFC-6902 patch, emitting an op only for fields that changed.
   // Scalars use replace; sub-resources (entities/timeline/evidence) use a
@@ -288,7 +299,17 @@ export default function AdminCaseForm() {
     if (changed(form.tags, original.tags))
       ops.push(buildStringListPatch("/tags", form.tags));
     if (changed(form.court_cases, original.court_cases))
-      ops.push(buildStringListPatch("/court_cases", form.court_cases));
+      // Chips are edited in the compact <court>:<NUMBER> form; the API takes
+      // canonical @id IRIs only, so convert on submit.
+      ops.push(
+        buildStringListPatch(
+          "/court_cases",
+          // NEVER silently drop a chip: an unconvertible ref (possible for
+          // dirty legacy data surfaced verbatim by fromCase) is sent as-is so
+          // the API rejects it loudly instead of the replace op deleting it.
+          form.court_cases.map((ref) => courtCaseInputToIri(ref) ?? ref),
+        ),
+      );
     if (form.case_start_date !== original.case_start_date)
       ops.push(replaceOp("/case_start_date", form.case_start_date || null));
     if (form.case_start_date_bs !== original.case_start_date_bs)

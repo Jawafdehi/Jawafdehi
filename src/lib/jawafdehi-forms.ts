@@ -9,6 +9,7 @@ import type {
 } from "@/types/jds";
 import type { PatchOp } from "@/services/admin-api";
 import { isValidEntityIri } from "@/lib/datalake-forms";
+import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 
 // Corruption-case type + workflow-state choices (see types/jds.ts).
 export const CASE_TYPES: readonly CaseType[] = [
@@ -123,13 +124,13 @@ export function isValidDateField(value: string): boolean {
   return v === "" || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v);
 }
 
-// A court-case reference is "<court>:<case_number>" — lowercase-alnum court id,
-// then a hyphen/alnum case number, no slashes/scheme (mirrors the /court_cases
-// patch value shape).
-export const COURT_CASE_REF_RE = /^[a-z0-9-]+:[A-Za-z0-9-]+$/;
-
+// A court-case reference INPUT: the "<court>:<case_number>" short form or the
+// canonical court-case @id IRI — exactly what parseCourtCaseRef accepts (ONE
+// grammar; a second regex here would drift from the submit converter). The
+// API accepts IRIs only — the editor converts chips via courtCaseInputToIri
+// on submit.
 export function isValidCourtCaseRef(value: string): boolean {
-  return COURT_CASE_REF_RE.test(value.trim());
+  return parseCourtCaseRef(value) !== null;
 }
 
 // An entity-relationship row is complete when it has a valid entity IRI and a
