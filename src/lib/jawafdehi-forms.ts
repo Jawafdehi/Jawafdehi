@@ -124,11 +124,8 @@ export function isValidDateField(value: string): boolean {
   return v === "" || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v);
 }
 
-// A court-case reference INPUT: the "<court>:<case_number>" short form or the
-// canonical court-case @id IRI — exactly what parseCourtCaseRef accepts (ONE
-// grammar; a second regex here would drift from the submit converter). The
-// API accepts IRIs only — the editor converts chips via courtCaseInputToIri
-// on submit.
+// A court-case reference: the canonical @id IRI — the ONLY format, exactly
+// what parseCourtCaseRef accepts (one grammar, shared with the renderers).
 export function isValidCourtCaseRef(value: string): boolean {
   return parseCourtCaseRef(value) !== null;
 }

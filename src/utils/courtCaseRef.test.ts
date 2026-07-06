@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isCourtCaseRef,
   courtRefCandidates,
-  courtCaseInputToIri,
   parseCourtCaseRef,
-  shortCourtCaseRef,
 } from './courtCaseRef';
 
 describe('isCourtCaseRef', () => {
@@ -41,15 +39,9 @@ describe('parseCourtCaseRef', () => {
     ).toEqual({ court: 'supreme', caseNumber: '078-wc-0123' });
   });
 
-  it('parses the legacy short form', () => {
-    expect(parseCourtCaseRef('special:081-CR-0116')).toEqual({
-      court: 'special',
-      caseNumber: '081-CR-0116',
-    });
-    expect(parseCourtCaseRef('  supreme:078-WC-0123 ')).toEqual({
-      court: 'supreme',
-      caseNumber: '078-WC-0123',
-    });
+  it('rejects the retired colon spelling (IRIs are the only format)', () => {
+    expect(parseCourtCaseRef('special:081-CR-0116')).toBeNull();
+    expect(parseCourtCaseRef('supreme:078-WC-0123')).toBeNull();
   });
 
   it('rejects non-court refs', () => {
@@ -65,29 +57,7 @@ describe('parseCourtCaseRef', () => {
     expect(
       parseCourtCaseRef('https://jawafdehi.org/courtcase/special/080%-cr'),
     ).toBeNull();
-    // Slashes in the short form would corrupt the IRI path structure.
-    expect(parseCourtCaseRef('special:080/81-CR-0111')).toBeNull();
   });
 });
 
-describe('shortCourtCaseRef', () => {
-  it('re-emits IRIs as <court>:<CASE-NUMBER>', () => {
-    expect(
-      shortCourtCaseRef('https://jawafdehi.org/courtcase/special/080-cr-0111'),
-    ).toBe('special:080-CR-0111');
-    expect(shortCourtCaseRef('supreme:078-wc-0123')).toBe('supreme:078-WC-0123');
-    expect(shortCourtCaseRef('garbage')).toBeNull();
-  });
-});
 
-describe('courtCaseInputToIri', () => {
-  it('builds the canonical lowercase IRI from either input form', () => {
-    expect(courtCaseInputToIri('special:080-CR-0111')).toBe(
-      'https://jawafdehi.org/courtcase/special/080-cr-0111',
-    );
-    expect(
-      courtCaseInputToIri('https://jawafdehi.org/courtcase/special/080-cr-0111'),
-    ).toBe('https://jawafdehi.org/courtcase/special/080-cr-0111');
-    expect(courtCaseInputToIri('garbage')).toBeNull();
-  });
-});

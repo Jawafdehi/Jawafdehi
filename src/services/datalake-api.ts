@@ -71,14 +71,22 @@ export async function getMaterial(iriOrTail: string): Promise<Material> {
 }
 
 /**
- * Parse a court-case ref into its composite key. Refs travel as the canonical
- * @id IRI (`https://<host>/courtcase/special/081-cr-0060`, the form
- * `Case.court_cases[]` carries) or the legacy `<court>:<number>` short form; a
- * bare number with no court prefix is returned with an empty court.
+ * Parse a court-case lookup id into its composite key. Ids are the canonical
+ * @id IRI (`https://<host>/courtcase/special/081-cr-0060`, the only form
+ * `Case.court_cases[]` carries) or an INTERNAL `<court>:<number>` lookup key
+ * (what `courtRefCandidates` builds when probing a bare number from the URL —
+ * a URL-construction detail, not a reference format); a bare number with no
+ * court is returned with an empty court.
  */
 export function parseCourtCaseRef(ref: string): { court: string; caseNumber: string } {
   const parts = parseRefParts(ref);
   if (parts) return { court: parts.court, caseNumber: parts.caseNumber };
+  if (!ref.includes('://')) {
+    const idx = ref.indexOf(':');
+    if (idx > 0 && idx < ref.length - 1) {
+      return { court: ref.slice(0, idx), caseNumber: ref.slice(idx + 1) };
+    }
+  }
   return { court: '', caseNumber: ref };
 }
 

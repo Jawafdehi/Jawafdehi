@@ -37,7 +37,6 @@ import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
 import DatePairInput from "@/components/admin/DatePairInput";
-import { courtCaseInputToIri, shortCourtCaseRef } from "@/utils/courtCaseRef";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,11 +158,8 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     thumbnail_url: str(c.thumbnail_url),
     banner_url: str(c.banner_url),
     tags: strList(c.tags),
-    // Stored refs are canonical @id IRIs; edit them in the compact
-    // `<court>:<CASE-NUMBER>` form (converted back to IRIs on submit — the
-    // API accepts IRIs only). Both `form` and `original` come through this
-    // mapping, so the diff comparison stays consistent.
-    court_cases: strList(c.court_cases).map((ref) => shortCourtCaseRef(ref) ?? ref),
+    // Canonical @id IRIs — the only court-case reference format.
+    court_cases: strList(c.court_cases),
     case_start_date: str(c.case_start_date),
     case_start_date_bs: str(c.case_start_date_bs),
     case_end_date: str(c.case_end_date),
@@ -299,17 +295,7 @@ export default function AdminCaseForm() {
     if (changed(form.tags, original.tags))
       ops.push(buildStringListPatch("/tags", form.tags));
     if (changed(form.court_cases, original.court_cases))
-      // Chips are edited in the compact <court>:<NUMBER> form; the API takes
-      // canonical @id IRIs only, so convert on submit.
-      ops.push(
-        buildStringListPatch(
-          "/court_cases",
-          // NEVER silently drop a chip: an unconvertible ref (possible for
-          // dirty legacy data surfaced verbatim by fromCase) is sent as-is so
-          // the API rejects it loudly instead of the replace op deleting it.
-          form.court_cases.map((ref) => courtCaseInputToIri(ref) ?? ref),
-        ),
-      );
+      ops.push(buildStringListPatch("/court_cases", form.court_cases));
     if (form.case_start_date !== original.case_start_date)
       ops.push(replaceOp("/case_start_date", form.case_start_date || null));
     if (form.case_start_date_bs !== original.case_start_date_bs)
@@ -553,10 +539,10 @@ export default function AdminCaseForm() {
           label="Court-case references"
           items={form.court_cases}
           onChange={(items) => set("court_cases", items)}
-          placeholder="court:case_number (e.g. special:081-CR-0136)"
-          help="Link related court cases as <court>:<case_number>."
+          placeholder="https://jawafdehi.org/courtcase/special/081-cr-0136"
+          help="Link related court cases by their canonical @id IRI."
           validate={isValidCourtCaseRef}
-          invalidHint="Use the form <court>:<case_number>."
+          invalidHint="Use the canonical court-case @id IRI."
         />
 
         <DatePairInput

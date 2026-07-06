@@ -44,7 +44,7 @@ describe("CourtCaseCard", () => {
   it("renders the core (no entities/hearings) shape without crashing", () => {
     render(
       <MemoryRouter>
-        <CourtCaseCard courtCaseId="kathmandudc:080-C4-2408" courtCase={coreCase} isLoading={false} />
+        <CourtCaseCard courtCaseId="https://jawafdehi.org/courtcase/kathmandudc/080-c4-2408" courtCase={coreCase} isLoading={false} />
       </MemoryRouter>,
     );
 
@@ -67,7 +67,7 @@ describe("CourtCaseCard", () => {
 
     render(
       <MemoryRouter>
-        <CourtCaseCard courtCaseId="kathmandudc:080-C4-2408" courtCase={fullCase} isLoading={false} />
+        <CourtCaseCard courtCaseId="https://jawafdehi.org/courtcase/kathmandudc/080-c4-2408" courtCase={fullCase} isLoading={false} />
       </MemoryRouter>,
     );
 
