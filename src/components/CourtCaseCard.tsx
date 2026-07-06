@@ -4,6 +4,7 @@ import { Scale, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
+import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { formatDateWithBS } from "@/utils/date";
 
 // ── Court identifier parsing ──────────────────────────────────────────────
@@ -25,19 +26,21 @@ function parseCourtIdentifier(
   courtIdentifier: string,
   lang: string
 ): { courtName: string; caseNumber: string } {
-  const colonIdx = courtIdentifier.indexOf(":");
-  if (colonIdx === -1) {
+  // Refs arrive as the canonical @id IRI or the legacy `<court>:<number>` form.
+  const parts = parseCourtCaseRef(courtIdentifier);
+  if (!parts) {
     return { courtName: courtIdentifier, caseNumber: "" };
   }
 
-  const prefix = courtIdentifier.slice(0, colonIdx).toLowerCase();
-  const caseNumber = courtIdentifier.slice(colonIdx + 1);
+  const prefix = parts.court.toLowerCase();
+  // IRIs carry the number lowercased; display it in its natural uppercase.
+  const caseNumber = parts.caseNumber.toUpperCase();
 
   let courtName: string;
   if (lang === "ne" && COURT_NAMES_NE[prefix]) {
     courtName = COURT_NAMES_NE[prefix];
   } else {
-    courtName = COURT_NAMES_EN[prefix] ?? courtIdentifier.slice(0, colonIdx);
+    courtName = COURT_NAMES_EN[prefix] ?? parts.court;
   }
 
   return { courtName, caseNumber };
@@ -86,15 +89,12 @@ interface CourtCaseCardProps {
   linkToDetail?: boolean;
 }
 
-// The /courtcase/* detail path for a `<court>:<case_number>` id (or null if the
-// id isn't in that composite form).
+// The /courtcase/* detail path for a court-case ref — @id IRI or
+// `<court>:<case_number>` (or null if the id is in neither form).
 function courtCaseDetailPath(courtCaseId: string): string | null {
-  const colonIdx = courtCaseId.indexOf(":");
-  if (colonIdx === -1) return null;
-  const court = courtCaseId.slice(0, colonIdx);
-  const caseNumber = courtCaseId.slice(colonIdx + 1);
-  if (!court || !caseNumber) return null;
-  return `/courtcase/${court}/${encodeURIComponent(caseNumber)}`;
+  const parts = parseCourtCaseRef(courtCaseId);
+  if (!parts) return null;
+  return `/courtcase/${parts.court}/${encodeURIComponent(parts.caseNumber)}`;
 }
 
 export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail }: CourtCaseCardProps) {

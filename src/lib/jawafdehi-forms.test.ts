@@ -44,13 +44,16 @@ describe("isValidDateField", () => {
 });
 
 describe("isValidCourtCaseRef", () => {
-  it("accepts court:case_number", () => {
-    expect(isValidCourtCaseRef("special:081-CR-0136")).toBe(true);
-    expect(isValidCourtCaseRef("e2e-district-court:E2E-001")).toBe(true);
+  it("accepts canonical court-case @id IRIs (the only format)", () => {
+    expect(
+      isValidCourtCaseRef("https://jawafdehi.org/courtcase/special/080-cr-0111"),
+    ).toBe(true);
   });
-  it("rejects missing colon or scheme", () => {
+  it("rejects the retired colon spelling and non-courtcase IRIs", () => {
+    expect(isValidCourtCaseRef("special:081-CR-0136")).toBe(false);
     expect(isValidCourtCaseRef("special")).toBe(false);
     expect(isValidCourtCaseRef("https://x/y")).toBe(false);
+    expect(isValidCourtCaseRef("https://jawafdehi.org/entity/person/foo")).toBe(false);
   });
 });
 

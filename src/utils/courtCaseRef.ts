@@ -26,3 +26,35 @@ export function isCourtCaseRef(id: string | undefined): boolean {
 export function courtRefCandidates(ref: string): string[] {
   return COURT_IDENTIFIERS.map((court) => `${court}:${ref}`);
 }
+
+// Canonical court-case @id IRI (the form `Case.court_cases[]` carries):
+// https://<host>/courtcase/<court>/<case_number>
+const COURTCASE_IRI_RE = /^https?:\/\/[^/]+\/courtcase\/([^/]+)\/([^/]+)\/?$/;
+
+export interface CourtCaseRefParts {
+  court: string;
+  caseNumber: string;
+}
+
+/**
+ * Parse a canonical court-case @id IRI
+ * (`https://<host>/courtcase/special/081-cr-0116`) — the ONLY court-case
+ * reference format. Returns null for anything else.
+ */
+export function parseCourtCaseRef(
+  ref: string | null | undefined,
+): CourtCaseRefParts | null {
+  if (!ref) return null;
+  const iri = COURTCASE_IRI_RE.exec(ref.trim());
+  if (!iri) return null;
+  // Malformed percent-encoding throws URIError — this parser runs during
+  // render and validation, so fail closed instead of crashing the UI.
+  try {
+    return {
+      court: decodeURIComponent(iri[1]),
+      caseNumber: decodeURIComponent(iri[2]),
+    };
+  } catch {
+    return null;
+  }
+}

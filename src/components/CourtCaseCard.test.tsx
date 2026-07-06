@@ -44,7 +44,7 @@ describe("CourtCaseCard", () => {
   it("renders the core (no entities/hearings) shape without crashing", () => {
     render(
       <MemoryRouter>
-        <CourtCaseCard courtCaseId="kathmandudc:080-C4-2408" courtCase={coreCase} isLoading={false} />
+        <CourtCaseCard courtCaseId="https://jawafdehi.org/courtcase/kathmandudc/080-c4-2408" courtCase={coreCase} isLoading={false} />
       </MemoryRouter>,
     );
 
@@ -67,12 +67,33 @@ describe("CourtCaseCard", () => {
 
     render(
       <MemoryRouter>
-        <CourtCaseCard courtCaseId="kathmandudc:080-C4-2408" courtCase={fullCase} isLoading={false} />
+        <CourtCaseCard courtCaseId="https://jawafdehi.org/courtcase/kathmandudc/080-c4-2408" courtCase={fullCase} isLoading={false} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText("CIAA")).toBeTruthy();
     expect(screen.getByText("Gitendra Babu Rai")).toBeTruthy();
     expect(screen.getByText(/Hearings/)).toBeTruthy();
+  });
+
+  it("parses @id IRI refs: court name, uppercased number, detail link", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <CourtCaseCard
+          courtCaseId="https://jawafdehi.org/courtcase/special/080-cr-0111"
+          courtCase={coreCase}
+          isLoading={false}
+          linkToDetail
+        />
+      </MemoryRouter>,
+    );
+
+    // The IRI carries the number lowercased; the card displays it uppercase
+    // with the mapped court name, and links to the composite-key detail page.
+    expect(screen.getAllByText(/080-CR-0111/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Special Court/).length).toBeGreaterThan(0);
+    expect(
+      container.querySelector('a[href="/courtcase/special/080-cr-0111"]'),
+    ).toBeTruthy();
   });
 });

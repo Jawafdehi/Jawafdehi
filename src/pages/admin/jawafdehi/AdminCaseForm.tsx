@@ -159,6 +159,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     thumbnail_url: str(c.thumbnail_url),
     banner_url: str(c.banner_url),
     tags: strList(c.tags),
+    // Canonical @id IRIs — the only court-case reference format.
     court_cases: strList(c.court_cases),
     case_start_date: str(c.case_start_date),
     case_start_date_bs: str(c.case_start_date_bs),
@@ -245,6 +246,11 @@ export default function AdminCaseForm() {
   const entityRowsValid = form.entities.every(
     (r) => r.nes_id.trim() === "" || isValidEntityRow(r),
   );
+  // An invalid court-case chip would 422 the whole PATCH (they are sent
+  // verbatim rather than silently dropped) — block save until fixed.
+  const courtCaseRowsValid = form.court_cases.every(
+    (c) => c.trim() === "" || isValidCourtCaseRef(c),
+  );
   const canSave =
     !saving &&
     form.title.trim() !== "" &&
@@ -253,7 +259,8 @@ export default function AdminCaseForm() {
     bigoValid &&
     datesValid &&
     timelineRowsValid &&
-    entityRowsValid;
+    entityRowsValid &&
+    courtCaseRowsValid;
 
   // Build the RFC-6902 patch, emitting an op only for fields that changed.
   // Scalars use replace; sub-resources (entities/timeline/evidence) use a
@@ -536,10 +543,10 @@ export default function AdminCaseForm() {
           label="Court-case references"
           items={form.court_cases}
           onChange={(items) => set("court_cases", items)}
-          placeholder="court:case_number (e.g. special:081-CR-0136)"
-          help="Link related court cases as <court>:<case_number>."
+          placeholder="https://jawafdehi.org/courtcase/special/081-cr-0136"
+          help="Link related court cases by their canonical @id IRI."
           validate={isValidCourtCaseRef}
-          invalidHint="Use the form <court>:<case_number>."
+          invalidHint="Use the canonical court-case @id IRI."
         />
 
         <DatePairInput
