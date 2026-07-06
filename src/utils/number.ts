@@ -84,3 +84,42 @@ export function formatBigo(amount: number | null | undefined): string {
 
   return `${prefix}Rs ${formatIndianNumber(absAmount)}`;
 }
+
+/**
+ * Formats the raw string of a numeric amount input with Indian (lakh/crore)
+ * digit grouping for display, without going through Number — so arbitrarily
+ * large amounts keep full precision and partial input ("1250000.", "12.5")
+ * survives as typed. Anything that isn't a plain non-negative decimal number is
+ * returned unchanged (the field's own validation flags it).
+ * Example: "86987106" -> "8,69,87,106"
+ */
+export function formatAmountInput(raw: string): string {
+  if (!raw) return "";
+  const m = /^(\d+)(\.\d*)?$/.exec(raw);
+  if (!m) return raw;
+  const [, intPart, fracPart] = m;
+
+  let grouped: string;
+  if (intPart.length <= 3) {
+    grouped = intPart;
+  } else {
+    const lastThree = intPart.slice(-3);
+    let remaining = intPart.slice(0, -3);
+    const groups: string[] = [lastThree];
+    while (remaining.length > 2) {
+      groups.unshift(remaining.slice(-2));
+      remaining = remaining.slice(0, -2);
+    }
+    groups.unshift(remaining);
+    grouped = groups.join(",");
+  }
+  return fracPart ? grouped + fracPart : grouped;
+}
+
+/**
+ * Inverse of formatAmountInput for change events: strips the grouping commas
+ * (and stray spaces) so the state/API value stays a plain number string.
+ */
+export function stripAmountFormatting(display: string): string {
+  return display.replace(/[,\s]/g, "");
+}

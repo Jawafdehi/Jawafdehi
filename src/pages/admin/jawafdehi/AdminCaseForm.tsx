@@ -31,6 +31,7 @@ import {
   type RelationshipType,
 } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
+import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
 import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshipsEditor";
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
@@ -487,12 +488,15 @@ export default function AdminCaseForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <Label htmlFor="bigo">Bigo (embezzlement amount)</Label>
+            {/* type="text": a native number input rejects the grouping commas.
+                The state (and the PATCH) stays the plain digit string. */}
             <Input
               id="bigo"
-              type="number"
-              value={form.bigo}
-              onChange={(e) => set("bigo", e.target.value)}
-              placeholder="e.g. 1250000"
+              type="text"
+              inputMode="numeric"
+              value={formatAmountInput(form.bigo)}
+              onChange={(e) => set("bigo", stripAmountFormatting(e.target.value))}
+              placeholder="e.g. 12,50,000"
             />
             <FieldError message={!bigoValid && "Must be a number."} />
           </div>
@@ -543,16 +547,18 @@ export default function AdminCaseForm() {
           idBase="case-start"
           adValue={form.case_start_date}
           bsValue={form.case_start_date_bs}
-          onAdChange={(v) => set("case_start_date", v)}
-          onBsChange={(v) => set("case_start_date_bs", v)}
+          onChange={({ ad, bs }) =>
+            setForm((f) => ({ ...f, case_start_date: ad, case_start_date_bs: bs }))
+          }
         />
         <DatePairInput
           label="Case end"
           idBase="case-end"
           adValue={form.case_end_date}
           bsValue={form.case_end_date_bs}
-          onAdChange={(v) => set("case_end_date", v)}
-          onBsChange={(v) => set("case_end_date_bs", v)}
+          onChange={({ ad, bs }) =>
+            setForm((f) => ({ ...f, case_end_date: ad, case_end_date_bs: bs }))
+          }
         />
         <FieldError message={!datesValid && "BS dates must be YYYY-MM-DD."} />
 

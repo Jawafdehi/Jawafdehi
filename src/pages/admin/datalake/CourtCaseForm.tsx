@@ -154,8 +154,9 @@ export default function CourtCaseForm() {
           idBase="reg"
           adValue={str(form.registration_date_ad)}
           bsValue={str(form.registration_date_bs)}
-          onAdChange={(v) => set("registration_date_ad", v)}
-          onBsChange={(v) => set("registration_date_bs", v)}
+          onChange={({ ad, bs }) =>
+            setForm((f) => ({ ...f, registration_date_ad: ad, registration_date_bs: bs }))
+          }
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

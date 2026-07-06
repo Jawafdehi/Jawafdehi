@@ -1,7 +1,9 @@
 import { Archive, ExternalLink, FileText, Files, Globe } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { materialTail } from "@/services/datalake-api";
 import type {
   DocumentSourceType,
   EvidenceMaterial,
@@ -157,7 +159,16 @@ export function DocumentSourceCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-medium leading-snug text-foreground break-words">
-                  {material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}
+                  {materialIri ? (
+                    <Link
+                      to={`/material/${materialTail(materialIri)}`}
+                      className="rounded-sm underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      {material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}
+                    </Link>
+                  ) : (
+                    material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })
+                  )}
                 </h3>
                 {sourceTypeLabel && (
                   <Badge variant="outline" className={`rounded-full px-2 py-0.5 text-xs font-medium ${sourceTypeClass}`}>
