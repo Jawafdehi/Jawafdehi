@@ -27,7 +27,7 @@ export interface StreamDocumentValue {
 }
 
 export interface StreamCaseValue {
-  case: { id: number; title: string; slug: string } | null;
+  case: RelatedCase | null;
   note?: string;
 }
 
