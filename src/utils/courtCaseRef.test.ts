@@ -59,6 +59,15 @@ describe('parseCourtCaseRef', () => {
     expect(parseCourtCaseRef('special:')).toBeNull();
     expect(parseCourtCaseRef('https://jawafdehi.org/entity/person/foo')).toBeNull();
   });
+
+  it('fails closed on malformed input instead of throwing', () => {
+    // Lone % in an IRI segment would make decodeURIComponent throw URIError.
+    expect(
+      parseCourtCaseRef('https://jawafdehi.org/courtcase/special/080%-cr'),
+    ).toBeNull();
+    // Slashes in the short form would corrupt the IRI path structure.
+    expect(parseCourtCaseRef('special:080/81-CR-0111')).toBeNull();
+  });
 });
 
 describe('shortCourtCaseRef', () => {

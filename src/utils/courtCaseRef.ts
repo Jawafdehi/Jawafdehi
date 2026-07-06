@@ -48,10 +48,16 @@ export function parseCourtCaseRef(
   const trimmed = ref.trim();
   const iri = COURTCASE_IRI_RE.exec(trimmed);
   if (iri) {
-    return {
-      court: decodeURIComponent(iri[1]),
-      caseNumber: decodeURIComponent(iri[2]),
-    };
+    // Malformed percent-encoding throws URIError — this parser runs during
+    // render and validation, so fail closed instead of crashing the UI.
+    try {
+      return {
+        court: decodeURIComponent(iri[1]),
+        caseNumber: decodeURIComponent(iri[2]),
+      };
+    } catch {
+      return null;
+    }
   }
   if (trimmed.includes('://')) return null;
   const idx = trimmed.indexOf(':');
@@ -59,6 +65,10 @@ export function parseCourtCaseRef(
   const court = trimmed.slice(0, idx).trim();
   const caseNumber = trimmed.slice(idx + 1).trim();
   if (!court || !caseNumber) return null;
+  // A slash would change the IRI's path structure (and the backend grammar
+  // rejects it anyway) — treat such input as invalid here so the editor
+  // flags the chip inline instead of building a malformed IRI.
+  if (court.includes('/') || caseNumber.includes('/')) return null;
   return { court, caseNumber };
 }
 
