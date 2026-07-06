@@ -27,7 +27,7 @@ const article: Article = {
     { type: "paragraph", value: "<p>Body paragraph</p>", id: "b2" },
   ],
   related_cases: [
-    { id: 3, case_id: "080-CR-0165", title: "Related case title", slug: "a-case" },
+    { id: 3, title: "Related case title", slug: "a-case" },
   ],
 };
 

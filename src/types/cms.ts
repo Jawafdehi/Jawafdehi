@@ -27,7 +27,7 @@ export interface StreamDocumentValue {
 }
 
 export interface StreamCaseValue {
-  case: { id: number; case_id: string; title: string; slug: string } | null;
+  case: { id: number; title: string; slug: string } | null;
   note?: string;
 }
 
@@ -48,7 +48,6 @@ export type StreamBlock =
 
 export interface RelatedCase {
   id: number;
-  case_id: string;
   title: string;
   slug: string;
 }
