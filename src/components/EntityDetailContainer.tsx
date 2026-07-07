@@ -107,7 +107,7 @@ export function EntityDetailContainer({
     );
   }
 
-  if (error) {
+  if (error && !jawafEntityName) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function EntityDetailContainer({
     );
   }
 
-  if (!entity && hasNesData) {
+  if (!entity && hasNesData && !jawafEntityName) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
@@ -263,6 +263,15 @@ export function EntityDetailContainer({
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {error && jawafEntityName && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {t('entityDetail.noNesDataAlert')}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* No entity data alert */}
           {!hasNesData && (
             <Alert>

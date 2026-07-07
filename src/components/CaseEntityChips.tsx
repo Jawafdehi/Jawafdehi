@@ -53,14 +53,14 @@ function getFallbackIcon(jawafEntity: JawafEntity, entity: Entity | null) {
   return <User className="h-5 w-5" />;
 }
 
-export function CaseEntityChips({ 
-  entities, 
-  resolvedEntities, 
-  language, 
-  initialLimit = 12 
+export function CaseEntityChips({
+  entities,
+  resolvedEntities,
+  language,
+  initialLimit = 12
 }: CaseEntityChipsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const displayedEntities = isExpanded ? entities : entities.slice(0, initialLimit);
   const hasMore = entities.length > initialLimit;
   const remainingCount = entities.length - initialLimit;
@@ -78,7 +78,7 @@ export function CaseEntityChips({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-start">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-4 sm:justify-start">
         {displayedEntities.map((jawafEntity, index) => {
           const entity = jawafEntity.nes_id ? resolvedEntities[jawafEntity.nes_id] ?? null : null;
           const displayName = getDisplayName(jawafEntity, entity, language);
@@ -103,11 +103,11 @@ export function CaseEntityChips({
                   {getFallbackIcon(jawafEntity, entity)}
                 </AvatarFallback>
               </Avatar>
-              <span className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
+              <span className="text-base font-medium leading-snug text-primary">
                 {displayName}
               </span>
               {strippedNotes && (
-                <span className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                <span className="text-sm leading-snug text-primary/75">
                   {strippedNotes}
                 </span>
               )}
@@ -118,7 +118,7 @@ export function CaseEntityChips({
             return (
               <div
                 key={key}
-                className="group flex w-[11rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center"
+                className="group flex w-full sm:w-[11rem] flex-col items-center gap-2 rounded-2xl px-2 sm:px-3 py-3 text-center"
               >
                 {inner}
               </div>
@@ -129,14 +129,14 @@ export function CaseEntityChips({
             <Link
               key={key}
               to={to}
-              className="group flex w-[11rem] flex-col items-center gap-2 rounded-2xl px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
+              className="group flex w-full sm:w-[11rem] flex-col items-center gap-2 rounded-2xl px-2 sm:px-3 py-3 text-center transition-all duration-200 hover:bg-muted/40"
             >
               {inner}
             </Link>
           );
         })}
       </div>
-      
+
       {hasMore && (
         <div className="flex justify-center sm:justify-start px-3">
           <button

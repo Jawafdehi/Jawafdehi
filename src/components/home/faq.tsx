@@ -33,7 +33,7 @@ const faqItems: FaqItem[] = [
     answerKeys: ["information.faq.anonymous.answer"],
   },
   {
-    id: "entity-response",
+    id: "accused-response",
     questionKey: "information.faq.entityResponse.question",
     answerKeys: ["information.faq.entityResponse.answer"],
   },

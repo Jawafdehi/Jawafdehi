@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link2, Check, Share2, QrCode, Printer, Download, X } from "lucide-react";
+import { Link2, Check, Share2, QrCode, Printer, Download } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -32,21 +32,23 @@ interface FloatingShareSidebarProps {
   url: string;
   title: string;
   description?: string;
-  isOpen?: boolean;
-  onToggle?: (isOpen: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const FloatingShareSidebar = ({
   url,
   title,
   description = "",
-  isOpen = false,
-  onToggle,
+  open,
+  onOpenChange,
 }: FloatingShareSidebarProps) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
-  const [moreDialogOpen, setMoreDialogOpen] = useState(false);
+  const [uncontrolledMoreDialogOpen, setUncontrolledMoreDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const moreDialogOpen = open ?? uncontrolledMoreDialogOpen;
+  const setMoreDialogOpen = onOpenChange ?? setUncontrolledMoreDialogOpen;
 
   const shareText = `${title}${description ? ` - ${description}` : ""}`;
   const encodedUrl = encodeURIComponent(url);
@@ -188,14 +190,6 @@ export const FloatingShareSidebar = ({
     },
   ];
 
-  if (!isOpen) return null;
-
-  const handleClose = () => {
-    if (onToggle) {
-      onToggle(false);
-    }
-  };
-
   return (
     <TooltipProvider>
       <div
@@ -203,27 +197,6 @@ export const FloatingShareSidebar = ({
         role="region"
         aria-label={t("share.share")}
       >
-        {/* Close Button */}
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="transition-all hover:bg-muted"
-              onClick={handleClose}
-              aria-label={t("share.close")}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{t("share.close")}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Divider */}
-        <div className="h-px bg-border my-1" />
-
         {primaryPlatforms.map(({ key, icon: Icon, label, color, bg }) => (
           <Tooltip key={key} delayDuration={200}>
             <TooltipTrigger asChild>

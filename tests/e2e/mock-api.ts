@@ -113,7 +113,20 @@ Bun.serve({
     const caseMatch = path.match(/^\/api\/cases\/([^/]+)\/$/);
     if (caseMatch) {
       const slug = decodeURIComponent(caseMatch[1]);
-      const existing = casesBySlug.get(slug);
+      let existing = casesBySlug.get(slug);
+      // Court-ref identifier lookup (`<court>:<number>`), mirroring the real
+      // API: resolves the case whose court_cases IRI matches, case-insensitively.
+      if (!existing) {
+        const refMatch = slug.match(/^([a-z]+):(.+)$/i);
+        if (refMatch) {
+          const iriTail = `/courtcase/${refMatch[1]}/${refMatch[2]}`.toLowerCase();
+          existing = [...casesBySlug.values()].find((c) =>
+            (c.court_cases as string[] | null | undefined)?.some(
+              (ref) => typeof ref === "string" && ref.toLowerCase().endsWith(iriTail),
+            ),
+          );
+        }
+      }
       if (!existing) return json({ detail: "Not found." }, 404);
       if (method === "GET") return json(existing);
       if (method === "PATCH") {
@@ -180,7 +193,9 @@ Bun.serve({
 
     // --- data-lake court cases ----------------------------------------------
     if (path === "/api/courtcases/" && method === "GET") return json(emptyPage);
-    if (path.startsWith("/api/courtcases/special/081-CR-0107")) {
+    // Case number segment matched case-insensitively: court-case @id IRIs carry
+    // it lowercased while the captured fixture (and display) use uppercase.
+    if (path.toLowerCase().startsWith("/api/courtcases/special/081-cr-0107")) {
       if (path.endsWith("/hearings")) return json(courtCaseHearings);
       if (path.endsWith("/entities")) return json(courtCaseEntities);
       if (path.endsWith("/documents")) return json(emptyPage);

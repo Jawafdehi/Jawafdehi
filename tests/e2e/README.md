@@ -8,6 +8,7 @@ Drives the real SPA in headless Chromium (Playwright) against a mock backend tha
 - `fixtures/` — captured JSON: cases list/detail, materials, statistics, entities, one court case with hearings/entities.
 - `admin-dates-repro.mjs` — admin case editor: BS/AD date pairing, the BS-picker corruption/crash path, bigo comma formatting, timeline inline inserts, and the save wire format.
 - `site-and-materials.mjs` — field-based material edit form (PUT body shape), case-detail evidence-title links to `/material/*`, home-page case-card thumbnail fallback.
+- `case-detail.mjs` — redesigned case page: banner (breadcrumb, badges, court-case @id IRI links), section jump nav, material-based evidence cards, PDF preview dialog, `/courtcase` page, `/case/<court-ref>` slug redirect, guest-chat-removal 404.
 - `smoke.mjs` — quick home-page load check.
 
 ## Running

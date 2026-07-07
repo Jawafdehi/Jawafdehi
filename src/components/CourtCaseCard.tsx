@@ -1,11 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { Scale, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { formatDateWithBS } from "@/utils/date";
+import { cn } from "@/lib/utils";
 
 // ── Court identifier parsing ──────────────────────────────────────────────
 
@@ -78,6 +81,65 @@ function getPartiesByRole(courtCase: CourtCase): {
   return { plaintiffs, defendants };
 }
 
+function getStatusTone(status: string | null | undefined) {
+  const normalized = status?.toLowerCase() || "";
+
+  if (
+    normalized.includes("फैसला") ||
+    normalized.includes("faisala") ||
+    normalized.includes("decision") ||
+    normalized.includes("decided") ||
+    normalized.includes("verdict")
+  ) {
+    return "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200";
+  }
+
+  if (
+    normalized.includes("pending") ||
+    normalized.includes("progress") ||
+    normalized.includes("विचाराधीन") ||
+    normalized.includes("चालु") ||
+    normalized.includes("ongoing")
+  ) {
+    return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200";
+  }
+
+  return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200";
+}
+
+function getLatestCourtUpdate(courtCase: CourtCase) {
+  if (courtCase.verdict_date_ad) {
+    return {
+      type: courtCase.case_status || "Faisala",
+      fallbackKey: "caseDetail.courtFaisala",
+      date: formatDateWithBS(courtCase.verdict_date_ad, "PP", courtCase.verdict_date_bs),
+    };
+  }
+
+  // `hearings` is absent on the core shape used on the case-detail page.
+  const latestHearing = [...(courtCase.hearings ?? [])]
+    .filter((hearing) => hearing.hearing_date_ad)
+    .sort((a, b) => b.hearing_date_ad.localeCompare(a.hearing_date_ad))[0];
+
+  if (latestHearing) {
+    return {
+      type: latestHearing.decision_type || latestHearing.case_status || "Hearing",
+      fallbackKey: "caseDetail.courtHearing",
+      date: formatDateWithBS(latestHearing.hearing_date_ad, "PP", latestHearing.hearing_date_bs),
+    };
+  }
+
+  if (courtCase.registration_date_ad) {
+    return {
+      type: "",
+      fallbackKey: "caseDetail.courtRegistered",
+      date: formatDateWithBS(courtCase.registration_date_ad, "PP", courtCase.registration_date_bs),
+    };
+  }
+
+  return null;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────
 
 interface CourtCaseCardProps {
@@ -103,35 +165,52 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
 
   const { courtName, caseNumber } = parseCourtIdentifier(courtCaseId, lang);
   const detailPath = linkToDetail ? courtCaseDetailPath(courtCaseId) : null;
+  const lastUpdate = courtCase ? getLatestCourtUpdate(courtCase) : null;
 
-  const header = (
-    <>
-      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Scale className="h-4 w-4 shrink-0 text-muted-foreground" />
-        {courtName}
-      </div>
-      {caseNumber && (
-        <div className="pl-6 text-xs font-mono text-muted-foreground">
-          {t("caseDetail.courtCaseNumber", "Case No.")}: {caseNumber}
-        </div>
-      )}
-    </>
+  const headerText = (
+    <span className="break-words">
+      {caseNumber ? `${caseNumber} (${courtName})` : courtName}
+    </span>
   );
 
   return (
     <div className="rounded-lg border border-border p-4">
       {/* Court name + case number header (links to the detail page when asked). */}
-      <div className="mb-3 space-y-0.5">
-        {detailPath ? (
-          <Link
-            to={detailPath}
-            className="block rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {header}
-          </Link>
-        ) : (
-          header
-        )}
+      <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          {detailPath ? (
+            <Link
+              to={detailPath}
+              className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary underline underline-offset-4 transition-colors hover:text-primary/75 md:text-lg"
+            >
+              {headerText}
+            </Link>
+          ) : (
+            <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary md:text-lg">
+              {headerText}
+            </span>
+          )}
+        </div>
+
+        <div className="flex shrink-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-end">
+          {lastUpdate && (
+            <p className="max-w-md text-left text-sm leading-5 text-primary/60">
+              <span className="font-medium text-primary/70">
+                {t("caseDetail.courtLastUpdate", "Last update")}:
+              </span>{" "}
+              {lastUpdate.type || t(lastUpdate.fallbackKey)} - {lastUpdate.date}
+            </p>
+          )}
+
+          {courtCase?.case_status && (
+            <Badge
+              variant="outline"
+              className={cn("w-fit rounded-full px-3 py-1 text-xs font-semibold", getStatusTone(courtCase.case_status))}
+            >
+              {courtCase.case_status}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -140,37 +219,31 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
           <Skeleton className="h-4 w-1/2" />
         </div>
       ) : courtCase ? (
-        <div className="space-y-3 text-sm">
+        <div className="space-y-3">
           {/* Metadata row */}
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-base font-normal leading-[1.7] text-primary/75 break-words">
             {courtCase.case_type && (
-              <span>
-                <span className="font-medium text-foreground">{t("caseDetail.courtCaseType", "Case Type")}:</span>{" "}
+              <span className="break-words">
+                <span className="font-medium text-primary/90">{t("caseDetail.courtCaseType", "Case Type")}:</span>{" "}
                 {courtCase.case_type}
               </span>
             )}
             {courtCase.category && (
-              <span>
-                <span className="font-medium text-foreground">{t("caseDetail.courtCategory", "Category")}:</span>{" "}
+              <span className="break-words">
+                <span className="font-medium text-primary/90">{t("caseDetail.courtCategory", "Category")}:</span>{" "}
                 {courtCase.category}
               </span>
             )}
-            {courtCase.division && (
-              <span>
-                <span className="font-medium text-foreground">{t("caseDetail.courtDivision", "Division")}:</span>{" "}
-                {courtCase.division}
-              </span>
-            )}
             {courtCase.registration_date_ad && (
-              <span>
-                <span className="font-medium text-foreground">{t("caseDetail.courtRegistered", "Registered")}:</span>{" "}
-                {formatDateWithBS(courtCase.registration_date_ad)}
+              <span className="break-words">
+                <span className="font-medium text-primary/90">{t("caseDetail.courtRegistered", "Registered")}:</span>{" "}
+                {formatDateWithBS(courtCase.registration_date_ad, "PP", courtCase.registration_date_bs)}
               </span>
             )}
-            {courtCase.case_status && (
-              <span>
-                <span className="font-medium text-foreground">{t("caseDetail.courtStatus", "Status")}:</span>{" "}
-                {courtCase.case_status}
+            {courtCase.verdict_date_ad && (
+              <span className="break-words">
+                <span className="font-medium text-primary/90">{t("caseDetail.courtVerdictDate", "Faisala date")}:</span>{" "}
+                {formatDateWithBS(courtCase.verdict_date_ad, "PP", courtCase.verdict_date_bs)}
               </span>
             )}
           </div>
@@ -180,16 +253,16 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
             const { plaintiffs, defendants } = getPartiesByRole(courtCase);
             if (plaintiffs.length === 0 && defendants.length === 0) return null;
             return (
-              <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-base font-normal leading-[1.7] text-primary/75 break-words">
                 {plaintiffs.length > 0 && (
-                  <span>
-                    <span className="font-medium text-foreground">{t("caseDetail.courtPlaintiff", "Plaintiff")}:</span>{" "}
+                  <span className="break-words">
+                    <span className="font-medium text-primary/90">{t("caseDetail.courtPlaintiff", "Plaintiff")}:</span>{" "}
                     {plaintiffs.join(", ")}
                   </span>
                 )}
                 {defendants.length > 0 && (
-                  <span>
-                    <span className="font-medium text-foreground">{t("caseDetail.courtDefendant", "Defendant")}:</span>{" "}
+                  <span className="break-words">
+                    <span className="font-medium text-primary/90">{t("caseDetail.courtDefendant", "Defendant")}:</span>{" "}
                     {defendants.join(", ")}
                   </span>
                 )}
@@ -200,27 +273,32 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
           {/* Hearings collapsible — absent on the core shape (case-detail page). */}
           {(courtCase.hearings?.length ?? 0) > 0 && (
             <Collapsible className="mt-3">
-              <CollapsibleTrigger className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-                <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
-                <span>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                >
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
                   {t("caseDetail.courtHearings", "Hearings")} ({courtCase.hearings?.length ?? 0})
-                </span>
+                </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <div className="table-scroll-wrapper overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-border bg-muted/50">
-                        <th className="px-3 py-3 text-left font-semibold text-foreground whitespace-nowrap">
+                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
                           {t("caseDetail.courtHearingDate", "सुनवाइ मिती")}
                         </th>
-                        <th className="px-3 py-3 text-left font-semibold text-foreground">
+                        <th className="px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
                           {t("caseDetail.courtHearingJudges", "Judges")}
                         </th>
-                        <th className="px-3 py-3 text-left font-semibold text-foreground whitespace-nowrap">
+                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
                           {t("caseDetail.courtHearingStatus", "Status")}
                         </th>
-                        <th className="px-3 py-3 text-left font-semibold text-foreground whitespace-nowrap">
+                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
                           {t("caseDetail.courtHearingDecision", "Decision")}
                         </th>
                       </tr>
@@ -230,10 +308,10 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
                         .sort((a, b) => a.hearing_date_ad.localeCompare(b.hearing_date_ad))
                         .map((hearing: CourtCaseHearing) => (
                           <tr key={hearing.id} className="border-b border-border/50 last:border-0">
-                            <td className="px-3 py-3 text-foreground whitespace-nowrap">
+                            <td className="whitespace-nowrap px-3 py-2.5 text-sm font-normal leading-relaxed text-primary/75">
                               {formatDateWithBS(hearing.hearing_date_ad)}
                             </td>
-                            <td className="px-3 py-3 text-foreground">
+                            <td className="px-3 py-2.5 text-sm font-normal leading-relaxed text-primary/75">
                               {hearing.judge_names
                                 ? hearing.judge_names.split("\n").map((line, i, arr) => (
                                     <span key={i}>
@@ -243,10 +321,10 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
                                   ))
                                 : null}
                             </td>
-                            <td className="px-3 py-3 text-foreground whitespace-nowrap">
+                            <td className="whitespace-nowrap px-3 py-2.5 text-sm font-normal leading-relaxed text-primary/75">
                               {hearing.case_status}
                             </td>
-                            <td className="px-3 py-3 text-foreground whitespace-nowrap">
+                            <td className="whitespace-nowrap px-3 py-2.5 text-sm font-normal leading-relaxed text-primary/75">
                               {hearing.decision_type || ""}
                             </td>
                           </tr>
