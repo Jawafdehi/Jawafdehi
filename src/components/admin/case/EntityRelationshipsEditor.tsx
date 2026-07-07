@@ -162,7 +162,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     update(i, { relationship_type: v as EntityRelationshipRow["relationship_type"] })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Relationship type">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -179,7 +179,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     update(i, { outcome: v as EntityRelationshipRow["outcome"] })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Verdict outcome">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
