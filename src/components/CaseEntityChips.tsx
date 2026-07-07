@@ -109,7 +109,7 @@ export function CaseEntityChips({
                 {displayName}
               </span>
               {shouldShowOutcome(jawafEntity.outcome) && (
-                <Badge className={outcomeBadgeClass(jawafEntity.outcome)}>
+                <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
                   {outcomeLabel(jawafEntity.outcome, language)}
                 </Badge>
               )}

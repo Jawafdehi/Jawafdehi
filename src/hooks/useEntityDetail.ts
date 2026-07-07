@@ -9,7 +9,7 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import { getEntityById, type Allegation as PAPAllegation } from '@/services/api';
 import { getCaseById } from '@/services/jds-api';
 import type { Entity } from '@/types/entity';
-import type { Case as JDSCase, EntityCaseRelationship, EntityOutcome } from '@/types/jds';
+import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 
 interface UseEntityDetailOptions {
   entityId?: string;
@@ -21,7 +21,6 @@ interface UseEntityDetailOptions {
 export interface EntityCaseWithRelation {
   caseItem: JDSCase;
   relationType: string;
-  outcome?: EntityOutcome;
   notes: string;
 }
 
@@ -75,7 +74,6 @@ export function useEntityDetail(options: UseEntityDetailOptions = {}): UseEntity
       return {
         caseItem,
         relationType: entry.relation_type,
-        outcome: entry.outcome,
         notes: entry.notes,
       };
     })

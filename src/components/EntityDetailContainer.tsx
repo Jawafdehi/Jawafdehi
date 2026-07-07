@@ -18,8 +18,7 @@ import { AlertCircle, FileText, Building2, User, Mail, Phone, Globe } from 'luci
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from '@/utils/entity-helpers';
-import type { Case as JDSCase, EntityCaseRelationship, EntityOutcome } from '@/types/jds';
-import { outcomeBadgeClass, outcomeLabel, shouldShowOutcome } from '@/utils/case-outcome';
+import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 import { formatDate } from '@/utils/date';
 
 interface EntityDetailContainerProps {
@@ -34,7 +33,7 @@ interface EntityDetailContainerProps {
 
 interface GroupedCaseRelation {
   caseItem: JDSCase;
-  relations: Array<{ relationType: string; outcome?: EntityOutcome; notes: string }>;
+  relations: Array<{ relationType: string; notes: string }>;
 }
 
 export function EntityDetailContainer({
@@ -46,7 +45,7 @@ export function EntityDetailContainer({
   hasNesData = true,
   relatedCaseEntries = [],
 }: EntityDetailContainerProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const {
     entity,
     allegations,
@@ -66,12 +65,12 @@ export function EntityDetailContainer({
     if (!existing) {
       relationGroups.set(detail.caseItem.id, {
         caseItem: detail.caseItem,
-        relations: [{ relationType: detail.relationType, outcome: detail.outcome, notes: detail.notes }],
+        relations: [{ relationType: detail.relationType, notes: detail.notes }],
       });
       continue;
     }
 
-    existing.relations.push({ relationType: detail.relationType, outcome: detail.outcome, notes: detail.notes });
+    existing.relations.push({ relationType: detail.relationType, notes: detail.notes });
   }
 
   const groupedCaseRelations = Array.from(relationGroups.values());
@@ -308,16 +307,9 @@ export function EntityDetailContainer({
                       </p>
                       <div className="flex gap-2 mt-2">
                         {relations.map((relation, index) => (
-                          <span key={`${caseItem.id}-rel-${index}`} className="flex gap-1">
-                            <Badge variant="destructive">
-                              {getRelationLabel(relation.relationType)}
-                            </Badge>
-                            {shouldShowOutcome(relation.outcome) && (
-                              <Badge className={outcomeBadgeClass(relation.outcome)}>
-                                {outcomeLabel(relation.outcome, i18n.language)}
-                              </Badge>
-                            )}
-                          </span>
+                          <Badge key={`${caseItem.id}-rel-${index}`} variant="destructive">
+                            {getRelationLabel(relation.relationType)}
+                          </Badge>
                         ))}
                         {caseItem.tags?.slice(0, 2).map((tag: string) => (
                           <Badge key={tag} variant="secondary">{tag}</Badge>
@@ -371,16 +363,9 @@ export function EntityDetailContainer({
                       </p>
                       <div className="flex gap-2 mt-2">
                         {relations.map((relation, index) => (
-                          <span key={`${caseItem.id}-rel-${index}`} className="flex gap-1">
-                            <Badge variant="secondary">
-                              {getRelationLabel(relation.relationType)}
-                            </Badge>
-                            {shouldShowOutcome(relation.outcome) && (
-                              <Badge className={outcomeBadgeClass(relation.outcome)}>
-                                {outcomeLabel(relation.outcome, i18n.language)}
-                              </Badge>
-                            )}
-                          </span>
+                          <Badge key={`${caseItem.id}-rel-${index}`} variant="secondary">
+                            {getRelationLabel(relation.relationType)}
+                          </Badge>
                         ))}
                         {caseItem.tags?.slice(0, 2).map((tag: string) => (
                           <Badge key={tag} variant="secondary">{tag}</Badge>
