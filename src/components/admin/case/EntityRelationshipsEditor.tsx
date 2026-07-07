@@ -2,6 +2,7 @@ import { useState } from "react";
 import { searchEntities, adminErrorMessage } from "@/services/admin-api";
 import {
   RELATIONSHIP_TYPES,
+  OUTCOME_TYPES,
   type EntityRelationshipRow,
 } from "@/lib/jawafdehi-forms";
 import { isValidEntityIri } from "@/lib/datalake-forms";
@@ -49,7 +50,10 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
 
   const addRow = (nes_id = "") =>
-    onChange([...rows, { nes_id, relationship_type: "ACCUSED", notes: "" }]);
+    onChange([
+      ...rows,
+      { nes_id, relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" },
+    ]);
 
   const runSearch = async () => {
     if (!query.trim()) return;
@@ -137,7 +141,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
           {rows.map((r, i) => {
             const iriBad = r.nes_id.trim() !== "" && !isValidEntityIri(r.nes_id);
             return (
-              <div key={i} className="grid gap-2 rounded border p-2 sm:grid-cols-[1fr_10rem_auto]">
+              <div key={i} className="grid gap-2 rounded border p-2 sm:grid-cols-[1fr_10rem_10rem_auto]">
                 <div className="space-y-1">
                   <Input
                     value={r.nes_id}
@@ -165,6 +169,23 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     {RELATIONSHIP_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>
                         {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={r.outcome}
+                  onValueChange={(v) =>
+                    update(i, { outcome: v as EntityRelationshipRow["outcome"] })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OUTCOME_TYPES.map((o) => (
+                      <SelectItem key={o} value={o}>
+                        {o}
                       </SelectItem>
                     ))}
                   </SelectContent>

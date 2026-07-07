@@ -25,10 +25,12 @@ import {
   buildEntitiesPatch,
   buildTimelinePatch,
   buildEvidencePatch,
+  OUTCOME_TYPES,
   type EntityRelationshipRow,
   type TimelineEventRow,
   type EvidenceRow,
   type RelationshipType,
+  type OutcomeType,
 } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
@@ -107,6 +109,14 @@ function asRelType(v: unknown): RelationshipType {
     : "ACCUSED";
 }
 
+// Coerce a loaded outcome into the known enum (default CHARGED).
+function asOutcome(v: unknown): OutcomeType {
+  const s = str(v).toUpperCase();
+  return (OUTCOME_TYPES as readonly string[]).includes(s)
+    ? (s as OutcomeType)
+    : "CHARGED";
+}
+
 // Parse a loaded case's entities array into editor rows. Tolerates the loose
 // read-plane shape (nes_id may live under different keys).
 function parseEntities(c: Record<string, unknown>): EntityRelationshipRow[] {
@@ -114,6 +124,7 @@ function parseEntities(c: Record<string, unknown>): EntityRelationshipRow[] {
   return list.map((e) => ({
     nes_id: str(e.nes_id ?? e.entity ?? e["@id"]),
     relationship_type: asRelType(e.relationship_type ?? e.role),
+    outcome: asOutcome(e.outcome),
     notes: str(e.notes),
   }));
 }

@@ -60,16 +60,17 @@ describe("isValidCourtCaseRef", () => {
 describe("isValidEntityRow", () => {
   it("needs a valid IRI and a known relationship type", () => {
     expect(
-      isValidEntityRow({ nes_id: IRI, relationship_type: "ACCUSED", notes: "" }),
+      isValidEntityRow({ nes_id: IRI, relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" }),
     ).toBe(true);
     expect(
-      isValidEntityRow({ nes_id: "not-an-iri", relationship_type: "ACCUSED", notes: "" }),
+      isValidEntityRow({ nes_id: "not-an-iri", relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" }),
     ).toBe(false);
     expect(
       isValidEntityRow({
         nes_id: IRI,
         // @ts-expect-error deliberately invalid enum value
         relationship_type: "BOGUS",
+        outcome: "CHARGED",
         notes: "",
       }),
     ).toBe(false);
@@ -99,13 +100,13 @@ describe("replaceOp", () => {
 describe("buildEntitiesPatch", () => {
   it("replaces /entities and drops blank rows", () => {
     const rows: EntityRelationshipRow[] = [
-      { nes_id: IRI, relationship_type: "ACCUSED", notes: "lead" },
-      { nes_id: "  ", relationship_type: "WITNESS", notes: "" },
+      { nes_id: IRI, relationship_type: "ACCUSED", outcome: "CONVICTED", notes: "lead" },
+      { nes_id: "  ", relationship_type: "WITNESS", outcome: "CHARGED", notes: "" },
     ];
     expect(buildEntitiesPatch(rows)).toEqual({
       op: "replace",
       path: "/entities",
-      value: [{ nes_id: IRI, relationship_type: "ACCUSED", notes: "lead" }],
+      value: [{ nes_id: IRI, relationship_type: "ACCUSED", outcome: "CONVICTED", notes: "lead" }],
     });
   });
   it("emits an empty list to clear all entities", () => {
