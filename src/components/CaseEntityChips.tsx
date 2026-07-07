@@ -8,6 +8,8 @@ import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
+import { Badge } from "@/components/ui/badge";
+import { outcomeBadgeClass, outcomeLabel, shouldShowOutcome } from "@/utils/case-outcome";
 
 interface CaseEntityChipsProps {
   entities: JawafEntity[];
@@ -106,6 +108,11 @@ export function CaseEntityChips({
               <span className="text-base font-medium leading-snug text-primary">
                 {displayName}
               </span>
+              {shouldShowOutcome(jawafEntity.outcome) && (
+                <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
+                  {outcomeLabel(jawafEntity.outcome, language)}
+                </Badge>
+              )}
               {strippedNotes && (
                 <span className="text-sm leading-snug text-primary/75">
                   {strippedNotes}

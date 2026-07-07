@@ -59,6 +59,11 @@ export const DocumentSourceTypeKeys: Record<DocumentSourceType, string> = {
 // Main Types
 // ============================================================================
 
+// Verdict outcome of a case<->entity relationship. Distinct from `type` (the
+// role): 'charged' is the default/undecided state; 'acquitted' is essential —
+// "not convicted" cannot distinguish acquitted from pending.
+export type EntityOutcome = "charged" | "convicted" | "acquitted" | "abated";
+
 export interface JawafEntity {
   // Numeric primary key is NOT returned by the backend for case-bound entities
   // (the case serializer keys entity binds on `nes_id`); optional for the rare
@@ -67,6 +72,7 @@ export interface JawafEntity {
   nes_id: string | null; // Entity ID from Nepal Entity Service
   display_name: string | null; // Display name for the entity
   type?: string; // Relationship type: 'accused', 'alleged', 'related', 'witness', 'location', 'respondent', 'petitioner', etc.
+  outcome?: EntityOutcome; // Verdict outcome; absent/'charged' = undecided
   notes?: string; // Additional notes about the relationship
   related_cases?: EntityCaseRelationship[]; // Unified case links with relation metadata
 }
@@ -74,6 +80,7 @@ export interface JawafEntity {
 export interface EntityCaseRelationship {
   case_id: number;
   relation_type: string;
+  outcome?: EntityOutcome; // Verdict outcome for this entity in this case
   notes: string;
 }
 

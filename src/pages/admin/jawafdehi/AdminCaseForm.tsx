@@ -25,10 +25,12 @@ import {
   buildEntitiesPatch,
   buildTimelinePatch,
   buildEvidencePatch,
+  OUTCOME_TYPES,
   type EntityRelationshipRow,
   type TimelineEventRow,
   type EvidenceRow,
   type RelationshipType,
+  type OutcomeType,
 } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
@@ -107,13 +109,25 @@ function asRelType(v: unknown): RelationshipType {
     : "ACCUSED";
 }
 
+// Coerce a loaded outcome into the known enum (default CHARGED).
+function asOutcome(v: unknown): OutcomeType {
+  const s = str(v).toUpperCase();
+  return (OUTCOME_TYPES as readonly string[]).includes(s)
+    ? (s as OutcomeType)
+    : "CHARGED";
+}
+
 // Parse a loaded case's entities array into editor rows. Tolerates the loose
 // read-plane shape (nes_id may live under different keys).
 function parseEntities(c: Record<string, unknown>): EntityRelationshipRow[] {
   const list = Array.isArray(c.entities) ? (c.entities as Record<string, unknown>[]) : [];
   return list.map((e) => ({
     nes_id: str(e.nes_id ?? e.entity ?? e["@id"]),
-    relationship_type: asRelType(e.relationship_type ?? e.role),
+    // The case-read API emits the role under `type`; keep `relationship_type`/
+    // `role` as fallbacks. Reading only the latter two coerced every loaded row
+    // to ACCUSED, so a whole-list save silently rewrote all non-accused roles.
+    relationship_type: asRelType(e.type ?? e.relationship_type ?? e.role),
+    outcome: asOutcome(e.outcome),
     notes: str(e.notes),
   }));
 }

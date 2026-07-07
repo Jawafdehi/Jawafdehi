@@ -84,11 +84,22 @@ export const RELATIONSHIP_TYPES = [
 ] as const;
 export type RelationshipType = (typeof RELATIONSHIP_TYPES)[number];
 
+// Verdict outcome, orthogonal to the relationship role. CHARGED = undecided
+// default; the terminal values are set only from a primary court order.
+export const OUTCOME_TYPES = [
+  "CHARGED",
+  "CONVICTED",
+  "ACQUITTED",
+  "ABATED",
+] as const;
+export type OutcomeType = (typeof OUTCOME_TYPES)[number];
+
 // --- Row shapes for the sub-resource editors (match §3 patch value shapes) ----
 
 export interface EntityRelationshipRow {
   nes_id: string;
   relationship_type: RelationshipType;
+  outcome: OutcomeType;
   notes: string;
 }
 
@@ -168,6 +179,7 @@ export function buildEntitiesPatch(rows: EntityRelationshipRow[]): PatchOp {
     .map((r) => ({
       nes_id: r.nes_id.trim(),
       relationship_type: r.relationship_type,
+      outcome: r.outcome,
       notes: r.notes ?? "",
     }));
   return replaceOp("/entities", value);
