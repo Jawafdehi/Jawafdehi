@@ -15,6 +15,11 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["Vesper Libre", "Georgia", "Noto Sans Devanagari", "serif"],
+        // "Register" data face: figures, counts, dates and case references.
+        mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

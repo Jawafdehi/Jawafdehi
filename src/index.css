@@ -6,6 +6,71 @@
   font-display: swap;
 }
 
+/* Vesper Libre — a bilingual (Latin + Devanagari) serif used for editorial
+   headings across /insights and /data-quality. Self-hosted; covers both
+   scripts, so bilingual headlines stay in one typeface. */
+@font-face {
+  font-family: 'Vesper Libre';
+  src: url('/font/Vesper_Libre/VesperLibre-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vesper Libre';
+  src: url('/font/Vesper_Libre/VesperLibre-Medium.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vesper Libre';
+  src: url('/font/Vesper_Libre/VesperLibre-Bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vesper Libre';
+  src: url('/font/Vesper_Libre/VesperLibre-Black.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+
+/* IBM Plex Mono (SIL OFL) — the "register" data face. Numbers, counts, case
+   references and dates on data pages are set in this mono so figures read like
+   entries in an official record, not generic dashboard text. Latin subset;
+   Devanagari digits fall back to Noto Sans Devanagari. */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/font/IBM_Plex_Mono/IBMPlexMono-400.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/font/IBM_Plex_Mono/IBMPlexMono-500.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/font/IBM_Plex_Mono/IBMPlexMono-600.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/font/IBM_Plex_Mono/IBMPlexMono-700.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
