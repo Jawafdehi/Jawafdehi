@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from "react";
 import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -38,12 +38,12 @@ import UpdateDetail from "./pages/UpdateDetail";
 import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
+import DocumentPreviewPage from "./pages/DocumentPreviewPage";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
-const GuestChat = lazy(() => import("./pages/GuestChat"));
 const Donate = lazy(() => import("./pages/Donate"));
 // Post-donation return targets (/donate/success, /donate/cancel) — not
 // pre-rendered, so lazy() per the split policy above.
@@ -53,7 +53,6 @@ const DataQuality = lazy(() => import("./pages/DataQuality"));
 const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
-const EntityResponse = lazy(() => import("./pages/EntityResponse"));
 const ModerationDashboard = lazy(() => import("./pages/ModerationDashboard"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
 const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
@@ -96,6 +95,7 @@ const App = () => (
         <Routes>
           {/* Embed route for oEmbed iframe */}
           <Route path="/embed/case/:id" element={<EmbedCaseCard />} />
+          <Route path="/document-viewer" element={<DocumentPreviewPage />} />
 
           {/* Unified admin panel — standalone full-screen, mounted at /admin.
               Folds in the former /portal casework pages. Auth: OIDC + an
@@ -133,8 +133,6 @@ const App = () => (
             <Route path="/material/*" element={<MaterialProfile />} />
             {/* Data-lake court case by IRI tail (/courtcase/<court>/<case_number>). */}
             <Route path="/courtcase/*" element={<CourtCaseProfile />} />
-            <Route path="/ask" element={<GuestChat />} />
-            <Route path="/entity-response/:id" element={<EntityResponse />} />
             <Route path="/moderation" element={<ModerationDashboard />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/updates" element={<Updates />} />

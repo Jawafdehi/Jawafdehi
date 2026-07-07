@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
+import { getCaseBadgeClassName } from "@/lib/case-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   ArchiveSearchResult,
@@ -69,8 +70,10 @@ function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
   const caseImageUrl = caseDetail
     ? caseDetail.thumbnail_url || caseDetail.banner_url || null
     : null;
-  const reserveImageSpace =
-    Boolean(caseSlug) && (isDetailLoading || Boolean(caseImageUrl && !imageFailed));
+  // Case cards always reserve the image rail (uniform layout): skeleton while
+  // hydrating, gradient placeholder when the case has no image.
+  const reserveImageSpace = Boolean(caseSlug);
+  const showCaseImage = Boolean(caseImageUrl && !imageFailed);
 
   useEffect(() => setImageFailed(false), [caseImageUrl]);
 
@@ -87,7 +90,9 @@ function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
       url={result.url}
       image={
         reserveImageSpace ? (
-          caseImageUrl && !imageFailed ? (
+          isDetailLoading ? (
+            <Skeleton className="h-full w-full rounded-none" />
+          ) : showCaseImage ? (
             <img
               alt=""
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -97,7 +102,7 @@ function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
               src={caseImageUrl}
             />
           ) : (
-            <Skeleton className="h-full w-full rounded-none" />
+            <div className="h-full w-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-50 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800" />
           )
         ) : null
       }
@@ -113,7 +118,11 @@ function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
                     toggleArchiveSearchParam(searchParams, "tags", tag),
                   );
                 }}
-                className="relative z-10 rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                className={getCaseBadgeClassName(
+                  "tag",
+                  undefined,
+                  "relative z-10 px-2.5 py-0.5 text-[10px] transition-colors",
+                )}
               >
                 {tag}
               </button>

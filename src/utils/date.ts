@@ -119,6 +119,111 @@ export function formatDateWithBS(
   return bs ? `${ad} | ${bs.formatted}` : ad;
 }
 
+export interface LocalizedDatePair {
+  primary: string;
+  primaryCalendar: 'AD' | 'BS';
+  secondary: string | null;
+  secondaryCalendar: 'AD' | 'BS' | null;
+}
+
+/**
+ * Format a date for bilingual case UI. The active language controls which
+ * calendar is primary while keeping the other calendar available as context.
+ */
+export function formatDateForLanguage(
+  dateString: string | null | undefined,
+  fmt = 'PP',
+  bsOverride?: string | null,
+  language = 'en'
+): LocalizedDatePair {
+  const ad = formatDate(dateString, fmt);
+  const overrideFormatted = formatBSString(bsOverride);
+  const computedBs = overrideFormatted || convertToBS(dateString)?.formatted || null;
+  const isNepali = language.startsWith('ne');
+
+  if (isNepali && computedBs) {
+    return {
+      primary: computedBs,
+      primaryCalendar: 'BS',
+      secondary: ad === 'N/A' || ad === 'Invalid Date' ? null : ad,
+      secondaryCalendar: ad === 'N/A' || ad === 'Invalid Date' ? null : 'AD',
+    };
+  }
+
+  return {
+    primary: ad,
+    primaryCalendar: 'AD',
+    secondary: computedBs,
+    secondaryCalendar: computedBs ? 'BS' : null,
+  };
+}
+
+export function formatDateRangeForLanguage(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+  fmt = 'PP',
+  startBsOverride?: string | null,
+  endBsOverride?: string | null,
+  language = 'en'
+): LocalizedDatePair {
+  const start = formatDateForLanguage(startDate, fmt, startBsOverride, language);
+
+  if (!endDate) return start;
+
+  const end = formatDateForLanguage(endDate, fmt, endBsOverride, language);
+
+  return {
+    primary: `${start.primary} - ${end.primary}`,
+    primaryCalendar: start.primaryCalendar,
+    secondary: start.secondary && end.secondary ? `${start.secondary} - ${end.secondary}` : start.secondary,
+    secondaryCalendar: start.secondaryCalendar,
+  };
+}
+
+export interface CaseDateRangeDisplay {
+  primary: string;
+  secondary: string | null;
+}
+
+/** Format a case date range as primary calendar plus optional parenthetical calendar. */
+export function formatCaseDateRangeForLanguage(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+  ongoingText = 'Ongoing',
+  language = 'en'
+): CaseDateRangeDisplay {
+  if (!startDate && !endDate) return { primary: 'N/A', secondary: null };
+
+  const formatSingle = (dateString: string) => formatDateForLanguage(dateString, 'PP', null, language);
+
+  if (!startDate && endDate) {
+    const end = formatSingle(endDate);
+    return { primary: end.primary, secondary: end.secondary };
+  }
+
+  if (startDate && !endDate) {
+    const start = formatSingle(startDate);
+    return {
+      primary: `${start.primary} - ${ongoingText}`,
+      secondary: start.secondary ? `${start.secondary} - ${ongoingText}` : null,
+    };
+  }
+
+  if (!startDate || !endDate) return { primary: 'N/A', secondary: null };
+
+  try {
+    if (kathmanduKey(startDate) === kathmanduKey(endDate)) {
+      const single = formatSingle(startDate);
+      return { primary: single.primary, secondary: single.secondary };
+    }
+  } catch {
+    // Fall through to range formatting if either key cannot be parsed.
+  }
+
+  const range = formatDateRangeForLanguage(startDate, endDate, 'PP', null, null, language);
+  return { primary: range.primary, secondary: range.secondary };
+}
+
 /** Format a start/end date range with BS dates, or show "Ongoing". */
 export function formatCaseDateRange(
   startDate: string | null | undefined,

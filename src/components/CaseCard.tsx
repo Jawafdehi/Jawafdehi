@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
+import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
 
@@ -80,11 +81,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     setImageIndex((i) => i + 1);
   };
 
-  const statusConfig = {
-    ongoing: { label: t("caseCard.status.ongoing"), color: "bg-alert text-alert-foreground" },
-    resolved: { label: t("caseCard.status.resolved"), color: "bg-success text-success-foreground" },
-    "under-investigation": { label: t("caseCard.status.underInvestigation"), color: "bg-muted text-muted-foreground" },
-  };
+  const statusLabel = t(getCaseStatusLabelKey(status));
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (!caseSlug) return;
@@ -122,10 +119,9 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-            <Badge className={`${statusConfig[status].color} shrink-0 rounded-full border-0 px-3 py-1 text-xs font-medium shadow-sm`}>
-              {statusConfig[status].label}
-            </Badge>
-
+            <CaseStatusBadge status={status} className="shrink-0">
+              {statusLabel}
+            </CaseStatusBadge>
           </div>
         </div>
 
@@ -184,21 +180,14 @@ function CaseCardTags({ tags }: Readonly<{ tags: string[] }>) {
   return (
     <div className="flex flex-wrap gap-1.5 mb-1">
       {tags.slice(0, 2).map((tag) => (
-        <Badge
-          key={tag}
-          variant="secondary"
-          className="bg-secondary text-secondary-foreground border border-border/50 px-2.5 py-0.5 text-xs shadow-sm hover:bg-secondary/80"
-        >
+        <CaseTagBadge key={tag} className="px-2.5 py-0.5">
           {tag}
-        </Badge>
+        </CaseTagBadge>
       ))}
       {tags.length > 2 && (
-        <Badge
-          variant="secondary"
-          className="bg-secondary text-secondary-foreground border border-border/50 px-2 py-0.5 text-xs shadow-sm"
-        >
+        <CaseTagBadge className="px-2 py-0.5">
           +{tags.length - 2}
-        </Badge>
+        </CaseTagBadge>
       )}
     </div>
   );
