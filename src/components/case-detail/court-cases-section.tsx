@@ -31,6 +31,7 @@ export function CourtCasesSection({
             courtCaseId={id}
             courtCase={courtCase}
             isLoading={isLoading}
+            linkToDetail
           />
         ))}
       </div>

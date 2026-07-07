@@ -17,11 +17,21 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
       return;
     }
 
-    try {
-      await i18n.changeLanguage(lang);
-      trackEvent('language_switch', { from_lang: currentLanguage, to_lang: lang });
-    } catch (error) {
-      console.error("[LanguageToggle] Failed to change language", error);
+    const updateLanguage = async () => {
+      try {
+        await i18n.changeLanguage(lang);
+        trackEvent("language_switch", { from_lang: currentLanguage, to_lang: lang });
+      } catch (error) {
+        console.error("[LanguageToggle] Failed to change language", error);
+      }
+    };
+
+    if (!document.startViewTransition) {
+      await updateLanguage();
+    } else {
+      document.startViewTransition(async () => {
+        await updateLanguage();
+      });
     }
     // Language preference is automatically persisted via localStorage by i18next-browser-languagedetector
   };
@@ -35,7 +45,7 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
       aria-label={`${t("common.changeLanguage")}: ${nextLanguageLabel}`}
       title={`${t("common.changeLanguage")}: ${nextLanguageLabel}`}
       className={cn(
-        "relative inline-flex h-10 w-[84px] shrink-0 items-center overflow-hidden rounded-full border px-1 text-sm font-semibold leading-none text-foreground transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "relative inline-flex h-9 w-[76px] shrink-0 items-center overflow-hidden rounded-full border px-1 text-sm font-semibold leading-none text-foreground transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         quiet
           ? "border-transparent bg-transparent shadow-none hover:border-transparent hover:bg-secondary/30 hover:shadow-none"
           : "border-border/70 bg-background/70 shadow-sm shadow-foreground/5 hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-background hover:shadow-md",
@@ -44,14 +54,14 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
       <span
         aria-hidden="true"
         className={cn(
-          "absolute top-1/2 h-8 w-9 -translate-y-1/2 rounded-full bg-foreground shadow-sm transition-transform duration-200 motion-reduce:transition-none",
-          currentLanguage === "en" ? "translate-x-0" : "translate-x-[38px]",
+          "absolute left-1 top-1/2 h-7 w-[calc(50%-4px)] -translate-y-1/2 rounded-full bg-foreground shadow-sm transition-transform duration-200 motion-reduce:transition-none",
+          currentLanguage === "en" ? "translate-x-0" : "translate-x-full",
         )}
       />
       <span className="relative z-10 grid h-full w-full grid-cols-2 items-center">
         <span
           className={cn(
-            "grid h-full place-items-center text-center text-[11px] font-bold leading-none transition-colors",
+            "grid h-full place-items-center text-center text-[10px] font-bold leading-none transition-colors",
             currentLanguage === "en" ? "text-background" : "text-muted-foreground",
           )}
         >
@@ -59,7 +69,7 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
         </span>
         <span
           className={cn(
-            "grid h-full place-items-center text-center text-[11px] font-bold leading-none transition-colors",
+            "grid h-full place-items-center text-center text-[10px] font-bold leading-none transition-colors",
             currentLanguage === "ne" ? "text-background" : "text-muted-foreground",
           )}
         >

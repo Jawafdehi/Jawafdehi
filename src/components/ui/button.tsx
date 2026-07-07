@@ -27,7 +27,7 @@ const buttonVariants = cva(
         lg: "h-11 px-8",
         xl: "h-14 px-10 text-base",
         icon: "h-10 w-10",
-        navCta: "h-11 min-w-[9.5rem] px-5 text-[13px]",
+        navCta: "h-11   px-4 text-[13px]",
         navSheet: "h-11 px-4",
         navMenuIcon: "h-11 w-11",
       },

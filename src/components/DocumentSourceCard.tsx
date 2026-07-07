@@ -2,18 +2,25 @@ import { Archive, Download, ExternalLink, FileText, Files, Link as LinkIcon } fr
 import { useState } from "react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { DocumentPreviewDialog, type PreviewDocument } from "@/components/DocumentPreviewDialog";
 import { SourceTypeBadge } from "@/components/SourceTypeBadge";
 import { Button } from "@/components/ui/button";
+import { materialTail } from "@/services/datalake-api";
 import type {
-  DocumentSource,
+  EvidenceMaterial,
   SourceLink,
   SourceLinkRole,
 } from "@/types/jds";
 
 interface DocumentSourceCardProps {
-  source: DocumentSource | null;
-  sourceId: string | number;
+  /**
+   * The resolved material embedded on the case-detail evidence entry
+   * (`{display_name, material_type, urls}`), or null when not yet available.
+   */
+  material: EvidenceMaterial | null;
+  /** The material @id IRI; used for a stable fallback title/key. */
+  materialIri: string;
   itemNumber: number;
   evidenceDescription?: string;
 }
@@ -54,16 +61,16 @@ const normalizeRole = (
 };
 
 /**
- * Build a clean, role-tagged list of links from a source's `urls` field.
+ * Build a clean, role-tagged list of links from a material's `urls` field.
  *
  * `urls` is the canonical source of links: each entry is a `{link, role}` dict
  * with an explicit role (RAW/MARKDOWN/PERMALINK). Invalid or non-http(s)
  * entries are dropped.
  */
-const resolveLinks = (source: DocumentSource | null): SourceLink[] => {
-  if (!source || !Array.isArray(source.urls)) return [];
+const resolveLinks = (material: EvidenceMaterial | null): SourceLink[] => {
+  if (!material || !Array.isArray(material.urls)) return [];
 
-  return source.urls
+  return material.urls
     .filter((u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link))
     .map((u) => ({ link: u.link.trim(), role: normalizeRole(u.role, u.link) }));
 };
@@ -159,45 +166,29 @@ const getFileActionLabelKey = (link: SourceLink) => {
 };
 
 export function DocumentSourceCard({
-  source,
-  sourceId,
-  itemNumber,
+  material,
+  materialIri,
   evidenceDescription,
 }: DocumentSourceCardProps) {
   const { t } = useTranslation();
   const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
-  const links = resolveLinks(source);
+  const links = resolveLinks(material);
   const { rawLinks, sourcePageLinks, permalinkLinks, alternateLinks, markdownLinks } = partitionLinks(links);
 
-  const hasSourceDesc = Boolean(source?.description?.trim() && source.description.trim() !== ".");
+  // The material shape carries no free-text description ("cases own no
+  // documents"), so the per-case evidence note is the only description channel:
+  // short notes render as a byline, long ones as the main paragraph.
   const hasEvidenceDesc = Boolean(evidenceDescription?.trim() && evidenceDescription.trim() !== ".");
 
   let mainDescription = "";
   let byline = "";
 
-  if (hasSourceDesc && hasEvidenceDesc) {
-    const srcDesc = source!.description!.trim();
-    const evDesc = evidenceDescription!.trim();
-    if (srcDesc.length > evDesc.length) {
-      mainDescription = srcDesc;
-      byline = evDesc;
-    } else {
-      mainDescription = evDesc;
-      byline = srcDesc;
-    }
-  } else if (hasEvidenceDesc) {
+  if (hasEvidenceDesc) {
     const evDesc = evidenceDescription!.trim();
     if (evDesc.length < 120) {
       byline = evDesc;
     } else {
       mainDescription = evDesc;
-    }
-  } else if (hasSourceDesc) {
-    const srcDesc = source!.description!.trim();
-    if (srcDesc.length < 120) {
-      byline = srcDesc;
-    } else {
-      mainDescription = srcDesc;
     }
   }
 
@@ -314,9 +305,18 @@ export function DocumentSourceCard({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <h3 className="font-semibold leading-snug text-primary/90 text-lg md:text-xl break-words">
-                    {source?.title || t("documentSource.fallbackTitle", { id: sourceId })}
+                    {materialIri ? (
+                      <Link
+                        to={`/material/${materialTail(materialIri)}`}
+                        className="rounded-sm underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        {material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}
+                      </Link>
+                    ) : (
+                      material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })
+                    )}
                   </h3>
-                  <SourceTypeBadge sourceType={source?.source_type} />
+                  <SourceTypeBadge sourceType={material?.material_type} />
                 </div>
               </div>
             </div>

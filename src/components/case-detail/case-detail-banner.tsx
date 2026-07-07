@@ -2,15 +2,17 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { ExternalLink, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { cn } from "@/lib/utils";
+import { entityPath } from "@/lib/entity-links";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
-import type { Entity } from "@/types/nes";
+import type { Entity } from "@/types/entity";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
-import { getPrimaryName } from "@/utils/nes-helpers";
+import { getPrimaryName } from "@/utils/entity-helpers";
+import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
@@ -40,15 +42,15 @@ const COURT_NAME_MAP: Record<string, { en: string; ne: string }> = {
   },
 };
 
-function parseCourtCaseRef(courtCase: string, language: "en" | "ne") {
-  const colonIndex = courtCase.indexOf(":");
+function formatCourtCaseRef(courtCase: string, language: "en" | "ne") {
+  // Refs arrive as the canonical @id IRI or the legacy `<court>:<number>` form.
+  const parts = parseCourtCaseRef(courtCase);
 
-  if (colonIndex === -1) return null;
+  if (!parts) return null;
 
-  const courtId = courtCase.substring(0, colonIndex).trim();
-  const caseNumber = courtCase.substring(colonIndex + 1).trim();
-
-  if (!courtId || !caseNumber) return null;
+  const courtId = parts.court.toLowerCase();
+  // IRIs carry the number lowercased; display it in its natural uppercase.
+  const caseNumber = parts.caseNumber.toUpperCase();
 
   const courtName = COURT_NAME_MAP[courtId]?.[language] || courtId;
 
@@ -56,7 +58,7 @@ function parseCourtCaseRef(courtCase: string, language: "en" | "ne") {
     courtId,
     courtName,
     caseNumber,
-    href: `https://ngm.jawafdehi.org/case/${encodeURIComponent(courtId)}/${encodeURIComponent(caseNumber)}`,
+    href: `/courtcase/${courtId}/${encodeURIComponent(parts.caseNumber)}`,
     label: `${caseNumber} (${courtName})`,
   };
 }
@@ -128,11 +130,11 @@ export function CaseDetailBanner({
     if (!caseData.court_cases?.length) return [];
 
     return caseData.court_cases
-      .map((courtCase) => parseCourtCaseRef(courtCase, normalizedLang))
-      .filter((courtCase): courtCase is NonNullable<ReturnType<typeof parseCourtCaseRef>> => Boolean(courtCase));
+      .map((courtCase) => formatCourtCaseRef(courtCase, normalizedLang))
+      .filter((courtCase): courtCase is NonNullable<ReturnType<typeof formatCourtCaseRef>> => Boolean(courtCase));
   }, [caseData.court_cases, normalizedLang]);
 
-  const breadcrumbCase = formattedCourtCases[0]?.caseNumber || caseData.case_id || String(caseData.id);
+  const breadcrumbCase = formattedCourtCases[0]?.caseNumber || String(caseData.id);
 
   const getEntityDisplayName = (caseEntity: JawafEntity) => {
     const entity = caseEntity.nes_id
@@ -228,17 +230,25 @@ export function CaseDetailBanner({
 
                   <div className={metaValueClass}>
                     {locationEntities.length > 0
-                      ? locationEntities.map((entity, index) => (
-                        <span key={entity.id}>
-                          <Link
-                            to={`/entity/${entity.id}`}
-                            className={metaLinkClass}
-                          >
-                            {getEntityDisplayName(entity)}
-                          </Link>
-                          {index < locationEntities.length - 1 && ", "}
-                        </span>
-                      ))
+                      ? locationEntities.map((entity, index) => {
+                        // Entities are keyed/linked by their NES @id IRI; id-less
+                        // binds render as plain text (no profile to link to).
+                        const key = entity.nes_id ?? `${entity.display_name ?? "location"}-${index}`;
+                        const to = entityPath(entity.nes_id);
+
+                        return (
+                          <span key={key}>
+                            {to ? (
+                              <Link to={to} className={metaLinkClass}>
+                                {getEntityDisplayName(entity)}
+                              </Link>
+                            ) : (
+                              <span>{getEntityDisplayName(entity)}</span>
+                            )}
+                            {index < locationEntities.length - 1 && ", "}
+                          </span>
+                        );
+                      })
                       : notAvailableLabel}
                   </div>
                 </div>
@@ -273,16 +283,13 @@ export function CaseDetailBanner({
                     </p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
                       {formattedCourtCases.map((courtCase) => (
-                        <a
+                        <Link
                           key={courtCase.label}
-                          href={courtCase.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          to={courtCase.href}
                           className="inline-flex items-center gap-1.5 text-sm font-semibold leading-6 text-primary underline underline-offset-4 transition-colors hover:text-primary/75"
                         >
                           <span>{courtCase.label}</span>
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                        </a>
+                        </Link>
                       ))}
                     </div>
                   </div>

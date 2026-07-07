@@ -102,3 +102,66 @@ export function formatBSString(bsDateString: string | null | undefined): string 
   if (month < 1 || month > 12 || date < 1 || date > 32) return null;
   return `${toNepaliNumerals(year)} ${NEPALI_MONTHS[month - 1]} ${toNepaliNumerals(date)}`;
 }
+
+// ============================================================================
+// Date-picker support: AD → BS conversion
+// ============================================================================
+//
+// The BS calendar picker itself is @sbmdkl/nepali-datepicker-reactjs (it emits
+// both bsDate and adDate). The one conversion we still do ourselves is AD → BS,
+// to keep the BS field in sync when the user picks in the Gregorian calendar.
+
+const AD_DATE_RE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+function pad(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+// ============================================================================
+// BS date-string normalization
+// ============================================================================
+
+const BS_DATE_RE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+/**
+ * Normalize a BS date string to canonical ASCII "YYYY-MM-DD": Devanagari
+ * numerals are transliterated and month/day zero-padded. Returns null when the
+ * input is empty or not a plausible BS date (e.g. the "-०-०" artifact the
+ * @sbmdkl picker produces from NaN state), so callers can reject it.
+ */
+export function normalizeBSDateString(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const ascii = value
+    .trim()
+    .split('')
+    .map((ch) => {
+      const i = NEPALI_NUMERALS.indexOf(ch);
+      return i === -1 ? ch : String(i);
+    })
+    .join('');
+  const m = BS_DATE_RE.exec(ascii);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 32) return null;
+  return `${year}-${pad(month)}-${pad(day)}`;
+}
+
+// Convert a Gregorian "YYYY-MM-DD" string to a BS "YYYY-MM-DD" string. Returns
+// null on any invalid/out-of-range input so callers can leave the pair alone.
+export function adStringToBSString(ad: string | null | undefined): string | null {
+  if (!ad) return null;
+  const m = AD_DATE_RE.exec(ad.trim());
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  try {
+    const r = bs.toBik(`${year}-${pad(month)}-${pad(day)}`);
+    return `${r.year}-${pad(r.month)}-${pad(r.day)}`;
+  } catch {
+    return null;
+  }
+}

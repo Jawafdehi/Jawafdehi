@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
+import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { formatDateWithBS } from "@/utils/date";
 import { cn } from "@/lib/utils";
 
@@ -26,28 +28,25 @@ const COURT_NAMES_NE: Record<string, string> = {
 function parseCourtIdentifier(
   courtIdentifier: string,
   lang: string
-): { courtName: string; caseNumber: string; courtSlug: string } {
-  const colonIdx = courtIdentifier.indexOf(":");
-  if (colonIdx === -1) {
-    return { courtName: courtIdentifier, caseNumber: "", courtSlug: courtIdentifier };
+): { courtName: string; caseNumber: string } {
+  // Refs arrive as the canonical @id IRI or the legacy `<court>:<number>` form.
+  const parts = parseCourtCaseRef(courtIdentifier);
+  if (!parts) {
+    return { courtName: courtIdentifier, caseNumber: "" };
   }
 
-  const prefix = courtIdentifier.slice(0, colonIdx).toLowerCase();
-  const caseNumber = courtIdentifier.slice(colonIdx + 1);
+  const prefix = parts.court.toLowerCase();
+  // IRIs carry the number lowercased; display it in its natural uppercase.
+  const caseNumber = parts.caseNumber.toUpperCase();
 
   let courtName: string;
   if (lang === "ne" && COURT_NAMES_NE[prefix]) {
     courtName = COURT_NAMES_NE[prefix];
   } else {
-    courtName = COURT_NAMES_EN[prefix] ?? courtIdentifier.slice(0, colonIdx);
+    courtName = COURT_NAMES_EN[prefix] ?? parts.court;
   }
 
-  return { courtName, caseNumber, courtSlug: prefix };
-}
-
-function getCourtCaseHref(courtSlug: string, caseNumber: string) {
-  if (!courtSlug || !caseNumber) return "https://ngm.jawafdehi.org";
-  return `https://ngm.jawafdehi.org/case/${encodeURIComponent(courtSlug)}/${encodeURIComponent(caseNumber)}`;
+  return { courtName, caseNumber };
 }
 
 // ── Defendant/Plaintiff from entities ────────────────────────────────────
@@ -59,7 +58,10 @@ function getPartiesByRole(courtCase: CourtCase): {
   const plaintiffs: string[] = [];
   const defendants: string[] = [];
 
-  for (const entity of courtCase.entities) {
+  // `entities` is only populated on the assembled "full" court case; the core
+  // shape used on the case-detail page omits it. Default to [] so the string
+  // plaintiff/defendant fallback below still renders instead of crashing.
+  for (const entity of courtCase.entities ?? []) {
     const side = entity.side?.toLowerCase();
     if (side === "plaintiff" || side === "वादी") {
       plaintiffs.push(entity.name);
@@ -114,7 +116,8 @@ function getLatestCourtUpdate(courtCase: CourtCase) {
     };
   }
 
-  const latestHearing = [...courtCase.hearings]
+  // `hearings` is absent on the core shape used on the case-detail page.
+  const latestHearing = [...(courtCase.hearings ?? [])]
     .filter((hearing) => hearing.hearing_date_ad)
     .sort((a, b) => b.hearing_date_ad.localeCompare(a.hearing_date_ad))[0];
 
@@ -143,32 +146,50 @@ interface CourtCaseCardProps {
   courtCaseId: string;
   courtCase?: CourtCase;
   isLoading: boolean;
+  // When true, the header links to the data-lake court-case detail page
+  // (/courtcase/<court>/<case_number>). Off on the detail page itself.
+  linkToDetail?: boolean;
 }
 
-export function CourtCaseCard({ courtCaseId, courtCase, isLoading }: CourtCaseCardProps) {
+// The /courtcase/* detail path for a court-case ref — @id IRI or
+// `<court>:<case_number>` (or null if the id is in neither form).
+function courtCaseDetailPath(courtCaseId: string): string | null {
+  const parts = parseCourtCaseRef(courtCaseId);
+  if (!parts) return null;
+  return `/courtcase/${parts.court}/${encodeURIComponent(parts.caseNumber)}`;
+}
+
+export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail }: CourtCaseCardProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
-  const { courtName, caseNumber, courtSlug } = parseCourtIdentifier(courtCaseId, lang);
-  const courtCaseHref = getCourtCaseHref(courtSlug, caseNumber);
+  const { courtName, caseNumber } = parseCourtIdentifier(courtCaseId, lang);
+  const detailPath = linkToDetail ? courtCaseDetailPath(courtCaseId) : null;
   const lastUpdate = courtCase ? getLatestCourtUpdate(courtCase) : null;
 
+  const headerText = (
+    <span className="break-words">
+      {caseNumber ? `${caseNumber} (${courtName})` : courtName}
+    </span>
+  );
+
   return (
-    <div className="rounded-lg border border-border  p-4">
-      {/* Court name + case number header */}
+    <div className="rounded-lg border border-border p-4">
+      {/* Court name + case number header (links to the detail page when asked). */}
       <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <a
-            href={courtCaseHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary underline underline-offset-4 transition-colors hover:text-primary/75 md:text-lg"
-          >
-            <span className="break-words">
-              {caseNumber ? `${caseNumber} (${courtName})` : courtName}
+          {detailPath ? (
+            <Link
+              to={detailPath}
+              className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary underline underline-offset-4 transition-colors hover:text-primary/75 md:text-lg"
+            >
+              {headerText}
+            </Link>
+          ) : (
+            <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary md:text-lg">
+              {headerText}
             </span>
-            <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          </a>
+          )}
         </div>
 
         <div className="flex shrink-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-end">
@@ -249,8 +270,8 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading }: CourtCaseCa
             );
           })()}
 
-          {/* Hearings collapsible */}
-          {courtCase.hearings.length > 0 && (
+          {/* Hearings collapsible — absent on the core shape (case-detail page). */}
+          {(courtCase.hearings?.length ?? 0) > 0 && (
             <Collapsible className="mt-3">
               <CollapsibleTrigger asChild>
                 <Button
@@ -260,7 +281,7 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading }: CourtCaseCa
                   className="h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 >
                   <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
-                  {t("caseDetail.courtHearings", "Hearings")} ({courtCase.hearings.length})
+                  {t("caseDetail.courtHearings", "Hearings")} ({courtCase.hearings?.length ?? 0})
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
@@ -283,7 +304,7 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading }: CourtCaseCa
                       </tr>
                     </thead>
                     <tbody>
-                      {[...courtCase.hearings]
+                      {[...(courtCase.hearings ?? [])]
                         .sort((a, b) => a.hearing_date_ad.localeCompare(b.hearing_date_ad))
                         .map((hearing: CourtCaseHearing) => (
                           <tr key={hearing.id} className="border-b border-border/50 last:border-0">

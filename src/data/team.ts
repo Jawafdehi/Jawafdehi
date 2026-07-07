@@ -38,7 +38,9 @@ export const usBoard: TeamMember[] = [
     thumb: "/assets/teammembers/anish.png",
     description: "",
     tags: ["Board Member"],
-    contacts: [],
+    contacts: [
+      { type: "email", value: "karkianish93@gmail.com" },
+    ],
   },
 ];
 
@@ -87,7 +89,9 @@ export const nepalBoard: TeamMember[] = [
     thumb: "/assets/teammembers/niroj.jpeg",
     description: "",
     tags: ["Founder", "Board Member"],
-    contacts: [],
+    contacts: [
+      { type: "email", value: "nirojaryal2002@gmail.com" },
+    ],
   },
   {
     displayName: { en: "Shikshita Bhandari", ne: "शिक्षिता भण्डारी" },
@@ -156,6 +160,14 @@ export const members: TeamMember[] = [
     description: "Social Media Volunteer",
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/sujata-pokharel-293348249/" },
+    ],
+  },
+  {
+    displayName: { en: "Britika Khanal", ne: "बृतिका खनाल" },
+    thumb: "/assets/teammembers/britika.jpg",
+    description: "Content & Social Media",
+    contacts: [
+      { type: "linkedin", value: "https://np.linkedin.com/in/britika-khanal-217b50257" },
     ],
   },
   {

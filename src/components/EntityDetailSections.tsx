@@ -1,7 +1,7 @@
 /**
  * Entity Detail Sections
  * 
- * Display entity detail sections using raw NES Entity data
+ * Display entity detail sections using raw entity record data
  */
 
 import React from 'react';
@@ -16,7 +16,7 @@ import {
   Vote,
   ExternalLink,
 } from 'lucide-react';
-import type { Entity, Candidacy } from '@/types/nes';
+import type { Entity, Candidacy } from '@/types/entity';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { 

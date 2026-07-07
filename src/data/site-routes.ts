@@ -1,4 +1,3 @@
-import { updates } from "./updates.ts";
 
 export type SearchIconName =
   | "BookOpen"
@@ -46,6 +45,8 @@ export type StaticSiteRoute = {
   keywords: string[];
   icon: SearchIconName;
   sitemapTitle: string;
+  excludeFromSearch?: boolean;
+  excludeFromSitemap?: boolean;
 };
 
 export type UpdateRouteEntry = {
@@ -119,6 +120,34 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     sitemapTitle: "Volunteer — Jawafdehi",
   },
   {
+    path: "/donate",
+    titleKey: "nav.donate",
+    descriptionKey: "searchCommand.descriptions.donate",
+    keywords: ["donate", "donation", "support", "fund", "give", "contribute"],
+    icon: "HeartHandshake",
+    sitemapTitle: "Donate — Jawafdehi",
+  },
+  {
+    path: "/donate/success",
+    titleKey: "nav.donate",
+    descriptionKey: "searchCommand.descriptions.donate",
+    keywords: ["donate", "donation", "support", "success", "payment"],
+    icon: "HeartHandshake",
+    sitemapTitle: "Donation Success — Jawafdehi",
+    excludeFromSearch: true,
+    excludeFromSitemap: true,
+  },
+  {
+    path: "/donate/cancel",
+    titleKey: "nav.donate",
+    descriptionKey: "searchCommand.descriptions.donate",
+    keywords: ["donate", "donation", "support", "cancel", "payment"],
+    icon: "HeartHandshake",
+    sitemapTitle: "Donation Cancelled — Jawafdehi",
+    excludeFromSearch: true,
+    excludeFromSitemap: true,
+  },
+  {
     path: "/about",
     titleKey: "nav.about",
     descriptionKey: "searchCommand.descriptions.about",
@@ -141,6 +170,14 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     keywords: ["products", "tools", "platforms"],
     icon: "FileText",
     sitemapTitle: "Products — Jawafdehi",
+  },
+  {
+    path: "/saptahik",
+    titleKey: "nav.weeklySeries",
+    descriptionKey: "searchCommand.descriptions.weeklySeries",
+    keywords: ["weekly", "corruption", "series", "meeting", "zoom", "youtube", "live"],
+    icon: "Newspaper",
+    sitemapTitle: "Weekly Corruption Series — Jawafdehi",
   },
   {
     path: "/updates",
@@ -176,10 +213,18 @@ export const PRE_RENDERED_STATIC_ROUTES = [
   },
 ] as const satisfies readonly StaticSiteRoute[];
 
-export const UPDATE_ROUTE_ENTRIES = updates.map(({ id, title }) => ({
-  id,
-  title: `${title} — Jawafdehi`,
-})) satisfies readonly UpdateRouteEntry[];
+// Updates/news now live in the Wagtail CMS and are fetched at runtime, so there
+// are no longer static per-article entries here. Build-time sitemap/prerender of
+// individual articles should source these from the CMS API (`getArticles`).
+export const UPDATE_ROUTE_ENTRIES: readonly UpdateRouteEntry[] = [];
+
+export function shouldIncludeStaticRouteInSearch(route: StaticSiteRoute): boolean {
+  return route.excludeFromSearch !== true;
+}
+
+export function shouldIncludeStaticRouteInSitemap(route: StaticSiteRoute): boolean {
+  return route.excludeFromSitemap !== true;
+}
 
 export function staticRouteToSearchEntry(route: StaticSiteRoute): SearchIndexEntry {
   return {
@@ -205,7 +250,9 @@ export function updateRouteToSearchEntry(update: UpdateRouteEntry): SearchIndexE
 
 export function buildFallbackSearchIndexEntries(): SearchIndexEntry[] {
   return [
-    ...PRE_RENDERED_STATIC_ROUTES.map(staticRouteToSearchEntry),
+    ...PRE_RENDERED_STATIC_ROUTES
+      .filter(shouldIncludeStaticRouteInSearch)
+      .map(staticRouteToSearchEntry),
     ...UPDATE_ROUTE_ENTRIES.map(updateRouteToSearchEntry),
   ];
 }

@@ -1,69 +1,106 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
+import { useAuth } from "react-oidc-context";
 import type { CaseworkUser } from "@/types/casework";
-import { getMe, login as apiLogin, logout as apiLogout, isLoggedIn } from "@/services/casework-api";
+import { getUserManager } from "@/services/oidc";
+import { isAdmin as rolesIsAdmin, isModerator as rolesIsModerator } from "@/lib/roles";
+import {
+  DEV_AUTH_ENABLED,
+  getStoredDevUser,
+  devLogin as devLoginRequest,
+  devLogout as devLogoutRequest,
+} from "@/services/dev-auth";
 
-interface AuthState {
+interface AuthContextValue {
   user: CaseworkUser | null;
   loading: boolean;
   error: string | null;
-}
-
-interface AuthContextValue extends AuthState {
-  login: (username: string, password: string) => Promise<void>;
+  login: () => void;
   logout: () => void;
   isAdmin: boolean;
+  // True when the user holds admin OR moderator — the UI gate for privileged
+  // actions (state transitions, moderation queue, regrade-all). The API is the
+  // authorization authority; this only decides which controls the UI offers.
+  isModerator: boolean;
+  // DEV-ONLY: whether the username/password login form is available (VITE_DEV_AUTH).
+  devAuthEnabled: boolean;
+  // DEV-ONLY: authenticate with username/password (Django session). Throws on
+  // bad credentials so the login form can surface the error.
+  devLogin: (username: string, password: string) => Promise<void>;
 }
 
 const CaseworkAuthContext = createContext<AuthContextValue | null>(null);
 
+// Build the portal user straight from the OIDC token claims. `roles` is the
+// flattened roles array (role keys, lowercase); the API remains the
+// authorization authority — this is only for the header / UI gating.
+function toCaseworkUser(
+  profile: Record<string, unknown> | undefined,
+): CaseworkUser | null {
+  if (!profile) return null;
+  const roles = Array.isArray(profile.roles)
+    ? (profile.roles as unknown[]).filter(
+        (r): r is string => typeof r === "string",
+      )
+    : [];
+  const username =
+    (profile.email as string) ||
+    (profile.preferred_username as string) ||
+    (profile.name as string) ||
+    "";
+  return { username, roles, is_admin: roles.includes("admin") };
+}
+
 export function CaseworkAuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthState>({ user: null, loading: true, error: null });
+  const auth = useAuth();
 
-  const fetchUser = useCallback(async () => {
-    if (!isLoggedIn()) {
-      setState({ user: null, loading: false, error: null });
-      return;
-    }
-    try {
-      const user = await getMe();
-      setState({ user, loading: false, error: null });
-    } catch {
-      setState({ user: null, loading: false, error: null });
-    }
-  }, []);
+  // DEV-ONLY session user (username/password). Rehydrated from localStorage so a
+  // reload stays logged in. When present it takes precedence over OIDC.
+  const [devUser, setDevUser] = useState<CaseworkUser | null>(() =>
+    getStoredDevUser(),
+  );
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  const oidcUser = useMemo(
+    () => (auth.isAuthenticated ? toCaseworkUser(auth.user?.profile) : null),
+    [auth.isAuthenticated, auth.user?.profile],
+  );
 
-  const login = async (username: string, password: string) => {
-    setState((s) => ({ ...s, loading: true, error: null }));
-    try {
-      await apiLogin(username, password);
-      await fetchUser();
-    } catch (err: unknown) {
-      const e = err as { response?: { status?: number; data?: { detail?: string } } };
-      const msg =
-        e.response?.status === 403
-          ? "Your account does not have the Contributor role required for the review system."
-          : e.response?.data?.detail ?? "Login failed. Check your credentials.";
-      setState((s) => ({ ...s, loading: false, error: msg }));
-      throw new Error(msg);
-    }
+  const user = devUser ?? oidcUser;
+
+  const login = () => {
+    auth.signinRedirect({
+      state: window.location.pathname + window.location.search,
+    });
+  };
+
+  const devLogin = async (username: string, password: string) => {
+    const u = await devLoginRequest(username, password);
+    setDevUser(u);
   };
 
   const logout = () => {
-    apiLogout();
-    setState({ user: null, loading: false, error: null });
+    if (devUser) {
+      // End the dev session and drop the local snapshot; stay in the SPA.
+      devLogoutRequest().finally(() => {
+        setDevUser(null);
+        window.location.assign("/admin/login");
+      });
+      return;
+    }
+    getUserManager().signoutRedirect();
   };
 
   return (
     <CaseworkAuthContext.Provider
       value={{
-        ...state,
+        user,
+        loading: auth.isLoading,
+        error: auth.error?.message ?? null,
         login,
         logout,
-        isAdmin: !!state.user?.is_admin,
+        isAdmin: rolesIsAdmin(user?.roles),
+        isModerator: rolesIsModerator(user?.roles),
+        devAuthEnabled: DEV_AUTH_ENABLED,
+        devLogin,
       }}
     >
       {children}

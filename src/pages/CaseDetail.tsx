@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   AlertCircle,
   MapPin,
-  StickyNote,
   User,
 } from "lucide-react";
 import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
@@ -30,10 +29,12 @@ import { CourtCasesSection } from "@/components/case-detail/court-cases-section"
 import { EvidenceSection } from "@/components/case-detail/evidence-section";
 import { InvolvedPartiesSection } from "@/components/case-detail/involved-parties-section";
 import { KeyAllegationsSection } from "@/components/case-detail/key-allegations-section";
-import { getCaseById, getCourtCase, getDocumentSourceById } from "@/services/jds-api";
+import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
+import { API_BASE_URL } from "@/services/http";
+import { getCourtCase } from "@/services/datalake-api";
 import { getEntityById } from "@/services/api";
-import type { CourtCase, DocumentSource, JawafEntity } from "@/types/jds";
-import type { Entity } from "@/types/nes";
+import type { CourtCase, JawafEntity } from "@/types/jds";
+import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
@@ -43,20 +44,23 @@ import { DisqusComments } from "@/components/DisqusComments";
 import { JAWAFDEHI_WHATSAPP_NUMBER, JAWAFDEHI_EMAIL } from "@/config/constants";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { trackEvent } from "@/utils/analytics";
+import { entityPath } from "@/lib/entity-links";
 import { formatBigo } from "@/utils/number";
 import { resolveLegacyCaseSlug } from "@/utils/legacyCaseMap";
+import { isCourtCaseRef } from "@/utils/courtCaseRef";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import "@/styles/print.css";
 
 function getGroupedEntities(entities: JawafEntity[]) {
-  const seen = new Set<number>();
-
+  // Case entities are keyed on their NES @id IRI (the backend no longer returns
+  // a numeric id). Fall back to display_name so id-less binds still dedupe.
+  const seen = new Set<string>();
   return entities.reduce((groups, entity) => {
-    if (seen.has(entity.id) || entity.type === "location") return groups;
+    const key = entity.nes_id ?? entity.display_name ?? "";
+    if ((key && seen.has(key)) || entity.type === "location") return groups;
 
-    seen.add(entity.id);
-
+    if (key) seen.add(key);
     const type = entity.type || "unknown";
 
     if (!groups[type]) groups[type] = [];
@@ -80,9 +84,13 @@ const CaseDetail = () => {
   // (local dev, preview deploys, direct hits that bypass the worker).
   const legacyTargetSlug = resolveLegacyCaseSlug(id);
 
+  // /case/<court-ref> URLs (e.g. /case/081-CR-0116): resolved via the by-court-ref
+  // API, then replaced with the canonical slug below once the case loads.
+  const isCourtRef = isCourtCaseRef(id);
+
   const { data: caseData, isLoading, isError } = useQuery({
     queryKey: ["case", id],
-    queryFn: () => getCaseById(id!),
+    queryFn: () => (isCourtRef ? getCaseByCourtRef(id!) : getCaseById(id!)),
     enabled: id != null && legacyTargetSlug == null,
     staleTime: 5 * 60 * 1000,
   });
@@ -96,22 +104,13 @@ const CaseDetail = () => {
   const visibleAccusedEntities = collapsedAccused ? bannerEntities.slice(0, BANNER_ACCUSED_LIMIT) : bannerEntities;
   const hiddenAccusedCount = accusedCount - visibleAccusedEntities.length;
 
-  const sourceQueries = useQueries({
-    queries: (caseData?.evidence ?? []).map((evidence) => ({
-      queryKey: ["source", evidence.source_id],
-      queryFn: () => getDocumentSourceById(evidence.source_id),
-      staleTime: 10 * 60 * 1000,
-      retry: false,
-    })),
-  });
-
   const uniqueNesIds = caseData
     ? [...new Set(caseData.entities.filter((e) => e.nes_id).map((e) => e.nes_id!))]
     : [];
 
   const entityQueries = useQueries({
     queries: uniqueNesIds.map((nesId) => ({
-      queryKey: ["nes-entity", nesId],
+      queryKey: ["entity-record", nesId],
       queryFn: () => getEntityById(nesId),
       staleTime: 10 * 60 * 1000,
       retry: false,
@@ -141,12 +140,6 @@ const CaseDetail = () => {
     trackEvent("case_view", { case_id: loadedCaseId, slug: `/case/${id}` });
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, isError]);
-
-  const resolvedSources: Record<string, DocumentSource> = {};
-  (caseData?.evidence ?? []).forEach((evidence, i) => {
-    const data = sourceQueries[i]?.data ?? evidence.source;
-    if (data) resolvedSources[String(evidence.source_id)] = data;
-  });
 
   const resolvedEntities: Record<string, Entity> = {};
   uniqueNesIds.forEach((nesId, i) => {
@@ -292,6 +285,12 @@ const CaseDetail = () => {
     return <Navigate to={`/case/${legacyTargetSlug}`} replace />;
   }
 
+  // /case/<court-ref> URLs: once the case resolves, replace with its canonical
+  // slug. Cases without a slug stay on the court-ref URL.
+  if (isCourtRef && caseData?.slug && caseData.slug !== id) {
+    return <Navigate to={`/case/${caseData.slug}`} replace />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
@@ -374,7 +373,7 @@ const CaseDetail = () => {
         <link
           rel="alternate"
           type="application/json"
-          href={`https://portal.jawafdehi.org/api/cases/${id}/`}
+          href={`${API_BASE_URL}/api/cases/${id}/`}
           title="Case data (JSON API)"
         />
         <link
@@ -445,11 +444,20 @@ const CaseDetail = () => {
 
                           displayName = translateDynamicText(displayName, currentLang);
 
+                          // Entities are keyed/linked by their NES @id IRI; id-less
+                          // binds render as plain text (no profile to link to).
+                          const key = e.nes_id ?? `${e.display_name ?? "entity"}-${index}`;
+                          const to = entityPath(e.nes_id);
+
                           return (
-                            <span key={e.id}>
-                              <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
-                                {displayName}
-                              </Link>
+                            <span key={key}>
+                              {to ? (
+                                <Link to={to} className="text-primary hover:underline">
+                                  {displayName}
+                                </Link>
+                              ) : (
+                                <span className="text-foreground">{displayName}</span>
+                              )}
                               {index < arr.length - 1 && ", "}
                             </span>
                           );
@@ -481,11 +489,18 @@ const CaseDetail = () => {
 
                                 displayName = translateDynamicText(displayName, currentLang);
 
+                                const key = e.nes_id ?? `${e.display_name ?? "location"}-${index}`;
+                                const to = entityPath(e.nes_id);
+
                                 return (
-                                  <span key={e.id}>
-                                    <Link to={`/entity/${e.id}`} className="text-primary hover:underline">
-                                      {displayName}
-                                    </Link>
+                                  <span key={key}>
+                                    {to ? (
+                                      <Link to={to} className="text-primary hover:underline">
+                                        {displayName}
+                                      </Link>
+                                    ) : (
+                                      <span className="text-foreground">{displayName}</span>
+                                    )}
                                     {index < locations.length - 1 && ", "}
                                   </span>
                                 );
@@ -591,7 +606,6 @@ const CaseDetail = () => {
 
                     <EvidenceSection
                       evidence={caseData.evidence}
-                      resolvedSources={resolvedSources}
                       title={t("caseDetail.evidence")}
                     />
 
@@ -611,7 +625,7 @@ const CaseDetail = () => {
               <CaseContactStrip
                 email={JAWAFDEHI_EMAIL}
                 whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
-                editUrl={`https://portal.jawafdehi.org/admin/cases/case/${id}/change/`}
+                editUrl={`${API_BASE_URL}/admin/cases/case/${id}/change/`}
                 emailLabel={t("caseDetail.emailLabel")}
                 whatsappLabel={t("caseDetail.whatsappLabel")}
                 editLabel={t("caseDetail.editCase")}

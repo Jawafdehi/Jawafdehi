@@ -37,7 +37,7 @@ export default function CaseworkReviewDetail() {
     setRerunning(true);
     try {
       const fresh = await submitReview({ slug: review.slug });
-      navigate(`/portal/reviews/${fresh.id}`);
+      navigate(`/admin/reviews/${fresh.id}`);
     } finally {
       setRerunning(false);
     }
@@ -117,7 +117,7 @@ export default function CaseworkReviewDetail() {
     <CaseworkLayout>
       <div className="space-y-5">
         <button
-          onClick={() => navigate("/portal/reviews")}
+          onClick={() => navigate("/admin/reviews")}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
           <ArrowLeft className="h-4 w-4" /> All reviews
@@ -153,6 +153,23 @@ export default function CaseworkReviewDetail() {
                 <span className="text-slate-400">
                   sources {review.sources_converted}/{review.source_count}
                 </span>
+                {review.reviewers && review.reviewers.length > 0 && (
+                  <span
+                    className="text-slate-400 font-mono"
+                    title={review.reviewers
+                      .map((rv) => `${rv.tier}: ${rv.provider}·${rv.model || "?"} (${rv.calls})`)
+                      .join(", ")}
+                  >
+                    🤖{" "}
+                    {Array.from(
+                      new Set(
+                        review.reviewers.map((rv) =>
+                          rv.model ? `${rv.provider}·${rv.model}` : rv.provider
+                        )
+                      )
+                    ).join(", ")}
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -217,33 +234,46 @@ export default function CaseworkReviewDetail() {
           <div className="bg-white border rounded-xl p-4">
             <h2 className="text-sm font-semibold mb-2">Sources ({result.source_summary.length})</h2>
             <ul className="space-y-1.5">
-              {result.source_summary.map((s, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm">
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                      s.conversion_status === "converted" || s.conversion_status === "attached"
-                        ? "bg-green-50 text-green-700 border-green-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
-                    }`}
-                  >
-                    {s.conversion_status}
-                  </span>
-                  <span className="flex-1 truncate" title={s.title}>
-                    {s.title || "(untitled)"}
-                  </span>
-                  <span className="text-xs text-slate-400">{s.markdown_chars} chars</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSource(s);
-                      setShowRaw(false);
-                    }}
-                  >
-                    <FileText className="h-3.5 w-3.5 mr-1" /> View
-                  </Button>
-                </li>
-              ))}
+              {result.source_summary.map((s, i) => {
+                const ok =
+                  s.conversion_status === "converted" || s.conversion_status === "attached";
+                return (
+                  <li key={i} className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                          ok
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {s.conversion_status}
+                      </span>
+                      <span className="flex-1 truncate" title={s.title}>
+                        {s.title || "(untitled)"}
+                      </span>
+                      <span className="text-xs text-slate-400">{s.markdown_chars} chars</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSource(s);
+                          setShowRaw(false);
+                        }}
+                      >
+                        <FileText className="h-3.5 w-3.5 mr-1" /> View
+                      </Button>
+                    </div>
+                    {/* Surface the conversion failure cause instead of hiding it
+                        behind an empty "0 chars" / empty View. */}
+                    {!ok && s.conversion_note && (
+                      <p className="mt-0.5 ml-1 text-xs text-amber-700 break-words">
+                        ⚠ {s.conversion_note}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -342,7 +372,10 @@ export default function CaseworkReviewDetail() {
               </div>
             </div>
             <div className="p-4 overflow-auto text-sm">
-              {showRaw ? (
+              {!(source.conversion_status === "converted" || source.conversion_status === "attached") && source.conversion_note ? (
+                // No converted text — show WHY (e.g. "Conversion failed: ...").
+                <p className="text-amber-700 break-words">⚠ {source.conversion_note}</p>
+              ) : showRaw ? (
                 <pre className="whitespace-pre-wrap text-xs">{source.markdown || "(no markdown)"}</pre>
               ) : (
                 <div
@@ -410,6 +443,17 @@ function RuleCard({
           <ul className="list-disc pl-4 text-xs text-red-700 space-y-0.5">
             {rr.issues.map((iss, i) => (
               <li key={i}>{iss}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {rr.notes && rr.notes.length > 0 && (
+        <div className="mt-2">
+          <div className="text-xs font-medium text-slate-500">Notes (informational, not scored)</div>
+          <ul className="list-disc pl-4 text-xs text-slate-500 space-y-0.5">
+            {rr.notes.map((n, i) => (
+              <li key={i}>{n}</li>
             ))}
           </ul>
         </div>

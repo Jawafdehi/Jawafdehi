@@ -1,23 +1,16 @@
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { Bot, Database, Code2, LayoutDashboard, Github, ExternalLink, SquareDashedBottomCode } from "lucide-react";
+import { Bot, Code2, LayoutDashboard, Github, ExternalLink, SquareDashedBottomCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/services/http";
 
 const PRODUCTS = [
   {
-    icon: Database,
-    name: "Nepal Entity Service (NES)",
-    href: "https://nes.jawafdehi.org",
-    description:
-      "Structured, open data on politicians, political parties, government leaders, and locations — designed to be reusable across any civic tech service.",
-    tags: ["Open Source", "Open Data", "Free Public API"],
-  },
-  {
     icon: Code2,
     name: "Jawafdehi API",
-    href: "https://portal.jawafdehi.org/api/swagger/",
+    href: `${API_BASE_URL}/api/swagger/`,
     description:
-      "The backend service that manages corruption cases, handles moderation workflows, and integrates with NES for entity data.",
+      "The backend service that manages corruption cases, handles moderation workflows, and integrates entity data.",
     tags: ["REST API", "Open Source", "Swagger Docs"],
   },
   {
@@ -27,14 +20,6 @@ const PRODUCTS = [
     description:
       "This platform — the public-facing interface for browsing cases, exploring entities, and understanding the archive.",
     tags: ["React", "Open Source", "Bilingual"],
-  },
-  {
-    icon: Database,
-    name: "NGM Archive",
-    href: "https://ngm.jawafdehi.org",
-    description:
-      "Open source database schema and seed data for the Nepal Entity Service. Community-driven migrations with full audit trails.",
-    tags: ["Open Schema", "Community Migrations", "GitHub"],
   },
   {
     icon: SquareDashedBottomCode,

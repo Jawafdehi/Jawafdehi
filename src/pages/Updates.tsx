@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import type { Update } from "@/data/updates";
-import { updates } from "@/data/updates";
-import { stripMarkdown } from "@/utils/markdown";
+import { useQuery } from "@tanstack/react-query";
+import { getArticles } from "@/services/cms-api";
+import type { ArticleListItem } from "@/types/cms";
 import { cn } from "@/lib/utils";
+import { formatPublicationDate } from "@/utils/date";
 import {
     CalendarIcon,
     ChevronRight,
@@ -14,38 +15,28 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const getExcerpt = (content: string, length = 170) => {
-    const text = stripMarkdown(content).replace(/\s+/g, " ").trim();
-
-    if (text.length <= length) {
-        return text;
-    }
-
-    return `${text.slice(0, length).trim()}...`;
-};
-
 type ViewMode = "cards" | "list";
 
 type UpdateCardProps = {
-    update: Update;
+    article: ArticleListItem;
     viewMode: ViewMode;
 };
 
-const UpdateCard = ({ update, viewMode }: UpdateCardProps) => {
+const UpdateCard = ({ article, viewMode }: UpdateCardProps) => {
     const { t } = useTranslation();
     const isList = viewMode === "list";
 
     return (
         <Link
-            to={`/updates/${update.id}`}
+            to={`/updates/${article.meta.slug}`}
             className="group flex min-h-full flex-col overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:data-[view=list]:flex-row"
             data-view={viewMode}
         >
-            {update.thumbnail ? (
+            {article.thumbnail?.url ? (
                 <div className="h-52 overflow-hidden border-b border-border/70 bg-muted md:data-[view=list]:h-auto md:data-[view=list]:min-h-52 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
                     <img
-                        src={update.thumbnail}
-                        alt=""
+                        src={article.thumbnail.url}
+                        alt={article.thumbnail.alt || ""}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
                     />
@@ -62,13 +53,13 @@ const UpdateCard = ({ update, viewMode }: UpdateCardProps) => {
                 <div>
                     <div className="mb-3 flex items-center gap-2 text-sm leading-5 text-muted-foreground">
                         <CalendarIcon className="h-4 w-4" aria-hidden="true" />
-                        <span>{update.date}</span>
+                        <span>{formatPublicationDate(article.date)}</span>
                     </div>
                     <h2 className="line-clamp-2 text-lg font-semibold leading-8 tracking-normal text-foreground transition-colors group-hover:text-primary">
-                        {update.title}
+                        {article.title}
                     </h2>
                     <p className={isList ? "mt-4 max-w-3xl text-sm leading-7 text-muted-foreground" : "mt-4 line-clamp-3 text-sm leading-7 text-muted-foreground"}>
-                        {getExcerpt(update.content, isList ? 240 : 150)}
+                        {article.excerpt}
                     </p>
                 </div>
 
@@ -85,6 +76,11 @@ const Updates = () => {
     const { t } = useTranslation();
     const [viewMode, setViewMode] = useState<ViewMode>("cards");
     const isCardView = viewMode === "cards";
+
+    const { data: articles, isLoading, isError } = useQuery({
+        queryKey: ["cms-articles"],
+        queryFn: () => getArticles(),
+    });
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
@@ -163,11 +159,21 @@ const Updates = () => {
                             </fieldset>
                         </div>
 
-                        <div className={isCardView ? "grid gap-6 md:grid-cols-2 xl:grid-cols-3" : "grid gap-5"}>
-                            {updates.map((update) => (
-                                <UpdateCard key={update.id} update={update} viewMode={viewMode} />
-                            ))}
-                        </div>
+                        {isError ? (
+                            <p className="text-muted-foreground">
+                                We couldn't load updates right now. Please try again later.
+                            </p>
+                        ) : isLoading ? (
+                            <p className="text-muted-foreground">Loading updates…</p>
+                        ) : !articles || articles.length === 0 ? (
+                            <p className="text-muted-foreground">No updates have been published yet.</p>
+                        ) : (
+                            <div className={isCardView ? "grid gap-6 md:grid-cols-2 xl:grid-cols-3" : "grid gap-5"}>
+                                {articles.map((article) => (
+                                    <UpdateCard key={article.id} article={article} viewMode={viewMode} />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
             </main>

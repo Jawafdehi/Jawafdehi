@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getEntities, searchEntities, EntitySearchParams, EntityListResponse } from '@/services/api';
-import type { Entity } from '@/types/nes';
+import type { Entity } from '@/types/entity';
 
 interface UseEntityListOptions {
   query?: string;

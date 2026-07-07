@@ -4,7 +4,7 @@ import { Building2, User, Mail, Phone, Globe, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from "@/utils/nes-helpers";
+import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
 interface EntityProfileHeaderProps {

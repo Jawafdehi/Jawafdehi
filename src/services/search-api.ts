@@ -1,17 +1,17 @@
-import axios from "axios";
+import { http } from "./http";
 
 import type {
   ArchiveSearchParams,
   ArchiveSearchResponse,
 } from "@/types/search";
 
-const JDS_API_BASE_URL =
-  import.meta.env.VITE_JDS_API_BASE_URL || "https://portal.jawafdehi.org/api";
-
 export async function searchArchive(
   params: ArchiveSearchParams,
 ): Promise<ArchiveSearchResponse> {
   const query = new URLSearchParams();
+  // Auto language: always request both scripts; the UI renders English-then-Nepali
+  // and there is no language toggle.
+  query.set("lang", "both");
   Object.entries(params).forEach(([name, value]) => {
     if (Array.isArray(value)) {
       value.forEach((item) => query.append(name, item));
@@ -20,7 +20,7 @@ export async function searchArchive(
     }
   });
   const suffix = query.toString();
-  const url = suffix ? `${JDS_API_BASE_URL}/search/?${suffix}` : `${JDS_API_BASE_URL}/search/`;
-  const response = await axios.get<ArchiveSearchResponse>(url);
+  const url = suffix ? `/api/search/?${suffix}` : `/api/search/`;
+  const response = await http.get<ArchiveSearchResponse>(url);
   return response.data;
 }

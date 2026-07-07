@@ -3,7 +3,13 @@ const defaultValues: Record<string, string> = {
   sort: "relevance",
 };
 const validSorts = new Set(["relevance", "newest", "oldest", "title"]);
-const validTypes = new Set(["all", "case", "entity", "document"]);
+const validTypes = new Set([
+  "all",
+  "entity",
+  "material",
+  "courtcase",
+  "case",
+]);
 
 export function normalizeArchiveSearchParams(current: URLSearchParams) {
   const next = new URLSearchParams(current);
@@ -23,8 +29,11 @@ export function normalizeArchiveSearchParams(current: URLSearchParams) {
   }
 
   const type = next.get("type");
+  // Default to "all": the unified corpus (entities + materials + court cases +
+  // cases). Defaulting to a single under-populated type makes a fresh search look
+  // empty even when the archive has plenty.
   if (!type || !validTypes.has(type)) {
-    next.set("type", "case");
+    next.set("type", "all");
   } else {
     next.set("type", type);
   }

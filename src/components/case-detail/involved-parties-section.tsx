@@ -1,7 +1,7 @@
 import { CaseEntityChips } from "@/components/CaseEntityChips";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
-import type { Entity } from "@/types/nes";
+import type { Entity } from "@/types/entity";
 
 const RELATION_PRIORITY: Record<string, number> = {
   accused: 1,

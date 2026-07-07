@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { MapPin, User } from "lucide-react";
+import { entityPath } from "@/lib/entity-links";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
 
@@ -21,9 +22,10 @@ interface CaseCardProps {
   tags?: string[];
   description: string;
   allegations?: string[]; // Key allegations array
-  entityIds?: number[]; // Jawaf entity IDs
-  locationIds?: number[]; // Jawaf entity IDs
+  entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
+  locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   thumbnailUrl?: string; //Thumbnail image
+  bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
   viewMode?: "grid" | "list";
   hideDescription?: boolean;
 }
@@ -53,7 +55,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, viewMode = "grid", hideDescription }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, bannerUrl, viewMode = "grid", hideDescription }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -65,13 +67,18 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Check if we have a valid thumbnail URL
-  const hasValidThumbnail = thumbnailUrl && thumbnailUrl.trim() !== '';
-  const [imageSrc, setImageSrc] = useState(hasValidThumbnail ? thumbnailUrl : null);
+  // Candidate images, best first: thumbnail, then banner. Cases sometimes carry
+  // a non-image thumbnail URL (an article/page link), so a load error must fall
+  // through to the banner before giving up on the gradient placeholder.
+  const imageCandidates = [thumbnailUrl, bannerUrl]
+    .map((url) => url?.trim())
+    .filter((url): url is string => Boolean(url));
+  const [imageIndex, setImageIndex] = useState(0);
+  const imageSrc = imageCandidates[imageIndex] ?? null;
 
-  // Handle image load errors by hiding the image
+  // Handle image load errors by advancing to the next candidate (or hiding).
   const handleImageError = () => {
-    setImageSrc(null);
+    setImageIndex((i) => i + 1);
   };
 
   const statusLabel = t(getCaseStatusLabelKey(status));
@@ -186,13 +193,14 @@ function CaseCardTags({ tags }: Readonly<{ tags: string[] }>) {
   );
 }
 
-function EntityRow({ icon: Icon, label, title, ids }: Readonly<{ icon: typeof User; label: string; title?: string; ids?: number[] }>) {
+function EntityRow({ icon: Icon, label, title, ids }: Readonly<{ icon: typeof User; label: string; title?: string; ids?: string[] }>) {
+  const to = ids && ids.length > 0 ? entityPath(ids[0]) : null;
   return (
     <div className="flex min-w-0 items-center">
       <Icon className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
-      {ids && ids.length > 0 ? (
+      {to ? (
         <Link
-          to={`/entity/${ids[0]}`}
+          to={to}
           className="block min-w-0 truncate rounded-sm transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           title={title}
           onClick={(e) => e.stopPropagation()}

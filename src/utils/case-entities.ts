@@ -55,20 +55,19 @@ export function getCaseTypeLabelKey(caseType: string | null | undefined): string
 /**
  * Display label for a search facet item.
  *
- * The backend ships a `display_name` for every facet, but for `case_type` that
- * string carries a bilingual "English (नेपाली)" admin label (from the
- * CaseType choices). The archive search should instead show the value in the
- * viewer's own language, so we localize case-type facets from their `name`
- * (the stable CaseType value) via the i18n keys; every other facet keeps the
- * backend `display_name`.
+ * `case_type` facets are localized to the viewer's language from their stable
+ * `name` (the CaseType value) via i18n keys. Every other facet uses its
+ * `display_name` when the backend provides one, else a humanized `name` — the
+ * unified search service returns bare `{name, count}` facets (no display_name),
+ * so the humanized fallback is the normal path there.
  */
 export function getFacetItemLabel(
   facetName: string,
-  item: { name: string; display_name: string },
+  item: { name: string; display_name?: string },
   translate: (key: string) => string,
 ): string {
   if (facetName === "case_type") {
     return translate(getCaseTypeLabelKey(item.name));
   }
-  return item.display_name;
+  return item.display_name || item.name.replaceAll("_", " ").replaceAll("-", " ");
 }

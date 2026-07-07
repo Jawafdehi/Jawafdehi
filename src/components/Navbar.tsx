@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
+  HeartHandshake,
   Menu,
   MessageCircle,
   Search,
@@ -46,6 +47,7 @@ const desktopNavWidthClass: Record<string, string> = {
   volunteer: "min-w-[6.25rem]",
   commitment: "min-w-[8.75rem]",
   about: "min-w-[5.75rem]",
+  archive: "min-w-[5.75rem]",
 };
 
 const useIsomorphicLayoutEffect =
@@ -67,6 +69,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [pillStyle, setPillStyle] = useState<PillStyle>({
     opacity: 0,
     transform: "translateX(0px)",
@@ -78,9 +81,18 @@ export function Navbar() {
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
       { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
-      { key: "cases", label: t("nav.cases"), to: "/search" },
       { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
       { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
+    ],
+    [t],
+  );
+
+  // Unified public archive: full search + the data-lake single-type browse views.
+  const archiveNavItems = useMemo<NavItem[]>(
+    () => [
+      { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
+      { key: "materials", label: t("nav.materials", "Governance materials"), to: "/materials" },
+      { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
     ],
     [t],
   );
@@ -90,6 +102,7 @@ export function Navbar() {
       { key: "about", label: t("nav.about"), to: "/about", exact: true },
       { key: "team", label: t("nav.team"), to: "/team" },
       { key: "products", label: t("nav.products"), to: "/products" },
+      { key: "weeklySeries", label: t("nav.weeklySeries"), to: "/saptahik" },
       { key: "updates", label: t("nav.updates"), to: "/updates" },
     ],
     [t],
@@ -98,11 +111,16 @@ export function Navbar() {
   const activeKey = useMemo(() => {
     const path = location.pathname;
 
-    if (["/about", "/team", "/products", "/updates"].includes(path) || path.startsWith("/updates/")) {
+    if (["/about", "/team", "/products", "/saptahik", "/updates"].includes(path) || path.startsWith("/updates/")) {
       return "about";
     }
-    if (path === "/cases" || path === "/search" || path.startsWith("/case/")) {
-      return "cases";
+    if (
+      ["/cases", "/search", "/materials", "/courtcases"].includes(path) ||
+      path.startsWith("/case/") ||
+      path.startsWith("/material/") ||
+      path.startsWith("/courtcase/")
+    ) {
+      return "archive";
     }
 
     return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
@@ -178,7 +196,7 @@ export function Navbar() {
           {t("nav.skipToContent")}
         </a>
 
-        <div className="container mx-auto grid h-[76px] grid-cols-[1fr_auto] items-center gap-3 px-4 lg:grid-cols-[minmax(150px,1fr)_auto_minmax(310px,1fr)]">
+        <div className="container mx-auto grid h-[76px] grid-cols-[1fr_auto] items-center gap-3 px-4 xl:grid-cols-[auto_1fr_auto]">
           <Link
             to="/"
             aria-label={t("nav.homeAria")}
@@ -200,7 +218,7 @@ export function Navbar() {
             aria-label="Primary"
             onPointerLeave={() => setHoveredKey(null)}
             className={cn(
-              "relative hidden items-center justify-self-center rounded-full border p-1 transition-all duration-200 ease-out lg:flex",
+              "relative hidden items-center justify-self-center rounded-full border p-1 transition-all duration-200 ease-out xl:flex",
               isScrolled
                 ? "border-slate-200/70 bg-white/85 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/80"
                 : "border-transparent bg-transparent shadow-none backdrop-blur-0",
@@ -234,6 +252,36 @@ export function Navbar() {
               </NavLink>
             ))}
 
+            <DropdownMenu open={archiveOpen} onOpenChange={setArchiveOpen}>
+              <DropdownMenuTrigger
+                ref={setNavRef("archive")}
+                onPointerEnter={() => setHoveredKey("archive")}
+                className={cn(
+                  "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  desktopNavWidthClass.archive,
+                  (activeKey === "archive" || archiveOpen) && "text-foreground/82",
+                )}
+              >
+                {t("nav.archive", "Archive")}
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                    archiveOpen && "rotate-180",
+                  )}
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="center"
+                className="mt-3 w-52 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+              >
+                {archiveNavItems.map((item) => (
+                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
+                    <Link to={item.to}>{item.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
               <DropdownMenuTrigger
                 ref={setNavRef("about")}
@@ -266,20 +314,23 @@ export function Navbar() {
                   <Link to="/products">{t("nav.products")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
+                  <Link to="/saptahik">{t("nav.weeklySeries")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
                   <Link to="/updates">{t("nav.updates")}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
 
-          <div className="hidden min-w-[310px] items-center justify-end gap-2 justify-self-end lg:flex">
+          <div className="hidden items-center justify-end gap-2 justify-self-end xl:flex">
             <LanguageToggle quiet={!isScrolled} />
 
             <div
               className={cn(
-                "flex items-center gap-1 rounded-full border p-1 transition-all duration-200 ease-out",
+                "flex items-center gap-1 rounded-full transition-all duration-200 ease-out",
                 isScrolled
-                  ? "border-slate-200/70 bg-white/75 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/70"
+                  ? " dark:border-border/70 dark:bg-background/70"
                   : "border-transparent bg-transparent shadow-none backdrop-blur-0",
               )}
             >
@@ -302,10 +353,24 @@ export function Navbar() {
 
             <Button
               asChild
+              variant="secondary"
+              className={cn(
+                "min-w-[8rem] whitespace-nowrap bg-accent px-4 font-semibold text-accent-foreground transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent/90",
+                isScrolled ? "shadow-md shadow-accent/20" : "shadow-none",
+              )}
+            >
+              <Link to="/donate">
+                <HeartHandshake className="h-4 w-4" />
+                {t("nav.donate")}
+              </Link>
+            </Button>
+
+            <Button
+              asChild
               variant="primary"
               size="navCta"
               className={cn(
-                "transition-all duration-200 ease-out hover:-translate-y-0.5",
+                "min-w-[12rem] whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-0.5",
                 isScrolled ? "shadow-md shadow-primary/15" : "shadow-none",
               )}
             >
@@ -316,7 +381,7 @@ export function Navbar() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 justify-self-end lg:hidden">
+          <div className="flex items-center gap-2 justify-self-end xl:hidden">
             <LanguageToggle quiet={!isScrolled} />
             <Button
               variant="navIcon"
@@ -371,6 +436,17 @@ export function Navbar() {
                       {item.label}
                     </NavLink>
                   ))}
+                  {archiveNavItems.map((item) => (
+                    <NavLink
+                      key={item.key}
+                      to={item.to}
+                      end={item.exact}
+                      className={mobileNavLinkClass}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
                   {aboutNavItems.map((item) => (
                     <NavLink
                       key={item.key}
@@ -385,6 +461,17 @@ export function Navbar() {
                 </nav>
 
                 <div className="mt-8 grid gap-3">
+                  <Button
+                    asChild
+                    size="navSheet"
+                    className="bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Link to="/donate">
+                      <HeartHandshake className="h-4 w-4" />
+                      {t("nav.donate")}
+                    </Link>
+                  </Button>
                   <Button
                     asChild
                     variant="primary"

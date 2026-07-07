@@ -8,13 +8,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
-
-const JDS_API_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_JDS_API_BASE_URL) ||
-  'https://portal.jawafdehi.org/api';
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -28,7 +24,7 @@ export default function EntityProfile() {
   const { data: jawafEntity, isLoading, isError } = useQuery({
     queryKey: ['jds-entity', numericId],
     queryFn: async () => {
-      const res = await axios.get<JawafEntity>(`${JDS_API_BASE_URL}/entities/${numericId}/`);
+      const res = await http.get<JawafEntity>(`/api/entities/${numericId}/`);
       return res.data;
     },
     enabled: validId,
@@ -79,7 +75,7 @@ export default function EntityProfile() {
             <meta name="twitter:title" content={pageTitle} />
             <meta name="twitter:description" content={pageDescription} />
             <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
-            <link rel="alternate" type="application/json" href={`https://portal.jawafdehi.org/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
+            <link rel="alternate" type="application/json" href={`${API_BASE_URL}/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
           </Helmet>
         );
       })()}

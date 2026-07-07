@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts",
     "build:dev": "vite build --mode development",
+    "analyze": "ANALYZE=true vite build && echo 'Bundle treemap written to dist/stats.html'",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -46,8 +47,10 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@sbmdkl/nepali-datepicker-reactjs": "^1.2.5",
     "@sentry/react": "^8.55.0",
     "@tanstack/react-query": "^5.83.0",
+    "@uiw/react-md-editor": "^4.1.1",
     "axios": "^1.13.2",
     "baseline-browser-mapping": "^2.9.19",
     "bikram-sambat": "^1.8.0",
@@ -63,9 +66,11 @@
     "i18next": "^25.6.3",
     "i18next-browser-languagedetector": "^8.2.0",
     "input-otp": "^1.4.2",
+    "isomorphic-dompurify": "^3.17.0",
     "lucide-react": "^0.462.0",
-    "mermaid": "^11.12.2",
+    "motion": "^12.40.0",
     "next-themes": "^0.3.0",
+    "oidc-client-ts": "^3.5.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-countup": "^6.5.3",
@@ -76,10 +81,12 @@
     "react-i18next": "^16.3.5",
     "react-icons": "^5.6.0",
     "react-markdown": "^10.1.0",
+    "react-oidc-context": "^3.3.1",
     "react-pdf": "^10.4.1",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.15.4",
+    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
@@ -88,7 +95,9 @@
     "zod": "^3.25.76"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix"]
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -111,11 +120,11 @@
     "lovable-tagger": "^1.1.11",
     "playwright": "^1.57.0",
     "postcss": "^8.5.6",
+    "rollup-plugin-visualizer": "^6.0.11",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^5.4.19",
-    "vite-plugin-radar": "^0.10.1",
     "vitest": "^4.0.9"
   }
 }

@@ -10,11 +10,40 @@
     "products": "Our Products",
     "ourProcess": "Our Process",
     "volunteer": "Volunteer",
+    "weeklySeries": "Weekly Series",
+    "donate": "Donate",
     "ourCommitment": "Our Commitment",
     "skipToContent": "Skip to content",
     "searchCases": "Search cases",
     "homeAria": "Jawafdehi home",
     "menu": "Menu"
+  },
+  "weeklyMeetings": {
+    "eyebrow": "Live every week",
+    "title": "Weekly Corruption Series",
+    "intro": "Each week we hold a live public session breaking down Nepal's corruption cases — the records, the people, and what accountability should look like. Join us live on Zoom or watch the series on YouTube.",
+    "pastPresentations": {
+      "heading": "Past presentations"
+    },
+    "schedule": {
+      "heading": "When we meet — every Friday",
+      "nepal": "Nepal",
+      "pacific": "Pacific (US)",
+      "eastern": "Eastern (US)"
+    },
+    "zoom": {
+      "heading": "Join the live meeting",
+      "description": "Hop into the live discussion on Zoom and take part in the conversation.",
+      "meetingId": "Meeting ID",
+      "passcode": "Passcode",
+      "cta": "Join Zoom Meeting"
+    },
+    "youtube": {
+      "heading": "Watch on YouTube",
+      "description": "Catch up on past sessions and follow the series on our YouTube channel.",
+      "cta": "Open YouTube channel",
+      "playlistTitle": "Weekly Corruption Series playlist"
+    }
   },
   "header": {
     "title": "Jawafdehi.org",
@@ -53,9 +82,11 @@
       "process": "See how records are reviewed and documented.",
       "commitment": "Read the principles behind the archive.",
       "volunteer": "Help build the accountability archive.",
+      "donate": "Support Jawafdehi with a donation.",
       "about": "Learn about Jawafdehi and its mission.",
       "team": "Meet the people behind Jawafdehi.",
       "products": "Explore Jawafdehi tools and products.",
+      "weeklySeries": "Join the weekly corruption series live on Zoom or watch on YouTube.",
       "updates": "Read recent platform updates.",
       "report": "Submit an allegation or public-interest corruption lead.",
       "feedback": "Send bugs, feature ideas, corrections, or general feedback.",
@@ -270,6 +301,104 @@
         "Investigate what legally and ethically constitutes corruption in each context",
         "Analyse the role of corruption in Nepali governance structures",
         "Evaluate the effectiveness of anti-corruption policy and institutional frameworks"
+      ]
+    }
+  },
+  "donate": {
+    "hero": {
+      "support": "Keep Nepal's",
+      "accountabilityArchive": "accountability archive",
+      "alive": "alive",
+      "description": "Jawafdehi is run by volunteers and funded by people who believe corruption should never be forgotten. Your donation pays for the servers, document archiving, and tooling that keep this public record permanent and free for everyone.",
+      "giveNow": "Ways to contribute",
+      "contactUs": "Contact us",
+      "email": "Email us"
+    },
+    "impact": {
+      "eyebrow": "Where your money goes",
+      "title": "Every rupee funds the public record",
+      "description": "Jawafdehi takes no profit. Donations cover the direct costs of keeping a permanent, openly accessible corruption archive online.",
+      "items": [
+        {
+          "title": "Hosting & infrastructure",
+          "desc": "Servers, databases, and bandwidth that keep the archive fast and available to anyone, anywhere, around the clock."
+        },
+        {
+          "title": "Document archiving",
+          "desc": "Scraping, digitising, and permanently storing government filings, court orders, and media reports so they cannot disappear."
+        },
+        {
+          "title": "Verification & research",
+          "desc": "Tooling and resources that help volunteers verify cases accurately before they are published to the public."
+        },
+        {
+          "title": "Open access for all",
+          "desc": "Keeping every case, entity, and document free to read, search, and reuse — with no paywalls and no ads."
+        }
+      ]
+    },
+    "international": {
+      "eyebrow": "Ways to give",
+      "title": "Support Jawafdehi",
+      "description": "Donate via PayPal. Scan the QR code or continue to PayPal to complete your donation securely.",
+      "primaryCta": "Continue to PayPal",
+      "secondaryCta": "Copy donation link",
+      "copyCopied": "Copied",
+      "copyAria": "Copy PayPal donation link",
+      "trustNote": "Payments are processed by PayPal. Jawafdehi does not store payment details.",
+      "qrLabel": "Scan to donate",
+      "qrHelper": "Opens PayPal",
+      "qrAlt": "Open PayPal donation checkout"
+    },
+    "ways": {
+      "eyebrow": "Ways to contribute",
+      "title": "Ways to contribute",
+      "description": "Use PayPal for cards or recurring support, or email us if you would like to discuss another contribution path. Every contribution, large or small, keeps the archive running.",
+      "paypal": {
+        "eyebrow": "Secure PayPal donation",
+        "title": "PayPal",
+        "desc": "Donate securely through PayPal. You can choose your amount, frequency, and payment method before confirming.",
+        "qrAlt": "Open PayPal donation checkout",
+        "qrTitle": "Scan to donate",
+        "qrDescription": "Use your phone camera to open the PayPal donation checkout, or continue on this device.",
+        "cta": "Continue to PayPal",
+        "note": "You will leave Jawafdehi and complete payment securely on PayPal.",
+        "highlights": [
+          "Works for international supporters",
+          "Supports cards and recurring donations",
+          "Useful for sharing on social media"
+        ]
+      },
+      "copy": "Copy",
+      "copied": "Copied"
+    },
+    "transparency": {
+      "eyebrow": "Our promise",
+      "title": "Transparent by default",
+      "description": "Jawafdehi is open source and built in the public interest. We publish how funds are used and never sell or share donor information. If you would like a receipt or have questions about giving, just email us."
+    },
+    "community": {
+      "eyebrow": "Our community",
+      "title": "For Nepali, by Nepali",
+      "description": "Jawafdehi is built and sustained by Nepali volunteers across Nepal and the wider diaspora. Every contribution helps keep public accountability infrastructure in Nepali hands, independent, open, and available to everyone."
+    },
+    "faq": {
+      "eyebrow": "Questions",
+      "title": "Frequently asked questions",
+      "description": "A few practical notes about supporting Jawafdehi. For receipts or donation questions, contact us directly.",
+      "items": [
+        {
+          "q": "Can I give monthly instead of once?",
+          "a": "Yes. PayPal supports recurring gifts, so you can choose one-time or monthly support before confirming your donation."
+        },
+        {
+          "q": "Where exactly does the money go?",
+          "a": "Donations fund hosting, document archiving, verification tooling, and keeping the archive free and open. Jawafdehi is volunteer-run and takes no profit."
+        },
+        {
+          "q": "Can I support Jawafdehi without donating money?",
+          "a": "Yes. You can help with research, translation, design, engineering, documentation, outreach, or reviewing public records. Email us and tell us how you would like to contribute."
+        }
       ]
     }
   },
@@ -999,5 +1128,51 @@
   "courts": {
     "supreme": "Supreme Court",
     "special": "Special Court"
+  },
+  "dataQuality": {
+    "title": "Data Quality & Coverage",
+    "intro": "What our public datasets track today, and how complete the records are.",
+    "error": "Metrics are temporarily unavailable. Please try again later.",
+    "empty": "No data yet",
+    "headlineHeading": "At a glance",
+    "breakdownHeading": "What's tracked",
+    "searchLabel": "Search the Jawafdehi archive",
+    "searchPlaceholder": "Search cases, people, offices, court records, or materials",
+    "searchSubmit": "Search",
+    "showMore": "Show {{count}} more",
+    "showLess": "Show less",
+    "nes": {
+      "heading": "Entities",
+      "description": "People, offices, organizations and locations tracked across the archive.",
+      "total": "Entities tracked",
+      "byType": "By type"
+    },
+    "ngm": {
+      "heading": "Judicial records",
+      "description": "Court cases, hearings and source documents collected from Nepal's judiciary.",
+      "courtCases": "Court records",
+      "courts": "Courts",
+      "byCourtType": "By court type"
+    },
+    "materials": {
+      "heading": "Materials",
+      "description": "Development projects, financing records and source documents collected from public portals.",
+      "total": "Materials tracked",
+      "byType": "By type",
+      "bySource": "By source",
+      "withDescription": "Have a description",
+      "withUrl": "Have a source link",
+      "withDate": "Have a date"
+    },
+    "completeness": {
+      "heading": "Completeness",
+      "withIdentifier": "Have a stable identifier",
+      "withProvenance": "Have provenance",
+      "withBilingualName": "Bilingual name (EN + NE)",
+      "nesResolved": "Resolved to a tracked entity",
+      "withRegistrationDate": "Have a registration date",
+      "withDocumentSources": "Have document sources",
+      "ofTotal": "{{part}} of {{total}} ({{pct}}%)"
+    }
   }
 }

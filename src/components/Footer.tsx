@@ -6,6 +6,7 @@ import { FaFacebook, FaYoutube, FaLinkedin, FaWhatsapp } from "react-icons/fa";
 import { SiLinktree } from "react-icons/si";
 
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
+import { API_BASE_URL } from "@/services/http";
 import { cn } from "@/lib/utils";
 
 type FooterLink = {
@@ -123,21 +124,24 @@ export const Footer = () => {
     { label: t("nav.ourProcess"), to: "/our-process" },
     { label: t("nav.ourCommitment"), to: "/commitment" },
     { label: t("nav.volunteer"), to: "/volunteer" },
+    { label: t("nav.donate"), to: "/donate" },
   ];
 
   const aboutLinks: FooterLink[] = [
     { label: t("nav.about"), to: "/about" },
     { label: t("nav.team"), to: "/team" },
     { label: t("nav.products"), to: "/products" },
+    { label: t("nav.weeklySeries"), to: "/saptahik" },
     { label: t("nav.updates"), to: "/updates" },
     { label: t("footer.feedback"), to: "/feedback" },
   ];
 
   const resourceLinks: FooterLink[] = [
-    { label: t("footer.contributorPortal"), to: "https://portal.jawafdehi.org", external: true },
+    { label: t("footer.contributorPortal"), to: `${API_BASE_URL}/admin`, external: true },
     { label: t("footer.githubRepo"), to: "https://github.com/Jawafdehi/Jawafdehi", external: true },
     { label: t("footer.siteStatus"), to: "https://status.jawafdehi.org/status/public", external: true },
-
+    { label: t("footer.privacy"), to: "/privacy" },
+    { label: t("footer.terms"), to: "/terms" },
   ];
 
   const socialLinks: FooterSocialLink[] = [

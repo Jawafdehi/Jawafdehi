@@ -1,18 +1,15 @@
 /**
- * Nepal Entity Service (NES) API Client
+ * Entity API Client
  *
- * This module provides typed API functions to interact with the NES backend.
+ * This module provides typed API functions to interact with the entity backend.
  *
- * References:
- * - Backend types: https://github.com/Jawafdehi/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
- * - Live reference: https://tundikhel.nes.jawafdehi.org
- * - Core NES: https://github.com/Jawafdehi/NepalEntityService
- *
- * Environment Variables:
- * - VITE_NES_API_BASE_URL: Base URL for the NES API (default: https://nes.jawafdehi.org/api)
+ * Entities live on the consolidated monolith under the unified `/api`
+ * root (`/api/entities`). Auth, base-URL resolution, and error extraction are
+ * handled by the shared `http` client (./http).
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import { http, extractErrorMessage } from './http';
+import { jsonLdToEntity } from './entity-adapters';
 import { getCasesByEntity } from '@/services/jds-api';
 import type {
   Person,
@@ -21,21 +18,7 @@ import type {
   Entity,
   Relationship,
   VersionSummary
-} from '@/types/nes';
-
-// ============================================================================
-// API Configuration
-// ============================================================================
-
-const API_BASE_URL = import.meta.env.VITE_NES_API_BASE_URL || 'https://nes.jawafdehi.org/api';
-
-const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000,
-});
+} from '@/types/entity';
 
 // ============================================================================
 // Response Types
@@ -47,11 +30,6 @@ export interface EntityListResponse {
   page?: number;
   limit?: number;
   has_more?: boolean;
-}
-
-export interface RelationshipListResponse {
-  relationships: Relationship[];
-  total?: number;
 }
 
 export interface VersionListResponse {
@@ -66,23 +44,19 @@ export interface VersionListResponse {
 export interface EntitySearchParams {
   query?: string;       // Search query
   entity_type?: string; // Entity type: person, organization, location
-  sub_type?: string;    // Entity subtype
-  attributes?: Record<string, unknown>; // Filter by attributes (JSON object)
+  /** @deprecated Not sent to the backend (no such filter); accepted for caller
+   * ergonomics but ignored by getEntities. */
+  sub_type?: string;
+  /** @deprecated Not sent to the backend (no such filter); accepted for caller
+   * ergonomics but ignored by getEntities. */
+  attributes?: Record<string, unknown>;
   limit?: number;       // Maximum number of results (default: 100, max: 1000)
   offset?: number;      // Number of results to skip (default: 0)
-  entity_ids?: string[]; // Filter by specific entity IDs (for batch retrieval)
-}
-
-export interface RelationshipSearchParams {
-  source_id?: string;   // Source entity ID
-  target_id?: string;   // Target entity ID
-  type?: string;        // Relationship type
-  limit?: number;       // Maximum number of results
-  offset?: number;      // Number of results to skip
+  entity_ids?: string[]; // Filter by specific entity IDs (batch retrieval; sent as `ids`)
 }
 
 // ============================================================================
-// PAP-Specific Types (Not part of NES core)
+// PAP-Specific Types (Not part of the entity core)
 // ============================================================================
 
 export interface Allegation {
@@ -117,7 +91,7 @@ export interface TimelineEvent {
 // Error Handling
 // ============================================================================
 
-export class NESApiError extends Error {
+export class EntityApiError extends Error {
   constructor(
     message: string,
     public statusCode?: number,
@@ -125,36 +99,19 @@ export class NESApiError extends Error {
     public originalError?: Error
   ) {
     super(message);
-    this.name = 'NESApiError';
+    this.name = 'EntityApiError';
   }
 }
 
 function handleApiError(error: unknown, endpoint: string): never {
-  if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError;
-    const statusCode = axiosError.response?.status;
-    const responseData = axiosError.response?.data as Record<string, unknown> | undefined;
-    const detail = responseData?.detail;
-    const message =
-      typeof detail === 'string'
-        ? detail
-        : detail
-          ? JSON.stringify(detail)
-          : axiosError.message;
+  const statusCode = (error as { response?: { status?: number } })?.response?.status;
+  const message = extractErrorMessage(error, 'Unknown error occurred');
 
-    throw new NESApiError(
-      `API request failed: ${message}`,
-      statusCode,
-      endpoint,
-      error
-    );
-  }
-
-  throw new NESApiError(
-    'Unknown error occurred',
-    undefined,
+  throw new EntityApiError(
+    `API request failed: ${message}`,
+    statusCode,
     endpoint,
-    error instanceof Error ? error : undefined
+    error instanceof Error ? error : undefined,
   );
 }
 
@@ -191,22 +148,21 @@ export async function getEntities(params?: EntitySearchParams): Promise<EntityLi
 
     if (params?.query) queryParams.query = params.query;
     if (params?.entity_type) queryParams.entity_type = params.entity_type;
-    if (params?.sub_type) queryParams.sub_type = params.sub_type;
-    if (params?.attributes) queryParams.attributes = JSON.stringify(params.attributes);
     if (params?.limit) queryParams.limit = params.limit;
     if (params?.offset !== undefined) queryParams.offset = params.offset;
 
-    // Handle entity_ids for batch retrieval
+    // Batch retrieval: the backend reads the `ids` param (entities/views.py).
     if (params?.entity_ids && params.entity_ids.length > 0) {
-      queryParams['entity-id'] = params.entity_ids.join(',');
+      queryParams.ids = params.entity_ids.join(',');
     }
 
-    const response = await api.get<EntityListResponse>('/entities', {
-      params: queryParams
+    const response = await http.get<EntityListResponse>('/api/entities', {
+      params: queryParams,
+      timeout: 30000,
     });
     return response.data;
   } catch (error) {
-    handleApiError(error, '/entities');
+    handleApiError(error, '/api/entities');
   }
 }
 
@@ -243,7 +199,7 @@ export async function searchEntities(
  *
  * @example
  * ```typescript
- * // Using NES entity ID format
+ * // Using entity ID format
  * const entity = await getEntityById('entity:person/prabin-shahi');
  * // Using simple slug
  * const entity2 = await getEntityById('pushpa-kamal-dahal-prachanda');
@@ -251,13 +207,17 @@ export async function searchEntities(
  */
 export async function getEntityById(idOrSlug: string): Promise<Entity> {
   try {
-    // URL-encode the entity ID to handle NES format (entity:type/slug)
+    // URL-encode the entity ID to handle the entity:type/slug format
     const encodedId = encodeURIComponent(idOrSlug);
-    const response = await api.get<Entity>(`/entities/${encodedId}`);
-    return response.data;
+    // The API returns schema.org JSON-LD; adapt it to the SPA's Entity shape so
+    // consumers (case entity chips, entity pages) can read names[]/pictures[] etc.
+    const response = await http.get<unknown>(`/api/entities/${encodedId}`, {
+      timeout: 30000,
+    });
+    return jsonLdToEntity(response.data);
   } catch (error) {
     const encodedId = encodeURIComponent(idOrSlug);
-    handleApiError(error, `/entities/${encodedId}`);
+    handleApiError(error, `/api/entities/${encodedId}`);
   }
 }
 
@@ -286,9 +246,12 @@ export async function getEntityBySlug(slug: string): Promise<Entity> {
  */
 export async function getEntityVersions(idOrSlug: string): Promise<VersionListResponse> {
   try {
-    // URL-encode the entity ID to handle NES format (entity:type/slug)
+    // URL-encode the entity ID to handle the entity:type/slug format
     const encodedId = encodeURIComponent(idOrSlug);
-    const response = await api.get<VersionListResponse>(`/entities/${encodedId}/versions`);
+    const response = await http.get<VersionListResponse>(
+      `/api/entities/${encodedId}/versions`,
+      { timeout: 30000 },
+    );
     return response.data;
   } catch (error) {
     console.warn(`Version history not available for entity ${idOrSlug}`);
@@ -297,42 +260,9 @@ export async function getEntityVersions(idOrSlug: string): Promise<VersionListRe
 }
 
 // ============================================================================
-// Relationship Endpoints
-// ============================================================================
-
-/**
- * Get relationships with optional filters
- *
- * Backend endpoint: GET /relationships?source_id={id}&target_id={id}&type={type}
- *
- * @param params - Relationship search parameters
- * @returns Promise<RelationshipListResponse>
- *
- * @example
- * ```typescript
- * // Get all relationships where entity is the source
- * const rels = await getRelationships({ source_id: 'entity-slug' });
- *
- * // Get all relationships where entity is the target
- * const rels = await getRelationships({ target_id: 'entity-slug' });
- * ```
- */
-export async function getRelationships(
-  params?: RelationshipSearchParams
-): Promise<RelationshipListResponse> {
-  try {
-    const response = await api.get<RelationshipListResponse>('/relationships', { params });
-    return response.data;
-  } catch (error) {
-    console.warn('Relationships endpoint returned error, returning empty list');
-    return { relationships: [] };
-  }
-}
-
-// ============================================================================
 // Allegation & Case API Functions
 // ============================================================================
-// Note: NES API provides entity data only. Allegations and cases will be
+// Note: the entity API provides entity data only. Allegations and cases will be
 // handled by a separate API (Jawafdehi) to be integrated later.
 //
 // These functions are currently not implemented and return empty arrays.
@@ -356,7 +286,7 @@ export async function getEntityAllegations(idOrSlug: string): Promise<Allegation
       status: 'ongoing', // Cases are published cases
       severity: jdsCase.case_type, // Map type to severity
       summary: jdsCase.key_allegations.join('; '),
-      evidence: (jdsCase.evidence ?? []).map(e => e.description),
+      evidence: (jdsCase.evidence ?? []).map(e => e.additional_details),
       date: jdsCase.created_at,
     }));
   } catch (error) {
@@ -383,7 +313,7 @@ export async function getEntityCases(idOrSlug: string): Promise<Case[]> {
       // `c` is list-sourced, so the full `description` is absent; fall back to
       // `short_description` (and ultimately '') for the required PAP field.
       description: c.description ?? c.short_description ?? '',
-      documents: (c.evidence ?? []).map(e => e.source_id.toString()),
+      documents: (c.evidence ?? []).map(e => e.material_iri),
       timeline: (c.timeline ?? []).map(t => ({
         date: t.date,
         event: t.title,
@@ -443,18 +373,16 @@ export async function getEntityIdsWithCases(): Promise<string[]> {
  */
 export async function healthCheck(): Promise<{ status: string }> {
   try {
-    const response = await api.get('/health');
+    const response = await http.get('/api/health', { timeout: 30000 });
     return response.data;
   } catch (error) {
-    handleApiError(error, '/health');
+    handleApiError(error, '/api/health');
   }
 }
 
 // ============================================================================
 // Exports
 // ============================================================================
-
-export default api;
 
 // Re-export types for convenience
 export type {
@@ -464,4 +392,4 @@ export type {
   Entity,
   Relationship,
   VersionSummary
-} from '@/types/nes';
+} from '@/types/entity';

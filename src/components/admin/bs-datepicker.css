@@ -1,0 +1,30 @@
+/* Make @sbmdkl/nepali-datepicker-reactjs's input match the shadcn <Input>/<Button>
+   look used across the admin forms. The library renders a bare <input>; we
+   restyle it to the same border/height/radius as the AD picker trigger. */
+.bs-datepicker .bs-datepicker-input {
+  display: flex;
+  height: 2.5rem; /* h-10, matches Button default */
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--input));
+  background-color: hsl(var(--background));
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--foreground));
+}
+
+.bs-datepicker .bs-datepicker-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.bs-datepicker .bs-datepicker-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+/* Disabled state (mirrors the wrapper data attr set by the component). */
+.bs-datepicker[data-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.5;
+}

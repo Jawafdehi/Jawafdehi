@@ -10,12 +10,14 @@ type SearchTabsProps = {
 const tabs: Array<{
   type: ArchiveSearchType;
   label: string;
-  countKey: keyof ArchiveSearchResponse["counts"];
+  // "all" has no per-type count; the others map to a counts key.
+  countKey?: keyof ArchiveSearchResponse["counts"];
 }> = [
-  { type: "all", label: "All results", countKey: "all" },
-  { type: "case", label: "Cases", countKey: "cases" },
-  { type: "entity", label: "Entities", countKey: "entities" },
-  { type: "document", label: "Documents", countKey: "documents" },
+  { type: "all", label: "All results" },
+  { type: "case", label: "Cases", countKey: "case" },
+  { type: "entity", label: "Entities", countKey: "entity" },
+  { type: "material", label: "Materials", countKey: "material" },
+  { type: "courtcase", label: "Court cases", countKey: "courtcase" },
 ];
 
 export function SearchTabs({ counts, activeType, onChange }: Readonly<SearchTabsProps>) {
@@ -42,7 +44,11 @@ export function SearchTabs({ counts, activeType, onChange }: Readonly<SearchTabs
             type="button"
           >
             {tab.label}
-            <span className="tabular-nums opacity-75">{counts[tab.countKey]}</span>
+            {tab.countKey ? (
+              <span className="tabular-nums opacity-75">
+                {counts[tab.countKey] ?? 0}
+              </span>
+            ) : null}
           </button>
         );
       })}

@@ -59,6 +59,28 @@ export function formatDateTime(dateString: string | null | undefined): string {
   return formatDate(dateString, 'PPp');
 }
 
+/**
+ * Format a CMS publication date (a date-only "YYYY-MM-DD" value) as
+ * "Month D, YYYY". Rendered in UTC — not Kathmandu like the helpers above — so
+ * a date-only value shows the calendar day the editor entered regardless of the
+ * viewer's timezone. Shared by the Updates list and the article detail/preview.
+ */
+export function formatPublicationDate(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 // ── BS conversion ────────────────────────────────────────────────────────
 
 /** Convert an ISO date string → BS date (year, month, date, formatted). */

@@ -31,6 +31,7 @@ import type {
   ArchiveSearchFacets,
   ArchiveSearchParams,
   ArchiveSearchResponse,
+  ArchiveSearchResultType,
   ArchiveSearchSort,
   ArchiveSearchType,
 } from "@/types/search";
@@ -42,7 +43,7 @@ import {
 } from "@/utils/archive-search-params";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
-type RefinementName = SidebarFilterName | "type" | "tags";
+type RefinementName = SidebarFilterName | "type";
 
 const validSorts = new Set<ArchiveSearchSort>([
   "relevance",
@@ -52,19 +53,32 @@ const validSorts = new Set<ArchiveSearchSort>([
 ]);
 const archiveSearchPageSize = 4;
 const emptyFacets: ArchiveSearchFacets = {
-  type: [],
   entity_type: [],
-  role: [],
   case_type: [],
   tags: [],
 };
 
-export default function ArchiveSearch() {
+// When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
+// Materials / Court-cases landing pages reuse this component): the record-type is
+// pinned, the type selector is hidden, and the heading/SEO are overridden.
+export interface ArchiveSearchProps {
+  lockedType?: ArchiveSearchResultType;
+  heading?: string;
+  description?: string;
+  canonicalPath?: string;
+}
+
+export default function ArchiveSearch({
+  lockedType,
+  heading,
+  description,
+  canonicalPath,
+}: ArchiveSearchProps = {}) {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedRecordType = useMemo(
-    () => readRecordType(searchParams),
-    [searchParams],
+    () => lockedType ?? readRecordType(searchParams),
+    [searchParams, lockedType],
   );
   const params = useMemo(
     () => readParams(searchParams, selectedRecordType),
@@ -120,7 +134,7 @@ export default function ArchiveSearch() {
     updateParams({ [name]: value, page: 1 });
   };
 
-  const toggleRefinement = (name: SidebarFilterName | "tags", value: string) => {
+  const toggleRefinement = (name: SidebarFilterName, value: string) => {
     setSearchParams(
       toggleArchiveSearchParam(searchParams, name, value),
     );
@@ -141,7 +155,7 @@ export default function ArchiveSearch() {
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "entity_type", "role", "case_type", "tags"] as RefinementName[]
+      ["type", "entity_type", "case_type", "tags"] as RefinementName[]
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -154,13 +168,14 @@ export default function ArchiveSearch() {
 
   const selectedSidebarFilters = {
     entity_type: params.entity_type || [],
-    role: params.role || [],
     case_type: params.case_type || [],
+    tags: params.tags || [],
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
-    type: selectedRecordType === "all" ? [] : [selectedRecordType],
-    tags: params.tags || [],
+    // On a locked single-type page the type isn't a removable refinement.
+    type:
+      lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
   };
   const activeRefinementCount = Object.values(selectedRefinements).reduce(
     (count, values) => count + values.length,
@@ -173,7 +188,9 @@ export default function ArchiveSearch() {
       <SearchFiltersSkeleton />
     ) : (
       <SearchFilters
+        counts={displayData?.counts || {}}
         facets={facets}
+        hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
         onToggle={toggleRefinement}
         onTypeChange={updateRecordType}
@@ -186,23 +203,26 @@ export default function ArchiveSearch() {
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
       <Helmet>
-        <title>Archive Search | Jawafdehi Nepal</title>
+        <title>{heading ? `${heading} | Jawafdehi Nepal` : "Archive Search | Jawafdehi Nepal"}</title>
         <meta
-          content="Search Jawafdehi's public archive across accountability cases, tracked entities, locations, and evidence documents."
+          content={
+            description ||
+            "Search Jawafdehi's public archive across accountability cases, tracked entities, locations, and evidence documents."
+          }
           name="description"
         />
-        <link href="https://jawafdehi.org/search" rel="canonical" />
+        <link href={`https://jawafdehi.org${canonicalPath || "/search"}`} rel="canonical" />
       </Helmet>
 
       <div className="container mx-auto px-4">
         <header className="max-w-3xl">
 
           <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
-            Archive Search
+            {heading || "Archive Search"}
           </h1>
           <p className="mt-3 text-base leading-7 text-muted-foreground">
-            Search Jawafdehi&apos;s public accountability archive across cases,
-            people, offices, locations, allegations, and evidence documents.
+            {description ||
+              "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents."}
           </p>
         </header>
 
@@ -296,7 +316,7 @@ export default function ArchiveSearch() {
           <section
             aria-busy={isInitialLoading || isRefreshing}
             aria-label="Archive search results"
-            className="self-start"
+            className="min-w-0 self-start"
           >
             {showError ? (
               <Alert className="mb-5" variant="destructive">
@@ -337,9 +357,11 @@ export default function ArchiveSearch() {
 
 function readRecordType(searchParams: URLSearchParams): ArchiveSearchType {
   const requestedType = searchParams.get("type");
-  return ["all", "case", "entity", "document"].includes(requestedType || "")
+  return ["all", "entity", "material", "courtcase", "case"].includes(
+    requestedType || "",
+  )
     ? (requestedType as ArchiveSearchType)
-    : "case";
+    : "all";
 }
 
 function readParams(
@@ -352,7 +374,6 @@ function readParams(
     q: searchParams.get("q") || undefined,
     type: selectedRecordType === "all" ? undefined : selectedRecordType,
     entity_type: searchParams.getAll("entity_type"),
-    role: searchParams.getAll("role"),
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
     sort: requestedSort && validSorts.has(requestedSort) ? requestedSort : "relevance",
@@ -404,7 +425,7 @@ function ArchiveSearchResults({
   return (
     <div className="space-y-3">
       {data.results.map((result) => (
-        <SearchResultCard key={`${result.result_type}-${result.id}`} result={result} />
+        <SearchResultCard key={`${result.type}-${result.id}`} result={result} />
       ))}
     </div>
   );
@@ -415,18 +436,17 @@ function getSelectedItems(
   selected: Record<RefinementName, string[]>,
   translate: (key: string) => string,
 ) {
+  // Selected-filter pill labels are localized via getFacetItemLabel. The "type"
+  // refinement has no facet group (it's the record-type radio), so it falls back
+  // to a humanized value. `facets` carries {name, count} under the unified contract.
   return (Object.keys(selected) as RefinementName[]).flatMap((name) =>
     selected[name].map((value) => {
-      const facetItem = facets[name].find((item) => item.name === value) ?? {
-        name: value,
-        display_name: humanize(value),
-        count: 0,
-      };
+      const facetItem =
+        name === "type"
+          ? { name: value }
+          : facets[name].find((item) => item.name === value) ?? { name: value };
       return { name, value, label: getFacetItemLabel(name, facetItem, translate) };
     }),
   );
 }
 
-function humanize(value: string) {
-  return value.replaceAll("_", " ").replaceAll("-", " ");
-}

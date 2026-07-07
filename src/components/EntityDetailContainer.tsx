@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertCircle, FileText, Building2, User, Mail, Phone, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from '@/utils/nes-helpers';
+import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from '@/utils/entity-helpers';
 import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 import { formatDate } from '@/utils/date';
 
@@ -272,7 +272,7 @@ export function EntityDetailContainer({
             </Alert>
           )}
 
-          {/* No NES Data Alert */}
+          {/* No entity data alert */}
           {!hasNesData && (
             <Alert>
               <AlertCircle className="h-4 w-4" />

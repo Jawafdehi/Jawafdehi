@@ -10,12 +10,16 @@ export function initSentry(): void {
   Sentry.init({
     dsn,
     environment: import.meta.env.MODE,
+    // Do not attach IP address, cookies, or other PII to events.
+    sendDefaultPii: false,
     integrations: [
       Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
+      // Mask text and block media in any captured replay.
+      Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
     ],
-    tracesSampleRate: 1.0,
-    replaysSessionSampleRate: 0.1,
+    tracesSampleRate: 0.1,
+    // Error-only replay: never record random sessions, only when an error fires.
+    replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
   });
 }

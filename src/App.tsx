@@ -1,12 +1,24 @@
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ClientOnly } from "@/components/ClientOnly";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { SentryErrorFallback } from "@/components/SentryErrorFallback";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
+// Eagerly imported pages.
+//
+// Split policy: this app has NO runtime SSR — HTML is produced at BUILD TIME by
+// scripts/pre-render.ts (the Cloudflare Worker only serves static assets + a SPA
+// fallback). React 18's renderToString does NOT await React.lazy/Suspense, so a
+// lazily-imported page would pre-render as the "Loading…" fallback, shipping
+// empty HTML + wrong Helmet meta for that route. Therefore every PRE-RENDERED
+// route (see PRE_RENDERED_STATIC_ROUTES in src/data/site-routes.ts, plus the
+// dynamic /case/:id, /entity/:id and /updates/:slug routes) MUST stay eager.
+// Routes NOT pre-rendered are client-rendered regardless, so they are lazy()
+// below to keep them out of the public entry chunk.
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import Entities from "./pages/Entities";
@@ -16,27 +28,49 @@ import OurProcess from "./pages/OurProcess";
 import OurTeam from "./pages/OurTeam";
 import Volunteer from "./pages/Volunteer";
 import OurProducts from "./pages/OurProducts";
+import WeeklyMeetings from "./pages/WeeklyMeetings";
 import Information from "./pages/Information";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
-import ModerationDashboard from "./pages/ModerationDashboard";
 import Feedback from "./pages/Feedback";
 import Updates from "./pages/Updates";
 import UpdateDetail from "./pages/UpdateDetail";
-import EmbedCaseCard from "./pages/EmbedCaseCard";
 import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
 import DocumentPreviewPage from "./pages/DocumentPreviewPage";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
-// Casework portal (VOL-3) — mounted at /portal.
-import { CaseworkAuthProvider } from "./context/CaseworkAuthContext";
-import CaseworkLogin from "./pages/CaseworkLogin";
-import CaseworkReviews from "./pages/CaseworkReviews";
-import CaseworkReviewDetail from "./pages/CaseworkReviewDetail";
-import CaseworkRules from "./pages/CaseworkRules";
-import CaseworkHow from "./pages/CaseworkHow";
+
+// Lazily imported pages. These routes are not pre-rendered, so client-side code
+// splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
+const Donate = lazy(() => import("./pages/Donate"));
+// Post-donation return targets (/donate/success, /donate/cancel) — not
+// pre-rendered, so lazy() per the split policy above.
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
+const DataQuality = lazy(() => import("./pages/DataQuality"));
+const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
+const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
+const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
+const ModerationDashboard = lazy(() => import("./pages/ModerationDashboard"));
+const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
+const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
+const Materials = lazy(() => import("./pages/Materials"));
+const CourtCases = lazy(() => import("./pages/CourtCases"));
+
+// The entire /admin/* subtree — including the OIDC client, admin CRUD forms and
+// casework pages — lives behind this single lazy boundary. /admin is auth-gated
+// and never pre-rendered, so none of it belongs in the public entry chunk.
+const AdminApp = lazy(() => import("./AdminApp"));
+
+// Back-compat redirect: /portal/<rest> -> /admin/<rest> (preserving query).
+const PortalRedirect = () => {
+  const location = useLocation();
+  const dest =
+    location.pathname.replace(/^\/portal/, "/admin") + location.search;
+  return <Navigate to={dest} replace />;
+};
 
 const RouteLoadingFallback = () => (
   <div
@@ -54,6 +88,7 @@ const App = () => (
       <ClientOnly>
         <Toaster />
         <Sonner />
+        <CookieConsentBanner />
       </ClientOnly>
       <Suspense fallback={<RouteLoadingFallback />}>
         <ScrollToTop />
@@ -62,23 +97,22 @@ const App = () => (
           <Route path="/embed/case/:id" element={<EmbedCaseCard />} />
           <Route path="/document-viewer" element={<DocumentPreviewPage />} />
 
-          {/* Casework portal (VOL-3) — standalone full-screen, mounted at /portal.
-              Auth: shared JWT + Contributor role. */}
+          {/* Unified admin panel — standalone full-screen, mounted at /admin.
+              Folds in the former /portal casework pages. Auth: OIDC + an
+              internal role (gated inside AdminApp). The whole subtree is
+              lazy-loaded and wrapped in <ClientOnly> so the OIDC UserManager
+              is only constructed on the client after hydration. */}
           <Route
-            path="/portal/*"
+            path="/admin/*"
             element={
-              <CaseworkAuthProvider>
-                <Routes>
-                  <Route path="login" element={<CaseworkLogin />} />
-                  <Route path="reviews" element={<CaseworkReviews />} />
-                  <Route path="reviews/:id" element={<CaseworkReviewDetail />} />
-                  <Route path="rules" element={<CaseworkRules />} />
-                  <Route path="how" element={<CaseworkHow />} />
-                  <Route path="" element={<CaseworkReviews />} />
-                </Routes>
-              </CaseworkAuthProvider>
+              <ClientOnly>
+                <AdminApp />
+              </ClientOnly>
             }
           />
+
+          {/* Back-compat: the casework portal moved from /portal to /admin. */}
+          <Route path="/portal/*" element={<PortalRedirect />} />
 
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />
@@ -86,20 +120,39 @@ const App = () => (
             <Route path="/case/:id" element={<CaseDetail />} />
             <Route path="/entities" element={<Entities />} />
             <Route path="/search" element={<ArchiveSearch />} />
+            {/* Data-lake single-type browse pages (unified-archive search, type-pinned). */}
+            <Route path="/materials" element={<Materials />} />
+            <Route path="/courtcases" element={<CourtCases />} />
+            {/* Legacy Jawafdehi case-entity profile (numeric id, single segment). */}
             <Route path="/entity/:id" element={<EntityProfile />} />
+            {/* Entity record by IRI tail (multi-segment, e.g. organization/.../tu).
+                React Router prefers the more specific :id route for single-segment
+                numeric ids, so this splat only catches the hierarchical entity IRIs. */}
+            <Route path="/entity/*" element={<EntityRecordProfile />} />
+            {/* Data-lake material by IRI tail (/material/<source>/<ident>). */}
+            <Route path="/material/*" element={<MaterialProfile />} />
+            {/* Data-lake court case by IRI tail (/courtcase/<court>/<case_number>). */}
+            <Route path="/courtcase/*" element={<CourtCaseProfile />} />
             <Route path="/moderation" element={<ModerationDashboard />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/updates" element={<Updates />} />
-            <Route path="/updates/:id" element={<UpdateDetail />} />
+            {/* Wagtail headless preview target — must precede the :slug route. */}
+            <Route path="/updates/preview" element={<UpdatePreview />} />
+            <Route path="/updates/:slug" element={<UpdateDetail />} />
             <Route path="/information" element={<Information />} />
             <Route path="/about" element={<About />} />
             <Route path="/commitment" element={<Commitment />} />
+            <Route path="/data-quality" element={<DataQuality />} />
             <Route path="/our-process" element={<OurProcess />} />
             <Route path="/team" element={<OurTeam />} />
             <Route path="/volunteer" element={<Volunteer />} />
+            <Route path="/donate" element={<Donate />} />
             <Route path="/products" element={<OurProducts />} />
+            <Route path="/saptahik" element={<WeeklyMeetings />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/donate/cancel" element={<PaymentCancelled />} />
+            <Route path="/donate/success" element={<PaymentSuccess />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -5,30 +5,51 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
+  ArchiveSearchCounts,
   ArchiveSearchFacets,
   ArchiveSearchType,
   SearchFacetItem,
 } from "@/types/search";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
-export type SidebarFilterName = "entity_type" | "role" | "case_type";
+export type SidebarFilterName = "entity_type" | "case_type" | "tags";
+
+// The four indexed result domains, in display order, with their record-type label.
+const RECORD_TYPES: { value: ArchiveSearchType; label: string }[] = [
+  { value: "case", label: "Cases" },
+  { value: "entity", label: "Entities" },
+  { value: "material", label: "Materials" },
+  { value: "courtcase", label: "Court cases" },
+];
+
+const FILTER_GROUPS: { name: SidebarFilterName; title: string }[] = [
+  { name: "entity_type", title: "Entity type" },
+  { name: "case_type", title: "Case type" },
+  { name: "tags", title: "Tags" },
+];
 
 type SearchFiltersProps = {
   facets: ArchiveSearchFacets;
+  counts: Partial<ArchiveSearchCounts>;
   selected: Record<SidebarFilterName, string[]>;
   selectedType?: ArchiveSearchType;
   onTypeChange: (type?: ArchiveSearchType) => void;
   onToggle: (name: SidebarFilterName, value: string) => void;
   onClear: () => void;
+  // Hide the record-type radios on single-type browse pages (Materials /
+  // Court-cases) where the type is pinned by the route, not user-selectable.
+  hideTypeSelector?: boolean;
 };
 
 export function SearchFilters({
   facets,
+  counts,
   selected,
   selectedType,
   onTypeChange,
   onToggle,
   onClear,
+  hideTypeSelector,
 }: Readonly<SearchFiltersProps>) {
   return (
     <aside
@@ -44,32 +65,23 @@ export function SearchFilters({
         </Button>
       </div>
 
-      <RecordTypeFilter
-        items={facets.type}
-        onChange={onTypeChange}
-        selectedType={selectedType}
-      />
-      <FilterGroup
-        items={facets.entity_type}
-        name="entity_type"
-        onToggle={onToggle}
-        selectedValues={selected.entity_type}
-        title="Entity type"
-      />
-      <FilterGroup
-        items={facets.role}
-        name="role"
-        onToggle={onToggle}
-        selectedValues={selected.role}
-        title="Entity role"
-      />
-      <FilterGroup
-        items={facets.case_type}
-        name="case_type"
-        onToggle={onToggle}
-        selectedValues={selected.case_type}
-        title="Case type"
-      />
+      {hideTypeSelector ? null : (
+        <RecordTypeFilter
+          counts={counts}
+          onChange={onTypeChange}
+          selectedType={selectedType}
+        />
+      )}
+      {FILTER_GROUPS.map(({ name, title }) => (
+        <FilterGroup
+          items={facets[name]}
+          key={name}
+          name={name}
+          onToggle={onToggle}
+          selectedValues={selected[name]}
+          title={title}
+        />
+      ))}
     </aside>
   );
 }
@@ -124,20 +136,16 @@ export function SearchFiltersSkeleton() {
 }
 
 function RecordTypeFilter({
-  items,
+  counts,
   onChange,
   selectedType,
 }: Readonly<{
-  items: SearchFacetItem[];
+  counts: Partial<ArchiveSearchCounts>;
   onChange: (type?: ArchiveSearchType) => void;
   selectedType?: ArchiveSearchType;
 }>) {
-  const displayItems = items.filter(
-    (item) => ["case", "entity", "document"].includes(item.name),
-  );
-
   return (
-    <fieldset>
+    <fieldset className="min-w-0">
       <legend className="mb-1.5 text-sm font-semibold text-foreground">
         Record type
       </legend>
@@ -149,12 +157,12 @@ function RecordTypeFilter({
         value={selectedType || "all"}
       >
         <FilterOption count={null} label="All records" value="all" />
-        {displayItems.map((item) => (
+        {RECORD_TYPES.map(({ value, label }) => (
           <FilterOption
-            count={item.count}
-            key={item.name}
-            label={item.display_name}
-            value={item.name}
+            count={counts[value as keyof ArchiveSearchCounts] ?? null}
+            key={value}
+            label={label}
+            value={value}
           />
         ))}
       </RadioGroup>
@@ -172,14 +180,14 @@ function FilterOption({
   value: string;
 }>) {
   return (
-    <label className="flex min-h-8 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+    <label className="flex min-h-8 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
       <RadioGroupItem
         aria-label={count === null ? label : `${label}: ${count} results`}
         value={value}
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {count !== null ? (
-        <span className="text-xs tabular-nums">{count}</span>
+        <span className="shrink-0 text-xs tabular-nums">{count}</span>
       ) : null}
     </label>
   );
@@ -200,20 +208,20 @@ function FilterGroup({
 }>) {
   const { t } = useTranslation();
   const displayItems = [...(items || [])];
+  // Keep any selected value visible even if it dropped out of the current facet
+  // buckets (e.g. it has zero hits under the active query).
   selectedValues.forEach((val) => {
     if (!displayItems.some((item) => item.name === val)) {
-      displayItems.push({
-        name: val,
-        display_name: val.replaceAll("_", " ").replaceAll("-", " "),
-        count: 0,
-      });
+      displayItems.push({ name: val, count: 0 });
     }
   });
 
   if (displayItems.length === 0) return null;
 
   return (
-    <fieldset className="space-y-0.5">
+    // min-w-0: <fieldset> defaults to min-width:min-content and ignores width
+    // constraints, so a long facet name would overflow the viewport on mobile.
+    <fieldset className="min-w-0 space-y-0.5">
       <legend className="mb-1.5 text-sm font-semibold text-foreground">
         {title}
       </legend>
@@ -222,7 +230,7 @@ function FilterGroup({
         const label = getFacetItemLabel(name, item, t);
         return (
           <label
-            className="flex min-h-8 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex min-h-8 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             key={item.name}
           >
             <Checkbox
@@ -231,7 +239,7 @@ function FilterGroup({
               onCheckedChange={() => onToggle(name, item.name)}
             />
             <span className="min-w-0 flex-1 truncate">{label}</span>
-            <span className="text-xs tabular-nums">{item.count}</span>
+            <span className="shrink-0 text-xs tabular-nums">{item.count}</span>
           </label>
         );
       })}
