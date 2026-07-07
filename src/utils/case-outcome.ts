@@ -35,13 +35,23 @@ const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
     "border-transparent bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
 };
 
+// Coerce any incoming value to a known outcome, defaulting to `charged`. Guards
+// the lookups below against unexpected/cased values (e.g. a stray uppercase from
+// the admin enum) so they can never index the maps with `undefined`.
+function normalizeOutcome(outcome: string): EntityOutcome {
+  const v = String(outcome).toLowerCase();
+  return v === "convicted" || v === "acquitted" || v === "abated" || v === "charged"
+    ? (v as EntityOutcome)
+    : "charged";
+}
+
 export function outcomeLabel(outcome: EntityOutcome, language: string): string {
   const lang = language === "ne" ? "ne" : "en";
-  return OUTCOME_LABELS[outcome][lang];
+  return OUTCOME_LABELS[normalizeOutcome(outcome)][lang];
 }
 
 export function outcomeBadgeClass(outcome: EntityOutcome): string {
-  return OUTCOME_BADGE_CLASSES[outcome];
+  return OUTCOME_BADGE_CLASSES[normalizeOutcome(outcome)];
 }
 
 /**
@@ -51,5 +61,5 @@ export function outcomeBadgeClass(outcome: EntityOutcome): string {
 export function shouldShowOutcome(
   outcome: EntityOutcome | undefined | null,
 ): outcome is EntityOutcome {
-  return outcome != null && outcome !== "charged";
+  return outcome != null && normalizeOutcome(outcome) !== "charged";
 }
