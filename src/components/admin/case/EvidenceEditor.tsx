@@ -24,9 +24,11 @@ function pickLangString(v: unknown): string {
   if (typeof v === "string") return v;
   if (v && typeof v === "object") {
     const map = v as Record<string, unknown>;
-    const picked =
-      map.en ?? map.ne ?? Object.values(map).find((x) => typeof x === "string");
-    if (typeof picked === "string") return picked;
+    // Check each candidate for a string value; a non-string `en` (e.g. a number
+    // or nested object) must not short-circuit past `ne`/other languages.
+    for (const candidate of [map.en, map.ne, ...Object.values(map)]) {
+      if (typeof candidate === "string") return candidate;
+    }
   }
   return "";
 }
