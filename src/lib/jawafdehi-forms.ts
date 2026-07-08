@@ -99,7 +99,8 @@ export type OutcomeType = (typeof OUTCOME_TYPES)[number];
 export interface EntityRelationshipRow {
   nes_id: string;
   relationship_type: RelationshipType;
-  outcome: OutcomeType;
+  // A verdict is meaningful only for ACCUSED; every other role carries null.
+  outcome: OutcomeType | null;
   notes: string;
 }
 
@@ -179,7 +180,11 @@ export function buildEntitiesPatch(rows: EntityRelationshipRow[]): PatchOp {
     .map((r) => ({
       nes_id: r.nes_id.trim(),
       relationship_type: r.relationship_type,
-      outcome: r.outcome,
+      // A verdict is only accepted on ACCUSED (the API 400s it otherwise);
+      // every other role sends null. An accused row with no verdict falls
+      // back to CHARGED.
+      outcome:
+        r.relationship_type === "ACCUSED" ? (r.outcome ?? "CHARGED") : null,
       notes: r.notes ?? "",
     }));
   return replaceOp("/entities", value);

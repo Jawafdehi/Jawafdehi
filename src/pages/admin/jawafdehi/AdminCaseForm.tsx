@@ -121,15 +121,19 @@ function asOutcome(v: unknown): OutcomeType {
 // read-plane shape (nes_id may live under different keys).
 function parseEntities(c: Record<string, unknown>): EntityRelationshipRow[] {
   const list = Array.isArray(c.entities) ? (c.entities as Record<string, unknown>[]) : [];
-  return list.map((e) => ({
-    nes_id: str(e.nes_id ?? e.entity ?? e["@id"]),
+  return list.map((e) => {
     // The case-read API emits the role under `type`; keep `relationship_type`/
     // `role` as fallbacks. Reading only the latter two coerced every loaded row
     // to ACCUSED, so a whole-list save silently rewrote all non-accused roles.
-    relationship_type: asRelType(e.type ?? e.relationship_type ?? e.role),
-    outcome: asOutcome(e.outcome),
-    notes: str(e.notes),
-  }));
+    const relationship_type = asRelType(e.type ?? e.relationship_type ?? e.role);
+    return {
+      nes_id: str(e.nes_id ?? e.entity ?? e["@id"]),
+      relationship_type,
+      // A verdict is meaningful only for ACCUSED; every other role is null.
+      outcome: relationship_type === "ACCUSED" ? asOutcome(e.outcome) : null,
+      notes: str(e.notes),
+    };
+  });
 }
 
 function parseTimeline(c: Record<string, unknown>): TimelineEventRow[] {

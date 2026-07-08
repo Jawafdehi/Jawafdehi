@@ -108,11 +108,12 @@ export function CaseEntityChips({
               <span className="text-base font-medium leading-snug text-primary">
                 {displayName}
               </span>
-              {shouldShowOutcome(jawafEntity.outcome) && (
-                <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
-                  {outcomeLabel(jawafEntity.outcome, language)}
-                </Badge>
-              )}
+              {jawafEntity.type === "accused" &&
+                shouldShowOutcome(jawafEntity.outcome) && (
+                  <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
+                    {outcomeLabel(jawafEntity.outcome, language)}
+                  </Badge>
+                )}
               {strippedNotes && (
                 <span className="text-sm leading-snug text-primary/75">
                   {strippedNotes}

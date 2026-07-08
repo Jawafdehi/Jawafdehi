@@ -158,9 +158,15 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                 </div>
                 <Select
                   value={r.relationship_type}
-                  onValueChange={(v) =>
-                    update(i, { relationship_type: v as EntityRelationshipRow["relationship_type"] })
-                  }
+                  onValueChange={(v) => {
+                    const rt = v as EntityRelationshipRow["relationship_type"];
+                    update(i, {
+                      relationship_type: rt,
+                      // A verdict applies only to ACCUSED: keep/seed it for
+                      // accused, clear it (null) for every other role.
+                      outcome: rt === "ACCUSED" ? (r.outcome ?? "CHARGED") : null,
+                    });
+                  }}
                 >
                   <SelectTrigger aria-label="Relationship type">
                     <SelectValue />
@@ -173,23 +179,32 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select
-                  value={r.outcome}
-                  onValueChange={(v) =>
-                    update(i, { outcome: v as EntityRelationshipRow["outcome"] })
-                  }
-                >
-                  <SelectTrigger aria-label="Verdict outcome">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {OUTCOME_TYPES.map((o) => (
-                      <SelectItem key={o} value={o}>
-                        {o}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {r.relationship_type === "ACCUSED" ? (
+                  <Select
+                    value={r.outcome ?? "CHARGED"}
+                    onValueChange={(v) =>
+                      update(i, { outcome: v as EntityRelationshipRow["outcome"] })
+                    }
+                  >
+                    <SelectTrigger aria-label="Verdict outcome">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OUTCOME_TYPES.map((o) => (
+                        <SelectItem key={o} value={o}>
+                          {o}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div
+                    className="flex items-center px-2 text-xs text-muted-foreground"
+                    aria-hidden
+                  >
+                    — no verdict —
+                  </div>
+                )}
                 <Button
                   type="button"
                   size="icon"
