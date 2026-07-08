@@ -323,7 +323,7 @@ export default function ArchiveSearch({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between gap-4">
                   <span>
-                    {params.page > 1
+                    {(params.page ?? 1) > 1
                       ? "That results page is out of range. Return to the first page to keep searching."
                       : "Archive search could not be loaded."}
                   </span>
@@ -333,12 +333,12 @@ export default function ArchiveSearch({
                     // bad page and never recover (BB-14). Reset to page 1 to
                     // escape it; otherwise retry the current query.
                     onClick={() =>
-                      params.page > 1 ? updateParams({ page: 1 }) : refetch()
+                      (params.page ?? 1) > 1 ? updateParams({ page: 1 }) : refetch()
                     }
                     size="sm"
                     variant="outline"
                   >
-                    {params.page > 1 ? "Back to first page" : "Retry"}
+                    {(params.page ?? 1) > 1 ? "Back to first page" : "Retry"}
                   </Button>
                 </AlertDescription>
               </Alert>
