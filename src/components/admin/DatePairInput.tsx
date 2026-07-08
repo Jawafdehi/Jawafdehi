@@ -24,18 +24,34 @@ import { adStringToBSString } from "@/utils/bs-calendar";
 //    writes back ONLY to AD (using the Gregorian date the BS picker emits), and
 //    the shown BS re-derives from that AD. The caller owns only AD and passes
 //    `onAdChange`; `bsValue`/`onChange` are ignored.
-interface DatePairInputProps {
+interface DatePairInputBaseProps {
   label: string;
   idBase: string;
   adValue: string; // AD "YYYY-MM-DD" or ""
-  bsValue?: string; // BS "YYYY-MM-DD" or "" (ignored when deriveBs is set)
-  onChange?: (pair: { ad: string; bs: string }) => void; // default mode
-  // Derive-only mode: BS is computed from AD for display and never stored. The
-  // caller owns only the AD value and receives just the AD string back.
-  deriveBs?: boolean;
-  onAdChange?: (ad: string) => void; // required when deriveBs is set
   disabled?: boolean;
 }
+
+// A discriminated union on `deriveBs` so the two modes can't be mixed at the
+// type level: derive-only mode requires `onAdChange` and forbids the stored-BS
+// props, and default mode requires `bsValue`/`onChange` and forbids `onAdChange`.
+type DatePairInputProps = DatePairInputBaseProps &
+  (
+    | {
+        // Derive-only mode: BS is computed from AD for display and never stored.
+        // The caller owns only the AD value and receives just the AD string back.
+        deriveBs: true;
+        onAdChange: (ad: string) => void;
+        bsValue?: never;
+        onChange?: never;
+      }
+    | {
+        // Default mode: BS and AD are BOTH stored by the caller.
+        deriveBs?: false;
+        bsValue: string; // BS "YYYY-MM-DD" or ""
+        onChange: (pair: { ad: string; bs: string }) => void;
+        onAdChange?: never;
+      }
+  );
 
 export default function DatePairInput({
   label,
