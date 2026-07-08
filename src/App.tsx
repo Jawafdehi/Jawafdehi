@@ -29,6 +29,7 @@ import Volunteer from "./pages/Volunteer";
 import OurProducts from "./pages/OurProducts";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
 import Information from "./pages/Information";
+import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
 import Feedback from "./pages/Feedback";
@@ -146,6 +147,7 @@ const App = () => (
             <Route path="/updates/preview" element={<UpdatePreview />} />
             <Route path="/updates/:slug" element={<UpdateDetail />} />
             <Route path="/information" element={<Information />} />
+            <Route path="/faq" element={<FaqPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/commitment" element={<Commitment />} />
             <Route path="/data-quality" element={<DataQuality />} />
