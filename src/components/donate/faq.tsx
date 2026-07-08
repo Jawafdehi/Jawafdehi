@@ -22,7 +22,7 @@ export function DonationFaq() {
       className="md:py-20"
       contentClassName="mx-auto max-w-6xl"
       description={t("donate.faq.description")}
-      eyebrow={t("donate.faq.eyebrow")}
+      eyebrow="FAQs"
       id="donate-faq"
       items={items}
       title={t("donate.faq.title")}

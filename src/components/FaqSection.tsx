@@ -9,6 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
 
 export type FaqSectionItem = {
@@ -87,9 +88,9 @@ export function FaqSection({
         <div className={contentClassName}>
           <div className="max-w-3xl">
             {eyebrow ? (
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              <Eyebrow className="mb-3">
                 {eyebrow}
-              </p>
+              </Eyebrow>
             ) : null}
             <h2
               id={titleId}
