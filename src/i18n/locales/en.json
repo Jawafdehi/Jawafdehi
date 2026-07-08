@@ -967,7 +967,8 @@
     },
     "entitySummary": {
       "withOthers_one": "{{name}} with {{count}} other",
-      "withOthers_other": "{{name}} with {{count}} others"
+      "withOthers_other": "{{name}} with {{count}} others",
+      "withOthersNepali": "{{name}} with {{countLabel}} others"
     }
   },
   "entityCard": {

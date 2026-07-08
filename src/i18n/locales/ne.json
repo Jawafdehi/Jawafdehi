@@ -966,7 +966,8 @@
     },
     "entitySummary": {
       "withOthers_one": "{{name}} समेत {{count}} अन्य",
-      "withOthers_other": "{{name}} समेत {{count}} अन्यहरू"
+      "withOthers_other": "{{name}} समेत {{count}} अन्यहरू",
+      "withOthersNepali": "{{name}} समेत {{countLabel}} अन्यहरू"
     }
   },
   "entityCard": {
