@@ -145,10 +145,21 @@ function parseTimeline(c: Record<string, unknown>): TimelineEventRow[] {
 function parseEvidence(c: Record<string, unknown>): EvidenceRow[] {
   const list = Array.isArray(c.evidence) ? (c.evidence as Record<string, unknown>[]) : [];
   return list
-    .map((e) => ({
-      material_iri: str(e.material_iri ?? e.material ?? e["@id"]),
-      additional_details: str(e.additional_details ?? e.notes),
-    }))
+    .map((e) => {
+      // CaseDetailSerializer enriches each evidence entry with a resolved
+      // `material` object ({display_name, material_type, urls}); capture the
+      // human title for display so linked rows aren't shown as a raw IRI (BB-20).
+      const mat = e.material;
+      const title =
+        mat && typeof mat === "object"
+          ? str((mat as Record<string, unknown>).display_name)
+          : "";
+      return {
+        material_iri: str(e.material_iri ?? e.material ?? e["@id"]),
+        additional_details: str(e.additional_details ?? e.notes),
+        title,
+      };
+    })
     .filter((e) => e.material_iri.trim());
 }
 
