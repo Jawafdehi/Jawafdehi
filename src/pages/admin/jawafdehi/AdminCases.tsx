@@ -44,65 +44,71 @@ export default function AdminCases() {
   const [search, setSearch] = useState("");
 
   return (
-    <ResourceTable<Row>
-      // Re-mount the table (resetting pagination) whenever a filter changes,
-      // so the new fetchPage closure runs from page 1.
-      key={`${state}|${search}`}
-      title="Jawafdehi Cases"
-      description="Accountability / corruption cases. Full create / edit / delete."
-      columns={columns}
-      pageSize={PAGE_SIZE}
-      rowKey={(r) => str(r.slug ?? r.id)}
-      onRowClick={(r) => {
-        const slug = r.slug;
-        if (typeof slug === "string" && slug)
-          navigate(`/admin/jawafdehi/cases/${encodeURIComponent(slug)}/edit`);
-      }}
-      headerAction={
-        <div className="flex items-center gap-2">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSearch(query.trim());
-            }}
-            className="flex items-center gap-2"
-          >
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search cases…"
-              className="h-9 w-[14rem]"
-            />
-            <Button type="submit" size="sm" variant="secondary">
-              <Search className="mr-1 h-4 w-4" /> Search
+    // The search form lives ABOVE the table (not in headerAction): the table
+    // remounts on a new search term to reset pagination, and keeping the input
+    // outside that keyed subtree preserves its focus across the remount.
+    <div className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSearch(query.trim());
+        }}
+        className="flex items-center gap-2"
+      >
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search cases…"
+          className="h-9 w-full max-w-sm"
+        />
+        <Button type="submit" size="sm" variant="secondary">
+          <Search className="mr-1 h-4 w-4" /> Search
+        </Button>
+      </form>
+
+      <ResourceTable<Row>
+        // Re-mount the table (resetting pagination) whenever a filter changes,
+        // so the new fetchPage closure runs from page 1.
+        key={`${state}|${search}`}
+        title="Jawafdehi Cases"
+        description="Accountability / corruption cases. Full create / edit / delete."
+        columns={columns}
+        pageSize={PAGE_SIZE}
+        rowKey={(r) => str(r.slug ?? r.id)}
+        onRowClick={(r) => {
+          const slug = r.slug;
+          if (typeof slug === "string" && slug)
+            navigate(`/admin/jawafdehi/cases/${encodeURIComponent(slug)}/edit`);
+        }}
+        headerAction={
+          <div className="flex items-center gap-2">
+            <Select value={state} onValueChange={setState}>
+              <SelectTrigger className="h-9 w-[9rem]">
+                <SelectValue placeholder="All states" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>All states</SelectItem>
+                {CASE_STATES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => navigate("/admin/jawafdehi/cases/new")}>
+              <Plus className="mr-1 h-4 w-4" /> New case
             </Button>
-          </form>
-          <Select value={state} onValueChange={setState}>
-            <SelectTrigger className="h-9 w-[9rem]">
-              <SelectValue placeholder="All states" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All states</SelectItem>
-              {CASE_STATES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button size="sm" onClick={() => navigate("/admin/jawafdehi/cases/new")}>
-            <Plus className="mr-1 h-4 w-4" /> New case
-          </Button>
-        </div>
-      }
-      fetchPage={(page) =>
-        listCases<Row>({
-          page,
-          page_size: PAGE_SIZE,
-          ...(state !== ALL ? { state } : {}),
-          ...(search ? { search } : {}),
-        })
-      }
-    />
+          </div>
+        }
+        fetchPage={(page) =>
+          listCases<Row>({
+            page,
+            page_size: PAGE_SIZE,
+            ...(state !== ALL ? { state } : {}),
+            ...(search ? { search } : {}),
+          })
+        }
+      />
+    </div>
   );
 }
