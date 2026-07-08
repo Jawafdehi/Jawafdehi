@@ -5,6 +5,7 @@ import { listCases } from "@/services/admin-api";
 import { CASE_STATES } from "@/lib/jawafdehi-forms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 type Row = Record<string, unknown>;
 
@@ -36,12 +37,17 @@ export default function AdminCases() {
   const navigate = useNavigate();
   // F10 — state filter. "__all__" sends no ?state= param.
   const [state, setState] = useState<string>(ALL);
+  // BB-24 — text search over title/description/key_allegations. `query` is the
+  // input value; `search` is the applied term (only updated on submit) so the
+  // table refetches on Enter, not on every keystroke.
+  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
 
   return (
     <ResourceTable<Row>
-      // Re-mount the table (resetting pagination) whenever the filter changes,
+      // Re-mount the table (resetting pagination) whenever a filter changes,
       // so the new fetchPage closure runs from page 1.
-      key={state}
+      key={`${state}|${search}`}
       title="Jawafdehi Cases"
       description="Accountability / corruption cases. Full create / edit / delete."
       columns={columns}
@@ -54,6 +60,23 @@ export default function AdminCases() {
       }}
       headerAction={
         <div className="flex items-center gap-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSearch(query.trim());
+            }}
+            className="flex items-center gap-2"
+          >
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search cases…"
+              className="h-9 w-[14rem]"
+            />
+            <Button type="submit" size="sm" variant="secondary">
+              <Search className="mr-1 h-4 w-4" /> Search
+            </Button>
+          </form>
           <Select value={state} onValueChange={setState}>
             <SelectTrigger className="h-9 w-[9rem]">
               <SelectValue placeholder="All states" />
@@ -77,6 +100,7 @@ export default function AdminCases() {
           page,
           page_size: PAGE_SIZE,
           ...(state !== ALL ? { state } : {}),
+          ...(search ? { search } : {}),
         })
       }
     />
