@@ -460,7 +460,10 @@ export default function AdminCaseForm() {
               placeholder="auto-derived from title"
             />
             <FieldError
-              message={!slugValid && "Lowercase alphanumeric, hyphen-separated."}
+              message={
+                !slugValid &&
+                "Use lowercase letters, numbers, and hyphens (e.g. ncell-tax-case). Leave blank to auto-generate from the title."
+              }
             />
             {editing && (
               <p className="text-xs text-muted-foreground">
@@ -530,7 +533,10 @@ export default function AdminCaseForm() {
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="allegations">Key allegations (one per line)</Label>
+          <Label htmlFor="allegations">Key allegations</Label>
+          <p className="text-xs text-muted-foreground">
+            Enter one allegation per line.
+          </p>
           <textarea
             id="allegations"
             value={allegationsText}
