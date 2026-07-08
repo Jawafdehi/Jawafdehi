@@ -40,4 +40,15 @@ describe("looksLikeReviewIri", () => {
     expect(looksLikeReviewIri("special:081-CR-0136")).toBe(false);
     expect(looksLikeReviewIri("case-081-cr-0136-oxygen-plant")).toBe(false);
   });
+
+  it("mirrors the backend: court-case numbers are lowercase-only (uppercase is not canonical)", () => {
+    // Court-case IRIs are strictly lowercase everywhere on the platform, so an
+    // uppercase number is not a valid court-case IRI — keep this in sync with
+    // the backend so the hint never says "ok" for something it will 400.
+    expect(
+      looksLikeReviewIri("https://jawafdehi.org/courtcase/special/080-CR-0111")
+    ).toBe(false);
+    // A case slug, by contrast, may contain uppercase.
+    expect(looksLikeReviewIri("https://jawafdehi.org/case/Case-Alpha")).toBe(true);
+  });
 });
