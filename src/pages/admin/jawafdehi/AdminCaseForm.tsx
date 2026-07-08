@@ -155,7 +155,12 @@ function parseEvidence(c: Record<string, unknown>): EvidenceRow[] {
           ? str((mat as Record<string, unknown>).display_name)
           : "";
       return {
-        material_iri: str(e.material_iri ?? e.material ?? e["@id"]),
+        // `e.material` is now the resolved object (used for `title`); only fall
+        // back to it for the IRI when it's still a bare string, else `String()`
+        // would yield "[object Object]".
+        material_iri: str(
+          e.material_iri ?? (typeof mat === "string" ? mat : undefined) ?? e["@id"],
+        ),
         additional_details: str(e.additional_details ?? e.notes),
         title,
       };
