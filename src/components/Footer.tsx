@@ -138,6 +138,7 @@ export const Footer = () => {
 
   const resourceLinks: FooterLink[] = [
     { label: t("footer.contributorPortal"), to: `${API_BASE_URL}/admin`, external: true },
+    { label: t("nav.faq"), to: "/faq" },
     { label: t("footer.githubRepo"), to: "https://github.com/Jawafdehi/Jawafdehi", external: true },
     { label: t("footer.siteStatus"), to: "https://status.jawafdehi.org/status/public", external: true },
     { label: t("footer.privacy"), to: "/privacy" },
