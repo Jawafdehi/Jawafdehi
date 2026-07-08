@@ -48,7 +48,7 @@ const markdownComponents: Components = {
   ),
   strong: ({ className, node: _node, ...props }) => (
     <strong
-      className={cn("font-semibold text-foreground", className)}
+      className={cn("font-medium text-foreground", className)}
       {...props}
     />
   ),
@@ -130,7 +130,7 @@ export function FaqSection({
                       </span>
                     </AccordionTrigger>
                     <AccordionContent
-                      className="space-y-3 px-5 pb-6 pr-12 text-sm leading-7 text-muted-foreground md:px-6 md:text-base"
+                      className="space-y-3 px-5 pb-6 pr-12 text-sm font-normal leading-7 text-muted-foreground md:px-6 md:text-base"
                     >
                       {item.answers.map((answer, index) => (
                         <Markdown

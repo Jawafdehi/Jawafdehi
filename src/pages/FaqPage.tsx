@@ -58,7 +58,7 @@ const markdownComponents: Components = {
     <li className={cn("pl-1", className)} {...props} />
   ),
   strong: ({ className, node: _node, ...props }) => (
-    <strong className={cn("font-semibold text-foreground", className)} {...props} />
+    <strong className={cn("font-medium text-foreground", className)} {...props} />
   ),
 };
 
@@ -180,7 +180,7 @@ export default function FaqPage() {
                               <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                             </span>
                           </AccordionTrigger>
-                          <AccordionContent className="pb-6 pr-0 text-sm leading-7 text-muted-foreground md:pr-16">
+                          <AccordionContent className="pb-6 pr-0 text-sm font-normal leading-7 text-muted-foreground md:pr-16 md:text-base">
                             <Markdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
                               {item.answer}
                             </Markdown>
