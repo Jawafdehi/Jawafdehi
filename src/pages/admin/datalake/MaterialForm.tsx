@@ -333,6 +333,7 @@ export default function MaterialForm() {
                 })
               }
               rows={3}
+              placeholder="सामग्रीको विवरण (नेपालीमा)"
             />
           </div>
           <div className="space-y-1">
@@ -346,6 +347,7 @@ export default function MaterialForm() {
                 })
               }
               rows={3}
+              placeholder="Material description (in English)"
             />
           </div>
         </div>
