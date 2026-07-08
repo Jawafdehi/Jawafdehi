@@ -17,8 +17,22 @@ function materialIri(m: Record<string, unknown>): string {
   return String(m["@id"] ?? m.iri ?? m.id ?? "");
 }
 
+// A stored material's `name`/`title` comes from JSON-LD as a language map
+// ({en, ne}); String()-ing that object yields "[object Object]" (BB-19). Unwrap
+// it to a readable string — prefer English, then Nepali, then any string value.
+function pickLangString(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (v && typeof v === "object") {
+    const map = v as Record<string, unknown>;
+    const picked =
+      map.en ?? map.ne ?? Object.values(map).find((x) => typeof x === "string");
+    if (typeof picked === "string") return picked;
+  }
+  return "";
+}
+
 function materialTitle(m: Record<string, unknown>): string {
-  return String(m.name ?? m.title ?? materialIri(m));
+  return pickLangString(m.name) || pickLangString(m.title) || materialIri(m);
 }
 
 // F5 — evidence linker. Case evidence is a reference to a data-lake material (the
