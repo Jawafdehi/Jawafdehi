@@ -88,6 +88,14 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     sitemapTitle: "Information — Jawafdehi",
   },
   {
+    path: "/faq",
+    titleKey: "nav.faq",
+    descriptionKey: "searchCommand.descriptions.faq",
+    keywords: ["faq", "questions", "answers", "reporting", "privacy", "volunteer", "funding"],
+    icon: "BookOpen",
+    sitemapTitle: "FAQ — Jawafdehi",
+  },
+  {
     path: "/our-process",
     titleKey: "nav.ourProcess",
     descriptionKey: "searchCommand.descriptions.process",
