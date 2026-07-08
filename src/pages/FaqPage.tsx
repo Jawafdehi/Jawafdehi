@@ -1,9 +1,10 @@
-import { useEffect, type MouseEvent } from "react";
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 
 import {
@@ -62,45 +63,25 @@ const markdownComponents: Components = {
 };
 
 export default function FaqPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
   const rawSections = t("faqPage.sections", { returnObjects: true });
   const sections = Array.isArray(rawSections)
     ? rawSections.filter(isFaqPageSection)
     : [];
 
   useEffect(() => {
-    if (sections.length === 0 || !window.location.hash) return;
+    if (sections.length === 0 || !location.hash) return;
 
-    const sectionId = decodeURIComponent(window.location.hash.slice(1));
+    const sectionId = decodeURIComponent(location.hash.slice(1));
     const frame = window.requestAnimationFrame(() => {
-      document.getElementById(sectionId)?.scrollIntoView({ block: "start" });
+      document
+        .getElementById(sectionId)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [sections.length]);
-
-  const handleBrowseLinkClick = (
-    event: MouseEvent<HTMLAnchorElement>,
-    sectionId: string,
-  ) => {
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.altKey ||
-      event.ctrlKey ||
-      event.shiftKey
-    ) {
-      return;
-    }
-
-    const sectionElement = document.getElementById(sectionId);
-    if (!sectionElement) return;
-
-    event.preventDefault();
-    sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.pushState(null, "", `#${sectionId}`);
-  };
+  }, [location.hash, sections.length]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,7 +101,10 @@ export default function FaqPage() {
           content={t("faqPage.meta.socialDescription")}
         />
         <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
-        <meta property="og:locale" content="en_US" />
+        <meta
+          property="og:locale"
+          content={i18n.language?.startsWith("ne") ? "ne_NP" : "en_US"}
+        />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={t("faqPage.meta.title")} />
         <meta
@@ -155,14 +139,13 @@ export default function FaqPage() {
                   </Eyebrow>
                   <nav aria-label="FAQ categories" className="space-y-1">
                     {sections.map((section) => (
-                      <a
+                      <Link
                         key={section.id}
-                        href={`#${section.id}`}
-                        onClick={(event) => handleBrowseLinkClick(event, section.id)}
+                        to={`#${section.id}`}
                         className="block rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {section.title}
-                      </a>
+                      </Link>
                     ))}
                   </nav>
                 </div>
