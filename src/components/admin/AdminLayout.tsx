@@ -14,7 +14,6 @@ import {
 } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import {
-  Building2,
   ClipboardCheck,
   FileText,
   Gavel,
@@ -72,8 +71,6 @@ const NAV: NavGroup[] = [
     heading: "Data Lake",
     items: [
       { to: "/admin/datalake/courtcases", label: "Court cases", icon: Gavel, canAccess: hasNgmWriteAccess },
-      { to: "/admin/datalake/courts", label: "Courts", icon: Building2, canAccess: hasNgmWriteAccess },
-      { to: "/admin/datalake/firms", label: "Blocklisted firms", icon: Building2, canAccess: hasNgmWriteAccess },
       { to: "/admin/datalake/materials", label: "Materials", icon: ScrollText, canAccess: hasNgmWriteAccess },
     ],
   },
