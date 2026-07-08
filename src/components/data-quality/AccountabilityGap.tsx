@@ -28,13 +28,10 @@ export function AccountabilityGap({
   const documented = published + investigating + closed;
   const ratio = published > 0 ? Math.round(documented / published) : 0;
 
+  // Only the mutually-exclusive status buckets go in the bars. "Documented" is
+  // their sum (33 + 2,892 + 1) — a derived total, not an API field — so it is
+  // shown as the header/denominator above, never as a fourth competing bar.
   const stages: FunnelStage[] = [
-    {
-      key: "documented",
-      label: t("dataQuality.gap.stage.documented", "Documented"),
-      count: documented,
-      color: "hsl(var(--primary))",
-    },
     {
       key: "investigating",
       label: t("dataQuality.cases.status.investigating", "Under investigation"),
@@ -119,13 +116,34 @@ export function AccountabilityGap({
               </div>
             )}
 
+            {/* The documented total: parent of the buckets below, shown as a
+                header so it never reads as a peer of its own components. */}
+            {!isLoading && (
+              <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("dataQuality.gap.totalLabel", "Documented cases")}
+                </span>
+                <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
+                  <CountUp end={documented} duration={1.2} separator="," />
+                </span>
+              </div>
+            )}
+
             <AccountabilityFunnel
               stages={stages}
+              denominator={documented}
               isLoading={isLoading}
               ofLabel={(pct) =>
                 t("dataQuality.gap.ofDocumented", "{{pct}}% of documented", { pct })
               }
             />
+
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              {t(
+                "dataQuality.gap.bucketsCaption",
+                "Every documented case sits in exactly one of these. The three add up to the total above.",
+              )}
+            </p>
           </div>
 
           {/* Status mix */}

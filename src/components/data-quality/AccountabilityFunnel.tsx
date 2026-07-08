@@ -9,25 +9,32 @@ export interface FunnelStage {
 }
 
 /**
- * A drop-off funnel: each stage is a full-width track with a proportional fill,
- * so the collapse from "documented" to "published" is visible at a glance. The
- * count sits OUTSIDE the bar (right-aligned) so even a 1%-wide sliver stays
- * readable — the whole point is that the last stage is almost nothing.
+ * A part-to-whole status breakdown. Each row is a mutually-exclusive bucket of
+ * the documented total (under investigation / published / closed), drawn as a
+ * full-width track with a proportional fill so the collapse to "published" is
+ * visible at a glance. The count sits OUTSIDE the bar (right-aligned) so even a
+ * 1%-wide sliver stays readable — the whole point is that published is almost
+ * nothing.
  *
- * Bars are scaled against the first stage (the widest), which is the honest
- * denominator for "% that make it this far".
+ * Bars are scaled against `denominator` (the documented total — the parent of
+ * these buckets, NOT one of the rows), which is the honest base for "% of all
+ * documented cases". The buckets sum back up to the denominator; it is shown
+ * separately as a header, never as a competing bar.
  */
 export function AccountabilityFunnel({
   stages,
+  denominator,
   isLoading,
   ofLabel,
 }: {
   stages: FunnelStage[];
+  /** The documented total these buckets divide up. Defaults to the largest row. */
+  denominator?: number;
   isLoading: boolean;
   /** Formatter for the "{pct}% of documented" caption per row. */
   ofLabel: (pct: string) => string;
 }) {
-  const denominator = stages[0]?.count || 1;
+  const base = (denominator ?? stages[0]?.count) || 1;
 
   if (isLoading) {
     return (
@@ -42,7 +49,7 @@ export function AccountabilityFunnel({
   return (
     <ul className="space-y-4">
       {stages.map((stage) => {
-        const share = (stage.count / denominator) * 100;
+        const share = (stage.count / base) * 100;
         // Keep a hairline of fill even at ~0% so the row never looks empty.
         const width = stage.count === 0 ? 0 : Math.max(share, 0.8);
         // Never let a rounded share read as a clean 100% unless it truly is

@@ -1281,7 +1281,9 @@
         "documented": "Documented",
         "published": "Reached a published finding"
       },
-      "eyebrow": "The core finding"
+      "eyebrow": "The core finding",
+      "totalLabel": "Documented cases",
+      "bucketsCaption": "Every documented case sits in exactly one of these. The three add up to the total above."
     },
     "backbone": {
       "heading": "The record base behind every case",
