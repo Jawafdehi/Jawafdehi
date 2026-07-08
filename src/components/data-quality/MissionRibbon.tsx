@@ -8,16 +8,9 @@ import { formatFreshness } from "@/lib/data-quality";
  * and when the underlying data was last refreshed. Deliberately low-key — a
  * signal, not a hero.
  */
-export function MissionRibbon({
-  lastUpdated,
-  showFreshness = true,
-}: {
-  lastUpdated?: string | null;
-  /** Hidden for sample-data previews, where a "last refreshed" time would be fabricated. */
-  showFreshness?: boolean;
-}) {
+export function MissionRibbon({ lastUpdated }: { lastUpdated?: string | null }) {
   const { t } = useTranslation();
-  const freshness = showFreshness ? formatFreshness(lastUpdated) : null;
+  const freshness = formatFreshness(lastUpdated);
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">

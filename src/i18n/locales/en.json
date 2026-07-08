@@ -1272,18 +1272,6 @@
       },
       "eyebrow": "The core finding"
     },
-    "concentration": {
-      "heading": "Where the cases cluster",
-      "description": "The offices and agencies named most often across documented cases.",
-      "tooltip": "Documented cases",
-      "note": "Illustrative sample for this preview. Office-level breakdowns are being wired to live data."
-    },
-    "momentum": {
-      "heading": "The archive keeps growing",
-      "description": "Documented cases add up month over month as court records and CIAA reports are collected and checked.",
-      "tooltip": "Cases documented (cumulative)",
-      "note": "Illustrative trend for this preview. A live time series is being wired in."
-    },
     "backbone": {
       "heading": "The record base behind every case",
       "description": "Each case is cross-checked against millions of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
@@ -1308,28 +1296,6 @@
         "materialLink": "Materials with a working source link"
       }
     },
-    "mockNotice": {
-      "title": "Preview with sample data.",
-      "body": "The figures below are placeholder numbers to show the layout. They are not real counts from Jawafdehi's records."
-    },
-    "courtCoverage": {
-      "heading": "How far the court records reach",
-      "description": "Which courts we hold records from, and the years they span. We don't yet have every court or every year, so here is exactly what is covered.",
-      "colCourt": "Court level",
-      "colCourts": "Courts covered",
-      "colRecords": "Records",
-      "colRange": "Registered between",
-      "court": {
-        "district": "District courts",
-        "high": "High courts",
-        "supreme": "Supreme Court",
-        "special": "Special Court"
-      },
-      "courtsValue": "{{covered}} of {{total}}",
-      "rangeValue": "BS {{from}} to {{to}} · {{fromAd}} to {{toAd}} AD",
-      "gapsNote": "Known gaps: some district and high courts, and cases registered before the start years above, are still being ingested. A missing court or year here means we haven't collected it yet, not that no cases exist.",
-      "mockNote": "Record counts are real; court tallies and date spans are sample values for this preview."
-    },
     "limitations": {
       "heading": "What this data can't tell you yet",
       "description": "The honest limits of what's here today. We list them so you don't read more into a number than it can carry.",
@@ -1339,28 +1305,6 @@
       "reconcile": "Two internal counts of tracked entities differ by one ({{a}} and {{b}}); we're reconciling which is right.",
       "coverage": "We don't hold every court or every year yet. A missing record means we haven't collected it, not that nothing happened."
     },
-    "sources": {
-      "heading": "Where each number comes from",
-      "description": "Every figure on this page traces to one of these feeds. Here is what each contributes, how often it updates, and when we last pulled it.",
-      "colSource": "Source",
-      "colRecords": "Records",
-      "colUpdates": "Updates",
-      "colRefreshed": "Last refreshed",
-      "item": {
-        "judiciary": "Nepal judiciary (court records)",
-        "ciaa": "CIAA (press releases + annual reports)",
-        "projectPortals": "Development project portals",
-        "submissions": "Public submissions",
-        "provinceKoshi": "Koshi Province portal"
-      },
-      "frequency": {
-        "monthly": "Monthly",
-        "asPublished": "As published",
-        "asReceived": "As received",
-        "oneOff": "One-time import"
-      },
-      "stale": "Stopped updating {{ago}}"
-    },
     "useData": {
       "heading": "Use this data",
       "description": "This archive is meant to be built on. Journalists, researchers and watchdogs can pull the records directly.",
@@ -1368,11 +1312,41 @@
         "title": "Query the API",
         "desc": "A public, read-only API serves cases, entities, court records and materials in JSON.",
         "button": "Open the API"
-      },
-      "download": {
-        "title": "Download the records",
-        "desc": "Bulk CSV exports of cases and court records, refreshed with the archive.",
-        "soon": "Bulk export is coming soon."
+      }
+    },
+    "entities": {
+      "heading": "Who we hold to account",
+      "description": "{{people}} of {{total}} tracked entities are individual people. The rest are the institutions they act through.",
+      "institutionsLabel": "Institutions we track",
+      "tooltip": "Entities",
+      "group": {
+        "hospitals": "Hospitals",
+        "government": "Government offices",
+        "localGov": "Local governments",
+        "schools": "Schools & universities",
+        "parties": "Political parties",
+        "orgs": "Companies & other orgs",
+        "courts": "Courts",
+        "places": "Places",
+        "international": "International bodies",
+        "other": "Other"
+      }
+    },
+    "materialsBySource": {
+      "heading": "Where the evidence comes from",
+      "description": "Every one of the {{total}} source materials is pulled from a public feed. This is the mix.",
+      "tooltip": "Materials",
+      "source": {
+        "courtOrders": "Court orders",
+        "courtRecords": "Court records",
+        "ciaaPress": "CIAA press releases",
+        "dfmis": "DFMIS (financial mgmt)",
+        "jawafdehi": "Jawafdehi",
+        "kanunPatrika": "Kanun Patrika",
+        "ciaaAnnual": "CIAA annual reports",
+        "koshi": "Koshi Province",
+        "ppmo": "PPMO blacklist",
+        "other": "Other"
       }
     }
   }

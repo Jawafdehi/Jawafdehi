@@ -14,17 +14,27 @@ interface HonestyItem {
   label: string;
   part: number;
   whole: number;
-  pct: number;
+}
+
+/**
+ * Percentage computed from the raw counts and TRUNCATED (not rounded), so an
+ * incomplete figure can never read as a clean 100%. The live API rounds
+ * 1,610,701 / 1,610,771 up to 100.0; from the counts we show the honest 99.99.
+ */
+function truncPct(part: number, whole: number): number {
+  if (!whole) return 0;
+  return Math.floor((part / whole) * 10000) / 100;
 }
 
 function HonestyRow({ item, t }: { item: HonestyItem; t: Translate }) {
+  const pct = truncPct(item.part, item.whole);
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-3">
         <span className="text-sm text-foreground">{item.label}</span>
-        <span className="font-mono text-sm font-bold tabular-nums text-foreground">{item.pct}%</span>
+        <span className="font-mono text-sm font-bold tabular-nums text-foreground">{pct}%</span>
       </div>
-      <Progress value={item.pct} className="h-1.5" />
+      <Progress value={pct} className="h-1.5" />
       <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground">
         {t("dataQuality.honesty.count", "{{part}} of {{total}}", {
           part: item.part.toLocaleString(),
@@ -61,19 +71,16 @@ export function DataHonesty({
       label: t("dataQuality.honesty.item.regDate", "Court records with an official registration date"),
       part: ngm.counts.with_registration_date,
       whole: ngm.court_cases_total,
-      pct: ngm.completeness.with_registration_date,
     });
     stillThin.push({
       label: t("dataQuality.honesty.item.linkedEntity", "Court records linked to the people or offices they name"),
       part: ngm.counts.nes_resolved,
       whole: ngm.court_cases_total,
-      pct: ngm.completeness.nes_resolved,
     });
     stillThin.push({
       label: t("dataQuality.honesty.item.sourceDoc", "Court records with an attached source document"),
       part: ngm.counts.with_document_sources,
       whole: ngm.court_cases_total,
-      pct: ngm.completeness.with_document_sources,
     });
   }
 
@@ -82,13 +89,11 @@ export function DataHonesty({
       label: t("dataQuality.honesty.item.stableId", "Tracked people and offices with a stable ID"),
       part: nes.counts.with_identifier,
       whole: nes.total,
-      pct: nes.completeness.with_identifier,
     });
     holdsUp.push({
       label: t("dataQuality.honesty.item.bilingual", "Entities with both an English and Nepali name"),
       part: nes.counts.with_bilingual_name,
       whole: nes.total,
-      pct: nes.completeness.with_bilingual_name,
     });
   }
 
@@ -97,7 +102,6 @@ export function DataHonesty({
       label: t("dataQuality.honesty.item.materialLink", "Materials with a working source link"),
       part: materials.counts.with_url,
       whole: materials.total,
-      pct: materials.completeness.with_url,
     });
   }
 
