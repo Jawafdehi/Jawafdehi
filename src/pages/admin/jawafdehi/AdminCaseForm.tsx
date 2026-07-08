@@ -64,6 +64,7 @@ interface CaseFormState {
   case_type: string;
   description: string;
   notes: string;
+  missing_details: string;
   key_allegations: string[];
   entities: EntityRelationshipRow[];
   timeline: TimelineEventRow[];
@@ -86,6 +87,7 @@ const EMPTY: CaseFormState = {
   case_type: "CORRUPTION",
   description: "",
   notes: "",
+  missing_details: "",
   key_allegations: [],
   entities: [],
   timeline: [],
@@ -165,6 +167,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     case_type: str(c.case_type) || "CORRUPTION",
     description: str(c.description),
     notes: str(c.notes),
+    missing_details: str(c.missing_details),
     key_allegations: allegations,
     entities: parseEntities(c),
     timeline: parseTimeline(c),
@@ -290,6 +293,8 @@ export default function AdminCaseForm() {
     if (form.description !== original.description)
       ops.push(replaceOp("/description", form.description));
     if (form.notes !== original.notes) ops.push(replaceOp("/notes", form.notes));
+    if (form.missing_details !== original.missing_details)
+      ops.push(replaceOp("/missing_details", form.missing_details));
     if (changed(form.key_allegations, original.key_allegations))
       ops.push(buildStringListPatch("/key_allegations", form.key_allegations));
     if (changed(form.entities, original.entities))
@@ -347,6 +352,7 @@ export default function AdminCaseForm() {
           case_type: form.case_type,
           description: form.description || undefined,
           notes: form.notes || undefined,
+          missing_details: form.missing_details || undefined,
           key_allegations: form.key_allegations.length
             ? form.key_allegations
             : undefined,
@@ -488,6 +494,20 @@ export default function AdminCaseForm() {
           <MDEditor
             value={form.notes}
             onChange={(v) => set("notes", v ?? "")}
+            height={200}
+            preview="edit"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label>Missing details</Label>
+          <p className="text-xs text-muted-foreground">
+            Markdown. Shown publicly on the case page — note information that is
+            not yet available or still being gathered.
+          </p>
+          <MDEditor
+            value={form.missing_details}
+            onChange={(v) => set("missing_details", v ?? "")}
             height={200}
             preview="edit"
           />
