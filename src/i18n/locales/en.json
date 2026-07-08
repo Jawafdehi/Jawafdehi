@@ -16,7 +16,11 @@
     "skipToContent": "Skip to content",
     "searchCases": "Search cases",
     "homeAria": "Jawafdehi home",
-    "menu": "Menu"
+    "menu": "Menu",
+    "archive": "Archive",
+    "searchArchive": "Search archive",
+    "materials": "Governance materials",
+    "courtCases": "Court cases"
   },
   "weeklyMeetings": {
     "eyebrow": "Live every week",
