@@ -54,11 +54,11 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
 
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
 
-  const addRow = (iri: string) => {
+  const addRow = (iri: string, title?: string) => {
     const value = iri.trim();
     if (!isValidMaterialIri(value)) return;
     if (rows.some((r) => r.material_iri === value)) return; // no dupes
-    onChange([...rows, { material_iri: value, additional_details: "" }]);
+    onChange([...rows, { material_iri: value, additional_details: "", title }]);
   };
 
   const runSearch = async () => {
@@ -128,7 +128,7 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
                     variant="ghost"
                     disabled={!isValidMaterialIri(iri)}
                     onClick={() => {
-                      addRow(iri);
+                      addRow(iri, materialTitle(m));
                       setResults([]);
                       setQuery("");
                     }}
@@ -179,7 +179,16 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
               className="grid items-center gap-2 rounded border p-2 sm:grid-cols-[1fr_auto]"
             >
               <div className="min-w-0 space-y-1">
-                <span className="block truncate font-mono text-xs">{r.material_iri}</span>
+                {r.title ? (
+                  <>
+                    <span className="block truncate text-sm font-medium">{r.title}</span>
+                    <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                      {r.material_iri}
+                    </span>
+                  </>
+                ) : (
+                  <span className="block truncate font-mono text-xs">{r.material_iri}</span>
+                )}
                 <Input
                   value={r.additional_details}
                   onChange={(e) => update(i, { additional_details: e.target.value })}

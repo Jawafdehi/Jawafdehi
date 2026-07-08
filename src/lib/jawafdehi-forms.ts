@@ -116,6 +116,9 @@ export interface TimelineEventRow {
 export interface EvidenceRow {
   material_iri: string;
   additional_details: string;
+  // Display-only human title resolved from the material (BB-20). Not sent in the
+  // patch — buildEvidencePatch only emits material_iri + additional_details.
+  title?: string;
 }
 
 // --- Validators --------------------------------------------------------------
