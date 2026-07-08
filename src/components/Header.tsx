@@ -62,6 +62,9 @@ export const Header = () => {
           <NavLink to="/commitment" className={navLinkClass}>
             {t("nav.ourCommitment")}
           </NavLink>
+          <NavLink to="/faq" className={navLinkClass}>
+            {t("nav.faq")}
+          </NavLink>
 
           {/* About dropdown */}
           <DropdownMenu>
@@ -139,6 +142,9 @@ export const Header = () => {
                 </NavLink>
                 <NavLink to="/commitment" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
                   {t("nav.ourCommitment")}
+                </NavLink>
+                <NavLink to="/faq" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
+                  {t("nav.faq")}
                 </NavLink>
                 <NavLink to="/about" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
                   {t("nav.about")}
