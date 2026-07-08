@@ -104,8 +104,8 @@ export function EvidenceBackbone({
                 const width = courtMax > 0 ? (c.count / courtMax) * 100 : 0;
                 return (
                   <li key={c.court__court_type} className="flex items-center gap-3">
-                    <span className="w-20 shrink-0 text-sm capitalize text-foreground">
-                      {c.court__court_type}
+                    <span className="w-20 shrink-0 text-sm text-foreground">
+                      {t(`dataQuality.backbone.courtType.${c.court__court_type}`, c.court__court_type)}
                     </span>
                     <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
                       <div

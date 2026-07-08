@@ -7,6 +7,7 @@ import type {
   MaterialsMetrics,
 } from "@/types/jds";
 import { Progress } from "@/components/ui/progress";
+import { truncPct } from "@/lib/data-quality";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -14,16 +15,6 @@ interface HonestyItem {
   label: string;
   part: number;
   whole: number;
-}
-
-/**
- * Percentage computed from the raw counts and TRUNCATED (not rounded), so an
- * incomplete figure can never read as a clean 100%. The live API rounds
- * 1,610,701 / 1,610,771 up to 100.0; from the counts we show the honest 99.99.
- */
-function truncPct(part: number, whole: number): number {
-  if (!whole) return 0;
-  return Math.floor((part / whole) * 10000) / 100;
 }
 
 function HonestyRow({ item, t }: { item: HonestyItem; t: Translate }) {
@@ -34,7 +25,7 @@ function HonestyRow({ item, t }: { item: HonestyItem; t: Translate }) {
         <span className="text-sm text-foreground">{item.label}</span>
         <span className="font-mono text-sm font-bold tabular-nums text-foreground">{pct}%</span>
       </div>
-      <Progress value={pct} className="h-1.5" />
+      <Progress value={pct} className="h-1.5" aria-label={item.label} />
       <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground">
         {t("dataQuality.honesty.count", "{{part}} of {{total}}", {
           part: item.part.toLocaleString(),

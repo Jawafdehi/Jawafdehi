@@ -43,8 +43,12 @@ export function BreakdownBar({
     return <div className="w-full" style={{ height }} />;
   }
 
+  const ariaLabel = `${tooltipLabel}: ${data
+    .map((d) => `${d.label} ${d.count.toLocaleString()}`)
+    .join(", ")}`;
+
   return (
-    <div className="w-full" style={{ height }}>
+    <div className="w-full" style={{ height }} role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           layout="vertical"

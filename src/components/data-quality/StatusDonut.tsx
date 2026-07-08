@@ -37,9 +37,17 @@ export function StatusDonut({
     return <div className="relative mx-auto h-[200px] w-full max-w-[240px]" />;
   }
 
+  const ariaLabel = `${centerLabel}: ${centerValue}. ${data
+    .map((s) => `${s.label} ${s.value.toLocaleString()}`)
+    .join(", ")}`;
+
   return (
     <div>
-      <div className="relative mx-auto h-[200px] w-full max-w-[240px]">
+      <div
+        className="relative mx-auto h-[200px] w-full max-w-[240px]"
+        role="img"
+        aria-label={ariaLabel}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

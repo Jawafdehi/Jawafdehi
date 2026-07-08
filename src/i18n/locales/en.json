@@ -1290,7 +1290,13 @@
       "courts": "Courts covered",
       "entities": "Entities tracked",
       "materials": "Source materials",
-      "byCourtType": "Court records by court level"
+      "byCourtType": "Court records by court level",
+      "courtType": {
+        "district": "District",
+        "high": "High",
+        "supreme": "Supreme",
+        "special": "Special"
+      }
     },
     "honesty": {
       "heading": "How solid is this data?",
@@ -1313,7 +1319,6 @@
       "linked": "None of the {{total}} court records are linked yet to the specific people or offices they name, so you can't jump from an official to their court history.",
       "investigating": "{{count}} cases sit under investigation in our counts but aren't yet browsable one by one.",
       "sourceDocs": "Only {{pct}}% of court records have an attached source document, so most can't be traced back to a filing yet.",
-      "reconcile": "Two internal counts of tracked entities differ by one ({{a}} and {{b}}); we're reconciling which is right.",
       "coverage": "We don't hold every court or every year yet. A missing record means we haven't collected it, not that nothing happened."
     },
     "useData": {

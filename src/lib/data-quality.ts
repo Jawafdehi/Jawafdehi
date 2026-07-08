@@ -44,3 +44,17 @@ export function formatFreshness(
   const months = Math.round(days / 30);
   return t("dataQuality.ribbon.freshness.monthsAgo", { count: months });
 }
+
+/**
+ * Percentage computed from raw counts and TRUNCATED, not rounded, so an
+ * incomplete figure can never read as a clean 100%. The live API's own
+ * pre-computed completeness values round (e.g. 1,610,701 / 1,610,771 up to
+ * 100.0); computing from the counts and truncating shows the honest 99.99.
+ * Shared by every section that displays a completeness percentage, so the
+ * same metric never shows a different, more-rounded number in one section
+ * than another.
+ */
+export function truncPct(part: number, whole: number): number {
+  if (!whole) return 0;
+  return Math.floor((part / whole) * 10000) / 100;
+}

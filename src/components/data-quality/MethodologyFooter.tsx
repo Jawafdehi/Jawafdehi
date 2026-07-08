@@ -59,7 +59,7 @@ export function MethodologyFooter() {
               className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
             >
               {t("dataQuality.methodology.processLink", "Read how we research and verify each case")}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </p>
         </div>

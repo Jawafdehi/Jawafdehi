@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { AlertTriangle } from "lucide-react";
 
 import type { CaseStatistics } from "@/types/jds";
+import { truncPct } from "@/lib/data-quality";
 
 /**
  * "What this data can't tell you yet." A plain, named list of the real limits of
@@ -14,7 +15,6 @@ export function DataLimitations({ stats }: { stats?: CaseStatistics }) {
   if (!stats) return null;
 
   const ngm = stats.ngm;
-  const nes = stats.nes;
   const investigating = stats.cases_under_investigation;
 
   const items: string[] = [];
@@ -39,24 +39,21 @@ export function DataLimitations({ stats }: { stats?: CaseStatistics }) {
     );
   }
 
-  if (ngm && ngm.completeness.with_document_sources < 100) {
-    items.push(
-      t(
-        "dataQuality.limitations.sourceDocs",
-        "Only {{pct}}% of court records have an attached source document, so most can't be traced back to a filing yet.",
-        { pct: ngm.completeness.with_document_sources },
-      ),
-    );
-  }
-
-  if (nes) {
-    items.push(
-      t(
-        "dataQuality.limitations.reconcile",
-        "Two internal counts of tracked entities differ by one ({{a}} and {{b}}); we're reconciling which is right.",
-        { a: nes.total.toLocaleString(), b: (nes.total - 1).toLocaleString() },
-      ),
-    );
+  if (ngm) {
+    // Derived from the raw counts and truncated (not the API's pre-rounded
+    // completeness value), so this can never claim "100%" while still
+    // calling most records untraceable, and always agrees with the
+    // percentage DataHonesty shows for the same metric.
+    const sourceDocsPct = truncPct(ngm.counts.with_document_sources, ngm.court_cases_total);
+    if (sourceDocsPct < 100) {
+      items.push(
+        t(
+          "dataQuality.limitations.sourceDocs",
+          "Only {{pct}}% of court records have an attached source document, so most can't be traced back to a filing yet.",
+          { pct: sourceDocsPct },
+        ),
+      );
+    }
   }
 
   items.push(

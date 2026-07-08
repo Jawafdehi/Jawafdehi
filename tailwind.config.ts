@@ -18,7 +18,16 @@ export default {
       fontFamily: {
         display: ["Vesper Libre", "Georgia", "Noto Sans Devanagari", "serif"],
         // "Register" data face: figures, counts, dates and case references.
-        mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        // Noto Sans Devanagari carries Nepali digits/text that appear in a
+        // mono context (IBM Plex Mono has no Devanagari glyphs of its own).
+        mono: [
+          "IBM Plex Mono",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Noto Sans Devanagari",
+          "monospace",
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
