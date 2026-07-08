@@ -5,6 +5,7 @@ import {
   listReviewsGrouped,
   submitReview,
   buildSubmitPayload,
+  looksLikeReviewIri,
   regradeAll,
   apiErrorMessage,
 } from "@/services/casework-api";
@@ -183,7 +184,7 @@ export default function CaseworkReviews() {
           <div>
             <h1 className="text-xl font-bold">Case reviews</h1>
             <p className="text-sm text-muted-foreground">
-              Submit a case slug, court case number, or case URL to run a multi-dimensional
+              Submit a Jawafdehi case IRI or a court-case IRI to run a multi-dimensional
               quality review.
             </p>
           </div>
@@ -215,8 +216,14 @@ export default function CaseworkReviews() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="slug, court case no. (special:081-CR-0136), or case URL"
+              placeholder="https://jawafdehi.org/case/<slug> or …/courtcase/<court>/<case-no>"
             />
+            {input.trim() && !looksLikeReviewIri(input) && !err && (
+              <p className="text-sm text-amber-600 mt-1">
+                Enter a case IRI (https://jawafdehi.org/case/&lt;slug&gt;) or a court-case
+                IRI (…/courtcase/&lt;court&gt;/&lt;case-number&gt;).
+              </p>
+            )}
             {err && (
               <p className="text-sm text-red-600 mt-1">
                 {err}

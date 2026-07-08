@@ -19,21 +19,32 @@ const CASEWORK = "/api/casework";
 // ---- Reviews ----
 
 export interface SubmitReviewPayload {
+  // Caseworkers submit an `iri`: a Jawafdehi case IRI
+  // (https://jawafdehi.org/case/<slug>) or a court-case IRI
+  // (https://jawafdehi.org/courtcase/<court>/<case-number>). The backend
+  // resolves it to the case's canonical slug.
+  iri?: string;
+  // `slug` is used only by the internal re-run / regrade path, which already
+  // holds the resolved canonical slug.
   slug?: string;
-  court_case_number?: string;
 }
 
-// A court case ref is "<court>:<case_number>" (e.g. "special:081-CR-0079"):
-// lowercase-alnum court id, then a hyphen/alnum case number, no slashes/scheme.
-const COURT_REF_RE = /^[a-z0-9]+:[A-Za-z0-9-]+$/;
+// A submitted IRI is either a Jawafdehi case IRI or a court-case IRI. The
+// backend is the authority (it resolves + validates against the DB); this is a
+// lenient client-side shape check so the form can flag obviously-wrong input
+// (a bare case number, a name) before a round-trip.
+const REVIEW_IRI_RE =
+  /^https?:\/\/[^/]+\/(?:case\/[a-zA-Z][a-zA-Z0-9-]*|courtcase\/[a-z0-9][a-z0-9_-]*\/[a-z0-9][a-z0-9._-]*)$/;
 
-// Classify free-text input from the submit box into the right field. A court
-// case ref goes to `court_case_number`; everything else (a bare slug or a full
-// case URL like https://jawafdehi.org/case/<slug>) goes to `slug`, which the
-// backend normalizes (it extracts the slug from a URL).
+export function looksLikeReviewIri(raw: string): boolean {
+  return REVIEW_IRI_RE.test(raw.trim());
+}
+
+// The submit box demands an IRI (a Jawafdehi case IRI or a court-case IRI).
+// Send it verbatim as `iri`; the backend resolves it to the canonical case slug
+// and returns a clear 400 if it names no case.
 export function buildSubmitPayload(raw: string): SubmitReviewPayload {
-  const value = raw.trim();
-  return COURT_REF_RE.test(value) ? { court_case_number: value } : { slug: value };
+  return { iri: raw.trim() };
 }
 
 export async function listReviews(params?: {
