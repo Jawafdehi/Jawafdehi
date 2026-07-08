@@ -75,10 +75,11 @@ interface CaseFormState {
   banner_url: string;
   tags: string[];
   court_cases: string[];
+  // AD (Gregorian) is the single source of truth. Bikram Sambat is DERIVED from
+  // the AD date at display time (public pages and the admin BS picker), never
+  // stored — the backend has no BS columns.
   case_start_date: string; // AD
-  case_start_date_bs: string; // BS
   case_end_date: string; // AD
-  case_end_date_bs: string; // BS
 }
 
 const EMPTY: CaseFormState = {
@@ -98,9 +99,7 @@ const EMPTY: CaseFormState = {
   tags: [],
   court_cases: [],
   case_start_date: "",
-  case_start_date_bs: "",
   case_end_date: "",
-  case_end_date_bs: "",
 };
 
 // Coerce a loaded relationship_type into the known enum (default ACCUSED).
@@ -195,9 +194,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     // Canonical @id IRIs — the only court-case reference format.
     court_cases: strList(c.court_cases),
     case_start_date: str(c.case_start_date),
-    case_start_date_bs: str(c.case_start_date_bs),
     case_end_date: str(c.case_end_date),
-    case_end_date_bs: str(c.case_end_date_bs),
   };
 }
 
@@ -264,9 +261,11 @@ export default function AdminCaseForm() {
 
   const slugValid = effectiveSlug === "" || isValidSlug(effectiveSlug);
   const bigoValid = form.bigo.trim() === "" || Number.isFinite(Number(form.bigo));
+  // AD is the stored source of truth (BS is derived for display only), so
+  // validate the AD fields.
   const datesValid =
-    isValidDateField(form.case_start_date_bs) &&
-    isValidDateField(form.case_end_date_bs);
+    isValidDateField(form.case_start_date) &&
+    isValidDateField(form.case_end_date);
   // A partially-filled timeline/entity row would serialize into the /timeline or
   // /entities replace and 422 the whole PATCH (title-less timeline row, IRI-less
   // entity row). Block save until every *populated* row is complete, so the user
@@ -332,14 +331,12 @@ export default function AdminCaseForm() {
       ops.push(buildStringListPatch("/tags", form.tags));
     if (changed(form.court_cases, original.court_cases))
       ops.push(buildStringListPatch("/court_cases", form.court_cases));
+    // Only AD dates are stored; BS is derived from them at display time, so no
+    // /case_*_date_bs ops are emitted (those columns don't exist on the backend).
     if (form.case_start_date !== original.case_start_date)
       ops.push(replaceOp("/case_start_date", form.case_start_date || null));
-    if (form.case_start_date_bs !== original.case_start_date_bs)
-      ops.push(replaceOp("/case_start_date_bs", form.case_start_date_bs || null));
     if (form.case_end_date !== original.case_end_date)
       ops.push(replaceOp("/case_end_date", form.case_end_date || null));
-    if (form.case_end_date_bs !== original.case_end_date_bs)
-      ops.push(replaceOp("/case_end_date_bs", form.case_end_date_bs || null));
     return ops;
   };
 
@@ -599,25 +596,24 @@ export default function AdminCaseForm() {
           invalidHint="Use the canonical court-case @id IRI."
         />
 
+        {/* BS is derived from AD for display and never stored (the backend has
+            no BS columns). Authors may still pick in the Nepali calendar — that
+            selection sets the AD date, and the shown BS re-derives from it. */}
         <DatePairInput
           label="Case start"
           idBase="case-start"
+          deriveBs
           adValue={form.case_start_date}
-          bsValue={form.case_start_date_bs}
-          onChange={({ ad, bs }) =>
-            setForm((f) => ({ ...f, case_start_date: ad, case_start_date_bs: bs }))
-          }
+          onAdChange={(ad) => set("case_start_date", ad)}
         />
         <DatePairInput
           label="Case end"
           idBase="case-end"
+          deriveBs
           adValue={form.case_end_date}
-          bsValue={form.case_end_date_bs}
-          onChange={({ ad, bs }) =>
-            setForm((f) => ({ ...f, case_end_date: ad, case_end_date_bs: bs }))
-          }
+          onAdChange={(ad) => set("case_end_date", ad)}
         />
-        <FieldError message={!datesValid && "BS dates must be YYYY-MM-DD."} />
+        <FieldError message={!datesValid && "Dates must be YYYY-MM-DD."} />
 
         {/* Sub-resource editors (F3/F4/F5). Shown only in edit mode: a case
             must exist (have a slug) before entities/evidence can be linked. On
