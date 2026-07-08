@@ -1,30 +1,21 @@
 import { useTranslation } from "react-i18next";
 
 import { FaqSection, type FaqSectionItem } from "@/components/FaqSection";
+import { getFaqSnippetItems } from "@/lib/faq-page-content";
 
-type FaqItem = { q: string; a: string };
-
-const isFaqItem = (item: unknown): item is FaqItem =>
-  typeof item === "object" &&
-  item !== null &&
-  "q" in item &&
-  "a" in item &&
-  typeof item.q === "string" &&
-  typeof item.a === "string";
+const donationFaqQuestionIds = [
+  "financial-support",
+  "funding",
+  "help-without-donating",
+] as const;
 
 export function DonationFaq() {
   const { t } = useTranslation();
-  const rawFaqItems = t("donate.faq.items", {
-    returnObjects: true,
-  });
-  const faqItems = Array.isArray(rawFaqItems)
-    ? rawFaqItems.filter(isFaqItem)
-    : [];
-  const items: FaqSectionItem[] = faqItems.map((item, index) => ({
-    id: `donate-faq-${index}`,
-    question: item.q,
-    answers: [item.a],
-  }));
+  const rawFaqSections = t("faqPage.sections", { returnObjects: true });
+  const items: FaqSectionItem[] = getFaqSnippetItems(
+    rawFaqSections,
+    donationFaqQuestionIds,
+  );
 
   return (
     <FaqSection
