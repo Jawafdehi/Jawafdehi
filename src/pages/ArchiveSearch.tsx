@@ -322,9 +322,23 @@ export default function ArchiveSearch({
               <Alert className="mb-5" variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between gap-4">
-                  <span>Archive search could not be loaded.</span>
-                  <Button onClick={() => refetch()} size="sm" variant="outline">
-                    Retry
+                  <span>
+                    {(params.page ?? 1) > 1
+                      ? "That results page is out of range. Return to the first page to keep searching."
+                      : "Archive search could not be loaded."}
+                  </span>
+                  <Button
+                    // A common cause is an out-of-range page (e.g. a stale
+                    // ?page=9999 URL): plain refetch would re-request the same
+                    // bad page and never recover (BB-14). Reset to page 1 to
+                    // escape it; otherwise retry the current query.
+                    onClick={() =>
+                      (params.page ?? 1) > 1 ? updateParams({ page: 1 }) : refetch()
+                    }
+                    size="sm"
+                    variant="outline"
+                  >
+                    {(params.page ?? 1) > 1 ? "Back to first page" : "Retry"}
                   </Button>
                 </AlertDescription>
               </Alert>
