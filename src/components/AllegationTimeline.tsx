@@ -49,7 +49,7 @@ export const AllegationTimeline = ({ allegations }: AllegationTimelineProps) => 
                 
                 <Link 
                   to={`/case/${item.id}`}
-                  className="block p-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors"
+                  className="block rounded-lg bg-card p-4 transition-colors hover:bg-accent"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
                     <h4 className="font-semibold text-foreground hover:text-primary transition-colors">

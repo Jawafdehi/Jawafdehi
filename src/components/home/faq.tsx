@@ -1,6 +1,12 @@
 import { Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 
 type FaqProps = {
@@ -55,10 +61,13 @@ const faqItems: FaqItem[] = [
 ];
 
 const faqCardClassName =
-  "group overflow-hidden rounded-2xl border border-border/70 bg-card text-card-foreground shadow-sm shadow-foreground/5 outline-none backdrop-blur-[12px] transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-card hover:text-card-foreground hover:shadow-md hover:shadow-foreground/10 focus-visible:-translate-y-0.5 focus-visible:border-foreground/15 focus-visible:bg-card focus-visible:text-card-foreground focus-visible:shadow-md focus-visible:shadow-foreground/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-within:-translate-y-0.5 focus-within:border-foreground/15 focus-within:bg-card focus-within:text-card-foreground focus-within:shadow-md focus-within:shadow-foreground/10 motion-reduce:transform-none motion-reduce:transition-none";
+  "group overflow-hidden rounded-lg bg-card text-card-foreground outline-none transition-colors duration-200 ease-out hover:bg-card hover:text-card-foreground focus-within:bg-card focus-within:text-card-foreground";
 
-const faqAnswerClassName =
-  "max-h-0 -translate-y-1 overflow-hidden opacity-0 transition-[max-height,opacity,transform] duration-300 ease-out group-hover:max-h-96 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:max-h-96 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 group-focus-within:max-h-96 group-focus-within:translate-y-0 group-focus-within:opacity-100 motion-reduce:transform-none motion-reduce:transition-none";
+const splitFaqItems = (items: FaqItem[]) => {
+  const midpoint = Math.ceil(items.length / 2);
+
+  return [items.slice(0, midpoint), items.slice(midpoint)];
+};
 
 export function Faq({ className }: Readonly<FaqProps>) {
   const { t } = useTranslation();
@@ -66,81 +75,66 @@ export function Faq({ className }: Readonly<FaqProps>) {
   return (
     <section
       id="faq"
-      className={cn("bg-background py-12 md:py-16", className)}
+      className={cn("bg-background py-16 md:py-24", className)}
       aria-labelledby="faq-title"
     >
-      <div className="container mx-auto grid gap-8 px-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.45fr)] md:items-start md:gap-12 lg:gap-16">
-        <div className="max-w-md">
-          <h2
-            id="faq-title"
-            className="max-w-sm text-3xl font-bold leading-tight tracking-normal text-primary md:text-4xl"
+      <div className="container mx-auto px-4">
+        <div>
+          <div className="max-w-3xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              FAQs
+            </p>
+            <h2
+              id="faq-title"
+              className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl"
+            >
+              {t("information.faq.title")}
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
+              {t("information.faq.description")}
+            </p>
+          </div>
+
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue={faqItems[0]?.id}
+            className="mt-12 grid items-start gap-4 md:mt-16 md:grid-cols-2 md:gap-x-5 md:gap-y-0"
           >
-            {t("information.faq.title")}
-          </h2>
-          <p className="mt-5 text-sm leading-7 text-foreground/60 md:text-base">
-            {t("information.faq.description")}
-          </p>
-        </div>
-
-        <ul className="flex flex-col gap-2.5">
-          {faqItems.map((item) => {
-            const questionId = `faq-${item.id}-question`;
-            const answerId = `faq-${item.id}-answer`;
-
-            return (
-              <li
-                key={item.id}
-                className={faqCardClassName}
+            {splitFaqItems(faqItems).map((columnItems, columnIndex) => (
+              <div
+                key={`faq-column-${columnIndex}`}
+                className="flex flex-col gap-4"
               >
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  aria-expanded={false}
-                  aria-controls={answerId}
-                  onClick={(e) => {
-                    const btn = e.currentTarget;
-                    const isExpanded = btn.getAttribute("aria-expanded") === "true";
-                    btn.setAttribute("aria-expanded", String(!isExpanded));
-                    const answer = document.getElementById(answerId);
-                    if (answer) {
-                      if (isExpanded) {
-                        answer.classList.add("max-h-0", "-translate-y-1", "overflow-hidden", "opacity-0");
-                        answer.classList.remove("max-h-96", "translate-y-0", "opacity-100");
-                      } else {
-                        answer.classList.remove("max-h-0", "-translate-y-1", "overflow-hidden", "opacity-0");
-                        answer.classList.add("max-h-96", "translate-y-0", "opacity-100");
-                      }
-                    }
-                  }}
-                >
-                  <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5">
-                    <h3
-                      id={questionId}
-                      className="text-left text-sm font-semibold leading-6 text-foreground transition-colors duration-200 group-hover:text-primary group-focus-visible:text-primary group-focus-within:text-primary md:text-base"
+                {columnItems.map((item) => (
+                  <AccordionItem
+                    key={item.id}
+                    value={item.id}
+                    className={faqCardClassName}
+                  >
+                    <AccordionTrigger className="min-h-[4.25rem] gap-5 px-5 py-5 text-left text-base font-semibold leading-6 text-foreground no-underline transition-colors hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:px-6 [&>svg]:hidden">
+                      <span>{t(item.questionKey)}</span>
+                      <span
+                        className="relative flex h-6 w-6 shrink-0 items-center justify-center text-foreground/55 transition-colors duration-200 group-hover:text-accent group-focus-within:text-accent"
+                        aria-hidden="true"
+                      >
+                        <Plus className="absolute h-4 w-4 transition-all duration-200 ease-out group-data-[state=open]:rotate-90 group-data-[state=open]:scale-75 group-data-[state=open]:opacity-0" />
+                        <Minus className="absolute h-4 w-4 -rotate-90 scale-75 opacity-0 transition-all duration-200 ease-out group-data-[state=open]:rotate-0 group-data-[state=open]:scale-100 group-data-[state=open]:opacity-100" />
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent
+                      className="space-y-3 px-5 pb-6 pr-12 text-sm leading-7 text-muted-foreground md:px-6 md:text-base"
                     >
-                      {t(item.questionKey)}
-                    </h3>
-                    <span
-                      className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/70 text-foreground/50 shadow-sm shadow-foreground/5 transition-[background-color,border-color,color] duration-200 group-hover:border-accent/20 group-hover:bg-accent/10 group-hover:text-accent group-focus-visible:border-accent/20 group-focus-visible:bg-accent/10 group-focus-within:border-accent/20 group-focus-within:bg-accent/10 group-focus-within:text-accent motion-reduce:transition-none"
-                      aria-hidden="true"
-                    >
-                      <Plus className="absolute h-3.5 w-3.5 transition-all duration-300 ease-out group-hover:rotate-90 group-hover:scale-[0.82] group-hover:opacity-0 group-focus-visible:rotate-90 group-focus-visible:scale-[0.82] group-focus-visible:opacity-0 group-focus-within:rotate-90 group-focus-within:scale-[0.82] group-focus-within:opacity-0 motion-reduce:transition-none" />
-                      <Minus className="absolute h-3.5 w-3.5 -rotate-90 scale-[0.82] opacity-0 transition-all duration-300 ease-out group-hover:rotate-0 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:rotate-0 group-focus-visible:scale-100 group-focus-visible:opacity-100 group-focus-within:rotate-0 group-focus-within:scale-100 group-focus-within:opacity-100 motion-reduce:transition-none" />
-                    </span>
-                  </div>
-                </button>
-
-                <div id={answerId} className={faqAnswerClassName}>
-                  <div className="space-y-3 px-4 pb-4 pr-12 text-sm leading-6 text-muted-foreground md:text-base">
-                    {item.answerKeys.map((answerKey) => (
-                      <p key={answerKey}>{t(answerKey)}</p>
-                    ))}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                      {item.answerKeys.map((answerKey) => (
+                        <p key={answerKey}>{t(answerKey)}</p>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </div>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </section>
   );

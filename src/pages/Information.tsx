@@ -165,7 +165,7 @@ const Information = () => {
                 </Card>
               </div>
 
-              <Card className="border-l-4 border-l-primary">
+              <Card>
                 <CardContent className="pt-6">
                   <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                     <Lock className="h-5 w-5" />

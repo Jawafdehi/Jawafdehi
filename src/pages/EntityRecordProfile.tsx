@@ -276,7 +276,7 @@ export default function EntityRecordProfile() {
             ) : null}
 
             {/* Details + relationships + identifiers. */}
-            <dl className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2">
+            <dl className="grid gap-4 rounded-xl bg-card p-5 sm:grid-cols-2">
               {detailRows.map((r) => (
                 <div key={r.label}>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</dt>

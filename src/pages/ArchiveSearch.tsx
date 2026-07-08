@@ -344,7 +344,7 @@ export default function ArchiveSearch({
 
         {showFilters ? (
           <div className="mt-5 lg:hidden">
-            <details className="rounded-xl border bg-card">
+            <details className="rounded-xl bg-card">
               <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-foreground">
                 Filters{activeRefinementCount ? ` (${activeRefinementCount})` : ""}
               </summary>
@@ -547,4 +547,3 @@ function getSelectedItems(
     }),
   );
 }
-

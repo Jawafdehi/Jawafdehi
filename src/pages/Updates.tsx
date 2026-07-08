@@ -29,7 +29,7 @@ const UpdateCard = ({ article, viewMode }: UpdateCardProps) => {
     return (
         <Link
             to={`/updates/${article.meta.slug}`}
-            className="group flex min-h-full flex-col overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:data-[view=list]:flex-row"
+            className="group flex min-h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:data-[view=list]:flex-row"
             data-view={viewMode}
         >
             {article.thumbnail?.url ? (

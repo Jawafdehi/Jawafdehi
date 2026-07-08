@@ -243,7 +243,7 @@ export default function AdminDashboard() {
           const Icon = s.icon;
           return (
             <Link key={s.to} to={s.to} className="group">
-              <Card className="h-full transition-colors group-hover:border-primary/50">
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Icon className="h-5 w-5 text-primary" />

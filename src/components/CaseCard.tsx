@@ -109,7 +109,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
 
   return (
     <Card
-      className={`group relative flex overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] cursor-pointer ${cardLayout}`}
+      className={`group relative flex overflow-hidden rounded-3xl bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] cursor-pointer ${cardLayout}`}
       onClick={handleCardClick}
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
