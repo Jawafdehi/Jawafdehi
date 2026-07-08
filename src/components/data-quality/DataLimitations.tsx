@@ -39,7 +39,7 @@ export function DataLimitations({ stats }: { stats?: CaseStatistics }) {
     );
   }
 
-  if (ngm) {
+  if (ngm && ngm.completeness.with_document_sources < 100) {
     items.push(
       t(
         "dataQuality.limitations.sourceDocs",

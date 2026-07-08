@@ -1184,7 +1184,18 @@
     "showLess": "कम देखाउनुहोस्",
     "ribbon": {
       "explainer": "हामीले के दस्तावेज गर्‍यौं, त्यो कहाँबाट आउँछ, र हरेक मुद्दा जवाफदेहीतर्फ कति टाढा पुगेको छ भन्ने खुला लेखाजोखा।",
-      "refreshed": "डेटा {{ago}} अद्यावधिक गरिएको"
+      "refreshed": "डेटा {{ago}} अद्यावधिक गरिएको",
+      "freshness": {
+        "justNow": "भर्खरै",
+        "minutesAgo_one": "{{count}} मिनेट अघि",
+        "minutesAgo_other": "{{count}} मिनेट अघि",
+        "hoursAgo_one": "{{count}} घण्टा अघि",
+        "hoursAgo_other": "{{count}} घण्टा अघि",
+        "daysAgo_one": "{{count}} दिन अघि",
+        "daysAgo_other": "{{count}} दिन अघि",
+        "monthsAgo_one": "{{count}} महिना अघि",
+        "monthsAgo_other": "{{count}} महिना अघि"
+      }
     },
     "cases": {
       "heading": "हामीले दस्तावेज गरिरहेका भ्रष्टाचार मुद्दाहरू",

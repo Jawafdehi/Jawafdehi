@@ -6,6 +6,8 @@ import {
   Tooltip,
 } from "recharts";
 
+import { useMounted } from "@/hooks/useMounted";
+
 export interface DonutSegment {
   key: string;
   label: string;
@@ -29,6 +31,11 @@ export function StatusDonut({
 }) {
   const total = segments.reduce((sum, s) => sum + s.value, 0);
   const data = segments.filter((s) => s.value > 0);
+  const mounted = useMounted();
+
+  if (!mounted) {
+    return <div className="relative mx-auto h-[200px] w-full max-w-[240px]" />;
+  }
 
   return (
     <div>

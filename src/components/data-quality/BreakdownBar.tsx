@@ -11,6 +11,7 @@ import {
 } from "recharts";
 
 import { MONO_STACK } from "@/lib/data-quality";
+import { useMounted } from "@/hooks/useMounted";
 
 export interface BreakdownItem {
   label: string;
@@ -35,9 +36,15 @@ export function BreakdownBar({
 }) {
   const data = [...items].sort((a, b) => b.count - a.count);
   const max = data[0]?.count ?? 0;
+  const mounted = useMounted();
+  const height = data.length * 44 + 24;
+
+  if (!mounted) {
+    return <div className="w-full" style={{ height }} />;
+  }
 
   return (
-    <div className="w-full" style={{ height: data.length * 44 + 24 }}>
+    <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           layout="vertical"

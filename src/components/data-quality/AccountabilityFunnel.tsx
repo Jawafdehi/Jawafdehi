@@ -45,7 +45,13 @@ export function AccountabilityFunnel({
         const share = (stage.count / denominator) * 100;
         // Keep a hairline of fill even at ~0% so the row never looks empty.
         const width = stage.count === 0 ? 0 : Math.max(share, 0.8);
-        const pctLabel = share >= 10 ? Math.round(share).toString() : share.toFixed(1);
+        // Never let a rounded share read as a clean 100% unless it truly is
+        // 100% — same honesty rule as DataHonesty's truncated completeness.
+        const rounded = Math.round(share);
+        const pctLabel =
+          share >= 10
+            ? (rounded >= 100 && share < 100 ? 99 : rounded).toString()
+            : share.toFixed(1);
 
         return (
           <li key={stage.key}>

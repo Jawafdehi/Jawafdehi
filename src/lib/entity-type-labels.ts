@@ -30,6 +30,7 @@ export type InstitutionGroupKey =
  * before the generic "Organization"; "PoliticalParty" before "Organization").
  */
 function groupKeyFor(entityType: string): InstitutionGroupKey {
+  if (!entityType) return "other";
   const t = entityType.toLowerCase();
   if (t.includes("administrativearea")) return "localGov";
   if (t.includes("governmentorganization")) return "government";

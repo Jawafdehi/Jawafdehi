@@ -10,7 +10,7 @@ import { formatFreshness } from "@/lib/data-quality";
  */
 export function MissionRibbon({ lastUpdated }: { lastUpdated?: string | null }) {
   const { t } = useTranslation();
-  const freshness = formatFreshness(lastUpdated);
+  const freshness = formatFreshness(lastUpdated, t);
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
