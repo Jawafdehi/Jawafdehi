@@ -116,6 +116,23 @@ describe("buildEntitiesPatch", () => {
       value: [],
     });
   });
+  it("sends outcome null for non-accused roles (a verdict is accused-only)", () => {
+    const rows: EntityRelationshipRow[] = [
+      { nes_id: IRI, relationship_type: "RELATED", outcome: "CONVICTED", notes: "" },
+      { nes_id: IRI, relationship_type: "LOCATION", outcome: null, notes: "" },
+    ];
+    const value = (buildEntitiesPatch(rows).value as { outcome: unknown }[]).map(
+      (v) => v.outcome,
+    );
+    expect(value).toEqual([null, null]);
+  });
+  it("falls back to CHARGED for an accused row with no verdict", () => {
+    const rows: EntityRelationshipRow[] = [
+      { nes_id: IRI, relationship_type: "ACCUSED", outcome: null, notes: "" },
+    ];
+    const value = buildEntitiesPatch(rows).value as { outcome: unknown }[];
+    expect(value[0].outcome).toBe("CHARGED");
+  });
 });
 
 describe("buildTimelinePatch", () => {

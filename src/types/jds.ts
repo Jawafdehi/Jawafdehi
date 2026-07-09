@@ -72,7 +72,7 @@ export interface JawafEntity {
   nes_id: string | null; // Entity ID from Nepal Entity Service
   display_name: string | null; // Display name for the entity
   type?: string; // Relationship type: 'accused', 'alleged', 'related', 'witness', 'location', 'respondent', 'petitioner', etc.
-  outcome?: EntityOutcome; // Verdict outcome; absent/'charged' = undecided
+  outcome?: EntityOutcome | null; // Verdict — only on 'accused'; null for every other role
   notes?: string; // Additional notes about the relationship
   related_cases?: EntityCaseRelationship[]; // Unified case links with relation metadata
 }
@@ -80,7 +80,7 @@ export interface JawafEntity {
 export interface EntityCaseRelationship {
   case_id: number;
   relation_type: string;
-  outcome?: EntityOutcome; // Verdict outcome for this entity in this case
+  outcome?: EntityOutcome | null; // Verdict — only on 'accused'; null otherwise
   notes: string;
 }
 
