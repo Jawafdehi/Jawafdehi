@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   listCases,
@@ -109,21 +109,35 @@ export default function Moderation() {
   const [sortDir, setSortDir] = useState<SortDir>("oldest");
   const [typeFilter, setTypeFilter] = useState<string>("__all__");
 
+  // load() is called from an effect AND the Refresh button, so a component-
+  // lifetime ref (not an effect-scoped flag) guards its async setState against a
+  // resolve-after-unmount when the moderator navigates away mid-request.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const page = await listCases<Row>({ state: "IN_REVIEW", page_size: 100 });
+      if (!mountedRef.current) return;
       setRows(page.results ?? []);
       setTotal(page.count ?? (page.results?.length ?? 0));
     } catch (err) {
+      if (!mountedRef.current) return;
       setError(adminErrorMessage(err, "Failed to load the moderation queue"));
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
     // AI-review badges are best-effort: a failure just means no badges.
     try {
       const grouped = await listReviewsGrouped({ page_size: 200 });
+      if (!mountedRef.current) return;
       const map = new Map<string, ReviewBadge>();
       for (const g of grouped.results ?? []) {
         if (!g.slug || !g.latest) continue;
@@ -134,6 +148,7 @@ export default function Moderation() {
       }
       setReviews(map);
     } catch {
+      if (!mountedRef.current) return;
       // non-fatal — leave the badge map empty
       setReviews(new Map());
     }

@@ -429,29 +429,10 @@ export async function patchCase<T = Record<string, unknown>>(
   patchOps: PatchOp[],
   opts: PatchCaseOptions = {},
 ): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (opts.ifMatch) headers["If-Match"] = opts.ifMatch;
-  if (opts.transitionReason && opts.transitionReason.trim())
-    headers["X-Transition-Reason"] = opts.transitionReason.trim();
-  try {
-    const { data } = await client.patch<T>(
-      `/api/cases/${encodeURIComponent(slug)}/`,
-      patchOps,
-      Object.keys(headers).length ? { headers } : undefined,
-    );
-    return data;
-  } catch (err) {
-    // 412 Precondition Failed (or 409 Conflict) => the optimistic lock tripped:
-    // the case changed since we loaded it. Surface a typed error so the editor
-    // can prompt a reload instead of a generic "save failed".
-    const s = (err as { response?: { status?: number } })?.response?.status;
-    if (s === 412 || s === 409) {
-      throw new CaseConflictError(
-        extractErrorMessage(err, "This case changed since you opened it."),
-      );
-    }
-    throw err;
-  }
+  // Thin wrapper over patchCaseWithEtag (which owns the header building + the
+  // 412/409 → CaseConflictError mapping) for callers that don't need the token.
+  const { data } = await patchCaseWithEtag<T>(slug, patchOps, opts);
+  return data;
 }
 
 // Like patchCase but also returns the fresh optimistic-concurrency token the
