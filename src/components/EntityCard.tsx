@@ -72,7 +72,7 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
   const href = entityPath(jawafEntity.nes_id);
 
   const card = (
-      <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
+      <Card className={`h-full${href ? " hover:shadow-lg transition-shadow duration-200" : ""}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16 flex-shrink-0">
