@@ -55,7 +55,7 @@ const CaseworkLogin = () => {
               <ClipboardCheck className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Casework Portal</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Jawafdehi Admin</h1>
         </div>
 
         <div className="space-y-4">

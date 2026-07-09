@@ -96,7 +96,13 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
             }}
             placeholder="Search entities to link…"
           />
-          <Button type="button" variant="outline" onClick={runSearch} disabled={searching}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={runSearch}
+            disabled={searching}
+            aria-label="Search entities"
+          >
             {searching ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -119,6 +125,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     type="button"
                     size="sm"
                     variant="ghost"
+                    aria-label={`Link ${entityName(e) || id}`}
                     onClick={() => {
                       addRow(id);
                       setResults([]);

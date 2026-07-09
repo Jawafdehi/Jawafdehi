@@ -9,6 +9,7 @@ import {
 import { replaceOp, type CaseState } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { FormError } from "@/components/admin/FormError";
+import ConfirmButton from "@/components/admin/ConfirmButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -75,9 +76,19 @@ export default function Moderation() {
       });
     } catch (err) {
       setError(adminErrorMessage(err, `Failed to ${verb.toLowerCase()} case`));
+      // Rethrow so a ConfirmButton-wrapped action (Dismiss) keeps its dialog
+      // open on failure. Plain-button callers (Approve / Send back) use
+      // actSafe() to avoid an unhandled rejection.
+      throw err;
     } finally {
       setBusySlug(null);
     }
+  };
+
+  // Fire-and-forget wrapper for the non-confirmed buttons: the error is already
+  // surfaced via setError inside act(), so we just swallow the rejection here.
+  const actSafe = (slug: string, to: CaseState, verb: string) => {
+    void act(slug, to, verb).catch(() => {});
   };
 
   return (
@@ -142,7 +153,7 @@ export default function Moderation() {
                   <Button
                     size="sm"
                     disabled={busy || !isModerator}
-                    onClick={() => act(slug, "PUBLISHED", "approved")}
+                    onClick={() => actSafe(slug, "PUBLISHED", "approved")}
                   >
                     {busy ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
@@ -155,20 +166,23 @@ export default function Moderation() {
                     size="sm"
                     variant="outline"
                     disabled={busy || !isModerator}
-                    onClick={() => act(slug, "DRAFT", "sent back to draft")}
+                    onClick={() => actSafe(slug, "DRAFT", "sent back to draft")}
                   >
                     <Undo2 className="mr-1 h-4 w-4" />
-                    Reject to draft
+                    Send back to draft
                   </Button>
-                  <Button
+                  <ConfirmButton
                     size="sm"
                     variant="destructive"
                     disabled={busy || !isModerator}
-                    onClick={() => act(slug, "CLOSED", "dismissed")}
+                    title="Dismiss this submission?"
+                    description="Dismissing closes the case and removes it from the moderation queue. You can reopen it as a draft later. The reason you entered (if any) is saved to notes."
+                    confirmLabel="Dismiss"
+                    onConfirm={() => act(slug, "CLOSED", "dismissed")}
                   >
                     <X className="mr-1 h-4 w-4" />
                     Dismiss
-                  </Button>
+                  </ConfirmButton>
                 </div>
               </div>
             );

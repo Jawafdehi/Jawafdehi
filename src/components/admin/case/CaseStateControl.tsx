@@ -4,6 +4,7 @@ import { replaceOp, type CaseState } from "@/lib/jawafdehi-forms";
 import { FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ConfirmButton from "@/components/admin/ConfirmButton";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -18,18 +19,49 @@ interface Transition {
   label: string;
   variant?: "default" | "outline" | "destructive";
   privileged?: boolean;
+  // When set, the action requires a confirm dialog (destructive / hard to undo).
+  confirm?: { title: string; description: string };
 }
+
+const CLOSE_CONFIRM = {
+  title: "Close this case?",
+  description:
+    "Closing removes the case from the public site. You can reopen it as a draft later.",
+};
+const UNPUBLISH_CONFIRM = {
+  title: "Un-publish this case?",
+  description:
+    "This takes the case off the public site and returns it to draft. It will no longer be visible to the public until re-published.",
+};
 
 const TRANSITIONS: Record<string, Transition[]> = {
   DRAFT: [{ to: "IN_REVIEW", label: "Submit for review", variant: "default" }],
   IN_REVIEW: [
     { to: "PUBLISHED", label: "Publish", variant: "default", privileged: true },
     { to: "DRAFT", label: "Send back to draft", variant: "outline" },
-    { to: "CLOSED", label: "Close", variant: "destructive", privileged: true },
+    {
+      to: "CLOSED",
+      label: "Close",
+      variant: "destructive",
+      privileged: true,
+      confirm: CLOSE_CONFIRM,
+    },
   ],
   PUBLISHED: [
-    { to: "DRAFT", label: "Un-publish", variant: "outline", privileged: true },
-    { to: "CLOSED", label: "Close", variant: "destructive", privileged: true },
+    {
+      to: "DRAFT",
+      label: "Un-publish",
+      variant: "outline",
+      privileged: true,
+      confirm: UNPUBLISH_CONFIRM,
+    },
+    {
+      to: "CLOSED",
+      label: "Close",
+      variant: "destructive",
+      privileged: true,
+      confirm: CLOSE_CONFIRM,
+    },
   ],
   CLOSED: [
     { to: "DRAFT", label: "Reopen (draft)", variant: "outline", privileged: true },
@@ -69,9 +101,19 @@ export default function CaseStateControl({
       onTransitioned(to);
     } catch (err) {
       setError(adminErrorMessage(err, "Transition failed"));
+      // Rethrow so a ConfirmButton-wrapped transition keeps its dialog open on
+      // failure instead of closing as if it succeeded.
+      throw err;
     } finally {
       setBusy(null);
     }
+  };
+
+  // Fire-and-forget wrapper for the plain (non-confirmed) transition buttons:
+  // the error is already surfaced via setError, so swallow the rejection to
+  // avoid an unhandled promise rejection.
+  const transitionSafe = (to: CaseState) => {
+    void transition(to).catch(() => {});
   };
 
   return (
@@ -88,19 +130,36 @@ export default function CaseStateControl({
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {available.map((t) => (
-            <Button
-              key={t.to}
-              type="button"
-              size="sm"
-              variant={t.variant ?? "outline"}
-              disabled={busy !== null}
-              onClick={() => transition(t.to)}
-            >
-              {busy === t.to && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-              {t.label}
-            </Button>
-          ))}
+          {available.map((t) =>
+            t.confirm ? (
+              <ConfirmButton
+                key={t.to}
+                variant={t.variant ?? "outline"}
+                size="sm"
+                disabled={busy !== null}
+                title={t.confirm.title}
+                description={t.confirm.description}
+                confirmLabel={t.label}
+                onConfirm={() => transition(t.to)}
+              >
+                {t.label}
+              </ConfirmButton>
+            ) : (
+              <Button
+                key={t.to}
+                type="button"
+                size="sm"
+                variant={t.variant ?? "outline"}
+                disabled={busy !== null}
+                onClick={() => transitionSafe(t.to)}
+              >
+                {busy === t.to && (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                )}
+                {t.label}
+              </Button>
+            ),
+          )}
         </div>
       )}
     </div>

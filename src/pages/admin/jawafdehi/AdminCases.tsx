@@ -14,10 +14,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
+import { fmtDate } from "@/lib/casework-ui";
 
 type Row = Record<string, unknown>;
 
 const str = (v: unknown): string => (v == null ? "—" : String(v));
+
+// Format an ISO timestamp for the table; blank/absent renders as "—".
+const fmtDateCell = (v: unknown): string => {
+  const iso = v == null ? "" : String(v);
+  return iso ? fmtDate(iso) : "—";
+};
 
 const columns: Column<Row>[] = [
   { header: "Title", cell: (r) => <span className="font-medium">{str(r.title)}</span> },
@@ -27,7 +34,7 @@ const columns: Column<Row>[] = [
     header: "State",
     cell: (r) => <Badge variant="secondary">{str(r.state ?? r.status)}</Badge>,
   },
-  { header: "Updated", cell: (r) => str(r.updated_at ?? r.modified) },
+  { header: "Updated", cell: (r) => fmtDateCell(r.updated_at ?? r.modified) },
 ];
 
 const PAGE_SIZE = 25;

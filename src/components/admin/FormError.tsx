@@ -36,10 +36,19 @@ export function FormError({
 export function FieldError({
   message,
   className,
+  id,
 }: {
   message?: string | null | false;
   className?: string;
+  // Optional id so a field can point at this via aria-describedby.
+  id?: string;
 }) {
   if (!message) return null;
-  return <p className={cn("text-xs text-red-600", className)}>{message}</p>;
+  // role="alert" so assistive tech announces the validation error when it
+  // appears, even if focus is still on the field.
+  return (
+    <p id={id} role="alert" className={cn("text-xs text-red-600", className)}>
+      {message}
+    </p>
+  );
 }
