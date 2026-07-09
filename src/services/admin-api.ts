@@ -14,6 +14,11 @@
 // request carries `Authorization: Bearer <access>` from the shared oidc.ts.
 import { http as client, API_BASE_URL, extractErrorMessage } from "./http";
 
+// Note: axios lowercases response header keys, so `res.headers.etag` is the
+// ETag the backend sends as `ETag`. CORS must expose it — the dev proxy is
+// same-origin so it's visible; cross-origin prod relies on
+// Access-Control-Expose-Headers including ETag.
+
 // Back-compat re-exports: callers (and dev-auth.ts) import these names. The
 // client, base-URL resolution, and error extraction now live in http.ts (one
 // unified client for the whole app).
@@ -336,6 +341,64 @@ export async function getCase<T = Record<string, unknown>>(
   return data;
 }
 
+// Fetch a case together with its optimistic-concurrency token (the ETag the
+// backend emits on retrieve). The editor holds this token and echoes it back as
+// `If-Match` on save so a concurrent edit is rejected (409/412) instead of
+// silently clobbered. `etag` is null when the backend predates the feature —
+// callers then behave as before (no precondition sent).
+export async function getCaseWithEtag<T = Record<string, unknown>>(
+  slug: string,
+): Promise<{ data: T; etag: string | null }> {
+  const res = await client.get<T>(`/api/cases/${encodeURIComponent(slug)}/`);
+  return { data: res.data, etag: res.headers?.etag ?? null };
+}
+
+// One entry in a case's workflow history (GET /api/cases/{slug}/history/).
+export interface CaseStateChange {
+  id: number;
+  from_state: string;
+  to_state: string;
+  actor_name: string;
+  reason: string;
+  created_at: string;
+}
+
+// Fetch a case's state-change history (newest first). Returns [] when the
+// endpoint is absent (older backend) so the feedback panel degrades to hidden
+// rather than erroring.
+export async function getCaseHistory(slug: string): Promise<CaseStateChange[]> {
+  try {
+    const { data } = await client.get<
+      Paginated<CaseStateChange> | CaseStateChange[]
+    >(`/api/cases/${encodeURIComponent(slug)}/history/`);
+    if (Array.isArray(data)) return data;
+    return data?.results ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// Raised when a PATCH is rejected because the case changed since it was loaded
+// (optimistic-lock precondition failed). The editor catches this to prompt a
+// reload rather than showing a generic error.
+export class CaseConflictError extends Error {
+  constructor(message = "This case changed since you opened it.") {
+    super(message);
+    this.name = "CaseConflictError";
+  }
+}
+
+// Options for a case PATCH beyond the raw ops:
+//   ifMatch          — optimistic-concurrency token from getCaseWithEtag; sent
+//                      as If-Match so a stale write is rejected with 412/409.
+//   transitionReason — a human reason for a state change, sent as
+//                      X-Transition-Reason (recorded in the case history);
+//                      keeps the RFC-6902 body a pure patch.
+export interface PatchCaseOptions {
+  ifMatch?: string | null;
+  transitionReason?: string;
+}
+
 // The authoring shape POST /api/cases/ accepts. The backend forces state=DRAFT
 // on create (A1); everything else rides along verbatim (the [k] escape hatch
 // keeps the form free to send extra authoring fields).
@@ -359,16 +422,47 @@ export async function createCase<T = Record<string, unknown>>(
 }
 
 // UPDATE is an RFC-6902 patch (mirrors the entity contract): the body is a
-// bare array of patch ops.
+// bare array of patch ops. Optional `opts` carry an If-Match precondition and/or
+// an X-Transition-Reason header (see PatchCaseOptions).
 export async function patchCase<T = Record<string, unknown>>(
   slug: string,
   patchOps: PatchOp[],
+  opts: PatchCaseOptions = {},
 ): Promise<T> {
-  const { data } = await client.patch<T>(
-    `/api/cases/${encodeURIComponent(slug)}/`,
-    patchOps,
-  );
+  // Thin wrapper over patchCaseWithEtag (which owns the header building + the
+  // 412/409 → CaseConflictError mapping) for callers that don't need the token.
+  const { data } = await patchCaseWithEtag<T>(slug, patchOps, opts);
   return data;
+}
+
+// Like patchCase but also returns the fresh optimistic-concurrency token the
+// backend emits on a successful write, so an in-place editor can keep saving
+// without a re-fetch. `etag` is null on an older backend.
+export async function patchCaseWithEtag<T = Record<string, unknown>>(
+  slug: string,
+  patchOps: PatchOp[],
+  opts: PatchCaseOptions = {},
+): Promise<{ data: T; etag: string | null }> {
+  const headers: Record<string, string> = {};
+  if (opts.ifMatch) headers["If-Match"] = opts.ifMatch;
+  if (opts.transitionReason && opts.transitionReason.trim())
+    headers["X-Transition-Reason"] = opts.transitionReason.trim();
+  try {
+    const res = await client.patch<T>(
+      `/api/cases/${encodeURIComponent(slug)}/`,
+      patchOps,
+      Object.keys(headers).length ? { headers } : undefined,
+    );
+    return { data: res.data, etag: res.headers?.etag ?? null };
+  } catch (err) {
+    const s = (err as { response?: { status?: number } })?.response?.status;
+    if (s === 412 || s === 409) {
+      throw new CaseConflictError(
+        extractErrorMessage(err, "This case changed since you opened it."),
+      );
+    }
+    throw err;
+  }
 }
 
 // Soft-delete a case (backend flips state -> CLOSED, returns 204).
