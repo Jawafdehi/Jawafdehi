@@ -5,8 +5,13 @@ import type { CaseworkRule, ReviewConfig } from "@/types/casework";
 import { Input } from "@/components/ui/input";
 import { Loader2, ChevronDown, Lock, ShieldAlert } from "lucide-react";
 import { mdToHtml, categoryColor, kindColor } from "@/lib/casework-ui";
+import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 
 export default function CaseworkRules() {
+  // Only moderators/admins may change the global review config (thresholds).
+  // The backend enforces this (config_view → 403); mirror it in the UI so a
+  // caseworker sees the values read-only instead of editable inputs that fail.
+  const { isModerator } = useCaseworkAuth();
   const [rules, setRules] = useState<CaseworkRule[]>([]);
   const [config, setConfig] = useState<ReviewConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,24 +61,35 @@ export default function CaseworkRules() {
           </div>
         </div>
 
-        {/* Config */}
+        {/* Config — editable by moderators/admins only. */}
         {config && (
-          <div className="bg-white border rounded-xl p-4 grid grid-cols-3 gap-4">
-            <ConfigField
-              label="Pass ≥"
-              value={config.pass_threshold}
-              onSave={(v) => saveConfig({ pass_threshold: v })}
-            />
-            <ConfigField
-              label="Revise ≥"
-              value={config.revise_threshold}
-              onSave={(v) => saveConfig({ revise_threshold: v })}
-            />
-            <ConfigField
-              label="LLM samples"
-              value={config.llm_samples}
-              onSave={(v) => saveConfig({ llm_samples: v })}
-            />
+          <div className="space-y-2">
+            <div className="bg-white border rounded-xl p-4 grid grid-cols-3 gap-4">
+              <ConfigField
+                label="Pass ≥"
+                value={config.pass_threshold}
+                onSave={(v) => saveConfig({ pass_threshold: v })}
+                disabled={!isModerator}
+              />
+              <ConfigField
+                label="Revise ≥"
+                value={config.revise_threshold}
+                onSave={(v) => saveConfig({ revise_threshold: v })}
+                disabled={!isModerator}
+              />
+              <ConfigField
+                label="LLM samples"
+                value={config.llm_samples}
+                onSave={(v) => saveConfig({ llm_samples: v })}
+                disabled={!isModerator}
+              />
+            </div>
+            {!isModerator && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Lock className="h-3 w-3" />
+                Only moderators can change these thresholds.
+              </p>
+            )}
           </div>
         )}
 
@@ -211,10 +227,12 @@ function ConfigField({
   label,
   value,
   onSave,
+  disabled = false,
 }: {
   label: string;
   value: number;
   onSave: (v: number) => void;
+  disabled?: boolean;
 }) {
   const [v, setV] = useState(String(value));
   useEffect(() => setV(String(value)), [value]);
@@ -224,8 +242,10 @@ function ConfigField({
       <Input
         type="number"
         value={v}
+        disabled={disabled}
         onChange={(e) => setV(e.target.value)}
         onBlur={() => {
+          if (disabled) return;
           const n = parseInt(v, 10);
           if (Number.isNaN(n)) {
             // Invalid/blank input: snap back to the current saved value so the

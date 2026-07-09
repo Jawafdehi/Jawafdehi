@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import {
   Navigate,
   NavLink,
@@ -13,13 +13,15 @@ import {
   hasNgmWriteAccess,
 } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   ClipboardCheck,
   FileText,
-  Gavel,
   LayoutDashboard,
   LogOut,
+  Menu,
   Network,
+  Gavel,
   ScrollText,
   ShieldCheck,
 } from "lucide-react";
@@ -95,7 +97,8 @@ const NAV: NavGroup[] = [
   },
 ];
 
-function Sidebar({ roles }: { roles: string[] }) {
+// `onNavigate` lets the mobile drawer close itself when a link is followed.
+function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => void }) {
   const lower = roles.map((r) => r.toLowerCase());
   return (
     <nav className="flex flex-col gap-5 p-4">
@@ -118,6 +121,7 @@ function Sidebar({ roles }: { roles: string[] }) {
                   key={it.to}
                   to={it.to}
                   end={it.end}
+                  onClick={onNavigate}
                   className={({ isActive }) =>
                     `flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
                       isActive
@@ -144,6 +148,12 @@ function AdminShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useCaseworkAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  // Mobile nav drawer. Closes on any route change so following a link inside it
+  // returns to the page (belt-and-braces with the per-link onNavigate).
+  const [navOpen, setNavOpen] = useState(false);
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -191,6 +201,17 @@ function AdminShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 border-b bg-white">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2 font-semibold">
+            {/* Hamburger — mobile only; opens the nav drawer. The desktop
+                sidebar (md+) makes this redundant, so it's hidden there. */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="-ml-2 md:hidden"
+              aria-label="Open navigation menu"
+              onClick={() => setNavOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             <ShieldCheck className="h-5 w-5 text-primary" />
             Jawafdehi Admin
           </div>
@@ -216,6 +237,22 @@ function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+
+      {/* Mobile nav drawer — renders the same Sidebar; closes on navigation. */}
+      <Sheet open={navOpen} onOpenChange={setNavOpen}>
+        <SheetContent side="left" className="w-72 p-0">
+          <SheetTitle className="px-4 pt-4 text-sm font-semibold text-muted-foreground">
+            {user.username}
+            {roles.length ? (
+              <span className="ml-1 text-xs font-normal text-slate-400">
+                ({roles.join(", ")})
+              </span>
+            ) : null}
+          </SheetTitle>
+          <Sidebar roles={roles} onNavigate={() => setNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
       <div className="mx-auto flex max-w-7xl">
         <aside className="hidden w-64 shrink-0 border-r bg-white md:block">
           <Sidebar roles={roles} />

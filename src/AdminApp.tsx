@@ -8,6 +8,8 @@ import { AuthProvider } from "react-oidc-context";
 import { getUserManager, onSigninCallback } from "./services/oidc";
 import { CaseworkAuthProvider } from "./context/CaseworkAuthContext";
 import AdminLayout from "@/components/admin/AdminLayout";
+import RequireWriteAccess from "@/components/admin/RequireWriteAccess";
+import { hasNesWriteAccess, hasNgmWriteAccess } from "@/lib/roles";
 import AdminDashboard from "./pages/admin/Dashboard";
 import EntitiesList from "./pages/admin/entities/EntitiesList";
 import EntityCreate from "./pages/admin/entities/EntityCreate";
@@ -56,28 +58,94 @@ const AdminApp = () => (
         <Route element={<AdminLayout />}>
           <Route path="" element={<AdminDashboard />} />
           {/* Entities — create/edit before the list so the literal "new" and
-              "edit" segments win over the splat. */}
-          <Route path="entities/new" element={<EntityCreate />} />
-          <Route path="entities/edit/*" element={<EntityEdit />} />
+              "edit" segments win over the splat. The write forms are gated on
+              entity-write access (the list stays open to any panel role). */}
+          <Route
+            path="entities/new"
+            element={
+              <RequireWriteAccess can={hasNesWriteAccess}>
+                <EntityCreate />
+              </RequireWriteAccess>
+            }
+          />
+          <Route
+            path="entities/edit/*"
+            element={
+              <RequireWriteAccess can={hasNesWriteAccess}>
+                <EntityEdit />
+              </RequireWriteAccess>
+            }
+          />
           <Route path="entities" element={<EntitiesList />} />
-          {/* Data Lake */}
-          <Route path="datalake/courtcases/new" element={<CourtCaseForm />} />
+          {/* Data Lake — list/read pages stay open to any panel role; the
+              create/edit FORMS are gated on data-lake write access. */}
+          <Route
+            path="datalake/courtcases/new"
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <CourtCaseForm />
+              </RequireWriteAccess>
+            }
+          />
           <Route
             path="datalake/courtcases/:court/:caseNumber/edit"
-            element={<CourtCaseForm />}
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <CourtCaseForm />
+              </RequireWriteAccess>
+            }
           />
           <Route path="datalake/courtcases" element={<AdminCourtCases />} />
-          <Route path="datalake/courts/new" element={<CourtForm />} />
+          <Route
+            path="datalake/courts/new"
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <CourtForm />
+              </RequireWriteAccess>
+            }
+          />
           <Route
             path="datalake/courts/:identifier/edit"
-            element={<CourtForm />}
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <CourtForm />
+              </RequireWriteAccess>
+            }
           />
           <Route path="datalake/courts" element={<Courts />} />
-          <Route path="datalake/firms/new" element={<FirmForm />} />
-          <Route path="datalake/firms/:id/edit" element={<FirmForm />} />
+          <Route
+            path="datalake/firms/new"
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <FirmForm />
+              </RequireWriteAccess>
+            }
+          />
+          <Route
+            path="datalake/firms/:id/edit"
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <FirmForm />
+              </RequireWriteAccess>
+            }
+          />
           <Route path="datalake/firms" element={<Firms />} />
-          <Route path="datalake/materials/new" element={<MaterialForm />} />
-          <Route path="datalake/materials/edit/*" element={<MaterialForm />} />
+          <Route
+            path="datalake/materials/new"
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <MaterialForm />
+              </RequireWriteAccess>
+            }
+          />
+          <Route
+            path="datalake/materials/edit/*"
+            element={
+              <RequireWriteAccess can={hasNgmWriteAccess}>
+                <MaterialForm />
+              </RequireWriteAccess>
+            }
+          />
           <Route path="datalake/materials" element={<AdminMaterials />} />
           {/* Jawafdehi — create/edit before the list so the literal "new"
               segment wins over the :slug/:id param. */}

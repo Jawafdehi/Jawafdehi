@@ -9,6 +9,7 @@ import {
 import { replaceOp, type CaseState } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { FormError } from "@/components/admin/FormError";
+import ConfirmButton from "@/components/admin/ConfirmButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -158,17 +159,20 @@ export default function Moderation() {
                     onClick={() => act(slug, "DRAFT", "sent back to draft")}
                   >
                     <Undo2 className="mr-1 h-4 w-4" />
-                    Reject to draft
+                    Send back to draft
                   </Button>
-                  <Button
+                  <ConfirmButton
                     size="sm"
                     variant="destructive"
                     disabled={busy || !isModerator}
-                    onClick={() => act(slug, "CLOSED", "dismissed")}
+                    title="Dismiss this submission?"
+                    description="Dismissing closes the case and removes it from the moderation queue. You can reopen it as a draft later. The reason you entered (if any) is saved to notes."
+                    confirmLabel="Dismiss"
+                    onConfirm={() => act(slug, "CLOSED", "dismissed")}
                   >
                     <X className="mr-1 h-4 w-4" />
                     Dismiss
-                  </Button>
+                  </ConfirmButton>
                 </div>
               </div>
             );

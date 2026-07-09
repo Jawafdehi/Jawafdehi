@@ -53,7 +53,6 @@ const DataQuality = lazy(() => import("./pages/DataQuality"));
 const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
-const ModerationDashboard = lazy(() => import("./pages/ModerationDashboard"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
 const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
 const Materials = lazy(() => import("./pages/Materials"));
@@ -133,7 +132,9 @@ const App = () => (
             <Route path="/material/*" element={<MaterialProfile />} />
             {/* Data-lake court case by IRI tail (/courtcase/<court>/<case_number>). */}
             <Route path="/courtcase/*" element={<CourtCaseProfile />} />
-            <Route path="/moderation" element={<ModerationDashboard />} />
+            {/* Moderation lives only under the auth-gated admin panel. Redirect
+                the old public /moderation path (and any stale bookmarks) there. */}
+            <Route path="/moderation" element={<Navigate to="/admin/moderation" replace />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/updates" element={<Updates />} />
             {/* Wagtail headless preview target — must precede the :slug route. */}

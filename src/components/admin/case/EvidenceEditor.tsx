@@ -101,7 +101,13 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
             }}
             placeholder="Search materials…"
           />
-          <Button type="button" variant="outline" onClick={runSearch} disabled={searching}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={runSearch}
+            disabled={searching}
+            aria-label="Search materials"
+          >
             {searching ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -127,6 +133,7 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
                     size="sm"
                     variant="ghost"
                     disabled={!isValidMaterialIri(iri)}
+                    aria-label={`Link ${materialTitle(m) || iri}`}
                     onClick={() => {
                       addRow(iri, materialTitle(m));
                       setResults([]);

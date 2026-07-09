@@ -33,6 +33,7 @@ import {
   type OutcomeType,
 } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
 import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshipsEditor";
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
@@ -220,6 +221,9 @@ export default function AdminCaseForm() {
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // True when the case failed to LOAD (bad slug / network) — as opposed to a
+  // save error. Drives a dedicated error view instead of a blank editable form.
+  const [loadFailed, setLoadFailed] = useState(false);
   // In create mode, track whether the user hand-edited the slug so we stop
   // auto-deriving it from the title.
   const [slugDirty, setSlugDirty] = useState(false);
@@ -230,6 +234,7 @@ export default function AdminCaseForm() {
   const loadCase = useCallback(async () => {
     if (!editing || !slug) return;
     setLoading(true);
+    setLoadFailed(false);
     try {
       const c = await getCase<Record<string, unknown>>(slug);
       const parsed = fromCase(c);
@@ -239,6 +244,7 @@ export default function AdminCaseForm() {
       setAllegationsText(parsed.key_allegations.join("\n"));
     } catch (err) {
       setError(adminErrorMessage(err, "Failed to load case"));
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -344,6 +350,20 @@ export default function AdminCaseForm() {
     return ops;
   };
 
+  // Dirty when there are unsaved edits: in edit mode, any diff op; in create
+  // mode, any non-empty core field. Drives the unsaved-changes guard.
+  const dirty = editing
+    ? buildPatch().length > 0
+    : form.title.trim() !== "" ||
+      form.description.trim() !== "" ||
+      form.notes.trim() !== "" ||
+      form.key_allegations.length > 0;
+  const { confirmDiscard } = useUnsavedChanges(dirty);
+
+  const onCancel = () => {
+    if (confirmDiscard()) navigate("/admin/jawafdehi/cases");
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSave) return;
@@ -400,6 +420,24 @@ export default function AdminCaseForm() {
     );
   }
 
+  // Bad slug / load failure: show a dedicated error view, not a blank editable
+  // form under an error banner (which read as a half-broken "New case").
+  if (editing && loadFailed) {
+    return (
+      <div className="max-w-3xl space-y-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-2"
+          onClick={() => navigate("/admin/jawafdehi/cases")}
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" /> Cases
+        </Button>
+        <FormError message={error || "This case could not be found."} />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl space-y-6" data-color-mode={mdColorMode}>
       <div>
@@ -407,7 +445,7 @@ export default function AdminCaseForm() {
           variant="ghost"
           size="sm"
           className="mb-2 -ml-2"
-          onClick={() => navigate("/admin/jawafdehi/cases")}
+          onClick={onCancel}
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> Cases
         </Button>
@@ -674,11 +712,7 @@ export default function AdminCaseForm() {
             )}
             {editing ? "Save changes" : "Create case"}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/admin/jawafdehi/cases")}
-          >
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         </div>
