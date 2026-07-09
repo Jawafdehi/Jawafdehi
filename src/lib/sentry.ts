@@ -5,7 +5,12 @@ const HARDCODED_DSN = "https://f5fafd04ccca67355a3b404d1b209e94@o451136404802764
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 export function initSentry(): void {
-  const dsn = SENTRY_DSN || HARDCODED_DSN;
+  // Only fall back to the hardcoded PRODUCTION DSN in non-dev builds. In dev,
+  // the prod DSN is omitted so localhost errors don't pollute the prod project
+  // (which also tripped 429s) — but a developer can still test Sentry locally by
+  // setting an explicit VITE_SENTRY_DSN. No DSN → nothing to init.
+  const dsn = SENTRY_DSN || (import.meta.env.DEV ? undefined : HARDCODED_DSN);
+  if (!dsn) return;
 
   Sentry.init({
     dsn,
