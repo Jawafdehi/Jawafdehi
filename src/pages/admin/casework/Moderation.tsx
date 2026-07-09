@@ -195,12 +195,13 @@ export default function Moderation() {
     return <FormError message={t("admin.moderation.noPermission")} />;
   }
 
-  // `verbKey` is one of approved | sentBack | dismissed — resolved to a
-  // localized past-tense verb for the toast + failure message.
+  // `verbKey` is one of approved | sentBack | dismissed — each has its own
+  // complete success/failure sentence (`{verbKey}Success` / `{verbKey}Failure`)
+  // rather than an interpolated verb, so both English and Nepali stay
+  // grammatical (no "Failed to approved case").
   const act = async (slug: string, to: CaseState, verbKey: string) => {
     setBusySlug(slug);
     setError(null);
-    const verb = t(`admin.moderation.${verbKey}`);
     try {
       const ops: PatchOp[] = [replaceOp("/state", to)];
       const reason = (reasons[slug] ?? "").trim();
@@ -209,7 +210,10 @@ export default function Moderation() {
       // loop) — rather than being overloaded into the shared internal /notes
       // field, which mixed return reasons with authoring notes.
       await patchCase(slug, ops, { transitionReason: reason || undefined });
-      toast({ title: t("admin.moderation.actionResult", { verb }), description: slug });
+      toast({
+        title: t(`admin.moderation.${verbKey}Success`),
+        description: slug,
+      });
       // Drop the case from the queue (it left IN_REVIEW).
       setRows((prev) => prev.filter((r) => str(r.slug) !== slug));
       setReasons((prev) => {
@@ -219,7 +223,7 @@ export default function Moderation() {
       });
     } catch (err) {
       setError(
-        adminErrorMessage(err, t("admin.moderation.actionFailed", { verb })),
+        adminErrorMessage(err, t(`admin.moderation.${verbKey}Failure`)),
       );
       // Rethrow so a ConfirmButton-wrapped action (Dismiss) keeps its dialog
       // open on failure. Plain-button callers (Approve / Send back) use

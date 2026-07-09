@@ -123,8 +123,9 @@ export default function CaseStateControl({
       <FieldError message={error} />
       {available.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          {t("admin.stateControl.noTransitions")}
-          {!isModerator ? t("admin.stateControl.noTransitionsForRole") : ""}.
+          {isModerator
+            ? t("admin.stateControl.noTransitions")
+            : t("admin.stateControl.noTransitionsForRole")}
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
