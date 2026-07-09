@@ -180,7 +180,6 @@ export default function EntityRecordProfile() {
       ? data.address
       : data?.address?.description || data?.address?.streetAddress || "";
   const identifiers = Array.isArray(data?.identifier) ? data!.identifier! : [];
-  const version = data?.["jawafdehi:version"];
   const blacklisted = data?.["jawafdehi:blacklisted"] === true;
 
   // Generic details: any presentable scalar field not handled elsewhere.
@@ -315,11 +314,6 @@ export default function EntityRecordProfile() {
                 <strong>Source:</strong> Jawafdehi entity registry — a public registry of Nepal&apos;s
                 people, organizations, and places.
               </p>
-              {version?.change_description ? (
-                <p className="mt-1">
-                  Added via {version.author?.slug || "import"}: {version.change_description}
-                </p>
-              ) : null}
             </div>
           </article>
         ) : null}

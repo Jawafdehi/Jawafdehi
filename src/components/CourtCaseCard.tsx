@@ -270,9 +270,12 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
             );
           })()}
 
-          {/* Hearings collapsible — absent on the core shape (case-detail page). */}
+          {/* Hearings collapsible — absent on the core shape (case-detail page).
+              Expanded by default on the court-case detail page (where the card is
+              the whole page, i.e. no linkToDetail); collapsed when embedded as a
+              related-case card so a list of cards stays compact. */}
           {(courtCase.hearings?.length ?? 0) > 0 && (
-            <Collapsible className="mt-3">
+            <Collapsible className="mt-3" defaultOpen={!linkToDetail}>
               <CollapsibleTrigger asChild>
                 <Button
                   type="button"

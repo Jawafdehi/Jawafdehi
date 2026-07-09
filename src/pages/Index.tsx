@@ -18,7 +18,7 @@ import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
 
 const Index = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
 
@@ -205,8 +205,12 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Recently Documented Cases</h2>
-                <p className="text-muted-foreground mt-1">Latest cases added to the archive</p>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {t("home.recentCases.heading", "Recently Documented Cases")}
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  {t("home.recentCases.subtitle", "Latest cases added to the archive")}
+                </p>
               </div>
             </div>
 
@@ -227,7 +231,8 @@ const Index = () => {
             <div className="text-center mt-10 mb-4 flex justify-center">
               <Button variant="primary" size="xl" asChild>
                 <Link to="/search?type=case">
-                  View all cases <ArrowRight className="ml-2 h-5 w-5" />
+                  {t("home.recentCases.viewAll", "View all cases")}{" "}
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
             </div>

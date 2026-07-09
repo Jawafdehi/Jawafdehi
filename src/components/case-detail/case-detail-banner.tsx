@@ -110,7 +110,12 @@ export function CaseDetailBanner({
   }, [bannerSrc]);
 
   const statusLabel = t(getCaseStatusLabelKey(caseData.state || "PUBLISHED"));
-  const caseTypeLabel = t(getCaseTypeLabelKey(caseData.case_type));
+  // A known case type localizes; an unknown/scraped one humanizes its raw value
+  // rather than mislabelling (getCaseTypeLabelKey returns null when unknown).
+  const caseTypeLabelKey = getCaseTypeLabelKey(caseData.case_type);
+  const caseTypeLabel = caseTypeLabelKey
+    ? t(caseTypeLabelKey)
+    : (caseData.case_type || "").replaceAll("_", " ").replaceAll("-", " ");
 
   const dateRange = formatCaseDateRangeForLanguage(
     caseData.case_start_date,
@@ -134,7 +139,14 @@ export function CaseDetailBanner({
       .filter((courtCase): courtCase is NonNullable<ReturnType<typeof formatCourtCaseRef>> => Boolean(courtCase));
   }, [caseData.court_cases, normalizedLang]);
 
-  const breadcrumbCase = formattedCourtCases[0]?.caseNumber || String(caseData.id);
+  // Prefer a linked court-case number, then the human-readable slug. Never fall
+  // back to the raw DB primary key — that would leak an internal id into the
+  // public breadcrumb (e.g. "jawafdehi.org / case / 11"). A published case always
+  // has a slug; the generic label is a defensive last resort only.
+  const breadcrumbCase =
+    formattedCourtCases[0]?.caseNumber ||
+    caseData.slug ||
+    t("caseDetail.breadcrumbFallback", "Case");
 
   const getEntityDisplayName = (caseEntity: JawafEntity) => {
     const entity = caseEntity.nes_id
@@ -213,9 +225,11 @@ export function CaseDetailBanner({
                   {statusLabel}
                 </CaseStatusBadge>
 
-                <CaseTypeBadge caseType={caseData.case_type}>
-                  {caseTypeLabel}
-                </CaseTypeBadge>
+                {caseTypeLabel ? (
+                  <CaseTypeBadge caseType={caseData.case_type}>
+                    {caseTypeLabel}
+                  </CaseTypeBadge>
+                ) : null}
 
                 {caseData.tags.map((tag) => (
                   <CaseTagBadge key={tag}>

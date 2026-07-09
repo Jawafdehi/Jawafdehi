@@ -25,5 +25,7 @@ dist-ssr
 .env
 .vite/*
 
-# We use bun
+# We use bun exclusively — keep other package managers' lockfiles out.
 package-lock.json
+pnpm-lock.yaml
+yarn.lock

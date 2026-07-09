@@ -87,10 +87,10 @@ const OurTeam = () => {
 
         {/* Team sections */}
         {[
-          { id: "nepal-board", heading: "Nepal Board", data: nepalBoard },
-          { id: "us-board", heading: "US Board", data: usBoard },
-          { id: "members", heading: "Current Members", data: members },
-          { id: "past-members", heading: "Past Members", data: pastMembers },
+          { id: "nepal-board", heading: t("team.sections.nepalBoard", "Nepal Board"), data: nepalBoard },
+          { id: "us-board", heading: t("team.sections.usBoard", "US Board"), data: usBoard },
+          { id: "members", heading: t("team.sections.currentMembers", "Current Members"), data: members },
+          { id: "past-members", heading: t("team.sections.pastMembers", "Past Members"), data: pastMembers },
         ].map(({ id, heading, data }) => (
           <section key={id} id={id} className="py-12 md:py-16">
             <div className="container mx-auto px-4">

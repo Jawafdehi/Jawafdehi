@@ -124,7 +124,7 @@ export function EntityDetailContainer({
         <CardContent className="p-12 text-center">
           <p className="text-muted-foreground">{t("entityDetail.entityNotFound")}</p>
           <Button asChild className="mt-4">
-            <Link to="/entities">{t("entityDetail.backToEntities")}</Link>
+            <Link to="/search?type=entity">{t("entityDetail.backToEntities")}</Link>
           </Button>
         </CardContent>
       </Card>

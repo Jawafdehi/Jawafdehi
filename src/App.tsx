@@ -21,7 +21,6 @@ import { AppLayout } from "@/components/AppLayout";
 // below to keep them out of the public entry chunk.
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
-import Entities from "./pages/Entities";
 import About from "./pages/About";
 import Commitment from "./pages/Commitment";
 import OurProcess from "./pages/OurProcess";
@@ -117,7 +116,12 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/cases" element={<Cases />} />
             <Route path="/case/:id" element={<CaseDetail />} />
-            <Route path="/entities" element={<Entities />} />
+            {/* The standalone entities directory was dropped; entity browse now
+                lives in unified search. Redirect old/bookmarked links there. */}
+            <Route
+              path="/entities"
+              element={<Navigate to="/search?type=entity" replace />}
+            />
             <Route path="/search" element={<ArchiveSearch />} />
             {/* Data-lake single-type browse pages (unified-archive search, type-pinned). */}
             <Route path="/materials" element={<Materials />} />

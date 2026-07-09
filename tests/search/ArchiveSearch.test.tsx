@@ -129,7 +129,7 @@ describe("ArchiveSearch", () => {
       2,
     );
     expect(
-      document.querySelector('p[aria-live="polite"] [aria-hidden="true"]'),
+      document.querySelector('div[aria-live="polite"] [aria-hidden="true"]'),
     ).toBeTruthy();
     expect(
       screen
@@ -173,7 +173,7 @@ describe("ArchiveSearch", () => {
       screen.getByRole("status", { name: "Searching archive" }),
     ).toBeTruthy();
     expect(
-      document.querySelector('p[aria-live="polite"] [aria-hidden="true"]'),
+      document.querySelector('div[aria-live="polite"] [aria-hidden="true"]'),
     ).toBeTruthy();
     expect(screen.queryByText("Original result")).toBeNull();
     expect(screen.queryByRole("button", { name: /next/i })).toBeNull();

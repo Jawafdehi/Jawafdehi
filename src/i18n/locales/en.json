@@ -136,11 +136,20 @@
   },
   "home": {
     "hero": {
-      "badge": "Transparency • Accountability • Justice",
-      "title": "Jawafdehi Nepal",
-      "description": "Documenting and tracking corruption cases to hold public entities accountable. Empowering Nepali citizens with transparency and verified information.",
-      "browseCases": "Browse Cases",
-      "learnMore": "Learn More"
+      "eyebrow": "Accountability has no expiry.",
+      "titlePrefix": "Nepal's Permanent",
+      "titleHighlight": "Corruption Case",
+      "titleSuffix": "Archive",
+      "description": "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
+      "searchLabel": "Search the Jawafdehi archive",
+      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
+      "searchSubmit": "Search Jawafdehi",
+      "stats": {
+        "casesDocumented": "Cases documented",
+        "officialsAndEntitiesTracked": "Officials & entities tracked",
+        "courtRecords": "Court records",
+        "materials": "Materials"
+      }
     },
     "featuredCases": {
       "title": "Featured Cases",
@@ -172,6 +181,11 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
+    },
+    "recentCases": {
+      "heading": "Recently Documented Cases",
+      "subtitle": "Latest cases added to the archive",
+      "viewAll": "View all cases"
     }
   },
   "ourProcess": {
@@ -422,6 +436,12 @@
       "nepaliVolunteers": "Nepali volunteers",
       "forNepal": "for Nepal",
       "description": "Jawafdehi runs entirely on volunteer effort from Nepali citizens across technology, research, journalism, and public policy. No corporate interests. No government funding. Just people who believe accountability matters."
+    },
+    "sections": {
+      "nepalBoard": "Nepal Board",
+      "usBoard": "US Board",
+      "currentMembers": "Current Members",
+      "pastMembers": "Past Members"
     }
   },
   "pagination": {
@@ -552,7 +572,8 @@
       "secondary": "Secondary Sources",
       "documentCount": "{{count}} document",
       "documentCount_plural": "{{count}} documents"
-    }
+    },
+    "breadcrumbFallback": "Case"
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
@@ -1512,5 +1533,32 @@
       "movedTo": "Moved to {{state}}",
       "by": "by {{name}}"
     }
+  },
+  "cookieConsent": {
+    "ariaLabel": "Cookie consent",
+    "message": "We use cookies that are necessary for the site to work, and—only with your consent—Google Analytics to understand how the platform is used. You can decline analytics without affecting your use of the site. See our <privacy>Privacy Policy</privacy>.",
+    "decline": "Decline",
+    "accept": "Accept analytics"
+  },
+  "archiveSearch": {
+    "heading": "Archive Search",
+    "description": "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
+    "searchLabel": "Search the Jawafdehi archive",
+    "placeholder": "Search cases, people, offices, locations, or allegations",
+    "submit": "Search archive",
+    "searching": "Searching archive",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results",
+    "sort": "Sort"
+  },
+  "materialsPage": {
+    "heading": "Governance materials",
+    "description": "Browse public-domain government documents and records in the Jawafdehi governance archive — development projects, agency publications, and official materials.",
+    "placeholder": "Search governance materials"
+  },
+  "courtCasesPage": {
+    "heading": "Court cases",
+    "description": "Browse court cases from Nepal's judiciary in the Jawafdehi governance archive — listings, hearings, and orders harvested from public court records.",
+    "placeholder": "Search court cases"
   }
 }
