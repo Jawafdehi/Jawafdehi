@@ -140,10 +140,13 @@ export function CaseDetailBanner({
   }, [caseData.court_cases, normalizedLang]);
 
   // Prefer a linked court-case number, then the human-readable slug. Never fall
-  // back to the raw DB primary key — that leaks an internal id into the public
-  // breadcrumb (e.g. "jawafdehi.org / case / 11").
+  // back to the raw DB primary key — that would leak an internal id into the
+  // public breadcrumb (e.g. "jawafdehi.org / case / 11"). A published case always
+  // has a slug; the generic label is a defensive last resort only.
   const breadcrumbCase =
-    formattedCourtCases[0]?.caseNumber || caseData.slug || String(caseData.id);
+    formattedCourtCases[0]?.caseNumber ||
+    caseData.slug ||
+    t("caseDetail.breadcrumbFallback", "Case");
 
   const getEntityDisplayName = (caseEntity: JawafEntity) => {
     const entity = caseEntity.nes_id

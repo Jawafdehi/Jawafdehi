@@ -572,7 +572,8 @@
       "secondary": "द्वितीयक स्रोतहरू",
       "documentCount": "{{count}} प्रमाण",
       "documentCount_plural": "{{count}} प्रमाणहरू"
-    }
+    },
+    "breadcrumbFallback": "मुद्दा"
   },
   "documentSource": {
     "fallbackTitle": "स्रोत {{id}}",

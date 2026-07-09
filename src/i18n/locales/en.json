@@ -572,7 +572,8 @@
       "secondary": "Secondary Sources",
       "documentCount": "{{count}} document",
       "documentCount_plural": "{{count}} documents"
-    }
+    },
+    "breadcrumbFallback": "Case"
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
