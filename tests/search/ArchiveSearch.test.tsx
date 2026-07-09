@@ -42,6 +42,7 @@ const baseResponse: ArchiveSearchResponse = {
     entity_type: [{ name: "Person", count: 4 }],
     case_type: [{ name: "CORRUPTION", count: 7 }],
     tags: [{ name: "CIAA", count: 6 }],
+    status: [{ name: "ongoing", count: 5 }],
   },
   results: [
     {
@@ -264,6 +265,48 @@ describe("ArchiveSearch", () => {
       ).toBeTruthy();
     });
     expect(getCaseByIdMock).toHaveBeenCalledWith("original-result");
+  });
+
+  it("renders enriched case cards without hydrating the detail endpoint", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          ...baseResponse.results[0],
+          card: {
+            slug: "original-result",
+            title: "Indexed card title",
+            short_description: "Indexed card summary",
+            key_allegations: ["Indexed allegation"],
+            tags: ["indexed-tag"],
+            case_type: "CORRUPTION",
+            status: "ongoing",
+            case_start_date: "2024-01-01",
+            case_end_date: null,
+            bigo: null,
+            thumbnail_url: "https://example.com/indexed-card.jpg",
+            banner_url: null,
+            timeline: [],
+            entities: [
+              {
+                nes_id: "https://jawafdehi.org/entity/person/indexed",
+                display_name: "Indexed Person",
+                entity_type: "Person",
+                type: "accused",
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    renderSearch();
+    await screen.findByText("Indexed card title");
+
+    expect(screen.getByText("Indexed card summary")).toBeTruthy();
+    expect(screen.getByText("Indexed Person")).toBeTruthy();
+    expect(document.querySelector('img[src="https://example.com/indexed-card.jpg"]')).toBeTruthy();
+    expect(getCaseByIdMock).not.toHaveBeenCalled();
   });
 
   it("does not show an empty state after an initial request failure", async () => {

@@ -56,6 +56,7 @@ const emptyFacets: ArchiveSearchFacets = {
   entity_type: [],
   case_type: [],
   tags: [],
+  status: [],
 };
 
 // When `lockedType` is set the page is a single-type browse view (e.g. the data-lake

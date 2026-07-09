@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type {
   ArchiveSearchResult,
   BilingualText,
+  CaseSearchCard,
 } from "@/types/search";
 import { cn } from "@/lib/utils";
 import { getCaseById } from "@/services/jds-api";
@@ -52,41 +53,46 @@ export function SearchResultCard({ result }: Readonly<{ result: ArchiveSearchRes
   return <SimpleResultCard result={result} />;
 }
 
-// Rich card for Jawafdehi cases: hydrates the thumbnail + subject/location
-// entities + tags lazily from the case detail API (data not in the search index).
+// Rich card for Jawafdehi cases. New index docs carry `result.card`, so the card
+// renders directly from OpenSearch; older docs fall back to one lazy detail fetch.
 function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
   const [searchParams, setSearchParams] = useSearchParams();
   const caseSlug = caseSlugFromUrl(result.url);
   const [imageFailed, setImageFailed] = useState(false);
+  const indexedCard = result.card;
 
   const { data: caseDetail, isFetching: isDetailLoading } = useQuery({
     queryKey: ["case", caseSlug],
     queryFn: () => getCaseById(caseSlug!),
-    enabled: Boolean(caseSlug),
+    enabled: Boolean(caseSlug) && !indexedCard,
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const caseImageUrl = caseDetail
-    ? caseDetail.thumbnail_url || caseDetail.banner_url || null
-    : null;
+  const caseImageUrl = indexedCard
+    ? indexedCard.thumbnail_url || indexedCard.banner_url || null
+    : caseDetail
+      ? caseDetail.thumbnail_url || caseDetail.banner_url || null
+      : null;
   // Case cards always reserve the image rail (uniform layout): skeleton while
-  // hydrating, gradient placeholder when the case has no image.
+  // hydrating old docs, gradient placeholder when the case has no image.
   const reserveImageSpace = Boolean(caseSlug);
   const showCaseImage = Boolean(caseImageUrl && !imageFailed);
 
   useEffect(() => setImageFailed(false), [caseImageUrl]);
 
-  const tags = caseDetail?.tags ?? [];
-  const metadata = caseDetail ? caseMetadata(caseDetail) : "";
+  const tags = indexedCard?.tags ?? caseDetail?.tags ?? [];
+  const metadata = indexedCard ? cardMetadata(indexedCard) : caseDetail ? caseMetadata(caseDetail) : "";
+  const title = indexedCard?.title || pickLang(result.title);
+  const description = indexedCard?.short_description || pickLang(result.snippet) || metadata;
 
   return (
     <ResultCardShell
       badge={resultLabel(result)}
-      description={pickLang(result.snippet) || metadata}
+      description={description}
       metadata={metadata}
       reserveImageSpace={reserveImageSpace}
-      title={pickLang(result.title)}
+      title={title}
       url={result.url}
       image={
         reserveImageSpace ? (
@@ -265,7 +271,17 @@ export function SearchResultCardSkeleton({
   );
 }
 
-// Subject + location entities from the hydrated case detail.
+// Subject + location entities from the indexed case-card payload.
+function cardMetadata(card: CaseSearchCard): string {
+  const entities = card.entities || [];
+  const [primaryEntity] = getSubjectEntities(entities, (e) => e.type);
+  const location = entities.find((entity) => entity.type === "location");
+  return [entityName(primaryEntity), entityName(location)]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+// Subject + location entities from the hydrated case detail fallback.
 function caseMetadata(detail: import("@/types/jds").CaseDetail): string {
   const entities = detail.entities || [];
   const [primaryEntity] = getSubjectEntities(entities, (e) => e.type);

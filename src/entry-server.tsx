@@ -8,6 +8,7 @@ import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getCases, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
+import { searchArchive } from './services/search-api';
 import { http } from './services/http';
 import type { JawafEntity } from './types/jds';
 
@@ -33,9 +34,13 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
     return;
   }
 
-  // Cases list page
+  // Cases list page: OpenSearch-backed case browse, via Django /api/search proxy.
   if (url === '/cases') {
-    await queryClient.prefetchQuery({ queryKey: ['cases', { page: 1 }], queryFn: () => getCases({ page: 1 }) });
+    await queryClient.prefetchInfiniteQuery({
+      queryKey: ['cases-search', { search: '', status: 'all' }],
+      queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: 12 }),
+      initialPageParam: '',
+    });
     return;
   }
 
