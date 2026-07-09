@@ -784,7 +784,6 @@
       }
     },
     "faq": {
-    
       "title": "Frequently Asked Questions",
       "description": "We compiled a list of answers to address your most pressing questions regarding Jawafdehi.",
       "howToReport": {
@@ -1147,6 +1146,62 @@
     "searchSubmit": "Search",
     "showMore": "Show {{count}} more",
     "showLess": "Show less",
+    "ribbon": {
+      "explainer": "An open account of what we've documented, where it comes from, and how far each case has travelled toward accountability.",
+      "refreshed": "Data last refreshed {{ago}}",
+      "freshness": {
+        "justNow": "just now",
+        "minutesAgo_one": "{{count}} minute ago",
+        "minutesAgo_other": "{{count}} minutes ago",
+        "hoursAgo_one": "{{count}} hour ago",
+        "hoursAgo_other": "{{count}} hours ago",
+        "daysAgo_one": "{{count}} day ago",
+        "daysAgo_other": "{{count}} days ago",
+        "monthsAgo_one": "{{count}} month ago",
+        "monthsAgo_other": "{{count}} months ago"
+      }
+    },
+    "cases": {
+      "heading": "Corruption cases we're documenting",
+      "lead": "Each case is a public official, office, or contract we're holding to account. Most are still working their way through investigation, and very few have reached a published finding. That gap is the story.",
+      "total": "Cases documented",
+      "courtRecords": "Underpinned by {{records}} Special Court records ingested from Nepal's judiciary.",
+      "donutCenter": "cases",
+      "donutCaption": "Status of every documented case. Most sit in investigation, where accountability moves slowly.",
+      "error": "Live case counts are unavailable right now. Please check back shortly.",
+      "status": {
+        "investigating": "Under investigation",
+        "published": "Published",
+        "closed": "Closed"
+      }
+    },
+    "methodology": {
+      "heading": "Where this comes from",
+      "intro": "Everything on this page comes from public records: court filings, CIAA reports, and leads people send us. It updates as new records are published. Where a figure isn't yet available from a verified source, we leave it out rather than estimate it.",
+      "sources": {
+        "ngm": {
+          "name": "Court records",
+          "desc": "case filings and orders collected from Nepal's Special Court and wider judiciary."
+        },
+        "ciaa": {
+          "name": "CIAA reports",
+          "desc": "annual reports and press releases from the Commission for the Investigation of Abuse of Authority."
+        },
+        "submissions": {
+          "name": "Public submissions",
+          "desc": "leads and corrections sent in by citizens, journalists and watchdogs, reviewed before they're used."
+        }
+      },
+      "processLink": "Read how we research and verify each case",
+      "report": {
+        "heading": "Spot something wrong?",
+        "body": "This archive is only as accurate as its sources. If a record looks off, tell us. Corrections are reviewed by a person.",
+        "button": "Report a data error",
+        "dialogTitle": "Report a data error",
+        "dialogDesc": "Tell us which record looks wrong and what it should say. Attach a source if you have one.",
+        "subject": "Data quality report"
+      }
+    },
     "nes": {
       "heading": "Entities",
       "description": "People, offices, organizations and locations tracked across the archive.",
@@ -1179,6 +1234,104 @@
       "withRegistrationDate": "Have a registration date",
       "withDocumentSources": "Have document sources",
       "ofTotal": "{{part}} of {{total}} ({{pct}}%)"
+    },
+    "gap": {
+      "heading": "The accountability gap",
+      "lead": "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
+      "ratioEyebrow": "The accountability ratio",
+      "ratioCaption": "documented cases for every one that has reached a published finding. The rest are still under investigation.",
+      "ofDocumented": "{{pct}}% of documented",
+      "stage": {
+        "documented": "Documented",
+        "published": "Reached a published finding"
+      },
+      "eyebrow": "The core finding",
+      "totalLabel": "Documented cases",
+      "bucketsCaption": "Every documented case sits in exactly one of these. The three add up to the total above."
+    },
+    "backbone": {
+      "heading": "The record base behind every case",
+      "description": "Each case is cross-checked against millions of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
+      "courtRecords": "Court records",
+      "courts": "Courts covered",
+      "entities": "Entities tracked",
+      "materials": "Source materials",
+      "byCourtType": "Court records by court level",
+      "courtType": {
+        "district": "District",
+        "high": "High",
+        "supreme": "Supreme",
+        "special": "Special"
+      }
+    },
+    "honesty": {
+      "heading": "How solid is this data?",
+      "description": "What the records back up today, and where they fall short. We show the gaps rather than round them away.",
+      "holdsUp": "What holds up",
+      "stillThin": "Still thin",
+      "count": "{{part}} of {{total}}",
+      "item": {
+        "regDate": "Court records with an official registration date",
+        "stableId": "Tracked people and offices with a stable ID",
+        "bilingual": "Entities with both an English and Nepali name",
+        "linkedEntity": "Court records linked to the people or offices they name",
+        "sourceDoc": "Court records with an attached source document",
+        "materialLink": "Materials with a working source link"
+      }
+    },
+    "limitations": {
+      "heading": "What this data can't tell you yet",
+      "description": "The honest limits of what's here today. We list them so you don't read more into a number than it can carry.",
+      "linked": "None of the {{total}} court records are linked yet to the specific people or offices they name, so you can't jump from an official to their court history.",
+      "investigating": "{{count}} cases sit under investigation in our counts but aren't yet browsable one by one.",
+      "sourceDocs": "Only {{pct}}% of court records have an attached source document, so most can't be traced back to a filing yet.",
+      "coverage": "We don't hold every court or every year yet. A missing record means we haven't collected it, not that nothing happened."
+    },
+    "useData": {
+      "heading": "Use this data",
+      "description": "This archive is meant to be built on. Journalists, researchers and watchdogs can pull the records directly.",
+      "api": {
+        "title": "Query the API",
+        "desc": "A public, read-only API serves cases, entities, court records and materials in JSON.",
+        "button": "Open the API"
+      }
+    },
+    "entities": {
+      "heading": "Who we hold to account",
+      "description": "{{people}} of {{total}} tracked entities are individual people. The rest are the institutions they act through.",
+      "institutionsLabel": "Institutions we track",
+      "tooltip": "Entities",
+      "group": {
+        "hospitals": "Hospitals",
+        "government": "Government offices",
+        "localGov": "Local governments",
+        "schools": "Schools & universities",
+        "parties": "Political parties",
+        "orgs": "Companies & other orgs",
+        "courts": "Courts",
+        "places": "Places",
+        "international": "International bodies",
+        "other": "Other"
+      }
+    },
+    "materialsBySource": {
+      "heading": "Where the evidence comes from",
+      "description": "Every one of the {{total}} source materials is pulled from a public feed. This is the mix.",
+      "tooltip": "Materials",
+      "source": {
+        "courtOrders": "Court orders",
+        "courtRecords": "Court records",
+        "ciaaPress": "CIAA press releases",
+        "dfmis": "DFMIS (financial mgmt)",
+        "jawafdehi": "Jawafdehi",
+        "kanunPatrika": "Kanun Patrika",
+        "ciaaAnnual": "CIAA annual reports",
+        "koshi": "Koshi Province",
+        "ppmo": "PPMO blacklist",
+        "ciaa": "CIAA",
+        "oag": "OAG (Attorney General)",
+        "other": "Other"
+      }
     }
   }
 }
