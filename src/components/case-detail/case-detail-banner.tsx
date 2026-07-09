@@ -225,9 +225,11 @@ export function CaseDetailBanner({
                   {statusLabel}
                 </CaseStatusBadge>
 
-                <CaseTypeBadge caseType={caseData.case_type}>
-                  {caseTypeLabel}
-                </CaseTypeBadge>
+                {caseTypeLabel ? (
+                  <CaseTypeBadge caseType={caseData.case_type}>
+                    {caseTypeLabel}
+                  </CaseTypeBadge>
+                ) : null}
 
                 {caseData.tags.map((tag) => (
                   <CaseTagBadge key={tag}>
