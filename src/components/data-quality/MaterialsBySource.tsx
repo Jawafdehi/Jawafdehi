@@ -15,9 +15,17 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
   const { t } = useTranslation();
   if (!materials?.by_source?.length) return null;
 
-  const items = materials.by_source.map((row) => ({
-    label: t(`dataQuality.materialsBySource.source.${sourceKeyFor(row.source)}`, row.source),
-    count: row.count,
+  // Aggregate counts by resolved source key so that multiple unmapped
+  // source tokens (e.g. "ciaa" and "oag") don't produce duplicate "Other"
+  // bars with colliding React keys.
+  const aggregated = new Map<string, number>();
+  for (const row of materials.by_source) {
+    const key = sourceKeyFor(row.source);
+    aggregated.set(key, (aggregated.get(key) ?? 0) + row.count);
+  }
+  const items = [...aggregated.entries()].map(([key, count]) => ({
+    label: t(`dataQuality.materialsBySource.source.${key}`, key),
+    count,
   }));
 
   return (

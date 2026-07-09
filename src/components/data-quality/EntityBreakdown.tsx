@@ -5,7 +5,7 @@ import { institutionGroups, personCount } from "@/lib/entity-type-labels";
 import { BreakdownBar } from "./BreakdownBar";
 
 /**
- * "Who we hold to account." Of the 184k tracked entities, ~88% are individual
+ * "Who we hold to account." Tracked entities — most are individual
  * people, so that fact leads as a sentence; the bar then breaks down the
  * remaining institutions (hospitals, government offices, local governments...)
  * with the raw schema tokens mapped to plain labels.

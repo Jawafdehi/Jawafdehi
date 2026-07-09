@@ -32,8 +32,9 @@ function ScaleTile({
 /**
  * "The record base behind every case." The redesign leads with the story (the
  * gap), then grounds it in the sheer scale of source records that back it —
- * 1.6M court records, tens of thousands of materials, 184k entities. Framed as
- * the raw material accountability is built from, not a dataset inventory.
+ * millions of court records, tens of thousands of materials, hundreds of
+ * thousands of entities. Framed as the raw material accountability is built
+ * from, not a dataset inventory.
  */
 export function EvidenceBackbone({
   nes,
@@ -46,8 +47,19 @@ export function EvidenceBackbone({
 }) {
   const { t } = useTranslation();
 
-  const courtMax =
-    ngm?.by_court_type.reduce((m, c) => Math.max(m, c.count), 0) ?? 0;
+  // Aggregate by lowercased court type to merge casing variants
+  // (e.g. "supreme" + "SUPREME") into one bucket, then sort desc.
+  const courtTypeAgg = new Map<string, number>();
+  if (ngm?.by_court_type) {
+    for (const c of ngm.by_court_type) {
+      const key = c.court__court_type.toLowerCase();
+      courtTypeAgg.set(key, (courtTypeAgg.get(key) ?? 0) + c.count);
+    }
+  }
+  const courtTypes = [...courtTypeAgg.entries()]
+    .map(([key, count]) => ({ key, count }))
+    .sort((a, b) => b.count - a.count);
+  const courtMax = courtTypes[0]?.count ?? 0;
 
   return (
     <section className="border-t border-border pt-10">
@@ -92,33 +104,31 @@ export function EvidenceBackbone({
         )}
       </div>
 
-      {ngm && ngm.by_court_type.length > 0 && (
+      {courtTypes.length > 0 && (
         <div className="mt-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("dataQuality.backbone.byCourtType", "Court records by court level")}
           </p>
           <ul className="space-y-2.5">
-            {[...ngm.by_court_type]
-              .sort((a, b) => b.count - a.count)
-              .map((c) => {
-                const width = courtMax > 0 ? (c.count / courtMax) * 100 : 0;
-                return (
-                  <li key={c.court__court_type} className="flex items-center gap-3">
-                    <span className="w-20 shrink-0 text-sm text-foreground">
-                      {t(`dataQuality.backbone.courtType.${c.court__court_type}`, c.court__court_type)}
-                    </span>
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-accent"
-                        style={{ width: `${Math.max(width, 0.5)}%` }}
-                      />
-                    </div>
-                    <span className="w-24 shrink-0 text-right font-mono text-sm font-semibold tabular-nums text-foreground">
-                      {c.count.toLocaleString()}
-                    </span>
-                  </li>
-                );
-              })}
+            {courtTypes.map((c) => {
+              const width = courtMax > 0 ? (c.count / courtMax) * 100 : 0;
+              return (
+                <li key={c.key} className="flex items-center gap-3">
+                  <span className="w-20 shrink-0 text-sm text-foreground">
+                    {t(`dataQuality.backbone.courtType.${c.key}`, c.key)}
+                  </span>
+                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-accent"
+                      style={{ width: `${Math.max(width, 0.5)}%` }}
+                    />
+                  </div>
+                  <span className="w-24 shrink-0 text-right font-mono text-sm font-semibold tabular-nums text-foreground">
+                    {c.count.toLocaleString()}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

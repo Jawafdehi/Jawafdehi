@@ -29,7 +29,7 @@ export function AccountabilityGap({
   const ratio = published > 0 ? Math.round(documented / published) : 0;
 
   // Only the mutually-exclusive status buckets go in the bars. "Documented" is
-  // their sum (33 + 2,892 + 1) — a derived total, not an API field — so it is
+  // their sum (the sum of the status buckets) — a derived total, not an API field — so it is
   // shown as the header/denominator above, never as a fourth competing bar.
   const stages: FunnelStage[] = [
     {

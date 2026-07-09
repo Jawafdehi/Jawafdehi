@@ -17,6 +17,8 @@ export function sourceKeyFor(source: string): string {
     ciaa_annual_report: "ciaaAnnual",
     "province/koshi": "koshi",
     ppmo_blacklist: "ppmo",
+    ciaa: "ciaa",
+    oag: "oag",
   };
   return map[source] ?? "other";
 }
