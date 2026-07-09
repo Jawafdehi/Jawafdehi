@@ -20,7 +20,12 @@ const columns: Column<Row>[] = [
   { header: "Type", cell: (r) => str(r.court_type) },
 ];
 
-const PAGE_SIZE = 25;
+// /api/courts/ is unpaginated (bare array, ~97 rows) — listCourts normalizes it
+// to a single page with next=null, so every row arrives at once. Size the window
+// larger than the whole set so the "N–M of total" footer reads accurately (and
+// the Next button stays disabled) rather than claiming a page split that the
+// single-shot response never produces.
+const PAGE_SIZE = 500;
 
 export default function Courts() {
   const navigate = useNavigate();
@@ -40,9 +45,9 @@ export default function Courts() {
           <Plus className="mr-1 h-4 w-4" /> New Court
         </Button>
       }
-      fetchPage={(page) =>
-        listCourts<Row>({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })
-      }
+      // Unpaginated endpoint: fetch the whole (normalized) set once; the page
+      // arg is unused because the backend returns every court in one array.
+      fetchPage={() => listCourts<Row>()}
     />
   );
 }

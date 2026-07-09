@@ -109,6 +109,33 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     ]);
   });
 
+  it("normalizes the bare-array /api/courts/ response into a paginated envelope (ADMIN-8)", async () => {
+    // /api/courts/ is unpaginated on the backend (pagination_class = None) and
+    // returns a plain array. listCourts must wrap it as { count, next, results }
+    // so the generic ResourceTable (which reads .results/.count) renders rows
+    // instead of an empty table.
+    responses.get = [
+      { data: [{ identifier: "kathmandudc" }, { identifier: "supremecourt" }] },
+    ];
+    const page = await listCourts();
+    expect(page.results.map((c) => (c as { identifier: string }).identifier)).toEqual([
+      "kathmandudc",
+      "supremecourt",
+    ]);
+    expect(page.count).toBe(2);
+    expect(page.next).toBeNull();
+  });
+
+  it("passes an already-paginated /api/courts/ envelope through unchanged", async () => {
+    // Defensive: if the backend ever starts paginating courts, don't double-wrap.
+    responses.get = [
+      { data: { count: 1, next: null, previous: null, results: [{ identifier: "x" }] } },
+    ];
+    const page = await listCourts();
+    expect(page.count).toBe(1);
+    expect(page.results).toHaveLength(1);
+  });
+
   it("routes materials to /api/materials", async () => {
     await listMaterials();
     await deleteMaterial("ciaa", "press-2081-042");

@@ -18,7 +18,10 @@ const columns: Column<Row>[] = [
   { header: "Status", cell: (r) => <Badge variant="secondary">{str(r.case_status)}</Badge> },
 ];
 
-const PAGE_SIZE = 25;
+// Must match the backend's fixed page size: /api/courtcases/ uses the default
+// DRF PageNumberPagination (PAGE_SIZE=20, no honored page_size param). Sending a
+// different size here would desync the "N–M of total" footer from the rows.
+const PAGE_SIZE = 20;
 
 export default function CourtCases() {
   const navigate = useNavigate();
@@ -44,10 +47,10 @@ export default function CourtCases() {
         )
       }
       fetchPage={(page) =>
-        listCourtCases<Row>({
-          limit: PAGE_SIZE,
-          offset: (page - 1) * PAGE_SIZE,
-        })
+        // PageNumberPagination is 1-based on `page`; the previous limit/offset
+        // params were ignored by the backend, so paging past 1 refetched page 1
+        // (ADMIN-5). `page` moves the window and drives .next/.count correctly.
+        listCourtCases<Row>({ page })
       }
     />
   );

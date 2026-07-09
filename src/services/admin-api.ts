@@ -183,7 +183,15 @@ export async function listCourtCases<T = Record<string, unknown>>(
 export async function listCourts<T = Record<string, unknown>>(
   params: Record<string, unknown> = {},
 ): Promise<Paginated<T>> {
-  const { data } = await client.get<Paginated<T>>("/api/courts/", { params });
+  // /api/courts/ has `pagination_class = None` (small fixed set, ~97 rows), so it
+  // returns a BARE ARRAY — not a { count, next, results } envelope. Normalize it
+  // to the paginated shape the generic admin ResourceTable expects (it reads
+  // .results/.count/.next). Without this, res.results is undefined → the courts
+  // table renders zero rows even though courts exist (ADMIN-8).
+  const { data } = await client.get<T[] | Paginated<T>>("/api/courts/", { params });
+  if (Array.isArray(data)) {
+    return { count: data.length, next: null, previous: null, results: data };
+  }
   return data;
 }
 

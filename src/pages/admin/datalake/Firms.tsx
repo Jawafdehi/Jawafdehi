@@ -16,7 +16,10 @@ const columns: Column<Row>[] = [
   { header: "Blocklisted", cell: (r) => str(r.blacklist_date_ad ?? r.blacklist_date_bs) },
 ];
 
-const PAGE_SIZE = 25;
+// Must match the backend's fixed page size: /api/firms/ uses the default DRF
+// PageNumberPagination (PAGE_SIZE=20, no honored page_size param), so the table
+// window has to be 20 to keep the "N–M of total" footer aligned with the rows.
+const PAGE_SIZE = 20;
 
 // F7 — blocklisted firms list. Firms are keyed by their numeric `id` (the model
 // PK); firm names are not unique, so the row/route key is the id.
@@ -39,7 +42,9 @@ export default function Firms() {
         </Button>
       }
       fetchPage={(page) =>
-        listBlacklistedFirms<Row>({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })
+        // PageNumberPagination is 1-based on `page`; the old limit/offset params
+        // were ignored, so paging past 1 refetched page 1 (same class as ADMIN-5).
+        listBlacklistedFirms<Row>({ page })
       }
     />
   );
