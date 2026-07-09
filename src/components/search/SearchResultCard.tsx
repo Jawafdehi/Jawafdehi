@@ -4,13 +4,17 @@ import { ArrowRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
+import { CaseCard } from "@/components/CaseCard";
+import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { getCaseBadgeClassName } from "@/lib/case-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   ArchiveSearchResult,
   BilingualText,
   CaseSearchCard,
+  CaseSearchCardEntity,
 } from "@/types/search";
+import type { CaseDetail } from "@/types/jds";
 import { cn } from "@/lib/utils";
 import { getCaseById } from "@/services/jds-api";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
@@ -228,6 +232,153 @@ function ResultCardShell({
           className="mt-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary"
         />
       </article>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card (grid) view — mirrors the list-view components above but lays each result
+// out as a vertical card. Case results reuse the shared <CaseCard> (same
+// component the /cases page renders); the other record types fall back to a
+// lightweight card with matching chrome.
+// ---------------------------------------------------------------------------
+
+type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
+
+const CASE_STATUS_BADGE: Record<CaseSearchCard["status"], CaseCardStatus> = {
+  ongoing: "ongoing",
+  closed: "resolved",
+  others: "under-investigation",
+};
+
+function entityNames(entities: readonly { display_name: string | null; nes_id: string | null }[]): string[] {
+  return entities.map((e) => e.display_name || e.nes_id || "").filter(Boolean);
+}
+
+function entityIds(entities: readonly { nes_id: string | null }[]): string[] {
+  return entities.map((e) => e.nes_id).filter((id): id is string => Boolean(id));
+}
+
+// Map the indexed case-card payload (the common path on new docs) onto <CaseCard>.
+function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult) {
+  const subject = getSubjectEntities<CaseSearchCardEntity>(card.entities, (e) => e.type);
+  const location = (card.entities || []).filter((e) => e.type === "location");
+  const names = entityNames(subject);
+  const locationList = entityNames(location);
+  return {
+    id: result.id,
+    slug: card.slug || caseSlugFromUrl(result.url) || null,
+    title: card.title || pickLang(result.title),
+    entity: names.join(", ") || "Unknown entity",
+    entityNames: names,
+    location: locationList.join(", ") || "Unknown location",
+    status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
+    tags: card.tags || [],
+    description: (card.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
+    allegations: card.key_allegations || [],
+    entityIds: entityIds(subject),
+    locationIds: entityIds(location),
+    thumbnailUrl: card.thumbnail_url || undefined,
+    bannerUrl: card.banner_url || undefined,
+  };
+}
+
+// Fallback for older indexed docs with no card payload: derive from case detail.
+// Status is inferred from the case's date fields (same rule the cases list uses).
+function caseCardPropsFromDetail(detail: CaseDetail, result: ArchiveSearchResult, fallbackSlug?: string) {
+  const entities = detail.entities || [];
+  const subject = getSubjectEntities(entities, (e) => e.type);
+  const location = entities.filter((e) => e.type === "location");
+  const names = entityNames(subject);
+  const locationList = entityNames(location);
+  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
+  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
+  const status: CaseCardStatus = hasStart && !hasEnd ? "ongoing" : hasStart && hasEnd ? "resolved" : "under-investigation";
+  return {
+    id: result.id,
+    slug: detail.slug || fallbackSlug || null,
+    title: detail.title || pickLang(result.title),
+    entity: names.join(", ") || "Unknown entity",
+    entityNames: names,
+    location: locationList.join(", ") || "Unknown location",
+    status,
+    tags: detail.tags || [],
+    description: (detail.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
+    allegations: detail.key_allegations || [],
+    entityIds: entityIds(subject),
+    locationIds: entityIds(location),
+    thumbnailUrl: detail.thumbnail_url || undefined,
+    bannerUrl: detail.banner_url || undefined,
+  };
+}
+
+export function SearchResultGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
+  if (result.type === "case") return <CaseGridCard result={result} />;
+  return <GenericGridCard result={result} />;
+}
+
+// Case grid card: renders the reused <CaseCard> in grid mode. Uses the indexed
+// card payload directly when present, else lazily hydrates from the detail API
+// (the same query the list card uses, so the fetch is shared/cached).
+function CaseGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
+  const caseSlug = caseSlugFromUrl(result.url);
+  const indexedCard = result.card;
+
+  const { data: caseDetail, isFetching } = useQuery({
+    queryKey: ["case", caseSlug],
+    queryFn: () => getCaseById(caseSlug!),
+    enabled: Boolean(caseSlug) && !indexedCard,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (indexedCard) {
+    return <CaseCard viewMode="grid" {...caseCardPropsFromCard(indexedCard, result)} />;
+  }
+  if (caseDetail) {
+    return <CaseCard viewMode="grid" {...caseCardPropsFromDetail(caseDetail, result, caseSlug)} />;
+  }
+  if (isFetching || caseSlug) return <CaseCardSkeleton />;
+  // No slug to hydrate from — degrade gracefully to the generic card.
+  return <GenericGridCard result={result} />;
+}
+
+// Generic grid card for entity / material / courtcase results (no relational
+// hydration). Visual chrome is kept in step with <CaseCard>.
+function GenericGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
+  const title = formatSimpleTitle(result);
+  const metadata = simpleMetadata(result);
+  const snippet = pickLang(result.snippet);
+  const description = snippet || metadata;
+
+  return (
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/70 bg-card p-5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)]">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Badge className="capitalize" variant="outline">
+          {resultLabel(result)}
+        </Badge>
+      </div>
+      <h2 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground group-hover:text-primary">
+        <Link to={result.url} className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <span aria-hidden="true" className="absolute inset-0" />
+          {title}
+        </Link>
+      </h2>
+      <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-muted-foreground">
+        {description}
+      </p>
+      {snippet && metadata ? (
+        <p className="mt-3 truncate text-xs leading-5 text-muted-foreground">
+          {metadata}
+        </p>
+      ) : null}
+      <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary">
+        View
+        <ArrowRight
+          aria-hidden="true"
+          className="h-4 w-4 transition-transform group-hover:translate-x-1"
+        />
+      </div>
     </div>
   );
 }
