@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { patchCase, adminErrorMessage, type PatchOp } from "@/services/admin-api";
 import { replaceOp, type CaseState } from "@/lib/jawafdehi-forms";
 import { FieldError } from "@/components/admin/FormError";
@@ -14,57 +15,51 @@ import { Loader2 } from "lucide-react";
 //
 // Privileged targets (PUBLISHED / CLOSED / un-publish to DRAFT) are gated to
 // admin/moderator in the UI; DRAFT⇄IN_REVIEW is available to any contributor.
+// Labels / confirm copy are i18n keys under `admin.stateControl.*`, resolved at
+// render so the control relabels on a language switch.
 interface Transition {
   to: CaseState;
-  label: string;
+  labelKey: string;
   variant?: "default" | "outline" | "destructive";
   privileged?: boolean;
-  // When set, the action requires a confirm dialog (destructive / hard to undo).
-  confirm?: { title: string; description: string };
+  // When set, the action requires a confirm dialog (destructive / hard to
+  // undo). ``confirmKey`` is the base key: ``{key}Title`` + ``{key}Body``.
+  confirmKey?: string;
 }
 
-const CLOSE_CONFIRM = {
-  title: "Close this case?",
-  description:
-    "Closing removes the case from the public site. You can reopen it as a draft later.",
-};
-const UNPUBLISH_CONFIRM = {
-  title: "Un-publish this case?",
-  description:
-    "This takes the case off the public site and returns it to draft. It will no longer be visible to the public until re-published.",
-};
-
 const TRANSITIONS: Record<string, Transition[]> = {
-  DRAFT: [{ to: "IN_REVIEW", label: "Submit for review", variant: "default" }],
+  DRAFT: [
+    { to: "IN_REVIEW", labelKey: "submitForReview", variant: "default" },
+  ],
   IN_REVIEW: [
-    { to: "PUBLISHED", label: "Publish", variant: "default", privileged: true },
-    { to: "DRAFT", label: "Send back to draft", variant: "outline" },
+    { to: "PUBLISHED", labelKey: "publish", variant: "default", privileged: true },
+    { to: "DRAFT", labelKey: "sendBackToDraft", variant: "outline" },
     {
       to: "CLOSED",
-      label: "Close",
+      labelKey: "close",
       variant: "destructive",
       privileged: true,
-      confirm: CLOSE_CONFIRM,
+      confirmKey: "closeConfirm",
     },
   ],
   PUBLISHED: [
     {
       to: "DRAFT",
-      label: "Un-publish",
+      labelKey: "unpublish",
       variant: "outline",
       privileged: true,
-      confirm: UNPUBLISH_CONFIRM,
+      confirmKey: "unpublishConfirm",
     },
     {
       to: "CLOSED",
-      label: "Close",
+      labelKey: "close",
       variant: "destructive",
       privileged: true,
-      confirm: CLOSE_CONFIRM,
+      confirmKey: "closeConfirm",
     },
   ],
   CLOSED: [
-    { to: "DRAFT", label: "Reopen (draft)", variant: "outline", privileged: true },
+    { to: "DRAFT", labelKey: "reopenDraft", variant: "outline", privileged: true },
   ],
 };
 
@@ -84,11 +79,12 @@ export default function CaseStateControl({
   isModerator,
   onTransitioned,
 }: Props) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState<CaseState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const available = (TRANSITIONS[state] ?? []).filter(
-    (t) => !t.privileged || isModerator,
+    (tr) => !tr.privileged || isModerator,
   );
 
   const transition = async (to: CaseState) => {
@@ -97,10 +93,10 @@ export default function CaseStateControl({
     try {
       const ops: PatchOp[] = [replaceOp("/state", to)];
       await patchCase(slug, ops);
-      toast({ title: `Case moved to ${to}` });
+      toast({ title: t("admin.stateControl.movedTo", { state: to }) });
       onTransitioned(to);
     } catch (err) {
-      setError(adminErrorMessage(err, "Transition failed"));
+      setError(adminErrorMessage(err, t("admin.stateControl.transitionFailed")));
       // Rethrow so a ConfirmButton-wrapped transition keeps its dialog open on
       // failure instead of closing as if it succeeded.
       throw err;
@@ -119,47 +115,51 @@ export default function CaseStateControl({
   return (
     <div className="space-y-2 rounded-md border bg-white p-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">State</span>
+        <span className="text-sm font-semibold">
+          {t("admin.stateControl.state")}
+        </span>
         <Badge variant="secondary">{state || "—"}</Badge>
       </div>
       <FieldError message={error} />
       {available.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No transitions available from this state
-          {!isModerator ? " for your role" : ""}.
+          {isModerator
+            ? t("admin.stateControl.noTransitions")
+            : t("admin.stateControl.noTransitionsForRole")}
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {available.map((t) =>
-            t.confirm ? (
+          {available.map((tr) => {
+            const label = t(`admin.stateControl.${tr.labelKey}`);
+            return tr.confirmKey ? (
               <ConfirmButton
-                key={t.to}
-                variant={t.variant ?? "outline"}
+                key={tr.to}
+                variant={tr.variant ?? "outline"}
                 size="sm"
                 disabled={busy !== null}
-                title={t.confirm.title}
-                description={t.confirm.description}
-                confirmLabel={t.label}
-                onConfirm={() => transition(t.to)}
+                title={t(`admin.stateControl.${tr.confirmKey}Title`)}
+                description={t(`admin.stateControl.${tr.confirmKey}Body`)}
+                confirmLabel={label}
+                onConfirm={() => transition(tr.to)}
               >
-                {t.label}
+                {label}
               </ConfirmButton>
             ) : (
               <Button
-                key={t.to}
+                key={tr.to}
                 type="button"
                 size="sm"
-                variant={t.variant ?? "outline"}
+                variant={tr.variant ?? "outline"}
                 disabled={busy !== null}
-                onClick={() => transitionSafe(t.to)}
+                onClick={() => transitionSafe(tr.to)}
               >
-                {busy === t.to && (
+                {busy === tr.to && (
                   <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                 )}
-                {t.label}
+                {label}
               </Button>
-            ),
-          )}
+            );
+          })}
         </div>
       )}
     </div>

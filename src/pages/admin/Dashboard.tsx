@@ -18,6 +18,7 @@ import {
   Network,
   ShieldCheck,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { hasNesWriteAccess, hasNgmWriteAccess, isModerator } from "@/lib/roles";
 import { listCases } from "@/services/admin-api";
@@ -36,8 +37,9 @@ import { listReviewsGrouped } from "@/services/casework-api";
 interface Section {
   to: string;
   icon: typeof Network;
-  title: string;
-  body: string;
+  // i18n keys under `admin.dashboard.sections.*`, resolved at render.
+  titleKey: string;
+  bodyKey: string;
   canAccess?: (roles: string[]) => boolean;
 }
 
@@ -45,34 +47,34 @@ const SECTIONS: Section[] = [
   {
     to: "/admin/entities",
     icon: Network,
-    title: "Entities",
-    body: "Schema.org JSON-LD entities. Create, edit, view versions, and trigger an OpenSearch reindex.",
+    titleKey: "admin.dashboard.sections.entitiesTitle",
+    bodyKey: "admin.dashboard.sections.entitiesBody",
     canAccess: hasNesWriteAccess,
   },
   {
     to: "/admin/datalake/courtcases",
     icon: Gavel,
-    title: "Data Lake",
-    body: "Court cases, hearings, and materials sourced into the governance data lake (read + ingestion).",
+    titleKey: "admin.dashboard.sections.dataLakeTitle",
+    bodyKey: "admin.dashboard.sections.dataLakeBody",
     canAccess: hasNgmWriteAccess,
   },
   {
     to: "/admin/jawafdehi/cases",
     icon: FileText,
-    title: "Jawafdehi Cases",
-    body: "Accountability cases — full create / edit / publish workflow.",
+    titleKey: "admin.dashboard.sections.casesTitle",
+    bodyKey: "admin.dashboard.sections.casesBody",
   },
   {
     to: "/admin/reviews",
     icon: ClipboardCheck,
-    title: "Casework Reviews",
-    body: "AI-assisted casework reviews, grading rules, and the review job queue.",
+    titleKey: "admin.dashboard.sections.reviewsTitle",
+    bodyKey: "admin.dashboard.sections.reviewsBody",
   },
   {
     to: "/admin/moderation",
     icon: ShieldCheck,
-    title: "Moderation",
-    body: "Triage and approve incoming submissions (admin / moderator only).",
+    titleKey: "admin.dashboard.sections.moderationTitle",
+    bodyKey: "admin.dashboard.sections.moderationBody",
     canAccess: isModerator,
   },
 ];
@@ -93,8 +95,9 @@ interface Metric {
   key: keyof Metrics;
   to: string;
   icon: typeof Network;
-  label: string;
-  sub: string;
+  // i18n keys under `admin.dashboard.metrics.*`, resolved at render.
+  labelKey: string;
+  subKey: string;
   // Narrow the metric to a subset of roles (matches the section predicates).
   canAccess?: (roles: string[]) => boolean;
   // Headline metric — rendered with emphasis (accent border/title).
@@ -106,8 +109,8 @@ const METRICS: Metric[] = [
     key: "inReview",
     to: "/admin/moderation",
     icon: Clock,
-    label: "Awaiting review",
-    sub: "Submissions in the moderation queue",
+    labelKey: "admin.dashboard.metrics.awaitingReview",
+    subKey: "admin.dashboard.metrics.awaitingReviewSub",
     canAccess: isModerator,
     headline: true,
   },
@@ -115,22 +118,22 @@ const METRICS: Metric[] = [
     key: "published",
     to: "/admin/jawafdehi/cases",
     icon: CheckCircle2,
-    label: "Published",
-    sub: "Live accountability cases",
+    labelKey: "admin.dashboard.metrics.published",
+    subKey: "admin.dashboard.metrics.publishedSub",
   },
   {
     key: "drafts",
     to: "/admin/jawafdehi/cases",
     icon: FileEdit,
-    label: "Drafts",
-    sub: "Cases still being authored",
+    labelKey: "admin.dashboard.metrics.drafts",
+    subKey: "admin.dashboard.metrics.draftsSub",
   },
   {
     key: "reviews",
     to: "/admin/reviews",
     icon: ClipboardCheck,
-    label: "Reviews (AI)",
-    sub: "Cases with AI-assisted reviews",
+    labelKey: "admin.dashboard.metrics.reviews",
+    subKey: "admin.dashboard.metrics.reviewsSub",
   },
 ];
 
@@ -145,10 +148,13 @@ async function safeCount(fetcher: () => Promise<{ count: number }>): Promise<Cou
   }
 }
 
-function MetricValue({ value }: { value: Count }) {
+function MetricValue({ value, loadingLabel }: { value: Count; loadingLabel: string }) {
   if (value === null) {
     return (
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Loading" />
+      <Loader2
+        className="h-6 w-6 animate-spin text-muted-foreground"
+        aria-label={loadingLabel}
+      />
     );
   }
   return (
@@ -159,6 +165,7 @@ function MetricValue({ value }: { value: Count }) {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { user } = useCaseworkAuth();
   const roles = user?.roles ?? [];
   const sections = SECTIONS.filter((s) => !s.canAccess || s.canAccess(roles));
@@ -190,9 +197,11 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Admin</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {t("admin.dashboard.title")}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          One panel for entities, the data lake, Jawafdehi cases, and casework.
+          {t("admin.dashboard.subtitle")}
         </p>
       </div>
 
@@ -213,12 +222,15 @@ export default function AdminDashboard() {
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {m.label}
+                    {t(m.labelKey)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1">
-                  <MetricValue value={counts[m.key]} />
-                  <p className="text-xs text-muted-foreground">{m.sub}</p>
+                  <MetricValue
+                    value={counts[m.key]}
+                    loadingLabel={t("admin.common.loading")}
+                  />
+                  <p className="text-xs text-muted-foreground">{t(m.subKey)}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -235,9 +247,9 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Icon className="h-5 w-5 text-primary" />
-                    {s.title}
+                    {t(s.titleKey)}
                   </CardTitle>
-                  <CardDescription>{s.body}</CardDescription>
+                  <CardDescription>{t(s.bodyKey)}</CardDescription>
                 </CardHeader>
                 <CardContent />
               </Card>

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { getCaseHistory, type CaseStateChange } from "@/services/admin-api";
 import { fmtDate } from "@/lib/casework-ui";
 import { Badge } from "@/components/ui/badge";
@@ -15,17 +17,17 @@ import { History, Loader2 } from "lucide-react";
 // box) so it's safe to ship ahead of the backend.
 
 // Human phrasing for a transition, from the reader's perspective.
-function describe(change: CaseStateChange): string {
+function describe(change: CaseStateChange, t: TFunction): string {
   const to = change.to_state;
-  if (to === "IN_REVIEW") return "Submitted for review";
-  if (to === "PUBLISHED") return "Published";
-  if (to === "CLOSED") return "Closed";
+  if (to === "IN_REVIEW") return t("admin.history.submitted");
+  if (to === "PUBLISHED") return t("admin.history.published");
+  if (to === "CLOSED") return t("admin.history.closed");
   if (to === "DRAFT") {
     // A revert from IN_REVIEW/PUBLISHED reads as "sent back"; the initial
     // draft creation isn't logged, so any → DRAFT here is a return.
-    return "Sent back to draft";
+    return t("admin.history.sentBack");
   }
-  return `Moved to ${to}`;
+  return t("admin.history.movedTo", { state: to });
 }
 
 // A returned/closed transition is the one an author most needs to see, so we
@@ -41,6 +43,7 @@ interface Props {
 }
 
 export default function CaseHistoryPanel({ slug, refreshKey = 0 }: Props) {
+  const { t } = useTranslation();
   const [changes, setChanges] = useState<CaseStateChange[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +70,7 @@ export default function CaseHistoryPanel({ slug, refreshKey = 0 }: Props) {
     <div className="space-y-2 rounded-md border bg-white p-4">
       <div className="flex items-center gap-2">
         <History className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-semibold">History</span>
+        <span className="text-sm font-semibold">{t("admin.history.title")}</span>
         {loading && (
           <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
         )}
@@ -81,10 +84,10 @@ export default function CaseHistoryPanel({ slug, refreshKey = 0 }: Props) {
             }`}
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="font-medium">{describe(c)}</span>
+              <span className="font-medium">{describe(c, t)}</span>
               {c.actor_name && (
                 <span className="text-xs text-muted-foreground">
-                  by {c.actor_name}
+                  {t("admin.history.by", { name: c.actor_name })}
                 </span>
               )}
               <span className="text-xs text-muted-foreground">
@@ -94,7 +97,7 @@ export default function CaseHistoryPanel({ slug, refreshKey = 0 }: Props) {
             {c.reason && (
               <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
                 <Badge variant="secondary" className="mr-1 align-middle">
-                  Reason
+                  {t("admin.history.reason")}
                 </Badge>
                 {c.reason}
               </p>

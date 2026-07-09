@@ -22,7 +22,7 @@ async function analyzePlugin(): Promise<PluginOption | null> {
   } catch {
     console.warn(
       "[vite] ANALYZE=true but rollup-plugin-visualizer is not installed; " +
-        "run `npm i -D rollup-plugin-visualizer` (or bun/pnpm equiv) first.",
+        "run `bun add -d rollup-plugin-visualizer` first.",
     );
     return null;
   }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
@@ -211,6 +212,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
 export default function AdminCaseForm() {
   const params = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isModerator } = useCaseworkAuth();
   const slug = params.slug;
   const editing = Boolean(slug);
@@ -259,12 +261,12 @@ export default function AdminCaseForm() {
       // A fresh load resolves any prior conflict and refreshes the history.
       setHistoryKey((k) => k + 1);
     } catch (err) {
-      setError(adminErrorMessage(err, "Failed to load case"));
+      setError(adminErrorMessage(err, t("admin.caseForm.loadFailed")));
       setLoadFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [editing, slug]);
+  }, [editing, slug, t]);
 
   useEffect(() => {
     loadCase();
@@ -399,7 +401,7 @@ export default function AdminCaseForm() {
       if (editing && slug) {
         const ops = buildPatch();
         if (ops.length === 0) {
-          toast({ title: "No changes to save" });
+          toast({ title: t("admin.caseForm.noChanges") });
           setSaving(false);
           return;
         }
@@ -411,7 +413,7 @@ export default function AdminCaseForm() {
         setOriginal(parsed);
         setCaseState(str(updated.state ?? updated.status) || caseState);
         setEtag(tok);
-        toast({ title: "Case updated" });
+        toast({ title: t("admin.caseForm.updated") });
       } else {
         const payload: CreateCasePayload = {
           title: form.title.trim(),
@@ -425,7 +427,7 @@ export default function AdminCaseForm() {
         };
         if (effectiveSlug) payload.slug = effectiveSlug;
         const created = await createCase<Record<string, unknown>>(payload);
-        toast({ title: "Case created (DRAFT)", description: str(created.slug) });
+        toast({ title: t("admin.caseForm.created"), description: str(created.slug) });
         // Land the user on the new case's edit page so they can add
         // entities/timeline/evidence and submit for review.
         const newSlug = str(created.slug) || effectiveSlug;
@@ -439,7 +441,7 @@ export default function AdminCaseForm() {
         setConflict(true);
         setError(err.message);
       } else {
-        setError(adminErrorMessage(err, "Failed to save case"));
+        setError(adminErrorMessage(err, t("admin.caseForm.saveFailed")));
       }
     } finally {
       setSaving(false);
@@ -468,9 +470,9 @@ export default function AdminCaseForm() {
           className="-ml-2"
           onClick={() => navigate("/admin/jawafdehi/cases")}
         >
-          <ArrowLeft className="mr-1 h-4 w-4" /> Cases
+          <ArrowLeft className="mr-1 h-4 w-4" /> {t("admin.caseForm.backToCases")}
         </Button>
-        <FormError message={error || "This case could not be found."} />
+        <FormError message={error || t("admin.caseForm.notFound")} />
       </div>
     );
   }
@@ -484,15 +486,14 @@ export default function AdminCaseForm() {
           className="mb-2 -ml-2"
           onClick={onCancel}
         >
-          <ArrowLeft className="mr-1 h-4 w-4" /> Cases
+          <ArrowLeft className="mr-1 h-4 w-4" /> {t("admin.caseForm.backToCases")}
         </Button>
         <h1 className="text-2xl font-bold tracking-tight">
-          {editing ? "Edit Case" : "New Case"}
+          {editing ? t("admin.caseForm.editTitle") : t("admin.caseForm.newTitle")}
         </h1>
         {editing && (
           <p className="text-sm text-muted-foreground">
-            Editing <span className="font-mono">{form.slug}</span>. New cases are
-            created as DRAFT.
+            {t("admin.caseForm.editingHint", { slug: form.slug })}
           </p>
         )}
       </div>
@@ -505,17 +506,14 @@ export default function AdminCaseForm() {
           so the user knows retrying as-is won't help. */}
       {conflict && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          <span>
-            This case was changed by someone else since you opened it. Reload to
-            get the latest version before saving.
-          </span>
+          <span>{t("admin.caseForm.conflictBanner")}</span>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => loadCase()}
           >
-            Reload case
+            {t("admin.caseForm.reloadCase")}
           </Button>
         </div>
       )}
@@ -540,18 +538,18 @@ export default function AdminCaseForm() {
 
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="space-y-1">
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">{t("admin.caseForm.labelTitle")}</Label>
           <Input
             id="title"
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
-            placeholder="Descriptive case title"
+            placeholder={t("admin.caseForm.titlePlaceholder")}
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label htmlFor="slug">Slug</Label>
+            <Label htmlFor="slug">{t("admin.caseForm.labelSlug")}</Label>
             <Input
               id="slug"
               value={effectiveSlug}
@@ -560,22 +558,19 @@ export default function AdminCaseForm() {
                 set("slug", e.target.value);
               }}
               className="font-mono text-xs"
-              placeholder="auto-derived from title"
+              placeholder={t("admin.caseForm.slugPlaceholder")}
             />
             <FieldError
-              message={
-                !slugValid &&
-                "Use lowercase letters, numbers, and hyphens (e.g. ncell-tax-case). Leave blank to auto-generate from the title."
-              }
+              message={!slugValid && t("admin.caseForm.slugInvalid")}
             />
             {editing && (
               <p className="text-xs text-muted-foreground">
-                Slug is immutable once the case leaves DRAFT (API enforces).
+                {t("admin.caseForm.slugImmutable")}
               </p>
             )}
           </div>
           <div className="space-y-1">
-            <Label>Case type</Label>
+            <Label>{t("admin.caseForm.labelCaseType")}</Label>
             <Select
               value={form.case_type}
               onValueChange={(v) => set("case_type", v)}
@@ -584,9 +579,9 @@ export default function AdminCaseForm() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CASE_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
+                {CASE_TYPES.map((ct) => (
+                  <SelectItem key={ct} value={ct}>
+                    {ct}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -595,23 +590,23 @@ export default function AdminCaseForm() {
         </div>
 
         <div className="space-y-1">
-          <Label>Description</Label>
+          <Label>{t("admin.caseForm.labelDescription")}</Label>
           <p className="text-xs text-muted-foreground">
-            Markdown. Publicly rendered on the case page.
+            {t("admin.caseForm.descriptionHelp")}
           </p>
           <MDEditor
             value={form.description}
             onChange={(v) => set("description", v ?? "")}
             height={280}
             preview="edit"
-            textareaProps={{ placeholder: "## Summary\n\nWhat happened…" }}
+            textareaProps={{ placeholder: t("admin.caseForm.descriptionPlaceholder") }}
           />
         </div>
 
         <div className="space-y-1">
-          <Label>Notes (internal)</Label>
+          <Label>{t("admin.caseForm.labelNotes")}</Label>
           <p className="text-xs text-muted-foreground">
-            Markdown. Internal casework notes (not shown publicly).
+            {t("admin.caseForm.notesHelp")}
           </p>
           <MDEditor
             value={form.notes}
@@ -622,10 +617,9 @@ export default function AdminCaseForm() {
         </div>
 
         <div className="space-y-1">
-          <Label>Missing details</Label>
+          <Label>{t("admin.caseForm.labelMissingDetails")}</Label>
           <p className="text-xs text-muted-foreground">
-            Markdown. Shown publicly on the case page — note information that is
-            not yet available or still being gathered.
+            {t("admin.caseForm.missingDetailsHelp")}
           </p>
           <MDEditor
             value={form.missing_details}
@@ -636,9 +630,11 @@ export default function AdminCaseForm() {
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="allegations">Key allegations</Label>
+          <Label htmlFor="allegations">
+            {t("admin.caseForm.labelAllegations")}
+          </Label>
           <p className="text-xs text-muted-foreground">
-            Enter one allegation per line.
+            {t("admin.caseForm.allegationsHelp")}
           </p>
           <textarea
             id="allegations"
@@ -646,14 +642,14 @@ export default function AdminCaseForm() {
             onChange={(e) => setAllegationsText(e.target.value)}
             rows={4}
             className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            placeholder={"Misappropriation of public funds\nFalsification of records"}
+            placeholder={t("admin.caseForm.allegationsPlaceholder")}
           />
         </div>
 
         {/* F6 — first-class field editors (replacing raw-JSON entry). */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label htmlFor="bigo">Bigo (embezzlement amount)</Label>
+            <Label htmlFor="bigo">{t("admin.caseForm.labelBigo")}</Label>
             {/* type="text": a native number input rejects the grouping commas.
                 The state (and the PATCH) stays the plain digit string. */}
             <Input
@@ -662,22 +658,24 @@ export default function AdminCaseForm() {
               inputMode="numeric"
               value={formatAmountInput(form.bigo)}
               onChange={(e) => set("bigo", stripAmountFormatting(e.target.value))}
-              placeholder="e.g. 12,50,000"
+              placeholder={t("admin.caseForm.bigoPlaceholder")}
             />
-            <FieldError message={!bigoValid && "Must be a number."} />
+            <FieldError message={!bigoValid && t("admin.caseForm.bigoInvalid")} />
           </div>
           <ChipListEditor
-            label="Tags"
+            label={t("admin.caseForm.labelTags")}
             items={form.tags}
             onChange={(items) => set("tags", items)}
-            placeholder="Add a tag and press Enter"
+            placeholder={t("admin.caseForm.tagsPlaceholder")}
             normalize={(v) => v.trim().toLowerCase()}
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label htmlFor="thumbnail_url">Thumbnail URL</Label>
+            <Label htmlFor="thumbnail_url">
+              {t("admin.caseForm.labelThumbnail")}
+            </Label>
             <Input
               id="thumbnail_url"
               value={form.thumbnail_url}
@@ -687,7 +685,7 @@ export default function AdminCaseForm() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="banner_url">Banner URL</Label>
+            <Label htmlFor="banner_url">{t("admin.caseForm.labelBanner")}</Label>
             <Input
               id="banner_url"
               value={form.banner_url}
@@ -699,33 +697,33 @@ export default function AdminCaseForm() {
         </div>
 
         <ChipListEditor
-          label="Court-case references"
+          label={t("admin.caseForm.labelCourtCases")}
           items={form.court_cases}
           onChange={(items) => set("court_cases", items)}
           placeholder="https://jawafdehi.org/courtcase/special/081-cr-0136"
-          help="Link related court cases by their canonical @id IRI."
+          help={t("admin.caseForm.courtCasesHelp")}
           validate={isValidCourtCaseRef}
-          invalidHint="Use the canonical court-case @id IRI."
+          invalidHint={t("admin.caseForm.courtCaseInvalid")}
         />
 
         {/* BS is derived from AD for display and never stored (the backend has
             no BS columns). Authors may still pick in the Nepali calendar — that
             selection sets the AD date, and the shown BS re-derives from it. */}
         <DatePairInput
-          label="Case start"
+          label={t("admin.caseForm.caseStart")}
           idBase="case-start"
           deriveBs
           adValue={form.case_start_date}
           onAdChange={(ad) => set("case_start_date", ad)}
         />
         <DatePairInput
-          label="Case end"
+          label={t("admin.caseForm.caseEnd")}
           idBase="case-end"
           deriveBs
           adValue={form.case_end_date}
           onAdChange={(ad) => set("case_end_date", ad)}
         />
-        <FieldError message={!datesValid && "Dates must be YYYY-MM-DD."} />
+        <FieldError message={!datesValid && t("admin.caseForm.datesInvalid")} />
 
         {/* Sub-resource editors (F3/F4/F5). Shown only in edit mode: a case
             must exist (have a slug) before entities/evidence can be linked. On
@@ -747,8 +745,7 @@ export default function AdminCaseForm() {
           </div>
         ) : (
           <p className="rounded-md border border-dashed bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
-            Entities, timeline, and evidence can be added after the DRAFT is
-            created.
+            {t("admin.caseForm.subResourcesHint")}
           </p>
         )}
 
@@ -756,14 +753,12 @@ export default function AdminCaseForm() {
           message={
             editing &&
             !timelineRowsValid &&
-            "Every timeline event needs a title and a valid date (YYYY-MM-DD)."
+            t("admin.caseForm.timelineRowsInvalid")
           }
         />
         <FieldError
           message={
-            editing &&
-            !entityRowsValid &&
-            "Every entity row needs a valid entity IRI and a relationship type."
+            editing && !entityRowsValid && t("admin.caseForm.entityRowsInvalid")
           }
         />
 
@@ -774,10 +769,12 @@ export default function AdminCaseForm() {
             ) : (
               <Save className="mr-1 h-4 w-4" />
             )}
-            {editing ? "Save changes" : "Create case"}
+            {editing
+              ? t("admin.caseForm.saveChanges")
+              : t("admin.caseForm.createCase")}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t("admin.common.cancel")}
           </Button>
         </div>
       </form>
