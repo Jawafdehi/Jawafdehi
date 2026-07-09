@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   listCases,
   patchCase,
@@ -97,6 +98,7 @@ function truncate(s: string, n = 300): string {
 // already scoped; the API is the authority regardless). Triage affordances
 // (age, sort, type filter, inline preview, AI-review badge) sit around that core.
 export default function Moderation() {
+  const { t } = useTranslation();
   const { isModerator } = useCaseworkAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
@@ -130,7 +132,7 @@ export default function Moderation() {
       setTotal(page.count ?? (page.results?.length ?? 0));
     } catch (err) {
       if (!mountedRef.current) return;
-      setError(adminErrorMessage(err, "Failed to load the moderation queue"));
+      setError(adminErrorMessage(err, t("admin.moderation.loadFailed")));
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -152,7 +154,7 @@ export default function Moderation() {
       // non-fatal — leave the badge map empty
       setReviews(new Map());
     }
-  }, []);
+  }, [t]);
 
   // Only fetch the queue for moderators. The nav link is already role-scoped and
   // the API re-checks on every transition, but a non-moderator who deep-links
@@ -190,14 +192,15 @@ export default function Moderation() {
   }, [rows, typeFilter, sortDir]);
 
   if (!isModerator) {
-    return (
-      <FormError message="You don't have permission to access the moderation queue." />
-    );
+    return <FormError message={t("admin.moderation.noPermission")} />;
   }
 
-  const act = async (slug: string, to: CaseState, verb: string) => {
+  // `verbKey` is one of approved | sentBack | dismissed — resolved to a
+  // localized past-tense verb for the toast + failure message.
+  const act = async (slug: string, to: CaseState, verbKey: string) => {
     setBusySlug(slug);
     setError(null);
+    const verb = t(`admin.moderation.${verbKey}`);
     try {
       const ops: PatchOp[] = [replaceOp("/state", to)];
       const reason = (reasons[slug] ?? "").trim();
@@ -206,7 +209,7 @@ export default function Moderation() {
       // loop) — rather than being overloaded into the shared internal /notes
       // field, which mixed return reasons with authoring notes.
       await patchCase(slug, ops, { transitionReason: reason || undefined });
-      toast({ title: `Case ${verb}`, description: slug });
+      toast({ title: t("admin.moderation.actionResult", { verb }), description: slug });
       // Drop the case from the queue (it left IN_REVIEW).
       setRows((prev) => prev.filter((r) => str(r.slug) !== slug));
       setReasons((prev) => {
@@ -215,7 +218,9 @@ export default function Moderation() {
         return next;
       });
     } catch (err) {
-      setError(adminErrorMessage(err, `Failed to ${verb.toLowerCase()} case`));
+      setError(
+        adminErrorMessage(err, t("admin.moderation.actionFailed", { verb })),
+      );
       // Rethrow so a ConfirmButton-wrapped action (Dismiss) keeps its dialog
       // open on failure. Plain-button callers (Approve / Send back) use
       // actSafe() to avoid an unhandled rejection.
@@ -227,23 +232,24 @@ export default function Moderation() {
 
   // Fire-and-forget wrapper for the non-confirmed buttons: the error is already
   // surfaced via setError inside act(), so we just swallow the rejection here.
-  const actSafe = (slug: string, to: CaseState, verb: string) => {
-    void act(slug, to, verb).catch(() => {});
+  const actSafe = (slug: string, to: CaseState, verbKey: string) => {
+    void act(slug, to, verbKey).catch(() => {});
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Moderation</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("admin.moderation.title")}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Cases submitted for review (IN_REVIEW). Approve to publish, send back
-            to draft, or dismiss (close). Optionally record a reason.
+            {t("admin.moderation.subtitle")}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
+          {t("admin.common.refresh")}
         </Button>
       </div>
 
@@ -253,13 +259,15 @@ export default function Moderation() {
         <div className="flex flex-wrap items-center gap-2">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="h-9 w-[180px]">
-              <SelectValue placeholder="All types" />
+              <SelectValue placeholder={t("admin.moderation.allTypes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">All types</SelectItem>
-              {caseTypes.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
+              <SelectItem value="__all__">
+                {t("admin.moderation.allTypes")}
+              </SelectItem>
+              {caseTypes.map((ct) => (
+                <SelectItem key={ct} value={ct}>
+                  {ct}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -274,15 +282,22 @@ export default function Moderation() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="oldest">Oldest first</SelectItem>
-              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="oldest">
+                {t("admin.moderation.oldestFirst")}
+              </SelectItem>
+              <SelectItem value="newest">
+                {t("admin.moderation.newestFirst")}
+              </SelectItem>
             </SelectContent>
           </Select>
 
           <span className="ml-auto text-xs text-muted-foreground">
             {total > rows.length
-              ? `Showing ${rows.length} of ${total}`
-              : `${visibleRows.length} case${visibleRows.length === 1 ? "" : "s"}`}
+              ? t("admin.moderation.showingOf", {
+                  count: rows.length,
+                  total,
+                })
+              : t("admin.moderation.caseCount", { count: visibleRows.length })}
           </span>
         </div>
       )}
@@ -293,11 +308,11 @@ export default function Moderation() {
         </div>
       ) : rows.length === 0 ? (
         <p className="rounded-md border border-dashed bg-slate-50 px-3 py-6 text-center text-sm text-muted-foreground">
-          Nothing awaiting review.
+          {t("admin.moderation.nothingAwaiting")}
         </p>
       ) : visibleRows.length === 0 ? (
         <p className="rounded-md border border-dashed bg-slate-50 px-3 py-6 text-center text-sm text-muted-foreground">
-          No cases match the current filter.
+          {t("admin.moderation.noneMatchFilter")}
         </p>
       ) : (
         <div className="space-y-3">
@@ -327,7 +342,11 @@ export default function Moderation() {
                         setExpanded((prev) => ({ ...prev, [slug]: !prev[slug] }))
                       }
                       className="mt-0.5 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                      aria-label={isOpen ? "Collapse preview" : "Expand preview"}
+                      aria-label={
+                        isOpen
+                          ? t("admin.moderation.collapsePreview")
+                          : t("admin.moderation.expandPreview")
+                      }
                       aria-expanded={isOpen}
                     >
                       {isOpen ? (
@@ -351,7 +370,7 @@ export default function Moderation() {
                           <Link
                             to="/admin/reviews"
                             className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 ${dispositionColor(review.disposition)}`}
-                            title="View AI review"
+                            title={t("admin.moderation.viewReview")}
                           >
                             <span
                               className="inline-block h-1.5 w-1.5 rounded-full"
@@ -361,7 +380,9 @@ export default function Moderation() {
                             {review.disposition ? ` · ${review.disposition}` : ""}
                           </Link>
                         ) : (
-                          <span className="text-slate-400">no review</span>
+                          <span className="text-slate-400">
+                            {t("admin.moderation.noReview")}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -370,7 +391,7 @@ export default function Moderation() {
                     to={`/admin/jawafdehi/cases/${slug}/edit`}
                     className="shrink-0 text-sm underline underline-offset-2"
                   >
-                    Open
+                    {t("admin.common.open")}
                   </Link>
                 </div>
 
@@ -378,7 +399,7 @@ export default function Moderation() {
                   <div className="mt-3 space-y-2 rounded-lg border bg-slate-50 p-3 text-sm">
                     <div>
                       <div className="text-xs font-semibold uppercase text-slate-500">
-                        Description
+                        {t("admin.moderation.description")}
                       </div>
                       <p className="whitespace-pre-wrap text-slate-700">
                         {description ? truncate(description) : "—"}
@@ -387,7 +408,7 @@ export default function Moderation() {
                     {allegations.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold uppercase text-slate-500">
-                          Key allegations
+                          {t("admin.moderation.keyAllegations")}
                         </div>
                         <ul className="list-disc pl-5 text-slate-700">
                           {allegations.map((a, i) => (
@@ -399,7 +420,7 @@ export default function Moderation() {
                     {entities.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold uppercase text-slate-500">
-                          Entities
+                          {t("admin.moderation.entities")}
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {entities.map((e, i) => (
@@ -414,7 +435,7 @@ export default function Moderation() {
                       </div>
                     )}
                     <div className="text-xs text-slate-500">
-                      Evidence: {evidence.length}
+                      {t("admin.moderation.evidence", { count: evidence.length })}
                     </div>
                   </div>
                 )}
@@ -424,7 +445,7 @@ export default function Moderation() {
                   onChange={(e) =>
                     setReasons((prev) => ({ ...prev, [slug]: e.target.value }))
                   }
-                  placeholder="Reason (optional — shown to the author in history)"
+                  placeholder={t("admin.moderation.reasonPlaceholder")}
                   className="mt-3"
                 />
 
@@ -439,28 +460,28 @@ export default function Moderation() {
                     ) : (
                       <Check className="mr-1 h-4 w-4" />
                     )}
-                    Approve
+                    {t("admin.moderation.approve")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={busy || !isModerator}
-                    onClick={() => actSafe(slug, "DRAFT", "sent back to draft")}
+                    onClick={() => actSafe(slug, "DRAFT", "sentBack")}
                   >
                     <Undo2 className="mr-1 h-4 w-4" />
-                    Send back to draft
+                    {t("admin.moderation.sendBack")}
                   </Button>
                   <ConfirmButton
                     size="sm"
                     variant="destructive"
                     disabled={busy || !isModerator}
-                    title="Dismiss this submission?"
-                    description="Dismissing closes the case and removes it from the moderation queue. You can reopen it as a draft later. The reason you entered (if any) is recorded in the case history."
-                    confirmLabel="Dismiss"
+                    title={t("admin.moderation.dismissConfirmTitle")}
+                    description={t("admin.moderation.dismissConfirmBody")}
+                    confirmLabel={t("admin.moderation.dismiss")}
                     onConfirm={() => act(slug, "CLOSED", "dismissed")}
                   >
                     <X className="mr-1 h-4 w-4" />
-                    Dismiss
+                    {t("admin.moderation.dismiss")}
                   </ConfirmButton>
                 </div>
               </div>

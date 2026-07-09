@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import {
   hasAdminAccess,
@@ -13,6 +14,7 @@ import {
   hasNgmWriteAccess,
 } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   ClipboardCheck,
@@ -37,31 +39,35 @@ import {
 // whose backend role set is more than a flat name match — see lib/roles).
 interface NavItem {
   to: string;
-  label: string;
+  // i18n key under `admin.nav.*` — resolved at render so switching language
+  // relabels the nav without rebuilding this static structure.
+  labelKey: string;
   icon: typeof LayoutDashboard;
   end?: boolean;
   roles?: string[];
   canAccess?: (roles: string[]) => boolean;
 }
 interface NavGroup {
-  heading: string;
+  headingKey: string;
   items: NavItem[];
 }
 
 const NAV: NavGroup[] = [
   {
-    heading: "Overview",
-    items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true }],
+    headingKey: "admin.nav.overview",
+    items: [
+      { to: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, end: true },
+    ],
   },
   {
     // NES writes are gated on NES_Contributor / NES_Admin (+ superuser) by the
     // backend (entities/permissions.py); platform readonly/caseworker/moderator
     // are NOT accepted, so don't offer the (write) Entities section to them.
-    heading: "Entities",
+    headingKey: "admin.nav.entities",
     items: [
       {
         to: "/admin/entities",
-        label: "Entities",
+        labelKey: "admin.nav.entities",
         icon: Network,
         canAccess: hasNesWriteAccess,
       },
@@ -70,26 +76,26 @@ const NAV: NavGroup[] = [
   {
     // Data Lake (court/material/firm) writes are gated on the NGM role set
     // (courts/permissions.py HasNgmRole): Admin/Moderator/Caseworker + NGM tiers.
-    heading: "Data Lake",
+    headingKey: "admin.nav.dataLake",
     items: [
-      { to: "/admin/datalake/courtcases", label: "Court cases", icon: Gavel, canAccess: hasNgmWriteAccess },
-      { to: "/admin/datalake/materials", label: "Materials", icon: ScrollText, canAccess: hasNgmWriteAccess },
+      { to: "/admin/datalake/courtcases", labelKey: "admin.nav.courtCases", icon: Gavel, canAccess: hasNgmWriteAccess },
+      { to: "/admin/datalake/materials", labelKey: "admin.nav.materials", icon: ScrollText, canAccess: hasNgmWriteAccess },
     ],
   },
   {
-    heading: "Jawafdehi — Cases",
+    headingKey: "admin.nav.casesGroup",
     items: [
-      { to: "/admin/jawafdehi/cases", label: "Cases", icon: FileText },
+      { to: "/admin/jawafdehi/cases", labelKey: "admin.nav.cases", icon: FileText },
     ],
   },
   {
-    heading: "Casework",
+    headingKey: "admin.nav.casework",
     items: [
-      { to: "/admin/reviews", label: "Reviews", icon: ClipboardCheck },
-      { to: "/admin/rules", label: "Rules", icon: ScrollText },
+      { to: "/admin/reviews", labelKey: "admin.nav.reviews", icon: ClipboardCheck },
+      { to: "/admin/rules", labelKey: "admin.nav.rules", icon: ScrollText },
       {
         to: "/admin/moderation",
-        label: "Moderation",
+        labelKey: "admin.nav.moderation",
         icon: ShieldCheck,
         roles: ["admin", "moderator"],
       },
@@ -99,6 +105,7 @@ const NAV: NavGroup[] = [
 
 // `onNavigate` lets the mobile drawer close itself when a link is followed.
 function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => void }) {
+  const { t } = useTranslation();
   const lower = roles.map((r) => r.toLowerCase());
   return (
     <nav className="flex flex-col gap-5 p-4">
@@ -110,9 +117,9 @@ function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => vo
         });
         if (!visible.length) return null;
         return (
-          <div key={group.heading} className="space-y-1">
+          <div key={group.headingKey} className="space-y-1">
             <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {group.heading}
+              {t(group.headingKey)}
             </p>
             {visible.map((it) => {
               const Icon = it.icon;
@@ -131,7 +138,7 @@ function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => vo
                   }
                 >
                   <Icon className="h-4 w-4" />
-                  {it.label}
+                  {t(it.labelKey)}
                 </NavLink>
               );
             })}
@@ -146,6 +153,7 @@ function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => vo
 // renders through <Outlet/>.
 function AdminShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useCaseworkAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   // Mobile nav drawer. Closes on any route change so following a link inside it
@@ -158,7 +166,7 @@ function AdminShell({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading…
+        {t("admin.common.loading")}
       </div>
     );
   }
@@ -176,11 +184,11 @@ function AdminShell({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h1 className="text-xl font-bold text-slate-900">No admin access</h1>
+          <h1 className="text-xl font-bold text-slate-900">
+            {t("admin.shell.noAccessTitle")}
+          </h1>
           <p className="text-sm text-slate-600">
-            Your account ({user.username}) doesn&apos;t have a role that grants
-            access to the admin panel. Ask an admin to grant you a role, then
-            sign in again.
+            {t("admin.shell.noAccessBody", { username: user.username })}
           </p>
           <Button
             variant="outline"
@@ -189,7 +197,7 @@ function AdminShell({ children }: { children: ReactNode }) {
               navigate("/admin/login");
             }}
           >
-            <LogOut className="mr-1 h-4 w-4" /> Sign out
+            <LogOut className="mr-1 h-4 w-4" /> {t("admin.common.signOut")}
           </Button>
         </div>
       </div>
@@ -207,13 +215,13 @@ function AdminShell({ children }: { children: ReactNode }) {
               variant="ghost"
               size="icon"
               className="-ml-2 md:hidden"
-              aria-label="Open navigation menu"
+              aria-label={t("admin.shell.openNav")}
               onClick={() => setNavOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </Button>
             <ShieldCheck className="h-5 w-5 text-primary" />
-            Jawafdehi Admin
+            {t("admin.shell.title")}
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-muted-foreground sm:inline">
@@ -224,6 +232,7 @@ function AdminShell({ children }: { children: ReactNode }) {
                 </span>
               ) : null}
             </span>
+            <LanguageToggle quiet />
             <Button
               variant="ghost"
               size="sm"
@@ -232,7 +241,7 @@ function AdminShell({ children }: { children: ReactNode }) {
                 navigate("/admin/login");
               }}
             >
-              <LogOut className="mr-1 h-4 w-4" /> Sign out
+              <LogOut className="mr-1 h-4 w-4" /> {t("admin.common.signOut")}
             </Button>
           </div>
         </div>

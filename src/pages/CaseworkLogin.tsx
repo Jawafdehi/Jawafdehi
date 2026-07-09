@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { FormError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { ClipboardCheck, Loader2 } from "lucide-react";
 const CaseworkLogin = () => {
   const { login, loading, error, user, devAuthEnabled, devLogin } =
     useCaseworkAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -38,8 +40,8 @@ const CaseworkLogin = () => {
         ?.status;
       setDevError(
         status === 401
-          ? "Invalid username or password."
-          : "Login failed. Is the backend running with DEV_AUTH?",
+          ? t("admin.login.invalidCredentials")
+          : t("admin.login.loginFailed"),
       );
     } finally {
       setDevBusy(false);
@@ -55,7 +57,9 @@ const CaseworkLogin = () => {
               <ClipboardCheck className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Jawafdehi Admin</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {t("admin.login.title")}
+          </h1>
         </div>
 
         <div className="space-y-4">
@@ -67,7 +71,7 @@ const CaseworkLogin = () => {
             className="w-full"
             disabled={loading}
           >
-            {loading ? "Signing in…" : "Login with Jawafdehi Auth"}
+            {loading ? t("admin.login.signingIn") : t("admin.login.ssoButton")}
           </Button>
 
           {/* DEV-ONLY: username/password form, shown only when VITE_DEV_AUTH is
@@ -78,7 +82,7 @@ const CaseworkLogin = () => {
               <div className="flex items-center gap-2 pt-1">
                 <div className="h-px flex-1 bg-slate-200" />
                 <span className="text-xs uppercase tracking-wide text-slate-400">
-                  Dev login
+                  {t("admin.login.devDivider")}
                 </span>
                 <div className="h-px flex-1 bg-slate-200" />
               </div>
@@ -87,7 +91,7 @@ const CaseworkLogin = () => {
                 <FormError message={devError} />
                 <div className="space-y-1">
                   <Label htmlFor="dev-username" className="text-xs">
-                    Username
+                    {t("admin.login.username")}
                   </Label>
                   <Input
                     id="dev-username"
@@ -99,7 +103,7 @@ const CaseworkLogin = () => {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="dev-password" className="text-xs">
-                    Password
+                    {t("admin.login.password")}
                   </Label>
                   <Input
                     id="dev-password"
@@ -119,10 +123,10 @@ const CaseworkLogin = () => {
                   {devBusy ? (
                     <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                   ) : null}
-                  Sign in with username &amp; password
+                  {t("admin.login.devSubmit")}
                 </Button>
                 <p className="text-xs text-slate-400 text-center">
-                  Dev only — same credentials as the Django admin.
+                  {t("admin.login.devNote")}
                 </p>
               </form>
             </>
