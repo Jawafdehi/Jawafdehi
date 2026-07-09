@@ -56,8 +56,18 @@ describe('getCaseTypeLabelKey', () => {
     expect(getCaseTypeLabelKey('TAX_EVASION')).toBe('cases.type.taxEvasion');
   });
 
-  it('falls back to corruption for unknown/null', () => {
-    expect(getCaseTypeLabelKey(null)).toBe('cases.type.corruption');
-    expect(getCaseTypeLabelKey('SOMETHING_ELSE')).toBe('cases.type.corruption');
+  it('is case-insensitive (scraped court types vary in casing)', () => {
+    // "Corruption" and "CORRUPTION" must resolve to the SAME key so facets
+    // don't fragment into duplicate buckets.
+    expect(getCaseTypeLabelKey('Corruption')).toBe('cases.type.corruption');
+    expect(getCaseTypeLabelKey('corruption')).toBe('cases.type.corruption');
+  });
+
+  it('returns null for unknown/null (never mislabels as a default)', () => {
+    // Previously fell through to a corruption default — a WRIT would render as
+    // "corruption". Now unknown types return null so callers humanize the raw value.
+    expect(getCaseTypeLabelKey(null)).toBeNull();
+    expect(getCaseTypeLabelKey(undefined)).toBeNull();
+    expect(getCaseTypeLabelKey('SOMETHING_ELSE')).toBeNull();
   });
 });

@@ -45,11 +45,20 @@ const CASE_TYPE_LABEL_KEYS: Record<string, string> = {
   TAX_EVASION: "cases.type.taxEvasion",
 };
 
-const DEFAULT_CASE_TYPE_LABEL_KEY = "cases.type.corruption";
-
-/** i18n key for a case type's display label (falls back to corruption). */
-export function getCaseTypeLabelKey(caseType: string | null | undefined): string {
-  return (caseType && CASE_TYPE_LABEL_KEYS[caseType]) || DEFAULT_CASE_TYPE_LABEL_KEY;
+/**
+ * i18n key for a case type's display label, or `null` when the type is unknown.
+ *
+ * Lookup is case-INSENSITIVE: court-case types arrive from external scrapers with
+ * inconsistent casing (e.g. "CORRUPTION" vs "Corruption"), and a case-sensitive
+ * match would (a) fragment facets into duplicate buckets and (b) fall through to a
+ * default. Returns `null` for genuinely unknown types so callers can humanize the
+ * raw value instead of mislabelling it (e.g. a WRIT must NOT render as "corruption").
+ */
+export function getCaseTypeLabelKey(
+  caseType: string | null | undefined,
+): string | null {
+  if (!caseType) return null;
+  return CASE_TYPE_LABEL_KEYS[caseType.toUpperCase()] ?? null;
 }
 
 /**
@@ -66,8 +75,12 @@ export function getFacetItemLabel(
   item: { name: string; display_name?: string },
   translate: (key: string) => string,
 ): string {
+  const humanize = (v: string) => v.replaceAll("_", " ").replaceAll("-", " ");
   if (facetName === "case_type") {
-    return translate(getCaseTypeLabelKey(item.name));
+    const key = getCaseTypeLabelKey(item.name);
+    // Known type → localized label; unknown (e.g. scraped WRIT) → humanized raw
+    // value, never a wrong default.
+    return key ? translate(key) : humanize(item.name);
   }
-  return item.display_name || item.name.replaceAll("_", " ").replaceAll("-", " ");
+  return item.display_name || humanize(item.name);
 }

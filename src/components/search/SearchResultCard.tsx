@@ -138,12 +138,17 @@ function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
 // type badge. No relational hydration (the index carries no relationship data).
 function SimpleResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
   const title = formatSimpleTitle(result);
-  const description = pickLang(result.snippet) || simpleMetadata(result);
+  const metadata = simpleMetadata(result);
+  const snippet = pickLang(result.snippet);
+  // When there's no snippet the description falls back to the metadata line; in
+  // that case don't ALSO render metadata separately, or the card shows the same
+  // text twice (e.g. "digitaldocument" / "digitaldocument").
+  const description = snippet || metadata;
   return (
     <ResultCardShell
       badge={resultLabel(result)}
       description={description}
-      metadata={simpleMetadata(result)}
+      metadata={snippet ? metadata : undefined}
       reserveImageSpace={false}
       title={title}
       url={result.url}

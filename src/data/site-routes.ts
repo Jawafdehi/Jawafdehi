@@ -80,14 +80,6 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     sitemapTitle: "Archive Search — Jawafdehi",
   },
   {
-    path: "/entities",
-    titleKey: "nav.entities",
-    descriptionKey: "searchCommand.descriptions.entities",
-    keywords: ["entities", "people", "organizations", "officials"],
-    icon: "Building2",
-    sitemapTitle: "Entities — Jawafdehi",
-  },
-  {
     path: "/information",
     titleKey: "nav.information",
     descriptionKey: "searchCommand.descriptions.information",

@@ -65,6 +65,9 @@ export interface ArchiveSearchProps {
   lockedType?: ArchiveSearchResultType;
   heading?: string;
   description?: string;
+  // Type-specific search input placeholder for locked-type browse pages
+  // (materials/court cases). Falls back to the generic archive placeholder.
+  placeholder?: string;
   canonicalPath?: string;
 }
 
@@ -72,6 +75,7 @@ export default function ArchiveSearch({
   lockedType,
   heading,
   description,
+  placeholder,
   canonicalPath,
 }: ArchiveSearchProps = {}) {
   const { t } = useTranslation();
@@ -218,11 +222,14 @@ export default function ArchiveSearch({
         <header className="max-w-3xl">
 
           <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
-            {heading || "Archive Search"}
+            {heading || t("archiveSearch.heading", "Archive Search")}
           </h1>
           <p className="mt-3 text-base leading-7 text-muted-foreground">
             {description ||
-              "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents."}
+              t(
+                "archiveSearch.description",
+                "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
+              )}
           </p>
         </header>
 
@@ -231,30 +238,42 @@ export default function ArchiveSearch({
           onSubmit={submitSearch}
         >
           <label className="sr-only" htmlFor="archive-search">
-            Search the Jawafdehi archive
+            {t("archiveSearch.searchLabel", "Search the Jawafdehi archive")}
           </label>
           <SearchBar
             className="lg:max-w-[min(64rem,calc(100%-16rem))]"
             id="archive-search"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search cases, people, offices, locations, or allegations"
-            submitLabel="Search archive"
+            placeholder={
+              placeholder ||
+              t(
+                "archiveSearch.placeholder",
+                "Search cases, people, offices, locations, or allegations",
+              )
+            }
+            submitLabel={t("archiveSearch.submit", "Search archive")}
             value={query}
           />
           <div className="flex items-center gap-3 lg:ml-auto lg:justify-end">
-            <p
+            <div
               aria-live="polite"
               className="mr-auto flex min-h-5 items-center whitespace-nowrap text-sm font-medium text-muted-foreground lg:mr-1"
             >
               {isInitialLoading || isRefreshing ? (
                 <>
-                  <span className="sr-only">Searching archive</span>
+                  <span className="sr-only">
+                    {t("archiveSearch.searching", "Searching archive")}
+                  </span>
                   <Skeleton aria-hidden="true" className="h-4 w-20" />
                 </>
-              ) : showError ? null : `${displayData?.count || 0} results`}
-            </p>
+              ) : showError ? null : (
+                t("archiveSearch.results", "{{count}} results", {
+                  count: displayData?.count || 0,
+                })
+              )}
+            </div>
             <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">
-              Sort
+              {t("archiveSearch.sort", "Sort")}
             </label>
             <Select
               onValueChange={(sort) => updateFilter("sort", sort)}

@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import CountUp from "react-countup";
 
 import { SearchBar } from "@/components/ui/search-bar";
@@ -23,15 +24,6 @@ type HeroMapImage = {
   className: string;
 };
 
-const heroCopy = {
-  eyebrow: "Accountability has no expiry.",
-  titlePrefix: "Nepal's Permanent",
-  titleHighlight: "Corruption Case",
-  titleSuffix: "Archive",
-  description:
-    "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
-};
-
 const heroMapImages: HeroMapImage[] = [
   {
     src: "/assets/map-light.svg",
@@ -50,19 +42,35 @@ export function Hero({
   materials,
 }: Readonly<HeroProps>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [archiveQuery, setArchiveQuery] = useState("");
 
   // All four stats link to the Data Quality dashboard, which explains what each
   // dataset tracks and how complete it is.
   const heroStats: HeroStat[] = [
-    { value: casesDocumented, label: "Cases documented", href: "/data-quality" },
     {
-      value: officialsAndEntitiesTracked,
-      label: "Officials & entities tracked",
+      value: casesDocumented,
+      label: t("home.hero.stats.casesDocumented", "Cases documented"),
       href: "/data-quality",
     },
-    { value: courtRecords, label: "Court records", href: "/data-quality" },
-    { value: materials, label: "Materials", href: "/data-quality" },
+    {
+      value: officialsAndEntitiesTracked,
+      label: t(
+        "home.hero.stats.officialsAndEntitiesTracked",
+        "Officials & entities tracked",
+      ),
+      href: "/data-quality",
+    },
+    {
+      value: courtRecords,
+      label: t("home.hero.stats.courtRecords", "Court records"),
+      href: "/data-quality",
+    },
+    {
+      value: materials,
+      label: t("home.hero.stats.materials", "Materials"),
+      href: "/data-quality",
+    },
   ];
 
   const goToSearch = (query: string) => {
@@ -91,17 +99,20 @@ export function Hero({
 
       <div className="container relative z-10 mx-auto flex min-h-[72svh] flex-col items-start justify-center px-6 py-14 text-left sm:px-8 sm:py-16 md:min-h-[74svh] md:items-center md:px-6 md:py-20 md:text-center lg:min-h-[76svh] lg:py-24">
         <p className="max-w-full text-[clamp(0.68rem,1.8vw,0.75rem)] font-bold uppercase tracking-[0.26em] text-accent sm:tracking-[0.28em]">
-          <em>{heroCopy.eyebrow}</em>
+          <em>{t("home.hero.eyebrow", "Accountability has no expiry.")}</em>
         </p>
 
         <h1 className="mt-5 max-w-[min(100%,9.6em)] text-[clamp(2.35rem,10.6vw,3.55rem)] font-extrabold leading-[0.96] tracking-[-0.045em] text-primary sm:max-w-[min(100%,10.8em)] sm:text-[clamp(3rem,8vw,4rem)] md:max-w-4xl md:text-6xl md:leading-[1.02] lg:text-6xl">
-  {heroCopy.titlePrefix}{" "}
-  <span className="text-accent">{heroCopy.titleHighlight}</span>{" "}
-  {heroCopy.titleSuffix}
+  {t("home.hero.titlePrefix", "Nepal's Permanent")}{" "}
+  <span className="text-accent">{t("home.hero.titleHighlight", "Corruption Case")}</span>{" "}
+  {t("home.hero.titleSuffix", "Archive")}
 </h1>
 
         <p className="mt-6 max-w-[min(100%,34rem)] text-[clamp(0.95rem,2.8vw,1.05rem)] leading-8 text-muted-foreground md:max-w-2xl md:text-lg">
-          {heroCopy.description}
+          {t(
+            "home.hero.description",
+            "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
+          )}
         </p>
 
         <form
@@ -109,15 +120,18 @@ export function Hero({
           onSubmit={submitArchiveSearch}
         >
           <label className="sr-only" htmlFor="hero-archive-search">
-            Search the Jawafdehi archive
+            {t("home.hero.searchLabel", "Search the Jawafdehi archive")}
           </label>
 
           <SearchBar
             id="hero-archive-search"
             inputClassName="bg-background/95 shadow-lg shadow-primary/5"
             onChange={(event) => setArchiveQuery(event.target.value)}
-            placeholder="Search cases, people, offices, locations, or allegations"
-            submitLabel="Search Jawafdehi"
+            placeholder={t(
+              "home.hero.searchPlaceholder",
+              "Search cases, people, offices, locations, or allegations",
+            )}
+            submitLabel={t("home.hero.searchSubmit", "Search Jawafdehi")}
             value={archiveQuery}
           />
         </form>
