@@ -9,6 +9,9 @@ let loaded = false;
 
 export function loadGoogleAnalytics(): void {
   if (typeof window === "undefined" || loaded || window.gtag) return;
+  // Never load the production GA property from a local dev build — otherwise
+  // localhost page views pollute prod analytics.
+  if (import.meta.env.DEV) return;
   loaded = true;
 
   const script = document.createElement("script");
