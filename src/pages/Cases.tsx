@@ -46,7 +46,8 @@ function normalizeStatus(value: string | null | undefined): CaseLifecycleStatus 
 }
 
 function pickTitle(result: ArchiveSearchResult, card?: CaseSearchCard): string {
-  return card?.title || result.title.en || result.title.ne || result.id;
+  // Envelope titles can carry <em> highlight tags; strip them from the fallback.
+  return card?.title || stripTags(result.title.en || result.title.ne || result.id);
 }
 
 function slugFromUrl(url: string | undefined): string | null {
@@ -241,7 +242,6 @@ const Cases = () => {
               cases={cases}
               hasNextPage={Boolean(hasNextPage)}
               currentLang={currentLang}
-              searchQuery={searchQuery}
               isFetching={isFetching}
               fetchNextPage={fetchNextPage}
               setStatusFilter={setStatusFilter}
@@ -264,7 +264,6 @@ type CaseResultsProps = Readonly<{
   cases: CaseCardViewModel[];
   hasNextPage: boolean;
   currentLang: string;
-  searchQuery: string;
   isFetching: boolean;
   fetchNextPage: () => void;
   setStatusFilter: (v: "all" | CaseLifecycleStatus) => void;
@@ -274,7 +273,7 @@ type CaseResultsProps = Readonly<{
 
 function CaseResults({
   isInitialLoading, isError, viewMode, cases, hasNextPage,
-  currentLang, searchQuery, isFetching, fetchNextPage, setStatusFilter, setSearchQuery, t,
+  currentLang, isFetching, fetchNextPage, setStatusFilter, setSearchQuery, t,
 }: CaseResultsProps) {
   const gridClass = viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-6";
 
@@ -333,7 +332,7 @@ function CaseResults({
           );
         })}
       </div>
-      {!searchQuery && !isError && hasNextPage && (
+      {!isError && hasNextPage && (
         <div className="mt-8 flex justify-center">
           <Button onClick={() => fetchNextPage()} disabled={isFetching} variant="outline" size="lg">
             {isFetching ? t("cases.loadingMore") : t("cases.loadMore")}
