@@ -5,105 +5,128 @@ import { CaseCard } from "@/components/CaseCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Search, AlertCircle, Filter, LayoutGrid, List } from "lucide-react";
-import { getCases } from "@/services/jds-api";
-import { getEntityById } from "@/services/api";
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
-import { getSubjectEntities } from "@/utils/case-entities";
-import type { Case } from "@/types/jds";
+import { searchArchive } from "@/services/search-api";
+import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
 
-/**
- * Categorizes a case based on its date fields
- * @param caseItem - The case object with date fields
- * @returns Status category: 'ongoing' | 'closed' | 'others'
- */
-function getCaseStatus(caseItem: Case): 'ongoing' | 'closed' | 'others' {
-  const { case_start_date, case_end_date } = caseItem;
-  
-  // Safely handle null, undefined, and empty strings
-  const hasStartDate = case_start_date && case_start_date.trim() !== '';
-  const hasEndDate = case_end_date && case_end_date.trim() !== '';
-  
-  if (hasStartDate && !hasEndDate) {
-    return 'ongoing';
-  }
-  
-  if (hasStartDate && hasEndDate) {
-    return 'closed';
-  }
-  
-  return 'others';
-}
+type CaseLifecycleStatus = "ongoing" | "closed" | "others";
+type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
 
-function mapCaseStatusToBadge(status: 'ongoing' | 'closed' | 'others'): 'ongoing' | 'resolved' | 'under-investigation' {
+type CaseCardViewModel = {
+  id: string;
+  slug: string | null;
+  title: string;
+  shortDescription: string;
+  tags: string[];
+  allegations: string[];
+  status: CaseLifecycleStatus;
+  thumbnailUrl?: string;
+  bannerUrl?: string;
+  subjectEntities: CaseSearchCardEntity[];
+  locationEntities: CaseSearchCardEntity[];
+};
+
+const CASES_PAGE_SIZE = 12;
+
+function mapCaseStatusToBadge(status: CaseLifecycleStatus): CaseBadgeStatus {
   switch (status) {
-    case 'ongoing': return 'ongoing';
-    case 'closed': return 'resolved';
-    case 'others': return 'under-investigation';
+    case "ongoing": return "ongoing";
+    case "closed": return "resolved";
+    case "others": return "under-investigation";
   }
 }
+
+function normalizeStatus(value: string | null | undefined): CaseLifecycleStatus {
+  return value === "ongoing" || value === "closed" || value === "others" ? value : "others";
+}
+
+function pickTitle(result: ArchiveSearchResult, card?: CaseSearchCard): string {
+  // Envelope titles can carry <em> highlight tags; strip them from the fallback.
+  return card?.title || stripTags(result.title.en || result.title.ne || result.id);
+}
+
+function slugFromUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const match = /\/case\/([^/?#]+)/.exec(url);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function stripTags(text: string): string {
+  return text.replace(/<[^>]*>/g, "");
+}
+
+function subjectEntities(entities: readonly CaseSearchCardEntity[] | undefined): CaseSearchCardEntity[] {
+  const list = entities ?? [];
+  const accused = list.filter((entity) => entity.type === "accused");
+  if (accused.length > 0) return accused;
+  return list.filter((entity) => Boolean(entity.type) && entity.type !== "location");
+}
+
+function locationEntities(entities: readonly CaseSearchCardEntity[] | undefined): CaseSearchCardEntity[] {
+  return (entities ?? []).filter((entity) => entity.type === "location");
+}
+
+function entityLabel(entity: CaseSearchCardEntity, currentLang: string): string {
+  const name = entity.display_name || entity.nes_id || "Unknown";
+  return translateDynamicText(name, currentLang);
+}
+
+function toCaseCardViewModel(result: ArchiveSearchResult): CaseCardViewModel {
+  const card = result.card;
+  return {
+    id: result.id,
+    slug: card?.slug || slugFromUrl(result.url),
+    title: pickTitle(result, card),
+    shortDescription: stripTags(card?.short_description || result.snippet.en || result.snippet.ne || ""),
+    tags: card?.tags || [],
+    allegations: card?.key_allegations || [],
+    status: normalizeStatus(card?.status || result.extra.case_status),
+    thumbnailUrl: card?.thumbnail_url || undefined,
+    bannerUrl: card?.banner_url || undefined,
+    subjectEntities: subjectEntities(card?.entities),
+    locationEntities: locationEntities(card?.entities),
+  };
+}
+
 const Cases = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<'all' | 'ongoing' | 'closed' | 'others'>('all');
-  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<"all" | CaseLifecycleStatus>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Debounce search input and reset pagination atomically
+  // Debounce search input and restart cursor pagination atomically by changing the query key.
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      setDebouncedSearch(searchQuery);
-    }, 300);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: casesData, isLoading: loading, isFetching, isPlaceholderData, isError, refetch } = useQuery({
-    queryKey: ['cases', { page, search: debouncedSearch }],
-    queryFn: () => getCases({ page, search: debouncedSearch || undefined }),
+  const { data, isLoading: loading, isFetching, isError, refetch, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    queryKey: ["cases-search", { search: debouncedSearch, status: statusFilter }],
+    queryFn: ({ pageParam }) => searchArchive({
+      q: debouncedSearch || undefined,
+      type: "case",
+      status: statusFilter === "all" ? undefined : [statusFilter],
+      sort: debouncedSearch ? "relevance" : "newest",
+      page_size: CASES_PAGE_SIZE,
+      cursor: pageParam || undefined,
+    }),
+    initialPageParam: "" as string,
+    getNextPageParam: (lastPage) => lastPage.next_cursor || undefined,
     staleTime: 5 * 60 * 1000,
     retry: 3,
-    placeholderData: (prev) => prev,
   });
 
-  const [allCases, setAllCases] = useState<Case[]>([]);
-  useEffect(() => {
-    if (!casesData || isPlaceholderData) return;
-    setAllCases(prev => page === 1 ? casesData.results : [...prev, ...casesData.results]);
-  }, [casesData, page, isPlaceholderData]);
-
-  const totalCount = casesData?.count ?? 0;
-  const isInitialLoading = loading && page === 1 && allCases.length === 0;
-
-  const uniqueNesIds = [...new Set(
-    allCases.flatMap(c => c.entities || []).filter(e => e.nes_id).map(e => e.nes_id!)
-  )];
-
-  const entityQueries = useQueries({
-    queries: uniqueNesIds.map((nesId) => ({
-      queryKey: ['entity-record', nesId],
-      queryFn: () => getEntityById(nesId),
-      staleTime: 10 * 60 * 1000,
-      retry: false,
-    })),
-  });
-
-  const resolvedEntities = Object.fromEntries(
-    uniqueNesIds.map((nesId, i) => [nesId, entityQueries[i]?.data]).filter(([, v]) => v)
-  );
-
-  const filteredCases = allCases.filter((caseItem) => {
-    const caseStatus = getCaseStatus(caseItem);
-    const matchesStatus = statusFilter === "all" || caseStatus === statusFilter;
-    return matchesStatus;
-  });
+  const results = data?.pages.flatMap((page) => page.results) ?? [];
+  const cases = results.map(toCaseCardViewModel);
+  const totalCount = data?.pages[0]?.count ?? 0;
+  const isInitialLoading = loading && cases.length === 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -131,7 +154,6 @@ const Cases = () => {
             <p className="text-muted-foreground text-lg">{t("cases.description")}</p>
           </section>
 
-          {/* Search and Filter Section */}
           <section id="case-search-section" className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative flex-[1.5]">
               <label htmlFor="case-search" className="sr-only">
@@ -149,7 +171,7 @@ const Cases = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as 'all' | 'ongoing' | 'closed' | 'others')}>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | CaseLifecycleStatus)}>
                   <SelectTrigger className="h-11 rounded-full">
                     <SelectValue placeholder={t("cases.filterByStatus")} />
                   </SelectTrigger>
@@ -194,14 +216,12 @@ const Cases = () => {
             </div>
           </section>
 
-          {/* Results Count */}
           <div className="mb-6">
             <p className="text-sm text-muted-foreground">
-              {isInitialLoading ? t("cases.loading") : t("cases.showing", { count: filteredCases.length, total: totalCount })}
+              {isInitialLoading ? t("cases.loading") : t("cases.showing", { count: cases.length, total: totalCount })}
             </p>
           </div>
 
-          {/* Cases Grid */}
           {isError ? (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
@@ -215,18 +235,15 @@ const Cases = () => {
           ) : null}
 
           <section id="case-results">
-<CaseResults
+            <CaseResults
               isInitialLoading={isInitialLoading}
               isError={isError}
               viewMode={viewMode}
-              filteredCases={filteredCases}
-              casesData={casesData}
-              resolvedEntities={resolvedEntities}
+              cases={cases}
+              hasNextPage={Boolean(hasNextPage)}
               currentLang={currentLang}
-              searchQuery={searchQuery}
               isFetching={isFetching}
-              refetch={refetch}
-              setPage={setPage}
+              fetchNextPage={fetchNextPage}
               setStatusFilter={setStatusFilter}
               setSearchQuery={setSearchQuery}
               t={t}
@@ -234,7 +251,6 @@ const Cases = () => {
           </section>
         </div>
       </main>
-
     </div>
   );
 };
@@ -245,22 +261,19 @@ type CaseResultsProps = Readonly<{
   isInitialLoading: boolean;
   isError: boolean;
   viewMode: "grid" | "list";
-  filteredCases: Case[];
-  casesData: { count: number; next: string | null } | undefined;
-  resolvedEntities: Record<string, unknown>;
+  cases: CaseCardViewModel[];
+  hasNextPage: boolean;
   currentLang: string;
-  searchQuery: string;
   isFetching: boolean;
-  refetch: () => void;
-  setPage: (fn: (p: number) => number) => void;
-  setStatusFilter: (v: "all" | "ongoing" | "closed" | "others") => void;
+  fetchNextPage: () => void;
+  setStatusFilter: (v: "all" | CaseLifecycleStatus) => void;
   setSearchQuery: (v: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
 }>;
 
 function CaseResults({
-  isInitialLoading, isError, viewMode, filteredCases, casesData, resolvedEntities,
-  currentLang, searchQuery, isFetching, refetch, setPage, setStatusFilter, setSearchQuery, t,
+  isInitialLoading, isError, viewMode, cases, hasNextPage,
+  currentLang, isFetching, fetchNextPage, setStatusFilter, setSearchQuery, t,
 }: CaseResultsProps) {
   const gridClass = viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-6";
 
@@ -276,7 +289,7 @@ function CaseResults({
     );
   }
 
-  if (filteredCases.length === 0) {
+  if (cases.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground text-lg mb-4">
@@ -292,66 +305,40 @@ function CaseResults({
   return (
     <>
       <div className={gridClass}>
-        {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
-            remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
-        {filteredCases.map((caseItem) => (
-          <CaseCard
-            key={caseItem.id}
-            id={caseItem.id.toString()}
-            slug={caseItem.slug}
-            title={caseItem.title}
-            entity={getEntityDisplayName(caseItem, resolvedEntities, currentLang)}
-            entityNames={getEntityNames(caseItem, resolvedEntities, currentLang)}
-            location={getLocationNames(caseItem, resolvedEntities, currentLang)}
-            status={mapCaseStatusToBadge(getCaseStatus(caseItem))}
-            tags={caseItem.tags || []}
-            description={(caseItem.short_description ?? '').replace(/<[^>]*>/g, '').substring(0, 200)}
-            allegations={caseItem.key_allegations}
-            entityIds={(caseItem.entities?.filter(e => e.type === 'accused') || []).map(e => e.nes_id).filter((id): id is string => Boolean(id))}
-            locationIds={(caseItem.entities?.filter(e => e.type === 'location') || []).map(e => e.nes_id).filter((id): id is string => Boolean(id))}
-            thumbnailUrl={caseItem.thumbnail_url ?? undefined}
-            bannerUrl={caseItem.banner_url ?? undefined}
-            viewMode={viewMode}
-          />
-        ))}
+        {cases.map((caseItem) => {
+          const entityNames = caseItem.subjectEntities.map((entity) => entityLabel(entity, currentLang));
+          const locationNames = caseItem.locationEntities.map((entity) => entityLabel(entity, currentLang));
+          const entity = entityNames.join(", ") || translateDynamicText("Unknown Entity", currentLang);
+          const location = locationNames.join(", ") || translateDynamicText("Unknown Location", currentLang);
+          return (
+            <CaseCard
+              key={caseItem.id}
+              id={caseItem.id}
+              slug={caseItem.slug}
+              title={caseItem.title}
+              entity={entity}
+              entityNames={entityNames}
+              location={location}
+              status={mapCaseStatusToBadge(caseItem.status)}
+              tags={caseItem.tags}
+              description={caseItem.shortDescription.substring(0, 200)}
+              allegations={caseItem.allegations}
+              entityIds={caseItem.subjectEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
+              locationIds={caseItem.locationEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
+              thumbnailUrl={caseItem.thumbnailUrl}
+              bannerUrl={caseItem.bannerUrl}
+              viewMode={viewMode}
+            />
+          );
+        })}
       </div>
-      {!searchQuery && !isError && casesData?.next && (
+      {!isError && hasNextPage && (
         <div className="mt-8 flex justify-center">
-          <Button onClick={() => setPage(p => p + 1)} disabled={isFetching} variant="outline" size="lg">
+          <Button onClick={() => fetchNextPage()} disabled={isFetching} variant="outline" size="lg">
             {isFetching ? t("cases.loadingMore") : t("cases.loadMore")}
           </Button>
         </div>
       )}
     </>
   );
-}
-
-function getEntityNames(caseItem: Case, resolvedEntities: Record<string, unknown>, currentLang: string): string[] {
-  // Subject entities: accused for CORRUPTION cases, else any named (non-location)
-  // entity so cases without an accused (e.g. TAX_EVASION) still name a subject.
-  const namedEntities = getSubjectEntities(caseItem.entities, e => e.type);
-  return namedEntities.map(e => {
-    if (e.nes_id && resolvedEntities[e.nes_id]) {
-      const entity = resolvedEntities[e.nes_id];
-      return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
-    }
-    return e.display_name || e.nes_id || translateDynamicText('Unknown Entity', currentLang);
-  });
-}
-
-function getEntityDisplayName(caseItem: Case, resolvedEntities: Record<string, unknown>, currentLang: string): string {
-  return getEntityNames(caseItem, resolvedEntities, currentLang).join(', ') || translateDynamicText('Unknown Entity', currentLang);
-}
-
-function getLocationNames(caseItem: Case, resolvedEntities: Record<string, unknown>, currentLang: string): string {
-  const locationEntities = caseItem.entities?.filter(e => e.type === 'location') || [];
-  return locationEntities.map(e => {
-    if (e.nes_id && resolvedEntities[e.nes_id]) {
-      const entity = resolvedEntities[e.nes_id];
-      const name = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
-      return translateDynamicText(name, currentLang);
-    }
-    const name = e.display_name || e.nes_id || 'Unknown';
-    return translateDynamicText(name, currentLang);
-  }).join(', ') || translateDynamicText('Unknown Location', currentLang);
 }

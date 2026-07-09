@@ -27,6 +27,8 @@ export interface ArchiveSearchParams {
   entity_type?: string[];
   case_type?: string[];
   tags?: string[];
+  // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
+  status?: string[];
   sort?: ArchiveSearchSort;
   page?: number;
   page_size?: number;
@@ -45,6 +47,33 @@ export interface ArchiveSearchFacets {
   entity_type: SearchFacetItem[];
   case_type: SearchFacetItem[];
   tags: SearchFacetItem[];
+  status: SearchFacetItem[];
+}
+
+export interface CaseSearchCardEntity {
+  nes_id: string | null;
+  display_name: string | null;
+  entity_type: string | null;
+  type: string;
+  outcome?: string | null;
+  notes?: string | null;
+}
+
+export interface CaseSearchCard {
+  slug: string | null;
+  title: string;
+  short_description: string | null;
+  key_allegations: string[];
+  tags: string[];
+  case_type: string | null;
+  status: "ongoing" | "closed" | "others";
+  case_start_date: string | null;
+  case_end_date: string | null;
+  bigo: number | null;
+  thumbnail_url: string | null;
+  banner_url: string | null;
+  timeline: Array<Record<string, unknown>>;
+  entities: CaseSearchCardEntity[];
 }
 
 // Type-specific metadata the service surfaces in the `extra` blob (all optional).
@@ -76,6 +105,9 @@ export interface ArchiveSearchResult {
   api_url: string | null;
   matched_fields: string[];
   extra: SearchResultExtra;
+  // Present for case hits after the jawafdehi-cases card-payload enrichment. Older
+  // cached/indexed docs may omit it, so callers must keep a safe fallback.
+  card?: CaseSearchCard;
 }
 
 // Per-type result counts (distinct from the refine facets above).
