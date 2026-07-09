@@ -189,6 +189,11 @@ export async function listCourts<T = Record<string, unknown>>(
   // .results/.count/.next). Without this, res.results is undefined → the courts
   // table renders zero rows even though courts exist (ADMIN-8).
   const { data } = await client.get<T[] | Paginated<T>>("/api/courts/", { params });
+  // Defensive: an empty/absent body (network anomaly, 204-ish) would otherwise
+  // propagate as a null envelope and crash ResourceTable on `res.results`.
+  if (!data) {
+    return { count: 0, next: null, previous: null, results: [] };
+  }
   if (Array.isArray(data)) {
     return { count: data.length, next: null, previous: null, results: data };
   }
