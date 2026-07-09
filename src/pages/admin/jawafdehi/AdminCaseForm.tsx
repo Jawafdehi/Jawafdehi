@@ -4,10 +4,11 @@ import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import {
-  getCase,
+  getCaseWithEtag,
   createCase,
-  patchCase,
+  patchCaseWithEtag,
   adminErrorMessage,
+  CaseConflictError,
   type CreateCasePayload,
   type PatchOp,
 } from "@/services/admin-api";
@@ -40,6 +41,7 @@ import TimelineEditor from "@/components/admin/case/TimelineEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
+import CaseHistoryPanel from "@/components/admin/case/CaseHistoryPanel";
 import DatePairInput from "@/components/admin/DatePairInput";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
@@ -227,6 +229,14 @@ export default function AdminCaseForm() {
   // In create mode, track whether the user hand-edited the slug so we stop
   // auto-deriving it from the title.
   const [slugDirty, setSlugDirty] = useState(false);
+  // Optimistic-concurrency token from the last load/save. Echoed back as
+  // If-Match on save so a concurrent edit is rejected instead of clobbered.
+  const [etag, setEtag] = useState<string | null>(null);
+  // True after a save was rejected because the case changed underneath us; we
+  // steer the user to reload rather than retry a stale write.
+  const [conflict, setConflict] = useState(false);
+  // Bumped to force the history panel to refetch (after a transition/save).
+  const [historyKey, setHistoryKey] = useState(0);
 
   const set = <K extends keyof CaseFormState>(k: K, v: CaseFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -235,13 +245,19 @@ export default function AdminCaseForm() {
     if (!editing || !slug) return;
     setLoading(true);
     setLoadFailed(false);
+    setConflict(false);
     try {
-      const c = await getCase<Record<string, unknown>>(slug);
+      const { data: c, etag: tok } = await getCaseWithEtag<
+        Record<string, unknown>
+      >(slug);
       const parsed = fromCase(c);
       setForm(parsed);
       setOriginal(parsed);
       setCaseState(str(c.state ?? c.status) || "DRAFT");
       setAllegationsText(parsed.key_allegations.join("\n"));
+      setEtag(tok);
+      // A fresh load resolves any prior conflict and refreshes the history.
+      setHistoryKey((k) => k + 1);
     } catch (err) {
       setError(adminErrorMessage(err, "Failed to load case"));
       setLoadFailed(true);
@@ -387,11 +403,14 @@ export default function AdminCaseForm() {
           setSaving(false);
           return;
         }
-        const updated = await patchCase<Record<string, unknown>>(slug, ops);
+        const { data: updated, etag: tok } = await patchCaseWithEtag<
+          Record<string, unknown>
+        >(slug, ops, { ifMatch: etag });
         const parsed = fromCase(updated);
         setForm(parsed);
         setOriginal(parsed);
         setCaseState(str(updated.state ?? updated.status) || caseState);
+        setEtag(tok);
         toast({ title: "Case updated" });
       } else {
         const payload: CreateCasePayload = {
@@ -413,7 +432,15 @@ export default function AdminCaseForm() {
         navigate(newSlug ? `/admin/jawafdehi/cases/${newSlug}/edit` : "/admin/jawafdehi/cases");
       }
     } catch (err) {
-      setError(adminErrorMessage(err, "Failed to save case"));
+      if (err instanceof CaseConflictError) {
+        // The case changed under us — a stale save was refused. Steer the user
+        // to reload (which pulls the latest + a fresh token) rather than letting
+        // them retry a write that would keep failing or clobber the new edit.
+        setConflict(true);
+        setError(err.message);
+      } else {
+        setError(adminErrorMessage(err, "Failed to save case"));
+      }
     } finally {
       setSaving(false);
     }
@@ -472,6 +499,27 @@ export default function AdminCaseForm() {
 
       <FormError message={error} />
 
+      {/* Optimistic-lock conflict: a save was refused because the case changed
+          since it was opened. Offer a one-click reload (discards local edits,
+          pulls the latest + a fresh token). Distinct from a generic save error
+          so the user knows retrying as-is won't help. */}
+      {conflict && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <span>
+            This case was changed by someone else since you opened it. Reload to
+            get the latest version before saving.
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => loadCase()}
+          >
+            Reload case
+          </Button>
+        </div>
+      )}
+
       {/* F2 — state transitions. Edit mode only (a persisted case has a state).
           Privileged targets are gated to admin/moderator in the UI; the API is
           the authority. Transitioning reloads the case to reflect the new state. */}
@@ -482,6 +530,12 @@ export default function AdminCaseForm() {
           isModerator={isModerator}
           onTransitioned={() => loadCase()}
         />
+      )}
+
+      {/* F7 — workflow history / author feedback. Renders nothing until there's
+          a transition to show (and is a no-op on an older backend). */}
+      {editing && slug && (
+        <CaseHistoryPanel slug={slug} refreshKey={historyKey} />
       )}
 
       <form onSubmit={onSubmit} className="space-y-5">

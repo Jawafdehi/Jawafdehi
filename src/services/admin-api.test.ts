@@ -8,16 +8,36 @@ vi.mock("./oidc", () => ({ getAccessToken: vi.fn().mockResolvedValue(null) }));
 // spy client; each verb records its (url, body) and resolves an empty body so
 // the wrappers just relay the shape. `vi.hoisted` lets the mock factory (which
 // is hoisted above imports) share the `calls` array with the test bodies.
-const { calls } = vi.hoisted(() => ({
-  calls: [] as { method: string; url: string; body?: unknown }[],
+const { calls, responses } = vi.hoisted(() => ({
+  calls: [] as {
+    method: string;
+    url: string;
+    body?: unknown;
+    config?: unknown;
+  }[],
+  // Per-method queue of scripted responses. When a queue has an entry it is
+  // shifted and used (resolve `{data, headers}` or reject an axios-like error);
+  // otherwise the default empty body is returned. Lets the optimistic-lock and
+  // etag tests drive status codes / headers without touching the happy path.
+  responses: {} as Record<
+    string,
+    Array<{ data?: unknown; headers?: unknown; status?: number }>
+  >,
 }));
 
 vi.mock("axios", () => {
   const record =
     (method: string) =>
-    (url: string, body?: unknown) => {
-      calls.push({ method, url, body });
-      return Promise.resolve({ data: {} });
+    (url: string, body?: unknown, config?: unknown) => {
+      calls.push({ method, url, body, config });
+      const queued = responses[method]?.shift();
+      if (queued && typeof queued.status === "number" && queued.status >= 400) {
+        return Promise.reject({ response: { status: queued.status, data: queued.data } });
+      }
+      return Promise.resolve({
+        data: queued?.data ?? {},
+        headers: queued?.headers ?? {},
+      });
     };
   const instance = {
     get: record("get"),
@@ -50,11 +70,16 @@ import {
   deleteMaterial,
   listCases,
   patchCase,
+  patchCaseWithEtag,
+  getCaseWithEtag,
+  getCaseHistory,
   deleteCase,
+  CaseConflictError,
 } from "./admin-api";
 
 beforeEach(() => {
   calls.length = 0;
+  for (const k of Object.keys(responses)) delete responses[k];
 });
 
 // TASK A — the client must address the SINGLE unified /api root; the former
@@ -146,5 +171,88 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     expect(fd.get("role")).toBe("RAW");
     expect(fd.get("material_type")).toBe("official_report");
     expect(fd.get("file")).toBeInstanceOf(File);
+  });
+});
+
+// Wave-2: optimistic concurrency (If-Match / ETag), transition reason header,
+// and the case history endpoint.
+describe("admin-api case optimistic concurrency + history", () => {
+  it("getCaseWithEtag returns the ETag response header", async () => {
+    responses.get = [{ data: { slug: "x" }, headers: { etag: '"abc123"' } }];
+    const { data, etag } = await getCaseWithEtag("x");
+    expect(data).toMatchObject({ slug: "x" });
+    expect(etag).toBe('"abc123"');
+  });
+
+  it("getCaseWithEtag returns null etag when the header is absent", async () => {
+    responses.get = [{ data: { slug: "x" }, headers: {} }];
+    const { etag } = await getCaseWithEtag("x");
+    expect(etag).toBeNull();
+  });
+
+  it("patchCase sends If-Match and X-Transition-Reason when provided", async () => {
+    await patchCase("case-1", [{ op: "replace", path: "/state", value: "DRAFT" }], {
+      ifMatch: '"tok1"',
+      transitionReason: "needs a second source",
+    });
+    expect(calls[0]).toMatchObject({ method: "patch", url: "/api/cases/case-1/" });
+    const cfg = calls[0].config as { headers: Record<string, string> };
+    expect(cfg.headers["If-Match"]).toBe('"tok1"');
+    expect(cfg.headers["X-Transition-Reason"]).toBe("needs a second source");
+  });
+
+  it("patchCase omits the config entirely when no opts are given", async () => {
+    await patchCase("case-1", [{ op: "replace", path: "/title", value: "X" }]);
+    expect(calls[0].config).toBeUndefined();
+  });
+
+  it("patchCase maps a 412 to CaseConflictError", async () => {
+    responses.patch = [{ status: 412, data: { detail: "changed" } }];
+    await expect(
+      patchCase("case-1", [{ op: "replace", path: "/title", value: "X" }]),
+    ).rejects.toBeInstanceOf(CaseConflictError);
+  });
+
+  it("patchCase maps a 409 to CaseConflictError too", async () => {
+    responses.patch = [{ status: 409, data: {} }];
+    await expect(
+      patchCase("case-1", [{ op: "replace", path: "/title", value: "X" }]),
+    ).rejects.toBeInstanceOf(CaseConflictError);
+  });
+
+  it("patchCase rethrows non-conflict errors unchanged", async () => {
+    responses.patch = [{ status: 422, data: { detail: "bad" } }];
+    await expect(
+      patchCase("case-1", [{ op: "replace", path: "/title", value: "X" }]),
+    ).rejects.not.toBeInstanceOf(CaseConflictError);
+  });
+
+  it("patchCaseWithEtag returns the fresh ETag on success", async () => {
+    responses.patch = [{ data: { slug: "x" }, headers: { etag: '"tok2"' } }];
+    const { etag } = await patchCaseWithEtag("x", [
+      { op: "replace", path: "/title", value: "X" },
+    ]);
+    expect(etag).toBe('"tok2"');
+  });
+
+  it("getCaseHistory hits /history/ and unwraps a paginated envelope", async () => {
+    responses.get = [
+      { data: { count: 1, next: null, previous: null, results: [{ id: 1 }] } },
+    ];
+    const rows = await getCaseHistory("case-1");
+    expect(calls[0].url).toBe("/api/cases/case-1/history/");
+    expect(rows).toEqual([{ id: 1 }]);
+  });
+
+  it("getCaseHistory tolerates a bare array response", async () => {
+    responses.get = [{ data: [{ id: 2 }] }];
+    const rows = await getCaseHistory("case-1");
+    expect(rows).toEqual([{ id: 2 }]);
+  });
+
+  it("getCaseHistory returns [] when the endpoint errors (older backend)", async () => {
+    responses.get = [{ status: 404, data: {} }];
+    const rows = await getCaseHistory("case-1");
+    expect(rows).toEqual([]);
   });
 });
