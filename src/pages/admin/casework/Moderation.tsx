@@ -76,9 +76,19 @@ export default function Moderation() {
       });
     } catch (err) {
       setError(adminErrorMessage(err, `Failed to ${verb.toLowerCase()} case`));
+      // Rethrow so a ConfirmButton-wrapped action (Dismiss) keeps its dialog
+      // open on failure. Plain-button callers (Approve / Send back) use
+      // actSafe() to avoid an unhandled rejection.
+      throw err;
     } finally {
       setBusySlug(null);
     }
+  };
+
+  // Fire-and-forget wrapper for the non-confirmed buttons: the error is already
+  // surfaced via setError inside act(), so we just swallow the rejection here.
+  const actSafe = (slug: string, to: CaseState, verb: string) => {
+    void act(slug, to, verb).catch(() => {});
   };
 
   return (
@@ -143,7 +153,7 @@ export default function Moderation() {
                   <Button
                     size="sm"
                     disabled={busy || !isModerator}
-                    onClick={() => act(slug, "PUBLISHED", "approved")}
+                    onClick={() => actSafe(slug, "PUBLISHED", "approved")}
                   >
                     {busy ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
@@ -156,7 +166,7 @@ export default function Moderation() {
                     size="sm"
                     variant="outline"
                     disabled={busy || !isModerator}
-                    onClick={() => act(slug, "DRAFT", "sent back to draft")}
+                    onClick={() => actSafe(slug, "DRAFT", "sent back to draft")}
                   >
                     <Undo2 className="mr-1 h-4 w-4" />
                     Send back to draft

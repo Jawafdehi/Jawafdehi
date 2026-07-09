@@ -351,13 +351,23 @@ export default function AdminCaseForm() {
   };
 
   // Dirty when there are unsaved edits: in edit mode, any diff op; in create
-  // mode, any non-empty core field. Drives the unsaved-changes guard.
+  // mode, any non-empty field the create form exposes (all fields render
+  // regardless of `editing`, so the guard must cover them all — not just the
+  // core four — or filling e.g. a thumbnail URL would be silently discarded).
   const dirty = editing
     ? buildPatch().length > 0
     : form.title.trim() !== "" ||
       form.description.trim() !== "" ||
       form.notes.trim() !== "" ||
-      form.key_allegations.length > 0;
+      form.missing_details.trim() !== "" ||
+      form.key_allegations.length > 0 ||
+      form.bigo.trim() !== "" ||
+      form.thumbnail_url.trim() !== "" ||
+      form.banner_url.trim() !== "" ||
+      form.tags.length > 0 ||
+      form.court_cases.length > 0 ||
+      form.case_start_date.trim() !== "" ||
+      form.case_end_date.trim() !== "";
   const { confirmDiscard } = useUnsavedChanges(dirty);
 
   const onCancel = () => {

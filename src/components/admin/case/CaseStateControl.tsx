@@ -101,9 +101,19 @@ export default function CaseStateControl({
       onTransitioned(to);
     } catch (err) {
       setError(adminErrorMessage(err, "Transition failed"));
+      // Rethrow so a ConfirmButton-wrapped transition keeps its dialog open on
+      // failure instead of closing as if it succeeded.
+      throw err;
     } finally {
       setBusy(null);
     }
+  };
+
+  // Fire-and-forget wrapper for the plain (non-confirmed) transition buttons:
+  // the error is already surfaced via setError, so swallow the rejection to
+  // avoid an unhandled promise rejection.
+  const transitionSafe = (to: CaseState) => {
+    void transition(to).catch(() => {});
   };
 
   return (
@@ -141,7 +151,7 @@ export default function CaseStateControl({
                 size="sm"
                 variant={t.variant ?? "outline"}
                 disabled={busy !== null}
-                onClick={() => transition(t.to)}
+                onClick={() => transitionSafe(t.to)}
               >
                 {busy === t.to && (
                   <Loader2 className="mr-1 h-4 w-4 animate-spin" />

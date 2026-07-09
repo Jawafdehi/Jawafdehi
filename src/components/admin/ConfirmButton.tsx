@@ -47,20 +47,39 @@ export default function ConfirmButton({
     setBusy(true);
     try {
       await onConfirm();
+      // Only close on success. Callers rethrow after surfacing their error, so
+      // a rejection keeps the dialog open — the destructive action didn't
+      // happen and the user shouldn't be left thinking it did.
       setOpen(false);
+    } catch {
+      // Swallow: the caller renders the failure in context (a toast / inline
+      // error). Keeping the dialog open signals the action did not complete.
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      // Ignore outside-click / programmatic close while the action is in
+      // flight, so the dialog can't vanish mid-request.
+      onOpenChange={(next) => {
+        if (busy) return;
+        setOpen(next);
+      }}
+    >
       <AlertDialogTrigger asChild>
         <Button variant={variant} size={size} disabled={disabled}>
           {children}
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent
+        onEscapeKeyDown={(e) => {
+          // Escape shouldn't dismiss the dialog while the action runs.
+          if (busy) e.preventDefault();
+        }}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
