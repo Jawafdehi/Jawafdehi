@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Filter } from "lucide-react";
-import { getEntityById } from "@/services/api";
-import { http } from "@/services/http";
+import { getEntities } from "@/services/api";
+import { jsonLdToEntity } from "@/services/entity-adapters";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import type { Entity } from "@/services/api";
@@ -30,82 +30,102 @@ interface EnrichedEntity {
   nesEntity?: Entity;
 }
 
-interface JawafEntityPage {
-  count: number;
-  next: string | null;
-  results: JawafEntity[];
+// Raw JSON-LD list item as returned by GET /api/entities. The directory renders
+// the entity registry directly (no case linkage), so we synthesize a lightweight
+// JawafEntity stub from each doc for EntityCard, plus the adapted Entity for rich
+// display. `[k]` keeps the type-specific long tail intact for jsonLdToEntity.
+interface EntityJsonLdItem {
+  "@id": string;
+  "@type"?: string | string[];
+  name?: { en?: string; ne?: string } | string;
+  [k: string]: unknown;
+}
+
+const PAGE_SIZE = 30;
+
+function displayNameFromJsonLd(name: EntityJsonLdItem["name"], lang: string): string {
+  if (!name) return "";
+  if (typeof name === "string") return name;
+  return (lang === "ne" ? name.ne : name.en) || name.en || name.ne || "";
 }
 
 const Entities = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [page, setPage] = useState(1);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
+  // Reset to page 1 whenever the (debounced) search changes, and reflect it in the URL.
   useEffect(() => {
+    setPage(1);
     const params = new URLSearchParams();
     if (debouncedSearchQuery) params.set("search", debouncedSearchQuery);
     setSearchParams(params, { replace: true });
   }, [debouncedSearchQuery, setSearchParams]);
 
-  const { data, isLoading: loading, isError } = useQuery({
-    queryKey: ['jds-entities', page],
+  const { data, isLoading: loading, isError, isPlaceholderData } = useQuery({
+    // `search` is in the key so a query change starts a fresh result set (page 1)
+    // and page transitions never mix results across different searches.
+    queryKey: ['entities', debouncedSearchQuery, page],
     queryFn: async () => {
-      const response = await http.get<JawafEntityPage>(
-        `/api/entities/`,
-        { params: { page } }
-      );
-      const jawafEntities = response.data.results || [];
+      // The entity registry endpoint is GET /api/entities (NO trailing slash — the
+      // slash 404s) and paginates with limit/offset, returning
+      // { entities: JSON-LD[], total, limit, offset } — NOT { results, next, count }.
+      // Search is done SERVER-SIDE (query param) so it spans all ~182k entities, not
+      // only the pages loaded so far. Reusing getEntities() keeps the contract in one place.
+      const response = await getEntities({
+        query: debouncedSearchQuery || undefined,
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      });
+      const items = (response.entities || []) as unknown as EntityJsonLdItem[];
+      const total = response.total ?? 0;
 
-      const enriched: EnrichedEntity[] = await Promise.all(
-        jawafEntities.map(async (jawafEntity) => {
-          if (jawafEntity.nes_id) {
-            try {
-              const nesEntity = await getEntityById(jawafEntity.nes_id);
-              return { jawafEntity, nesEntity };
-            } catch {
-              return { jawafEntity };
-            }
-          }
-          return { jawafEntity };
-        })
-      );
+      // Each JSON-LD doc IS the entity. Adapt it to the SPA Entity shape for rich
+      // display, and synthesize a JawafEntity stub (nes_id/display_name) so
+      // EntityCard renders a name + a working /entity/<prefix>/<slug> link.
+      const enriched: EnrichedEntity[] = items.map((doc) => {
+        const iri = doc["@id"];
+        return {
+          jawafEntity: {
+            nes_id: iri,
+            display_name: displayNameFromJsonLd(doc.name, i18n.language),
+          } as unknown as JawafEntity,
+          nesEntity: jsonLdToEntity(doc),
+        };
+      });
 
       return {
         entities: enriched,
-        count: response.data.count || 0,
-        hasMore: response.data.next !== null,
+        count: total,
+        hasMore: (page - 1) * PAGE_SIZE + items.length < total,
       };
     },
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
 
-  // Accumulate pages client-side
+  // Accumulate pages client-side. Guard on !isPlaceholderData so we only append
+  // once the NEW page has actually loaded — otherwise the placeholder (previous
+  // page's data) would be appended when `page` bumps, duplicating rows.
   const [allEntities, setAllEntities] = useState<EnrichedEntity[]>([]);
   useEffect(() => {
-    if (!data) return;
+    if (!data || isPlaceholderData) return;
     setAllEntities(prev => page === 1 ? data.entities : [...prev, ...data.entities]);
-  }, [data, page]);
+  }, [data, page, isPlaceholderData]);
 
   useEffect(() => {
     if (isError) toast.error(t("entities.fetchError") || "Failed to load entities");
   }, [isError, t]);
 
+  // Search is applied server-side (see the query above), so `allEntities` already
+  // holds only matching rows. We do NOT re-filter client-side — that would hide
+  // valid backend matches whose display_name differs from the raw query. When
+  // browsing (no search) we sort by name for a stable, scannable order.
   const filteredEntities = debouncedSearchQuery
-    ? allEntities.filter(({ jawafEntity, nesEntity }) => {
-        const query = debouncedSearchQuery.toLowerCase();
-        if (jawafEntity.display_name?.toLowerCase().includes(query)) return true;
-        if (jawafEntity.nes_id?.toLowerCase().includes(query)) return true;
-        if (nesEntity?.names) {
-          const en = nesEntity.names.find(n => n.en)?.en?.full?.toLowerCase() || '';
-          const ne = nesEntity.names.find(n => n.ne)?.ne?.full?.toLowerCase() || '';
-          if (en.includes(query) || ne.includes(query)) return true;
-        }
-        return false;
-      })
+    ? allEntities
     : [...allEntities].sort((a, b) => {
         const nameA = a.jawafEntity.display_name || a.jawafEntity.nes_id || '';
         const nameB = b.jawafEntity.display_name || b.jawafEntity.nes_id || '';
@@ -208,8 +228,8 @@ const Entities = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEntities.map(({ jawafEntity, nesEntity }) => (
-                  <EntityCard key={jawafEntity.id} entity={nesEntity} jawafEntity={jawafEntity} />
+                {filteredEntities.map(({ jawafEntity, nesEntity }, idx) => (
+                  <EntityCard key={jawafEntity.nes_id ?? `entity-${idx}`} entity={nesEntity} jawafEntity={jawafEntity} />
                 ))}
               </div>
               {!debouncedSearchQuery && data?.hasMore && (

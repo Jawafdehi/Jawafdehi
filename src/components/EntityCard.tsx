@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Building2, User, MapPin } from "lucide-react";
 import { Entity } from "@/services/api";
 import { getPrimaryName, getAttribute } from "@/utils/entity-helpers";
+import { entityPath } from "@/lib/entity-links";
 import type { JawafEntity } from "@/types/jds";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
@@ -51,9 +52,11 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
       const thumbPicture = entity.pictures.find(p => p.type === 'thumb');
       profilePicUrl = thumbPicture?.url || entity.pictures[0]?.url || null;
     }
-  } else if (jawafEntity.nes_id) {
-    // Show nes_id as fallback if NES data failed to load
-    primaryName = jawafEntity.nes_id;
+  } else if (!primaryName || primaryName === t('entityCard.unknown')) {
+    // Last resort only: show the nes_id IRI when there's no display_name and no
+    // resolved entity record. (Previously this ALWAYS overrode display_name with
+    // the raw IRI whenever the entity record was absent.)
+    if (jawafEntity.nes_id) primaryName = jawafEntity.nes_id;
   }
 
   const relationEntries = jawafEntity.related_cases || [];
@@ -64,9 +67,12 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
     (entry) => entry.relation_type !== 'accused' && entry.relation_type !== 'alleged'
   ).length;
 
-  return (
-    <Link to={`/entity/${jawafEntity.id}`}>
-      <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
+  // Link to the entity profile via its nes_id IRI (the API no longer sends a
+  // numeric `id`; entityPath maps the @id IRI to the /entity/* SPA route).
+  const href = entityPath(jawafEntity.nes_id);
+
+  const card = (
+      <Card className={`h-full${href ? " hover:shadow-lg transition-shadow duration-200" : ""}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16 flex-shrink-0">
@@ -126,8 +132,10 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
           </div>
         </CardContent>
       </Card>
-    </Link>
   );
+
+  // Only wrap in a Link when we have a resolvable target — never /entity/undefined.
+  return href ? <Link to={href}>{card}</Link> : <div>{card}</div>;
 };
 
 export default EntityCard;
