@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Filter } from "lucide-react";
-import { getEntityById } from "@/services/api";
-import { http } from "@/services/http";
+import { getEntities } from "@/services/api";
+import { jsonLdToEntity } from "@/services/entity-adapters";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import type { Entity } from "@/services/api";
@@ -30,14 +30,27 @@ interface EnrichedEntity {
   nesEntity?: Entity;
 }
 
-interface JawafEntityPage {
-  count: number;
-  next: string | null;
-  results: JawafEntity[];
+// Raw JSON-LD list item as returned by GET /api/entities. The directory renders
+// the entity registry directly (no case linkage), so we synthesize a lightweight
+// JawafEntity stub from each doc for EntityCard, plus the adapted Entity for rich
+// display. `[k]` keeps the type-specific long tail intact for jsonLdToEntity.
+interface EntityJsonLdItem {
+  "@id": string;
+  "@type"?: string | string[];
+  name?: { en?: string; ne?: string } | string;
+  [k: string]: unknown;
+}
+
+const PAGE_SIZE = 30;
+
+function displayNameFromJsonLd(name: EntityJsonLdItem["name"], lang: string): string {
+  if (!name) return "";
+  if (typeof name === "string") return name;
+  return (lang === "ne" ? name.ne : name.en) || name.en || name.ne || "";
 }
 
 const Entities = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [page, setPage] = useState(1);
@@ -51,32 +64,37 @@ const Entities = () => {
   }, [debouncedSearchQuery, setSearchParams]);
 
   const { data, isLoading: loading, isError } = useQuery({
-    queryKey: ['jds-entities', page],
+    queryKey: ['entities', page],
     queryFn: async () => {
-      const response = await http.get<JawafEntityPage>(
-        `/api/entities/`,
-        { params: { page } }
-      );
-      const jawafEntities = response.data.results || [];
+      // The entity registry endpoint is GET /api/entities (NO trailing slash — the
+      // slash 404s) and paginates with limit/offset, returning
+      // { entities: JSON-LD[], total, limit, offset } — NOT { results, next, count }.
+      // Reusing the shared getEntities() service keeps the contract in one place.
+      const response = await getEntities({
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      });
+      const items = (response.entities || []) as unknown as EntityJsonLdItem[];
+      const total = response.total ?? 0;
 
-      const enriched: EnrichedEntity[] = await Promise.all(
-        jawafEntities.map(async (jawafEntity) => {
-          if (jawafEntity.nes_id) {
-            try {
-              const nesEntity = await getEntityById(jawafEntity.nes_id);
-              return { jawafEntity, nesEntity };
-            } catch {
-              return { jawafEntity };
-            }
-          }
-          return { jawafEntity };
-        })
-      );
+      // Each JSON-LD doc IS the entity. Adapt it to the SPA Entity shape for rich
+      // display, and synthesize a JawafEntity stub (id/nes_id/display_name) so
+      // EntityCard renders a name + a working /entity/<prefix>/<slug> link.
+      const enriched: EnrichedEntity[] = items.map((doc) => {
+        const iri = doc["@id"];
+        return {
+          jawafEntity: {
+            nes_id: iri,
+            display_name: displayNameFromJsonLd(doc.name, i18n.language),
+          } as unknown as JawafEntity,
+          nesEntity: jsonLdToEntity(doc),
+        };
+      });
 
       return {
         entities: enriched,
-        count: response.data.count || 0,
-        hasMore: response.data.next !== null,
+        count: total,
+        hasMore: (page - 1) * PAGE_SIZE + items.length < total,
       };
     },
     staleTime: 5 * 60 * 1000,
@@ -208,8 +226,8 @@ const Entities = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEntities.map(({ jawafEntity, nesEntity }) => (
-                  <EntityCard key={jawafEntity.id} entity={nesEntity} jawafEntity={jawafEntity} />
+                {filteredEntities.map(({ jawafEntity, nesEntity }, idx) => (
+                  <EntityCard key={jawafEntity.nes_id ?? `entity-${idx}`} entity={nesEntity} jawafEntity={jawafEntity} />
                 ))}
               </div>
               {!debouncedSearchQuery && data?.hasMore && (
