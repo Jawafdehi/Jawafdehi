@@ -11,7 +11,7 @@ import { truncPct } from "@/lib/data-quality";
  * here, where the whole page is an argument for honesty about the gap.
  */
 export function DataLimitations({ stats }: { stats?: CaseStatistics }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   if (!stats) return null;
 
   const ngm = stats.ngm;
@@ -24,7 +24,7 @@ export function DataLimitations({ stats }: { stats?: CaseStatistics }) {
       t(
         "dataQuality.limitations.linked",
         "None of the {{total}} court records are linked yet to the specific people or offices they name, so you can't jump from an official to their court history.",
-        { total: ngm.court_cases_total.toLocaleString() },
+        { total: ngm.court_cases_total.toLocaleString(i18n.language) },
       ),
     );
   }
@@ -34,7 +34,7 @@ export function DataLimitations({ stats }: { stats?: CaseStatistics }) {
       t(
         "dataQuality.limitations.investigating",
         "{{count}} cases sit under investigation in our counts but aren't yet browsable one by one.",
-        { count: investigating.toLocaleString() },
+        { count: investigating.toLocaleString(i18n.language) },
       ),
     );
   }
