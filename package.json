@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "preview": "vite preview",
     "predeploy": "bun run lint && bun run build",
     "deploy": "wrangler deploy",
@@ -103,6 +105,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.16.5",

@@ -29,3 +29,7 @@ dist-ssr
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+# Playwright E2E artifacts
+/playwright-report/
+/test-results/
+/tests/e2e-pw/.auth/
