@@ -4,7 +4,7 @@ import { Community } from "@/components/donate/community";
 import { DonationDescription } from "@/components/donate/description";
 import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
-import { PayPalDonation } from "@/components/donate/paypal";
+import { DonationInfo } from "@/components/donate/info";
 
 const Donate = () => {
   return (
@@ -28,7 +28,7 @@ const Donate = () => {
       <section className="flex-1">
         <DonateHero />
         <DonationDescription />
-        <PayPalDonation />
+        <DonationInfo />
         <Community />
         <DonationFaq />
       </section>
