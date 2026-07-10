@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const CaseCardSkeleton = () => {
   return (
-    <Card aria-hidden="true" className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)]">
+    <Card aria-hidden="true" className="group relative flex h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)]">
       <div className="relative h-52 overflow-hidden bg-muted/20">
         <Skeleton className="h-full w-full rounded-none" />
         <div className="absolute inset-x-0 top-0 p-4">

@@ -221,7 +221,7 @@ export default function MaterialProfile() {
 
             {/* Details. */}
             {detailRows.length > 0 || data.identifier ? (
-              <dl className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2">
+              <dl className="grid gap-4 rounded-xl bg-card p-5 sm:grid-cols-2">
                 {detailRows.map((r) => (
                   <div key={r.label}>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</dt>
@@ -243,7 +243,7 @@ export default function MaterialProfile() {
 
             {/* Full-text transcript (when present). */}
             {fullTextStr ? (
-              <section className="rounded-xl border bg-card p-5">
+              <section className="rounded-xl bg-card p-5">
                 <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                   <FileText className="h-4 w-4" aria-hidden="true" /> Document text
                 </h2>

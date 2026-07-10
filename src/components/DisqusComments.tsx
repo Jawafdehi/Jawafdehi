@@ -80,7 +80,7 @@ export function DisqusComments({ caseId, caseTitle, caseUrl }: DisqusCommentsPro
   return (
     <section
       ref={sectionRef}
-      className="mt-12 mb-8 disqus-comments print:hidden rounded-2xl border border-border/70 bg-card/40 p-6 sm:p-8 shadow-sm"
+      className="mt-12 mb-8 disqus-comments print:hidden rounded-2xl bg-card/40 p-6 shadow-sm sm:p-8"
       aria-labelledby="comments-heading"
     >
       <Separator className="mb-8" />

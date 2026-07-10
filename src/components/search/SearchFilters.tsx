@@ -54,7 +54,7 @@ export function SearchFilters({
   return (
     <aside
       aria-label="Archive search filters"
-      className="space-y-4 rounded-xl border bg-card p-4"
+      className="space-y-4 rounded-xl bg-card p-4"
     >
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-sm font-bold tracking-tight text-foreground">
@@ -97,7 +97,7 @@ export function SearchFiltersSkeleton() {
   return (
     <aside
       aria-hidden="true"
-      className="space-y-4 rounded-xl border bg-card p-4"
+      className="space-y-4 rounded-xl bg-card p-4"
     >
       <div className="flex h-8 items-center justify-between gap-4">
         <Skeleton className="h-4 w-14" />

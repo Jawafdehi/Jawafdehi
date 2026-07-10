@@ -45,7 +45,10 @@ const desktopNavWidthClass: Record<string, string> = {
   process: "min-w-[7.25rem]",
   cases: "min-w-[4.75rem]",
   volunteer: "min-w-[6.25rem]",
+  faq: "min-w-[4.25rem]",
+  updates: "min-w-[5.5rem]",
   commitment: "min-w-[8.75rem]",
+  weeklySeries: "min-w-[7.5rem]",
   about: "min-w-[5.75rem]",
   archive: "min-w-[5.75rem]",
 };
@@ -80,9 +83,9 @@ export function Navbar() {
   const navItems = useMemo<NavItem[]>(
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
-      { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
+      { key: "weeklySeries", label: t("nav.weeklySeries"), to: "/saptahik" },
       { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
-      { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
+      { key: "updates", label: t("nav.updates"), to: "/updates" },
     ],
     [t],
   );
@@ -100,10 +103,11 @@ export function Navbar() {
   const aboutNavItems = useMemo<NavItem[]>(
     () => [
       { key: "about", label: t("nav.about"), to: "/about", exact: true },
+      { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
+      { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
       { key: "team", label: t("nav.team"), to: "/team" },
       { key: "products", label: t("nav.products"), to: "/products" },
-      { key: "weeklySeries", label: t("nav.weeklySeries"), to: "/saptahik" },
-      { key: "updates", label: t("nav.updates"), to: "/updates" },
+      { key: "faq", label: t("nav.faq"), to: "/faq" },
     ],
     [t],
   );
@@ -111,7 +115,7 @@ export function Navbar() {
   const activeKey = useMemo(() => {
     const path = location.pathname;
 
-    if (["/about", "/team", "/products", "/saptahik", "/updates"].includes(path) || path.startsWith("/updates/")) {
+    if (["/about", "/our-process", "/commitment", "/team", "/products", "/faq"].includes(path)) {
       return "about";
     }
     if (
@@ -150,6 +154,8 @@ export function Navbar() {
   const setNavRef = (key: string) => (node: HTMLElement | null) => {
     navRefs.current[key] = node;
   };
+
+  const [homeNavItem, ...secondaryNavItems] = navItems;
 
   useEffect(() => {
     const updateScrolled = () => {
@@ -233,7 +239,55 @@ export function Navbar() {
               style={pillStyle}
             />
 
-            {navItems.map((item) => (
+            {homeNavItem ? (
+              <NavLink
+                to={homeNavItem.to}
+                end={homeNavItem.exact}
+                ref={setNavRef(homeNavItem.key)}
+                onPointerEnter={() => setHoveredKey(homeNavItem.key)}
+                className={({ isActive }) =>
+                  cn(
+                    "relative z-10 inline-flex h-10 items-center justify-center rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    desktopNavWidthClass[homeNavItem.key],
+                    isActive && "font-medium text-foreground/82",
+                  )
+                }
+              >
+                {homeNavItem.label}
+              </NavLink>
+            ) : null}
+
+            <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
+              <DropdownMenuTrigger
+                ref={setNavRef("about")}
+                onPointerEnter={() => setHoveredKey("about")}
+                className={cn(
+                  "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  desktopNavWidthClass.about,
+                  (activeKey === "about" || aboutOpen) && "text-foreground/82",
+                )}
+              >
+                {t("nav.about")}
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                    aboutOpen && "rotate-180",
+                  )}
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="center"
+                className="mt-3 w-56 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+              >
+                {aboutNavItems.map((item) => (
+                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
+                    <Link to={item.to}>{item.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {secondaryNavItems.map((item) => (
               <NavLink
                 key={item.key}
                 to={item.to}
@@ -279,46 +333,6 @@ export function Navbar() {
                     <Link to={item.to}>{item.label}</Link>
                   </DropdownMenuItem>
                 ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
-              <DropdownMenuTrigger
-                ref={setNavRef("about")}
-                onPointerEnter={() => setHoveredKey("about")}
-                className={cn(
-                  "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  desktopNavWidthClass.about,
-                  (activeKey === "about" || aboutOpen) && "text-foreground/82",
-                )}
-              >
-                {t("nav.about")}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    aboutOpen && "rotate-180",
-                  )}
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                className="mt-3 w-48 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
-              >
-                <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
-                  <Link to="/about">{t("nav.about")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
-                  <Link to="/team">{t("nav.team")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
-                  <Link to="/products">{t("nav.products")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
-                  <Link to="/saptahik">{t("nav.weeklySeries")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl text-sm font-normal">
-                  <Link to="/updates">{t("nav.updates")}</Link>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
@@ -425,7 +439,28 @@ export function Navbar() {
                 </SheetHeader>
 
                 <nav className="mt-8 flex flex-col gap-2">
-                  {navItems.map((item) => (
+                  {homeNavItem ? (
+                    <NavLink
+                      to={homeNavItem.to}
+                      end={homeNavItem.exact}
+                      className={mobileNavLinkClass}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {homeNavItem.label}
+                    </NavLink>
+                  ) : null}
+                  {aboutNavItems.map((item) => (
+                    <NavLink
+                      key={item.key}
+                      to={item.to}
+                      end={item.exact}
+                      className={mobileNavLinkClass}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                  {secondaryNavItems.map((item) => (
                     <NavLink
                       key={item.key}
                       to={item.to}
@@ -437,17 +472,6 @@ export function Navbar() {
                     </NavLink>
                   ))}
                   {archiveNavItems.map((item) => (
-                    <NavLink
-                      key={item.key}
-                      to={item.to}
-                      end={item.exact}
-                      className={mobileNavLinkClass}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
-                  {aboutNavItems.map((item) => (
                     <NavLink
                       key={item.key}
                       to={item.to}

@@ -254,7 +254,7 @@ function ResultCardShell({
   url: string;
 }>) {
   return (
-    <div className="group relative block overflow-hidden rounded-xl border bg-card p-4 transition-colors hover:border-primary/35 hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+    <div className="group relative block overflow-hidden rounded-xl bg-card p-4 transition-colors hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
       <article className="relative z-10 flex min-h-20 items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
@@ -335,7 +335,7 @@ export function SearchResultCardSkeleton({
   return (
     <div
       aria-hidden="true"
-      className="relative overflow-hidden rounded-xl border bg-card p-4"
+      className="relative overflow-hidden rounded-xl bg-card p-4"
     >
       <div className="relative z-10 flex min-h-20 items-start gap-3">
         <div className="min-w-0 flex-1">

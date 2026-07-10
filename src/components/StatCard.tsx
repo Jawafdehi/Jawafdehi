@@ -11,7 +11,7 @@ interface StatCardProps {
 
 export const StatCard = ({ title, value, icon: Icon, description, trend }: StatCardProps) => {
   return (
-    <Card className="border-border/50">
+    <Card>
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">

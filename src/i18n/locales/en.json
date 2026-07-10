@@ -20,7 +20,8 @@
     "archive": "Archive",
     "searchArchive": "Search archive",
     "materials": "Governance materials",
-    "courtCases": "Court cases"
+    "courtCases": "Court cases",
+    "faq": "FAQ"
   },
   "weeklyMeetings": {
     "eyebrow": "Live every week",
@@ -98,7 +99,8 @@
       "terms": "Read platform rules, public domain data terms, disclaimers, and permitted use.",
       "updateDetail": "Read a Jawafdehi platform update.",
       "caseDetail": "Open a documented corruption case.",
-      "entityDetail": "Open a tracked person, office, or organization."
+      "entityDetail": "Open a tracked person, office, or organization.",
+      "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers."
     }
   },
   "footer": {
@@ -1618,5 +1620,184 @@
         "cta": "Donate now"
       }
     }
+  },
+  "faqPage": {
+    "meta": {
+      "title": "FAQ | Jawafdehi Nepal",
+      "description": "Answers to common questions about Jawafdehi, the corruption cases we document, verification, reporting, data use, privacy, volunteering, funding, and legal disclaimers.",
+      "socialDescription": "Answers to common questions about Jawafdehi, reporting corruption cases, verification, data reuse, privacy, volunteering, and funding."
+    },
+    "hero": {
+      "eyebrow": "Jawafdehi FAQ",
+      "title": "Questions, answered plainly.",
+      "description": "Everything readers, contributors, reporters, accused entities, donors, and volunteers ask before using or supporting Jawafdehi."
+    },
+    "browseLabel": "Browse",
+    "sections": [
+      {
+        "id": "about-jawafdehi",
+        "title": "About Jawafdehi",
+        "questions": [
+          {
+            "id": "what-is-jawafdehi",
+            "question": "What is Jawafdehi?",
+            "answer": "Jawafdehi is an open-source civic-tech platform for Nepal, built by Nepali volunteers, that documents allegations of corruption. Grounded in a Gen-Z mandate for transparency and action, we aim to become Nepal's accountability system — holding corrupt politicians, individuals, and others accountable through independent, evidence-first, and citizen-powered means. We use AI to process government documents, track news sources, and generate comprehensive investigation reports, scaling the fight against corruption through technology. Free to use, open source, and **volunteer-led** — built by Nepali volunteers and a small paid team of intern lawyers and engineers who believe **accountability has no expiry**."
+          },
+          {
+            "id": "what-does-jawafdehi-mean",
+            "question": "What does \"Jawafdehi\" mean?",
+            "answer": "*Jawafdehi* (जवाफदेही) is Nepali for **accountability** — being answerable for one's actions. It's the principle the entire platform is built around."
+          },
+          {
+            "id": "who-runs-jawafdehi",
+            "question": "Who runs Jawafdehi? Is it affiliated with the government or a political party?",
+            "answer": "No. Jawafdehi is **volunteer-led** — built and run by Nepali volunteers, supporting a small paid team of intern lawyers and engineers, in Nepal and across the diaspora — and is operated by two aligned, independently-governed nonprofit entities that share the name **Jawafdehi Initiative**:\n\n- **Jawafdehi Initiative Inc.** — a Michigan (USA) nonprofit corporation, Michigan entity no. **900230142**, US EIN **42-3114954**, organized exclusively for charitable, educational, and research purposes.\n- **Jawafdehi Initiative** — a Profit Non-Distributing Company registered in Nepal under the Companies Act, 2006 (Nepal's legal form for a not-for-profit), registration no. **393949/82/83**, PAN **623632659**, incorporated June 2026, registered office in Biratnagar Metropolitan City Ward 5, Morang.\n\nOur boards of directors:\n\n- **Jawafdehi Initiative Inc. (US):** Bishwas Gautam, Nischal Dahal, Anish Karki.\n- **Jawafdehi Initiative (Nepal):** Damodar Dahal (Chairperson), Niroj Aryal (Secretary), Medha Sharma, Rohan Raj Gautam, Shikshita Bhandari.\n\nOur incorporation documents are public — the US Articles of Incorporation and IRS EIN letter for Jawafdehi Initiative Inc., and the Nepal certificate of incorporation for Jawafdehi Initiative. We accept **no funding from any government or political party**, and nothing that would compromise our editorial independence. We are not a government body, law firm, or legal authority."
+          }
+        ]
+      },
+      {
+        "id": "what-we-document",
+        "title": "What we document",
+        "questions": [
+          {
+            "id": "case-coverage",
+            "question": "What kinds of cases does Jawafdehi cover?",
+            "answer": "Our primary focus today — and the core of our roadmap — is corruption cases filed by the **CIAA** (Commission for the Investigation of Abuse of Authority): we index each with its supporting documents, court orders, and legal filings as a structured, plain-language record. We are **not CIAA-exclusive** — our longer-term goal is to also document major cases of national public interest that fall outside CIAA filings, such as the Ncell, Giribandhu, and Rabi Lamichhane cases. Each entry lets citizens, journalists, researchers, and volunteers follow the full trail of a case: the accused parties, the alleged misconduct, locations, dates, official sources, and related documents."
+          },
+          {
+            "id": "information-sources",
+            "question": "Where does the information come from?",
+            "answer": "Today, most cases are built from **CIAA filings and the official documents, court orders, and legal records attached to them**. For the broader cases of national interest, we also draw on court records, the Attorney General's Office, official government documents, and credible media reporting. Everything is public and verifiable — we add plain-language summaries (human-reviewed) and link every fact back to its primary source, so you can check it yourself."
+          },
+          {
+            "id": "what-counts-as-corruption",
+            "question": "What counts as \"corruption\"?",
+            "answer": "Corruption is the **abuse of entrusted power for private gain** — a betrayal of public trust. The forms we track are:\n\n- **Bribery** — offering, giving, receiving, or soliciting something of value to influence an official.\n- **Embezzlement** — theft or misappropriation of funds placed in one's trust.\n- **Nepotism & favoritism** — favoring relatives or friends regardless of merit, especially in hiring or contracts.\n- **Conflict of interest** — personal interests improperly influencing professional duties.\n- **Abuse of public resources** — misuse of public funds, assets, or authority for personal benefit."
+          }
+        ]
+      },
+      {
+        "id": "how-it-works",
+        "title": "How it works & how we keep it accurate",
+        "questions": [
+          {
+            "id": "verification-process",
+            "question": "How do you verify a case before publishing?",
+            "answer": "Every case undergoes a multi-stage review before publication:\n\n1. **Source collection** — we gather government records, media reports, NGO investigations, public documents, and credible whistleblower accounts.\n2. **Cross-verification** — multiple independent sources are required; claims must be corroborated through official documents, witness accounts, or verifiable evidence.\n3. **Team review** — our moderation team reviews each case for accuracy, legal compliance, and ethical standards before approval.\n4. **Continuous updates** — cases are monitored; updates, responses from accused entities, and investigation outcomes are added as they emerge.\n\nOur standards require a **minimum of two independent, credible sources** per allegation; official documentation wherever possible; a clear distinction between verified facts, allegations, and ongoing investigations; a **right to respond for all accused entities**; and protection of sources and sensitive information."
+          },
+          {
+            "id": "ai-use",
+            "question": "Do you use AI? Can I trust it?",
+            "answer": "Yes. We use AI — including Anthropic's Claude — to process and summarize large volumes of legal documents faster. But **every case summary generated by AI is reviewed by a human volunteer for factual accuracy before it is published.** Speed does not come at the cost of accuracy. Where we use Claude, submitted content is processed under Anthropic's commercial terms and is **not used to train their models**."
+          },
+          {
+            "id": "inaccurate-information",
+            "question": "What if information on the platform is inaccurate?",
+            "answer": "Despite our rigorous process, errors can occur. If you find inaccurate information, contact us through our feedback form with supporting evidence. We'll review and correct any verified inaccuracy promptly, and **all corrections are documented in the case's audit trail**."
+          },
+          {
+            "id": "right-to-respond",
+            "question": "Can accused entities respond to allegations?",
+            "answer": "Yes — the **right to respond** is core to how we work. There's no self-serve submission portal; instead, an accused individual or organization should **contact the Jawafdehi team directly**. We first **verify identity through established, official channels** (for example, an official social-media account or a video call), and once verified, we publish the response **alongside** the original allegation so readers get the full context."
+          }
+        ]
+      },
+      {
+        "id": "reporting",
+        "title": "Reporting / submitting a case",
+        "questions": [
+          {
+            "id": "report-a-case",
+            "question": "How do I report a corruption case?",
+            "answer": "Use the **\"Report a case\" form** on jawafdehi.org and include as much detail and supporting documentation as you can. You may submit **anonymously or with your identity**. Every submission is reviewed by our team before anything is published, and we may contact you for verification if you've left a way to reach you.\n\nYou can also reach us at **report@jawafdehi.org** or **WhatsApp +977 9768630501**.\n\nIf you'd prefer to go straight to the authorities, you can report corruption through official channels: the **CIAA** — hotline **107**, toll-free **1660-01-22233**, or **ujuri@ciaa.gov.np** — and **Transparency International Nepal** (transparency.org/en/report-corruption/nepal)."
+          },
+          {
+            "id": "after-submit",
+            "question": "What happens after I submit?",
+            "answer": "Your submission enters our verification queue. Our team reviews the information, corroborates it through multiple sources, and decides whether it meets our publication standards. **This typically takes 7–14 days, depending on case complexity.** If you provided contact details, we'll notify you of the outcome."
+          },
+          {
+            "id": "anonymous-reporting",
+            "question": "If I report anonymously, is my identity protected?",
+            "answer": "Yes. We practice **minimal data collection**. Anonymous submissions don't store identifying information, you're never required to give a name or email, and access to submissions is limited to authorized personnel. We **never publish a source's identity without their informed consent**, and personal data like phone numbers and national ID numbers are never published. If you're concerned about safety, leave identifying details out of your submission and consider privacy tools such as the **Tor Browser** when using the platform."
+          }
+        ]
+      },
+      {
+        "id": "using-data",
+        "title": "Using the data",
+        "questions": [
+          {
+            "id": "reuse-information",
+            "question": "Can I reuse the information — for journalism, research, or advocacy?",
+            "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
+          },
+          {
+            "id": "free-forever",
+            "question": "Is it free? Will it ever have a paywall?",
+            "answer": "It's **free, forever** — no subscriptions, no paywalls, no premium tiers, no ads. Public accountability infrastructure should be free to everyone who needs it."
+          },
+          {
+            "id": "open-source",
+            "question": "Is the platform open source?",
+            "answer": "Not entirely — we keep some internal tooling private. But our core platforms are public: the **Jawafdehi API**, our case **reviewers and graders**, **NES** (Nepal Entity Service), **NGM** (Nepal Governance Modernization), and **likhit**, our universal Markdown converter for Nepali documents. We're strong believers in open source and in giving back to the community."
+          }
+        ]
+      },
+      {
+        "id": "privacy-safety",
+        "title": "Privacy & safety",
+        "questions": [
+          {
+            "id": "data-use",
+            "question": "What do you do with my data?",
+            "answer": "We practice **minimal data collection and maximum transparency**. All submissions are voluntary — you can report or send feedback anonymously, without a name or email. We minimize the data we collect, limit access to submissions to authorized personnel, and never sell, rent, or share personal information for commercial purposes. Full detail is in the Privacy Policy."
+          }
+        ]
+      },
+      {
+        "id": "get-involved",
+        "title": "Get involved",
+        "questions": [
+          {
+            "id": "volunteer",
+            "question": "How can I volunteer? Do I need to be an expert?",
+            "answer": "You don't need to be an expert — you need to care about Nepal and be willing to contribute your skills. We're looking for technologists, working professionals, legal minds, and students to help across our teams: data scraping, outreach, platform development, case compilation, and corruption research. You'll join a global community of Nepali volunteers in Nepal and across the diaspora (US, Thailand, India, and beyond). Email us to introduce yourself."
+          },
+          {
+            "id": "financial-support",
+            "question": "How can I support Jawafdehi financially?",
+            "answer": "You can support us via **PayPal**, **international bank wire (SWIFT)**, or a **Nepal bank account (coming soon)**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+          },
+          {
+            "id": "help-without-donating",
+            "question": "Can I help without donating money?",
+            "answer": "Yes. You can contribute research, translation, design, engineering, documentation, outreach, or help reviewing public records. Email us and tell us how you'd like to contribute."
+          }
+        ]
+      },
+      {
+        "id": "funding-independence",
+        "title": "Funding & independence",
+        "questions": [
+          {
+            "id": "funding",
+            "question": "How is Jawafdehi funded?",
+            "answer": "Jawafdehi is **volunteer-led and takes no profit**. It's funded by its volunteers and supporters, and by partnerships with **Nepali organizations and small Nepali businesses** that share our mission (for example, through donated infrastructure and services). We accept **no funding from any government or political party**, and nothing that would compromise our editorial independence."
+          }
+        ]
+      },
+      {
+        "id": "legal-disclaimers",
+        "title": "Legal & disclaimers",
+        "questions": [
+          {
+            "id": "legal-authority",
+            "question": "Are you a court or government authority? Can you prosecute?",
+            "answer": "No. Jawafdehi is an open-source documentation and public-awareness platform run by volunteers — **not** a government entity, judiciary body, or law firm, and not a legal authority. We don't prosecute, adjudicate, or give legal advice. Case information is based on publicly available records, may not reflect the most current legal status, and should not be treated as legal fact or used as the sole basis for any legal decision."
+          }
+        ]
+      }
+    ]
   }
 }
