@@ -22,7 +22,7 @@ export function KeyAllegationsSection({
               <span className="mt-1 shrink-0 text-lg font-bold leading-7 text-accent">
                 #{index + 1}.
               </span>
-              <p className="max-w-4xl text-base md:text-lg font-normal leading-[1.7] text-primary/75">
+              <p className="font-paragraph measure-prose">
                 {allegation}
               </p>
             </li>

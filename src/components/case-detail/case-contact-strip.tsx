@@ -22,15 +22,15 @@ export function CaseContactStrip({
   title,
 }: Readonly<CaseContactStripProps>) {
   return (
-    <aside className="no-print rounded-lg px-4 py-3 sm:px-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <aside className="no-print rounded-lg py-1.5 sm:px-5 sm:py-3">
+      <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:justify-between sm:gap-3">
         <div className="min-w-0">
-          <h3 className="text-lg font-extrabold tracking-tight text-primary sm:text-xl">
+          <h3 className="text-base font-extrabold tracking-tight text-primary sm:text-xl">
             {title}
           </h3>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 items-center gap-2">
          <Button
   asChild
   variant="navIcon"
@@ -59,7 +59,7 @@ export function CaseContactStrip({
   </a>
 </Button>
 
-          <Button asChild variant="primary" size="navCta">
+          <Button asChild className="px-3" variant="disclosure" size="navCta">
             <a href={editUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               <span>{editLabel}</span>

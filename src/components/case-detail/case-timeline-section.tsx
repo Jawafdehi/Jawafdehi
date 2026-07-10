@@ -4,6 +4,8 @@ import { formatDateRangeForLanguage } from "@/utils/date";
 import type { LocalizedDatePair } from "@/utils/date";
 import type { TimelineEntry } from "@/types/jds";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { CollapsibleCaseContent } from "@/components/case-detail/collapsible-case-content";
 
 interface CaseTimelineSectionProps {
   className?: string;
@@ -55,6 +57,8 @@ export function CaseTimelineSection({
   timeline,
   title,
 }: Readonly<CaseTimelineSectionProps>) {
+  const { t } = useTranslation();
+
   if (timeline.length === 0) return null;
 
   const releases: Release[] = timeline.map((item) => {
@@ -78,7 +82,7 @@ export function CaseTimelineSection({
           <h3 className="text-base md:text-lg font-semibold leading-snug tracking-tight text-primary/90">
             {item.title}
           </h3>
-          <p className="max-w-4xl text-sm md:text-base font-normal leading-[1.7] text-primary/75">
+          <p className="font-paragraph font-paragraph-compact measure-prose">
             {item.description}
           </p>
         </div>
@@ -92,7 +96,12 @@ export function CaseTimelineSection({
       className={cn("scroll-mt-28 no-page-break max-w-4xl", className)}
       aria-label={title}
     >
-      <ChangelogContent description="" heading={title} releases={releases} />
+      <CollapsibleCaseContent
+        readMoreLabel={t("caseDetail.readMore")}
+        showLessLabel={t("caseDetail.showLess")}
+      >
+        <ChangelogContent description="" heading={title} releases={releases} />
+      </CollapsibleCaseContent>
     </section>
   );
 }

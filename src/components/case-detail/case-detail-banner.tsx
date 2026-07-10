@@ -97,9 +97,9 @@ export function CaseDetailBanner({
   const titleLength = title.trim().length;
   const titleSizeClass =
     titleLength > 110
-      ? "text-xl leading-snug sm:text-2xl md:text-[1.7rem]"
+      ? "text-xl leading-snug sm:text-2xl md:text-3xl"
       : titleLength > 80
-        ? "text-2xl leading-snug sm:text-[1.7rem] md:text-3xl"
+        ? "text-2xl leading-snug sm:text-3xl md:text-3xl"
         : "text-2xl sm:text-3xl md:text-4xl";
 
   const bannerSrc = getCaseBannerSrc(caseData);
@@ -184,10 +184,10 @@ export function CaseDetailBanner({
                 setImageSrc(PLACEHOLDER_IMAGE);
               }
             }}
-            className="h-[340px] w-full object-cover object-top sm:h-[440px] lg:h-[520px] xl:h-[560px]"
+            className="order-2 h-52 w-full object-cover object-top sm:h-[440px] lg:order-none lg:h-[520px] xl:h-[560px]"
           />
 
-          <div className="flex flex-col justify-center py-6 lg:py-10">
+          <div className="order-1 flex flex-col justify-center py-0 lg:order-none lg:py-10">
             <div className="bg-primary px-6 py-5 text-white lg:-ml-20 lg:px-10">
               <nav
                 aria-label="breadcrumb"
@@ -317,7 +317,7 @@ export function CaseDetailBanner({
                     <Button
                       type="button"
                       variant="outline"
-                      className="gap-2 border-primary/20 bg-background text-primary hover:bg-primary/5 hover:text-primary"
+                      className="hidden gap-2 border-primary/20 bg-background text-primary hover:bg-primary/5 hover:text-primary sm:inline-flex"
                       onClick={shareAction.onClick}
                       aria-label={shareAction.label}
                     >

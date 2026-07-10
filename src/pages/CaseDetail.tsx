@@ -3,19 +3,14 @@ import { useParams, Link, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
-import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Banknote,
-  Calendar,
   AlertTriangle,
   ArrowLeft,
   AlertCircle,
-  MapPin,
-  User,
 } from "lucide-react";
 import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
@@ -25,6 +20,7 @@ import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-deta
 import { MissingDetailsSection } from "@/components/case-detail/missing-details-section";
 import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
+import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
 import { CourtCasesSection } from "@/components/case-detail/court-cases-section";
 import { EvidenceSection } from "@/components/case-detail/evidence-section";
 import { InvolvedPartiesSection } from "@/components/case-detail/involved-parties-section";
@@ -294,7 +290,7 @@ const CaseDetail = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-        <main id="main-content" className="flex-1 py-6 md:py-12">
+        <div className="flex-1 py-6 md:py-12">
           <div className="container mx-auto max-w-5xl px-6">
             <Skeleton className="mb-6 h-10 w-32" />
 
@@ -313,7 +309,7 @@ const CaseDetail = () => {
               <Skeleton className="h-64 w-full" />
             </div>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -321,7 +317,7 @@ const CaseDetail = () => {
   if (isError || !caseData) {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-        <main id="main-content" className="flex-1 py-6 md:py-12">
+        <div className="flex-1 py-6 md:py-12">
           <div className="container mx-auto max-w-5xl px-6">
             <Button variant="ghost" asChild className="mb-6">
               <Link to="/cases">
@@ -337,7 +333,7 @@ const CaseDetail = () => {
               </AlertDescription>
             </Alert>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -394,7 +390,7 @@ const CaseDetail = () => {
         }}
       />
 
-      <main id="main-content" className="flex-1 py-6 sm:py-8">
+      <div className="flex-1 py-6 sm:py-8">
         <div className="container mx-auto px-6">
           <div className="min-w-0">
             <div className="min-w-0">
@@ -421,17 +417,9 @@ const CaseDetail = () => {
                 <div className="mb-8 hidden print:block">
                   <h1 className="mb-6 text-4xl font-bold text-foreground">{caseData.title}</h1>
 
-                  {caseData.banner_url && (
-                    <img
-                      src={caseData.banner_url}
-                      alt={caseData.title}
-                      className="mb-6 h-64 w-full rounded-lg object-cover"
-                    />
-                  )}
-
                   <div className="grid grid-cols-1 gap-4">
                     <div className="flex items-start text-muted-foreground">
-                      <User className="mr-2 h-5 w-5 flex-shrink-0" />
+                      <span className="mr-2 font-semibold">{t("caseDetail.relationTypes.accused")}:</span>
                       <div className="flex flex-wrap gap-1 text-sm">
                         {visibleAccusedEntities.map((e, index, arr) => {
                           const entity = e.nes_id ? resolvedEntities[e.nes_id] : null;
@@ -472,7 +460,7 @@ const CaseDetail = () => {
                     </div>
 
                     <div className="flex items-center text-muted-foreground">
-                      <MapPin className="mr-2 h-5 w-5" />
+                      <span className="mr-2 font-semibold">{t("caseDetail.location")}:</span>
                       <div className="flex flex-wrap gap-1 text-sm">
                         {(() => {
                           const locations = caseData.entities.filter((e) => e.type === "location");
@@ -511,7 +499,6 @@ const CaseDetail = () => {
                     </div>
 
                     <div className="flex items-center text-muted-foreground">
-                      <Calendar className="mr-2 h-5 w-5" />
                       <span className="text-sm">
                         {t("caseDetail.period")}:{" "}
                         {(() => {
@@ -539,7 +526,6 @@ const CaseDetail = () => {
 
                     {caseData.bigo != null && caseData.bigo > 0 && (
                       <div className="flex items-center text-muted-foreground">
-                        <Banknote className="mr-2 h-5 w-5" />
                         <span className="text-sm">
                           {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo)}
                         </span>
@@ -636,19 +622,15 @@ const CaseDetail = () => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Mobile Share Button */}
       {isMobile && (
-        <div className="no-print pointer-events-auto fixed bottom-5 left-3 z-40 sm:left-6">
-          <ShareButton
+        <div className="no-print pointer-events-auto fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-3 z-40 sm:right-6">
+          <MobileShareExpander
             url={canonicalUrl}
             title={caseData.title}
             description={plainDescription}
-            variant="outline"
-            size="lg"
-            showLabel
-            className="border-2 shadow-lg hover:shadow-xl"
           />
         </div>
       )}

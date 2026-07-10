@@ -15,7 +15,7 @@ export function NotesSection({
   return (
     <section id="notes" className="mb-12 scroll-mt-28 border-t border-border pt-5 max-w-4xl">
       
-      <div className="overflow-hidden max-w-4xl text-base md:text-lg leading-[1.7] text-primary/75">
+      <div className="font-paragraph measure-prose overflow-hidden">
         <ResponsiveTable html={html} />
       </div>
     </section>
