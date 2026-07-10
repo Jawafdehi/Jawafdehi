@@ -148,10 +148,6 @@
     @apply text-foreground/70;
   }
 
-  .font-paragraph-compact {
-    @apply text-sm md:text-base;
-  }
-
   .font-meta {
     @apply text-xs font-medium text-muted-foreground;
     font-family: var(--font-family-app);
@@ -215,6 +211,10 @@
     @apply text-base font-normal text-primary/75 md:text-lg;
     font-family: var(--font-family-app);
     line-height: var(--font-paragraph-leading);
+  }
+
+  .font-paragraph-compact {
+    @apply text-sm md:text-base;
   }
 
   .content-prose {
