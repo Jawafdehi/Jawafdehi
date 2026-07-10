@@ -1560,5 +1560,59 @@
     "heading": "Court cases",
     "description": "Browse court cases from Nepal's judiciary in the Jawafdehi governance archive — listings, hearings, and orders harvested from public court records.",
     "placeholder": "Search court cases"
+  },
+  "newsletter": {
+    "modal": {
+      "title": "Stay Informed on Corruption in Nepal.",
+      "description": "Subscribe to the Jawafdehi newsletter for our latest documented cases and important updates in the fight for accountability.",
+      "submit": "Keep Me Updated",
+      "disclaimer": "Jawafdehi will periodically send newsletters and other updates. You can unsubscribe from all emails at any time."
+    },
+    "form": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Your email address",
+      "privacyPrefix": "I agree to the",
+      "privacyLink": "Privacy Policy",
+      "privacySuffix": ".",
+      "subscribe": "Subscribe",
+      "submitting": "Subscribing…",
+      "successTitle": "You're on the list.",
+      "successMessage": "Watch your inbox for new cases and Jawafdehi updates.",
+      "errorFirstName": "Please enter your first name.",
+      "errorEmail": "Please enter a valid email address.",
+      "errorConsent": "Please accept the Privacy Policy to subscribe.",
+      "errorUnsubscribed": "This address was previously unsubscribed. Please contact privacy@jawafdehi.org if you want to opt back in.",
+      "errorThrottled": "Too many attempts. Please wait a moment and try again.",
+      "errorGeneric": "Something went wrong. Please try again later."
+    },
+    "unsubscribe": {
+      "loading": "Unsubscribing…",
+      "confirmTitle": "Unsubscribe from Jawafdehi emails?",
+      "confirmMessage": "Please confirm that you want this address removed from Jawafdehi newsletter emails.",
+      "action": "Unsubscribe",
+      "successTitle": "You're unsubscribed",
+      "successMessage": "This newsletter link has been unsubscribed from Jawafdehi emails.",
+      "errorTitle": "Unsubscribe link unavailable",
+      "errorMessage": "This unsubscribe link is invalid or has expired. Please contact privacy@jawafdehi.org if you need help.",
+      "home": "Back to home"
+    },
+    "vision": {
+      "title": "Share Our Vision",
+      "stayInformed": {
+        "title": "Stay informed",
+        "description": "Subscribe to our newsletter to get the latest documented cases and updates from Jawafdehi."
+      },
+      "engage": {
+        "title": "Engage",
+        "description": "Jawafdehi is built entirely by volunteers. Join us and help document corruption in Nepal.",
+        "cta": "Become a volunteer"
+      },
+      "donate": {
+        "title": "Donate",
+        "description": "Your support keeps Nepal's corruption case archive free, open, and permanent. Take action and donate now.",
+        "cta": "Donate now"
+      }
+    }
   }
 }

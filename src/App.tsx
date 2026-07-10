@@ -56,6 +56,7 @@ const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
 const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
 const Materials = lazy(() => import("./pages/Materials"));
 const CourtCases = lazy(() => import("./pages/CourtCases"));
+const NewsletterUnsubscribe = lazy(() => import("./pages/NewsletterUnsubscribe"));
 
 // The entire /admin/* subtree — including the OIDC client, admin CRUD forms and
 // casework pages — lives behind this single lazy boundary. /admin is auth-gated
@@ -156,6 +157,10 @@ const App = () => (
             <Route path="/saptahik" element={<WeeklyMeetings />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route
+              path="/newsletter/unsubscribe/:token"
+              element={<NewsletterUnsubscribe />}
+            />
             <Route path="/donate/cancel" element={<PaymentCancelled />} />
             <Route path="/donate/success" element={<PaymentSuccess />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
