@@ -29,7 +29,7 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
   if (url === '/') {
     await Promise.allSettled([
       queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
-      queryClient.prefetchQuery({ queryKey: ['cases', { page: 1 }], queryFn: () => getCases({ page: 1 }) }),
+      queryClient.prefetchQuery({ queryKey: ['cases', { page: 1, page_size: 3 }], queryFn: () => getCases({ page: 1, page_size: 3 }) }),
     ]);
     return;
   }

@@ -7,10 +7,10 @@ import { SupportingPartner } from "@/components/home/supportingpartner";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import { getCases, getStatistics } from "@/services/jds-api";
 import { getEntityById } from "@/services/api";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { Entity } from "@/types/entity";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
@@ -20,7 +20,6 @@ import { useTranslation } from "react-i18next";
 const Index = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
-  const [resolvedEntities, setResolvedEntities] = useState<Record<string, Entity>>({});
 
   const { data: stats, isError: statsError, isLoading: statsLoading } = useQuery({
     queryKey: ['statistics'],
@@ -35,51 +34,52 @@ const Index = () => {
     return value?.toLocaleString() || "0";
   };
 
+  // The "Recently Documented Cases" section renders only the top 3 cards, so
+  // fetch exactly 3 rather than the default page of 20 — this shrinks the
+  // payload and the backend per-card resolution work. Keep the query key in
+  // sync with the SSR prefetch in entry-server.tsx.
   const { data: casesData } = useQuery({
-    queryKey: ['cases', { page: 1 }],
-    queryFn: () => getCases({ page: 1 }),
+    queryKey: ['cases', { page: 1, page_size: 3 }],
+    queryFn: () => getCases({ page: 1, page_size: 3 }),
     staleTime: 5 * 60 * 1000,
   });
 
-  // Resolve location entities from the registry
-  useEffect(() => {
-    if (!casesData?.results) return;
-
-    let isMounted = true;
-
-    const resolveEntities = async () => {
-      const allEntities = casesData.results.flatMap(c => c.entities || []);
-      const locationEntities = allEntities.filter(e => e.type === 'location');
-      const uniqueNesIds = [...new Set(locationEntities.map(e => e.nes_id!).filter(Boolean))];
-
-      const entityPromises = uniqueNesIds.map(async (nesId) => {
-        try {
-          const entity = await getEntityById(nesId);
-          return { id: nesId, entity };
-        } catch {
-          return null;
-        }
-      });
-
-      const entities = await Promise.all(entityPromises);
-
-      // Only update state if component is still mounted
-      if (isMounted) {
-        const entitiesMap = entities.reduce((acc, item) => {
-          if (item) acc[item.id] = item.entity;
-          return acc;
-        }, {} as Record<string, Entity>);
-        setResolvedEntities(entitiesMap);
-      }
-    };
-
-    resolveEntities();
-
-    // Cleanup function to prevent state updates on unmounted component
-    return () => {
-      isMounted = false;
-    };
+  // Resolve location entity display names via react-query so they are cached
+  // and deduped across mounts (and shared with the case-detail page's
+  // ["entity-record", id] queries) instead of an uncached imperative fetch that
+  // re-fires on every mount. Only the top 3 rendered cases' locations are read.
+  const locationNesIds = useMemo(() => {
+    const top = casesData?.results?.slice(0, 3) ?? [];
+    const ids = top
+      .flatMap(c => c.entities ?? [])
+      .filter(e => e.type === 'location' && e.nes_id)
+      .map(e => e.nes_id!);
+    return [...new Set(ids)];
   }, [casesData]);
+
+  const entityQueries = useQueries({
+    queries: locationNesIds.map(nesId => ({
+      queryKey: ["entity-record", nesId],
+      queryFn: () => getEntityById(nesId),
+      staleTime: 10 * 60 * 1000,
+      retry: false,
+    })),
+  });
+
+  // Build the resolved-name map from the cached query results. Keyed by a stable
+  // primitive signature (which ids have loaded) so the map identity only changes
+  // when a query actually resolves — keeps the featuredCases memo below stable.
+  const resolvedKey = entityQueries.map(q => (q.data ? 'y' : 'n')).join('');
+  const resolvedEntities = useMemo(() => {
+    const map: Record<string, Entity> = {};
+    locationNesIds.forEach((nesId, i) => {
+      const entity = entityQueries[i]?.data;
+      if (entity) map[nesId] = entity;
+    });
+    return map;
+    // entityQueries omitted intentionally; resolvedKey captures when results load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationNesIds, resolvedKey]);
 
   // Transform API cases to CaseCard format
   const featuredCases = useMemo(() => {
