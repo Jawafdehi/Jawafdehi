@@ -65,6 +65,13 @@ describe("isValidEntityRow", () => {
     expect(
       isValidEntityRow({ nes_id: "not-an-iri", relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" }),
     ).toBe(false);
+    // A blank / whitespace-only IRI row is invalid: the form blocks save on it (BB-27) rather than letting the patch builder silently drop the row and vanish on reload.
+    expect(
+      isValidEntityRow({ nes_id: "", relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" }),
+    ).toBe(false);
+    expect(
+      isValidEntityRow({ nes_id: "   ", relationship_type: "WITNESS", outcome: null, notes: "" }),
+    ).toBe(false);
     expect(
       isValidEntityRow({
         nes_id: IRI,
