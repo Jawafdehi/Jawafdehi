@@ -408,7 +408,8 @@
         ]
       },
       "copy": "Copy",
-      "copied": "Copied"
+      "copied": "Copied",
+      "copyFailed": "Copy failed — select and copy manually"
     },
     "transparency": {
       "eyebrow": "Our promise",

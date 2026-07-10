@@ -10,22 +10,58 @@ const PAYPAL_DONATE_URL =
   "https://www.paypal.com/donate/?hosted_button_id=ZYCQYYBFK7SDY";
 const NEPALI_BANK_ACCOUNT_NUMBER = "04601000000088900197";
 
-// Copy-to-clipboard with transient "copied" feedback. Clears any pending timer
-// on the next copy (so rapid clicks don't reset the state early) and on unmount.
+// Best-effort clipboard write. Prefers the async Clipboard API but falls back to
+// a legacy execCommand("copy") for insecure (HTTP) contexts and older browsers
+// where navigator.clipboard is unavailable. Returns whether the copy succeeded.
+async function writeToClipboard(text: string): Promise<boolean> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to the legacy path below.
+    }
+  }
+
+  if (typeof document === "undefined") return false;
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    // Keep it out of view and unfocusable to screen users without breaking selection.
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+// Copy-to-clipboard with transient "copied"/"failed" feedback. Clears any pending
+// timer on the next copy (so rapid clicks don't reset the state early) and on
+// unmount. On failure it surfaces a `failed` flag so the UI can prompt the user
+// to copy manually instead of silently doing nothing.
 function useCopyFeedback(duration = 1800) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   const copy = useCallback(
     async (text: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        if (timerRef.current) window.clearTimeout(timerRef.current);
-        timerRef.current = window.setTimeout(() => setCopied(false), duration);
-      } catch {
+      const ok = await writeToClipboard(text);
+      setCopied(ok);
+      setFailed(!ok);
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      timerRef.current = window.setTimeout(() => {
         setCopied(false);
-      }
+        setFailed(false);
+      }, duration);
     },
     [duration],
   );
@@ -37,15 +73,21 @@ function useCopyFeedback(duration = 1800) {
     [],
   );
 
-  return { copied, copy };
+  return { copied, failed, copy };
 }
 
 export function DonationInfo() {
   const { t } = useTranslation();
-  const { copied: isDonationLinkCopied, copy: copyDonationLink } =
-    useCopyFeedback();
-  const { copied: isBankAccountCopied, copy: copyBankAccountNumber } =
-    useCopyFeedback();
+  const {
+    copied: isDonationLinkCopied,
+    failed: isDonationLinkFailed,
+    copy: copyDonationLink,
+  } = useCopyFeedback();
+  const {
+    copied: isBankAccountCopied,
+    failed: isBankAccountFailed,
+    copy: copyBankAccountNumber,
+  } = useCopyFeedback();
 
   return (
     <section
@@ -103,7 +145,7 @@ export function DonationInfo() {
                     {t("donate.ways.nepali.accountLabel")}
                   </dt>
                   <dd className="mt-1 flex items-center gap-1">
-                    <span className="min-w-0 break-all font-mono text-xl font-medium tracking-wide text-primary">
+                    <span className="min-w-0 select-all break-all font-mono text-xl font-medium tracking-wide text-primary">
                       {NEPALI_BANK_ACCOUNT_NUMBER}
                     </span>
                     <button
@@ -112,12 +154,16 @@ export function DonationInfo() {
                       aria-label={
                         isBankAccountCopied
                           ? t("donate.ways.copied")
-                          : t("donate.ways.nepali.copyAria")
+                          : isBankAccountFailed
+                            ? t("donate.ways.copyFailed")
+                            : t("donate.ways.nepali.copyAria")
                       }
                       title={
                         isBankAccountCopied
                           ? t("donate.ways.copied")
-                          : t("donate.ways.nepali.copyAria")
+                          : isBankAccountFailed
+                            ? t("donate.ways.copyFailed")
+                            : t("donate.ways.nepali.copyAria")
                       }
                       className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
@@ -127,10 +173,19 @@ export function DonationInfo() {
                         <Copy className="h-4 w-4" aria-hidden="true" />
                       )}
                       <span aria-live="polite" className="sr-only">
-                        {isBankAccountCopied ? t("donate.ways.copied") : ""}
+                        {isBankAccountCopied
+                          ? t("donate.ways.copied")
+                          : isBankAccountFailed
+                            ? t("donate.ways.copyFailed")
+                            : ""}
                       </span>
                     </button>
                   </dd>
+                  {isBankAccountFailed ? (
+                    <p className="mt-1 text-xs font-medium text-destructive">
+                      {t("donate.ways.copyFailed")}
+                    </p>
+                  ) : null}
                 </div>
               </dl>
 
