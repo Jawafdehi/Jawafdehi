@@ -5,20 +5,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "font-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground font-semibold shadow-sm shadow-primary/15 transition-colors duration-200 hover:bg-primary/85",
+          "bg-primary text-primary-foreground font-semibold transition-colors duration-200 hover:bg-primary/85",
         primary:
-          "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-colors duration-200 hover:bg-primary/85",
+          "bg-primary text-primary-foreground font-bold transition-colors duration-200 hover:bg-primary/85",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-primary font-bold bg-background text-primary hover:bg-accent hover:text-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         navIcon:
-          "border border-border/70 bg-background/70 text-foreground/75 shadow-sm shadow-foreground/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-background hover:text-foreground hover:shadow-md",
+          "border border-border/70 bg-background/70 text-foreground/75 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-background hover:text-foreground",
+        disclosure:
+          "font-semibold text-primary hover:text-primary/75",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -27,7 +29,7 @@ const buttonVariants = cva(
         lg: "h-11 px-8",
         xl: "h-14 px-10 text-base",
         icon: "h-10 w-10",
-        navCta: "h-11   px-4 text-[13px]",
+        navCta: "font-button h-11 px-4",
         navSheet: "h-11 px-4",
         navMenuIcon: "h-11 w-11",
       },
