@@ -1,4 +1,3 @@
-import { type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -303,12 +302,12 @@ function GenericGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) 
           {resultLabel(result)}
         </Badge>
       </div>
-      <h2 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground group-hover:text-primary">
+      <h3 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground group-hover:text-primary">
         <Link to={result.url} className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           <span aria-hidden="true" className="absolute inset-0" />
           {title}
         </Link>
-      </h2>
+      </h3>
       <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-muted-foreground">
         {description}
       </p>
