@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug } from "@/services/cms-api";
 import { ArticleView } from "@/components/ArticleView";
 import NotFound from "./NotFound";
+import { previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
 
 const UpdateDetail = () => {
     const { slug } = useParams();
@@ -26,19 +27,40 @@ const UpdateDetail = () => {
         return <NotFound />;
     }
 
-    const description = (article.excerpt || "").slice(0, 160);
+    const canonicalUrl = `${SITE_URL}/updates/${article.meta.slug}`;
+    const ogImage =
+        previewImageUrl(article.thumbnail?.url, "https://portal.jawafdehi.org") ||
+        SOCIAL_IMAGE_URL;
+    const metaTitle = `${article.title} | Jawafdehi`;
+    const description = truncateMeta(article.excerpt || "");
+    const imageAlt = article.thumbnail?.alt || article.title;
 
     return (
         <>
             <Helmet>
-                <title>{article.title} | Jawafdehi</title>
+                <title>{metaTitle}</title>
                 <meta name="description" content={description} />
-                <meta property="og:title" content={article.title} />
-                <meta property="og:description" content={description} />
+                <link rel="canonical" href={canonicalUrl} />
+
+                <meta property="og:site_name" content={SITE_NAME} />
                 <meta property="og:type" content="article" />
-                {article.thumbnail?.url && <meta property="og:image" content={article.thumbnail.url} />}
+                <meta property="og:url" content={canonicalUrl} />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={description} />
+                <meta property="og:image" content={ogImage} />
+                <meta property="og:image:alt" content={imageAlt} />
+                <meta property="og:locale" content="en_US" />
+
+                {article.meta.first_published_at && (
+                    <meta property="article:published_time" content={article.meta.first_published_at} />
+                )}
+                <meta property="article:modified_time" content={article.date} />
+
                 <meta name="twitter:card" content="summary_large_image" />
-                {article.thumbnail?.url && <meta name="twitter:image" content={article.thumbnail.url} />}
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={description} />
+                <meta name="twitter:image" content={ogImage} />
+                <meta name="twitter:image:alt" content={imageAlt} />
             </Helmet>
 
             <ArticleView article={article} />

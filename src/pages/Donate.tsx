@@ -18,11 +18,11 @@ const Donate = () => {
         <meta property="og:url" content="https://jawafdehi.org/donate" />
         <meta property="og:title" content="Donate — Jawafdehi" />
         <meta property="og:description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Donate — Jawafdehi" />
         <meta name="twitter:description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
       </Helmet>
 
       <section className="flex-1">

@@ -38,6 +38,7 @@ import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
+import { previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -343,23 +344,29 @@ const CaseDetail = () => {
   }
 
   const canonicalCaseSlug = caseData.slug || id;
-  const canonicalUrl = `https://jawafdehi.org/case/${canonicalCaseSlug}`;
-  const plainDescription = stripMarkdown(caseData.description).substring(0, 160);
-  const metaDescription =
-    plainDescription || caseData.key_allegations?.slice(0, 2).join(". ").substring(0, 160) || "";
+  const canonicalUrl = `${SITE_URL}/case/${canonicalCaseSlug}`;
+  const plainDescription = truncateMeta(stripMarkdown(stripHtml(caseData.description)));
+  const allegationDescription = truncateMeta(caseData.key_allegations?.slice(0, 2).join(". "));
+  const metaDescription = plainDescription || allegationDescription || "";
+  const metaTitle = `${caseData.title} | Jawafdehi`;
+  const ogImage =
+    previewImageUrl(caseData.banner_url, "https://portal.jawafdehi.org") ||
+    previewImageUrl(caseData.thumbnail_url, "https://portal.jawafdehi.org") ||
+    SOCIAL_IMAGE_URL;
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
       <Helmet>
-        <title>{caseData.title} | Jawafdehi</title>
+        <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={`${caseData.title} | Jawafdehi`} />
+        <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:alt" content={caseData.title} />
         <meta property="og:locale" content="en_US" />
         <meta property="article:published_time" content={caseData.created_at} />
         <meta property="article:modified_time" content={caseData.updated_at} />
@@ -367,9 +374,10 @@ const CaseDetail = () => {
           <meta key={tag} property="article:tag" content={tag} />
         ))}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${caseData.title} | Jawafdehi`} />
+        <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content={ogImage} />
+        <meta name="twitter:image:alt" content={caseData.title} />
         <link
           rel="alternate"
           type="application/json"

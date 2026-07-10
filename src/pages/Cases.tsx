@@ -139,12 +139,12 @@ const Cases = () => {
         <meta property="og:url" content="https://jawafdehi.org/cases" />
         <meta property="og:title" content="Corruption Cases | Jawafdehi Nepal" />
         <meta property="og:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Corruption Cases | Jawafdehi Nepal" />
         <meta name="twitter:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
       </Helmet>
 
       <main id="main-content" className="flex-1 py-8 md:py-12">
