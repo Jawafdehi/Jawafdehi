@@ -28,34 +28,46 @@ interface CaseCardProps {
   bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
   viewMode?: "grid" | "list";
   hideDescription?: boolean;
+  // When set, tags render as buttons that invoke this instead of plain badges —
+  // the archive search uses it to toggle a tag as a URL refinement.
+  onTagClick?: (tag: string) => void;
 }
 
-function formatEntityCount(count: number, language: string) {
-  if (!language.startsWith("ne")) {
+// i18next's `language` is typed as `string` but can be transiently undefined
+// (e.g. before init, or in tests), so guard before calling string methods —
+// an unguarded `.startsWith` here crashed card rendering across the search page.
+function normalizeLanguage(language?: string | null): string {
+  return typeof language === "string" ? language : "en";
+}
+
+function formatEntityCount(count: number, language?: string | null) {
+  const lang = normalizeLanguage(language);
+  if (!lang.startsWith("ne")) {
     return count.toString();
   }
 
   return count.toString().replace(/\d/g, (digit) => nepaliDigits[Number(digit)]);
 }
 
-function getEntitySummary(entity: string, entityNames: string[] | undefined, language: string, t: TFunction) {
+function getEntitySummary(entity: string, entityNames: string[] | undefined, language: string | undefined, t: TFunction) {
+  const lang = normalizeLanguage(language);
   const names = entityNames?.filter(Boolean) ?? entity.split(",").map((name) => name.trim()).filter(Boolean);
   const firstName = names[0] || entity;
   const remainingCount = Math.max(names.length - 1, 0);
-  const countLabel = formatEntityCount(remainingCount, language);
+  const countLabel = formatEntityCount(remainingCount, lang);
 
   if (remainingCount === 0) {
     return firstName;
   }
 
-  if (language.startsWith("ne")) {
+  if (lang.startsWith("ne")) {
     return t("caseCard.entitySummary.withOthersNepali", { name: firstName, count: remainingCount, countLabel });
   }
 
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, bannerUrl, viewMode = "grid", hideDescription }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, bannerUrl, viewMode = "grid", hideDescription, onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -127,7 +139,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
 
         <div className="flex flex-1 flex-col bg-card min-w-0">
           <CardHeader className="space-y-2 px-4 pb-0 pt-4 sm:px-5 sm:pt-5">
-            <CaseCardTags tags={tags} />
+            <CaseCardTags tags={tags} onTagClick={onTagClick} />
             {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                 remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
             <h3 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground">
@@ -175,15 +187,32 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   );
 };
 
-function CaseCardTags({ tags }: Readonly<{ tags: string[] }>) {
+function CaseCardTags({ tags, onTagClick }: Readonly<{ tags: string[]; onTagClick?: (tag: string) => void }>) {
   if (!tags || tags.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1.5 mb-1">
-      {tags.slice(0, 2).map((tag) => (
-        <CaseTagBadge key={tag} className="px-2.5 py-0.5">
-          {tag}
-        </CaseTagBadge>
-      ))}
+      {tags.slice(0, 2).map((tag) =>
+        onTagClick ? (
+          // Clickable tag → search refinement. stopPropagation so it doesn't
+          // trigger the card's navigate-to-detail click.
+          <button
+            key={tag}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onTagClick(tag);
+            }}
+            className="relative z-10 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <CaseTagBadge className="px-2.5 py-0.5">{tag}</CaseTagBadge>
+          </button>
+        ) : (
+          <CaseTagBadge key={tag} className="px-2.5 py-0.5">
+            {tag}
+          </CaseTagBadge>
+        ),
+      )}
       {tags.length > 2 && (
         <CaseTagBadge className="px-2 py-0.5">
           +{tags.length - 2}

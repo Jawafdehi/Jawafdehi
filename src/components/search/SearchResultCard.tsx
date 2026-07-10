@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import type {
 import type { CaseDetail } from "@/types/jds";
 import { getCaseById } from "@/services/jds-api";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { humanizeEntityType } from "@/utils/entity-helpers";
 
@@ -75,6 +76,7 @@ function CaseResultCard({
   viewMode,
 }: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
   const { i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const caseSlug = caseSlugFromUrl(result.url);
   const indexedCard = result.card;
   const caseCardViewMode = viewMode === "card" ? "grid" : "list";
@@ -87,15 +89,24 @@ function CaseResultCard({
     staleTime: 5 * 60 * 1000,
   });
 
+  // Clicking a tag on a search result card toggles it as a URL tag refinement.
+  const handleTagClick = (tag: string) =>
+    setSearchParams(toggleArchiveSearchParam(searchParams, "tags", tag));
+
   if (indexedCard) {
     return (
-      <CaseCard viewMode={caseCardViewMode} {...caseCardPropsFromCard(indexedCard, result, i18n.language)} />
+      <CaseCard
+        viewMode={caseCardViewMode}
+        onTagClick={handleTagClick}
+        {...caseCardPropsFromCard(indexedCard, result, i18n.language)}
+      />
     );
   }
   if (caseDetail) {
     return (
       <CaseCard
         viewMode={caseCardViewMode}
+        onTagClick={handleTagClick}
         {...caseCardPropsFromDetail(caseDetail, result, i18n.language, caseSlug)}
       />
     );
@@ -155,8 +166,9 @@ function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult
     location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
     status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
     tags: card.tags || [],
+    // Search cards show the case summary (not the first allegation, which is what
+    // the /cases grid leads with) so the result matches the query context.
     description: (card.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
-    allegations: card.key_allegations || [],
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
     thumbnailUrl: card.thumbnail_url || undefined,
@@ -190,7 +202,6 @@ function caseCardPropsFromDetail(
     status,
     tags: detail.tags || [],
     description: (detail.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
-    allegations: detail.key_allegations || [],
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
     thumbnailUrl: detail.thumbnail_url || undefined,
