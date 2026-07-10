@@ -151,6 +151,10 @@ export function NewsletterForm({
       hasError &&
         "border-accent ring-1 ring-accent focus-visible:ring-accent focus-visible:ring-offset-2",
     );
+  const fieldErrorClassName = cn(
+    "text-sm font-medium text-destructive",
+    inverted && "text-primary-foreground",
+  );
 
   return (
     <form onSubmit={handleSubmit} noValidate className={cn("space-y-4 text-left", className)}>
@@ -165,6 +169,7 @@ export function NewsletterForm({
           autoComplete="given-name"
           required
           aria-invalid={fieldErrors.firstName}
+          aria-describedby={fieldErrors.firstName ? `${fieldId}-first-name-error` : undefined}
           placeholder={compact ? `${t("newsletter.form.firstName")} *` : undefined}
           value={firstName}
           onChange={(e) => {
@@ -175,6 +180,11 @@ export function NewsletterForm({
           }}
           className={getInputClassName(fieldErrors.firstName)}
         />
+        {fieldErrors.firstName && (
+          <p id={`${fieldId}-first-name-error`} role="alert" className={fieldErrorClassName}>
+            {t("newsletter.form.errorFirstName")}
+          </p>
+        )}
       </div>
 
       {withLastName && (
@@ -206,6 +216,7 @@ export function NewsletterForm({
           autoComplete="email"
           required
           aria-invalid={fieldErrors.email}
+          aria-describedby={fieldErrors.email ? `${fieldId}-email-error` : undefined}
           placeholder={compact ? `${t("newsletter.form.email")} *` : undefined}
           value={email}
           onChange={(e) => {
@@ -216,6 +227,11 @@ export function NewsletterForm({
           }}
           className={getInputClassName(fieldErrors.email)}
         />
+        {fieldErrors.email && (
+          <p id={`${fieldId}-email-error`} role="alert" className={fieldErrorClassName}>
+            {t("newsletter.form.errorEmail")}
+          </p>
+        )}
       </div>
 
       <div className="flex items-start gap-2">
@@ -230,6 +246,7 @@ export function NewsletterForm({
           )}
           checked={consented}
           aria-invalid={fieldErrors.consent}
+          aria-describedby={fieldErrors.consent ? `${fieldId}-consent-error` : undefined}
           required
           onCheckedChange={(checked) => {
             const nextChecked = checked === true;
@@ -261,6 +278,12 @@ export function NewsletterForm({
           {t("newsletter.form.privacySuffix")}
         </Label>
       </div>
+
+      {fieldErrors.consent && (
+        <p id={`${fieldId}-consent-error`} role="alert" className={fieldErrorClassName}>
+          {t("newsletter.form.errorConsent")}
+        </p>
+      )}
 
       {formError && (
         <p
