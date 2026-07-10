@@ -50,14 +50,14 @@ export function PageHero({
           </h1>
 
           {description ? (
-            <p
+            <div
               className={cn(
                 "font-hero-lede measure-intro mx-auto mt-6",
                 descriptionClassName,
               )}
             >
               {description}
-            </p>
+            </div>
           ) : null}
 
           {actions ? (

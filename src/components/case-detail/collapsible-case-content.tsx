@@ -45,7 +45,9 @@ export function CollapsibleCaseContent({
       observer.disconnect();
       window.removeEventListener("resize", updateOverflow);
     };
-  }, [children]);
+    // ResizeObserver already reacts to content size changes (incl. children
+    // updates), so we don't re-run — and re-subscribing on every render churns.
+  }, []);
 
   return (
     <div className={cn("relative", className)}>
