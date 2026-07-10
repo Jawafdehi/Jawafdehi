@@ -24,15 +24,29 @@ setup("authenticate as admin via dev-login", async ({ page }) => {
   const body = await res.json();
   const csrf: string = body.csrftoken ?? "e2e-csrf";
 
-  await page.addInitScript((csrfToken) => {
-    localStorage.setItem(
-      "jawafdehi.devAuth.user",
-      JSON.stringify({ username: "admin", roles: ["Admin"], is_admin: true }),
-    );
-    localStorage.setItem("jawafdehi.devAuth.csrf", csrfToken as string);
-    // Pre-answer the cookie-consent banner so its fixed bar doesn't intercept clicks.
-    localStorage.setItem("jawafdehi_analytics_consent", "denied");
-  }, csrf);
+  // Use the REAL role snapshot the backend returned — do not fabricate it. If a
+  // regression stopped dev-login granting admin, this fails HERE (loudly) instead
+  // of the admin specs silently passing on a faked localStorage snapshot.
+  expect(
+    body.is_admin === true && (body.roles ?? []).includes("Admin"),
+    `dev-login did not return admin roles: ${JSON.stringify(body)}`,
+  ).toBeTruthy();
+
+  const devUser = {
+    username: body.username,
+    roles: body.roles,
+    is_admin: body.is_admin,
+  };
+
+  await page.addInitScript(
+    ({ user, csrfToken }) => {
+      localStorage.setItem("jawafdehi.devAuth.user", JSON.stringify(user));
+      localStorage.setItem("jawafdehi.devAuth.csrf", csrfToken as string);
+      // Pre-answer the cookie-consent banner so its fixed bar doesn't intercept clicks.
+      localStorage.setItem("jawafdehi_analytics_consent", "denied");
+    },
+    { user: devUser, csrfToken: csrf },
+  );
 
   // Land on the SPA so localStorage is written to the right origin, then persist.
   await page.goto("/admin/");

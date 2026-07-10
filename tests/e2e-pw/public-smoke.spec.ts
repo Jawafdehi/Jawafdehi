@@ -59,8 +59,14 @@ test("search a seeded term returns results (proves the real OpenSearch path)", a
 test("cases list renders and only public cases are shown", async ({ page }) => {
   await page.goto("/cases");
   await assertRendered(page);
-  // The word 'secret' seeds the non-public leak-check cases; they must not appear.
-  await expect(page.getByText(/var-.*-secret/i)).toHaveCount(0);
+  await page.waitForLoadState("networkidle");
+  // seed_dev's published case appears; its non-public siblings (draft/in-review/
+  // closed) must NOT — assert on the real seeded slugs, not a never-inserted
+  // marker. The published-case link is the positive control that the list loaded.
+  await expect(page.locator('a[href="/case/seed-published"]').first()).toBeVisible();
+  for (const slug of ["seed-draft", "seed-in-review", "seed-closed"]) {
+    await expect(page.locator(`a[href="/case/${slug}"]`)).toHaveCount(0);
+  }
 });
 
 test("case detail renders for a seeded published case", async ({ page }) => {
