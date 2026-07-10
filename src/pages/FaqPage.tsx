@@ -1,10 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
-import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 
 import {
@@ -14,53 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { cn } from "@/lib/utils";
-
-type FaqPageQuestion = {
-  id: string;
-  question: string;
-  answer: string;
-};
-
-type FaqPageSection = {
-  id: string;
-  title: string;
-  questions: FaqPageQuestion[];
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const isFaqPageQuestion = (value: unknown): value is FaqPageQuestion =>
-  isRecord(value) &&
-  typeof value.id === "string" &&
-  typeof value.question === "string" &&
-  typeof value.answer === "string";
-
-const isFaqPageSection = (value: unknown): value is FaqPageSection =>
-  isRecord(value) &&
-  typeof value.id === "string" &&
-  typeof value.title === "string" &&
-  Array.isArray(value.questions) &&
-  value.questions.every(isFaqPageQuestion);
-
-const markdownComponents: Components = {
-  p: ({ className, node: _node, ...props }) => (
-    <p className={cn("mb-3 last:mb-0", className)} {...props} />
-  ),
-  ul: ({ className, node: _node, ...props }) => (
-    <ul className={cn("my-3 list-disc space-y-2 pl-5", className)} {...props} />
-  ),
-  ol: ({ className, node: _node, ...props }) => (
-    <ol className={cn("my-3 list-decimal space-y-2 pl-5", className)} {...props} />
-  ),
-  li: ({ className, node: _node, ...props }) => (
-    <li className={cn("pl-1", className)} {...props} />
-  ),
-  strong: ({ className, node: _node, ...props }) => (
-    <strong className={cn("font-medium text-foreground", className)} {...props} />
-  ),
-};
+import { faqMarkdownComponents } from "@/components/faq-markdown";
+import { isFaqPageSection } from "@/lib/faq-page-content";
 
 export default function FaqPage() {
   const { t, i18n } = useTranslation();
@@ -70,6 +24,20 @@ export default function FaqPage() {
     ? rawSections.filter(isFaqPageSection)
     : [];
 
+  // Track the active section from the URL hash. Native anchor clicks fire
+  // `hashchange` (not react-router navigation), so we listen for it directly to
+  // keep the sidebar's aria-current in sync on every click.
+  const [activeSection, setActiveSection] = useState("");
+  useEffect(() => {
+    const syncHash = () =>
+      setActiveSection(decodeURIComponent(window.location.hash.slice(1)));
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, []);
+
+  // Smooth-scroll deep links (e.g. arriving at /faq#reporting). In-page anchor
+  // clicks are handled natively by the browser.
   useEffect(() => {
     if (sections.length === 0 || !location.hash) return;
 
@@ -138,15 +106,25 @@ export default function FaqPage() {
                     {t("faqPage.browseLabel")}
                   </Eyebrow>
                   <nav aria-label="FAQ categories" className="space-y-1">
-                    {sections.map((section) => (
-                      <Link
-                        key={section.id}
-                        to={`#${section.id}`}
-                        className="block rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {section.title}
-                      </Link>
-                    ))}
+                    {sections.map((section) => {
+                      const isActive = activeSection === section.id;
+                      return (
+                        // Native anchor (not React Router <Link>) so browsers scroll
+                        // to the section on every click — including re-clicking the
+                        // current section, where the hash doesn't change and the
+                        // effect below wouldn't re-fire. The href carries the full
+                        // path (not a bare "#id") because the app's <base href="/">
+                        // would otherwise resolve a fragment-only link to "/#id".
+                        <a
+                          key={section.id}
+                          href={`${location.pathname}${location.search}#${section.id}`}
+                          aria-current={isActive ? "location" : undefined}
+                          className="block rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=location]:bg-background aria-[current=location]:font-semibold aria-[current=location]:text-primary"
+                        >
+                          {section.title}
+                        </a>
+                      );
+                    })}
                   </nav>
                 </div>
               </aside>
@@ -181,7 +159,7 @@ export default function FaqPage() {
                             </span>
                           </AccordionTrigger>
                           <AccordionContent className="pb-6 pr-0 text-sm font-normal leading-7 text-muted-foreground md:pr-16 md:text-base">
-                            <Markdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
+                            <Markdown components={faqMarkdownComponents} remarkPlugins={[remarkGfm]}>
                               {item.answer}
                             </Markdown>
                           </AccordionContent>

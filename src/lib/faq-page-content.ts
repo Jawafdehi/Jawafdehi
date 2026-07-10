@@ -4,13 +4,13 @@ export type FaqSnippetItem = {
   answers: string[];
 };
 
-type FaqPageQuestion = {
+export type FaqPageQuestion = {
   id: string;
   question: string;
   answer: string;
 };
 
-type FaqPageSection = {
+export type FaqPageSection = {
   id: string;
   title: string;
   questions: FaqPageQuestion[];
@@ -19,13 +19,13 @@ type FaqPageSection = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const isFaqPageQuestion = (value: unknown): value is FaqPageQuestion =>
+export const isFaqPageQuestion = (value: unknown): value is FaqPageQuestion =>
   isRecord(value) &&
   typeof value.id === "string" &&
   typeof value.question === "string" &&
   typeof value.answer === "string";
 
-const isFaqPageSection = (value: unknown): value is FaqPageSection =>
+export const isFaqPageSection = (value: unknown): value is FaqPageSection =>
   isRecord(value) &&
   typeof value.id === "string" &&
   typeof value.title === "string" &&
