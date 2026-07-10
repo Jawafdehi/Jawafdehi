@@ -20,7 +20,8 @@
     "archive": "Archive",
     "searchArchive": "Search archive",
     "materials": "Governance materials",
-    "courtCases": "Court cases"
+    "courtCases": "Court cases",
+    "faq": "FAQ"
   },
   "weeklyMeetings": {
     "eyebrow": "Live every week",
@@ -98,7 +99,8 @@
       "terms": "Read platform rules, public domain data terms, disclaimers, and permitted use.",
       "updateDetail": "Read a Jawafdehi platform update.",
       "caseDetail": "Open a documented corruption case.",
-      "entityDetail": "Open a tracked person, office, or organization."
+      "entityDetail": "Open a tracked person, office, or organization.",
+      "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers."
     }
   },
   "footer": {

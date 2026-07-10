@@ -20,7 +20,8 @@
     "archive": "अभिलेख",
     "searchArchive": "अभिलेख खोज्नुहोस्",
     "materials": "शासकीय सामग्रीहरू",
-    "courtCases": "अदालती मुद्दाहरू"
+    "courtCases": "अदालती मुद्दाहरू",
+    "faq": "प्रश्नोत्तर"
   },
   "weeklyMeetings": {
     "eyebrow": "हरेक हप्ता प्रत्यक्ष",
@@ -98,7 +99,8 @@
       "terms": "प्लेटफर्म नियम, सार्वजनिक डोमेन डेटा, अस्वीकरण र प्रयोग सर्तहरू पढ्नुहोस्।",
       "updateDetail": "जवाफदेहीको प्लेटफर्म अपडेट पढ्नुहोस्।",
       "caseDetail": "दस्तावेज गरिएको भ्रष्टाचार मुद्दा खोल्नुहोस्।",
-      "entityDetail": "ट्र्याक गरिएको व्यक्ति, कार्यालय वा संस्था खोल्नुहोस्।"
+      "entityDetail": "ट्र्याक गरिएको व्यक्ति, कार्यालय वा संस्था खोल्नुहोस्।",
+      "faq": "जवाफदेही, रिपोर्टिङ, प्रमाणीकरण, डेटा प्रयोग, गोपनीयता, स्वयंसेवा, कोष र कानूनी अस्वीकरणबारे सामान्य प्रश्नहरूको उत्तर पढ्नुहोस्।"
     }
   },
   "footer": {
@@ -1621,178 +1623,178 @@
   },
   "faqPage": {
     "meta": {
-      "title": "FAQ | Jawafdehi Nepal",
-      "description": "Answers to common questions about Jawafdehi, the corruption cases we document, verification, reporting, data use, privacy, volunteering, funding, and legal disclaimers.",
-      "socialDescription": "Answers to common questions about Jawafdehi, reporting corruption cases, verification, data reuse, privacy, volunteering, and funding."
+      "title": "प्रश्नोत्तर | जवाफदेही नेपाल",
+      "description": "जवाफदेही, हामीले अभिलेख गर्ने भ्रष्टाचार मुद्दाहरू, प्रमाणीकरण, रिपोर्टिङ, डेटा प्रयोग, गोपनीयता, स्वयंसेवा, कोष र कानूनी अस्वीकरणबारे सामान्य प्रश्नहरूको उत्तर।",
+      "socialDescription": "जवाफदेही, भ्रष्टाचार मुद्दा रिपोर्ट गर्ने, प्रमाणीकरण, डेटा पुनःप्रयोग, गोपनीयता, स्वयंसेवा र कोषबारे सामान्य प्रश्नहरूको उत्तर।"
     },
     "hero": {
-      "eyebrow": "Jawafdehi FAQ",
-      "title": "Questions, answered plainly.",
-      "description": "Everything readers, contributors, reporters, accused entities, donors, and volunteers ask before using or supporting Jawafdehi."
+      "eyebrow": "जवाफदेही प्रश्नोत्तर",
+      "title": "प्रश्नहरू, सरल भाषामा उत्तर।",
+      "description": "जवाफदेही प्रयोग वा सहयोग गर्नुअघि पाठक, योगदानकर्ता, रिपोर्ट गर्ने व्यक्ति, आरोपित पक्ष, दाता र स्वयंसेवकहरूले सोध्ने सबै कुरा।"
     },
-    "browseLabel": "Browse",
+    "browseLabel": "विषयहरू हेर्नुहोस्",
     "sections": [
       {
         "id": "about-jawafdehi",
-        "title": "About Jawafdehi",
+        "title": "जवाफदेहीबारे",
         "questions": [
           {
             "id": "what-is-jawafdehi",
-            "question": "What is Jawafdehi?",
-            "answer": "Jawafdehi is an open-source civic-tech platform for Nepal, built by Nepali volunteers, that documents allegations of corruption. Grounded in a Gen-Z mandate for transparency and action, we aim to become Nepal's accountability system — holding corrupt politicians, individuals, and others accountable through independent, evidence-first, and citizen-powered means. We use AI to process government documents, track news sources, and generate comprehensive investigation reports, scaling the fight against corruption through technology. Free to use, open source, and **volunteer-led** — built by Nepali volunteers and a small paid team of intern lawyers and engineers who believe **accountability has no expiry**."
+            "question": "जवाफदेही के हो?",
+            "answer": "जवाफदेही नेपाली स्वयंसेवकहरूद्वारा निर्मित, नेपालका लागि एउटा खुला स्रोत सिभिक-टेक प्लेटफर्म हो, जसले भ्रष्टाचारका आरोपहरू अभिलेख गर्छ। पारदर्शिता र कार्यका लागि Gen-Z जनादेशमा आधारित रहेर, हामी स्वतन्त्र, प्रमाण-प्रथम र नागरिक-सशक्त माध्यमबाट भ्रष्ट राजनीतिज्ञ, व्यक्ति र अन्यलाई जवाफदेही बनाउँदै नेपालको जवाफदेहिता प्रणाली बन्ने लक्ष्य राख्छौं। हामी सरकारी कागजात प्रशोधन गर्न, समाचार स्रोत ट्र्याक गर्न र विस्तृत अनुसन्धान प्रतिवेदन तयार गर्न AI प्रयोग गर्छौं, र प्रविधिमार्फत भ्रष्टाचारविरुद्धको लडाइँलाई विस्तार गर्छौं। प्रयोग गर्न निःशुल्क, खुला स्रोत र **स्वयंसेवक-नेतृत्वमा** — नेपाली स्वयंसेवक तथा **जवाफदेहिताको म्याद हुँदैन** भन्ने विश्वास गर्ने इन्टर्न वकिल र इन्जिनियरहरूको सानो पारिश्रमिक टोलीद्वारा निर्मित।"
           },
           {
             "id": "what-does-jawafdehi-mean",
-            "question": "What does \"Jawafdehi\" mean?",
-            "answer": "*Jawafdehi* (जवाफदेही) is Nepali for **accountability** — being answerable for one's actions. It's the principle the entire platform is built around."
+            "question": "\"जवाफदेही\" को अर्थ के हो?",
+            "answer": "*Jawafdehi* (जवाफदेही) भनेको नेपालीमा **जवाफदेहिता** हो — आफ्नो कामप्रति उत्तरदायी हुनु। यही सिद्धान्तमा सम्पूर्ण प्लेटफर्म निर्माण गरिएको छ।"
           },
           {
             "id": "who-runs-jawafdehi",
-            "question": "Who runs Jawafdehi? Is it affiliated with the government or a political party?",
-            "answer": "No. Jawafdehi is **volunteer-led** — built and run by Nepali volunteers, supporting a small paid team of intern lawyers and engineers, in Nepal and across the diaspora — and is operated by two aligned, independently-governed nonprofit entities that share the name **Jawafdehi Initiative**:\n\n- **Jawafdehi Initiative Inc.** — a Michigan (USA) nonprofit corporation, Michigan entity no. **900230142**, US EIN **42-3114954**, organized exclusively for charitable, educational, and research purposes.\n- **Jawafdehi Initiative** — a Profit Non-Distributing Company registered in Nepal under the Companies Act, 2006 (Nepal's legal form for a not-for-profit), registration no. **393949/82/83**, PAN **623632659**, incorporated June 2026, registered office in Biratnagar Metropolitan City Ward 5, Morang.\n\nOur boards of directors:\n\n- **Jawafdehi Initiative Inc. (US):** Bishwas Gautam, Nischal Dahal, Anish Karki.\n- **Jawafdehi Initiative (Nepal):** Damodar Dahal (Chairperson), Niroj Aryal (Secretary), Medha Sharma, Rohan Raj Gautam, Shikshita Bhandari.\n\nOur incorporation documents are public — the US Articles of Incorporation and IRS EIN letter for Jawafdehi Initiative Inc., and the Nepal certificate of incorporation for Jawafdehi Initiative. We accept **no funding from any government or political party**, and nothing that would compromise our editorial independence. We are not a government body, law firm, or legal authority."
+            "question": "जवाफदेही कसले चलाउँछ? के यो सरकार वा कुनै राजनीतिक दलसँग आबद्ध छ?",
+            "answer": "होइन। जवाफदेही **स्वयंसेवक-नेतृत्वमा** छ — नेपाल र विश्वभरका नेपाली स्वयंसेवकहरूद्वारा निर्मित तथा सञ्चालित, र इन्टर्न वकिल र इन्जिनियरहरूको सानो पारिश्रमिक टोलीलाई सहयोग गर्दै — र यो **Jawafdehi Initiative** नाम साझा गर्ने दुई समान उद्देश्यका, स्वतन्त्र रूपमा सञ्चालित गैरनाफामूलक संस्थाद्वारा चलाइन्छ:\n\n- **Jawafdehi Initiative Inc.** — मिशिगन (अमेरिका) को गैरनाफामूलक निगम, मिशिगन संस्था नं. **900230142**, अमेरिकी EIN **42-3114954**, विशुद्ध परोपकारी, शैक्षिक र अनुसन्धान उद्देश्यका लागि स्थापित।\n- **Jawafdehi Initiative** — कम्पनी ऐन, २०६३ (नेपालको गैरनाफामूलकका लागिको कानूनी स्वरूप) अन्तर्गत नेपालमा दर्ता भएको नाफा वितरण नगर्ने कम्पनी, दर्ता नं. **393949/82/83**, PAN **623632659**, जुन २०२६ मा संस्थापित, दर्ता कार्यालय बिराटनगर महानगरपालिका वडा ५, मोरङ।\n\nहाम्रा सञ्चालक समितिहरू:\n\n- **Jawafdehi Initiative Inc. (अमेरिका):** Bishwas Gautam, Nischal Dahal, Anish Karki।\n- **Jawafdehi Initiative (नेपाल):** Damodar Dahal (अध्यक्ष), Niroj Aryal (सचिव), Medha Sharma, Rohan Raj Gautam, Shikshita Bhandari।\n\nहाम्रा संस्थापन कागजातहरू सार्वजनिक छन् — Jawafdehi Initiative Inc. का अमेरिकी संस्थापन प्रमाणपत्र (Articles of Incorporation) र IRS EIN पत्र, तथा Jawafdehi Initiative को नेपाल संस्थापन प्रमाणपत्र। हामी **कुनै पनि सरकार वा राजनीतिक दलबाट कोष स्वीकार गर्दैनौं**, र हाम्रो सम्पादकीय स्वतन्त्रतामा आँच पुर्‍याउने केही पनि लिँदैनौं। हामी सरकारी निकाय, ल फर्म वा कानूनी प्राधिकरण होइनौं।"
           }
         ]
       },
       {
         "id": "what-we-document",
-        "title": "What we document",
+        "title": "हामी के अभिलेख गर्छौं",
         "questions": [
           {
             "id": "case-coverage",
-            "question": "What kinds of cases does Jawafdehi cover?",
-            "answer": "Our primary focus today — and the core of our roadmap — is corruption cases filed by the **CIAA** (Commission for the Investigation of Abuse of Authority): we index each with its supporting documents, court orders, and legal filings as a structured, plain-language record. We are **not CIAA-exclusive** — our longer-term goal is to also document major cases of national public interest that fall outside CIAA filings, such as the Ncell, Giribandhu, and Rabi Lamichhane cases. Each entry lets citizens, journalists, researchers, and volunteers follow the full trail of a case: the accused parties, the alleged misconduct, locations, dates, official sources, and related documents."
+            "question": "जवाफदेहीले कस्ता प्रकारका मुद्दाहरू समेट्छ?",
+            "answer": "आज हाम्रो मुख्य केन्द्रविन्दु — र हाम्रो कार्ययोजनाको मूल — **अख्तियार दुरुपयोग अनुसन्धान आयोग (CIAA)** द्वारा दायर गरिएका भ्रष्टाचार मुद्दाहरू हुन्: हामी प्रत्येकलाई त्यसका सहायक कागजात, अदालती आदेश र कानूनी दस्तावेजसहित संरचित, सरल-भाषाको अभिलेखका रूपमा सूचीकृत गर्छौं। हामी **CIAA मै मात्र सीमित छैनौं** — हाम्रो दीर्घकालीन लक्ष्य CIAA का दायरा बाहिर पर्ने Ncell, Giribandhu र Rabi Lamichhane जस्ता राष्ट्रिय सार्वजनिक सरोकारका प्रमुख मुद्दाहरू पनि अभिलेख गर्नु हो। प्रत्येक प्रविष्टिले नागरिक, पत्रकार, अनुसन्धाता र स्वयंसेवकहरूलाई मुद्दाको पूरा शृंखला पछ्याउन दिन्छ: आरोपित पक्ष, आरोपित कदाचार, स्थान, मिति, आधिकारिक स्रोत र सम्बन्धित कागजातहरू।"
           },
           {
             "id": "information-sources",
-            "question": "Where does the information come from?",
-            "answer": "Today, most cases are built from **CIAA filings and the official documents, court orders, and legal records attached to them**. For the broader cases of national interest, we also draw on court records, the Attorney General's Office, official government documents, and credible media reporting. Everything is public and verifiable — we add plain-language summaries (human-reviewed) and link every fact back to its primary source, so you can check it yourself."
+            "question": "जानकारी कहाँबाट आउँछ?",
+            "answer": "आज अधिकांश मुद्दाहरू **CIAA का दायर तथा तिनमा संलग्न आधिकारिक कागजात, अदालती आदेश र कानूनी अभिलेखबाट** निर्माण गरिन्छन्। राष्ट्रिय सरोकारका फराकिला मुद्दाहरूका लागि हामी अदालती अभिलेख, महान्यायाधिवक्ताको कार्यालय, आधिकारिक सरकारी कागजात र विश्वसनीय सञ्चार माध्यमको रिपोर्टिङ पनि प्रयोग गर्छौं। सबै कुरा सार्वजनिक र प्रमाणयोग्य छ — हामी सरल-भाषाका सारांश (मानवद्वारा समीक्षित) थप्छौं र हरेक तथ्यलाई त्यसको प्राथमिक स्रोतसँग जोड्छौं, ताकि तपाईं आफैँ जाँच गर्न सक्नुहोस्।"
           },
           {
             "id": "what-counts-as-corruption",
-            "question": "What counts as \"corruption\"?",
-            "answer": "Corruption is the **abuse of entrusted power for private gain** — a betrayal of public trust. The forms we track are:\n\n- **Bribery** — offering, giving, receiving, or soliciting something of value to influence an official.\n- **Embezzlement** — theft or misappropriation of funds placed in one's trust.\n- **Nepotism & favoritism** — favoring relatives or friends regardless of merit, especially in hiring or contracts.\n- **Conflict of interest** — personal interests improperly influencing professional duties.\n- **Abuse of public resources** — misuse of public funds, assets, or authority for personal benefit."
+            "question": "\"भ्रष्टाचार\" भनेको के हो?",
+            "answer": "भ्रष्टाचार भनेको **निजी लाभका लागि सुम्पिएको अधिकारको दुरुपयोग** हो — सार्वजनिक विश्वासको धोका। हामीले ट्र्याक गर्ने रूपहरू यी हुन्:\n\n- **घुसखोरी** — कुनै अधिकारीलाई प्रभावित पार्न मूल्यवान् केही प्रस्ताव गर्नु, दिनु, लिनु वा माग्नु।\n- **हिनामिना** — आफ्नो जिम्मामा रहेको रकमको चोरी वा दुरुपयोग।\n- **नातावाद र कृपावाद** — योग्यता नहेरी नातेदार वा साथीलाई पक्षपात गर्नु, विशेषगरी नियुक्ति वा ठेक्कामा।\n- **स्वार्थ बाझिने अवस्था** — निजी स्वार्थले पेसागत दायित्वमा अनुचित प्रभाव पार्नु।\n- **सार्वजनिक स्रोतको दुरुपयोग** — निजी लाभका लागि सार्वजनिक रकम, सम्पत्ति वा अधिकारको दुरुपयोग।"
           }
         ]
       },
       {
         "id": "how-it-works",
-        "title": "How it works & how we keep it accurate",
+        "title": "यो कसरी काम गर्छ र हामी यसलाई कसरी सटीक राख्छौं",
         "questions": [
           {
             "id": "verification-process",
-            "question": "How do you verify a case before publishing?",
-            "answer": "Every case undergoes a multi-stage review before publication:\n\n1. **Source collection** — we gather government records, media reports, NGO investigations, public documents, and credible whistleblower accounts.\n2. **Cross-verification** — multiple independent sources are required; claims must be corroborated through official documents, witness accounts, or verifiable evidence.\n3. **Team review** — our moderation team reviews each case for accuracy, legal compliance, and ethical standards before approval.\n4. **Continuous updates** — cases are monitored; updates, responses from accused entities, and investigation outcomes are added as they emerge.\n\nOur standards require a **minimum of two independent, credible sources** per allegation; official documentation wherever possible; a clear distinction between verified facts, allegations, and ongoing investigations; a **right to respond for all accused entities**; and protection of sources and sensitive information."
+            "question": "प्रकाशन गर्नुअघि तपाईं मुद्दा कसरी प्रमाणित गर्नुहुन्छ?",
+            "answer": "प्रकाशनअघि प्रत्येक मुद्दा बहु-चरणीय समीक्षाबाट गुज्रन्छ:\n\n1. **स्रोत सङ्कलन** — हामी सरकारी अभिलेख, सञ्चार माध्यमका रिपोर्ट, गैरसरकारी संस्थाका अनुसन्धान, सार्वजनिक कागजात र विश्वसनीय सूचनादाताका विवरण सङ्कलन गर्छौं।\n2. **क्रस-प्रमाणीकरण** — बहु स्वतन्त्र स्रोत आवश्यक हुन्छन्; दाबीहरू आधिकारिक कागजात, साक्षी विवरण वा प्रमाणयोग्य प्रमाणबाट पुष्टि हुनुपर्छ।\n3. **टोली समीक्षा** — हाम्रो मोडरेसन टोलीले स्वीकृतिअघि प्रत्येक मुद्दालाई सटीकता, कानूनी अनुपालन र नैतिक मापदण्डका लागि समीक्षा गर्छ।\n4. **निरन्तर अद्यावधिक** — मुद्दाहरूको अनुगमन गरिन्छ; अद्यावधिक, आरोपित पक्षका प्रतिक्रिया र अनुसन्धानका नतिजा आएसँगै थपिन्छन्।\n\nहाम्रा मापदण्डअनुसार प्रत्येक आरोपका लागि **कम्तीमा दुई स्वतन्त्र, विश्वसनीय स्रोत**; सम्भव भएसम्म आधिकारिक कागजात; प्रमाणित तथ्य, आरोप र जारी अनुसन्धानबीच स्पष्ट भिन्नता; **सबै आरोपित पक्षलाई प्रतिक्रियाको अधिकार**; र स्रोत तथा संवेदनशील जानकारीको संरक्षण आवश्यक हुन्छ।"
           },
           {
             "id": "ai-use",
-            "question": "Do you use AI? Can I trust it?",
-            "answer": "Yes. We use AI — including Anthropic's Claude — to process and summarize large volumes of legal documents faster. But **every case summary generated by AI is reviewed by a human volunteer for factual accuracy before it is published.** Speed does not come at the cost of accuracy. Where we use Claude, submitted content is processed under Anthropic's commercial terms and is **not used to train their models**."
+            "question": "के तपाईं AI प्रयोग गर्नुहुन्छ? के म यसमा विश्वास गर्न सक्छु?",
+            "answer": "हो। हामी ठूलो परिमाणका कानूनी कागजात छिटो प्रशोधन र सारांश गर्न AI — Anthropic को Claude समेत — प्रयोग गर्छौं। तर **AI ले तयार गरेको प्रत्येक मुद्दा सारांश प्रकाशन हुनुअघि तथ्यगत सटीकताका लागि मानव स्वयंसेवकद्वारा समीक्षा गरिन्छ।** गति सटीकताको मूल्यमा आउँदैन। हामीले Claude प्रयोग गर्दा, पेस गरिएको सामग्री Anthropic का व्यावसायिक सर्तअन्तर्गत प्रशोधन गरिन्छ र **तिनका मोडेल तालिम दिन प्रयोग गरिँदैन**।"
           },
           {
             "id": "inaccurate-information",
-            "question": "What if information on the platform is inaccurate?",
-            "answer": "Despite our rigorous process, errors can occur. If you find inaccurate information, contact us through our feedback form with supporting evidence. We'll review and correct any verified inaccuracy promptly, and **all corrections are documented in the case's audit trail**."
+            "question": "प्लेटफर्ममा भएको जानकारी गलत भएमा के हुन्छ?",
+            "answer": "हाम्रो कठोर प्रक्रियाका बावजुद, त्रुटि हुन सक्छ। तपाईंले गलत जानकारी भेट्टाउनुभयो भने, प्रमाणसहित हाम्रो प्रतिक्रिया फारममार्फत हामीलाई सम्पर्क गर्नुहोस्। हामी प्रमाणित कुनै पनि अशुद्धिलाई तुरुन्तै समीक्षा गरी सच्याउँछौं, र **सबै सुधार मुद्दाको अडिट ट्रेलमा अभिलेख गरिन्छ**।"
           },
           {
             "id": "right-to-respond",
-            "question": "Can accused entities respond to allegations?",
-            "answer": "Yes — the **right to respond** is core to how we work. There's no self-serve submission portal; instead, an accused individual or organization should **contact the Jawafdehi team directly**. We first **verify identity through established, official channels** (for example, an official social-media account or a video call), and once verified, we publish the response **alongside** the original allegation so readers get the full context."
+            "question": "के आरोपित पक्षले आरोपप्रति प्रतिक्रिया दिन सक्छन्?",
+            "answer": "हो — **प्रतिक्रियाको अधिकार** हाम्रो कार्यशैलीको मूल हो। यहाँ स्वयं-पेस गर्ने पोर्टल छैन; बरु, आरोपित व्यक्ति वा संस्थाले **जवाफदेही टोलीलाई सीधै सम्पर्क गर्नुपर्छ**। हामी पहिले **स्थापित, आधिकारिक माध्यमबाट पहिचान प्रमाणित गर्छौं** (उदाहरणका लागि, आधिकारिक सामाजिक सञ्जाल खाता वा भिडियो कल), र प्रमाणित भएपछि, पाठकले पूर्ण सन्दर्भ पाऊन् भनी हामी प्रतिक्रियालाई मूल आरोपको **छेउमै** प्रकाशित गर्छौं।"
           }
         ]
       },
       {
         "id": "reporting",
-        "title": "Reporting / submitting a case",
+        "title": "रिपोर्टिङ / मुद्दा पेस गर्ने",
         "questions": [
           {
             "id": "report-a-case",
-            "question": "How do I report a corruption case?",
-            "answer": "Use the **\"Report a case\" form** on jawafdehi.org and include as much detail and supporting documentation as you can. You may submit **anonymously or with your identity**. Every submission is reviewed by our team before anything is published, and we may contact you for verification if you've left a way to reach you.\n\nYou can also reach us at **report@jawafdehi.org** or **WhatsApp +977 9768630501**.\n\nIf you'd prefer to go straight to the authorities, you can report corruption through official channels: the **CIAA** — hotline **107**, toll-free **1660-01-22233**, or **ujuri@ciaa.gov.np** — and **Transparency International Nepal** (transparency.org/en/report-corruption/nepal)."
+            "question": "म भ्रष्टाचार मुद्दा कसरी रिपोर्ट गर्न सक्छु?",
+            "answer": "jawafdehi.org मा रहेको **\"मुद्दा रिपोर्ट गर्नुहोस्\" फारम** प्रयोग गर्नुहोस् र सकेसम्म धेरै विवरण तथा सहायक कागजात समावेश गर्नुहोस्। तपाईं **नामरहित वा आफ्नो पहिचानसहित** पेस गर्न सक्नुहुन्छ। केही पनि प्रकाशन हुनुअघि प्रत्येक पेसलाई हाम्रो टोलीले समीक्षा गर्छ, र तपाईंले सम्पर्कको माध्यम छोड्नुभएको छ भने हामी प्रमाणीकरणका लागि तपाईंलाई सम्पर्क गर्न सक्छौं।\n\nतपाईं हामीलाई **report@jawafdehi.org** वा **WhatsApp +977 9768630501** मा पनि सम्पर्क गर्न सक्नुहुन्छ।\n\nसीधै अधिकारीहरूकहाँ जान चाहनुहुन्छ भने, तपाईं आधिकारिक माध्यमबाट भ्रष्टाचार रिपोर्ट गर्न सक्नुहुन्छ: **CIAA** — हटलाइन **107**, टोल-फ्री **1660-01-22233**, वा **ujuri@ciaa.gov.np** — र **Transparency International Nepal** (transparency.org/en/report-corruption/nepal)।"
           },
           {
             "id": "after-submit",
-            "question": "What happens after I submit?",
-            "answer": "Your submission enters our verification queue. Our team reviews the information, corroborates it through multiple sources, and decides whether it meets our publication standards. **This typically takes 7–14 days, depending on case complexity.** If you provided contact details, we'll notify you of the outcome."
+            "question": "पेस गरेपछि के हुन्छ?",
+            "answer": "तपाईंको पेस हाम्रो प्रमाणीकरण लाममा प्रवेश गर्छ। हाम्रो टोलीले जानकारी समीक्षा गर्छ, बहु स्रोतबाट पुष्टि गर्छ, र यो हाम्रा प्रकाशन मापदण्डसँग मेल खान्छ कि खाँदैन निर्णय गर्छ। **मुद्दाको जटिलताअनुसार यसमा सामान्यतया ७–१४ दिन लाग्छ।** तपाईंले सम्पर्क विवरण दिनुभएको छ भने, हामी नतिजाबारे तपाईंलाई जानकारी दिनेछौं।"
           },
           {
             "id": "anonymous-reporting",
-            "question": "If I report anonymously, is my identity protected?",
-            "answer": "Yes. We practice **minimal data collection**. Anonymous submissions don't store identifying information, you're never required to give a name or email, and access to submissions is limited to authorized personnel. We **never publish a source's identity without their informed consent**, and personal data like phone numbers and national ID numbers are never published. If you're concerned about safety, leave identifying details out of your submission and consider privacy tools such as the **Tor Browser** when using the platform."
+            "question": "मैले नामरहित रिपोर्ट गरेँ भने, के मेरो पहिचान सुरक्षित रहन्छ?",
+            "answer": "हो। हामी **न्यूनतम डेटा सङ्कलन** अभ्यास गर्छौं। नामरहित पेसहरूले पहिचान खुलाउने जानकारी भण्डारण गर्दैनन्, तपाईंलाई नाम वा इमेल दिन कहिल्यै बाध्य पारिँदैन, र पेसहरूमा पहुँच अधिकृत कर्मचारीमै सीमित हुन्छ। हामी **स्रोतको सूचित सहमतिबिना उसको पहिचान कहिल्यै प्रकाशित गर्दैनौं**, र फोन नम्बर तथा राष्ट्रिय परिचयपत्र नम्बरजस्ता व्यक्तिगत डेटा कहिल्यै प्रकाशित गरिँदैन। सुरक्षाबारे चिन्तित हुनुहुन्छ भने, आफ्नो पेसमा पहिचान खुलाउने विवरण नराख्नुहोस् र प्लेटफर्म प्रयोग गर्दा **Tor Browser** जस्ता गोपनीयता उपकरण प्रयोग गर्ने विचार गर्नुहोस्।"
           }
         ]
       },
       {
         "id": "using-data",
-        "title": "Using the data",
+        "title": "डेटा प्रयोग",
         "questions": [
           {
             "id": "reuse-information",
-            "question": "Can I reuse the information — for journalism, research, or advocacy?",
-            "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
+            "question": "के म जानकारी पुनःप्रयोग गर्न सक्छु — पत्रकारिता, अनुसन्धान वा वकालतका लागि?",
+            "answer": "हो — **गैरव्यावसायिक** प्रयोगका लागि। प्रकाशित मुद्दा डेटा **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)** अन्तर्गत इजाजतपत्रप्राप्त छ: तपाईंले **Jawafdehi.org लाई श्रेय दिएसम्म** गैरव्यावसायिक उद्देश्य — पत्रकारिता, अनुसन्धान, शिक्षा, वकालत — का लागि यसलाई पढ्न, साझा गर्न र यसमा आधारित रहन सक्नुहुन्छ। **व्यावसायिक** प्रयोगका लागि, तपाईंलाई हामीबाट छुट्टै इजाजतपत्र चाहिन्छ (जसमा नैतिक-प्रयोगका सर्तहरू हुन्छन्) — inquiry@jawafdehi.org मा लेख्नुहोस्। हामी जानीजानी डेटालाई सार्वजनिक अधिकारक्षेत्र (public domain) मा **राख्दैनौं**, ताकि अभिलेख एउटै आधिकारिक, सच्याउन सकिने स्रोत रहिरहोस्।"
           },
           {
             "id": "free-forever",
-            "question": "Is it free? Will it ever have a paywall?",
-            "answer": "It's **free, forever** — no subscriptions, no paywalls, no premium tiers, no ads. Public accountability infrastructure should be free to everyone who needs it."
+            "question": "के यो निःशुल्क छ? के यसमा कहिल्यै पेवाल हुन्छ?",
+            "answer": "यो **निःशुल्क छ, सधैँ** — कुनै सदस्यता छैन, कुनै पेवाल छैन, कुनै प्रिमियम तह छैन, कुनै विज्ञापन छैन। सार्वजनिक जवाफदेहिता पूर्वाधार यसको आवश्यकता पर्ने सबैका लागि निःशुल्क हुनुपर्छ।"
           },
           {
             "id": "open-source",
-            "question": "Is the platform open source?",
-            "answer": "Not entirely — we keep some internal tooling private. But our core platforms are public: the **Jawafdehi API**, our case **reviewers and graders**, **NES** (Nepal Entity Service), **NGM** (Nepal Governance Modernization), and **likhit**, our universal Markdown converter for Nepali documents. We're strong believers in open source and in giving back to the community."
+            "question": "के यो प्लेटफर्म खुला स्रोत हो?",
+            "answer": "पूर्ण रूपमा होइन — हामी केही आन्तरिक उपकरण निजी राख्छौं। तर हाम्रा मुख्य प्लेटफर्महरू सार्वजनिक छन्: **Jawafdehi API**, हाम्रा मुद्दा **समीक्षक र ग्रेडर**, **NES** (Nepal Entity Service), **NGM** (Nepal Governance Modernization), र नेपाली कागजातका लागि हाम्रो विश्वव्यापी मार्कडाउन कन्भर्टर **likhit**। हामी खुला स्रोत र समुदायलाई फिर्ता दिनेमा दृढ विश्वास गर्छौं।"
           }
         ]
       },
       {
         "id": "privacy-safety",
-        "title": "Privacy & safety",
+        "title": "गोपनीयता र सुरक्षा",
         "questions": [
           {
             "id": "data-use",
-            "question": "What do you do with my data?",
-            "answer": "We practice **minimal data collection and maximum transparency**. All submissions are voluntary — you can report or send feedback anonymously, without a name or email. We minimize the data we collect, limit access to submissions to authorized personnel, and never sell, rent, or share personal information for commercial purposes. Full detail is in the Privacy Policy."
+            "question": "तपाईं मेरो डेटा के गर्नुहुन्छ?",
+            "answer": "हामी **न्यूनतम डेटा सङ्कलन र अधिकतम पारदर्शिता** अभ्यास गर्छौं। सबै पेस स्वैच्छिक हुन्छन् — तपाईं नाम वा इमेलबिना, नामरहित रूपमा रिपोर्ट वा प्रतिक्रिया पठाउन सक्नुहुन्छ। हामी सङ्कलन गर्ने डेटा न्यूनीकरण गर्छौं, पेसहरूमा पहुँच अधिकृत कर्मचारीमै सीमित गर्छौं, र व्यक्तिगत जानकारी व्यावसायिक उद्देश्यका लागि कहिल्यै बेच्दैनौं, भाडामा दिँदैनौं वा साझा गर्दैनौं। पूर्ण विवरण गोपनीयता नीतिमा छ।"
           }
         ]
       },
       {
         "id": "get-involved",
-        "title": "Get involved",
+        "title": "सहभागी हुनुहोस्",
         "questions": [
           {
             "id": "volunteer",
-            "question": "How can I volunteer? Do I need to be an expert?",
-            "answer": "You don't need to be an expert — you need to care about Nepal and be willing to contribute your skills. We're looking for technologists, working professionals, legal minds, and students to help across our teams: data scraping, outreach, platform development, case compilation, and corruption research. You'll join a global community of Nepali volunteers in Nepal and across the diaspora (US, Thailand, India, and beyond). Email us to introduce yourself."
+            "question": "म कसरी स्वयंसेवा गर्न सक्छु? के म विशेषज्ञ हुनैपर्छ?",
+            "answer": "तपाईं विशेषज्ञ हुनुपर्दैन — तपाईंले नेपालप्रति सरोकार राख्नुपर्छ र आफ्नो सीप योगदान गर्न इच्छुक हुनुपर्छ। हामी हाम्रा टोलीहरूमा सहयोग गर्न प्रविधिविद्, कार्यरत पेसेवर, कानूनी दिमाग र विद्यार्थीहरू खोज्दैछौं: डेटा स्क्र्यापिङ, आउटरिच, प्लेटफर्म विकास, मुद्दा सङ्कलन र भ्रष्टाचार अनुसन्धान। तपाईं नेपाल र विश्वभर (अमेरिका, थाइल्यान्ड, भारत र अन्य) रहेका नेपाली स्वयंसेवकहरूको विश्वव्यापी समुदायमा सामेल हुनुहुनेछ। आफ्नो परिचय दिन हामीलाई इमेल गर्नुहोस्।"
           },
           {
             "id": "financial-support",
-            "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us via **PayPal**, **international bank wire (SWIFT)**, or a **Nepal bank account (coming soon)**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "question": "म जवाफदेहीलाई आर्थिक रूपमा कसरी सहयोग गर्न सक्छु?",
+            "answer": "तपाईं हामीलाई **PayPal**, **अन्तर्राष्ट्रिय बैंक वायर (SWIFT)**, वा **नेपाल बैंक खाता (छिट्टै आउँदै)** मार्फत सहयोग गर्न सक्नुहुन्छ। तपाईंको योगदानले **मुख्यतया रोजगारीलाई सहयोग गर्छ** — अभिलेख अनुसन्धान, प्रमाणीकरण र सम्भार गर्ने व्यक्तिहरूलाई भुक्तानी गर्दै — साथै यसलाई चलाइराख्ने र प्रयोग गर्न निःशुल्क राख्ने होस्टिङ र उपकरणसहित। जवाफदेहीले कुनै नाफा लिँदैन।"
           },
           {
             "id": "help-without-donating",
-            "question": "Can I help without donating money?",
-            "answer": "Yes. You can contribute research, translation, design, engineering, documentation, outreach, or help reviewing public records. Email us and tell us how you'd like to contribute."
+            "question": "के म पैसा दान नगरी सहयोग गर्न सक्छु?",
+            "answer": "हो। तपाईं अनुसन्धान, अनुवाद, डिजाइन, इन्जिनियरिङ, कागजातीकरण, आउटरिच, वा सार्वजनिक अभिलेख समीक्षामा योगदान गर्न सक्नुहुन्छ। हामीलाई इमेल गर्नुहोस् र तपाईं कसरी योगदान गर्न चाहनुहुन्छ भन्नुहोस्।"
           }
         ]
       },
       {
         "id": "funding-independence",
-        "title": "Funding & independence",
+        "title": "कोष र स्वतन्त्रता",
         "questions": [
           {
             "id": "funding",
-            "question": "How is Jawafdehi funded?",
-            "answer": "Jawafdehi is **volunteer-led and takes no profit**. It's funded by its volunteers and supporters, and by partnerships with **Nepali organizations and small Nepali businesses** that share our mission (for example, through donated infrastructure and services). We accept **no funding from any government or political party**, and nothing that would compromise our editorial independence."
+            "question": "जवाफदेहीलाई कसरी कोष जुटाइन्छ?",
+            "answer": "जवाफदेही **स्वयंसेवक-नेतृत्वमा छ र कुनै नाफा लिँदैन**। यो यसका स्वयंसेवक र समर्थकहरू, तथा हाम्रो लक्ष्य साझा गर्ने **नेपाली संस्था र साना नेपाली व्यवसाय**हरूसँगको साझेदारी (उदाहरणका लागि, दान गरिएको पूर्वाधार र सेवामार्फत) बाट कोष जुटाइन्छ। हामी **कुनै पनि सरकार वा राजनीतिक दलबाट कोष स्वीकार गर्दैनौं**, र हाम्रो सम्पादकीय स्वतन्त्रतामा आँच पुर्‍याउने केही पनि लिँदैनौं।"
           }
         ]
       },
       {
         "id": "legal-disclaimers",
-        "title": "Legal & disclaimers",
+        "title": "कानूनी र अस्वीकरण",
         "questions": [
           {
             "id": "legal-authority",
-            "question": "Are you a court or government authority? Can you prosecute?",
-            "answer": "No. Jawafdehi is an open-source documentation and public-awareness platform run by volunteers — **not** a government entity, judiciary body, or law firm, and not a legal authority. We don't prosecute, adjudicate, or give legal advice. Case information is based on publicly available records, may not reflect the most current legal status, and should not be treated as legal fact or used as the sole basis for any legal decision."
+            "question": "के तपाईं अदालत वा सरकारी प्राधिकरण हुनुहुन्छ? के तपाईं अभियोजन गर्न सक्नुहुन्छ?",
+            "answer": "होइन। जवाफदेही स्वयंसेवकहरूद्वारा सञ्चालित खुला स्रोत कागजातीकरण र सार्वजनिक-जनचेतना प्लेटफर्म हो — सरकारी निकाय, न्यायिक निकाय वा ल फर्म **होइन**, र कानूनी प्राधिकरण पनि होइन। हामी अभियोजन गर्दैनौं, न्यायनिरूपण गर्दैनौं, वा कानूनी सल्लाह दिँदैनौं। मुद्दाको जानकारी सार्वजनिक रूपमा उपलब्ध अभिलेखमा आधारित छ, यसले सबैभन्दा पछिल्लो कानूनी स्थिति प्रतिबिम्बित नगर्न सक्छ, र यसलाई कानूनी तथ्यका रूपमा लिनु वा कुनै कानूनी निर्णयको एकमात्र आधार बनाउनु हुँदैन।"
           }
         ]
       }

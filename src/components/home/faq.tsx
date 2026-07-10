@@ -29,7 +29,7 @@ export function Faq({ className }: Readonly<FaqProps>) {
     <FaqSection
       className={className}
       description={t("information.faq.description")}
-      eyebrow="FAQs"
+      eyebrow={t("nav.faq")}
       id="faq"
       items={items}
       title={t("information.faq.title")}
