@@ -254,7 +254,13 @@ export function DonationInfo() {
                       variant="outline"
                       size="lg"
                       onClick={() => copyDonationLink(PAYPAL_DONATE_URL)}
-                      aria-label={t("donate.ways.paypal.copyAria")}
+                      aria-label={
+                        isDonationLinkCopied
+                          ? t("donate.ways.copied")
+                          : isDonationLinkFailed
+                            ? t("donate.ways.copyFailed")
+                            : t("donate.ways.paypal.copyAria")
+                      }
                       className="w-full min-w-0 gap-1.5 border-border/80 bg-transparent px-2 text-xs font-semibold text-primary hover:border-primary/25 hover:bg-muted/50"
                     >
                       {isDonationLinkCopied ? (
@@ -263,13 +269,25 @@ export function DonationInfo() {
                         <Copy className="h-4 w-4" aria-hidden="true" />
                       )}
 
-                      <span aria-live="polite">
+                      <span>
                         {isDonationLinkCopied
                           ? t("donate.ways.copied")
                           : t("donate.ways.paypal.copyCta")}
                       </span>
+                      <span aria-live="polite" className="sr-only">
+                        {isDonationLinkCopied
+                          ? t("donate.ways.copied")
+                          : isDonationLinkFailed
+                            ? t("donate.ways.copyFailed")
+                            : ""}
+                      </span>
                     </Button>
                   </div>
+                  {isDonationLinkFailed ? (
+                    <p className="mt-2 text-xs font-medium text-destructive">
+                      {t("donate.ways.copyFailed")}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
