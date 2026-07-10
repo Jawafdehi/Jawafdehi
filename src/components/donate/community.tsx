@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 
+import { Eyebrow } from "@/components/ui/eyebrow";
+
 export function Community() {
   const { t } = useTranslation();
 
@@ -11,9 +13,9 @@ export function Community() {
     >
       <div className="container mx-auto flex flex-col items-center px-4 text-center">
         <div className="mx-auto max-w-5xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+          <Eyebrow className="mb-3">
             {t("donate.community.eyebrow")}
-          </p>
+          </Eyebrow>
           <h2
             id="donate-community-title"
             className="text-3xl font-bold leading-tight tracking-normal text-primary md:text-4xl"
