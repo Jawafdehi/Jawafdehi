@@ -167,8 +167,12 @@ function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult
     status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
     tags: card.tags || [],
     // Search cards show the case summary (not the first allegation, which is what
-    // the /cases grid leads with) so the result matches the query context.
-    description: (card.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
+    // the /cases grid leads with) so the result matches the query context. When
+    // there's no summary, fall back to the matched snippet explaining WHY the
+    // result matched.
+    description: (card.short_description || pickLang(result.snippet) || "")
+      .replace(/<[^>]*>/g, "")
+      .substring(0, 200),
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
     thumbnailUrl: card.thumbnail_url || undefined,
@@ -201,7 +205,9 @@ function caseCardPropsFromDetail(
     location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
     status,
     tags: detail.tags || [],
-    description: (detail.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
+    description: (detail.short_description || pickLang(result.snippet) || "")
+      .replace(/<[^>]*>/g, "")
+      .substring(0, 200),
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
     thumbnailUrl: detail.thumbnail_url || undefined,
