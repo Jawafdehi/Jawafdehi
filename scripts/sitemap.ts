@@ -3,14 +3,16 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import {
   PRE_RENDERED_STATIC_ROUTES,
-  UPDATE_ROUTE_ENTRIES,
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
+import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const CANONICAL = 'https://jawafdehi.org';
-const API_BASE = 'https://api.jawafdehi.org/api';
+const API_BASE = process.env.VITE_JAWAFDEHI_API_BASE_URL || 'https://api.jawafdehi.org/api';
+const CMS_BASE = `${API_BASE}/cms/v2`;
+const FETCH_TIMEOUT_MS = 10_000;
 
 interface EntitySummary {
   id: number;
@@ -20,6 +22,7 @@ interface EntitySummary {
 
 interface CaseSummary {
   id: number;
+  slug?: string | null;
   title: string;
   updated_at: string;
   entities: EntitySummary[];
@@ -32,6 +35,21 @@ interface PaginatedCaseList {
 
 function toYMD(isoDate: string): string {
   return isoDate.substring(0, 10);
+}
+
+async function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function buildDate(): string {
@@ -57,7 +75,7 @@ async function fetchAllCases(): Promise<CaseSummary[]> {
   const all: CaseSummary[] = [];
   let url: string | null = `${API_BASE}/cases/`;
   while (url) {
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (!res.ok) throw new Error(`API error ${res.status}`);
     const data: PaginatedCaseList = await res.json();
     all.push(...data.results);
@@ -66,15 +84,69 @@ async function fetchAllCases(): Promise<CaseSummary[]> {
   return all;
 }
 
+async function fetchAllArticles(): Promise<ArticleListItem[]> {
+  const all: ArticleListItem[] = [];
+  const limit = 20;
+  let offset = 0;
+  let totalCount: number | null = null;
+
+  do {
+    const url = new URL(`${CMS_BASE}/pages/`);
+    url.searchParams.set('type', 'content.ArticlePage');
+    url.searchParams.set('fields', 'title,category,date,excerpt,thumbnail');
+    url.searchParams.set('order', '-date');
+    url.searchParams.set('limit', String(limit));
+    if (offset > 0) {
+      url.searchParams.set('offset', String(offset));
+    }
+
+    const res = await fetchWithTimeout(url.toString());
+    if (!res.ok) throw new Error(`CMS API error ${res.status}`);
+    const data: WagtailListResponse<ArticleListItem> = await res.json();
+    totalCount = data.meta.total_count;
+    all.push(...data.items);
+
+    if (data.items.length === 0) {
+      break;
+    }
+    offset += data.items.length;
+  } while (totalCount == null || offset < totalCount);
+
+  return all;
+}
+
 async function main() {
   const today = buildDate();
 
+  // A reachable API is a hard requirement: a static-only sitemap that silently
+  // omits every case and update would hide entire sections from search engines
+  // while the build stays green. Fetch failures abort instead.
   let cases: CaseSummary[] = [];
   try {
     cases = await fetchAllCases();
     console.log(`[sitemap] Fetched ${cases.length} cases`);
   } catch (err) {
-    console.warn('[sitemap] WARNING: API unreachable, generating static-only sitemap:', err);
+    console.error(
+      `[sitemap] FATAL: could not fetch cases from ${API_BASE}. ` +
+      `Refusing to write a sitemap missing every case. ` +
+      `Check the API is reachable and VITE_JAWAFDEHI_API_BASE_URL is correct.`,
+      err,
+    );
+    process.exit(1);
+  }
+
+  let articles: ArticleListItem[] = [];
+  try {
+    articles = await fetchAllArticles();
+    console.log(`[sitemap] Fetched ${articles.length} CMS articles`);
+  } catch (err) {
+    console.error(
+      `[sitemap] FATAL: could not fetch CMS articles from ${CMS_BASE}. ` +
+      `Refusing to write a sitemap missing every update. ` +
+      `Check the CMS API is reachable and VITE_JAWAFDEHI_API_BASE_URL is correct.`,
+      err,
+    );
+    process.exit(1);
   }
 
   // Build a map of entity id → display_name from all cases
@@ -95,8 +167,14 @@ async function main() {
     ...PRE_RENDERED_STATIC_ROUTES
       .filter(shouldIncludeStaticRouteInSitemap)
       .map(r => urlEntry(`${CANONICAL}${r.path}`, today, r.sitemapTitle)),
-    ...UPDATE_ROUTE_ENTRIES.map(u => urlEntry(`${CANONICAL}/updates/${u.id}`, today, u.title)),
-    ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.id}`, toYMD(c.updated_at), c.title ? `${c.title} — Jawafdehi` : undefined)),
+    ...articles
+      .filter(a => a.meta.slug)
+      .map(a => urlEntry(
+        `${CANONICAL}/updates/${a.meta.slug}`,
+        toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
+        a.title ? `${a.title} — Jawafdehi` : undefined,
+      )),
+    ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.slug || c.id}`, toYMD(c.updated_at), c.title ? `${c.title} — Jawafdehi` : undefined)),
     ...entityIds.map(id => {
       const name = entityMap.get(id);
       return urlEntry(`${CANONICAL}/entity/${id}`, today, name ? `${name} — Jawafdehi` : undefined);
