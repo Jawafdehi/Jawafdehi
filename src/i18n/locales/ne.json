@@ -357,19 +357,6 @@
         }
       ]
     },
-    "international": {
-      "eyebrow": "अन्तर्राष्ट्रिय दाताहरू",
-      "title": "जहाँबाट पनि Jawafdehi लाई सहयोग गर्नुहोस्",
-      "description": "PayPal मार्फत Jawafdehi लाई सहयोग गर्नुहोस्। QR कोड स्क्यान गर्नुहोस् वा PayPal मा गएर आफ्नो दान सुरक्षित रूपमा पूरा गर्नुहोस्।",
-      "primaryCta": "PayPal मा जारी राख्नुहोस्",
-      "secondaryCta": "दान लिंक कपी गर्नुहोस्",
-      "copyCopied": "कपी भयो",
-      "copyAria": "PayPal दान लिंक कपी गर्नुहोस्",
-      "trustNote": "भुक्तानी PayPal मार्फत प्रशोधन हुन्छ। Jawafdehi ले भुक्तानी विवरणहरू भण्डारण गर्दैन।",
-      "qrLabel": "दान गर्न स्क्यान गर्नुहोस्",
-      "qrHelper": "PayPal खोल्छ",
-      "qrAlt": "PayPal दान checkout खोल्नुहोस्"
-    },
     "ways": {
       "eyebrow": "दान गर्ने तरिकाहरू",
       "title": "आफूलाई मिल्ने विकल्प छान्नुहोस्",
@@ -377,16 +364,13 @@
       "nepali": {
         "eyebrow": "नेपाली समुदाय",
         "title": "बैंक ट्रान्सफर",
-        "desc": "Prime Commercial Bank मार्फत सिधै योगदान गर्नुहोस्।",
         "preferredNote": "नेपाली बैंक खाता प्राथमिकतामा छ।",
         "nameLabel": "नाम",
         "accountName": "Jawafdehi Initiative",
         "accountLabel": "खाता नं.",
         "bankLabel": "बैंक",
-        "branchLabel": "शाखा",
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
-        "copyCta": "खाता नम्बर कपी गर्नुहोस्",
         "copyAria": "नेपाली बैंक खाता नम्बर कपी गर्नुहोस्"
       },
       "paypal": {
@@ -399,13 +383,7 @@
         "copyCta": "लिंक कपी गर्नुहोस्",
         "copyAria": "PayPal दान लिंक कपी गर्नुहोस्",
         "recipient": "दान Jawafdehi Initiative (Michigan, USA) मा जान्छ।",
-        "feeNote": "तेस्रो-पक्ष कारोबार शुल्क बढीमा ३% सम्म लाग्न सक्छ।",
-        "note": "तपाईं Jawafdehi बाट बाहिरिएर PayPal मा सुरक्षित रूपमा भुक्तानी पूरा गर्नुहुनेछ।",
-        "highlights": [
-          "अन्तर्राष्ट्रिय समर्थकहरूका लागि उपयोगी",
-          "कार्ड र नियमित दान समर्थन गर्छ",
-          "सामाजिक सञ्जालमा साझा गर्न सजिलो"
-        ]
+        "feeNote": "तेस्रो-पक्ष कारोबार शुल्क बढीमा ३% सम्म लाग्न सक्छ।"
       },
       "copy": "कपी गर्नुहोस्",
       "copied": "कपी भयो",

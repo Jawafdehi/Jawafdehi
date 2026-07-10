@@ -357,19 +357,6 @@
         }
       ]
     },
-    "international": {
-      "eyebrow": "Ways to give",
-      "title": "Support Jawafdehi",
-      "description": "Donate via PayPal. Scan the QR code or continue to PayPal to complete your donation securely.",
-      "primaryCta": "Continue to PayPal",
-      "secondaryCta": "Copy donation link",
-      "copyCopied": "Copied",
-      "copyAria": "Copy PayPal donation link",
-      "trustNote": "Payments are processed by PayPal. Jawafdehi does not store payment details.",
-      "qrLabel": "Scan to donate",
-      "qrHelper": "Opens PayPal",
-      "qrAlt": "Open PayPal donation checkout"
-    },
     "ways": {
       "eyebrow": "Ways to give",
       "title": "Choose the option that fits you",
@@ -377,16 +364,13 @@
       "nepali": {
         "eyebrow": "Nepali community",
         "title": "Bank transfer",
-        "desc": "Contribute directly through Prime Commercial Bank.",
         "preferredNote": "Nepali bank account preferred.",
         "nameLabel": "Name",
         "accountName": "Jawafdehi Initiative",
         "accountLabel": "A/c no.",
         "bankLabel": "Bank",
-        "branchLabel": "Branch",
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
-        "copyCta": "Copy account number",
         "copyAria": "Copy Nepali bank account number"
       },
       "paypal": {
@@ -399,13 +383,7 @@
         "copyCta": "Copy link",
         "copyAria": "Copy PayPal donation link",
         "recipient": "Donations go to Jawafdehi Initiative (Michigan, USA).",
-        "feeNote": "Subject to third-party transaction fees of up to 3%.",
-        "note": "You will leave Jawafdehi and complete payment securely on PayPal.",
-        "highlights": [
-          "Works for international supporters",
-          "Supports cards and recurring donations",
-          "Useful for sharing on social media"
-        ]
+        "feeNote": "Subject to third-party transaction fees of up to 3%."
       },
       "copy": "Copy",
       "copied": "Copied",
