@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { searchEntities, adminErrorMessage } from "@/services/admin-api";
 import {
   RELATIONSHIP_TYPES,
@@ -43,17 +44,22 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
   const [results, setResults] = useState<Record<string, unknown>[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchErr, setSearchErr] = useState<string | null>(null);
+  // Index of a row just appended by "Add row" / the link button, so its IRI input can grab focus and scroll into view once it mounts — otherwise the new row lands below the fold and the click reads as a no-op (BB-27).
+  const pendingFocus = useRef<number | null>(null);
 
   const update = (i: number, patch: Partial<EntityRelationshipRow>) =>
     onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
 
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
 
-  const addRow = (nes_id = "") =>
+  const addRow = (nes_id = "") => {
+    // The appended row lands at the current end of the list; queue that index for focus.
+    pendingFocus.current = rows.length;
     onChange([
       ...rows,
       { nes_id, relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" },
     ]);
+  };
 
   const runSearch = async () => {
     if (!query.trim()) return;
@@ -146,17 +152,37 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
       ) : (
         <div className="space-y-3">
           {rows.map((r, i) => {
-            const iriBad = r.nes_id.trim() !== "" && !isValidEntityIri(r.nes_id);
+            // A blank IRI means "required, not filled yet"; a non-blank IRI that fails the pattern is malformed. Both are invalid and block save (AdminCaseForm.entityRowsValid), so a blank add-row can no longer be silently dropped from the /entities patch and vanish on save (BB-27).
+            const iriMissing = r.nes_id.trim() === "";
+            const iriBad = !iriMissing && !isValidEntityIri(r.nes_id);
             return (
               <div key={i} className="grid gap-2 rounded border p-2 sm:grid-cols-[1fr_10rem_10rem_auto]">
                 <div className="space-y-1">
                   <Input
+                    ref={(el) => {
+                      if (el && pendingFocus.current === i) {
+                        pendingFocus.current = null;
+                        el.focus();
+                        el.scrollIntoView?.({ block: "nearest" });
+                      }
+                    }}
                     value={r.nes_id}
                     onChange={(e) => update(i, { nes_id: e.target.value })}
-                    className="font-mono text-xs"
+                    aria-invalid={iriMissing || iriBad}
+                    className={cn(
+                      "font-mono text-xs",
+                      (iriMissing || iriBad) &&
+                        "border-red-400 focus-visible:ring-red-400",
+                    )}
                     placeholder="https://jawafdehi.org/entity/person/…"
                   />
-                  <FieldError message={iriBad && "Not a canonical entity @id IRI."} />
+                  <FieldError
+                    message={
+                      (iriMissing &&
+                        "Entity IRI required — search above or paste a canonical @id.") ||
+                      (iriBad && "Not a canonical entity @id IRI.")
+                    }
+                  />
                   <Input
                     value={r.notes}
                     onChange={(e) => update(i, { notes: e.target.value })}

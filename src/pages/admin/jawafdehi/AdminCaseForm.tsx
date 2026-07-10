@@ -294,18 +294,13 @@ export default function AdminCaseForm() {
   const datesValid =
     isValidDateField(form.case_start_date) &&
     isValidDateField(form.case_end_date);
-  // A partially-filled timeline/entity row would serialize into the /timeline or
-  // /entities replace and 422 the whole PATCH (title-less timeline row, IRI-less
-  // entity row). Block save until every *populated* row is complete, so the user
-  // fixes it here instead of losing the whole batch to a server rejection. A
-  // fully-blank trailing add-row is fine — it's dropped by the patch builder.
+  // A partially-filled timeline row (title without a date, etc.) would serialize into the /timeline replace and 422 the whole PATCH, so block save until every *populated* timeline row is complete — a fully-blank trailing timeline add-row is fine, the patch builder drops it.
   const timelineRowsValid = form.timeline.every(
     (r) =>
       (r.title.trim() === "" && r.date.trim() === "") || isValidTimelineRow(r),
   );
-  const entityRowsValid = form.entities.every(
-    (r) => r.nes_id.trim() === "" || isValidEntityRow(r),
-  );
+  // Entities are stricter than timeline: an "Add row" starts blank and buildEntitiesPatch silently drops blank-IRI rows, so a blank row would vanish on save with no feedback ("Add row appears to do nothing", BB-27). Require every entity row to carry a valid IRI so save is blocked with an inline hint instead — the author fills the IRI (search or paste) or removes the row, never loses it silently.
+  const entityRowsValid = form.entities.every((r) => isValidEntityRow(r));
   // An invalid court-case chip would 422 the whole PATCH (they are sent
   // verbatim rather than silently dropped) — block save until fixed.
   const courtCaseRowsValid = form.court_cases.every(
