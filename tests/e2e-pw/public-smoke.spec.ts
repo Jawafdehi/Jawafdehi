@@ -58,12 +58,11 @@ test("search a seeded term returns results (proves the real OpenSearch path)", a
 
 test("cases list renders and only public cases are shown", async ({ page }) => {
   await page.goto("/cases");
-  await assertRendered(page);
-  await page.waitForLoadState("networkidle");
-  // seed_dev's published case appears; its non-public siblings (draft/in-review/
-  // closed) must NOT — assert on the real seeded slugs, not a never-inserted
-  // marker. The published-case link is the positive control that the list loaded.
+  // The published-case link is the positive control: this web-first assertion
+  // waits for the list to load, so no separate networkidle is needed.
   await expect(page.locator('a[href="/case/seed-published"]').first()).toBeVisible();
+  // Its non-public siblings (draft/in-review/closed) must NOT appear — assert on
+  // the real seeded slugs, not a never-inserted marker.
   for (const slug of ["seed-draft", "seed-in-review", "seed-closed"]) {
     await expect(page.locator(`a[href="/case/${slug}"]`)).toHaveCount(0);
   }
@@ -121,6 +120,10 @@ test("no requests leak to the production API or telemetry", async ({ page }) => 
     }
   });
   await page.goto("/");
+  await assertRendered(page);
   await page.goto("/search?q=roads");
+  await assertRendered(page);
+  // assertRendered above waits for each page to actually render, so any async API/
+  // telemetry request fired on load has had a chance to appear before we assert.
   expect(external, `leaked external requests: ${external.join("\n")}`).toEqual([]);
 });

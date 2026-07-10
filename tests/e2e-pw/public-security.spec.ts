@@ -48,14 +48,10 @@ for (const c of NONPUBLIC) {
     page,
   }) => {
     await page.goto(`/case/${c.slug}`);
-    // The public case API 404s non-public cases; the SPA must NEVER render the
-    // case body/title. Wait for the network to settle so a delayed content flash
-    // would still be caught.
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByText(c.marker)).toHaveCount(0);
-    // Instead of the case, a safe failure/not-found affordance is shown (the SPA
-    // surfaces the API 404 as "Failed to load case details" and a Back-to-Cases
-    // link) — never the case content.
+    // Web-first, POSITIVE assertion first: wait until the SPA has resolved the
+    // API 404 into its safe failure/not-found affordance ("Failed to load case
+    // details" + a Back-to-Cases link). This implicitly waits out any content
+    // flash, so the negative check below can't pass vacuously mid-load.
     await expect(
       page
         .getByText(
@@ -63,6 +59,8 @@ for (const c of NONPUBLIC) {
         )
         .first(),
     ).toBeVisible();
+    // Only now assert the case body/title NEVER rendered.
+    await expect(page.getByText(c.marker)).toHaveCount(0);
   });
 }
 
@@ -71,13 +69,18 @@ test("searching for a non-public-only term surfaces no non-public case", async (
 }) => {
   // 'kickbacks' appears only in the DRAFT case title; a public search must not
   // surface it. Positive control: 'embezzlement' (the PUBLISHED case) DOES return
-  // a linked result, proving search is actually running end-to-end.
+  // a linked result — this web-first assertion waits out the query, proving search
+  // runs end-to-end.
   await page.goto("/search?q=embezzlement");
-  await page.waitForLoadState("networkidle");
   await expect(page.locator(`a[href="/case/${PUBLIC.slug}"]`).first()).toBeVisible();
 
+  // For the negative query, anchor on the results surface having SETTLED (the
+  // "no records found" state) before asserting absence, so the check can't pass
+  // vacuously while the query is still in flight.
   await page.goto("/search?q=kickbacks");
-  await page.waitForLoadState("networkidle");
+  await expect(
+    page.getByText(/no archive records found/i).first(),
+  ).toBeVisible();
   for (const c of NONPUBLIC) {
     await expect(page.locator(`a[href="/case/${c.slug}"]`)).toHaveCount(0);
   }
