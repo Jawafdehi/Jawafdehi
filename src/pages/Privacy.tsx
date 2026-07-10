@@ -12,12 +12,12 @@ const Privacy = () => {
         <meta property="og:url" content="https://jawafdehi.org/privacy" />
         <meta property="og:title" content="Jawafdehi Initiative Privacy Policy" />
         <meta property="og:description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Jawafdehi Initiative Privacy Policy" />
         <meta name="twitter:description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
       </Helmet>
 
       <main id="main-content" className="flex-1">

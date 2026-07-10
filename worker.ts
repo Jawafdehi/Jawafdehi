@@ -1,6 +1,15 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
+import {
+  SITE_NAME,
+  SITE_URL,
+  SOCIAL_IMAGE_URL,
+  previewImageUrl,
+  stripHtml,
+  truncateMeta,
+} from './src/utils/seo';
+import { stripMarkdown } from './src/utils/markdown';
 
 interface Env {
   ASSETS: {
@@ -9,6 +18,14 @@ interface Env {
 }
 
 const JDS_API_BASE = 'https://api.jawafdehi.org/api';
+const CMS_API_BASE = `${JDS_API_BASE}/cms/v2`;
+// Uploaded media (case banners/thumbnails, CMS images) are served from the
+// portal origin, so relative media paths must resolve against it — not the
+// frontend origin — or shared links get broken Open Graph images.
+const MEDIA_BASE = 'https://portal.jawafdehi.org';
+// Bound upstream API calls made while injecting share metadata so a slow backend
+// can never hang the edge request; on timeout we fall through to the SPA shell.
+const META_FETCH_TIMEOUT_MS = 4000;
 
 const DOCUMENT_PREVIEW_ALLOWED_HOSTS = new Set([
   'ngm-store.jawafdehi.org',
@@ -237,6 +254,199 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
   });
 }
 
+// --------------------------------------------------------------------------
+// Dynamic share-preview metadata
+//
+// Case and update pages are pre-rendered at build time with correct Open Graph
+// / Twitter tags, so the vast majority of shared links resolve to a static file
+// with baked-in metadata. This fallback covers the gap for a record published
+// AFTER the last build: instead of serving the bare SPA shell (whose default
+// tags would make every fresh case look identical when shared), we fetch the
+// record and inject its real title, description, and image into the shell so
+// every platform's crawler (Facebook, X/Twitter, LinkedIn, WhatsApp, Slack,
+// Discord, iMessage, Telegram, …) sees the right preview. All these platforms
+// read the same Open Graph / Twitter Card tags, so one injection covers them.
+// --------------------------------------------------------------------------
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Fetch with a hard timeout. Resolves to null (rather than throwing) on timeout,
+// network error, or non-OK status, so callers cleanly fall through to the SPA.
+async function fetchWithTimeout(url: string): Promise<Response | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), META_FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    return response.ok ? response : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function buildMetaTags(input: {
+  title: string;
+  description: string;
+  canonicalUrl: string;
+  imageUrl: string;
+  imageAlt: string;
+  type?: 'article' | 'website';
+  publishedTime?: string | null;
+  modifiedTime?: string | null;
+}): string {
+  const type = input.type ?? 'article';
+  return `
+<title>${escapeHtml(input.title)}</title>
+<meta name="description" content="${escapeHtml(input.description)}" />
+<link rel="canonical" href="${escapeHtml(input.canonicalUrl)}" />
+<meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />
+<meta property="og:type" content="${escapeHtml(type)}" />
+<meta property="og:url" content="${escapeHtml(input.canonicalUrl)}" />
+<meta property="og:title" content="${escapeHtml(input.title)}" />
+<meta property="og:description" content="${escapeHtml(input.description)}" />
+<meta property="og:image" content="${escapeHtml(input.imageUrl)}" />
+<meta property="og:image:alt" content="${escapeHtml(input.imageAlt)}" />
+<meta property="og:locale" content="en_US" />
+${input.publishedTime ? `<meta property="article:published_time" content="${escapeHtml(input.publishedTime)}" />` : ''}
+${input.modifiedTime ? `<meta property="article:modified_time" content="${escapeHtml(input.modifiedTime)}" />` : ''}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${escapeHtml(input.title)}" />
+<meta name="twitter:description" content="${escapeHtml(input.description)}" />
+<meta name="twitter:image" content="${escapeHtml(input.imageUrl)}" />
+<meta name="twitter:image:alt" content="${escapeHtml(input.imageAlt)}" />`.trim();
+}
+
+// Replace the SPA template's helmet placeholders directly (preserving template
+// structure) so the injected tags land where the client would otherwise render
+// them and there are no duplicate/leftover placeholder comments.
+function injectHeadMeta(indexHtml: string, title: string, metaTags: string): string {
+  if (indexHtml.includes('<!--helmet-meta-->')) {
+    return indexHtml
+      .replace('<!--helmet-title-->', escapeHtml(title))
+      .replace('<!--helmet-meta-->', metaTags);
+  }
+  if (indexHtml.includes('</head>')) {
+    return indexHtml.replace('</head>', `${metaTags}\n</head>`);
+  }
+  return indexHtml;
+}
+
+async function fetchIndexHtml(request: Request, env: Env): Promise<string | null> {
+  const indexRequest = new Request(new URL('/', request.url).toString(), request);
+  const indexResponse = await env.ASSETS.fetch(indexRequest);
+  if (!indexResponse.ok) return null;
+  return indexResponse.text();
+}
+
+function metaHtmlResponse(html: string): Response {
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=300',
+      ...securityHeaders(),
+    },
+  });
+}
+
+// Inject share metadata for a published case not yet captured by pre-render.
+async function handleCaseMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
+  const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/cases/${encodeURIComponent(slug)}/`);
+  if (!apiResponse) return null;
+
+  let caseData: Record<string, unknown>;
+  try {
+    caseData = (await apiResponse.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  const titleRaw = String(caseData.title || 'Jawafdehi Case');
+  const allegationText = Array.isArray(caseData.key_allegations)
+    ? caseData.key_allegations.slice(0, 2).map((item) => String(item ?? '').trim()).filter(Boolean).join('. ')
+    : '';
+  const description = truncateMeta(
+    stripMarkdown(stripHtml(typeof caseData.description === 'string' ? caseData.description : '')) ||
+    allegationText ||
+    'A verified corruption and misconduct case documented by Jawafdehi Nepal.',
+  );
+  const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
+  const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
+  const imageUrl =
+    previewImageUrl(caseData.banner_url as string | null | undefined, MEDIA_BASE) ||
+    previewImageUrl(caseData.thumbnail_url as string | null | undefined, MEDIA_BASE) ||
+    SOCIAL_IMAGE_URL;
+
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+
+  const metaTags = buildMetaTags({
+    title: `${titleRaw} | Jawafdehi`,
+    description,
+    canonicalUrl,
+    imageUrl,
+    imageAlt: titleRaw,
+    type: 'article',
+    publishedTime: typeof caseData.created_at === 'string' ? caseData.created_at : null,
+    modifiedTime: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
+  });
+  return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
+}
+
+// Inject share metadata for a CMS update/news article not yet pre-rendered.
+async function handleUpdateMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
+  const apiResponse = await fetchWithTimeout(
+    `${CMS_API_BASE}/pages/?type=content.ArticlePage&slug=${encodeURIComponent(slug)}&fields=*`,
+  );
+  if (!apiResponse) return null;
+
+  let article: Record<string, unknown> | undefined;
+  try {
+    const payload = (await apiResponse.json()) as { items?: Array<Record<string, unknown>> };
+    article = payload.items?.[0];
+  } catch {
+    return null;
+  }
+  if (!article) return null;
+
+  const titleRaw = String(article.title || 'Jawafdehi Update');
+  const description = truncateMeta(
+    stripHtml(typeof article.excerpt === 'string' ? article.excerpt : '') ||
+    'An update from Jawafdehi Nepal.',
+  );
+  const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
+  const thumbnail = article.thumbnail as { url?: string; alt?: string } | null | undefined;
+  const imageUrl = previewImageUrl(thumbnail?.url, MEDIA_BASE) || SOCIAL_IMAGE_URL;
+  const meta = article.meta as { first_published_at?: string | null } | undefined;
+  const date = typeof article.date === 'string' ? article.date : null;
+
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+
+  const metaTags = buildMetaTags({
+    title: `${titleRaw} | Jawafdehi`,
+    description,
+    canonicalUrl,
+    imageUrl,
+    imageAlt: thumbnail?.alt || titleRaw,
+    type: 'article',
+    publishedTime: meta?.first_published_at || date,
+    modifiedTime: date,
+  });
+  return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -328,6 +538,23 @@ export default {
 
     // SPA fallback: serve index.html with 200
     if (request.method !== 'GET' && request.method !== 'HEAD') return asset;
+
+    // Case / update detail pages published after the last build aren't
+    // pre-rendered, so the bare SPA shell would share with generic metadata.
+    // Inject the record's real Open Graph / Twitter tags so link previews are
+    // correct on every platform. Numeric / court-ref case URLs are already
+    // redirected to their canonical slug above, so only slugs reach here.
+    const caseSlugMatch = path.match(/^\/case\/([^/]+)\/?$/);
+    if (caseSlugMatch) {
+      const metaResponse = await handleCaseMetaFallback(request, env, decodeURIComponent(caseSlugMatch[1]));
+      if (metaResponse) return metaResponse;
+    }
+    const updateSlugMatch = path.match(/^\/updates\/([^/]+)\/?$/);
+    if (updateSlugMatch) {
+      const metaResponse = await handleUpdateMetaFallback(request, env, decodeURIComponent(updateSlugMatch[1]));
+      if (metaResponse) return metaResponse;
+    }
+
     const indexRequest = new Request(new URL('/', request.url).toString(), request);
     const indexResponse = await env.ASSETS.fetch(indexRequest);
     const spaResponse = new Response(indexResponse.body, {

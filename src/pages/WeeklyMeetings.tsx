@@ -121,14 +121,14 @@ const WeeklyMeetings = () => {
           property="og:description"
           content="Join Jawafdehi's weekly corruption series: a live public meeting on Zoom analyzing Nepal's corruption cases, also streamed on YouTube."
         />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Weekly Corruption Series — Jawafdehi" />
         <meta
           name="twitter:description"
           content="Join Jawafdehi's weekly corruption series: a live public meeting on Zoom analyzing Nepal's corruption cases, also streamed on YouTube."
         />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
       </Helmet>
 
       <main id="main-content" className="flex-1">
