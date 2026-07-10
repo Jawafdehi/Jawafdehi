@@ -24,7 +24,9 @@ export function NewsletterSignupModal() {
 
   useEffect(() => {
     if (getNewsletterPromptState() !== null) return;
-    const timer = window.setTimeout(() => setOpen(true), OPEN_DELAY_MS);
+    const timer = window.setTimeout(() => {
+      if (getNewsletterPromptState() === null) setOpen(true);
+    }, OPEN_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, []);
 
