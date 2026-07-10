@@ -66,10 +66,10 @@ const Index = () => {
     })),
   });
 
-  // Build the resolved-name map from the cached query results. Keyed by a stable
-  // primitive signature (which ids have loaded) so the map identity only changes
-  // when a query actually resolves — keeps the featuredCases memo below stable.
-  const resolvedKey = entityQueries.map(q => (q.data ? 'y' : 'n')).join('');
+  // Build the resolved-name map from the cached query results. useQueries applies
+  // structural sharing, so entityQueries keeps a stable reference until a result
+  // actually changes (including a background refetch) — depending on it directly
+  // recomputes the map exactly when data changes and no more often.
   const resolvedEntities = useMemo(() => {
     const map: Record<string, Entity> = {};
     locationNesIds.forEach((nesId, i) => {
@@ -77,9 +77,7 @@ const Index = () => {
       if (entity) map[nesId] = entity;
     });
     return map;
-    // entityQueries omitted intentionally; resolvedKey captures when results load.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationNesIds, resolvedKey]);
+  }, [locationNesIds, entityQueries]);
 
   // Transform API cases to CaseCard format
   const featuredCases = useMemo(() => {
