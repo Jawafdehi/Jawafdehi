@@ -9,6 +9,16 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: [],
+    // The Playwright E2E specs (tests/e2e-pw/**) use @playwright/test's runner,
+    // not vitest — collecting them here throws "did not expect test.beforeEach()".
+    // Keep vitest's defaults and just carve out the Playwright dir + its report.
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'tests/e2e-pw/**',
+      'playwright-report/**',
+      'test-results/**',
+    ],
   },
   resolve: {
     alias: {
