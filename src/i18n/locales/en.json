@@ -970,6 +970,7 @@
     "nepali": "नेपाली (Nepali)",
     "loading": "Loading…",
     "notAvailable": "N/A",
+    "view": "View",
     "viewDetails": "View Details →"
   },
   "themeToggle": {
@@ -1547,6 +1548,9 @@
     "placeholder": "Search cases, people, offices, locations, or allegations",
     "submit": "Search archive",
     "searching": "Searching archive",
+    "viewMode": "View mode",
+    "listView": "List view",
+    "cardView": "Card view",
     "results_one": "{{count}} result",
     "results_other": "{{count}} results",
     "sort": "Sort"

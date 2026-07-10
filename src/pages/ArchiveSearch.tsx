@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, LayoutGrid, List, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -14,6 +14,7 @@ import {
   SearchResultCard,
   SearchResultCardSkeleton,
 } from "@/components/search/SearchResultCard";
+import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/ui/pagination";
@@ -90,6 +91,7 @@ export default function ArchiveSearch({
     [searchParams, selectedRecordType],
   );
   const [query, setQuery] = useState(params.q || "");
+  const [viewMode, setViewMode] = useState<"list" | "card">("list");
 
   useEffect(() => setQuery(params.q || ""), [params.q]);
   useEffect(() => {
@@ -273,6 +275,34 @@ export default function ArchiveSearch({
                 })
               )}
             </div>
+            <div
+              aria-label={t("archiveSearch.viewMode", "View mode")}
+              className="flex items-center rounded-full border p-0.5"
+              role="group"
+            >
+              <Button
+                aria-label={t("archiveSearch.listView", "List view")}
+                aria-pressed={viewMode === "list"}
+                className="h-9 w-9 rounded-full"
+                onClick={() => setViewMode("list")}
+                size="icon"
+                type="button"
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                aria-label={t("archiveSearch.cardView", "Card view")}
+                aria-pressed={viewMode === "card"}
+                className="h-9 w-9 rounded-full"
+                onClick={() => setViewMode("card")}
+                size="icon"
+                type="button"
+                variant={viewMode === "card" ? "secondary" : "ghost"}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
             <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">
               {t("archiveSearch.sort", "Sort")}
             </label>
@@ -368,6 +398,7 @@ export default function ArchiveSearch({
               data={displayData}
               isError={showError}
               isLoading={isInitialLoading || isRefreshing}
+              viewMode={viewMode}
             />
 
             {!showError &&
@@ -416,19 +447,34 @@ function readParams(
   };
 }
 
+const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 2xl:grid-cols-3";
+
 function ArchiveSearchResults({
   data,
   isError,
   isLoading,
+  viewMode,
 }: Readonly<{
   data: ArchiveSearchResponse | undefined;
   isError: boolean;
   isLoading: boolean;
+  viewMode: "list" | "card";
 }>) {
+  const { t } = useTranslation();
+  const searchingLabel = t("archiveSearch.searching", "Searching archive");
   if (isLoading) {
+    if (viewMode === "card") {
+      return (
+        <output aria-label={searchingLabel} className={cardGridClass}>
+          {[0, 1, 2, 3].map((index) => (
+            <CaseCardSkeleton key={index} />
+          ))}
+        </output>
+      );
+    }
     return (
       <div
-        aria-label="Searching archive"
+        aria-label={searchingLabel}
         aria-live="polite"
         className="space-y-3"
         role="status"
@@ -456,10 +502,28 @@ function ArchiveSearchResults({
     );
   }
 
+  if (viewMode === "card") {
+    return (
+      <div className={cardGridClass}>
+        {data.results.map((result) => (
+          <SearchResultCard
+            key={`${result.type}-${result.id}`}
+            result={result}
+            viewMode="card"
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       {data.results.map((result) => (
-        <SearchResultCard key={`${result.type}-${result.id}`} result={result} />
+        <SearchResultCard
+          key={`${result.type}-${result.id}`}
+          result={result}
+          viewMode="list"
+        />
       ))}
     </div>
   );
