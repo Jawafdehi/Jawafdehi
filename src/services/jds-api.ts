@@ -57,6 +57,32 @@ export interface FeedbackResponse {
   message: string;
 }
 
+// ============================================================================
+// Newsletter Types
+// ============================================================================
+
+export interface NewsletterSubscription {
+  email: string;
+  firstName: string;
+  lastName?: string;
+  consentAccepted: boolean;
+  consentSource: string;
+  privacyVersion: string;
+  locale?: string;
+}
+
+export interface NewsletterSubscriptionResponse {
+  id: number;
+  email: string;
+  status: string;
+  message: string;
+}
+
+export interface NewsletterUnsubscribeResponse {
+  status: string;
+  message: string;
+}
+
 export interface ValidationError {
   [key: string]: string[] | ValidationError;
 }
@@ -273,4 +299,47 @@ export async function submitFeedback(feedback: FeedbackSubmission): Promise<Feed
   }
 }
 
+// ============================================================================
+// Newsletter API Functions
+// ============================================================================
+
+/**
+ * Subscribe an email address to the Jawafdehi newsletter.
+ *
+ * @param subscription - Subscriber name and email address
+ * @returns Promise<NewsletterSubscriptionResponse> - The created subscription
+ * @throws JDSApiError - On validation errors, rate limiting, or server errors
+ */
+export async function subscribeToNewsletter(
+  subscription: NewsletterSubscription,
+): Promise<NewsletterSubscriptionResponse> {
+  try {
+    const response = await http.post<NewsletterSubscriptionResponse>(
+      '/api/newsletter/subscriptions/',
+      subscription,
+      { timeout: 10000 },
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, '/newsletter/subscriptions/');
+  }
+}
+
+/**
+ * Unsubscribe a newsletter recipient using their opaque unsubscribe token.
+ */
+export async function unsubscribeFromNewsletter(
+  token: string,
+): Promise<NewsletterUnsubscribeResponse> {
+  try {
+    const response = await http.post<NewsletterUnsubscribeResponse>(
+      `/api/newsletter/unsubscribe/${encodeURIComponent(token)}/`,
+      {},
+      { timeout: 10000 },
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, '/newsletter/unsubscribe/');
+  }
+}
 
