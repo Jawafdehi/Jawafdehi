@@ -247,6 +247,8 @@ export interface CaseSearchParams {
   tags?: string;
   search?: string;
   page?: number;
+  /** Server honours ?page_size= up to 200 (CasePagination). */
+  page_size?: number;
 }
 
 // ============================================================================
