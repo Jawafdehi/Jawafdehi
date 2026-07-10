@@ -327,17 +327,47 @@ ${input.modifiedTime ? `<meta property="article:modified_time" content="${escape
 <meta name="twitter:image:alt" content="${escapeHtml(input.imageAlt)}" />`.trim();
 }
 
-// Replace the SPA template's helmet placeholders directly (preserving template
-// structure) so the injected tags land where the client would otherwise render
-// them and there are no duplicate/leftover placeholder comments.
+// Strip the head tags we are about to override (title, canonical, and the
+// Open Graph / Twitter / description meta) from a head fragment. The asset the
+// worker fetches for the shell is the PRE-RENDERED homepage (`dist/index.html`),
+// which already has baked-in tags and no helmet placeholders — so without this
+// the appended tags would produce two <title>, two og:title, two canonical, …
+// in one head and crawlers would show the generic homepage preview. Regexes are
+// scoped to the head region and rely on real `>`/quotes inside attribute values
+// always being HTML-escaped (both helmet and buildMetaTags escape them), so
+// `[^>]*` never overruns an attribute. Function-form replacements are used so a
+// `$`-containing match is never treated as a replacement pattern.
+function stripOverriddenHeadTags(head: string): string {
+  return head
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, () => '')
+    .replace(/<meta\b[^>]*\bproperty=["'](?:og|article):[^"']*["'][^>]*>/gi, () => '')
+    .replace(/<meta\b[^>]*\bname=["']twitter:[^"']*["'][^>]*>/gi, () => '')
+    .replace(/<meta\b[^>]*\bname=["']description["'][^>]*>/gi, () => '')
+    .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
+}
+
+// Inject the record's share metadata into the SPA shell.
+//
+// If the fetched HTML still has the helmet placeholders (raw template), replace
+// them in place. Otherwise the shell is the fully pre-rendered homepage: strip
+// its existing overridable head tags first, then append ours before </head> so
+// there is exactly one of each tag regardless of which shell we got.
+//
+// All replacements use the function form (or a template literal) so `$`
+// sequences (`$$`, `$&`, `` $` ``, `$'`) in the injected title / meta — which
+// escapeHtml does NOT neutralize — are inserted literally and cannot inject
+// markup into the head.
 function injectHeadMeta(indexHtml: string, title: string, metaTags: string): string {
   if (indexHtml.includes('<!--helmet-meta-->')) {
     return indexHtml
-      .replace('<!--helmet-title-->', escapeHtml(title))
-      .replace('<!--helmet-meta-->', metaTags);
+      .replace('<!--helmet-title-->', () => escapeHtml(title))
+      .replace('<!--helmet-meta-->', () => metaTags);
   }
-  if (indexHtml.includes('</head>')) {
-    return indexHtml.replace('</head>', `${metaTags}\n</head>`);
+  const headEnd = indexHtml.indexOf('</head>');
+  if (headEnd !== -1) {
+    const head = stripOverriddenHeadTags(indexHtml.slice(0, headEnd));
+    const rest = indexHtml.slice(headEnd);
+    return `${head}${metaTags}\n${rest}`;
   }
   return indexHtml;
 }
