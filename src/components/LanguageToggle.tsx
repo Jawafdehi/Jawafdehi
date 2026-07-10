@@ -61,7 +61,7 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
       <span className="relative z-10 grid h-full w-full grid-cols-2 items-center">
         <span
           className={cn(
-            "grid h-full place-items-center text-center text-[10px] font-bold leading-none transition-colors",
+            "grid h-full place-items-center text-center text-xs font-bold leading-none transition-colors",
             currentLanguage === "en" ? "text-background" : "text-muted-foreground",
           )}
         >
@@ -69,7 +69,7 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
         </span>
         <span
           className={cn(
-            "grid h-full place-items-center text-center text-[10px] font-bold leading-none transition-colors",
+            "grid h-full place-items-center text-center text-xs font-bold leading-none transition-colors",
             currentLanguage === "ne" ? "text-background" : "text-muted-foreground",
           )}
         >

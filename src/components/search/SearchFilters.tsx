@@ -60,7 +60,7 @@ export function SearchFilters({
         <h2 className="text-sm font-bold tracking-tight text-foreground">
           Filters
         </h2>
-        <Button className="h-8 px-2 text-xs" onClick={onClear} variant="ghost">
+        <Button className="h-11 px-3 text-xs" onClick={onClear} variant="ghost">
           Clear
         </Button>
       </div>
@@ -180,7 +180,7 @@ function FilterOption({
   value: string;
 }>) {
   return (
-    <label className="flex min-h-8 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+    <label className="flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
       <RadioGroupItem
         aria-label={count === null ? label : `${label}: ${count} results`}
         value={value}
@@ -230,7 +230,7 @@ function FilterGroup({
         const label = getFacetItemLabel(name, item, t);
         return (
           <label
-            className="flex min-h-8 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             key={item.name}
           >
             <Checkbox

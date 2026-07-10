@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import CountUp from "react-countup";
+import { useTranslation } from "react-i18next";
 
 import { SearchBar } from "@/components/ui/search-bar";
 import { cn } from "@/lib/utils";
@@ -41,36 +41,21 @@ export function Hero({
   courtRecords,
   materials,
 }: Readonly<HeroProps>) {
-  const navigate = useNavigate();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [archiveQuery, setArchiveQuery] = useState("");
 
   // All four stats link to the Data Quality dashboard, which explains what each
   // dataset tracks and how complete it is.
   const heroStats: HeroStat[] = [
-    {
-      value: casesDocumented,
-      label: t("home.hero.stats.casesDocumented", "Cases documented"),
-      href: "/data-quality",
-    },
+    { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/data-quality" },
     {
       value: officialsAndEntitiesTracked,
-      label: t(
-        "home.hero.stats.officialsAndEntitiesTracked",
-        "Officials & entities tracked",
-      ),
+      label: t("home.hero.stats.officialsAndEntitiesTracked"),
       href: "/data-quality",
     },
-    {
-      value: courtRecords,
-      label: t("home.hero.stats.courtRecords", "Court records"),
-      href: "/data-quality",
-    },
-    {
-      value: materials,
-      label: t("home.hero.stats.materials", "Materials"),
-      href: "/data-quality",
-    },
+    { value: courtRecords, label: t("home.hero.stats.courtRecords"), href: "/data-quality" },
+    { value: materials, label: t("home.hero.stats.materials"), href: "/data-quality" },
   ];
 
   const goToSearch = (query: string) => {
@@ -97,22 +82,18 @@ export function Hero({
     >
       <HeroBackdrop images={heroMapImages} />
 
-      <div className="container relative z-10 mx-auto flex min-h-[72svh] flex-col items-start justify-center px-6 py-14 text-left sm:px-8 sm:py-16 md:min-h-[74svh] md:items-center md:px-6 md:py-20 md:text-center lg:min-h-[76svh] lg:py-24">
-        <p className="max-w-full text-[clamp(0.68rem,1.8vw,0.75rem)] font-bold uppercase tracking-[0.26em] text-accent sm:tracking-[0.28em]">
-          <em>{t("home.hero.eyebrow", "Accountability has no expiry.")}</em>
+      <div className="layout-container relative z-10 flex min-h-[72svh] flex-col items-start justify-center py-14 text-left sm:items-center sm:py-16 sm:text-center md:min-h-[74svh] md:py-20 lg:min-h-[76svh] lg:py-24">
+        <p className="font-eyebrow font-eyebrow-display max-w-full">
+          <em>{t("home.hero.eyebrow")}</em>
         </p>
 
-        <h1 className="mt-5 max-w-[min(100%,9.6em)] text-[clamp(2.35rem,10.6vw,3.55rem)] font-extrabold leading-[0.96] tracking-[-0.045em] text-primary sm:max-w-[min(100%,10.8em)] sm:text-[clamp(3rem,8vw,4rem)] md:max-w-4xl md:text-6xl md:leading-[1.02] lg:text-6xl">
-  {t("home.hero.titlePrefix", "Nepal's Permanent")}{" "}
-  <span className="text-accent">{t("home.hero.titleHighlight", "Corruption Case")}</span>{" "}
-  {t("home.hero.titleSuffix", "Archive")}
-</h1>
+        <h1 className="font-home-hero-title mt-5">
+          {t("home.hero.titlePrefix")} <span className="text-accent">{t("home.hero.titleHighlight")}</span>{" "}
+          {t("home.hero.titleSuffix")}
+        </h1>
 
-        <p className="mt-6 max-w-[min(100%,34rem)] text-[clamp(0.95rem,2.8vw,1.05rem)] leading-8 text-muted-foreground md:max-w-2xl md:text-lg">
-          {t(
-            "home.hero.description",
-            "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
-          )}
+        <p className="font-home-hero-lede measure-intro mt-6">
+          {t("home.hero.description")}
         </p>
 
         <form
@@ -120,18 +101,15 @@ export function Hero({
           onSubmit={submitArchiveSearch}
         >
           <label className="sr-only" htmlFor="hero-archive-search">
-            {t("home.hero.searchLabel", "Search the Jawafdehi archive")}
+            {t("home.hero.searchLabel")}
           </label>
 
           <SearchBar
             id="hero-archive-search"
             inputClassName="bg-background/95 shadow-lg shadow-primary/5"
             onChange={(event) => setArchiveQuery(event.target.value)}
-            placeholder={t(
-              "home.hero.searchPlaceholder",
-              "Search cases, people, offices, locations, or allegations",
-            )}
-            submitLabel={t("home.hero.searchSubmit", "Search Jawafdehi")}
+            placeholder={t("home.hero.searchPlaceholder")}
+            submitLabel={t("home.hero.searchSubmit")}
             value={archiveQuery}
           />
         </form>
@@ -148,11 +126,11 @@ function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
       {stats.map(({ value, label, href }, index) => {
         const content = (
           <>
-            <p className="text-[clamp(1.35rem,5vw,1.75rem)] font-extrabold leading-none text-primary tabular-nums md:text-3xl">
+            <p className="font-stat-value tabular-nums">
               <HeroStatValue value={value} />
             </p>
 
-            <p className="mt-2 text-[clamp(0.72rem,2.6vw,0.9rem)] leading-5 text-muted-foreground">
+            <p className="font-stat-label mt-2">
               {label}
             </p>
           </>
@@ -163,7 +141,7 @@ function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
             key={label}
             className={cn(
               "min-w-0 text-left",
-              "md:px-6 md:text-center",
+              "sm:text-center md:px-6",
               index > 0 && "md:border-l md:border-border",
             )}
           >

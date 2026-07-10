@@ -262,7 +262,7 @@ function ResultCardShell({
               {badge}
             </Badge>
           </div>
-          <h2 className="truncate text-base font-bold leading-6 text-foreground group-hover:text-primary">
+          <h2 className="break-words text-base font-bold leading-6 text-foreground group-hover:text-primary">
             <Link to={url} className="focus:outline-none">
               <span className="absolute inset-0" aria-hidden="true" />
               {title}
@@ -272,7 +272,7 @@ function ResultCardShell({
             {description}
           </p>
           {metadata ? (
-            <p className="mt-2 truncate text-xs leading-5 text-muted-foreground">
+            <p className="mt-2 break-words text-xs leading-5 text-muted-foreground">
               {metadata}
             </p>
           ) : null}

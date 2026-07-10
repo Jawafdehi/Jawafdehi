@@ -43,7 +43,7 @@ export default function PaymentCancelled() {
               <Button
                 asChild
                 size="lg"
-                className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2.5 text-[0.8125rem] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent/90 sm:text-sm md:h-12 md:min-w-[15rem] md:px-7"
+                className="font-button h-11 min-w-0 flex-1 rounded-full bg-accent px-2.5 text-accent-foreground shadow-md shadow-accent/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent/90 md:h-12 md:min-w-[15rem] md:px-7"
               >
                 <a
                   href={PAYPAL_DONATE_URL}
@@ -59,7 +59,7 @@ export default function PaymentCancelled() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="h-11 min-w-0 flex-1 rounded-full border-primary bg-background/80 px-2.5 text-[0.8125rem] font-semibold text-primary hover:border-primary hover:bg-muted/60 hover:text-primary sm:text-sm md:h-12 md:min-w-[13rem] md:px-7"
+                className="font-button h-11 min-w-0 flex-1 rounded-full border-primary bg-background/80 px-2.5 text-primary hover:border-primary hover:bg-muted/60 hover:text-primary md:h-12 md:min-w-[13rem] md:px-7"
               >
                 <Link to="/">Return home</Link>
               </Button>

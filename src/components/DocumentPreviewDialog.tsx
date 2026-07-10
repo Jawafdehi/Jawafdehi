@@ -372,7 +372,7 @@ export function DocumentPreviewViewer({
               )}
 
               {!isLoadingMarkdown && !markdownError && (
-                <div className="prose prose-sm max-w-none break-words">
+                <div className="font-paragraph content-prose max-w-none break-words">
                   <Markdown remarkPlugins={[remarkGfm]}>{markdown}</Markdown>
                 </div>
               )}

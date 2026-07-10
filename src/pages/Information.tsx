@@ -31,10 +31,10 @@ const Information = () => {
         <section id="information-hero" className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
+              <h1 className="font-page-title font-page-title-inverse mb-6">
                 {t("information.title")}
               </h1>
-              <p className="text-xl text-primary-foreground/80 leading-relaxed">
+              <p className="font-page-lede font-page-lede-inverse">
                 {t("information.subtitle")}
               </p>
             </div>
@@ -165,7 +165,7 @@ const Information = () => {
                 </Card>
               </div>
 
-              <Card className="border-l-4 border-l-primary">
+              <Card>
                 <CardContent className="pt-6">
                   <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                     <Lock className="h-5 w-5" />

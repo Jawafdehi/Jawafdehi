@@ -134,7 +134,7 @@ const WeeklyMeetings = () => {
       <main id="main-content" className="flex-1">
         <section className="container mx-auto px-4 py-12 md:py-16">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            <p className="font-eyebrow font-eyebrow-display text-primary">
               {t("weeklyMeetings.eyebrow")}
             </p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">

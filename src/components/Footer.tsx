@@ -167,7 +167,7 @@ export const Footer = () => {
         "dark:[--footer-border:hsl(var(--border)/0.70)] dark:[--footer-border-hover:hsl(var(--foreground)/0.20)] dark:[--footer-dot:hsl(var(--border))]",
       )}
     >
-      <div className="container mx-auto px-4 py-12 md:py-14">
+      <div className="layout-container py-12 md:py-14">
         <div className="grid gap-10 lg:grid-cols-[minmax(280px,1.15fr)_minmax(0,1.85fr)] lg:gap-14">
           <div className="space-y-6">
             <Link
@@ -188,7 +188,7 @@ export const Footer = () => {
             </Link>
 
             <div className="max-w-sm space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--footer-title)]">
+              <p className="font-eyebrow font-eyebrow-display text-[var(--footer-title)]">
                 <em>{t("footer.accountabilityNoExpiry")}</em>
               </p>
               <p className="text-sm leading-6 text-[var(--footer-muted)]">
@@ -221,7 +221,7 @@ export const Footer = () => {
         </div>
 
         <div className="mt-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <p className="max-w-3xl text-xs leading-5 text-[var(--footer-muted)]">
+          <p className="font-caption measure-prose text-[var(--footer-muted)]">
             {t("footer.disclaimer")}
           </p>
 

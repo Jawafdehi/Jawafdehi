@@ -197,7 +197,7 @@ export function EntityDetailSections({ entity }: EntityDetailSectionsProps) {
                           {description}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border/50">
-                          <span className="font-mono bg-muted px-2 py-0.5 rounded text-[10px]">
+                          <span className="font-code rounded bg-muted px-2 py-0.5">
                             {tag}
                           </span>
                         </div>

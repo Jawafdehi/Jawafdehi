@@ -147,7 +147,7 @@ const Cases = () => {
         <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
       </Helmet>
 
-      <main id="main-content" className="flex-1 py-8 md:py-12">
+      <div className="flex-1 py-8 md:py-12">
         <div className="container mx-auto px-4">
           <section id="cases-intro" className="mb-10">
             <h1 className="text-4xl font-bold text-foreground mb-3">{t("cases.title")}</h1>
@@ -250,7 +250,7 @@ const Cases = () => {
             />
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

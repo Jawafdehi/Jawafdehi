@@ -208,7 +208,7 @@ export default function ArchiveSearch({
   ) : null;
 
   return (
-    <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
+    <div className="min-h-screen bg-background py-8 md:py-12">
       <Helmet>
         <title>{heading ? `${heading} | Jawafdehi Nepal` : "Archive Search | Jawafdehi Nepal"}</title>
         <meta
@@ -257,10 +257,10 @@ export default function ArchiveSearch({
             submitLabel={t("archiveSearch.submit", "Search archive")}
             value={query}
           />
-          <div className="flex items-center gap-3 lg:ml-auto lg:justify-end">
+          <div className="flex w-full flex-wrap items-center gap-3 lg:ml-auto lg:w-auto lg:flex-nowrap lg:justify-end">
             <div
               aria-live="polite"
-              className="mr-auto flex min-h-5 items-center whitespace-nowrap text-sm font-medium text-muted-foreground lg:mr-1"
+              className="flex min-h-5 w-full items-center text-sm font-medium text-muted-foreground sm:mr-auto sm:w-auto sm:whitespace-nowrap lg:mr-1"
             >
               {isInitialLoading || isRefreshing ? (
                 <>
@@ -306,11 +306,8 @@ export default function ArchiveSearch({
             <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">
               {t("archiveSearch.sort", "Sort")}
             </label>
-            <Select
-              onValueChange={(sort) => updateFilter("sort", sort)}
-              value={params.sort || "relevance"}
-            >
-              <SelectTrigger className="h-11 w-[160px] rounded-full px-4" id="archive-sort">
+            <Select onValueChange={(sort) => updateFilter("sort", sort)} value={params.sort || "relevance"}>
+              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-full px-4 sm:w-[160px] sm:flex-none" id="archive-sort">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -330,7 +327,7 @@ export default function ArchiveSearch({
           >
             {selectedItems.map((item) => (
               <button
-                className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 key={`${item.name}-${item.value}`}
                 onClick={() => removeRefinement(item.name, item.value)}
                 type="button"
@@ -416,7 +413,7 @@ export default function ArchiveSearch({
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

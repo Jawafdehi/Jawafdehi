@@ -10,10 +10,10 @@ export function CommitmentMission() {
         </h2>
 
         <div className="mx-auto max-w-4xl space-y-5 text-center">
-          <p className="text-base leading-8 text-foreground/75 md:text-[1.0625rem]">
+          <p className="font-paragraph font-paragraph-foreground">
             {t("commitment.mission.paragraph1")}
           </p>
-          <p className="text-base leading-8 text-foreground/75 md:text-[1.0625rem]">
+          <p className="font-paragraph font-paragraph-foreground">
             {t("commitment.mission.paragraph2")}
           </p>
         </div>

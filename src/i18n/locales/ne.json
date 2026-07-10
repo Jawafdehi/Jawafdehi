@@ -572,7 +572,9 @@
       "documentCount_one": "{{count}} प्रमाण",
       "documentCount_other": "{{count}} प्रमाणहरू"
     },
-    "breadcrumbFallback": "मुद्दा"
+    "breadcrumbFallback": "मुद्दा",
+    "readMore": "थप पढ्नुहोस्",
+    "showLess": "कम देखाउनुहोस्"
   },
   "documentSource": {
     "fallbackTitle": "स्रोत {{id}}",

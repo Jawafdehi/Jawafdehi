@@ -572,7 +572,9 @@
       "documentCount_one": "{{count}} document",
       "documentCount_other": "{{count}} documents"
     },
-    "breadcrumbFallback": "Case"
+    "breadcrumbFallback": "Case",
+    "readMore": "Read more",
+    "showLess": "Show less"
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",

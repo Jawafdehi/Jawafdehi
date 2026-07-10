@@ -1,3 +1,5 @@
+@import "./styles/typography.css";
+
 @font-face {
   font-family: 'Noto Sans Devanagari';
   src: url('/font/Noto_Sans_Devanagari/NotoSansDevanagari-VariableFont_wdth,wght.ttf') format('truetype');
@@ -145,7 +147,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: Helvetica, Arial, 'Noto Sans Devanagari', sans-serif;
+    font-family: var(--font-family-app);
   }
 }
 

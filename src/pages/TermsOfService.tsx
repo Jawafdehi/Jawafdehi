@@ -24,10 +24,10 @@ const TermsOfService = () => {
         <section id="terms-hero" className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
+              <h1 className="font-page-title font-page-title-inverse mb-4">
                 Jawafdehi Initiative Terms of Service
               </h1>
-              <p className="text-xl text-primary-foreground/80 leading-relaxed">
+              <p className="font-page-lede font-page-lede-inverse">
                 Last updated: June 23, 2026
               </p>
             </div>
@@ -36,7 +36,7 @@ const TermsOfService = () => {
 
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert">
+            <div className="font-paragraph content-prose max-w-3xl mx-auto">
               <h2 id="acceptance">1. Acceptance of Terms</h2>
               <p>
                 By accessing or using jawafdehi.org ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.

@@ -115,7 +115,7 @@ export function PdfDocumentPreview({
                   <Page pageNumber={pageNumber} width={64} renderAnnotationLayer={false} renderTextLayer={false} />
                 ) : (
                   <div
-                    className="flex w-16 items-center justify-center bg-slate-100 text-[10px] font-semibold text-slate-400"
+                    className="flex w-16 items-center justify-center bg-slate-100 text-xs font-semibold text-slate-400"
                     style={{ height: getPageHeight(pageNumber, 64) }}
                   >
                     {pageNumber}
