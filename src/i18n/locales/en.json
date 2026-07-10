@@ -151,7 +151,11 @@
         "officialsAndEntitiesTracked": "Officials & entities tracked",
         "courtRecords": "Court records",
         "materials": "Materials"
-      }
+      },
+      "badge": "Transparency • Accountability • Justice",
+      "title": "Jawafdehi Nepal",
+      "browseCases": "Browse Cases",
+      "learnMore": "Learn More"
     },
     "featuredCases": {
       "title": "Featured Cases",
@@ -573,9 +577,13 @@
       "legal": "Legal Documents",
       "secondary": "Secondary Sources",
       "documentCount_one": "{{count}} document",
-      "documentCount_other": "{{count}} documents"
+      "documentCount_other": "{{count}} documents",
+      "documentCount": "{{count}} document",
+      "documentCount_plural": "{{count}} documents"
     },
-    "breadcrumbFallback": "Case"
+    "breadcrumbFallback": "Case",
+    "readMore": "Read more",
+    "showLess": "Show less"
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
