@@ -1,12 +1,12 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
-import { getCaseBadgeClassName } from "@/lib/case-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   ArchiveSearchResult,
@@ -15,11 +15,15 @@ import type {
   CaseSearchCardEntity,
 } from "@/types/search";
 import type { CaseDetail } from "@/types/jds";
-import { cn } from "@/lib/utils";
 import { getCaseById } from "@/services/jds-api";
-import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
+import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { humanizeEntityType } from "@/utils/entity-helpers";
+
+// Both the /search list and card views render the same components; `viewMode`
+// only decides whether the shared <CaseCard> lays out horizontally (list) or as
+// a vertical tile (card), and which chrome the generic (non-case) card uses.
+export type SearchViewMode = "list" | "card";
 
 // Auto-language: prefer English, fall back to Nepali (no toggle). Strips the HTML
 // <em> highlight tags that snippets carry so we render plain text.
@@ -52,20 +56,30 @@ function caseSlugFromUrl(url: string): string | undefined {
   return match?.[1];
 }
 
-export function SearchResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
-  if (result.type === "case") return <CaseResultCard result={result} />;
-  return <SimpleResultCard result={result} />;
+// Result dispatcher. Case records render the shared <CaseCard> (the same
+// component the /cases page uses) in either list or grid mode; every other
+// record type falls back to a lightweight card with matching chrome.
+export function SearchResultCard({
+  result,
+  viewMode = "list",
+}: Readonly<{ result: ArchiveSearchResult; viewMode?: SearchViewMode }>) {
+  if (result.type === "case") return <CaseResultCard result={result} viewMode={viewMode} />;
+  return <GenericResultCard result={result} viewMode={viewMode} />;
 }
 
-// Rich card for Jawafdehi cases. New index docs carry `result.card`, so the card
-// renders directly from OpenSearch; older docs fall back to one lazy detail fetch.
-function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
-  const [searchParams, setSearchParams] = useSearchParams();
+// Rich card for Jawafdehi cases, reusing <CaseCard> for full visual parity with
+// /cases. New index docs carry `result.card`, so the card renders directly from
+// OpenSearch; older docs fall back to one lazy detail fetch.
+function CaseResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  const { i18n } = useTranslation();
   const caseSlug = caseSlugFromUrl(result.url);
-  const [imageFailed, setImageFailed] = useState(false);
   const indexedCard = result.card;
+  const caseCardViewMode = viewMode === "card" ? "grid" : "list";
 
-  const { data: caseDetail, isFetching: isDetailLoading } = useQuery({
+  const { data: caseDetail, isFetching } = useQuery({
     queryKey: ["case", caseSlug],
     queryFn: () => getCaseById(caseSlug!),
     enabled: Boolean(caseSlug) && !indexedCard,
@@ -73,79 +87,123 @@ function CaseResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const caseImageUrl = indexedCard
-    ? indexedCard.thumbnail_url || indexedCard.banner_url || null
-    : caseDetail
-      ? caseDetail.thumbnail_url || caseDetail.banner_url || null
-      : null;
-  // Case cards always reserve the image rail (uniform layout): skeleton while
-  // hydrating old docs, gradient placeholder when the case has no image.
-  const reserveImageSpace = Boolean(caseSlug);
-  const showCaseImage = Boolean(caseImageUrl && !imageFailed);
-
-  useEffect(() => setImageFailed(false), [caseImageUrl]);
-
-  const tags = indexedCard?.tags ?? caseDetail?.tags ?? [];
-  const metadata = indexedCard ? cardMetadata(indexedCard) : caseDetail ? caseMetadata(caseDetail) : "";
-  const title = indexedCard?.title || pickLang(result.title);
-  const description = indexedCard?.short_description || pickLang(result.snippet) || metadata;
-
-  return (
-    <ResultCardShell
-      badge={resultLabel(result)}
-      description={description}
-      metadata={metadata}
-      reserveImageSpace={reserveImageSpace}
-      title={title}
-      url={result.url}
-      image={
-        reserveImageSpace ? (
-          isDetailLoading ? (
-            <Skeleton className="h-full w-full rounded-none" />
-          ) : showCaseImage ? (
-            <img
-              alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              decoding="async"
-              loading="lazy"
-              onError={() => setImageFailed(true)}
-              src={caseImageUrl}
-            />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-50 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800" />
-          )
-        ) : null
-      }
-      tags={
-        tags.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <button
-                key={tag}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSearchParams(
-                    toggleArchiveSearchParam(searchParams, "tags", tag),
-                  );
-                }}
-                className={getCaseBadgeClassName(
-                  "tag",
-                  undefined,
-                  "relative z-10 px-2.5 py-0.5 text-[10px] transition-colors",
-                )}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        ) : null
-      }
-    />
-  );
+  if (indexedCard) {
+    return (
+      <CaseCard viewMode={caseCardViewMode} {...caseCardPropsFromCard(indexedCard, result, i18n.language)} />
+    );
+  }
+  if (caseDetail) {
+    return (
+      <CaseCard
+        viewMode={caseCardViewMode}
+        {...caseCardPropsFromDetail(caseDetail, result, i18n.language, caseSlug)}
+      />
+    );
+  }
+  // Only show the loading placeholder while the detail fetch is genuinely in
+  // flight. If it settles with no data (e.g. the request failed), fall through
+  // to the generic card instead of getting stuck on the skeleton forever.
+  if (isFetching) {
+    return viewMode === "card" ? <CaseCardSkeleton /> : <SearchResultCardSkeleton showTags />;
+  }
+  return <GenericResultCard result={result} viewMode={viewMode} />;
 }
 
-// Lightweight card for entity / material / courtcase: bilingual title + snippet +
-// type badge. No relational hydration (the index carries no relationship data).
+// Non-case results (entity / material / court case): list uses the compact row
+// shell, card uses the vertical grid tile. Neither hydrates relational data —
+// the index carries none for these types.
+function GenericResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  return viewMode === "card" ? <GenericGridCard result={result} /> : <SimpleResultCard result={result} />;
+}
+
+// ---------------------------------------------------------------------------
+// Case → <CaseCard> prop mapping
+// ---------------------------------------------------------------------------
+
+type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
+
+const CASE_STATUS_BADGE: Record<CaseSearchCard["status"], CaseCardStatus> = {
+  ongoing: "ongoing",
+  closed: "resolved",
+  others: "under-investigation",
+};
+
+function entityNames(entities: readonly { display_name: string | null; nes_id: string | null }[]): string[] {
+  return entities.map((e) => e.display_name || e.nes_id || "").filter(Boolean);
+}
+
+function entityIds(entities: readonly { nes_id: string | null }[]): string[] {
+  return entities.map((e) => e.nes_id).filter((id): id is string => Boolean(id));
+}
+
+// Map the indexed case-card payload (the common path on new docs) onto <CaseCard>.
+// `language` localizes the unknown-entity/location fallbacks the same way /cases does.
+function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult, language: string) {
+  const subject = getSubjectEntities<CaseSearchCardEntity>(card.entities, (e) => e.type);
+  const location = (card.entities || []).filter((e) => e.type === "location");
+  const names = entityNames(subject);
+  const locationList = entityNames(location);
+  return {
+    id: result.id,
+    slug: card.slug || caseSlugFromUrl(result.url) || null,
+    title: card.title || pickLang(result.title),
+    entity: names.join(", ") || translateDynamicText("Unknown Entity", language),
+    entityNames: names,
+    location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
+    status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
+    tags: card.tags || [],
+    description: (card.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
+    allegations: card.key_allegations || [],
+    entityIds: entityIds(subject),
+    locationIds: entityIds(location),
+    thumbnailUrl: card.thumbnail_url || undefined,
+    bannerUrl: card.banner_url || undefined,
+  };
+}
+
+// Fallback for older indexed docs with no card payload: derive from case detail.
+// Status is inferred from the case's date fields (same rule the cases list uses).
+function caseCardPropsFromDetail(
+  detail: CaseDetail,
+  result: ArchiveSearchResult,
+  language: string,
+  fallbackSlug?: string,
+) {
+  const entities = detail.entities || [];
+  const subject = getSubjectEntities(entities, (e) => e.type);
+  const location = entities.filter((e) => e.type === "location");
+  const names = entityNames(subject);
+  const locationList = entityNames(location);
+  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
+  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
+  const status: CaseCardStatus = hasStart && !hasEnd ? "ongoing" : hasStart && hasEnd ? "resolved" : "under-investigation";
+  return {
+    id: result.id,
+    slug: detail.slug || fallbackSlug || null,
+    title: detail.title || pickLang(result.title),
+    entity: names.join(", ") || translateDynamicText("Unknown Entity", language),
+    entityNames: names,
+    location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
+    status,
+    tags: detail.tags || [],
+    description: (detail.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
+    allegations: detail.key_allegations || [],
+    entityIds: entityIds(subject),
+    locationIds: entityIds(location),
+    thumbnailUrl: detail.thumbnail_url || undefined,
+    bannerUrl: detail.banner_url || undefined,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Generic (non-case) cards — list row + grid tile
+// ---------------------------------------------------------------------------
+
+// Lightweight list row for entity / material / courtcase: bilingual title +
+// snippet + type badge.
 function SimpleResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
   const title = formatSimpleTitle(result);
   const metadata = simpleMetadata(result);
@@ -159,52 +217,29 @@ function SimpleResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>)
       badge={resultLabel(result)}
       description={description}
       metadata={snippet ? metadata : undefined}
-      reserveImageSpace={false}
       title={title}
       url={result.url}
     />
   );
 }
 
-// Shared card chrome used by every result type.
+// Shared row chrome for the generic list card.
 function ResultCardShell({
   badge,
   title,
   description,
   metadata,
   url,
-  image,
-  tags,
-  reserveImageSpace,
 }: Readonly<{
   badge: string;
   title: string;
   description: string;
   metadata?: string;
   url: string;
-  image?: ReactNode;
-  tags?: ReactNode;
-  reserveImageSpace: boolean;
 }>) {
   return (
     <div className="group relative block overflow-hidden rounded-xl border bg-card p-4 transition-colors hover:border-primary/35 hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-      {reserveImageSpace ? (
-        <div
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 hidden w-64 overflow-hidden sm:block lg:w-72"
-        >
-          {image}
-          <div className="absolute inset-y-0 right-0 w-2/5 bg-gradient-to-r from-transparent to-card" />
-          <div className="absolute inset-0 bg-gradient-to-b from-card/5 to-card/10" />
-        </div>
-      ) : null}
-
-      <article
-        className={cn(
-          "relative z-10 flex min-h-20 items-start gap-3 transition-[padding] duration-200",
-          reserveImageSpace && "sm:pl-64 lg:pl-72",
-        )}
-      >
+      <article className="relative z-10 flex min-h-20 items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
             <Badge className="capitalize" variant="outline">
@@ -225,7 +260,6 @@ function ResultCardShell({
               {metadata}
             </p>
           ) : null}
-          {tags}
         </div>
         <ArrowRight
           aria-hidden="true"
@@ -236,116 +270,10 @@ function ResultCardShell({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Card (grid) view — mirrors the list-view components above but lays each result
-// out as a vertical card. Case results reuse the shared <CaseCard> (same
-// component the /cases page renders); the other record types fall back to a
-// lightweight card with matching chrome.
-// ---------------------------------------------------------------------------
-
-type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
-
-const CASE_STATUS_BADGE: Record<CaseSearchCard["status"], CaseCardStatus> = {
-  ongoing: "ongoing",
-  closed: "resolved",
-  others: "under-investigation",
-};
-
-function entityNames(entities: readonly { display_name: string | null; nes_id: string | null }[]): string[] {
-  return entities.map((e) => e.display_name || e.nes_id || "").filter(Boolean);
-}
-
-function entityIds(entities: readonly { nes_id: string | null }[]): string[] {
-  return entities.map((e) => e.nes_id).filter((id): id is string => Boolean(id));
-}
-
-// Map the indexed case-card payload (the common path on new docs) onto <CaseCard>.
-function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult) {
-  const subject = getSubjectEntities<CaseSearchCardEntity>(card.entities, (e) => e.type);
-  const location = (card.entities || []).filter((e) => e.type === "location");
-  const names = entityNames(subject);
-  const locationList = entityNames(location);
-  return {
-    id: result.id,
-    slug: card.slug || caseSlugFromUrl(result.url) || null,
-    title: card.title || pickLang(result.title),
-    entity: names.join(", ") || "Unknown entity",
-    entityNames: names,
-    location: locationList.join(", ") || "Unknown location",
-    status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
-    tags: card.tags || [],
-    description: (card.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
-    allegations: card.key_allegations || [],
-    entityIds: entityIds(subject),
-    locationIds: entityIds(location),
-    thumbnailUrl: card.thumbnail_url || undefined,
-    bannerUrl: card.banner_url || undefined,
-  };
-}
-
-// Fallback for older indexed docs with no card payload: derive from case detail.
-// Status is inferred from the case's date fields (same rule the cases list uses).
-function caseCardPropsFromDetail(detail: CaseDetail, result: ArchiveSearchResult, fallbackSlug?: string) {
-  const entities = detail.entities || [];
-  const subject = getSubjectEntities(entities, (e) => e.type);
-  const location = entities.filter((e) => e.type === "location");
-  const names = entityNames(subject);
-  const locationList = entityNames(location);
-  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
-  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
-  const status: CaseCardStatus = hasStart && !hasEnd ? "ongoing" : hasStart && hasEnd ? "resolved" : "under-investigation";
-  return {
-    id: result.id,
-    slug: detail.slug || fallbackSlug || null,
-    title: detail.title || pickLang(result.title),
-    entity: names.join(", ") || "Unknown entity",
-    entityNames: names,
-    location: locationList.join(", ") || "Unknown location",
-    status,
-    tags: detail.tags || [],
-    description: (detail.short_description || "").replace(/<[^>]*>/g, "").substring(0, 200),
-    allegations: detail.key_allegations || [],
-    entityIds: entityIds(subject),
-    locationIds: entityIds(location),
-    thumbnailUrl: detail.thumbnail_url || undefined,
-    bannerUrl: detail.banner_url || undefined,
-  };
-}
-
-export function SearchResultGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
-  if (result.type === "case") return <CaseGridCard result={result} />;
-  return <GenericGridCard result={result} />;
-}
-
-// Case grid card: renders the reused <CaseCard> in grid mode. Uses the indexed
-// card payload directly when present, else lazily hydrates from the detail API
-// (the same query the list card uses, so the fetch is shared/cached).
-function CaseGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
-  const caseSlug = caseSlugFromUrl(result.url);
-  const indexedCard = result.card;
-
-  const { data: caseDetail, isFetching } = useQuery({
-    queryKey: ["case", caseSlug],
-    queryFn: () => getCaseById(caseSlug!),
-    enabled: Boolean(caseSlug) && !indexedCard,
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  if (indexedCard) {
-    return <CaseCard viewMode="grid" {...caseCardPropsFromCard(indexedCard, result)} />;
-  }
-  if (caseDetail) {
-    return <CaseCard viewMode="grid" {...caseCardPropsFromDetail(caseDetail, result, caseSlug)} />;
-  }
-  if (isFetching || caseSlug) return <CaseCardSkeleton />;
-  // No slug to hydrate from — degrade gracefully to the generic card.
-  return <GenericGridCard result={result} />;
-}
-
-// Generic grid card for entity / material / courtcase results (no relational
+// Generic grid tile for entity / material / courtcase results (no relational
 // hydration). Visual chrome is kept in step with <CaseCard>.
 function GenericGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
+  const { t } = useTranslation();
   const title = formatSimpleTitle(result);
   const metadata = simpleMetadata(result);
   const snippet = pickLang(result.snippet);
@@ -373,7 +301,7 @@ function GenericGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) 
         </p>
       ) : null}
       <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary">
-        View
+        {t("common.view", "View")}
         <ArrowRight
           aria-hidden="true"
           className="h-4 w-4 transition-transform group-hover:translate-x-1"
@@ -383,6 +311,8 @@ function GenericGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) 
   );
 }
 
+// Compact list-row skeleton (matches <ResultCardShell>). The card-view loading
+// state reuses <CaseCardSkeleton> so it lines up with the reused <CaseCard>.
 export function SearchResultCardSkeleton({
   showTags = false,
 }: Readonly<{ showTags?: boolean }>) {
@@ -391,18 +321,7 @@ export function SearchResultCardSkeleton({
       aria-hidden="true"
       className="relative overflow-hidden rounded-xl border bg-card p-4"
     >
-      {showTags ? (
-        <div className="absolute inset-y-0 left-0 hidden w-64 overflow-hidden sm:block lg:w-72">
-          <Skeleton className="h-full w-full rounded-none" />
-          <div className="absolute inset-y-0 right-0 w-2/5 bg-gradient-to-r from-transparent to-card" />
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "relative z-10 flex min-h-20 items-start gap-3",
-          showTags && "sm:pl-64 lg:pl-72",
-        )}
-      >
+      <div className="relative z-10 flex min-h-20 items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2">
             <Skeleton className="h-5 w-16 rounded-full" />
@@ -427,26 +346,6 @@ export function SearchResultCardSkeleton({
   );
 }
 
-// Subject + location entities from the indexed case-card payload.
-function cardMetadata(card: CaseSearchCard): string {
-  const entities = card.entities || [];
-  const [primaryEntity] = getSubjectEntities(entities, (e) => e.type);
-  const location = entities.find((entity) => entity.type === "location");
-  return [entityName(primaryEntity), entityName(location)]
-    .filter(Boolean)
-    .join(" · ");
-}
-
-// Subject + location entities from the hydrated case detail fallback.
-function caseMetadata(detail: import("@/types/jds").CaseDetail): string {
-  const entities = detail.entities || [];
-  const [primaryEntity] = getSubjectEntities(entities, (e) => e.type);
-  const location = entities.find((entity) => entity.type === "location");
-  return [entityName(primaryEntity), entityName(location)]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 // Metadata line for the non-case types, derived from the search `extra` blob.
 function simpleMetadata(result: ArchiveSearchResult): string {
   const parts: string[] = [];
@@ -461,10 +360,6 @@ function simpleMetadata(result: ArchiveSearchResult): string {
     if (result.extra.date) parts.push(result.extra.date);
   }
   return parts.join(" · ");
-}
-
-function entityName(entity?: { display_name: string | null; nes_id: string | null }) {
-  return entity?.display_name || entity?.nes_id || "";
 }
 
 function humanize(value: string) {

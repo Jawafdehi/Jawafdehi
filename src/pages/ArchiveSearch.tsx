@@ -13,7 +13,6 @@ import {
 import {
   SearchResultCard,
   SearchResultCardSkeleton,
-  SearchResultGridCard,
 } from "@/components/search/SearchResultCard";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -461,10 +460,12 @@ function ArchiveSearchResults({
   isLoading: boolean;
   viewMode: "list" | "card";
 }>) {
+  const { t } = useTranslation();
+  const searchingLabel = t("archiveSearch.searching", "Searching archive");
   if (isLoading) {
     if (viewMode === "card") {
       return (
-        <output aria-label="Searching archive" className={cardGridClass}>
+        <output aria-label={searchingLabel} className={cardGridClass}>
           {[0, 1, 2, 3].map((index) => (
             <CaseCardSkeleton key={index} />
           ))}
@@ -473,7 +474,7 @@ function ArchiveSearchResults({
     }
     return (
       <div
-        aria-label="Searching archive"
+        aria-label={searchingLabel}
         aria-live="polite"
         className="space-y-3"
         role="status"
@@ -505,7 +506,11 @@ function ArchiveSearchResults({
     return (
       <div className={cardGridClass}>
         {data.results.map((result) => (
-          <SearchResultGridCard key={`${result.type}-${result.id}`} result={result} />
+          <SearchResultCard
+            key={`${result.type}-${result.id}`}
+            result={result}
+            viewMode="card"
+          />
         ))}
       </div>
     );
@@ -514,7 +519,11 @@ function ArchiveSearchResults({
   return (
     <div className="space-y-3">
       {data.results.map((result) => (
-        <SearchResultCard key={`${result.type}-${result.id}`} result={result} />
+        <SearchResultCard
+          key={`${result.type}-${result.id}`}
+          result={result}
+          viewMode="list"
+        />
       ))}
     </div>
   );
