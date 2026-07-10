@@ -1,16 +1,21 @@
 import * as Sentry from "@sentry/react";
+import { isCloudflarePreviewHost, telemetryAllowedHere } from "./telemetry";
 
 const HARDCODED_DSN = "https://f5fafd04ccca67355a3b404d1b209e94@o4511364048027648.ingest.de.sentry.io/4511366946226256";
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 export function initSentry(): void {
-  // Only fall back to the hardcoded PRODUCTION DSN in non-dev builds. In dev,
-  // the prod DSN is omitted so localhost errors don't pollute the prod project
-  // (which also tripped 429s) — but a developer can still test Sentry locally by
-  // setting an explicit VITE_SENTRY_DSN. No DSN → nothing to init.
-  const dsn = SENTRY_DSN || (import.meta.env.DEV ? undefined : HARDCODED_DSN);
-  if (!dsn) return;
+  // Cloudflare `*.workers.dev` previews NEVER report — even though CI bakes
+  // VITE_SENTRY_DSN into every build — so preview errors can't reach the prod
+  // Sentry project (which also tripped 429s). This block cannot be overridden.
+  if (isCloudflarePreviewHost()) return;
+
+  // Dev builds and localhost stay silent too, UNLESS a developer opts into local
+  // Sentry testing by setting an explicit VITE_SENTRY_DSN.
+  if (!SENTRY_DSN && !telemetryAllowedHere()) return;
+
+  const dsn = SENTRY_DSN || HARDCODED_DSN;
 
   Sentry.init({
     dsn,

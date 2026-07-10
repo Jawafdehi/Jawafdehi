@@ -4,6 +4,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { getConsent, setConsent } from "@/lib/consent";
 import { loadGoogleAnalytics } from "@/lib/ga";
+import { telemetryAllowedHere } from "@/lib/telemetry";
 
 /**
  * Opt-in cookie consent banner. Analytics (Google Analytics) load only after
@@ -15,6 +16,9 @@ export function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // On dev builds, localhost, and *.workers.dev previews, GA never loads, so
+    // there's nothing to consent to — don't prompt.
+    if (!telemetryAllowedHere()) return;
     const decision = getConsent();
     if (decision === null) {
       setVisible(true);

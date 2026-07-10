@@ -4,14 +4,16 @@
  * gtag.js is never fetched and no GA cookies are set.
  */
 import { JAWAFDEHI_GA_MEASUREMENT_ID } from "@/config/analytics-config";
+import { telemetryAllowedHere } from "./telemetry";
 
 let loaded = false;
 
 export function loadGoogleAnalytics(): void {
   if (typeof window === "undefined" || loaded || window.gtag) return;
-  // Never load the production GA property from a local dev build — otherwise
-  // localhost page views pollute prod analytics.
-  if (import.meta.env.DEV) return;
+  // Never load the production GA property from a dev build, localhost, or a
+  // Cloudflare `*.workers.dev` preview — otherwise their page views pollute
+  // prod analytics.
+  if (!telemetryAllowedHere()) return;
   loaded = true;
 
   const script = document.createElement("script");
