@@ -51,7 +51,7 @@ export function SourceTypeBadge({
     <Badge
       variant="outline"
       className={cn(
-        "h-6 rounded-full px-2.5 text-[11px] font-semibold leading-none shadow-sm ring-1 ring-inset ring-white/45",
+        "font-meta font-meta-compact h-6 rounded-full px-2.5 shadow-sm ring-1 ring-inset ring-white/45",
         SOURCE_TYPE_TONE_CLASSES[metadata.tone],
         className,
       )}

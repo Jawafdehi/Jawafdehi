@@ -33,23 +33,23 @@ export const ArticleView = ({ article }: { article: Article }) => {
                     </div>
 
                     <div className="mx-auto max-w-4xl">
-                        <article className="prose prose-slate dark:prose-invert lg:prose-xl max-w-none">
-                            <div className="mb-8 not-prose">
-                                <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{article.title}</h1>
-                                <div className="flex items-center text-muted-foreground">
+                        <article className="max-w-none">
+                            <div className="mb-8">
+                                <h1 className="font-page-title mb-4">{article.title}</h1>
+                                <div className="font-meta flex items-center">
                                     <Calendar className="mr-2 h-4 w-4" />
                                     <span className="mt-1">{formatPublicationDate(article.date)}</span>
                                 </div>
                             </div>
 
-                            <div className="markdown-content">
+                            <div className="font-paragraph content-prose markdown-content">
                                 <StreamField blocks={article.body} />
                             </div>
                         </article>
 
                         {article.related_cases && article.related_cases.length > 0 && (
                             <section className="mx-auto mt-12 max-w-4xl">
-                                <h2 className="text-lg font-bold text-foreground">
+                                <h2 className="font-card-title">
                                     {t("updates.relatedCases", "Related cases")}
                                 </h2>
                                 <div className="mt-4 grid gap-3">
@@ -59,7 +59,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                             to={`/case/${relatedCase.slug}`}
                                             className="flex items-center justify-between gap-3 rounded-lg bg-card p-4 transition-colors hover:bg-primary/[0.03]"
                                         >
-                                            <span className="font-semibold text-foreground">{relatedCase.title}</span>
+                                            <span className="font-card-title">{relatedCase.title}</span>
                                             <ArrowRight className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
                                         </Link>
                                     ))}

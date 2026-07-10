@@ -173,6 +173,9 @@ export function DocumentSourceCard({
   const { t } = useTranslation();
   const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
   const links = resolveLinks(material);
+  const printLinks = links.filter(
+    (link, index, allLinks) => allLinks.findIndex((candidate) => candidate.link === link.link) === index,
+  );
   const { rawLinks, sourcePageLinks, permalinkLinks, alternateLinks, markdownLinks } = partitionLinks(links);
 
   // The material shape carries no free-text description ("cases own no
@@ -297,7 +300,21 @@ export function DocumentSourceCard({
 
   return (
     <>
-      <article className="border-b border-border/70 py-6 md:py-8 first:pt-0 last:pb-0 last:border-b-0">
+      <article className="hidden print:block">
+        <h3 className="print-source-title">{material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}</h3>
+        {evidenceDescription?.trim() ? <p>{evidenceDescription.trim()}</p> : null}
+        {printLinks.length ? (
+          <ul>
+            {printLinks.map((link) => (
+              <li key={link.link}>
+                <a href={link.link}>{link.link}</a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </article>
+
+      <article className="print:hidden border-b border-border/70 py-6 md:py-8 first:pt-0 last:pb-0 last:border-b-0">
         <div className="flex min-w-0 items-start gap-3">
 
           <div className="min-w-0 flex-1">
@@ -328,7 +345,7 @@ export function DocumentSourceCard({
             )}
 
             {mainDescription && (
-              <p className={`text-base font-normal leading-[1.7] text-primary/75 break-words ${byline ? "mt-2.5" : "mt-2"}`}>
+              <p className={`font-paragraph break-words ${byline ? "mt-2.5" : "mt-2"}`}>
                 {mainDescription}
               </p>
             )}

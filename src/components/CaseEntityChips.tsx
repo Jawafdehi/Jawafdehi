@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { outcomeBadgeClass, outcomeLabel, shouldShowOutcome } from "@/utils/case-outcome";
 
 interface CaseEntityChipsProps {
+  className?: string;
   entities: JawafEntity[];
   resolvedEntities: Record<string, Entity>;
   language: string;
@@ -56,6 +57,7 @@ function getFallbackIcon(jawafEntity: JawafEntity, entity: Entity | null) {
 }
 
 export function CaseEntityChips({
+  className,
   entities,
   resolvedEntities,
   language,
@@ -79,7 +81,7 @@ export function CaseEntityChips({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", className)}>
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-4 sm:justify-start">
         {displayedEntities.map((jawafEntity, index) => {
           const entity = jawafEntity.nes_id ? resolvedEntities[jawafEntity.nes_id] ?? null : null;

@@ -189,7 +189,7 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
                 {r.title ? (
                   <>
                     <span className="block truncate text-sm font-medium">{r.title}</span>
-                    <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                    <span className="font-code block truncate">
                       {r.material_iri}
                     </span>
                   </>

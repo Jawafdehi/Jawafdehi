@@ -29,7 +29,7 @@ export default function PaymentSuccess() {
               strokeWidth={1.65}
             />
 
-            <h1 className="max-w-4xl text-3xl font-black leading-[1.04] tracking-normal text-primary md:text-4xl lg:text-5xl">
+            <h1 className="font-status-title measure-prose">
               Thank you for
               <span className="block">supporting Jawafdehi.</span>
             </h1>
@@ -43,7 +43,7 @@ export default function PaymentSuccess() {
               <Button
                 asChild
                 size="lg"
-                className="h-11 min-w-0 flex-1 rounded-full bg-primary px-2.5 text-[0.8125rem] font-semibold text-primary-foreground shadow-md shadow-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 sm:text-sm md:h-12 md:min-w-[14rem] md:px-7"
+                className="font-button h-11 min-w-0 flex-1 rounded-full bg-primary px-2.5 text-primary-foreground shadow-md shadow-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 md:h-12 md:min-w-[14rem] md:px-7"
               >
                 <Link to="/search?type=case">
                   <Archive className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
@@ -55,7 +55,7 @@ export default function PaymentSuccess() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="h-11 min-w-0 flex-1 rounded-full border-primary bg-background/80 px-2.5 text-[0.8125rem] font-semibold text-primary hover:border-primary hover:bg-muted/60 hover:text-primary sm:text-sm md:h-12 md:min-w-[13rem] md:px-7"
+                className="font-button h-11 min-w-0 flex-1 rounded-full border-primary bg-background/80 px-2.5 text-primary hover:border-primary hover:bg-muted/60 hover:text-primary md:h-12 md:min-w-[13rem] md:px-7"
               >
                 <Link to="/">Return home</Link>
               </Button>

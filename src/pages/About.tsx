@@ -25,7 +25,7 @@ const About = () => {
         <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
       </Helmet>
 
-      <main id="main-content" className="flex-1">
+      <div className="flex-1">
         <AboutHero />
 
         {/* About Us Section */}
@@ -33,11 +33,11 @@ const About = () => {
           <div className="container mx-auto px-4">
             <div className="grid gap-9 md:grid-cols-2 md:gap-12 lg:gap-16">
               <div className="max-w-[44rem]">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                <p className="font-eyebrow mb-3">
                   {t("about.aboutUs.eyebrow", "Who we are")}
                 </p>
                 <h2 className="mb-4 text-2xl font-bold tracking-normal text-foreground md:text-3xl">{t("about.aboutUs.title")}</h2>
-                <p className="text-justify text-base leading-8 text-foreground/75 md:text-[1.0625rem]">
+                <p className="font-paragraph font-paragraph-foreground md:text-justify">
                   {t("about.aboutUs.description").split(t("about.aboutUs.openSource")).map((part, index, array) => (
                     index < array.length - 1 ? (
                       <span key={index}>
@@ -57,14 +57,14 @@ const About = () => {
               </div>
 
               <div className="ml-auto max-w-[44rem] text-left md:mr-8 lg:mr-16">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                <p className="font-eyebrow mb-3">
                   {t("about.building.eyebrow", "What we do")}
                 </p>
                 <h2 className="mb-4 text-2xl font-bold tracking-normal text-foreground md:text-3xl">{t("about.building.title")}</h2>
-                <p className="text-justify text-base leading-8 text-foreground/75 md:text-[1.0625rem]">
+                <p className="font-paragraph font-paragraph-foreground md:text-justify">
                   {t("about.building.description1")}
                 </p>
-                <p className="mt-5 text-justify text-base leading-8 text-foreground/75 md:text-[1.0625rem]">
+                <p className="font-paragraph font-paragraph-foreground mt-5 md:text-justify">
                   {t("about.building.description2")}
                 </p>
               </div>
@@ -74,7 +74,7 @@ const About = () => {
 
         <CoreValues />
 
-      </main>
+      </div>
 
     </div>
   );

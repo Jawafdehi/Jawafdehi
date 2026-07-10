@@ -159,7 +159,7 @@ function prepareHtml(content: string): string {
   return convertMarkdownToHtml(content);
 }
 
-const PROSE_BASE = 'prose prose-sm sm:prose-base max-w-none text-base md:text-lg font-normal leading-[1.7] text-primary/75 prose-p:text-primary/75 prose-p:leading-[1.7] prose-li:text-primary/75 prose-li:leading-[1.7] prose-headings:text-primary';
+const PROSE_BASE = 'font-paragraph content-prose max-w-none';
 
 export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({ html }) => {
   const processedHtml = useMemo(() => prepareHtml(html), [html]);
@@ -179,24 +179,6 @@ export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({ html }) => {
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
-        .custom-marker-list {
-          display: grid;
-          gap: 0.45rem;
-          margin: 0.75rem 0;
-        }
-        .custom-marker-list-item {
-          display: grid;
-          grid-template-columns: max-content minmax(0, 1fr);
-          column-gap: 0.45rem;
-          align-items: start;
-        }
-        .custom-marker-list-marker {
-          color: hsl(var(--primary) / 0.75);
-          font-weight: 500;
-        }
-        .custom-marker-list-content {
-          min-width: 0;
-        }
         @media (max-width: 639px) {
           .table-scroll-wrapper table {
             table-layout: auto;
@@ -204,8 +186,6 @@ export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({ html }) => {
           .table-scroll-wrapper td,
           .table-scroll-wrapper th {
             white-space: nowrap;
-            font-size: 11px;
-            padding: 4px 6px;
           }
         }
       `}</style>
@@ -223,7 +203,7 @@ export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({ html }) => {
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <div
-            className="[&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-border [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-2 [&_th]:text-left [&_th]:bg-gradient-to-b [&_th]:from-muted [&_th]:to-muted/80 [&_th]:font-semibold [&_th]:text-xs [&_th]:text-foreground [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1.5 [&_td]:text-base md:[&_td]:text-lg [&_td]:font-normal [&_td]:leading-[1.7] [&_td]:text-primary/75 [&_tr:nth-child(even)]:bg-muted/40 [&_tr:hover]:bg-muted/60 [&_tr]:transition-colors [&_caption]:text-sm [&_caption]:font-semibold [&_caption]:mb-3 [&_caption]:text-foreground sm:[&_th]:px-3 sm:[&_th]:py-3 sm:[&_th]:text-sm"
+            className="font-paragraph content-table"
             dangerouslySetInnerHTML={{ __html: table }}
           />
         </div>

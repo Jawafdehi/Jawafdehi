@@ -241,7 +241,7 @@ export default function CaseworkReviewDetail() {
                   <li key={i} className="text-sm">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                        className={`font-meta rounded border px-1.5 py-0.5 ${
                           ok
                             ? "bg-green-50 text-green-700 border-green-200"
                             : "bg-amber-50 text-amber-700 border-amber-200"
@@ -379,7 +379,7 @@ export default function CaseworkReviewDetail() {
                 <pre className="whitespace-pre-wrap text-xs">{source.markdown || "(no markdown)"}</pre>
               ) : (
                 <div
-                  className="prose prose-sm max-w-none"
+                  className="font-paragraph content-prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: mdToHtml(source.markdown || "_(no markdown)_") }}
                 />
               )}
@@ -406,16 +406,16 @@ function RuleCard({
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium">{rr.title}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">
+            <span className="font-meta rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-slate-500">
               {rr.kind}
             </span>
             {rr.is_gate && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200">
+              <span className="font-meta rounded border border-purple-200 bg-purple-100 px-1.5 py-0.5 text-purple-700">
                 gate ≥ {rr.gate_min}
               </span>
             )}
             {rr.gate_failed && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">
+              <span className="font-meta rounded border border-red-200 bg-red-100 px-1.5 py-0.5 text-red-700">
                 GATE FAILED
               </span>
             )}
@@ -426,7 +426,7 @@ function RuleCard({
             {rr.score}
           </div>
           {rr.kind === "llm" && (
-            <div className="text-[10px] text-slate-400">
+            <div className="font-meta text-slate-400">
               μ{rr.score} · σ{rr.std} · {rr.confidence}
             </div>
           )}
@@ -472,7 +472,7 @@ function RuleCard({
 
       <button
         onClick={onToggle}
-        className="mt-2 text-[11px] text-slate-400 hover:text-slate-600 flex items-center gap-1"
+        className="font-meta mt-2 flex items-center gap-1 text-slate-400 hover:text-slate-600"
       >
         <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
         {expanded ? "hide rule instruction" : "show rule instruction"}
@@ -510,7 +510,7 @@ function RuleCard({
                 Description
               </div>
               <div
-                className="prose prose-sm max-w-none"
+                className="font-paragraph content-prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: mdToHtml(rr.description) }}
               />
             </div>

@@ -119,10 +119,10 @@ export default function FaqPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
               <Eyebrow className="mb-4">{t("faqPage.hero.eyebrow")}</Eyebrow>
-              <h1 className="text-4xl font-extrabold leading-tight tracking-normal text-primary md:text-5xl">
+              <h1 className="font-page-title">
                 {t("faqPage.hero.title")}
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg md:leading-8">
+              <p className="font-page-lede mt-4 max-w-2xl">
                 {t("faqPage.hero.description")}
               </p>
             </div>
@@ -162,7 +162,7 @@ export default function FaqPage() {
                     <div className="mb-3">
                       <h2
                         id={`${section.id}-title`}
-                        className="text-2xl font-bold tracking-normal text-primary md:text-3xl"
+                        className="font-section-title"
                       >
                         {section.title}
                       </h2>

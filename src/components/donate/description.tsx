@@ -2,6 +2,8 @@ import { Globe, HeartHandshake, Search, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { TbBrandOpenSource } from "react-icons/tb";
 
+import { Eyebrow } from "@/components/ui/eyebrow";
+
 type ImpactItem = { title: string; desc: string };
 
 const impactIcons = [Globe, Search, ShieldCheck, TbBrandOpenSource];
@@ -31,9 +33,9 @@ export function DonationDescription() {
     >
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+          <Eyebrow className="mb-3">
             {t("donate.impact.eyebrow")}
-          </p>
+          </Eyebrow>
           <h2
             id="donate-impact-title"
             className="text-3xl font-bold text-foreground md:text-4xl"

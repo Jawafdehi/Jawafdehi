@@ -91,7 +91,7 @@ const Volunteer = () => {
       <section id="who-we-need" className="bg-muted/10 pt-12 pb-10 md:pt-14 md:pb-12 lg:pt-16">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            <p className="font-eyebrow mb-3">
               {t("volunteer.whoCanJoin.eyebrow")}
             </p>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
@@ -115,13 +115,13 @@ const Volunteer = () => {
           </div>
 
           <div className="mx-auto mt-12 max-w-3xl text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            <p className="font-eyebrow mb-3">
               {t("volunteer.globalCommunity.eyebrow")}
             </p>
             <h2 className="mb-4 text-2xl font-bold tracking-normal text-foreground md:text-3xl">
               {t("volunteer.globalCommunity.title")}
             </h2>
-            <p className="text-base leading-8 text-foreground/75 md:text-[1.0625rem]">
+            <p className="font-paragraph font-paragraph-foreground">
               {t("volunteer.globalCommunity.description")}
             </p>
           </div>
@@ -132,7 +132,7 @@ const Volunteer = () => {
       <section id="volunteer-teams" className="bg-muted/20 pt-10 pb-12 md:pt-12 md:pb-14">
         <div className="container mx-auto px-4">
           <div className="mx-auto mb-10 max-w-2xl text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            <p className="font-eyebrow mb-3">
               {t("volunteer.teams.eyebrow")}
             </p>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">

@@ -202,7 +202,7 @@ export function Navbar() {
           {t("nav.skipToContent")}
         </a>
 
-        <div className="container mx-auto grid h-[76px] grid-cols-[1fr_auto] items-center gap-3 px-4 xl:grid-cols-[auto_1fr_auto]">
+        <div className="layout-container grid h-[76px] grid-cols-[1fr_auto] items-center gap-3 xl:grid-cols-[auto_1fr_auto]">
           <Link
             to="/"
             aria-label={t("nav.homeAria")}
@@ -427,7 +427,7 @@ export function Navbar() {
                   <span className="sr-only">{t("nav.menu")}</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[320px] border-border/70 bg-background/95 p-5 backdrop-blur-[12px] sm:w-[390px]">
+              <SheetContent side="right" className="w-full max-w-[320px] border-border/70 bg-background/95 p-5 backdrop-blur-[12px] sm:max-w-[390px]">
                 <SheetHeader className="text-left">
                   <SheetTitle className="flex items-center gap-3 text-base">
                     <img

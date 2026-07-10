@@ -318,7 +318,7 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
             value={searchValue}
             onValueChange={setSearchValue}
             placeholder={t("searchCommand.placeholder")}
-            className="h-12 text-[15px] leading-6 placeholder:text-muted-foreground/70"
+            className="font-input h-12 placeholder:text-muted-foreground/70"
           />
           <CommandList className="max-h-[min(460px,62vh)] space-y-2.5 overflow-y-auto rounded-xl bg-transparent pr-1 scroll-py-3">
             {visibleSearchItems.length === 0 ? (
@@ -344,10 +344,10 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
                     <Icon className="h-[15px] w-[15px]" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold leading-5 text-foreground">
+                    <span className="font-nav block truncate">
                       {item.title}
                     </span>
-                    <span className="mt-1.5 block line-clamp-2 min-h-9 text-[13px] leading-[18px] text-muted-foreground/85">
+                    <span className="font-meta mt-1.5 block min-h-9 line-clamp-2 text-muted-foreground/85">
                       {previewText
                         ? renderHighlightedQuery(previewText, searchValue)
                         : "\u00A0"}

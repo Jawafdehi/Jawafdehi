@@ -171,7 +171,7 @@ export default function CaseworkRules() {
                           {r.detector && (
                             <span>
                               <span className="text-slate-400">Detector: </span>
-                              <code className="px-1 bg-slate-100 rounded text-[11px]">{r.detector}</code>
+                              <code className="font-code rounded bg-slate-100 px-1">{r.detector}</code>
                             </span>
                           )}
                         </div>
@@ -182,7 +182,7 @@ export default function CaseworkRules() {
                               Description
                             </div>
                             <div
-                              className="prose prose-sm max-w-none"
+                              className="font-paragraph content-prose max-w-none"
                               dangerouslySetInnerHTML={{ __html: mdToHtml(r.description) }}
                             />
                           </div>

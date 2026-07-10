@@ -176,7 +176,7 @@ const Index = () => {
         })}</script>
       </Helmet>
 
-      <main id="main-content" className="flex-1">
+      <div className="flex-1">
         <Hero
           casesDocumented={getStatValue(stats?.published_cases)}
           officialsAndEntitiesTracked={getStatValue(stats?.nes?.total)}
@@ -243,7 +243,7 @@ const Index = () => {
         <Faq />
         <ShareOurVision />
         <SupportingPartner />
-      </main>
+      </div>
 
       <NewsletterSignupModal />
     </div>

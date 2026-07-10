@@ -52,7 +52,7 @@ export function ProcessTimeline() {
                   {title}
                 </h3>
               </div>
-              <p className="max-w-[34rem] text-[0.95rem] leading-7 text-foreground/70 md:text-base">
+              <p className="font-paragraph font-paragraph-muted max-w-[34rem]">
                 {description}
               </p>
             </article>
