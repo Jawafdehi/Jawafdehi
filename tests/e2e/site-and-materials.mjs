@@ -22,7 +22,7 @@ const check = (label, ok, detail = '') => {
 await page.addInitScript(() => {
   localStorage.setItem(
     'jawafdehi.devAuth.user',
-    JSON.stringify({ username: 'e2e-admin', roles: ['Admin'], is_admin: true }),
+    JSON.stringify({ username: 'e2e-admin', roles: [], is_admin: true }),
   );
   localStorage.setItem('jawafdehi.devAuth.csrf', 'e2e-csrf');
   localStorage.setItem('jawafdehi_analytics_consent', 'denied');

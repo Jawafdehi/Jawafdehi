@@ -74,7 +74,7 @@ Bun.serve({
     // --- DEV_AUTH session ---------------------------------------------------
     if (path === "/api/casework/auth/dev-login/" && method === "POST") {
       return json(
-        { username: "e2e-admin", roles: ["Admin"], is_admin: true, csrftoken: "e2e-csrf" },
+        { username: "e2e-admin", roles: [], is_admin: true, csrftoken: "e2e-csrf" },
         200,
         { "Set-Cookie": "sessionid=e2e-session; Path=/; SameSite=Lax" },
       );
