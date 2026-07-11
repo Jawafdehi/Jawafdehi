@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -11,24 +12,73 @@ import {
 import { NewsletterForm } from "@/components/home/newsletter-form";
 import { getNewsletterPromptState, setNewsletterPromptState } from "@/lib/newsletter";
 
-/** Delay before the prompt appears, so it doesn't interrupt the first paint. */
-const OPEN_DELAY_MS = 5000;
+/**
+ * Dwell before the prompt appears — long enough that it reads as a considered
+ * ask to an engaged reader rather than an immediate interruption on first paint.
+ */
+const OPEN_DELAY_MS = 25000;
 
 /**
- * Newsletter signup prompt shown once per browser when a visitor lands on the
- * site. Dismissing it (or subscribing anywhere) keeps it from reappearing.
+ * Routes the prompt may appear on: the home page and the content pages an
+ * engaged reader is most likely to land on from social/search — case pages and
+ * the updates feed. Other routes (about, privacy, admin, …) never arm it.
+ */
+function isEligiblePath(path: string): boolean {
+  return (
+    path === "/" ||
+    path === "/cases" ||
+    path.startsWith("/case/") ||
+    path === "/updates" ||
+    path.startsWith("/updates/")
+  );
+}
+
+/**
+ * Newsletter signup prompt. Arms a single dwell timer the first time a visitor
+ * is on an eligible page; the timer persists across in-app navigation (so the
+ * dwell accumulates rather than resetting on every route change). Dismissing it
+ * suppresses it for 30 days; subscribing anywhere suppresses it permanently.
  */
 export function NewsletterSignupModal() {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+
+  // Mirror the current route in a ref so the timer callback can re-check
+  // eligibility at fire time without being re-created on every navigation.
+  const eligibleRef = useRef(false);
+  eligibleRef.current = isEligiblePath(pathname);
+  const armedRef = useRef(false);
+  const firedRef = useRef(false);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (getNewsletterPromptState() !== null) return;
-    const timer = window.setTimeout(() => {
-      if (getNewsletterPromptState() === null) setOpen(true);
+    // Dwell already elapsed on an earlier eligible view: open as soon as the
+    // visitor is back on an eligible page, rather than restarting the timer.
+    // (Covers firing while momentarily on an ineligible route.)
+    if (firedRef.current) {
+      if (eligibleRef.current) setOpen(true);
+      return;
+    }
+    if (armedRef.current) return;
+    if (!eligibleRef.current) return;
+    // First eligible view: start the dwell once. No cleanup here on purpose — a
+    // route change must not clear the timer and reset the accumulated dwell.
+    armedRef.current = true;
+    timerRef.current = window.setTimeout(() => {
+      firedRef.current = true;
+      if (getNewsletterPromptState() === null && eligibleRef.current) setOpen(true);
     }, OPEN_DELAY_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
+  }, [pathname]);
+
+  // Clear the timer only when the modal actually unmounts.
+  useEffect(
+    () => () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    },
+    [],
+  );
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
