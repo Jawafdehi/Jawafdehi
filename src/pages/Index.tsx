@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { Hero } from "@/components/home/hero";
 import { Faq } from "@/components/home/faq";
-import { NewsletterSignupModal } from "@/components/home/newsletter-signup-modal";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { ShareOurVision } from "@/components/home/share-our-vision";
 import { SupportingPartner } from "@/components/home/supportingpartner";
@@ -244,8 +243,6 @@ const Index = () => {
         <ShareOurVision />
         <SupportingPartner />
       </div>
-
-      <NewsletterSignupModal />
     </div>
   );
 };
