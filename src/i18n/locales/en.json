@@ -1602,6 +1602,12 @@
       "errorMessage": "This unsubscribe link is invalid or has expired. Please contact privacy@jawafdehi.org if you need help.",
       "home": "Back to home"
     },
+    "confirmed": {
+      "title": "You're confirmed!",
+      "message": "Thanks for confirming your email — you're now subscribed to the Jawafdehi newsletter. Watch your inbox for newly documented cases and updates.",
+      "exploreCases": "Explore the cases",
+      "home": "Back to home"
+    },
     "vision": {
       "title": "Share Our Vision",
       "stayInformed": {
