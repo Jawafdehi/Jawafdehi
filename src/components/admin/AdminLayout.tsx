@@ -61,9 +61,9 @@ const NAV: NavGroup[] = [
     ],
   },
   {
-    // NES writes are gated on NES_Contributor / NES_Admin (+ superuser) by the
-    // backend (entities/permissions.py); platform readonly/caseworker/moderator
-    // are NOT accepted, so don't offer the (write) Entities section to them.
+    // v3: entity writes are gated on the single content-staff role (Caseworker,
+    // + superuser) by the backend (entities/permissions.py). ReadOnly is not
+    // accepted, so don't offer the (write) Entities section to it.
     headingKey: "admin.nav.entities",
     items: [
       {
@@ -75,8 +75,9 @@ const NAV: NavGroup[] = [
     ],
   },
   {
-    // Data Lake (court/material/firm) writes are gated on the NGM role set
-    // (courts/permissions.py HasNgmRole): Admin/Moderator/Caseworker + NGM tiers.
+    // v3: court-case / material / firm writes are gated on the single
+    // content-staff role (Caseworker, + superuser) by the backend
+    // (courts/permissions.py HasNgmRole). The old rate tiers are retired.
     headingKey: "admin.nav.dataLake",
     items: [
       { to: "/admin/datalake/courtcases", labelKey: "admin.nav.courtCases", icon: Gavel, canAccess: hasNgmWriteAccess },
