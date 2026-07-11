@@ -124,7 +124,10 @@ function Sidebar({
     <nav className="flex flex-col gap-5 p-4">
       {NAV.map((group) => {
         const visible = group.items.filter((it) => {
-          if (it.roles && !it.roles.some((r) => lower.includes(r.toLowerCase()))) return false;
+          // A superuser has an empty `roles` array in v3, so bypass the static
+          // `roles` allow-list for admins (else a role-gated item hides from them).
+          if (it.roles && !isAdmin && !it.roles.some((r) => lower.includes(r.toLowerCase())))
+            return false;
           if (it.canAccess && !it.canAccess(roles, isAdmin)) return false;
           return true;
         });
