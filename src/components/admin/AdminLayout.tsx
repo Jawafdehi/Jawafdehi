@@ -12,6 +12,7 @@ import {
   hasAdminAccess,
   hasNesWriteAccess,
   hasNgmWriteAccess,
+  isModerator,
 } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -45,7 +46,7 @@ interface NavItem {
   icon: typeof LayoutDashboard;
   end?: boolean;
   roles?: string[];
-  canAccess?: (roles: string[]) => boolean;
+  canAccess?: (roles: string[], isAdmin: boolean) => boolean;
 }
 interface NavGroup {
   headingKey: string;
@@ -60,9 +61,9 @@ const NAV: NavGroup[] = [
     ],
   },
   {
-    // NES writes are gated on NES_Contributor / NES_Admin (+ superuser) by the
-    // backend (entities/permissions.py); platform readonly/caseworker/moderator
-    // are NOT accepted, so don't offer the (write) Entities section to them.
+    // v3: entity writes are gated on the single content-staff role (Caseworker,
+    // + superuser) by the backend (entities/permissions.py). ReadOnly is not
+    // accepted, so don't offer the (write) Entities section to it.
     headingKey: "admin.nav.entities",
     items: [
       {
@@ -74,8 +75,9 @@ const NAV: NavGroup[] = [
     ],
   },
   {
-    // Data Lake (court/material/firm) writes are gated on the NGM role set
-    // (courts/permissions.py HasNgmRole): Admin/Moderator/Caseworker + NGM tiers.
+    // v3: court-case / material / firm writes are gated on the single
+    // content-staff role (Caseworker, + superuser) by the backend
+    // (courts/permissions.py HasNgmRole). The old rate tiers are retired.
     headingKey: "admin.nav.dataLake",
     items: [
       { to: "/admin/datalake/courtcases", labelKey: "admin.nav.courtCases", icon: Gavel, canAccess: hasNgmWriteAccess },
@@ -97,22 +99,36 @@ const NAV: NavGroup[] = [
         to: "/admin/moderation",
         labelKey: "admin.nav.moderation",
         icon: ShieldCheck,
-        roles: ["admin", "moderator"],
+        // v3: privileged casework action → the single content-staff role
+        // (or superuser). Use the shared helper so it stays in sync with
+        // lib/roles and admits a group-less superuser via the is_admin flag.
+        canAccess: isModerator,
       },
     ],
   },
 ];
 
 // `onNavigate` lets the mobile drawer close itself when a link is followed.
-function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => void }) {
+function Sidebar({
+  roles,
+  isAdmin,
+  onNavigate,
+}: {
+  roles: string[];
+  isAdmin: boolean;
+  onNavigate?: () => void;
+}) {
   const { t } = useTranslation();
   const lower = roles.map((r) => r.toLowerCase());
   return (
     <nav className="flex flex-col gap-5 p-4">
       {NAV.map((group) => {
         const visible = group.items.filter((it) => {
-          if (it.roles && !it.roles.some((r) => lower.includes(r.toLowerCase()))) return false;
-          if (it.canAccess && !it.canAccess(roles)) return false;
+          // A superuser has an empty `roles` array in v3, so bypass the static
+          // `roles` allow-list for admins (else a role-gated item hides from them).
+          if (it.roles && !isAdmin && !it.roles.some((r) => lower.includes(r.toLowerCase())))
+            return false;
+          if (it.canAccess && !it.canAccess(roles, isAdmin)) return false;
           return true;
         });
         if (!visible.length) return null;
@@ -152,7 +168,7 @@ function Sidebar({ roles, onNavigate }: { roles: string[]; onNavigate?: () => vo
 // Shell wrapper. Used directly by AdminLayout (route element) — the page body
 // renders through <Outlet/>.
 function AdminShell({ children }: { children: ReactNode }) {
-  const { user, loading, logout } = useCaseworkAuth();
+  const { user, loading, logout, isAdmin } = useCaseworkAuth();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -178,9 +194,10 @@ function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
-  // Role gate.
+  // Role gate. Admins are superusers with NO group in v3, so admit them via the
+  // is_admin flag (their `roles` list is empty).
   const roles = user.roles ?? [];
-  if (!hasAdminAccess(roles)) {
+  if (!hasAdminAccess(roles, isAdmin)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-8 text-center shadow-xl">
@@ -258,13 +275,13 @@ function AdminShell({ children }: { children: ReactNode }) {
               </span>
             ) : null}
           </SheetTitle>
-          <Sidebar roles={roles} onNavigate={() => setNavOpen(false)} />
+          <Sidebar roles={roles} isAdmin={isAdmin} onNavigate={() => setNavOpen(false)} />
         </SheetContent>
       </Sheet>
 
       <div className="mx-auto flex max-w-7xl">
         <aside className="hidden w-64 shrink-0 border-r bg-white md:block">
-          <Sidebar roles={roles} />
+          <Sidebar roles={roles} isAdmin={isAdmin} />
         </aside>
         <main className="min-w-0 flex-1 px-4 py-6">{children}</main>
       </div>

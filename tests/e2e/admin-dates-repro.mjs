@@ -23,7 +23,7 @@ const check = (label, ok, detail = '') => {
 await page.addInitScript(() => {
   localStorage.setItem(
     'jawafdehi.devAuth.user',
-    JSON.stringify({ username: 'e2e-admin', roles: ['Admin'], is_admin: true }),
+    JSON.stringify({ username: 'e2e-admin', roles: [], is_admin: true }),
   );
   localStorage.setItem('jawafdehi.devAuth.csrf', 'e2e-csrf');
   // Pre-answer the cookie-consent banner: its fixed bottom bar otherwise

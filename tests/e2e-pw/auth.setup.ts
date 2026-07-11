@@ -27,9 +27,11 @@ setup("authenticate as admin via dev-login", async ({ page }) => {
   // Use the REAL role snapshot the backend returned — do not fabricate it. If a
   // regression stopped dev-login granting admin, this fails HERE (loudly) instead
   // of the admin specs silently passing on a faked localStorage snapshot.
+  // v3 authz model: admin is a Django superuser with NO group, so `roles` is
+  // empty and admin-ness is carried by the `is_admin` bool.
   expect(
-    body.is_admin === true && (body.roles ?? []).includes("Admin"),
-    `dev-login did not return admin roles: ${JSON.stringify(body)}`,
+    body.is_admin === true,
+    `dev-login did not return an admin (is_admin) snapshot: ${JSON.stringify(body)}`,
   ).toBeTruthy();
 
   const devUser = {

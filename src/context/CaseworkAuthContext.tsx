@@ -47,8 +47,20 @@ function toCaseworkUser(
     (profile.preferred_username as string) ||
     (profile.name as string) ||
     "";
-  return { username, roles, is_admin: roles.includes("admin") };
+  // v3: prefer an explicit is_admin/is_superuser claim if the IdP emits one;
+  // otherwise fall back to the `admin` role key (which the Zitadel token DOES
+  // carry for a superuser — it's what drives is_superuser server-side).
+  const is_admin =
+    typeof profile.is_admin === "boolean"
+      ? profile.is_admin
+      : typeof profile.is_superuser === "boolean"
+        ? profile.is_superuser
+        : roles.includes("admin");
+  return { username, roles, is_admin };
 }
+// NOTE: dev-login / me responses carry an explicit `is_admin` bool (a superuser
+// has an empty `roles` list in v3), so the gates below read `user.is_admin`
+// alongside `user.roles` — never infer admin-ness from `roles` alone.
 
 export function CaseworkAuthProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -97,8 +109,8 @@ export function CaseworkAuthProvider({ children }: { children: React.ReactNode }
         error: auth.error?.message ?? null,
         login,
         logout,
-        isAdmin: rolesIsAdmin(user?.roles),
-        isModerator: rolesIsModerator(user?.roles),
+        isAdmin: rolesIsAdmin(user?.roles, user?.is_admin ?? false),
+        isModerator: rolesIsModerator(user?.roles, user?.is_admin ?? false),
         devAuthEnabled: DEV_AUTH_ENABLED,
         devLogin,
       }}

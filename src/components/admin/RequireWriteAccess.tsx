@@ -17,14 +17,15 @@ export default function RequireWriteAccess({
   children,
   message = "You don't have permission to edit this section. Ask an admin to grant you access.",
 }: {
-  // Predicate over the user's roles (e.g. hasNesWriteAccess from lib/roles).
-  can: (roles: string[]) => boolean;
+  // Predicate over the user's roles + is_admin flag (e.g. hasNesWriteAccess from
+  // lib/roles). The is_admin flag admits a group-less superuser (empty roles).
+  can: (roles: string[], isAdmin: boolean) => boolean;
   children: ReactNode;
   message?: string;
 }) {
-  const { user } = useCaseworkAuth();
+  const { user, isAdmin } = useCaseworkAuth();
   const roles = user?.roles ?? [];
-  if (!can(roles)) {
+  if (!can(roles, isAdmin)) {
     return (
       <div className="max-w-2xl">
         <FormError message={message} />

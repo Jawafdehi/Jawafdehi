@@ -40,7 +40,7 @@ interface Section {
   // i18n keys under `admin.dashboard.sections.*`, resolved at render.
   titleKey: string;
   bodyKey: string;
-  canAccess?: (roles: string[]) => boolean;
+  canAccess?: (roles: string[], isAdmin: boolean) => boolean;
 }
 
 const SECTIONS: Section[] = [
@@ -99,7 +99,7 @@ interface Metric {
   labelKey: string;
   subKey: string;
   // Narrow the metric to a subset of roles (matches the section predicates).
-  canAccess?: (roles: string[]) => boolean;
+  canAccess?: (roles: string[], isAdmin: boolean) => boolean;
   // Headline metric — rendered with emphasis (accent border/title).
   headline?: boolean;
 }
@@ -166,10 +166,14 @@ function MetricValue({ value, loadingLabel }: { value: Count; loadingLabel: stri
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
-  const { user } = useCaseworkAuth();
+  const { user, isAdmin } = useCaseworkAuth();
   const roles = user?.roles ?? [];
-  const sections = SECTIONS.filter((s) => !s.canAccess || s.canAccess(roles));
-  const metrics = METRICS.filter((m) => !m.canAccess || m.canAccess(roles));
+  const sections = SECTIONS.filter(
+    (s) => !s.canAccess || s.canAccess(roles, isAdmin),
+  );
+  const metrics = METRICS.filter(
+    (m) => !m.canAccess || m.canAccess(roles, isAdmin),
+  );
 
   const [counts, setCounts] = useState<Metrics>({
     inReview: null,
