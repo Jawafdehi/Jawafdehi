@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 
 import { NewsletterSignupModal } from "@/components/home/newsletter-signup-modal";
 
@@ -34,12 +34,28 @@ beforeEach(() => {
 
 const STORAGE_KEY = "jawafdehi_newsletter_prompt";
 const DWELL_MS = 25000;
+const CASE_PATH = "/case/case-081-cr-0107-patanjali";
 
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <NewsletterSignupModal />
     </MemoryRouter>,
+  );
+}
+
+/** Buttons that navigate between an eligible and an ineligible route in-app. */
+function Nav() {
+  const navigate = useNavigate();
+  return (
+    <>
+      <button type="button" onClick={() => navigate("/about")}>
+        to-ineligible
+      </button>
+      <button type="button" onClick={() => navigate("/updates")}>
+        to-eligible
+      </button>
+    </>
   );
 }
 
@@ -54,7 +70,7 @@ describe("NewsletterSignupModal trigger", () => {
   });
 
   it("stays closed until the dwell elapses, then opens on an eligible route", () => {
-    renderAt("/case/some-case");
+    renderAt(CASE_PATH);
     expect(screen.queryByRole("dialog")).toBeNull();
     act(() => vi.advanceTimersByTime(DWELL_MS));
     expect(screen.queryByRole("dialog")).not.toBeNull();
@@ -74,5 +90,23 @@ describe("NewsletterSignupModal trigger", () => {
     renderAt("/");
     act(() => vi.advanceTimersByTime(DWELL_MS));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens on return to an eligible route when the dwell fired on an ineligible one", () => {
+    render(
+      <MemoryRouter initialEntries={[CASE_PATH]}>
+        <Nav />
+        <NewsletterSignupModal />
+      </MemoryRouter>,
+    );
+    // Leave for an ineligible page before the dwell completes...
+    act(() => vi.advanceTimersByTime(DWELL_MS / 2));
+    fireEvent.click(screen.getByText("to-ineligible"));
+    // ...the dwell fires while ineligible, so it stays closed.
+    act(() => vi.advanceTimersByTime(DWELL_MS));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // Returning to an eligible page opens it immediately (no second dwell).
+    fireEvent.click(screen.getByText("to-eligible"));
+    expect(screen.queryByRole("dialog")).not.toBeNull();
   });
 });

@@ -49,16 +49,25 @@ export function NewsletterSignupModal() {
   const eligibleRef = useRef(false);
   eligibleRef.current = isEligiblePath(pathname);
   const armedRef = useRef(false);
+  const firedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (armedRef.current) return;
     if (getNewsletterPromptState() !== null) return;
+    // Dwell already elapsed on an earlier eligible view: open as soon as the
+    // visitor is back on an eligible page, rather than restarting the timer.
+    // (Covers firing while momentarily on an ineligible route.)
+    if (firedRef.current) {
+      if (eligibleRef.current) setOpen(true);
+      return;
+    }
+    if (armedRef.current) return;
     if (!eligibleRef.current) return;
-    // First eligible view: start the dwell. No cleanup here on purpose — we
-    // don't want a route change to clear the timer and reset the dwell.
+    // First eligible view: start the dwell once. No cleanup here on purpose — a
+    // route change must not clear the timer and reset the accumulated dwell.
     armedRef.current = true;
     timerRef.current = window.setTimeout(() => {
+      firedRef.current = true;
       if (getNewsletterPromptState() === null && eligibleRef.current) setOpen(true);
     }, OPEN_DELAY_MS);
   }, [pathname]);

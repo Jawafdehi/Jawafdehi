@@ -54,4 +54,9 @@ describe("newsletter prompt state", () => {
     window.localStorage.setItem(STORAGE_KEY, "{not json");
     expect(getNewsletterPromptState()).toBeNull();
   });
+
+  it("treats non-object JSON (e.g. 'null') as absent, without throwing", () => {
+    window.localStorage.setItem(STORAGE_KEY, "null");
+    expect(getNewsletterPromptState()).toBeNull();
+  });
 });

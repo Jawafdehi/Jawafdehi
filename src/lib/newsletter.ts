@@ -37,11 +37,13 @@ export function getNewsletterPromptState(): NewsletterPromptValue | null {
     // Legacy plain-string values (pre-TTL builds): honour as a no-expiry suppression.
     if (raw === "subscribed" || raw === "dismissed") return raw;
 
-    const parsed = JSON.parse(raw) as Partial<StoredPrompt>;
-    if (parsed.state === "subscribed") return "subscribed";
-    if (parsed.state === "dismissed") {
-      const fresh =
-        typeof parsed.ts === "number" && Date.now() - parsed.ts < DISMISS_TTL_MS;
+    const parsed: unknown = JSON.parse(raw);
+    // Guard against non-object JSON (e.g. "null", a number) before reading fields.
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const { state, ts } = parsed as Partial<StoredPrompt>;
+    if (state === "subscribed") return "subscribed";
+    if (state === "dismissed") {
+      const fresh = typeof ts === "number" && Date.now() - ts < DISMISS_TTL_MS;
       return fresh ? "dismissed" : null;
     }
     return null;
