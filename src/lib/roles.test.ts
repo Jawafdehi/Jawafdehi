@@ -7,70 +7,75 @@ import {
   hasNgmWriteAccess,
 } from "./roles";
 
+// v3 authz model: one content-staff role reachable under three live Zitadel
+// keys — "moderator", "contributor", "caseworker" (dev-login sends the Django
+// group name "Caseworker"). Admin is a superuser with NO group, conveyed via the
+// `is_admin` bool (second arg), so a superuser has an EMPTY roles array.
+
 describe("roles helpers", () => {
-  it("hasAdminAccess: true for any admin-panel role, case-insensitive", () => {
+  it("hasAdminAccess: true for any content-staff or readonly role, case-insensitive", () => {
     expect(hasAdminAccess(["Caseworker"])).toBe(true);
-    expect(hasAdminAccess(["READONLY"])).toBe(true);
-    expect(hasAdminAccess(["admin"])).toBe(true);
     expect(hasAdminAccess(["moderator"])).toBe(true);
+    expect(hasAdminAccess(["contributor"])).toBe(true);
+    expect(hasAdminAccess(["READONLY"])).toBe(true);
   });
 
-  it("hasAdminAccess: false for the retired 'contributor' role, unknowns, or none", () => {
-    // "contributor" was renamed to "caseworker" platform-wide; no backend path
-    // emits it any more, so it must NOT admit anyone.
-    expect(hasAdminAccess(["contributor"])).toBe(false);
+  it("hasAdminAccess: superuser admitted via the is_admin flag (empty roles)", () => {
+    expect(hasAdminAccess([], true)).toBe(true);
+    expect(hasAdminAccess(undefined, true)).toBe(true);
+  });
+
+  it("hasAdminAccess: false for unknowns or no role/flag", () => {
     expect(hasAdminAccess(["viewer"])).toBe(false);
     expect(hasAdminAccess([])).toBe(false);
     expect(hasAdminAccess(undefined)).toBe(false);
   });
 
-  it("isModerator: only admin or moderator", () => {
-    expect(isModerator(["Admin"])).toBe(true);
-    expect(isModerator(["MODERATOR"])).toBe(true);
-    expect(isModerator(["caseworker"])).toBe(false);
+  it("isModerator: any content-staff role (moderator/contributor/caseworker) or superuser", () => {
+    expect(isModerator(["moderator"])).toBe(true);
+    expect(isModerator(["contributor"])).toBe(true);
+    expect(isModerator(["caseworker"])).toBe(true);
+    expect(isModerator(["Caseworker"])).toBe(true);
+    expect(isModerator([], true)).toBe(true); // superuser via flag
     expect(isModerator(["readonly"])).toBe(false);
     expect(isModerator(undefined)).toBe(false);
   });
 
-  it("isAdmin: only admin", () => {
+  it("isAdmin: only the superuser flag (v3: admin is not a role in `roles`)", () => {
+    expect(isAdmin([], true)).toBe(true);
+    expect(isAdmin(undefined, true)).toBe(true);
+    // Legacy "admin" role string still recognised for back-compat with any
+    // caller/payload that carries it, but production superusers use the flag.
     expect(isAdmin(["admin"])).toBe(true);
-    expect(isAdmin(["ADMIN", "moderator"])).toBe(true);
     expect(isAdmin(["moderator"])).toBe(false);
+    expect(isAdmin(["caseworker"])).toBe(false);
     expect(isAdmin(undefined)).toBe(false);
   });
 
-  it("hasNesWriteAccess: only NES roles (both OIDC + group spellings) or admin", () => {
-    // OIDC claim keys
-    expect(hasNesWriteAccess(["nes_contributor"])).toBe(true);
-    expect(hasNesWriteAccess(["nes_admin"])).toBe(true);
-    // Django group names (from dev-login / me_view), case-insensitive
-    expect(hasNesWriteAccess(["NES_Contributor"])).toBe(true);
-    expect(hasNesWriteAccess(["NES_Admin"])).toBe(true);
-    // admin -> Django superuser, which bypasses the NES permission classes
-    expect(hasNesWriteAccess(["admin"])).toBe(true);
-    // Platform roles WITHOUT an NES group are backend-403'd — must be hidden.
-    expect(hasNesWriteAccess(["caseworker"])).toBe(false);
-    expect(hasNesWriteAccess(["moderator"])).toBe(false);
+  it("hasNesWriteAccess: the content-staff role or superuser", () => {
+    expect(hasNesWriteAccess(["caseworker"])).toBe(true);
+    expect(hasNesWriteAccess(["moderator"])).toBe(true);
+    expect(hasNesWriteAccess(["contributor"])).toBe(true);
+    expect(hasNesWriteAccess(["Caseworker"])).toBe(true);
+    expect(hasNesWriteAccess([], true)).toBe(true); // superuser via flag
+    // Retired NES-specific keys no longer grant access on their own.
+    expect(hasNesWriteAccess(["nes_contributor"])).toBe(false);
     expect(hasNesWriteAccess(["readonly"])).toBe(false);
     expect(hasNesWriteAccess(["ReadOnly"])).toBe(false);
     expect(hasNesWriteAccess([])).toBe(false);
     expect(hasNesWriteAccess(undefined)).toBe(false);
   });
 
-  it("hasNgmWriteAccess: NGM role set (Admin/Moderator/Caseworker + tiers)", () => {
-    expect(hasNgmWriteAccess(["admin"])).toBe(true);
+  it("hasNgmWriteAccess: the content-staff role or superuser", () => {
     expect(hasNgmWriteAccess(["moderator"])).toBe(true);
+    expect(hasNgmWriteAccess(["contributor"])).toBe(true);
     expect(hasNgmWriteAccess(["caseworker"])).toBe(true);
     expect(hasNgmWriteAccess(["Caseworker"])).toBe(true);
-    // NGM tier roles — OIDC claim keys and Django group names.
-    expect(hasNgmWriteAccess(["ngm_silver"])).toBe(true);
-    expect(hasNgmWriteAccess(["ngm_gold"])).toBe(true);
-    expect(hasNgmWriteAccess(["ngm_platinum"])).toBe(true);
-    // readonly is NOT in the NGM set -> hidden.
+    expect(hasNgmWriteAccess([], true)).toBe(true); // superuser via flag
+    // Retired NGM rate tiers no longer grant access.
+    expect(hasNgmWriteAccess(["ngm_gold"])).toBe(false);
     expect(hasNgmWriteAccess(["readonly"])).toBe(false);
     expect(hasNgmWriteAccess(["ReadOnly"])).toBe(false);
-    // NES-only roles do NOT grant NGM writes.
-    expect(hasNgmWriteAccess(["nes_contributor"])).toBe(false);
     expect(hasNgmWriteAccess([])).toBe(false);
     expect(hasNgmWriteAccess(undefined)).toBe(false);
   });
