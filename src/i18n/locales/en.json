@@ -1295,6 +1295,18 @@
         "special": "Special"
       }
     },
+    "courtCases": {
+      "heading": "Court cases",
+      "description": "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
+      "matrixHeading": "Court records by level and year",
+      "filterCourt": "Court level",
+      "filterYear": "Year",
+      "filterAll": "All",
+      "total": "Total",
+      "legendLabel": "Case volume",
+      "legendLow": "fewer",
+      "legendHigh": "more"
+    },
     "honesty": {
       "heading": "How solid is this data?",
       "description": "What the records back up today, and where they fall short. We show the gaps rather than round them away.",

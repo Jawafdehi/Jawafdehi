@@ -1,12 +1,9 @@
 import { useTranslation } from "react-i18next";
 import CountUp from "react-countup";
-import { Database, FileText, Gavel, Landmark } from "lucide-react";
+import { Gavel, Landmark } from "lucide-react";
 
-import type {
-  DataLakeMetrics,
-  EntityMetrics,
-  MaterialsMetrics,
-} from "@/types/jds";
+import type { DataLakeMetrics } from "@/types/jds";
+import { CourtYearMatrix } from "./CourtYearMatrix";
 
 /** A single scale figure with an icon and label. */
 function ScaleTile({
@@ -30,108 +27,50 @@ function ScaleTile({
 }
 
 /**
- * "The record base behind every case." The redesign leads with the story (the
- * gap), then grounds it in the sheer scale of source records that back it —
- * millions of court records, tens of thousands of materials, hundreds of
- * thousands of entities. Framed as the raw material accountability is built
- * from, not a dataset inventory.
+ * "Court cases." The judicial record base behind every case: the scale of court
+ * records and the courts they span, then a court x year heatmap that shows how
+ * that volume distributes across court levels and time. Entities and materials
+ * live in their own sections; the standalone per-court-level bars are gone —
+ * their totals are the heatmap's row totals now.
  */
-export function EvidenceBackbone({
-  nes,
-  ngm,
-  materials,
-}: {
-  nes?: EntityMetrics;
-  ngm?: DataLakeMetrics;
-  materials?: MaterialsMetrics;
-}) {
+export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
   const { t } = useTranslation();
-
-  // Aggregate by lowercased court type to merge casing variants
-  // (e.g. "supreme" + "SUPREME") into one bucket, then sort desc.
-  const courtTypeAgg = new Map<string, number>();
-  if (ngm?.by_court_type) {
-    for (const c of ngm.by_court_type) {
-      const key = c.court__court_type.toLowerCase();
-      courtTypeAgg.set(key, (courtTypeAgg.get(key) ?? 0) + c.count);
-    }
-  }
-  const courtTypes = [...courtTypeAgg.entries()]
-    .map(([key, count]) => ({ key, count }))
-    .sort((a, b) => b.count - a.count);
-  const courtMax = courtTypes[0]?.count ?? 0;
 
   return (
     <section className="border-t border-border pt-10">
       <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
-        {t("dataQuality.backbone.heading", "The record base behind every case")}
+        {t("dataQuality.courtCases.heading", "Court cases")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {t(
-          "dataQuality.backbone.description",
-          "Each case is cross-checked against millions of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
+          "dataQuality.courtCases.description",
+          "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
         )}
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {ngm && (
+      {ngm && (
+        <div className="mt-6 grid grid-cols-2 gap-4">
           <ScaleTile
             icon={<Gavel className="h-6 w-6" />}
             value={ngm.court_cases_total}
             label={t("dataQuality.backbone.courtRecords", "Court records")}
           />
-        )}
-        {ngm && (
           <ScaleTile
             icon={<Landmark className="h-6 w-6" />}
             value={ngm.courts_total}
             label={t("dataQuality.backbone.courts", "Courts covered")}
           />
-        )}
-        {nes && (
-          <ScaleTile
-            icon={<Database className="h-6 w-6" />}
-            value={nes.total}
-            label={t("dataQuality.backbone.entities", "Entities tracked")}
-          />
-        )}
-        {materials && (
-          <ScaleTile
-            icon={<FileText className="h-6 w-6" />}
-            value={materials.total}
-            label={t("dataQuality.backbone.materials", "Source materials")}
-          />
-        )}
-      </div>
-
-      {courtTypes.length > 0 && (
-        <div className="mt-8">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("dataQuality.backbone.byCourtType", "Court records by court level")}
-          </p>
-          <ul className="space-y-2.5">
-            {courtTypes.map((c) => {
-              const width = courtMax > 0 ? (c.count / courtMax) * 100 : 0;
-              return (
-                <li key={c.key} className="flex items-center gap-3">
-                  <span className="w-20 shrink-0 text-sm text-foreground">
-                    {t(`dataQuality.backbone.courtType.${c.key}`, c.key)}
-                  </span>
-                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-accent"
-                      style={{ width: `${Math.max(width, 0.5)}%` }}
-                    />
-                  </div>
-                  <span className="w-24 shrink-0 text-right font-mono text-sm font-semibold tabular-nums text-foreground">
-                    {c.count.toLocaleString()}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
         </div>
       )}
+
+      {ngm?.by_court_type_year?.length ? (
+        <div className="mt-8">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("dataQuality.courtCases.matrixHeading", "Court records by level and year")}
+          </p>
+          <CourtYearMatrix ngm={ngm} />
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -111,8 +111,8 @@ const DataQuality = () => {
           {/* Who we track: 88% people, then the institutions (live nes.by_type). */}
           <EntityBreakdown nes={data?.nes} />
 
-          {/* The scale that backs every case. */}
-          <EvidenceBackbone nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
+          {/* Court cases: the judicial record base + court x year heatmap. */}
+          <EvidenceBackbone ngm={data?.ngm} />
 
           {/* Where the evidence comes from (live materials.by_source). */}
           <MaterialsBySource materials={data?.materials} />
