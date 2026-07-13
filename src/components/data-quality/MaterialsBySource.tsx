@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { MaterialsMetrics } from "@/types/jds";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
-import { BreakdownBar } from "./BreakdownBar";
+import { TreemapChart } from "./TreemapChart";
 
 /**
  * Two complementary evidence reads:
@@ -54,9 +54,8 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
       </p>
       {sourceItems.length > 0 && (
         <div className="mt-6">
-          <BreakdownBar
+          <TreemapChart
             items={sourceItems}
-            labelWidth={180}
             tooltipLabel={t("dataQuality.materialsBySource.tooltip", "Materials")}
           />
         </div>
@@ -75,9 +74,8 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
             )}
           </p>
           <div className="mt-6">
-            <BreakdownBar
+            <TreemapChart
               items={typeItems}
-              labelWidth={180}
               tooltipLabel={t("dataQuality.materialsByType.tooltip", "Materials")}
             />
           </div>
