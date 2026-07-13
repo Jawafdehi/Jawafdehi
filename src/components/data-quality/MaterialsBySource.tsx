@@ -2,31 +2,43 @@ import { useTranslation } from "react-i18next";
 
 import type { MaterialsMetrics } from "@/types/jds";
 import { sourceKeyFor } from "@/lib/material-source-labels";
+import { materialTypeKeyFor } from "@/lib/material-type-labels";
 import { BreakdownBar } from "./BreakdownBar";
 
 /**
- * "Where the evidence comes from." Every material in the archive traces to one
- * of these public feeds (court orders, CIAA releases, DFMIS...). Raw source
- * tokens are mapped to plain labels.
+ * Two complementary evidence reads:
  *
- * Reads live materials.by_source from /api/statistics/ (no mock).
+ *  1. "Where the evidence comes from" — the original SOURCE each material traces
+ *     back to (Attorney General charge sheets, Nepal Kanun Patrika precedents,
+ *     court orders, CIAA releases, Jawafdehi originals...). Reads by_source.
+ *  2. "What materials are hosted" — the same materials grouped by document TYPE
+ *     (charge sheets, court order precedents, court orders...). Reads by_type.
+ *
+ * Source and type are different axes: "Charge Sheets" / "Court Order Precedents"
+ * are material TYPES (chart 2); the SOURCES they come from are the Attorney
+ * General (`ag`) and Nepal Kanun Patrika (`nkp`) in chart 1. Raw tokens are
+ * mapped to plain labels via the two label mappers.
+ *
+ * Reads live materials.by_source / by_type from /api/statistics/.
  */
 export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics }) {
   const { t } = useTranslation();
-  if (!materials?.by_source?.length) return null;
+  if (!materials) return null;
 
-  // Aggregate counts by resolved source key so that multiple unmapped
-  // source tokens (e.g. "ciaa" and "oag") don't produce duplicate "Other"
-  // bars with colliding React keys.
-  const aggregated = new Map<string, number>();
-  for (const row of materials.by_source) {
-    const key = sourceKeyFor(row.source);
-    aggregated.set(key, (aggregated.get(key) ?? 0) + row.count);
-  }
-  const items = [...aggregated.entries()].map(([key, count]) => ({
-    label: t(`dataQuality.materialsBySource.source.${key}`, key),
-    count,
-  }));
+  // Aggregate counts by resolved key so multiple unmapped tokens collapse into
+  // one "Other" bar instead of colliding React keys / duplicate rows.
+  const sourceItems = aggregate(
+    materials.by_source ?? [],
+    (row) => sourceKeyFor(row.source),
+    (key) => t(`dataQuality.materialsBySource.source.${key}`, key),
+  );
+  const typeItems = aggregate(
+    materials.by_type ?? [],
+    (row) => materialTypeKeyFor(row.material_type),
+    (key) => t(`dataQuality.materialsByType.type.${key}`, key),
+  );
+
+  if (!sourceItems.length && !typeItems.length) return null;
 
   return (
     <section className="border-t border-border pt-10">
@@ -36,18 +48,56 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {t(
           "dataQuality.materialsBySource.description",
-          "Every one of the {{total}} source materials is pulled from a public feed. This is the mix.",
+          "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate.",
           { total: materials.total.toLocaleString() },
         )}
       </p>
+      {sourceItems.length > 0 && (
+        <div className="mt-6">
+          <BreakdownBar
+            items={sourceItems}
+            labelWidth={180}
+            tooltipLabel={t("dataQuality.materialsBySource.tooltip", "Materials")}
+          />
+        </div>
+      )}
 
-      <div className="mt-6">
-        <BreakdownBar
-          items={items}
-          labelWidth={180}
-          tooltipLabel={t("dataQuality.materialsBySource.tooltip", "Materials")}
-        />
-      </div>
+      {typeItems.length > 0 && (
+        <div className="mt-10">
+          <h3 className="font-display text-lg font-bold tracking-tight text-foreground md:text-xl">
+            {t("dataQuality.materialsByType.heading", "What materials are hosted")}
+          </h3>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            {t(
+              "dataQuality.materialsByType.description",
+              "The same {{total}} materials, grouped by the kind of document they are.",
+              { total: materials.total.toLocaleString() },
+            )}
+          </p>
+          <div className="mt-6">
+            <BreakdownBar
+              items={typeItems}
+              labelWidth={180}
+              tooltipLabel={t("dataQuality.materialsByType.tooltip", "Materials")}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
+}
+
+/** Roll raw rows up by a resolved key, summing counts, into labeled bar items. */
+function aggregate<T>(
+  rows: T[],
+  keyOf: (row: T) => string,
+  labelOf: (key: string) => string,
+): { label: string; count: number }[] {
+  const byKey = new Map<string, number>();
+  for (const row of rows) {
+    const key = keyOf(row);
+    const count = (row as { count: number }).count;
+    byKey.set(key, (byKey.get(key) ?? 0) + count);
+  }
+  return [...byKey.entries()].map(([key, count]) => ({ label: labelOf(key), count }));
 }

@@ -1339,20 +1339,40 @@
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "description": "Every one of the {{total}} source materials is pulled from a public feed. This is the mix.",
+      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate.",
       "tooltip": "Materials",
       "source": {
+        "ag": "Attorney General (charge sheets)",
+        "nkp": "Nepal Kanun Patrika",
         "courtOrders": "Court orders",
         "courtRecords": "Court records",
         "ciaaPress": "CIAA press releases",
-        "dfmis": "DFMIS (financial mgmt)",
-        "jawafdehi": "Jawafdehi",
-        "kanunPatrika": "Kanun Patrika",
+        "dfmis": "Digital Financial Management Information System (DFMIS)",
+        "jawafdehi": "Jawafdehi original documents",
+        "kanunPatrika": "Nepal Kanun Patrika",
         "ciaaAnnual": "CIAA annual reports",
         "koshi": "Koshi Province",
         "ppmo": "PPMO blacklist",
         "ciaa": "CIAA",
         "oag": "OAG (Attorney General)",
+        "other": "Other"
+      }
+    },
+    "materialsByType": {
+      "heading": "What materials are hosted",
+      "description": "The same {{total}} materials, grouped by the kind of document they are.",
+      "tooltip": "Materials",
+      "type": {
+        "chargeSheet": "Charge sheets",
+        "precedent": "Court order precedents",
+        "courtOrder": "Court orders",
+        "courtCase": "Court case records",
+        "document": "Documents",
+        "legalCorpus": "Laws & legislation",
+        "officialReport": "Official reports",
+        "news": "News",
+        "socialMedia": "Social media",
+        "manuscript": "Manuscripts",
         "other": "Other"
       }
     }

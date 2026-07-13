@@ -8,6 +8,11 @@
 /** i18n key suffix under dataQuality.materialsBySource.source.* */
 export function sourceKeyFor(source: string): string {
   const map: Record<string, string> = {
+    // ag (Attorney General, ~100k charge sheets) and nkp (Nepal Kanun Patrika,
+    // ~10k precedents) are the two big feeds that were falling into "Other"
+    // because they had no mapping. kanun_patrika is the legacy token for nkp.
+    ag: "ag",
+    nkp: "nkp",
     court_order: "courtOrders",
     court: "courtRecords",
     ciaa_press_release: "ciaaPress",
