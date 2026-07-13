@@ -1299,6 +1299,8 @@
     "courtCases": {
       "heading": "Court cases",
       "description": "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
+      "trendHeading": "Court cases filed per year",
+      "trendTooltip": "Court cases",
       "matrixHeading": "Court records by level and year",
       "filterCourt": "Court level",
       "filterYear": "Year",

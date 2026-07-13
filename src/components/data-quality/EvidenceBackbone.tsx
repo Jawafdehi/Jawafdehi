@@ -4,6 +4,7 @@ import { Gavel, Landmark } from "lucide-react";
 
 import type { DataLakeMetrics } from "@/types/jds";
 import { CourtYearMatrix } from "./CourtYearMatrix";
+import { CourtYearTrend } from "./CourtYearTrend";
 
 /** A single scale figure with an icon and label. */
 function ScaleTile({
@@ -62,6 +63,15 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
           />
         </div>
       )}
+
+      {ngm?.by_year?.length ? (
+        <div className="mt-8">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("dataQuality.courtCases.trendHeading", "Court cases filed per year")}
+          </p>
+          <CourtYearTrend ngm={ngm} />
+        </div>
+      ) : null}
 
       {ngm?.by_court_type_year?.length ? (
         <div className="mt-8">
