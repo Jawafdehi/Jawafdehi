@@ -8,10 +8,10 @@ import { AccountabilityFunnel, type FunnelStage } from "./AccountabilityFunnel";
 
 /**
  * The page centerpiece: corruption cases. Thousands of cases are documented and
- * under investigation, but almost none reach a published finding. A headline
- * ratio names that gap; a drop-off funnel shows the status split; and the
- * right-column donut breaks the same cases into CIAA vs non-CIAA prosecutions
- * (the status donut it replaces was a ~99% single slice — no information).
+ * under investigation, but almost none reach a published finding. A drop-off
+ * funnel shows that status split; the right-column donut breaks the same cases
+ * into CIAA vs non-CIAA prosecutions (the status donut it replaces was a ~99%
+ * single slice — no information).
  */
 export function AccountabilityGap({
   stats,
@@ -28,7 +28,6 @@ export function AccountabilityGap({
   const investigating = stats?.cases_under_investigation ?? 0;
   const closed = stats?.cases_closed ?? 0;
   const documented = published + investigating + closed;
-  const ratio = published > 0 ? Math.round(documented / published) : 0;
 
   // CIAA vs non-CIAA split (classified by the CR court-case number). Optional:
   // present only once the backend deploys, so the donut renders conditionally.
@@ -100,25 +99,8 @@ export function AccountabilityGap({
         </p>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr] lg:gap-12">
-          {/* Ratio headline + funnel */}
+          {/* Documented total + funnel */}
           <div>
-            {ratio > 0 && (
-              <div className="mb-8 rounded-xl border border-border bg-muted/20 px-5 py-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("dataQuality.gap.ratioEyebrow", "The accountability ratio")}
-                </p>
-                <p className="mt-1 font-mono text-[2.75rem] font-bold leading-none tracking-tight text-accent">
-                  <CountUp end={ratio} duration={1.2} separator="," />
-                </p>
-                <p className="mt-2 text-sm leading-6 text-foreground/70">
-                  {t(
-                    "dataQuality.gap.ratioCaption",
-                    "documented cases for every one that has reached a published finding. The rest are still under investigation.",
-                  )}
-                </p>
-              </div>
-            )}
-
             {/* The documented total: parent of the buckets below, shown as a
                 header so it never reads as a peer of its own components. */}
             {!isLoading && (
