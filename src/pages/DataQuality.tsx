@@ -10,7 +10,6 @@ import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
 import { EvidenceBackbone } from "@/components/data-quality/EvidenceBackbone";
 import { MaterialsBySource } from "@/components/data-quality/MaterialsBySource";
 import { DataHonesty } from "@/components/data-quality/DataHonesty";
-import { DataLimitations } from "@/components/data-quality/DataLimitations";
 import { UseThisData } from "@/components/data-quality/UseThisData";
 import { MethodologyFooter } from "@/components/data-quality/MethodologyFooter";
 
@@ -89,9 +88,6 @@ const DataQuality = () => {
 
           {/* Honest completeness / trust label. */}
           <DataHonesty nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
-
-          {/* The named limits of what's here (real facts). */}
-          <DataLimitations stats={data} />
 
           {/* Make the data reusable: the public API. */}
           <UseThisData />
