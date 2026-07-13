@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { MaterialsMetrics } from "@/types/jds";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
-import { TreemapChart } from "./TreemapChart";
+import { LollipopChart } from "./LollipopChart";
 
 /**
  * Two complementary evidence reads:
@@ -54,10 +54,7 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
       </p>
       {sourceItems.length > 0 && (
         <div className="mt-6">
-          <TreemapChart
-            items={sourceItems}
-            tooltipLabel={t("dataQuality.materialsBySource.tooltip", "Materials")}
-          />
+          <LollipopChart items={sourceItems} />
         </div>
       )}
 
@@ -74,10 +71,7 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
             )}
           </p>
           <div className="mt-6">
-            <TreemapChart
-              items={typeItems}
-              tooltipLabel={t("dataQuality.materialsByType.tooltip", "Materials")}
-            />
+            <LollipopChart items={typeItems} />
           </div>
         </div>
       )}
