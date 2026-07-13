@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import type { EntityMetrics } from "@/types/jds";
 import { institutionGroups, personCount } from "@/lib/entity-type-labels";
+import {
+  entityFilterForGroup,
+  entityTypeSearchHref,
+} from "@/lib/entity-filter-links";
 import { personSectorKey, rollupToCoarse } from "@/lib/person-sector-labels";
 import { BreakdownBar } from "./BreakdownBar";
 
@@ -21,10 +26,17 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
   if (!nes?.by_type?.length) return null;
 
   const people = personCount(nes.by_type);
-  const items = institutionGroups(nes.by_type).map((g) => ({
+  const groups = institutionGroups(nes.by_type).map((g) => ({
+    key: g.key,
     label: t(`dataQuality.entities.group.${g.key}`, g.key),
     count: g.count,
   }));
+  // Drill-down link per bar, keyed by the (translated) label the bar carries.
+  const hrefByLabel = new Map<string, string>();
+  for (const g of groups) {
+    const href = entityFilterForGroup(g.key);
+    if (href) hrefByLabel.set(g.label, href);
+  }
 
   return (
     <section>
@@ -38,15 +50,22 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
           { people: people.toLocaleString(), total: nes.total.toLocaleString() },
         )}
       </p>
+      <Link
+        to={entityTypeSearchHref(["Person"])}
+        className="mt-2 inline-block text-sm font-medium text-accent hover:underline"
+      >
+        {t("dataQuality.entities.browsePeople", "Browse all people")} →
+      </Link>
 
-      {items.length > 0 && (
+      {groups.length > 0 && (
         <>
           <p className="mt-6 mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("dataQuality.entities.institutionsLabel", "Institutions we track")}
           </p>
           <BreakdownBar
-            items={items}
+            items={groups}
             tooltipLabel={t("dataQuality.entities.tooltip", "Entities")}
+            hrefFor={(item) => hrefByLabel.get(item.label)}
           />
         </>
       )}

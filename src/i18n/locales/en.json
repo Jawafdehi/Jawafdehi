@@ -1278,7 +1278,8 @@
       "lead": "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
       "ciaaLabel": "CIAA prosecutions",
       "nonCiaaLabel": "Other bodies",
-      "ciaaCaption": "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies."
+      "ciaaCaption": "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies.",
+      "browsePublished": "Browse published cases"
     },
     "backbone": {
       "heading": "The record base behind every case",
@@ -1346,6 +1347,7 @@
       "heading": "Who we hold to account",
       "description": "{{people}} of {{total}} tracked entities are individual people. The rest are the institutions they act through.",
       "institutionsLabel": "Institutions we track",
+      "browsePeople": "Browse all people",
       "tooltip": "Entities",
       "group": {
         "hospitals": "Hospitals",

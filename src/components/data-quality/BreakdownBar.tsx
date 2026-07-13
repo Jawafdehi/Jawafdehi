@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -29,16 +30,26 @@ export function BreakdownBar({
   items,
   tooltipLabel,
   labelWidth = 210,
+  hrefFor,
 }: {
   items: BreakdownItem[];
   /** Series name shown in the hover tooltip (e.g. "Entities", "Materials"). */
   tooltipLabel: string;
   labelWidth?: number;
+  /**
+   * Optional per-item drill-down link. When it returns a URL for an item, that
+   * bar becomes clickable and navigates there; rows with no URL stay static.
+   * Click is a progressive enhancement — callers keep an accessible text link
+   * (or the page search) as the real path to the same data.
+   */
+  hrefFor?: (item: BreakdownItem) => string | undefined;
 }) {
+  const navigate = useNavigate();
   const data = [...items].sort((a, b) => b.count - a.count);
   const max = data[0]?.count ?? 0;
   const mounted = useMounted();
   const narrow = useIsNarrow();
+  const anyClickable = hrefFor ? data.some((d) => Boolean(hrefFor(d))) : false;
   const height = data.length * 44 + 24;
 
   // On phones the fixed label gutter eats most of a ~375px container, crushing
@@ -84,10 +95,31 @@ export function BreakdownBar({
               fontSize: 13,
             }}
           />
-          <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false}>
-            {data.map((entry) => (
-              <Cell key={entry.label} fill="hsl(var(--accent))" />
-            ))}
+          <Bar
+            dataKey="count"
+            radius={[0, 4, 4, 0]}
+            maxBarSize={22}
+            isAnimationActive={false}
+            onClick={
+              anyClickable
+                ? (payload: { payload?: BreakdownItem }) => {
+                    const item = payload?.payload;
+                    const href = item && hrefFor?.(item);
+                    if (href) navigate(href);
+                  }
+                : undefined
+            }
+          >
+            {data.map((entry) => {
+              const clickable = Boolean(hrefFor?.(entry));
+              return (
+                <Cell
+                  key={entry.label}
+                  fill="hsl(var(--accent))"
+                  style={{ cursor: clickable ? "pointer" : "default" }}
+                />
+              );
+            })}
             <LabelList
               dataKey="count"
               position="right"

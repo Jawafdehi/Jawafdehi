@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import CountUp from "react-countup";
 
 import type { CaseStatistics } from "@/types/jds";
@@ -146,6 +147,14 @@ export function AccountabilityGap({
                 "Every documented case sits in exactly one of these. The three add up to the total above.",
               )}
             </p>
+            {published > 0 && (
+              <Link
+                to="/cases"
+                className="mt-3 inline-block text-sm font-medium text-accent hover:underline"
+              >
+                {t("dataQuality.corruptionCases.browsePublished", "Browse published cases")} →
+              </Link>
+            )}
           </div>
 
           {/* Who is prosecuting: CIAA vs other bodies. Renders only once the
