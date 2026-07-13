@@ -6,10 +6,11 @@ import { StatusDonut, type DonutSegment } from "./StatusDonut";
 import { AccountabilityFunnel, type FunnelStage } from "./AccountabilityFunnel";
 
 /**
- * The page centerpiece: the accountability gap. Thousands of cases are
- * documented and under investigation, but almost none reach a published
- * finding. A headline ratio names the gap; a drop-off funnel shows it; the
- * status donut is the secondary "where do they all sit" read.
+ * The page centerpiece: corruption cases. Thousands of cases are documented and
+ * under investigation, but almost none reach a published finding. A headline
+ * ratio names that gap; a drop-off funnel shows the status split; and the
+ * right-column donut breaks the same cases into CIAA vs non-CIAA prosecutions
+ * (the status donut it replaces was a ~99% single slice — no information).
  */
 export function AccountabilityGap({
   stats,
@@ -27,6 +28,12 @@ export function AccountabilityGap({
   const closed = stats?.cases_closed ?? 0;
   const documented = published + investigating + closed;
   const ratio = published > 0 ? Math.round(documented / published) : 0;
+
+  // CIAA vs non-CIAA split (classified by the CR court-case number). Optional:
+  // present only once the backend deploys, so the donut renders conditionally.
+  const ciaa = stats?.cases_ciaa ?? 0;
+  const nonCiaa = stats?.cases_non_ciaa ?? 0;
+  const ciaaTotal = ciaa + nonCiaa;
 
   // Only the mutually-exclusive status buckets go in the bars. "Documented" is
   // their sum (the sum of the status buckets) — a derived total, not an API field — so it is
@@ -52,23 +59,18 @@ export function AccountabilityGap({
     },
   ];
 
-  const segments: DonutSegment[] = [
+  // CIAA vs non-CIAA — two balanced slices (unlike the retired status donut).
+  const ciaaSegments: DonutSegment[] = [
     {
-      key: "investigating",
-      label: t("dataQuality.cases.status.investigating", "Under investigation"),
-      value: investigating,
-      color: "hsl(var(--alert))",
+      key: "ciaa",
+      label: t("dataQuality.corruptionCases.ciaaLabel", "CIAA prosecutions"),
+      value: ciaa,
+      color: "hsl(var(--accent))",
     },
     {
-      key: "published",
-      label: t("dataQuality.cases.status.published", "Published"),
-      value: published,
-      color: "hsl(var(--success))",
-    },
-    {
-      key: "closed",
-      label: t("dataQuality.cases.status.closed", "Closed"),
-      value: closed,
+      key: "non_ciaa",
+      label: t("dataQuality.corruptionCases.nonCiaaLabel", "Other bodies"),
+      value: nonCiaa,
       color: "hsl(var(--muted-foreground))",
     },
   ];
@@ -76,14 +78,14 @@ export function AccountabilityGap({
   return (
     <section>
       <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">
-        {t("dataQuality.gap.eyebrow", "The core finding")}
+        {t("dataQuality.corruptionCases.eyebrow", "The core finding")}
       </p>
       <h2 className="font-display text-[1.9rem] font-bold leading-tight tracking-tight text-foreground md:text-[2.5rem]">
-        {t("dataQuality.gap.heading", "The accountability gap")}
+        {t("dataQuality.corruptionCases.heading", "Corruption cases")}
       </h2>
       <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
         {t(
-          "dataQuality.gap.lead",
+          "dataQuality.corruptionCases.lead",
           "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
         )}
       </p>
@@ -146,24 +148,28 @@ export function AccountabilityGap({
             </p>
           </div>
 
-          {/* Status mix */}
-          <div>
-            {isLoading ? (
-              <div className="mx-auto h-[200px] w-[200px] animate-pulse rounded-full bg-muted" />
-            ) : (
-              <StatusDonut
-                segments={segments}
-                centerValue={documented.toLocaleString()}
-                centerLabel={t("dataQuality.cases.donutCenter", "cases")}
-              />
-            )}
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              {t(
-                "dataQuality.cases.donutCaption",
-                "Status of every documented case. Most sit in investigation, where accountability moves slowly.",
+          {/* Who is prosecuting: CIAA vs other bodies. Renders only once the
+              split is in the payload (post-deploy); otherwise this column is
+              omitted so the section degrades gracefully. */}
+          {ciaaTotal > 0 && (
+            <div>
+              {isLoading ? (
+                <div className="mx-auto h-[200px] w-[200px] animate-pulse rounded-full bg-muted" />
+              ) : (
+                <StatusDonut
+                  segments={ciaaSegments}
+                  centerValue={ciaaTotal.toLocaleString()}
+                  centerLabel={t("dataQuality.cases.donutCenter", "cases")}
+                />
               )}
-            </p>
-          </div>
+              <p className="mt-4 text-xs leading-5 text-muted-foreground">
+                {t(
+                  "dataQuality.corruptionCases.ciaaCaption",
+                  "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies.",
+                )}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </section>

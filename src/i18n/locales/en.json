@@ -1272,6 +1272,14 @@
       "totalLabel": "Documented cases",
       "bucketsCaption": "Every documented case sits in exactly one of these. The three add up to the total above."
     },
+    "corruptionCases": {
+      "eyebrow": "The core finding",
+      "heading": "Corruption cases",
+      "lead": "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
+      "ciaaLabel": "CIAA prosecutions",
+      "nonCiaaLabel": "Other bodies",
+      "ciaaCaption": "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies."
+    },
     "backbone": {
       "heading": "The record base behind every case",
       "description": "Each case is cross-checked against millions of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
