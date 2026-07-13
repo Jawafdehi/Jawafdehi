@@ -1312,6 +1312,9 @@
       "description": "What the records back up today, and where they fall short. We show the gaps rather than round them away.",
       "holdsUp": "What holds up",
       "stillThin": "Still thin",
+      "legendThin": "Thin (under 25%)",
+      "legendPartial": "Partial",
+      "legendSolid": "Solid (75%+)",
       "count": "{{part}} of {{total}}",
       "item": {
         "regDate": "Court records with an official registration date",
