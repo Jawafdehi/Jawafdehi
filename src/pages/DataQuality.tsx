@@ -1,12 +1,10 @@
-import { type FormEvent, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { getStatistics } from "@/services/jds-api";
 import { MOCK_STATISTICS } from "@/lib/data-quality-mock";
-import { MissionRibbon } from "@/components/data-quality/MissionRibbon";
 import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
 import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
 import { EvidenceBackbone } from "@/components/data-quality/EvidenceBackbone";
@@ -15,12 +13,9 @@ import { DataHonesty } from "@/components/data-quality/DataHonesty";
 import { DataLimitations } from "@/components/data-quality/DataLimitations";
 import { UseThisData } from "@/components/data-quality/UseThisData";
 import { MethodologyFooter } from "@/components/data-quality/MethodologyFooter";
-import { SearchBar } from "@/components/ui/search-bar";
 
 const DataQuality = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [query, setQuery] = useState("");
 
   // `?mock=1` previews the page from a local fixture (data-quality-mock.ts)
   // instead of the live API. This is the review surface for the new sections:
@@ -43,12 +38,6 @@ const DataQuality = () => {
   const data = useMock ? MOCK_STATISTICS : liveData;
   const isLoading = useMock ? false : liveLoading;
   const isError = useMock ? false : liveError;
-
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = query.trim();
-    navigate(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search");
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -76,30 +65,11 @@ const DataQuality = () => {
                 "What our public datasets track today, and how complete the records are.",
               )}
             </p>
-
-            <form className="mt-6 w-full max-w-2xl" onSubmit={submitSearch}>
-              <label className="sr-only" htmlFor="data-quality-search">
-                {t("dataQuality.searchLabel", "Search the Jawafdehi archive")}
-              </label>
-              <SearchBar
-                id="data-quality-search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t(
-                  "dataQuality.searchPlaceholder",
-                  "Search cases, people, offices, court records, or materials",
-                )}
-                submitLabel={t("dataQuality.searchSubmit", "Search")}
-              />
-            </form>
           </div>
         </section>
 
         <div className="container mx-auto space-y-12 px-6 py-12">
-          {/* Quiet trust strip + last-refreshed signal. */}
-          <MissionRibbon lastUpdated={data?.last_updated} />
-
-          {/* Centerpiece: the accountability gap (funnel + ratio + status mix). */}
+          {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
           <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
           {isError && !data && (
