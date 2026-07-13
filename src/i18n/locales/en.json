@@ -1335,6 +1335,26 @@
         "places": "Places",
         "international": "International bodies",
         "other": "Other"
+      },
+      "sectorHeading": "What positions the people hold",
+      "sectorTooltip": "People",
+      "toggleHideUnknown": "Hide not recorded",
+      "toggleGranularity": "Group broadly",
+      "sector": {
+        "politicians": "Elected politicians",
+        "legislators": "Legislators (MPs)",
+        "civilService": "Civil servants",
+        "localGov": "Local government",
+        "judiciary": "Judiciary",
+        "security": "Security forces",
+        "business": "Business & private",
+        "other": "Other",
+        "notRecorded": "Position not recorded"
+      },
+      "coarse": {
+        "public": "Public sector",
+        "private": "Private sector",
+        "other": "Other / not recorded"
       }
     },
     "materialsBySource": {

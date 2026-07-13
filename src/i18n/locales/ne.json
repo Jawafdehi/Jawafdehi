@@ -1335,6 +1335,26 @@
         "places": "स्थानहरू",
         "international": "अन्तर्राष्ट्रिय निकाय",
         "other": "अन्य"
+      },
+      "sectorHeading": "मानिसहरूले कस्तो पद ओगटेका छन्",
+      "sectorTooltip": "व्यक्ति",
+      "toggleHideUnknown": "अभिलेख नभएका लुकाउनुहोस्",
+      "toggleGranularity": "व्यापक रूपमा समूहबद्ध",
+      "sector": {
+        "politicians": "निर्वाचित राजनीतिज्ञ",
+        "legislators": "सांसद",
+        "civilService": "निजामती कर्मचारी",
+        "localGov": "स्थानीय सरकार",
+        "judiciary": "न्यायपालिका",
+        "security": "सुरक्षा निकाय",
+        "business": "व्यवसाय र निजी",
+        "other": "अन्य",
+        "notRecorded": "पद अभिलेख नभएको"
+      },
+      "coarse": {
+        "public": "सार्वजनिक क्षेत्र",
+        "private": "निजी क्षेत्र",
+        "other": "अन्य / अभिलेख नभएको"
       }
     },
     "materialsBySource": {
