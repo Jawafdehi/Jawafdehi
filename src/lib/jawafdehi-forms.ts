@@ -102,6 +102,9 @@ export interface EntityRelationshipRow {
   // A verdict is meaningful only for ACCUSED; every other role carries null.
   outcome: OutcomeType | null;
   notes: string;
+  // Display-only human name resolved from NES (mirrors EvidenceRow.title, BB-20).
+  // Not sent in the patch — buildEntitiesPatch only emits the canonical fields.
+  display_name?: string;
 }
 
 export interface TimelineEventRow {
