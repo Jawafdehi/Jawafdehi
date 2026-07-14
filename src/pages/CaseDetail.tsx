@@ -1,5 +1,5 @@
 import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
@@ -70,6 +70,7 @@ function getGroupedEntities(entities: JawafEntity[]) {
 const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
+  const navigate = useNavigate();
   const { id } = useParams();
   const trackedCaseIdRef = useRef<string | null>(null);
   const isMobile = useIsMobile();
@@ -240,7 +241,11 @@ const CaseDetail = () => {
 
     setActiveSection(sectionId);
     target.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.replaceState(null, "", `#${sectionId}`);
+    // Route the scroll-spy hash through React Router (replace, no new entry) so
+    // it resolves against the current route rather than the document <base
+    // href="/">. A raw window.history.replaceState("#id") would rewrite the path
+    // to "/#id" and desync the back-stack, sending Back to the wrong page.
+    navigate(`#${sectionId}`, { replace: true });
   };
 
   const handleBannerShare = async () => {

@@ -83,6 +83,7 @@ const COMMON_TERMS: Record<string, { en: string; ne: string }> = {
   'pending': { en: 'Pending', ne: 'विचाराधीन' },
   'under_review': { en: 'Under Review', ne: 'समीक्षाधीन' },
   'ongoing': { en: 'Ongoing', ne: 'चलिरहेको' },
+  'concluded': { en: 'Concluded', ne: 'समाप्त भएको' },
   'resolved': { en: 'Resolved', ne: 'समाधान भएको' },
   'under_investigation': { en: 'Under Investigation', ne: 'अनुसन्धानमा' },
   

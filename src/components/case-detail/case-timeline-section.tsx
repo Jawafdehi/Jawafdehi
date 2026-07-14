@@ -51,6 +51,53 @@ function getCompactDateLabel(
   return { label, year };
 }
 
+type CompactDateLabel = { label: string; year: string | null } | null;
+
+interface TimelineRow {
+  date: LocalizedDatePair;
+  primaryDate: CompactDateLabel;
+  secondaryDate: CompactDateLabel;
+}
+
+/**
+ * Build the group-heading text for each primary-calendar year. The timeline rows
+ * only carry the day/month in the secondary calendar, so the year would
+ * otherwise appear in one calendar (AD in English) but not the other. Surface
+ * the secondary-calendar year(s) in the heading. A single AD year can span two
+ * BS years (the BS new year falls mid-April), so aggregate the distinct
+ * secondary years seen within each group and render them as a range.
+ */
+function buildYearGroupHeadings(rows: TimelineRow[]): Map<string, string> {
+  const secondaryYears = new Map<string, string[]>();
+  let secondaryCalendar: "AD" | "BS" | null = null;
+
+  for (const row of rows) {
+    const primaryYear = row.primaryDate?.year;
+    if (!primaryYear) continue;
+
+    if (!secondaryCalendar && row.date.secondaryCalendar) {
+      secondaryCalendar = row.date.secondaryCalendar;
+    }
+
+    const seen = secondaryYears.get(primaryYear) ?? [];
+    const secondaryYear = row.secondaryDate?.year;
+    if (secondaryYear && !seen.includes(secondaryYear)) seen.push(secondaryYear);
+    secondaryYears.set(primaryYear, seen);
+  }
+
+  const headings = new Map<string, string>();
+  for (const [primaryYear, years] of secondaryYears) {
+    if (years.length === 0 || !secondaryCalendar) {
+      headings.set(primaryYear, primaryYear);
+      continue;
+    }
+    const span = years.length === 1 ? years[0] : `${years[0]}–${years[years.length - 1]}`;
+    headings.set(primaryYear, `${primaryYear} (${span} ${secondaryCalendar})`);
+  }
+
+  return headings;
+}
+
 export function CaseTimelineSection({
   className,
   language,
@@ -61,7 +108,7 @@ export function CaseTimelineSection({
 
   if (timeline.length === 0) return null;
 
-  const releases: Release[] = timeline.map((item) => {
+  const rows = timeline.map((item) => {
     const date = formatDateRangeForLanguage(
       item.date,
       item.end_date,
@@ -73,22 +120,28 @@ export function CaseTimelineSection({
     const primaryDate = getCompactDateLabel(date.primary, date.primaryCalendar);
     const secondaryDate = getCompactDateLabel(date.secondary, date.secondaryCalendar);
 
-    return {
-      version: primaryDate?.label || date.primary,
-      date: secondaryDate?.label || "",
-      year: primaryDate?.year || undefined,
-      content: (
-        <div className="space-y-1">
-          <h3 className="text-base md:text-lg font-semibold leading-snug tracking-tight text-primary/90">
-            {item.title}
-          </h3>
-          <p className="font-paragraph font-paragraph-compact measure-prose">
-            {item.description}
-          </p>
-        </div>
-      ),
-    };
+    return { item, date, primaryDate, secondaryDate };
   });
+
+  // Heading is keyed on the primary-calendar year, but the label carries both
+  // calendars' years so the group heading matches the AD+BS event rows.
+  const yearGroupHeadings = buildYearGroupHeadings(rows);
+
+  const releases: Release[] = rows.map(({ item, date, primaryDate, secondaryDate }) => ({
+    version: primaryDate?.label || date.primary,
+    date: secondaryDate?.label || "",
+    year: primaryDate?.year ? yearGroupHeadings.get(primaryDate.year) : undefined,
+    content: (
+      <div className="space-y-1">
+        <h3 className="text-base md:text-lg font-semibold leading-snug tracking-tight text-primary/90">
+          {item.title}
+        </h3>
+        <p className="font-paragraph font-paragraph-compact measure-prose">
+          {item.description}
+        </p>
+      </div>
+    ),
+  }));
 
   return (
     <section
