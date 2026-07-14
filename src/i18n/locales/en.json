@@ -1412,7 +1412,6 @@
     "materialsBySource": {
       "heading": "Where the evidence comes from",
       "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate.",
-      "sourceNote": "“Jawafdehi original documents” are source files — press releases, charge sheets, news — that were attached to our own case files and republished here as standalone records.",
       "tooltip": "Materials",
       "table": {
         "source": "Source",

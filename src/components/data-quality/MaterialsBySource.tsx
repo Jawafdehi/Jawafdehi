@@ -26,9 +26,11 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
   if (!materials) return null;
 
   // Aggregate counts by resolved key so multiple unmapped tokens collapse into
-  // one "Other" bar instead of colliding React keys / duplicate rows.
+  // one "Other" bar instead of colliding React keys / duplicate rows. The
+  // "jawafdehi" source (case-attached uploads) is excluded here — it conflated
+  // documents we already hold elsewhere and read as confusing on this chart.
   const sourceItems = aggregate(
-    materials.by_source ?? [],
+    (materials.by_source ?? []).filter((row) => row.source !== "jawafdehi"),
     (row) => sourceKeyFor(row.source),
     (key) => t(`dataQuality.materialsBySource.source.${key}`, key),
   );
@@ -58,12 +60,6 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
             items={sourceItems}
             nameHeader={t("dataQuality.materialsBySource.table.source", "Source")}
           />
-          <p className="mt-3 max-w-2xl text-xs leading-5 text-muted-foreground">
-            {t(
-              "dataQuality.materialsBySource.sourceNote",
-              "“Jawafdehi original documents” are source files — press releases, charge sheets, news — that were attached to our own case files and republished here as standalone records.",
-            )}
-          </p>
         </div>
       )}
 
