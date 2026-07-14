@@ -1,5 +1,5 @@
 import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
@@ -71,6 +71,7 @@ const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const { id } = useParams();
+  const navigate = useNavigate();
   const trackedCaseIdRef = useRef<string | null>(null);
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState("allegations");
@@ -91,6 +92,20 @@ const CaseDetail = () => {
     enabled: id != null && legacyTargetSlug == null,
     staleTime: 5 * 60 * 1000,
   });
+
+  // BB-38: follow the canonical slug once the case loads. The API 301-redirects
+  // stale/old slugs to the current one and `fetch` follows the redirect
+  // transparently, so `caseData.slug` is always canonical. When it differs from
+  // the route param — a stale slug, a legacy numeric id, or a /case/<court-ref>
+  // URL — replace the URL so the user lands on /case/<current-slug> without
+  // adding a history entry. Guarded to only fire when the slug is truthy and
+  // actually different, which prevents redirect loops once the URL is canonical.
+  useEffect(() => {
+    const canonicalSlug = caseData?.slug;
+    if (canonicalSlug && canonicalSlug !== id) {
+      navigate(`/case/${canonicalSlug}`, { replace: true });
+    }
+  }, [caseData?.slug, id, navigate]);
 
   // Subject entities: accused for CORRUPTION cases, else any named (non-location)
   // entity so cases without an accused (e.g. TAX_EVASION) still name a subject.
@@ -280,12 +295,6 @@ const CaseDetail = () => {
   // happen after all hooks have run so we don't violate rules-of-hooks.
   if (legacyTargetSlug) {
     return <Navigate to={`/case/${legacyTargetSlug}`} replace />;
-  }
-
-  // /case/<court-ref> URLs: once the case resolves, replace with its canonical
-  // slug. Cases without a slug stay on the court-ref URL.
-  if (isCourtRef && caseData?.slug && caseData.slug !== id) {
-    return <Navigate to={`/case/${caseData.slug}`} replace />;
   }
 
   if (isLoading) {
