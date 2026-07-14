@@ -52,12 +52,12 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
 
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
 
-  const addRow = (nes_id = "") => {
+  const addRow = (nes_id = "", display_name?: string) => {
     // The appended row lands at the current end of the list; queue that index for focus.
     pendingFocus.current = rows.length;
     onChange([
       ...rows,
-      { nes_id, relationship_type: "ACCUSED", outcome: "CHARGED", notes: "" },
+      { nes_id, relationship_type: "ACCUSED", outcome: "CHARGED", notes: "", display_name },
     ]);
   };
 
@@ -133,7 +133,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     variant="ghost"
                     aria-label={`Link ${entityName(e) || id}`}
                     onClick={() => {
-                      addRow(id);
+                      addRow(id, entityName(e) || undefined);
                       setResults([]);
                       setQuery("");
                     }}
@@ -158,6 +158,14 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
             return (
               <div key={i} className="grid gap-2 rounded border p-2 sm:grid-cols-[1fr_10rem_10rem_auto]">
                 <div className="space-y-1">
+                  {r.display_name && (
+                    <span
+                      className="block truncate text-sm font-medium"
+                      title={r.display_name}
+                    >
+                      {r.display_name}
+                    </span>
+                  )}
                   <Input
                     ref={(el) => {
                       if (el && pendingFocus.current === i) {
@@ -167,7 +175,11 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                       }
                     }}
                     value={r.nes_id}
-                    onChange={(e) => update(i, { nes_id: e.target.value })}
+                    // Hand-editing the IRI invalidates the resolved name; drop it
+                    // so a stale label can't sit above a different entity.
+                    onChange={(e) =>
+                      update(i, { nes_id: e.target.value, display_name: undefined })
+                    }
                     aria-invalid={iriMissing || iriBad}
                     className={cn(
                       "font-mono text-xs",

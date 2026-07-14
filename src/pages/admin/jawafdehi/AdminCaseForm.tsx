@@ -131,12 +131,16 @@ function parseEntities(c: Record<string, unknown>): EntityRelationshipRow[] {
     // `role` as fallbacks. Reading only the latter two coerced every loaded row
     // to ACCUSED, so a whole-list save silently rewrote all non-accused roles.
     const relationship_type = asRelType(e.type ?? e.relationship_type ?? e.role);
+    // The case-read API resolves each entity's name into `display_name`; keep it
+    // for display only (like evidence's `title`). Empty when NES can't resolve.
+    const display_name = str(e.display_name) || undefined;
     return {
       nes_id: str(e.nes_id ?? e.entity ?? e["@id"]),
       relationship_type,
       // A verdict is meaningful only for ACCUSED; every other role is null.
       outcome: relationship_type === "ACCUSED" ? asOutcome(e.outcome) : null,
       notes: str(e.notes),
+      display_name,
     };
   });
 }
