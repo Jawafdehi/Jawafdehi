@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
-import { getCaseStatusLabelKey } from "@/lib/case-badges";
+import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
@@ -109,7 +109,10 @@ export function CaseDetailBanner({
     setImageSrc(bannerSrc);
   }, [bannerSrc]);
 
-  const statusLabel = t(getCaseStatusLabelKey(caseData.state || "PUBLISHED"));
+  // Derive the chip from state + end date so a concluded case (one with a
+  // `case_end_date`) no longer reads "Ongoing".
+  const effectiveStatus = deriveCaseStatus(caseData.state, caseData.case_end_date);
+  const statusLabel = t(getCaseStatusLabelKey(effectiveStatus));
   // A known case type localizes; an unknown/scraped one humanizes its raw value
   // rather than mislabelling (getCaseTypeLabelKey returns null when unknown).
   const caseTypeLabelKey = getCaseTypeLabelKey(caseData.case_type);
@@ -221,7 +224,7 @@ export function CaseDetailBanner({
 
             <div className="px-6 py-6 text-sm lg:px-10 lg:py-7">
               <div className="mb-5 flex flex-wrap items-center gap-2">
-                <CaseStatusBadge status={caseData.state || "PUBLISHED"}>
+                <CaseStatusBadge status={effectiveStatus}>
                   {statusLabel}
                 </CaseStatusBadge>
 

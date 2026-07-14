@@ -556,6 +556,7 @@
     "embezzledAmount": "बिगो (हिनामिना रकम)",
     "status": {
       "ongoing": "चलिरहेको",
+      "concluded": "समाप्त भएको",
       "resolved": "समाधान भएको",
       "underInvestigation": "अनुसन्धानमा"
     },

@@ -8,6 +8,7 @@ export type CaseStatusValue =
   | "PUBLISHED"
   | "CLOSED"
   | "ongoing"
+  | "concluded"
   | "resolved"
   | "under-investigation"
   | "closed"
@@ -27,6 +28,7 @@ const statusPillClassNames: Record<string, string> = {
   PUBLISHED: "border-transparent bg-alert text-alert-foreground hover:bg-alert/90",
   CLOSED: "border-transparent bg-success text-success-foreground hover:bg-success/90",
   ongoing: "border-transparent bg-alert text-alert-foreground hover:bg-alert/90",
+  concluded: "border-transparent bg-success text-success-foreground hover:bg-success/90",
   resolved: "border-transparent bg-success text-success-foreground hover:bg-success/90",
   closed: "border-transparent bg-success text-success-foreground hover:bg-success/90",
   "under-investigation": "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
@@ -44,6 +46,7 @@ const CASE_STATUS_LABEL_KEYS: Record<string, string> = {
   PUBLISHED: "caseDetail.status.ongoing",
   CLOSED: "caseDetail.status.resolved",
   ongoing: "caseDetail.status.ongoing",
+  concluded: "caseDetail.status.concluded",
   resolved: "caseDetail.status.resolved",
   closed: "caseDetail.status.resolved",
   "under-investigation": "caseDetail.status.underInvestigation",
@@ -107,4 +110,27 @@ export function getCaseStatusLabelKey(status: CaseStatusValue) {
     (lookupKey) => CASE_STATUS_LABEL_KEYS[lookupKey],
   );
   return key ? CASE_STATUS_LABEL_KEYS[key] : "caseDetail.status.underInvestigation";
+}
+
+/**
+ * Derive the status shown on a public case chip from the case's workflow state
+ * and its recorded end date, rather than assuming every published case is
+ * "ongoing". A published case that carries a `case_end_date` has concluded, so
+ * it must not read "Ongoing". Draft/in-review cases keep their workflow state so
+ * the reviewer-facing chip is unchanged; an explicit CLOSED state also wins.
+ */
+export function deriveCaseStatus(
+  state: string | null | undefined,
+  caseEndDate?: string | null,
+): CaseStatusValue {
+  // Normalize case and separators so a lowercase/mixed-case API value
+  // ("draft", "in-review", "closed") is compared the same as its canonical form.
+  const normalizedState = state?.trim().toUpperCase().replace(/-/g, "_");
+
+  if (normalizedState === "DRAFT" || normalizedState === "IN_REVIEW") return normalizedState;
+  if (normalizedState === "CLOSED") return "CLOSED";
+
+  if (caseEndDate && caseEndDate.trim() !== "") return "concluded";
+
+  return normalizedState || "PUBLISHED";
 }

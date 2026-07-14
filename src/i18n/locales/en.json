@@ -556,6 +556,7 @@
     "courtCaseUnavailable": "Court case details unavailable.",
     "status": {
       "ongoing": "Ongoing",
+      "concluded": "Concluded",
       "resolved": "Resolved",
       "underInvestigation": "Under Investigation"
     },

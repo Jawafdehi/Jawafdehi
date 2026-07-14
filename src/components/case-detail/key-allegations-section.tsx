@@ -20,7 +20,7 @@ export function KeyAllegationsSection({
           {allegations.map((allegation, index) => (
             <li key={index} className="flex items-start gap-4">
               <span className="mt-1 shrink-0 text-lg font-bold leading-7 text-accent">
-                #{index + 1}.
+                {index + 1}.
               </span>
               <p className="font-paragraph measure-prose">
                 {allegation}

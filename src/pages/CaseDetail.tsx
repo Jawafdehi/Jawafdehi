@@ -255,7 +255,11 @@ const CaseDetail = () => {
 
     setActiveSection(sectionId);
     target.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.replaceState(null, "", `#${sectionId}`);
+    // Route the scroll-spy hash through React Router (replace, no new entry) so
+    // it resolves against the current route rather than the document <base
+    // href="/">. A raw window.history.replaceState("#id") would rewrite the path
+    // to "/#id" and desync the back-stack, sending Back to the wrong page.
+    navigate(`#${sectionId}`, { replace: true });
   };
 
   const handleBannerShare = async () => {
