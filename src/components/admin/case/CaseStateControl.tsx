@@ -30,6 +30,13 @@ interface Transition {
 const TRANSITIONS: Record<string, Transition[]> = {
   DRAFT: [
     { to: "IN_REVIEW", labelKey: "submitForReview", variant: "default" },
+    {
+      to: "CLOSED",
+      labelKey: "close",
+      variant: "destructive",
+      privileged: true,
+      confirmKey: "closeConfirm",
+    },
   ],
   IN_REVIEW: [
     { to: "PUBLISHED", labelKey: "publish", variant: "default", privileged: true },
