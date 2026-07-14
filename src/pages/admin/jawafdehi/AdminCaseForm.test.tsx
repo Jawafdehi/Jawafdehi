@@ -95,15 +95,26 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
 
     // No public link is rendered for a draft…
     expect(viewLink()).toBeNull();
-    // …instead a disabled "View on website" button is shown, with the
-    // "not public yet" tooltip carried by its wrapping span.
+    // …instead a disabled "View on website" button is shown.
     const btn = screen.getByRole("button", {
       name: /admin\.caseForm\.viewOnWebsite/,
     }) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
+    // The native `disabled` already conveys the state; no redundant aria-disabled.
+    expect(btn.hasAttribute("aria-disabled")).toBe(false);
+
+    // The "not public yet" reason reaches sighted mouse users via the wrapping
+    // span's hover title…
     const tip = btn.closest("span[title]");
     expect(tip?.getAttribute("title")).toBe(
       "admin.caseForm.viewOnWebsiteNotPublic",
     );
+    // …and keyboard / screen-reader users via an sr-only hint wired through
+    // aria-describedby (a disabled button can't be focused to reveal a title).
+    const describedBy = btn.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    const hint = document.getElementById(describedBy as string);
+    expect(hint?.textContent).toBe("admin.caseForm.viewOnWebsiteNotPublic");
+    expect(hint?.className).toContain("sr-only");
   });
 });
