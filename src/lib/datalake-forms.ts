@@ -44,6 +44,7 @@ export const MATERIAL_TYPES = [
   { token: "court_order", label: "Court order / verdict" },
   { token: "manuscript", label: "Manuscript" },
   { token: "charge_sheet", label: "Charge sheet (अभियोगपत्र)" },
+  { token: "press_release", label: "Press release (प्रेस विज्ञप्ति)" },
   { token: "legal_corpus", label: "Legal corpus (acts/laws)" },
   { token: "official_report", label: "Official report" },
   { token: "document", label: "Generic document" },
