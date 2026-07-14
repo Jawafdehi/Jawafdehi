@@ -20,14 +20,14 @@ interface CaseHit {
 
 const MIN_QUERY = 2;
 
-// Server-backed case autocomplete for submitting a review. Debounced query →
-// GET /api/cases/?search= (full-text over title/description/key_allegations);
-// picking a case yields its canonical slug, which the caller submits verbatim.
+// Server-backed case autocomplete. Debounced query → GET /api/cases/?search=
+// (full-text over title/description/key_allegations); picking a case yields its
+// canonical slug (+ title) so the caller can open that case's review page.
 export function CaseSearchCombobox({
   onPick,
   disabled,
 }: {
-  onPick: (slug: string) => void;
+  onPick: (slug: string, title?: string) => void;
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -66,11 +66,11 @@ export function CaseSearchCombobox({
     };
   }, [debounced]);
 
-  const pick = (slug: string) => {
+  const pick = (slug: string, title?: string) => {
     setOpen(false);
     setQuery("");
     setResults([]);
-    onPick(slug);
+    onPick(slug, title);
   };
 
   return (
@@ -113,7 +113,7 @@ export function CaseSearchCombobox({
               <CommandItem
                 key={c.slug}
                 value={c.slug}
-                onSelect={() => pick(c.slug)}
+                onSelect={() => pick(c.slug, c.title)}
                 className="flex flex-col items-start gap-0.5"
               >
                 <span className="text-sm font-medium truncate w-full">{c.title || c.slug}</span>

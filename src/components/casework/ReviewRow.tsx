@@ -18,13 +18,33 @@ function reviewerLabels(reviewers: ReviewerInfo[] | null): string[] {
 
 // One review execution rendered as a compact row: id, time, status/stage,
 // reviewers, overall score, disposition, duration. The per-case review page
-// lists a case's whole run history with these; clicking opens the run detail.
-export function ReviewRow({ review: r, onClick }: { review: ReviewListItem; onClick: () => void }) {
+// lists a case's whole run history with these; clicking selects the run whose
+// full breakdown renders below. `selected` highlights the active run.
+export function ReviewRow({
+  review: r,
+  onClick,
+  selected = false,
+}: {
+  review: ReviewListItem;
+  onClick: () => void;
+  selected?: boolean;
+}) {
   const reviewers = reviewerLabels(r.reviewers);
   return (
     <li
-      className="px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer"
+      role="option"
+      tabIndex={0}
+      aria-selected={selected}
+      className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer border-l-2 ${
+        selected ? "bg-slate-50 border-primary" : "border-transparent hover:bg-slate-50"
+      }`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
       <span className="text-xs font-mono text-slate-400 w-12">#{r.id}</span>
       <span className="text-xs text-slate-500 w-40 hidden md:inline">
