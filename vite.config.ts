@@ -213,11 +213,7 @@ export default defineConfig(async ({ mode, isSsrBuild }) => {
               manualChunks: {
                 "react-vendor": ["react", "react-dom", "react-router-dom"],
                 query: ["@tanstack/react-query", "axios"],
-                i18n: [
-                  "i18next",
-                  "react-i18next",
-                  "i18next-browser-languagedetector",
-                ],
+                i18n: ["i18next", "react-i18next"],
                 // The markdown rendering stack (react-markdown + remark/rehype +
                 // the micromark/mdast/hast transitive tree — ~250 modules) is
                 // only used to render case descriptions on CaseDetail. That page

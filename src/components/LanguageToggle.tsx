@@ -33,7 +33,7 @@ export const LanguageToggle = ({ quiet = false }: LanguageToggleProps) => {
         await updateLanguage();
       });
     }
-    // Language preference is automatically persisted via localStorage by i18next-browser-languagedetector
+    // Language preference is persisted to localStorage by the languageChanged handler in src/i18n/config.ts.
   };
 
   return (

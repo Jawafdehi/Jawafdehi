@@ -144,7 +144,8 @@ When the Entity API supports i18n, dynamic content translation can be integrated
 
 - `react-i18next` - React bindings for i18next
 - `i18next` - Core internationalization framework
-- `i18next-browser-languagedetector` - Language detection from browser/localStorage
+
+Language detection and localStorage persistence are handled directly in `config.ts` (no `i18next-browser-languagedetector`); the stored preference is the single source of truth and browser/Google auto-translation is suppressed via `translate="no"` + `<meta name="google" content="notranslate">` in `index.html`.
 
 ## Resources
 
