@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReviewDetail, RuleResult, SourceSummary } from "@/types/casework";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +29,16 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [source, setSource] = useState<SourceSummary | null>(null);
   const [showRaw, setShowRaw] = useState(false);
+
+  // Close the source viewer on Escape (keyboard a11y).
+  useEffect(() => {
+    if (!source) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSource(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [source]);
 
   const result = review.result || null;
   const passT = result?.thresholds?.pass ?? 80;
