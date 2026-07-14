@@ -9,8 +9,10 @@ describe("sourceKeyFor", () => {
     expect(sourceKeyFor("nkp")).toBe("nkp");
   });
 
-  it("keeps the legacy kanun_patrika token mapped", () => {
-    expect(sourceKeyFor("kanun_patrika")).toBe("kanunPatrika");
+  it("merges the legacy kanun_patrika token into the nkp row", () => {
+    // kanun_patrika is the legacy token for the same publication as nkp; both
+    // resolve to the same key so aggregate() sums them into one row.
+    expect(sourceKeyFor("kanun_patrika")).toBe("nkp");
   });
 
   it("still maps the known feeds", () => {
