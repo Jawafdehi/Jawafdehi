@@ -19,37 +19,20 @@ const CASEWORK = "/api/casework";
 // ---- Reviews ----
 
 export interface SubmitReviewPayload {
-  // Caseworkers submit an `iri`: a Jawafdehi case IRI
-  // (https://jawafdehi.org/case/<slug>) or a court-case IRI
-  // (https://jawafdehi.org/courtcase/<court>/<case-number>). The backend
-  // resolves it to the case's canonical slug.
-  iri?: string;
-  // `slug` is used only by the internal re-run / regrade path, which already
-  // holds the resolved canonical slug.
+  // The submit UI resolves the case via autocomplete and sends its canonical
+  // `slug` (the same payload the re-run / regrade paths use). `iri` is still
+  // accepted by the backend (a Jawafdehi case IRI or a court-case IRI) for
+  // programmatic callers, but the portal no longer produces it.
   slug?: string;
-}
-
-// A submitted IRI is either a Jawafdehi case IRI or a court-case IRI. The
-// backend is the authority (it resolves + validates against the DB); this is a
-// lenient client-side shape check so the form can flag obviously-wrong input
-// (a bare case number, a name) before a round-trip.
-const REVIEW_IRI_RE =
-  /^https?:\/\/[^/]+\/(?:case\/[a-zA-Z][a-zA-Z0-9-]*|courtcase\/[a-z0-9][a-z0-9_-]*\/[a-z0-9][a-z0-9._-]*)$/;
-
-export function looksLikeReviewIri(raw: string): boolean {
-  return REVIEW_IRI_RE.test(raw.trim());
-}
-
-// The submit box demands an IRI (a Jawafdehi case IRI or a court-case IRI).
-// Send it verbatim as `iri`; the backend resolves it to the canonical case slug
-// and returns a clear 400 if it names no case.
-export function buildSubmitPayload(raw: string): SubmitReviewPayload {
-  return { iri: raw.trim() };
+  iri?: string;
 }
 
 export async function listReviews(params?: {
   page?: number;
   page_size?: number;
+  // Scope the flat list to one case's runs (newest-first). Used by the
+  // per-case review page to load a case's whole run history.
+  slug?: string;
 }): Promise<Paginated<ReviewListItem>> {
   const { data } = await client.get<Paginated<ReviewListItem> | ReviewListItem[]>(`${CASEWORK}/reviews/`, {
     params,

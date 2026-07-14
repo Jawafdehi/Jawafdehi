@@ -31,6 +31,7 @@ import Moderation from "./pages/admin/casework/Moderation";
 import CaseworkLogin from "./pages/CaseworkLogin";
 import CaseworkCallback from "./pages/CaseworkCallback";
 import CaseworkReviews from "./pages/CaseworkReviews";
+import CaseworkCaseReviews from "./pages/CaseworkCaseReviews";
 import CaseworkReviewDetail from "./pages/CaseworkReviewDetail";
 import CaseworkRules from "./pages/CaseworkRules";
 import CaseworkHow from "./pages/CaseworkHow";
@@ -161,6 +162,7 @@ const AdminApp = () => (
               on the case; manage docs under Data Lake → Materials. */}
           {/* Casework (folded in from /portal) */}
           <Route path="reviews" element={<CaseworkReviews />} />
+          <Route path="reviews/case/:slug" element={<CaseworkCaseReviews />} />
           <Route path="reviews/:id" element={<CaseworkReviewDetail />} />
           <Route path="rules" element={<CaseworkRules />} />
           <Route path="how" element={<CaseworkHow />} />

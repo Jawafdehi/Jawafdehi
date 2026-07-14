@@ -4,18 +4,16 @@ import CaseworkLayout from "@/components/CaseworkLayout";
 import {
   listReviewsGrouped,
   submitReview,
-  buildSubmitPayload,
-  looksLikeReviewIri,
   regradeAll,
   apiErrorMessage,
 } from "@/services/casework-api";
-import type { GroupedCase, ReviewListItem, ReviewerInfo } from "@/types/casework";
+import type { GroupedCase, ReviewListItem } from "@/types/casework";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { dispositionColor, statusColor, fmtDate, fmtDur, scoreBand } from "@/lib/casework-ui";
-import { Loader2, Plus, RefreshCw, Repeat } from "lucide-react";
+import { CaseSearchCombobox } from "@/components/casework/CaseSearchCombobox";
+import { dispositionColor, statusColor, fmtDate, scoreBand } from "@/lib/casework-ui";
+import { Loader2, RefreshCw, Repeat, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 20;
 
@@ -37,21 +35,6 @@ function mergeGroups(prev: GroupedCase[], fresh: GroupedCase[]): GroupedCase[] {
   return [...bySlug.values()].sort((a, b) => (b.latest?.id ?? 0) - (a.latest?.id ?? 0));
 }
 
-// Distinct "provider·model" labels for the reviewer(s) that graded a run.
-function reviewerLabels(reviewers: ReviewerInfo[] | null): string[] {
-  if (!reviewers?.length) return [];
-  const seen = new Set<string>();
-  const labels: string[] = [];
-  for (const r of reviewers) {
-    const label = r.model ? `${r.provider}·${r.model}` : r.provider;
-    if (label && !seen.has(label)) {
-      seen.add(label);
-      labels.push(label);
-    }
-  }
-  return labels;
-}
-
 export default function CaseworkReviews() {
   const navigate = useNavigate();
   const { isModerator } = useCaseworkAuth();
@@ -62,11 +45,10 @@ export default function CaseworkReviews() {
   const [count, setCount] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [nextPage, setNextPage] = useState(2);
-  const [input, setInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [rerunningSlug, setRerunningSlug] = useState<string | null>(null);
   const [err, setErr] = useState("");
-  // Separate from `err` (which renders under the submit input) so a regrade-all
+  // Separate from `err` (which renders under the submit picker) so a regrade-all
   // failure surfaces next to the Regrade-all button, not the submit form.
   const [regradeErr, setRegradeErr] = useState("");
   const [conflictId, setConflictId] = useState<number | null>(null);
@@ -140,11 +122,11 @@ export default function CaseworkReviews() {
     }
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  // Submit a review for the case picked from the autocomplete. We already hold
+  // the canonical slug, so send it verbatim (same payload as re-run).
+  const onPickCase = async (slug: string) => {
     setSubmitting(true);
-    const ok = await runSubmit(buildSubmitPayload(input), "Submit failed.");
+    const ok = await runSubmit({ slug }, "Submit failed.");
     if (!ok) setSubmitting(false);
   };
 
@@ -175,8 +157,6 @@ export default function CaseworkReviews() {
     }
   };
 
-  const shownReviews = groups.reduce((n, g) => n + (g.executions?.length ?? 0), 0);
-
   return (
     <CaseworkLayout>
       <div className="space-y-6">
@@ -184,8 +164,7 @@ export default function CaseworkReviews() {
           <div>
             <h1 className="text-xl font-bold">Case reviews</h1>
             <p className="text-sm text-muted-foreground">
-              Submit a Jawafdehi case IRI or a court-case IRI to run a multi-dimensional
-              quality review.
+              Search a corruption case to run a multi-dimensional quality review.
             </p>
           </div>
           {isModerator && (
@@ -211,46 +190,31 @@ export default function CaseworkReviews() {
           )}
         </div>
 
-        <form onSubmit={onSubmit} className="flex gap-2 items-start">
-          <div className="flex-1">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="https://jawafdehi.org/case/<slug> or …/courtcase/<court>/<case-no>"
-            />
-            {input.trim() && !looksLikeReviewIri(input) && !err && (
-              <p className="text-sm text-amber-600 mt-1">
-                Enter a case IRI (https://jawafdehi.org/case/&lt;slug&gt;) or a court-case
-                IRI (…/courtcase/&lt;court&gt;/&lt;case-number&gt;).
-              </p>
-            )}
-            {err && (
-              <p className="text-sm text-red-600 mt-1">
-                {err}
-                {conflictId != null && (
-                  <>
-                    {" "}
-                    <button
-                      type="button"
-                      className="underline font-medium"
-                      onClick={() => navigate(`/admin/reviews/${conflictId}`)}
-                    >
-                      View existing review
-                    </button>
-                  </>
-                )}
-              </p>
-            )}
+        <div className="max-w-xl">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <CaseSearchCombobox onPick={onPickCase} disabled={submitting} />
+            </div>
+            {submitting && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
-          <Button type="submit" disabled={submitting || !input.trim()}>
-            {submitting ? (
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4 mr-1" />
-            )}
-            Review
-          </Button>
-        </form>
+          {err && (
+            <p className="text-sm text-red-600 mt-1">
+              {err}
+              {conflictId != null && (
+                <>
+                  {" "}
+                  <button
+                    type="button"
+                    className="underline font-medium"
+                    onClick={() => navigate(`/admin/reviews/${conflictId}`)}
+                  >
+                    View existing review
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+        </div>
 
         {loading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -258,48 +222,18 @@ export default function CaseworkReviews() {
           </div>
         ) : groups.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No reviews yet. Submit a case above.
+            No reviews yet. Search a case above to run one.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {groups.map((g) => (
-              <div key={g.slug} className="bg-white border rounded-xl overflow-hidden">
-                <div className="px-4 py-2.5 bg-slate-50 border-b flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="font-mono text-xs text-slate-500 truncate">{g.slug}</div>
-                    <div className="text-sm font-medium truncate">{g.case_title || "—"}</div>
-                  </div>
-                  <div className="flex items-center gap-3 ml-3">
-                    <span className="text-xs text-slate-500 whitespace-nowrap">
-                      {g.executions?.length ?? 0} review
-                      {(g.executions?.length ?? 0) === 1 ? "" : "s"}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={rerunningSlug === g.slug}
-                      title="Run a fresh review for this case against the current rules"
-                      onClick={() => onRerun(g.slug)}
-                    >
-                      {rerunningSlug === g.slug ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                      )}
-                      Re-run
-                    </Button>
-                  </div>
-                </div>
-                <ul className="divide-y">
-                  {(g.executions ?? []).map((r) => (
-                    <ReviewRow
-                      key={r.id}
-                      review={r}
-                      onClick={() => navigate(`/admin/reviews/${r.id}`)}
-                    />
-                  ))}
-                </ul>
-              </div>
+              <CaseRow
+                key={g.slug}
+                group={g}
+                rerunning={rerunningSlug === g.slug}
+                onOpen={() => navigate(`/admin/reviews/case/${encodeURIComponent(g.slug)}`)}
+                onRerun={() => onRerun(g.slug)}
+              />
             ))}
 
             {hasNext && (
@@ -313,8 +247,7 @@ export default function CaseworkReviews() {
               </div>
             )}
             <p className="text-center text-xs text-slate-400">
-              Showing {groups.length} of {count} case{count === 1 ? "" : "s"} ({shownReviews}{" "}
-              review{shownReviews === 1 ? "" : "s"})
+              Showing {groups.length} of {count} case{count === 1 ? "" : "s"}
             </p>
           </div>
         )}
@@ -323,49 +256,81 @@ export default function CaseworkReviews() {
   );
 }
 
-function ReviewRow({ review: r, onClick }: { review: ReviewListItem; onClick: () => void }) {
-  const reviewers = reviewerLabels(r.reviewers);
+// One case as a single compact row: title/slug + its LATEST run's score,
+// disposition, status and time. Clicking opens the per-case review page (the
+// case's full run history); the full per-run breakdown lives one level deeper.
+function CaseRow({
+  group: g,
+  rerunning,
+  onOpen,
+  onRerun,
+}: {
+  group: GroupedCase;
+  rerunning: boolean;
+  onOpen: () => void;
+  onRerun: () => void;
+}) {
+  const latest: ReviewListItem | undefined = g.latest;
+  const runs = g.executions?.length ?? 0;
+  const inProgress = latest?.status === "pending" || latest?.status === "running";
   return (
-    <li
-      className="px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer"
-      onClick={onClick}
+    <div
+      className="bg-white border rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-slate-50 cursor-pointer"
+      onClick={onOpen}
     >
-      <span className="text-xs font-mono text-slate-400 w-12">#{r.id}</span>
-      <span className="text-xs text-slate-500 w-40 hidden md:inline">
-        🕓 {fmtDate(r.completed_at || r.created_at)}
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium truncate">{g.case_title || g.slug}</div>
+        <div className="font-mono text-xs text-slate-400 truncate">{g.slug}</div>
+      </div>
+
+      {latest && (
+        <>
+          <span className="text-xs text-slate-400 whitespace-nowrap hidden md:inline">
+            🕓 {fmtDate(latest.completed_at || latest.created_at)}
+          </span>
+          <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(latest.status)}`}>
+            {inProgress ? latest.stage || latest.status : latest.status}
+          </span>
+          {latest.overall_score != null && (
+            <span
+              className="text-base font-bold w-9 text-right"
+              style={{ color: scoreBand(latest.overall_score) }}
+            >
+              {latest.overall_score}
+            </span>
+          )}
+          {latest.disposition && (
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full border ${dispositionColor(latest.disposition)}`}
+            >
+              {latest.disposition}
+            </span>
+          )}
+        </>
+      )}
+
+      <span className="text-xs text-slate-400 whitespace-nowrap hidden lg:inline w-14 text-right">
+        {runs} run{runs === 1 ? "" : "s"}
       </span>
-      <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(r.status)}`}>
-        {r.status === "running" || r.status === "pending" ? r.stage || r.status : r.status}
-      </span>
-      {reviewers.length > 0 && (
-        <span
-          className="text-xs text-slate-400 font-mono hidden lg:inline truncate max-w-[14rem]"
-          title={`Graded by ${reviewers.join(", ")}`}
-        >
-          {reviewers.join(", ")}
-        </span>
-      )}
-      <span className="flex-1" />
-      {r.overall_score != null && (
-        <span
-          className="text-sm font-bold w-10 text-right"
-          style={{ color: scoreBand(r.overall_score) }}
-        >
-          {r.overall_score}
-        </span>
-      )}
-      {r.disposition && (
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full border ${dispositionColor(r.disposition)}`}
-        >
-          {r.disposition}
-        </span>
-      )}
-      {r.duration_seconds != null && (
-        <span className="text-xs text-slate-400 w-14 text-right hidden lg:inline">
-          {fmtDur(r.duration_seconds)}
-        </span>
-      )}
-    </li>
+
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={rerunning}
+        title="Run a fresh review for this case against the current rules"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRerun();
+        }}
+      >
+        {rerunning ? (
+          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+        ) : (
+          <RefreshCw className="h-3.5 w-3.5 mr-1" />
+        )}
+        Re-run
+      </Button>
+      <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
+    </div>
   );
 }
