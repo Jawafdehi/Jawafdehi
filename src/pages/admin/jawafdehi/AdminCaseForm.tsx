@@ -289,21 +289,24 @@ export default function AdminCaseForm() {
     () => form.key_allegations.map((s) => s.trim()).filter((s) => s !== ""),
     [form.key_allegations],
   );
+  // Derive each update from the previous state (functional setForm), not from
+  // the render-scope `form`, so a burst of edits that batches before a re-render
+  // can't drop writes.
   const updateAllegation = (i: number, value: string) =>
-    set(
-      "key_allegations",
-      form.key_allegations.map((a, idx) => (idx === i ? value : a)),
-    );
+    setForm((f) => ({
+      ...f,
+      key_allegations: f.key_allegations.map((a, idx) => (idx === i ? value : a)),
+    }));
   const removeAllegation = (i: number) =>
-    set(
-      "key_allegations",
-      form.key_allegations.filter((_, idx) => idx !== i),
-    );
+    setForm((f) => ({
+      ...f,
+      key_allegations: f.key_allegations.filter((_, idx) => idx !== i),
+    }));
   const addAllegation = () => {
     // The appended row lands at the current end of the list; queue that index
     // for focus so the new (empty) input is ready to type into.
     pendingAllegationFocus.current = form.key_allegations.length;
-    set("key_allegations", [...form.key_allegations, ""]);
+    setForm((f) => ({ ...f, key_allegations: [...f.key_allegations, ""] }));
   };
 
   const effectiveSlug = editing
