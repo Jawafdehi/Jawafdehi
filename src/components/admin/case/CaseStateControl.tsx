@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { patchCase, adminErrorMessage, type PatchOp } from "@/services/admin-api";
 import { replaceOp, type CaseState } from "@/lib/jawafdehi-forms";
@@ -76,6 +76,10 @@ interface Props {
   isModerator: boolean;
   // Called after a successful transition so the parent can reload the case.
   onTransitioned: (to: CaseState) => void;
+  // Optional content rendered on the right of the State row (e.g. the latest
+  // AI-review score badge). Kept a generic slot so this control stays focused
+  // on state transitions and doesn't couple to the review system.
+  rightSlot?: ReactNode;
 }
 
 // F2 — state transition control. PATCHes a single replace on /state (§3). The
@@ -85,6 +89,7 @@ export default function CaseStateControl({
   state,
   isModerator,
   onTransitioned,
+  rightSlot,
 }: Props) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState<CaseState | null>(null);
@@ -126,6 +131,7 @@ export default function CaseStateControl({
           {t("admin.stateControl.state")}
         </span>
         <Badge variant="secondary">{state || "—"}</Badge>
+        {rightSlot && <div className="ml-auto">{rightSlot}</div>}
       </div>
       <FieldError message={error} />
       {available.length === 0 ? (
