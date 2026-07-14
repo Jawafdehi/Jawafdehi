@@ -56,7 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Save } from "lucide-react";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
 
@@ -494,6 +494,43 @@ export default function AdminCaseForm() {
           <p className="text-sm text-muted-foreground">
             {t("admin.caseForm.editingHint", { slug: form.slug })}
           </p>
+        )}
+        {/* "View on website" — the public case page lives at /case/<slug> on the
+            shared origin, so a relative link opens it in a new tab. Only a
+            PUBLISHED case is public; DRAFT/IN_REVIEW/CLOSED 404 publicly, so the
+            link is disabled (button's pointer-events-none forwards the hover to
+            the wrapping span, which carries the "not public yet" tooltip). */}
+        {editing && form.slug && (
+          <div className="mt-2">
+            {caseState === "PUBLISHED" ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={`/case/${form.slug}`}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <ExternalLink className="mr-1 h-4 w-4" />
+                  {t("admin.caseForm.viewOnWebsite")}
+                </a>
+              </Button>
+            ) : (
+              <span
+                className="inline-block"
+                title={t("admin.caseForm.viewOnWebsiteNotPublic")}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  aria-disabled="true"
+                >
+                  <ExternalLink className="mr-1 h-4 w-4" />
+                  {t("admin.caseForm.viewOnWebsite")}
+                </Button>
+              </span>
+            )}
+          </div>
         )}
       </div>
 
