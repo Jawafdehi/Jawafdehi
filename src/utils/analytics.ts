@@ -22,6 +22,12 @@ export type AnalyticsEvent =
   | { name: 'case_view'; params: { case_id: string; slug: string } }
   | { name: 'entity_view'; params: { entity_type: string; entity_id: string; slug: string } }
   | { name: 'language_switch'; params: { from_lang: string; to_lang: string } }
+  // Archive site search. `view_search_results` is GA4's canonical site-search
+  // event, so `search_term` populates the built-in Search terms reporting
+  // directly — the SPA fires it manually because enhanced measurement cannot
+  // observe client-side (History API) navigations. `result_type`/`results_count`
+  // are extra params (register as custom dimensions/metrics to surface in reports).
+  | { name: 'view_search_results'; params: { search_term: string; result_type?: string; results_count?: number } }
   | { name: 'allegation_submitted'; params?: Record<string, never> };
 
 type AnalyticsEventParams<T extends AnalyticsEvent['name']> =

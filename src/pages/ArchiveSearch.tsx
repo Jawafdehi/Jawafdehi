@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, LayoutGrid, List, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -43,6 +43,7 @@ import {
   toggleArchiveSearchParam,
 } from "@/utils/archive-search-params";
 import { getFacetItemLabel } from "@/utils/case-entities";
+import { trackEvent } from "@/utils/analytics";
 
 type RefinementName = SidebarFilterName | "type";
 
@@ -122,6 +123,22 @@ export default function ArchiveSearch({
       setLastSuccessfulData(data);
     }
   }, [data, isError, isPlaceholderData]);
+
+  // Report genuine archive searches to GA4. Fire once per distinct query term
+  // (deduped via the ref) when fresh results land — never on pagination, sort,
+  // or filter refinements of the same term, and never for term-less browsing.
+  const lastTrackedQuery = useRef<string | null>(null);
+  useEffect(() => {
+    const term = params.q?.trim();
+    if (!term || !data || isPlaceholderData || isError) return;
+    if (lastTrackedQuery.current === term) return;
+    lastTrackedQuery.current = term;
+    trackEvent("view_search_results", {
+      search_term: term,
+      result_type: selectedRecordType,
+      results_count: data.count,
+    });
+  }, [params.q, data, isPlaceholderData, isError, selectedRecordType]);
 
   const displayData = data || lastSuccessfulData;
   const isInitialLoading = isLoading && !displayData;

@@ -28,7 +28,7 @@ const Privacy = () => {
                 Jawafdehi Initiative Privacy Policy
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: June 23, 2026
+                Last updated: July 13, 2026
               </p>
             </div>
           </div>
@@ -80,7 +80,7 @@ const Privacy = () => {
 
               <h3 id="analytics-data">2.3 Analytics Data</h3>
               <p>
-                With your consent, we use Google Analytics 4 to understand how visitors use the Platform (for example, which pages are viewed). Google Analytics sets cookies and processes usage data. Google Analytics 4 does not log or store full IP addresses, and we do not use Google Analytics for advertising or cross-context behavioral tracking. Analytics do not load and no analytics cookies are set unless you opt in through our cookie banner. You can decline analytics at any time without affecting your use of the Platform (see Section 4).
+                With your consent, we use Google Analytics 4 to understand how visitors use the Platform — for example, which pages are viewed and what visitors search for in the public archive. When you run a search, the words you type into the archive search box are recorded as part of an analytics event, together with the number of results returned. Because our archive concerns public corruption records, a search may include a person's name; if you would rather not have your search terms recorded, decline analytics in the cookie banner, and if you are concerned about your safety avoid entering identifying details (see Section 7). Google Analytics sets cookies and processes usage data. Google Analytics 4 does not log or store full IP addresses, and we do not use Google Analytics for advertising or cross-context behavioral tracking. Analytics do not load and no analytics cookies are set unless you opt in through our cookie banner. You can decline analytics at any time without affecting your use of the Platform (see Section 4).
               </p>
 
               <h3 id="error-monitoring">2.4 Error Monitoring</h3>
