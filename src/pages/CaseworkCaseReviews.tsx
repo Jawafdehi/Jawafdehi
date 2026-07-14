@@ -21,7 +21,11 @@ export default function CaseworkCaseReviews() {
 
   const load = useCallback(
     async (isPoll = false) => {
-      if (!slug) return;
+      if (!slug) {
+        // Without this the spinner (loading starts true) would never clear.
+        if (!isPoll) setLoading(false);
+        return;
+      }
       try {
         // page_size=100: a single case rarely has more runs than that, so this
         // loads the whole history in one request (newest-first from the backend).
@@ -40,13 +44,22 @@ export default function CaseworkCaseReviews() {
     load();
   }, [load]);
 
-  // Poll while the newest run is still in progress.
+  // Poll while the newest run is still in progress. Recursive setTimeout (not
+  // setInterval) so a slow request can't pile up behind the previous one.
   useEffect(() => {
     const latest = runs[0];
-    if (latest?.status === "pending" || latest?.status === "running") {
-      const t = setInterval(() => load(true), 3000);
-      return () => clearInterval(t);
-    }
+    if (latest?.status !== "pending" && latest?.status !== "running") return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      await load(true);
+      if (active) timer = setTimeout(tick, 3000);
+    };
+    timer = setTimeout(tick, 3000);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [runs, load]);
 
   const onRerun = async () => {

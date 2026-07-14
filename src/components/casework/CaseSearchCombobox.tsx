@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { listCases } from "@/services/admin-api";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -35,8 +35,6 @@ export function CaseSearchCombobox({
   const [debounced, setDebounced] = useState("");
   const [results, setResults] = useState<CaseHit[]>([]);
   const [loading, setLoading] = useState(false);
-  // Guards against a slow earlier request landing after a newer one.
-  const reqId = useRef(0);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query.trim()), 250);
@@ -49,18 +47,23 @@ export function CaseSearchCombobox({
       setLoading(false);
       return;
     }
-    const id = ++reqId.current;
+    // `active` flips false on cleanup (a newer query, or unmount), so a slow
+    // earlier request can't overwrite fresher results or set state after unmount.
+    let active = true;
     setLoading(true);
     listCases<CaseHit>({ search: debounced, page_size: 10 })
       .then((page) => {
-        if (id === reqId.current) setResults(page.results ?? []);
+        if (active) setResults(page.results ?? []);
       })
       .catch(() => {
-        if (id === reqId.current) setResults([]);
+        if (active) setResults([]);
       })
       .finally(() => {
-        if (id === reqId.current) setLoading(false);
+        if (active) setLoading(false);
       });
+    return () => {
+      active = false;
+    };
   }, [debounced]);
 
   const pick = (slug: string) => {
