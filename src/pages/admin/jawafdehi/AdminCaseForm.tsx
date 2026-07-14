@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
@@ -56,7 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Save } from "lucide-react";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
 
@@ -220,6 +220,10 @@ export default function AdminCaseForm() {
   const { isModerator } = useCaseworkAuth();
   const slug = params.slug;
   const editing = Boolean(slug);
+  // Ties the disabled "View on website" button to its "not public yet" hint via
+  // aria-describedby so the reason reaches screen readers (a disabled button
+  // isn't focusable, so a hover-only title alone would exclude keyboard/AT users).
+  const notPublicHintId = useId();
 
   const [form, setForm] = useState<CaseFormState>(EMPTY);
   const [original, setOriginal] = useState<CaseFormState>(EMPTY);
@@ -494,6 +498,52 @@ export default function AdminCaseForm() {
           <p className="text-sm text-muted-foreground">
             {t("admin.caseForm.editingHint", { slug: form.slug })}
           </p>
+        )}
+        {/* "View on website" — the public case page lives at /case/<slug> on the
+            shared origin, so a relative link opens it in a new tab. Only a
+            PUBLISHED case is public; DRAFT/IN_REVIEW/CLOSED 404 publicly, so the
+            control is disabled instead of linking to a 404. The reason is exposed
+            three ways so no user is left guessing: a hover `title` on the wrapping
+            span (sighted mouse users, since the disabled button's
+            pointer-events-none forwards the hover to the span), plus an sr-only
+            hint wired to the button via aria-describedby (keyboard / screen-reader
+            users, who can't focus a disabled button to see a title). The button
+            keeps only its native `disabled` — no redundant aria-disabled — and
+            nothing here is focusable, so it is not a focus trap. */}
+        {editing && form.slug && (
+          <div className="mt-2">
+            {caseState === "PUBLISHED" ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={`/case/${form.slug}`}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <ExternalLink className="mr-1 h-4 w-4" />
+                  {t("admin.caseForm.viewOnWebsite")}
+                </a>
+              </Button>
+            ) : (
+              <span
+                className="inline-block"
+                title={t("admin.caseForm.viewOnWebsiteNotPublic")}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  aria-describedby={notPublicHintId}
+                >
+                  <ExternalLink className="mr-1 h-4 w-4" />
+                  {t("admin.caseForm.viewOnWebsite")}
+                </Button>
+                <span id={notPublicHintId} className="sr-only">
+                  {t("admin.caseForm.viewOnWebsiteNotPublic")}
+                </span>
+              </span>
+            )}
+          </div>
         )}
       </div>
 

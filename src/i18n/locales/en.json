@@ -1464,6 +1464,8 @@
       "editTitle": "Edit Case",
       "newTitle": "New Case",
       "editingHint": "Editing {{slug}}. New cases are created as DRAFT.",
+      "viewOnWebsite": "View on website",
+      "viewOnWebsiteNotPublic": "Not public yet — publish the case to view it on the website.",
       "notFound": "This case could not be found.",
       "conflictBanner": "This case was changed by someone else since you opened it. Reload to get the latest version before saving.",
       "reloadCase": "Reload case",
@@ -1772,7 +1774,7 @@
           {
             "id": "financial-support",
             "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us via **PayPal**, **international bank wire (SWIFT)**, or a **Nepal bank account (coming soon)**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "answer": "You can support us via **PayPal**, **international bank wire (SWIFT)**, or a **Nepal bank account**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
           },
           {
             "id": "help-without-donating",
