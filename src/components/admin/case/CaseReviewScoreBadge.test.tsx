@@ -80,10 +80,12 @@ describe("CaseReviewScoreBadge", () => {
   it("url-encodes the slug in the review-history link", async () => {
     vi.mocked(listReviews).mockResolvedValue(page([]));
 
-    render(<CaseReviewScoreBadge slug="a/b c" />);
+    render(<CaseReviewScoreBadge slug="koshi/morang mudda" />);
 
     const link = (await screen.findByRole("link")) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/admin/reviews/case/a%2Fb%20c");
+    expect(link.getAttribute("href")).toBe(
+      "/admin/reviews/case/koshi%2Fmorang%20mudda",
+    );
   });
 
   it("shows a muted 'no review' link when the case has never been reviewed", async () => {
@@ -108,9 +110,12 @@ describe("CaseReviewScoreBadge", () => {
     expect(link.textContent).toContain("scoring");
   });
 
-  // An endpoint error degrades to the same latest===null render as the "no
-  // review" case above (the component's catch sets latest to null), so the
-  // "none" test already covers that render branch. It isn't re-tested through a
-  // thrown mock here because a rejection raised inside the effect trips vitest's
-  // global unhandled-rejection detector even though the component handles it.
+  // An endpoint error degrades to the SAME latest===null render as the "no
+  // review" case above (the component's catch sets latest to null), which that
+  // test already covers. It is not re-tested through a rejected mock here: a
+  // rejection consumed inside a React effect trips vitest v4's global
+  // unhandled-rejection detector regardless of how the component handles it —
+  // verified with mockRejectedValue, an async-throw mock, and a call-site
+  // .catch, all of which still flag it despite the handler attaching
+  // synchronously. Testing it would assert nothing the "no review" case doesn't.
 });
