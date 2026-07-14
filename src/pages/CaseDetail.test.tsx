@@ -110,6 +110,21 @@ describe("CaseDetail canonical slug redirect (BB-38)", () => {
     expect(getCaseById).toHaveBeenCalledWith("old-slug");
   });
 
+  it("redirects a /case/<court-ref> URL to the canonical case slug", async () => {
+    // Court-ref-style URLs (e.g. /case/081-CR-0116) resolve via getCaseByCourtRef;
+    // the effect must replace the URL with the resolved case's canonical slug.
+    // This covers the path the old court-ref-only <Navigate> block used to handle.
+    getCaseByCourtRef.mockResolvedValue(makeCase("current-slug"));
+
+    renderAt("081-CR-0116");
+
+    await waitFor(() =>
+      expect(navigateSpy).toHaveBeenCalledWith("/case/current-slug", { replace: true }),
+    );
+    expect(getCaseByCourtRef).toHaveBeenCalledWith("081-CR-0116");
+    expect(getCaseById).not.toHaveBeenCalled();
+  });
+
   it("does not redirect (no loop) when the route slug is already canonical", async () => {
     getCaseById.mockResolvedValue(makeCase("current-slug"));
 
