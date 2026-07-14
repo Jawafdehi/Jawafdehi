@@ -32,7 +32,7 @@ import CaseworkLogin from "./pages/CaseworkLogin";
 import CaseworkCallback from "./pages/CaseworkCallback";
 import CaseworkReviews from "./pages/CaseworkReviews";
 import CaseworkCaseReviews from "./pages/CaseworkCaseReviews";
-import CaseworkReviewDetail from "./pages/CaseworkReviewDetail";
+import CaseworkRunRedirect from "./pages/CaseworkRunRedirect";
 import CaseworkRules from "./pages/CaseworkRules";
 import CaseworkHow from "./pages/CaseworkHow";
 
@@ -163,7 +163,7 @@ const AdminApp = () => (
           {/* Casework (folded in from /portal) */}
           <Route path="reviews" element={<CaseworkReviews />} />
           <Route path="reviews/case/:slug" element={<CaseworkCaseReviews />} />
-          <Route path="reviews/:id" element={<CaseworkReviewDetail />} />
+          <Route path="reviews/:id" element={<CaseworkRunRedirect />} />
           <Route path="rules" element={<CaseworkRules />} />
           <Route path="how" element={<CaseworkHow />} />
           <Route path="moderation" element={<Moderation />} />

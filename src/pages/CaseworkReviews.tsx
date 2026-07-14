@@ -1,29 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CaseworkLayout from "@/components/CaseworkLayout";
-import {
-  listReviewsGrouped,
-  submitReview,
-  regradeAll,
-  apiErrorMessage,
-} from "@/services/casework-api";
+import { listReviewsGrouped, regradeAll, apiErrorMessage } from "@/services/casework-api";
 import type { GroupedCase, ReviewListItem } from "@/types/casework";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { CaseSearchCombobox } from "@/components/casework/CaseSearchCombobox";
 import { dispositionColor, statusColor, fmtDate, scoreBand } from "@/lib/casework-ui";
-import { Loader2, RefreshCw, Repeat, ChevronRight } from "lucide-react";
+import { Loader2, Repeat, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 20;
-
-// Get the HTTP status off an axios error without pulling in axios types here.
-function errStatus(e: unknown): number | undefined {
-  return (e as { response?: { status?: number } })?.response?.status;
-}
-function conflictReviewId(e: unknown): number | undefined {
-  return (e as { response?: { data?: { review_id?: number } } })?.response?.data?.review_id;
-}
 
 // Merge freshly-fetched case groups into the accumulated list: replace existing
 // cases in place (by slug) and add new ones, keeping most-recently-active first
@@ -45,13 +32,17 @@ export default function CaseworkReviews() {
   const [count, setCount] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [nextPage, setNextPage] = useState(2);
-  const [submitting, setSubmitting] = useState(false);
-  const [rerunningSlug, setRerunningSlug] = useState<string | null>(null);
   const [err, setErr] = useState("");
-  // Separate from `err` (which renders under the submit picker) so a regrade-all
-  // failure surfaces next to the Regrade-all button, not the submit form.
   const [regradeErr, setRegradeErr] = useState("");
-  const [conflictId, setConflictId] = useState<number | null>(null);
+
+  // Open a case's review page. A review is NEVER started from here — searching
+  // or clicking a case just navigates; the "Run review" action lives on the case
+  // page. Carry the title so a never-reviewed case shows it before its first run.
+  const openCase = useCallback(
+    (slug: string, title?: string) =>
+      navigate(`/admin/reviews/case/${encodeURIComponent(slug)}`, { state: { title } }),
+    [navigate]
+  );
 
   // Load the first page of cases. When called by polling (isPoll), only merge the
   // fresh page-1 groups — don't touch pagination/loading/error state, so a
@@ -103,40 +94,6 @@ export default function CaseworkReviews() {
     return () => clearInterval(t);
   }, [groups, loadFirst]);
 
-  // Returns true on success (the component navigates away, so callers must not
-  // touch state afterward); on failure the error is set and false is returned.
-  const runSubmit = async (
-    payload: Parameters<typeof submitReview>[0],
-    fallback: string
-  ): Promise<boolean> => {
-    setErr("");
-    setConflictId(null);
-    try {
-      const review = await submitReview(payload);
-      navigate(`/admin/reviews/${review.id}`);
-      return true;
-    } catch (e: unknown) {
-      setErr(apiErrorMessage(e, fallback));
-      if (errStatus(e) === 409) setConflictId(conflictReviewId(e) ?? null);
-      return false;
-    }
-  };
-
-  // Submit a review for the case picked from the autocomplete. We already hold
-  // the canonical slug, so send it verbatim (same payload as re-run).
-  const onPickCase = async (slug: string) => {
-    setSubmitting(true);
-    const ok = await runSubmit({ slug }, "Submit failed.");
-    if (!ok) setSubmitting(false);
-  };
-
-  // Re-run: submit a fresh review for an already-reviewed case slug.
-  const onRerun = async (gslug: string) => {
-    setRerunningSlug(gslug);
-    const ok = await runSubmit({ slug: gslug }, "Re-run failed.");
-    if (!ok) setRerunningSlug(null);
-  };
-
   // F9 — regrade all reviewable cases against the current rules (admin/
   // moderator). POSTs /api/casework/reviews/regrade-all/; refresh page 1 so the
   // newly-queued runs appear.
@@ -164,7 +121,7 @@ export default function CaseworkReviews() {
           <div>
             <h1 className="text-xl font-bold">Case reviews</h1>
             <p className="text-sm text-muted-foreground">
-              Search a corruption case to run a multi-dimensional quality review.
+              Search a corruption case to open its review page.
             </p>
           </div>
           {isModerator && (
@@ -183,37 +140,14 @@ export default function CaseworkReviews() {
                 )}
                 Regrade all
               </Button>
-              {regradeErr && (
-                <p className="text-sm text-red-600 text-right">{regradeErr}</p>
-              )}
+              {regradeErr && <p className="text-sm text-red-600 text-right">{regradeErr}</p>}
             </div>
           )}
         </div>
 
         <div className="max-w-xl">
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <CaseSearchCombobox onPick={onPickCase} disabled={submitting} />
-            </div>
-            {submitting && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-          </div>
-          {err && (
-            <p className="text-sm text-red-600 mt-1">
-              {err}
-              {conflictId != null && (
-                <>
-                  {" "}
-                  <button
-                    type="button"
-                    className="underline font-medium"
-                    onClick={() => navigate(`/admin/reviews/${conflictId}`)}
-                  >
-                    View existing review
-                  </button>
-                </>
-              )}
-            </p>
-          )}
+          <CaseSearchCombobox onPick={openCase} />
+          {err && <p className="text-sm text-red-600 mt-1">{err}</p>}
         </div>
 
         {loading ? (
@@ -222,7 +156,7 @@ export default function CaseworkReviews() {
           </div>
         ) : groups.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No reviews yet. Search a case above to run one.
+            No reviews yet. Search a case above to open it and run one.
           </p>
         ) : (
           <div className="space-y-2">
@@ -230,18 +164,14 @@ export default function CaseworkReviews() {
               <CaseRow
                 key={g.slug}
                 group={g}
-                rerunning={rerunningSlug === g.slug}
-                onOpen={() => navigate(`/admin/reviews/case/${encodeURIComponent(g.slug)}`)}
-                onRerun={() => onRerun(g.slug)}
+                onOpen={() => openCase(g.slug, g.case_title)}
               />
             ))}
 
             {hasNext && (
               <div className="flex justify-center pt-1">
                 <Button variant="outline" size="sm" disabled={loadingMore} onClick={loadMore}>
-                  {loadingMore ? (
-                    <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                  ) : null}
+                  {loadingMore ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}
                   Load more
                 </Button>
               </div>
@@ -257,19 +187,9 @@ export default function CaseworkReviews() {
 }
 
 // One case as a single compact row: title/slug + its LATEST run's score,
-// disposition, status and time. Clicking opens the per-case review page (the
-// case's full run history); the full per-run breakdown lives one level deeper.
-function CaseRow({
-  group: g,
-  rerunning,
-  onOpen,
-  onRerun,
-}: {
-  group: GroupedCase;
-  rerunning: boolean;
-  onOpen: () => void;
-  onRerun: () => void;
-}) {
+// disposition, status and time. Clicking opens the per-case review page, which
+// hosts the run history and the full breakdown.
+function CaseRow({ group: g, onOpen }: { group: GroupedCase; onOpen: () => void }) {
   const latest: ReviewListItem | undefined = g.latest;
   const runs = g.executions?.length ?? 0;
   const inProgress = latest?.status === "pending" || latest?.status === "running";
@@ -312,24 +232,6 @@ function CaseRow({
       <span className="text-xs text-slate-400 whitespace-nowrap hidden lg:inline w-14 text-right">
         {runs} run{runs === 1 ? "" : "s"}
       </span>
-
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={rerunning}
-        title="Run a fresh review for this case against the current rules"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRerun();
-        }}
-      >
-        {rerunning ? (
-          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-        ) : (
-          <RefreshCw className="h-3.5 w-3.5 mr-1" />
-        )}
-        Re-run
-      </Button>
       <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
     </div>
   );

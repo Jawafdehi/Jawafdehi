@@ -1,8 +1,9 @@
-// Headless verify driver for the redesigned casework review flow:
-//   1. autocomplete case-search submit (no more raw-IRI box)
-//   2. slimmed list — one row per case, LATEST run only
-//   3. new per-case review page (/admin/reviews/case/:slug) with run history
-//   4. run detail (/admin/reviews/:id) still serves the full breakdown
+// Headless verify driver for the casework review flow (consolidated design):
+//   1. list is navigational — one row per case, LATEST run only, NO submit here
+//   2. search / row-click NAVIGATE to the case page (they never start a review)
+//   3. the per-case page HOSTS the reviews: run switcher + selected run's full
+//      breakdown inline, and is the only place a new review is triggered
+//   4. legacy /admin/reviews/:id redirects to /admin/reviews/case/:slug?run=:id
 // Requires: mock API on :48000 (bun tests/e2e/mock-api.ts) and the dev server
 // started with VITE_DEV_AUTH=true (port via E2E_BASE_URL, default :40115).
 //   node tests/e2e/casework-reviews.mjs
@@ -10,12 +11,19 @@ import { chromium } from "playwright";
 
 const BASE = process.env.E2E_BASE_URL || "http://127.0.0.1:40115";
 const SHOTS = process.env.E2E_SHOTS_DIR || "/tmp/e2e-shots";
-const PATANJALI = "case-081-cr-0107-patanjali"; // seeded with two runs (88, 74)
+const PATANJALI = "case-081-cr-0107-patanjali"; // seeded with two runs: #502=88, #501=74
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
 const pageErrors = [];
 page.on("pageerror", (e) => pageErrors.push(String(e).split("\n")[0]));
+// Track review-submit POSTs so we can assert navigation NEVER starts a review.
+const submitPosts = [];
+page.on("request", (r) => {
+  if (r.method() === "POST" && r.url().includes("/api/casework/reviews/submit/")) {
+    submitPosts.push(r.url());
+  }
+});
 
 let failures = 0;
 const check = (label, ok, detail = "") => {
@@ -23,8 +31,6 @@ const check = (label, ok, detail = "") => {
   if (!ok) failures += 1;
 };
 
-// Dev-auth session snapshot (see src/services/dev-auth-constants.ts) + cookie
-// consent pre-answered so its fixed bar can't intercept clicks.
 await page.addInitScript(() => {
   localStorage.setItem(
     "jawafdehi.devAuth.user",
@@ -34,30 +40,45 @@ await page.addInitScript(() => {
   localStorage.setItem("jawafdehi_analytics_consent", "denied");
 });
 
-// === 1. List loads, one row per case, LATEST run only ======================
-console.log("\n== List: slim, one row per case ==");
+// === 1. List: slim + navigational (no submit / no re-run here) =============
+console.log("\n== List: slim, navigational ==");
 await page.goto(BASE + "/admin/reviews", { waitUntil: "networkidle" });
 await page.getByRole("heading", { name: "Case reviews" }).waitFor({ timeout: 30000 });
-
-// The IRI box is gone; the submit control is the autocomplete combobox.
-check(
-  "no raw-IRI textbox",
-  (await page.locator('input[placeholder*="jawafdehi.org/case"]').count()) === 0,
-);
 check("autocomplete combobox present", (await page.getByRole("combobox").count()) === 1);
-
-// Seeded patanjali case: latest run is 88/PASS; the older 74 must NOT show.
 check("latest score (88) shown on list", (await page.getByText("88", { exact: true }).count()) >= 1);
 check("older run score (74) hidden on list", (await page.getByText("74", { exact: true }).count()) === 0);
-const rerunButtons = await page.getByRole("button", { name: "Re-run" }).count();
-check("one Re-run per case (1 case seeded)", rerunButtons === 1, `count=${rerunButtons}`);
-await page.screenshot({ path: `${SHOTS}/reviews-list.png`, fullPage: true });
+check("no Re-run button on the list", (await page.getByRole("button", { name: /Re-run/ }).count()) === 0);
 
-// === 2. Autocomplete submit ================================================
-console.log("\n== Autocomplete: search + submit ==");
+// Clicking a case row NAVIGATES to its case page and starts NOTHING.
+let n = submitPosts.length;
+await page.locator("div.cursor-pointer", { hasText: PATANJALI }).first().click();
+await page.waitForURL(new RegExp(`/admin/reviews/case/${PATANJALI}$`), { timeout: 15000 });
+check("row click navigates to the case page", true, page.url());
+check("row click started no review", submitPosts.length === n, `submits=${submitPosts.length - n}`);
+
+// === 2. Per-case page HOSTS the reviews (run switcher + inline breakdown) ===
+console.log("\n== Per-case page: run switcher + inline breakdown ==");
+check("shows Runs (2)", (await page.getByText(/Runs \(2\)/).count()) === 1);
+// Latest run (#502) is selected by default; its full breakdown renders inline.
+await page.getByText("Sources attached").first().waitFor({ timeout: 15000 });
+check("latest run breakdown renders inline (run #502)", (await page.getByText("run #502").count()) >= 1);
+check(
+  "breakdown shows the rule cards (inline, not a separate page)",
+  (await page.getByText("Sources attached").count()) >= 1,
+);
+
+// Select the older run (#501=74) — the breakdown switches in place.
+await page.locator("li", { hasText: "#501" }).first().click();
+await page.getByText("run #501").first().waitFor({ timeout: 10000 });
+check("selecting a run swaps the breakdown in place", (await page.getByText("run #501").count()) >= 1);
+check("selecting a run deep-links via ?run=", page.url().includes("run=501"), page.url());
+await page.screenshot({ path: `${SHOTS}/reviews-per-case-hosted.png`, fullPage: true });
+
+// === 3. Search NAVIGATES to a case (never auto-submits) ====================
+console.log("\n== Search navigates, does not submit ==");
+await page.goto(BASE + "/admin/reviews", { waitUntil: "networkidle" });
 await page.getByRole("combobox").click();
 const search = page.getByPlaceholder("Search cases by title…");
-await search.waitFor({ timeout: 10000 });
 await search.click();
 await search.pressSequentially("Ncell", { delay: 30 });
 await page.waitForResponse(
@@ -65,63 +86,46 @@ await page.waitForResponse(
   { timeout: 10000 },
 );
 await page.getByRole("option").first().waitFor({ timeout: 10000 });
-const optionCount = await page.getByRole("option").count();
-check("autocomplete returned matches for 'Ncell'", optionCount >= 1, `options=${optionCount}`);
+n = submitPosts.length;
+await page.getByRole("option").first().click();
+await page.waitForURL(/\/admin\/reviews\/case\/case-ncell/, { timeout: 15000 });
+check("search click navigates to the case page", /\/admin\/reviews\/case\/case-ncell/.test(page.url()), page.url());
+check("search click started NO review", submitPosts.length === n, `submits=${submitPosts.length - n}`);
+const ncellSlug = decodeURIComponent(page.url().split("/admin/reviews/case/")[1].split("?")[0]);
+// A never-reviewed case shows the empty state + a Run-review trigger.
+check("zero-run case shows empty state", (await page.getByText(/No reviews for this case yet/).count()) === 1);
+check("case page offers a Run review trigger", (await page.getByRole("button", { name: /Run review/ }).count()) === 1);
 
+// === 4. Trigger a review — only on the case page ===========================
+console.log("\n== Trigger a review on the case page ==");
+n = submitPosts.length;
 const [submitReq] = await Promise.all([
   page.waitForRequest(
     (r) => r.method() === "POST" && r.url().includes("/api/casework/reviews/submit/"),
     { timeout: 10000 },
   ),
-  page.getByRole("option").first().click(),
+  page.getByRole("button", { name: /Run review/ }).click(),
 ]);
-const submittedSlug = submitReq.postDataJSON().slug;
-check("submit sent a case slug", typeof submittedSlug === "string" && submittedSlug.length > 0, submittedSlug);
-check("submitted a Ncell case", String(submittedSlug).startsWith("case-ncell"), submittedSlug);
-
-// === 3. Lands on run detail (full breakdown) ===============================
-console.log("\n== Run detail after submit ==");
-await page.waitForURL(/\/admin\/reviews\/\d+$/, { timeout: 15000 });
-await page.getByText("View case on jawafdehi.org").waitFor({ timeout: 15000 });
-check("run detail shows the score (91)", (await page.getByText("91", { exact: true }).count()) >= 1);
 check(
-  "run detail renders the rule breakdown",
-  (await page.getByText("Sources attached").count()) >= 1,
+  "Run review submits the picked case's slug",
+  submitReq.postDataJSON().slug === ncellSlug,
+  submitReq.postDataJSON().slug,
 );
-await page.screenshot({ path: `${SHOTS}/reviews-run-detail.png`, fullPage: true });
+await page.getByText(/Runs \(1\)/).waitFor({ timeout: 15000 });
+await page.getByText("Sources attached").first().waitFor({ timeout: 15000 });
+check("new run appears with its breakdown inline", (await page.getByText("91", { exact: true }).count()) >= 1);
 
-// === 4. Back-link -> per-case page =========================================
-console.log("\n== Per-case page (run history) ==");
-await page.getByRole("button", { name: /All runs for this case/ }).click();
-await page.waitForURL(new RegExp(`/admin/reviews/case/${submittedSlug}$`), { timeout: 15000 });
-check(
-  "per-case page shows 1 run for the just-submitted case",
-  (await page.getByText(/Runs \(1\)/).count()) === 1,
-);
-
-// Click the run row -> back to its detail.
-await page.locator("ul li").first().click();
-await page.waitForURL(/\/admin\/reviews\/\d+$/, { timeout: 15000 });
-check("run row opens the run detail", /\/admin\/reviews\/\d+$/.test(page.url()), page.url());
-
-// === 5. List row click -> per-case page; multi-run history ==================
-console.log("\n== List row navigation + multi-run history ==");
-await page.goto(BASE + "/admin/reviews", { waitUntil: "networkidle" });
-await page.getByRole("heading", { name: "Case reviews" }).waitFor({ timeout: 30000 });
-// Two cases now (patanjali + the submitted Ncell) -> two Re-run buttons.
-const rerun2 = await page.getByRole("button", { name: "Re-run" }).count();
-check("list now has one row per case (2 cases)", rerun2 === 2, `count=${rerun2}`);
-
-// Directly load the patanjali per-case page: its ?slug= history has BOTH runs.
-await page.goto(BASE + `/admin/reviews/case/${PATANJALI}`, { waitUntil: "networkidle" });
-check("patanjali per-case page shows Runs (2)", (await page.getByText(/Runs \(2\)/).count()) === 1);
-check("history shows the latest run (88)", (await page.getByText("88", { exact: true }).count()) >= 1);
-check("history shows the older run (74)", (await page.getByText("74", { exact: true }).count()) >= 1);
-await page.screenshot({ path: `${SHOTS}/reviews-per-case.png`, fullPage: true });
+// === 5. Legacy /admin/reviews/:id redirects to the case page ===============
+console.log("\n== Legacy per-run URL redirects ==");
+await page.goto(BASE + "/admin/reviews/502", { waitUntil: "networkidle" });
+await page.waitForURL(new RegExp(`/admin/reviews/case/${PATANJALI}\\?run=502`), { timeout: 15000 });
+check("/admin/reviews/502 redirects to the case page ?run=502", page.url().includes(`case/${PATANJALI}?run=502`), page.url());
+await page.getByText("run #502").first().waitFor({ timeout: 15000 });
+check("redirect lands on the right run's breakdown", (await page.getByText("run #502").count()) >= 1);
 
 // The dev SSR harness emits a hydration-mismatch error on every full admin-route
-// load (reproducible on unchanged pages like /admin/rules), so ignore that known
-// artifact and only fail on unexpected runtime errors.
+// load (reproducible on unchanged pages), so ignore that known artifact and only
+// fail on unexpected runtime errors.
 const IGNORE = /Hydration failed|error while hydrating/;
 const realErrors = pageErrors.filter((e) => !IGNORE.test(e));
 console.log("\npageErrors (real):", realErrors.length ? realErrors : "none");
