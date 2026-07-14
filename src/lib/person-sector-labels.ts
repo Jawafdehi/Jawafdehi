@@ -17,6 +17,7 @@ export const COARSE_SECTOR: Record<string, CoarseSector> = {
   local_gov: "public",
   judiciary: "public",
   security: "public",
+  health: "public",
   business: "private",
   other: "other",
   not_recorded: "other",

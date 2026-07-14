@@ -18,7 +18,10 @@ export function sourceKeyFor(source: string): string {
     ciaa_press_release: "ciaaPress",
     dfmis: "dfmis",
     jawafdehi: "jawafdehi",
-    kanun_patrika: "kanunPatrika",
+    // Legacy token for the same publication as `nkp` — map to the SAME key so
+    // aggregate() sums the two into one "Nepal Kanun Patrika" row instead of
+    // rendering two rows with an identical label.
+    kanun_patrika: "nkp",
     ciaa_annual_report: "ciaaAnnual",
     "province/koshi": "koshi",
     ppmo_blacklist: "ppmo",

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { MaterialsMetrics } from "@/types/jds";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
-import { LollipopChart } from "./LollipopChart";
+import { MaterialsTable } from "./MaterialsTable";
 
 /**
  * Two complementary evidence reads:
@@ -54,7 +54,16 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
       </p>
       {sourceItems.length > 0 && (
         <div className="mt-6">
-          <LollipopChart items={sourceItems} />
+          <MaterialsTable
+            items={sourceItems}
+            nameHeader={t("dataQuality.materialsBySource.table.source", "Source")}
+          />
+          <p className="mt-3 max-w-2xl text-xs leading-5 text-muted-foreground">
+            {t(
+              "dataQuality.materialsBySource.sourceNote",
+              "“Jawafdehi original documents” are source files — press releases, charge sheets, news — that were attached to our own case files and republished here as standalone records.",
+            )}
+          </p>
         </div>
       )}
 
@@ -71,7 +80,10 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
             )}
           </p>
           <div className="mt-6">
-            <LollipopChart items={typeItems} />
+            <MaterialsTable
+              items={typeItems}
+              nameHeader={t("dataQuality.materialsByType.table.type", "Document type")}
+            />
           </div>
         </div>
       )}

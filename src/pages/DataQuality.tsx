@@ -2,16 +2,18 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 
 import { getStatistics } from "@/services/jds-api";
 import { MOCK_STATISTICS } from "@/lib/data-quality-mock";
+import { formatFreshness } from "@/lib/data-quality";
 import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
 import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
 import { EvidenceBackbone } from "@/components/data-quality/EvidenceBackbone";
 import { MaterialsBySource } from "@/components/data-quality/MaterialsBySource";
 import { DataHonesty } from "@/components/data-quality/DataHonesty";
+import { DataPipeline } from "@/components/data-quality/DataPipeline";
 import { UseThisData } from "@/components/data-quality/UseThisData";
-import { MethodologyFooter } from "@/components/data-quality/MethodologyFooter";
 
 const DataQuality = () => {
   const { t } = useTranslation();
@@ -37,6 +39,8 @@ const DataQuality = () => {
   const data = useMock ? MOCK_STATISTICS : liveData;
   const isLoading = useMock ? false : liveLoading;
   const isError = useMock ? false : liveError;
+
+  const freshness = data ? formatFreshness(data.last_updated, t) : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -64,6 +68,14 @@ const DataQuality = () => {
                 "What our public datasets track today, and how complete the records are.",
               )}
             </p>
+            {freshness && (
+              <p className="mt-4 flex items-center gap-1.5 text-sm italic text-muted-foreground/80">
+                <RefreshCw className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
+                {t("dataQuality.ribbon.refreshed", "Data last refreshed {{ago}}", {
+                  ago: freshness,
+                })}
+              </p>
+            )}
           </div>
         </section>
 
@@ -89,11 +101,11 @@ const DataQuality = () => {
           {/* Honest completeness / trust label. */}
           <DataHonesty nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
 
-          {/* Make the data reusable: the public API. */}
-          <UseThisData />
+          {/* Where this comes from: conceptual public-record → published-case flow. */}
+          <DataPipeline />
 
-          {/* Plain-language methodology + report-an-error. */}
-          <MethodologyFooter />
+          {/* Make the data reusable: the public API + report-an-error. */}
+          <UseThisData />
         </div>
       </main>
     </div>

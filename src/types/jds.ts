@@ -259,6 +259,9 @@ export interface CaseStatistics {
   published_cases: number;
   entities_tracked: number;
   cases_under_investigation: number;
+  // Cases being prepared for publication (state IN_REVIEW) — a subset of
+  // cases_under_investigation. Optional so pre-deploy/cached payloads stay safe.
+  cases_in_review?: number;
   cases_closed: number;
   // CIAA vs non-CIAA split, classified by the criminal "CR" court-case number.
   // Optional so older cached payloads (and pre-deploy responses) stay type-safe.

@@ -29,6 +29,14 @@ export function AccountabilityGap({
   const closed = stats?.cases_closed ?? 0;
   const documented = published + investigating + closed;
 
+  // "In review" (being prepared for publication) is a subset of the
+  // under-investigation bucket; the rest are drafts. When the backend provides
+  // the split, the funnel shows draft vs in-review separately; otherwise it
+  // keeps a single "under investigation" bar (graceful pre-deploy fallback).
+  const inReviewProvided = stats?.cases_in_review !== undefined;
+  const inReview = stats?.cases_in_review ?? 0;
+  const draftOnly = Math.max(0, investigating - inReview);
+
   // CIAA vs non-CIAA split (classified by the CR court-case number). Optional:
   // present only once the backend deploys, so the donut renders conditionally.
   const ciaa = stats?.cases_ciaa ?? 0;
@@ -42,9 +50,19 @@ export function AccountabilityGap({
     {
       key: "investigating",
       label: t("dataQuality.cases.status.investigating", "Under investigation"),
-      count: investigating,
+      count: inReviewProvided ? draftOnly : investigating,
       color: "hsl(var(--alert))",
     },
+    ...(inReviewProvided
+      ? [
+          {
+            key: "in_review",
+            label: t("dataQuality.gap.stage.inReview", "In review (being prepared)"),
+            count: inReview,
+            color: "hsl(var(--accent))",
+          } as FunnelStage,
+        ]
+      : []),
     {
       key: "published",
       label: t("dataQuality.gap.stage.published", "Reached a published finding"),

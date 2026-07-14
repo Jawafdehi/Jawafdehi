@@ -17,6 +17,8 @@ import type { CaseStatistics } from "@/types/jds";
 export const MOCK_STATISTICS: CaseStatistics = {
   published_cases: 34,
   cases_under_investigation: 2891,
+  // In review (being prepared) — a subset of the 2891 under investigation.
+  cases_in_review: 512,
   cases_closed: 1,
   entities_tracked: 422,
   // New: CIAA vs non-CIAA (sums to 34 + 2891 + 1 = 2926 total cases).
@@ -44,16 +46,15 @@ export const MOCK_STATISTICS: CaseStatistics = {
     // New: persons by sector — sums to the Person total (162,614). Distribution
     // reflects the verified reality (dataset dominated by local election
     // candidates); the near-empty sectors are kept for honest coverage.
+    // Sectors the backend actually emits (derived from each person's memberOf
+    // org): local government, elected politicians, health, other office, and the
+    // persons with no resolvable office (not_recorded).
     persons_by_sector: [
       { sector: "local_gov", count: 154800 },
-      { sector: "legislators", count: 3500 },
-      { sector: "not_recorded", count: 2400 },
-      { sector: "politicians", count: 900 },
-      { sector: "civil_service", count: 620 },
-      { sector: "judiciary", count: 140 },
-      { sector: "security", count: 95 },
-      { sector: "business", count: 70 },
-      { sector: "other", count: 89 },
+      { sector: "not_recorded", count: 4200 },
+      { sector: "politicians", count: 2100 },
+      { sector: "health", count: 1100 },
+      { sector: "other", count: 414 },
     ],
     counts: {
       with_identifier: 181600,

@@ -1258,6 +1258,27 @@
       "withDocumentSources": "Have document sources",
       "ofTotal": "{{part}} of {{total}} ({{pct}}%)"
     },
+    "pipeline": {
+      "intro": "Every figure on this page follows the same path — from public record to published case.",
+      "stages": {
+        "sources": {
+          "title": "Public sources",
+          "caption": "Government offices, courts and registries — the Attorney General, CIAA, the courts, Nepal Kanun Patrika and more."
+        },
+        "collected": {
+          "title": "Collected records",
+          "caption": "We gather their source documents, court-case records, and the people and bodies named in them."
+        },
+        "linked": {
+          "title": "Cross-checked & linked",
+          "caption": "Duplicates are removed, entities resolved, and each document linked to the case it belongs to."
+        },
+        "cases": {
+          "title": "Accountability cases",
+          "caption": "Verified findings become the public cases you can browse and search."
+        }
+      }
+    },
     "gap": {
       "heading": "The accountability gap",
       "lead": "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
@@ -1266,6 +1287,7 @@
       "ofDocumented": "{{pct}}% of documented",
       "stage": {
         "documented": "Documented",
+        "inReview": "In review (being prepared)",
         "published": "Reached a published finding"
       },
       "eyebrow": "The core finding",
@@ -1273,9 +1295,9 @@
       "bucketsCaption": "Every documented case sits in exactly one of these. The three add up to the total above."
     },
     "corruptionCases": {
-      "eyebrow": "The core finding",
+      "eyebrow": "An open record",
       "heading": "Corruption cases",
-      "lead": "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
+      "lead": "A public record of corruption cases involving officials, offices, and contracts, compiled from court filings and official sources.",
       "ciaaLabel": "CIAA prosecutions",
       "nonCiaaLabel": "Other bodies",
       "ciaaCaption": "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies.",
@@ -1312,20 +1334,22 @@
     },
     "honesty": {
       "heading": "How solid is this data?",
-      "description": "What the records back up today, and where they fall short. We show the gaps rather than round them away.",
-      "holdsUp": "What holds up",
-      "stillThin": "Still thin",
-      "legendThin": "Thin (under 25%)",
-      "legendPartial": "Partial",
-      "legendSolid": "Solid (75%+)",
+      "description": "What the records back up today, and where they fall short — we show the gaps rather than round them away.",
+      "ofTotal": "of {{total}}",
+      "notStarted": "not started yet",
       "count": "{{part}} of {{total}}",
+      "group": {
+        "court": "Court records",
+        "entities": "People & offices tracked",
+        "materials": "Source materials"
+      },
       "item": {
-        "regDate": "Court records with an official registration date",
-        "stableId": "Tracked people and offices with a stable ID",
-        "bilingual": "Entities with both an English and Nepali name",
-        "linkedEntity": "Court records linked to the people or offices they name",
-        "sourceDoc": "Court records with an attached source document",
-        "materialLink": "Materials with a working source link"
+        "regDate": "Have an official registration date",
+        "sourceDoc": "Have an attached source document",
+        "linkedEntity": "Linked to the people and offices named",
+        "stableId": "Have a stable identifier",
+        "bilingual": "Have both an English and Nepali name",
+        "materialLink": "Have a source link"
       }
     },
     "limitations": {
@@ -1376,6 +1400,7 @@
         "security": "Security forces",
         "business": "Business & private",
         "other": "Other",
+        "health": "Health sector",
         "notRecorded": "Position not recorded"
       },
       "coarse": {
@@ -1387,7 +1412,14 @@
     "materialsBySource": {
       "heading": "Where the evidence comes from",
       "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate.",
+      "sourceNote": "“Jawafdehi original documents” are source files — press releases, charge sheets, news — that were attached to our own case files and republished here as standalone records.",
       "tooltip": "Materials",
+      "table": {
+        "source": "Source",
+        "type": "Document type",
+        "count": "Documents",
+        "share": "Share"
+      },
       "source": {
         "ag": "Attorney General (charge sheets)",
         "nkp": "Nepal Kanun Patrika",

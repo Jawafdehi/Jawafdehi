@@ -34,6 +34,14 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
     return;
   }
 
+  // Data Quality & Coverage page: shares the ['statistics'] query key with the
+  // home hero, so prefetching here paints the KPI strip / sections server-side
+  // instead of flashing empty until the client fetch resolves.
+  if (url === '/data-quality') {
+    await queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics });
+    return;
+  }
+
   // Cases list page: OpenSearch-backed case browse, via Django /api/search proxy.
   if (url === '/cases') {
     await queryClient.prefetchInfiniteQuery({
