@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReviewDetail, RuleResult, SourceSummary } from "@/types/casework";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   dispositionColor,
   statusColor,
@@ -28,16 +29,6 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [source, setSource] = useState<SourceSummary | null>(null);
   const [showRaw, setShowRaw] = useState(false);
-
-  // Close the source viewer on Escape (keyboard a11y).
-  useEffect(() => {
-    if (!source) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSource(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [source]);
 
   const result = review.result || null;
   const passT = result?.thresholds?.pass ?? 80;
@@ -209,6 +200,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
+                aria-pressed={filter === f}
                 className={`text-xs px-2.5 py-1 rounded-full border ${
                   filter === f
                     ? "bg-primary text-primary-foreground border-primary"
@@ -264,29 +256,20 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
         </div>
       )}
 
-      {/* Source modal */}
-      {source && (
-        <div
-          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
-          onClick={() => setSource(null)}
-        >
-          <div
-            className="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-4 py-3 border-b flex items-center justify-between gap-3">
+      {/* Source viewer — shared Dialog primitive: focus trap, Escape-to-close,
+          and overlay semantics come for free. */}
+      <Dialog open={!!source} onOpenChange={(open) => !open && setSource(null)}>
+        {source && (
+          <DialogContent className="max-w-3xl w-full max-h-[85vh] p-0 gap-0 flex flex-col overflow-hidden">
+            {/* pr-12 leaves room for the Dialog's built-in close (X) button. */}
+            <div className="px-4 py-3 border-b flex items-center justify-between gap-3 pr-12">
               <div className="min-w-0">
-                <div className="text-sm font-semibold truncate">{source.title}</div>
+                <DialogTitle className="text-sm font-semibold truncate">{source.title}</DialogTitle>
                 <div className="text-xs text-slate-400">{source.source_type}</div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setShowRaw((v) => !v)}>
-                  {showRaw ? "Rendered" : "Raw"}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setSource(null)}>
-                  Close
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowRaw((v) => !v)}>
+                {showRaw ? "Rendered" : "Raw"}
+              </Button>
             </div>
             <div className="p-4 overflow-auto text-sm">
               {!(source.conversion_status === "converted" || source.conversion_status === "attached") &&
@@ -302,9 +285,9 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                 />
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }
@@ -390,6 +373,7 @@ function RuleCard({
 
       <button
         onClick={onToggle}
+        aria-expanded={expanded}
         className="font-meta mt-2 flex items-center gap-1 text-slate-400 hover:text-slate-600"
       >
         <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />

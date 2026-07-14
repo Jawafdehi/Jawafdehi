@@ -32,10 +32,19 @@ export function ReviewRow({
   const reviewers = reviewerLabels(r.reviewers);
   return (
     <li
+      role="option"
+      tabIndex={0}
+      aria-selected={selected}
       className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer border-l-2 ${
         selected ? "bg-slate-50 border-primary" : "border-transparent hover:bg-slate-50"
       }`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
       <span className="text-xs font-mono text-slate-400 w-12">#{r.id}</span>
       <span className="text-xs text-slate-500 w-40 hidden md:inline">

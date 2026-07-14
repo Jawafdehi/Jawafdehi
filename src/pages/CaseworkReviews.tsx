@@ -54,6 +54,7 @@ export default function CaseworkReviews() {
         setCount(page.count);
         setHasNext(Boolean(page.next));
         setNextPage(2);
+        setErr(""); // a successful (re)load clears a prior failure banner
       }
       setGroups((prev) => (prev.length ? mergeGroups(prev, page.results) : page.results));
     } catch {
@@ -65,6 +66,7 @@ export default function CaseworkReviews() {
 
   const loadMore = useCallback(async () => {
     setLoadingMore(true);
+    setErr("");
     try {
       const page = await listReviewsGrouped({ page: nextPage, page_size: PAGE_SIZE });
       setCount(page.count);

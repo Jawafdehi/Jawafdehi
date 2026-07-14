@@ -49,9 +49,10 @@ check("latest score (88) shown on list", (await page.getByText("88", { exact: tr
 check("older run score (74) hidden on list", (await page.getByText("74", { exact: true }).count()) === 0);
 check("no Re-run button on the list", (await page.getByRole("button", { name: /Re-run/ }).count()) === 0);
 
-// Clicking a case row NAVIGATES to its case page and starts NOTHING.
+// Clicking a case row NAVIGATES to its case page and starts NOTHING. Click the
+// slug text (bubbles to the row's onClick) — a stable hook not tied to styling.
 let n = submitPosts.length;
-await page.locator("div.cursor-pointer", { hasText: PATANJALI }).first().click();
+await page.getByText(PATANJALI, { exact: true }).click();
 await page.waitForURL(new RegExp(`/admin/reviews/case/${PATANJALI}$`), { timeout: 15000 });
 check("row click navigates to the case page", true, page.url());
 check("row click started no review", submitPosts.length === n, `submits=${submitPosts.length - n}`);
@@ -73,6 +74,15 @@ await page.getByText("run #501").first().waitFor({ timeout: 10000 });
 check("selecting a run swaps the breakdown in place", (await page.getByText("run #501").count()) >= 1);
 check("selecting a run deep-links via ?run=", page.url().includes("run=501"), page.url());
 await page.screenshot({ path: `${SHOTS}/reviews-per-case-hosted.png`, fullPage: true });
+
+// Source viewer is the shared Dialog primitive (focus trap + Escape-to-close).
+await page.getByRole("button", { name: /View/ }).first().click();
+const dialog = page.getByRole("dialog");
+await dialog.waitFor({ timeout: 10000 });
+check("source viewer opens as a dialog", (await dialog.getByText("Charge sheet").count()) >= 1);
+await page.keyboard.press("Escape");
+await dialog.waitFor({ state: "hidden", timeout: 10000 });
+check("Escape closes the source dialog", (await page.getByRole("dialog").count()) === 0);
 
 // === 3. Search NAVIGATES to a case (never auto-submits) ====================
 console.log("\n== Search navigates, does not submit ==");

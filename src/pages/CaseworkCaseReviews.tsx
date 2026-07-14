@@ -77,13 +77,16 @@ export default function CaseworkCaseReviews() {
     });
   }, [runs, searchParams]);
 
-  // Load the selected run's full detail (the breakdown).
+  // Load the selected run's full detail (the breakdown). Clear the previous
+  // detail first so switching runs shows the loader — never the prior run's data
+  // under the new run number.
   useEffect(() => {
     if (selectedId == null) {
       setDetail(null);
       return;
     }
     let active = true;
+    setDetail(null);
     setDetailLoading(true);
     getReview(selectedId)
       .then((d) => {
@@ -100,9 +103,30 @@ export default function CaseworkCaseReviews() {
     };
   }, [selectedId]);
 
-  // Poll while the selected run is still in progress: refresh both its detail
-  // and the run list (so the row's score/status settle). Recursive setTimeout so
-  // a slow request can't pile up.
+  // Keep the run list fresh while ANY run is still processing — even when the
+  // user is viewing a different, already-finished run. Recursive setTimeout so a
+  // slow request can't pile up.
+  useEffect(() => {
+    const anyActive = runs.some((r) => r.status === "pending" || r.status === "running");
+    if (!anyActive) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      try {
+        await loadRuns(true);
+      } catch {
+        /* retry next tick */
+      }
+      if (active) timer = setTimeout(tick, 3000);
+    };
+    timer = setTimeout(tick, 3000);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [runs, loadRuns]);
+
+  // Refresh the SELECTED run's breakdown while it is still in progress.
   useEffect(() => {
     const s = detail?.status;
     if (selectedId == null || (s !== "pending" && s !== "running")) return;
@@ -110,7 +134,7 @@ export default function CaseworkCaseReviews() {
     let timer: ReturnType<typeof setTimeout>;
     const tick = async () => {
       try {
-        const [d] = await Promise.all([getReview(selectedId), loadRuns(true)]);
+        const d = await getReview(selectedId);
         if (active) setDetail(d);
       } catch {
         /* keep last-known detail; try again next tick */
@@ -122,7 +146,7 @@ export default function CaseworkCaseReviews() {
       active = false;
       clearTimeout(timer);
     };
-  }, [detail?.status, selectedId, loadRuns]);
+  }, [detail?.status, selectedId]);
 
   const selectRun = (id: number) => {
     setSelectedId(id);
@@ -189,7 +213,7 @@ export default function CaseworkCaseReviews() {
             </div>
             <Button
               onClick={onRunReview}
-              disabled={submitting || latestInProgress}
+              disabled={submitting || latestInProgress || loadingRuns}
               title={
                 latestInProgress
                   ? "A review is already in progress for this case"
@@ -224,7 +248,7 @@ export default function CaseworkCaseReviews() {
               <div className="px-4 py-2.5 bg-slate-50 border-b text-sm font-semibold">
                 Runs ({runs.length})
               </div>
-              <ul className="divide-y">
+              <ul className="divide-y" role="listbox" aria-label="Review runs">
                 {runs.map((r) => (
                   <ReviewRow
                     key={r.id}
