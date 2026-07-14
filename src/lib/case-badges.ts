@@ -123,12 +123,14 @@ export function deriveCaseStatus(
   state: string | null | undefined,
   caseEndDate?: string | null,
 ): CaseStatusValue {
-  const trimmedState = state?.trim();
+  // Normalize case and separators so a lowercase/mixed-case API value
+  // ("draft", "in-review", "closed") is compared the same as its canonical form.
+  const normalizedState = state?.trim().toUpperCase().replace(/-/g, "_");
 
-  if (trimmedState === "DRAFT" || trimmedState === "IN_REVIEW") return trimmedState;
-  if (trimmedState === "CLOSED") return "CLOSED";
+  if (normalizedState === "DRAFT" || normalizedState === "IN_REVIEW") return normalizedState;
+  if (normalizedState === "CLOSED") return "CLOSED";
 
   if (caseEndDate && caseEndDate.trim() !== "") return "concluded";
 
-  return trimmedState || "PUBLISHED";
+  return normalizedState || "PUBLISHED";
 }

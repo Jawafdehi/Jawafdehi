@@ -6,6 +6,7 @@ import type { TimelineEntry } from "@/types/jds";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { CollapsibleCaseContent } from "@/components/case-detail/collapsible-case-content";
+import { buildYearGroupHeadings } from "@/components/case-detail/case-timeline-headings";
 
 interface CaseTimelineSectionProps {
   className?: string;
@@ -49,53 +50,6 @@ function getCompactDateLabel(
     .join(" - ");
 
   return { label, year };
-}
-
-type CompactDateLabel = { label: string; year: string | null } | null;
-
-interface TimelineRow {
-  date: LocalizedDatePair;
-  primaryDate: CompactDateLabel;
-  secondaryDate: CompactDateLabel;
-}
-
-/**
- * Build the group-heading text for each primary-calendar year. The timeline rows
- * only carry the day/month in the secondary calendar, so the year would
- * otherwise appear in one calendar (AD in English) but not the other. Surface
- * the secondary-calendar year(s) in the heading. A single AD year can span two
- * BS years (the BS new year falls mid-April), so aggregate the distinct
- * secondary years seen within each group and render them as a range.
- */
-function buildYearGroupHeadings(rows: TimelineRow[]): Map<string, string> {
-  const secondaryYears = new Map<string, string[]>();
-  let secondaryCalendar: "AD" | "BS" | null = null;
-
-  for (const row of rows) {
-    const primaryYear = row.primaryDate?.year;
-    if (!primaryYear) continue;
-
-    if (!secondaryCalendar && row.date.secondaryCalendar) {
-      secondaryCalendar = row.date.secondaryCalendar;
-    }
-
-    const seen = secondaryYears.get(primaryYear) ?? [];
-    const secondaryYear = row.secondaryDate?.year;
-    if (secondaryYear && !seen.includes(secondaryYear)) seen.push(secondaryYear);
-    secondaryYears.set(primaryYear, seen);
-  }
-
-  const headings = new Map<string, string>();
-  for (const [primaryYear, years] of secondaryYears) {
-    if (years.length === 0 || !secondaryCalendar) {
-      headings.set(primaryYear, primaryYear);
-      continue;
-    }
-    const span = years.length === 1 ? years[0] : `${years[0]}–${years[years.length - 1]}`;
-    headings.set(primaryYear, `${primaryYear} (${span} ${secondaryCalendar})`);
-  }
-
-  return headings;
 }
 
 export function CaseTimelineSection({

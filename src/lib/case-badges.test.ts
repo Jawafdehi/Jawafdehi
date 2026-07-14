@@ -32,6 +32,16 @@ describe("deriveCaseStatus", () => {
   it("keeps an explicit CLOSED state", () => {
     expect(deriveCaseStatus("CLOSED", null)).toBe("CLOSED");
   });
+
+  it("is case- and separator-insensitive for the workflow state", () => {
+    expect(deriveCaseStatus("draft", "2023-06-09")).toBe("DRAFT");
+    expect(deriveCaseStatus("In_Review", "2023-06-09")).toBe("IN_REVIEW");
+    expect(deriveCaseStatus("in-review", null)).toBe("IN_REVIEW");
+    expect(deriveCaseStatus("closed", null)).toBe("CLOSED");
+    // A lowercase published state with an end date still concludes.
+    expect(deriveCaseStatus("published", "2023-06-09")).toBe("concluded");
+    expect(deriveCaseStatus("published", null)).toBe("PUBLISHED");
+  });
 });
 
 describe("getCaseStatusLabelKey", () => {
