@@ -34,6 +34,14 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
   const passT = result?.thresholds?.pass ?? 80;
   const inProgress = review.status === "pending" || review.status === "running";
 
+  // Elapsed is the time actually spent running the review: finished − picked up.
+  // Fall back to the worker-measured duration for older rows that predate the
+  // pickup-time stamp (started_at null).
+  const elapsedSeconds =
+    review.started_at && review.completed_at
+      ? (new Date(review.completed_at).getTime() - new Date(review.started_at).getTime()) / 1000
+      : review.duration_seconds;
+
   const grouped = useMemo(() => {
     const g = new Map<string, RuleResult[]>();
     for (const rr of result?.rules || []) {
@@ -74,11 +82,23 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                   {result?.case_type?.label || review.case_type}
                 </span>
               )}
-              <span className="text-slate-400">
-                🕓 {fmtDate(review.completed_at || review.created_at)}
+              <span className="text-slate-400" title="Submitted for review">
+                🕓 {fmtDate(review.created_at)}
               </span>
-              {review.duration_seconds != null && (
-                <span className="text-slate-400">⏱ {fmtDur(review.duration_seconds)}</span>
+              {review.started_at && (
+                <span className="text-slate-400" title="Picked up by a worker">
+                  🚀 {fmtDate(review.started_at)}
+                </span>
+              )}
+              {review.completed_at && (
+                <span className="text-slate-400" title="Finished">
+                  🏁 {fmtDate(review.completed_at)}
+                </span>
+              )}
+              {elapsedSeconds != null && (
+                <span className="text-slate-400" title="Elapsed (finished − picked up)">
+                  ⏱ {fmtDur(elapsedSeconds)}
+                </span>
               )}
               <span className="text-slate-400">
                 sources {review.sources_converted}/{review.source_count}
