@@ -13,12 +13,14 @@ export default function CaseworkRunRedirect() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!id) {
+    const runId = Number(id);
+    // Bail on a missing / non-numeric id instead of fetching /reviews/NaN/.
+    if (!id || Number.isNaN(runId)) {
       navigate("/admin/reviews", { replace: true });
       return;
     }
     let active = true;
-    getReview(Number(id))
+    getReview(runId)
       .then((r) => {
         if (active)
           navigate(`/admin/reviews/case/${encodeURIComponent(r.slug)}?run=${r.id}`, {

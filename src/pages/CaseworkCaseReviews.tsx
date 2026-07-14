@@ -126,7 +126,10 @@ export default function CaseworkCaseReviews() {
 
   const selectRun = (id: number) => {
     setSelectedId(id);
-    setSearchParams({ run: String(id) }, { replace: true });
+    // Preserve any other query params rather than replacing the whole string.
+    const params = new URLSearchParams(searchParams);
+    params.set("run", String(id));
+    setSearchParams(params, { replace: true });
   };
 
   // Trigger a fresh review for this case (the ONLY place a review is started).

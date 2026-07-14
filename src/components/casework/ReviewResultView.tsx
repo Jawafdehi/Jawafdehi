@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReviewDetail, RuleResult, SourceSummary } from "@/types/casework";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,16 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [source, setSource] = useState<SourceSummary | null>(null);
   const [showRaw, setShowRaw] = useState(false);
+
+  // Close the source viewer on Escape (keyboard a11y).
+  useEffect(() => {
+    if (!source) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSource(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [source]);
 
   const result = review.result || null;
   const passT = result?.thresholds?.pass ?? 80;
@@ -123,7 +133,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
           </div>
         )}
 
-        {review.status === "failed" && (
+        {review.status === "failed" && review.error && (
           <pre className="mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded p-3 whitespace-pre-wrap max-h-48 overflow-auto">
             {review.error}
           </pre>
