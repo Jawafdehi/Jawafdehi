@@ -42,6 +42,7 @@ import TimelineEditor from "@/components/admin/case/TimelineEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
+import CaseReviewScoreBadge from "@/components/admin/case/CaseReviewScoreBadge";
 import CaseHistoryPanel from "@/components/admin/case/CaseHistoryPanel";
 import DatePairInput from "@/components/admin/DatePairInput";
 import { FormError, FieldError } from "@/components/admin/FormError";
@@ -576,6 +577,7 @@ export default function AdminCaseForm() {
           state={caseState}
           isModerator={isModerator}
           onTransitioned={() => loadCase()}
+          rightSlot={<CaseReviewScoreBadge slug={slug} />}
         />
       )}
 

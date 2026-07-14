@@ -1467,6 +1467,12 @@
       "editingHint": "Editing {{slug}}. New cases are created as DRAFT.",
       "viewOnWebsite": "View on website",
       "viewOnWebsiteNotPublic": "Not public yet — publish the case to view it on the website.",
+      "reviewBadge": {
+        "label": "AI",
+        "none": "No AI review",
+        "loading": "Loading latest AI review…",
+        "linkTitle": "View AI review history"
+      },
       "notFound": "This case could not be found.",
       "conflictBanner": "This case was changed by someone else since you opened it. Reload to get the latest version before saving.",
       "reloadCase": "Reload case",
