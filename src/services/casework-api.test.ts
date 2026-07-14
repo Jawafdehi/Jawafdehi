@@ -1,54 +1,60 @@
-import { describe, it, expect } from "vitest";
-import { buildSubmitPayload, looksLikeReviewIri } from "./casework-api";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-describe("buildSubmitPayload", () => {
-  it("sends a Jawafdehi case IRI as `iri`", () => {
-    expect(buildSubmitPayload("https://jawafdehi.org/case/alpha-case")).toEqual({
-      iri: "https://jawafdehi.org/case/alpha-case",
+// The OIDC token fetch touches the browser UserManager; stub it so the request
+// interceptor is inert in tests.
+vi.mock("./oidc", () => ({ getAccessToken: vi.fn().mockResolvedValue(null) }));
+
+// Capture what the shared axios instance is asked to fetch (mirrors
+// admin-api.test.ts). Each verb records its (url, params/body) and resolves an
+// empty body so the wrappers just relay the shape.
+const { calls } = vi.hoisted(() => ({
+  calls: [] as { method: string; url: string; body?: unknown; config?: unknown }[],
+}));
+
+vi.mock("axios", () => {
+  const record =
+    (method: string) =>
+    (url: string, body?: unknown, config?: unknown) => {
+      calls.push({ method, url, body, config });
+      // GET signature is (url, config); POST is (url, body, config).
+      return Promise.resolve({ data: { id: 7 }, headers: {} });
+    };
+  const instance = {
+    get: (url: string, config?: unknown) => {
+      calls.push({ method: "get", url, config });
+      return Promise.resolve({ data: { count: 0, next: null, previous: null, results: [] }, headers: {} });
+    },
+    post: record("post"),
+    put: record("put"),
+    patch: record("patch"),
+    delete: record("delete"),
+    interceptors: { request: { use: () => undefined } },
+  };
+  return { default: { create: () => instance } };
+});
+
+import { submitReview, listReviews } from "./casework-api";
+
+beforeEach(() => {
+  calls.length = 0;
+});
+
+describe("submitReview", () => {
+  it("POSTs the case slug to the submit endpoint", async () => {
+    await submitReview({ slug: "case-081-cr-0136-oxygen-plant" });
+    expect(calls[0]).toMatchObject({
+      method: "post",
+      url: "/api/casework/reviews/submit/",
+      body: { slug: "case-081-cr-0136-oxygen-plant" },
     });
-  });
-
-  it("sends a court-case IRI as `iri`", () => {
-    expect(
-      buildSubmitPayload("https://jawafdehi.org/courtcase/special/080-cr-0111")
-    ).toEqual({ iri: "https://jawafdehi.org/courtcase/special/080-cr-0111" });
-  });
-
-  it("trims surrounding whitespace", () => {
-    expect(buildSubmitPayload("  https://jawafdehi.org/case/alpha-case  ")).toEqual({
-      iri: "https://jawafdehi.org/case/alpha-case",
-    });
-  });
-
-  it("forwards non-IRI input verbatim (the backend rejects it with a clear 400)", () => {
-    expect(buildSubmitPayload("080-CR-0111")).toEqual({ iri: "080-CR-0111" });
   });
 });
 
-describe("looksLikeReviewIri", () => {
-  it("accepts case and court-case IRIs", () => {
-    expect(looksLikeReviewIri("https://jawafdehi.org/case/alpha-case")).toBe(true);
-    expect(
-      looksLikeReviewIri("https://jawafdehi.org/courtcase/special/080-cr-0111")
-    ).toBe(true);
-    expect(looksLikeReviewIri("  https://jawafdehi.org/case/alpha-case  ")).toBe(true);
-  });
-
-  it("rejects case numbers, names, and legacy court refs", () => {
-    expect(looksLikeReviewIri("080-CR-0111")).toBe(false);
-    expect(looksLikeReviewIri("Giribandhu")).toBe(false);
-    expect(looksLikeReviewIri("special:081-CR-0136")).toBe(false);
-    expect(looksLikeReviewIri("case-081-cr-0136-oxygen-plant")).toBe(false);
-  });
-
-  it("mirrors the backend: court-case numbers are lowercase-only (uppercase is not canonical)", () => {
-    // Court-case IRIs are strictly lowercase everywhere on the platform, so an
-    // uppercase number is not a valid court-case IRI — keep this in sync with
-    // the backend so the hint never says "ok" for something it will 400.
-    expect(
-      looksLikeReviewIri("https://jawafdehi.org/courtcase/special/080-CR-0111")
-    ).toBe(false);
-    // A case slug, by contrast, may contain uppercase.
-    expect(looksLikeReviewIri("https://jawafdehi.org/case/Case-Alpha")).toBe(true);
+describe("listReviews", () => {
+  it("scopes the flat list to one case via ?slug=", async () => {
+    await listReviews({ slug: "case-a", page_size: 100 });
+    expect(calls[0].method).toBe("get");
+    expect(calls[0].url).toBe("/api/casework/reviews/");
+    expect(calls[0].config).toMatchObject({ params: { slug: "case-a", page_size: 100 } });
   });
 });

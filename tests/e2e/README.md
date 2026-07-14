@@ -9,6 +9,7 @@ Drives the real SPA in headless Chromium (Playwright) against a mock backend tha
 - `admin-dates-repro.mjs` — admin case editor: BS/AD date pairing, the BS-picker corruption/crash path, bigo comma formatting, timeline inline inserts, and the save wire format.
 - `site-and-materials.mjs` — field-based material edit form (PUT body shape), case-detail evidence-title links to `/material/*`, home-page case-card thumbnail fallback.
 - `case-detail.mjs` — redesigned case page: banner (breadcrumb, badges, court-case @id IRI links), section jump nav, material-based evidence cards, PDF preview dialog, `/courtcase` page, `/case/<court-ref>` slug redirect, guest-chat-removal 404.
+- `casework-reviews.mjs` — casework review flow: autocomplete case-search submit (no raw-IRI box), the slimmed one-row-per-case list (latest run only), the per-case review page (`/admin/reviews/case/:slug`) run history, and the run-detail breakdown. Uses the in-memory review store the mock seeds (one case, two runs) and appends on submit.
 - `smoke.mjs` — quick home-page load check.
 
 ## Running

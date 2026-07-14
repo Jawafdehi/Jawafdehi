@@ -117,10 +117,10 @@ export default function CaseworkReviewDetail() {
     <CaseworkLayout>
       <div className="space-y-5">
         <button
-          onClick={() => navigate("/admin/reviews")}
+          onClick={() => navigate(`/admin/reviews/case/${encodeURIComponent(review.slug)}`)}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
-          <ArrowLeft className="h-4 w-4" /> All reviews
+          <ArrowLeft className="h-4 w-4" /> All runs for this case
         </button>
 
         {/* Hero */}

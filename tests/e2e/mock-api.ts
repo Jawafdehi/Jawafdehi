@@ -52,6 +52,112 @@ for (const m of materialsList.results) {
   materialsByTail.set(materialTail(String(m["@id"])), m);
 }
 
+// ---------------------------------------------------------------------------
+// Casework reviews (in-memory). submit appends a fresh run; the store stays
+// newest-first so grouping and the flat ?slug= list mirror the real backend's
+// -created_at ordering.
+// ---------------------------------------------------------------------------
+let reviewSeq = 500;
+const reviews: Json[] = [];
+
+function makeResult(slug: string, title: string, score: number, disposition: string): Json {
+  const rule = (key: string, ruleTitle: string, category: string, kind: string, sc: number) => ({
+    key,
+    title: ruleTitle,
+    category,
+    kind,
+    condition_text: "",
+    applies_to: [],
+    weight: 1,
+    is_gate: false,
+    gate_min: 0,
+    gate_failed: false,
+    score: sc,
+    confidence: "high",
+    variance: 0,
+    std: 0,
+    issues: [],
+    notes: [],
+    suggestions: [],
+    rationale: "Deterministic check passed.",
+    description: "",
+    good_examples: "",
+    bad_examples: "",
+  });
+  return {
+    slug,
+    title,
+    state: "IN_REVIEW",
+    case_type: { type: "criminal", label: "Criminal", rationale: "" },
+    overall_score: score,
+    disposition,
+    // Three categories so the detail radar chart (>= 3 axes) renders.
+    rules: [
+      rule("has_sources", "Sources attached", "Evidence", "deterministic", 100),
+      rule("summary_quality", "Summary quality", "Narrative", "llm", score),
+      rule("entity_coverage", "Entity coverage", "Entities", "llm", Math.max(0, score - 3)),
+    ],
+    categories: [
+      { category: "Evidence", score: 100, rules: 1 },
+      { category: "Narrative", score, rules: 1 },
+      { category: "Entities", score: Math.max(0, score - 3), rules: 1 },
+    ],
+    gate_failures: [],
+    gates_pass: true,
+    narrative: `Automated review summary for ${title}.`,
+    info: [],
+    judge_error: null,
+    llm_samples: 3,
+    thresholds: { pass: 80, revise: 60 },
+    model_id_used: "anthropic/opus-4.8",
+    source_summary: [
+      {
+        title: "Charge sheet",
+        source_type: "pdf",
+        conversion_status: "converted",
+        conversion_note: "",
+        markdown_chars: 1234,
+        markdown: "# Charge sheet\n\nBody text.",
+        url: [],
+      },
+    ],
+  };
+}
+
+function makeReview(slug: string, title: string, score: number, disposition: string): Json {
+  const id = ++reviewSeq;
+  return {
+    id,
+    slug,
+    case_title: title,
+    status: "done",
+    stage: "done",
+    case_state: "IN_REVIEW",
+    case_type: "criminal",
+    source_count: 1,
+    sources_converted: 1,
+    overall_score: score,
+    disposition,
+    reviewers: [{ tier: "premium", provider: "anthropic", model: "opus-4.8", calls: 3 }],
+    created_at: "2026-07-13T10:00:00Z",
+    completed_at: "2026-07-13T10:01:00Z",
+    started_at: "2026-07-13T10:00:05Z",
+    updated_at: "2026-07-13T10:01:00Z",
+    duration_seconds: 61,
+    error: "",
+    result: makeResult(slug, title, score, disposition),
+  };
+}
+
+// Seed one case with two runs so the list shows a case row and the per-case
+// page shows a run history out of the box.
+{
+  const seedSlug = String(caseDetail.slug);
+  const seedTitle = String(caseDetail.title || seedSlug);
+  reviews.unshift(makeReview(seedSlug, seedTitle, 74, "REVISE"));
+  reviews.unshift(makeReview(seedSlug, seedTitle, 88, "PASS"));
+}
+
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
     status,
@@ -83,7 +189,54 @@ Bun.serve({
       return new Response(null, { status: 204 });
     }
 
-    // --- casework review surface (admin shell dashboards) -------------------
+    // --- casework reviews ---------------------------------------------------
+    // Grouped list: one entry per case (all its runs), newest-case-first.
+    if (path === "/api/casework/reviews/grouped/" && method === "GET") {
+      const bySlug = new Map<string, Json[]>();
+      for (const r of reviews) {
+        const s = String(r.slug);
+        if (!bySlug.has(s)) bySlug.set(s, []);
+        bySlug.get(s)!.push(r);
+      }
+      const results = [...bySlug.entries()].map(([s, execs]) => ({
+        slug: s,
+        case_title: execs[0].case_title,
+        latest: execs[0],
+        executions: execs,
+      }));
+      return json({ count: results.length, next: null, previous: null, results });
+    }
+    // Submit: append a fresh run for the case named by slug (or a /case/ IRI).
+    if (path === "/api/casework/reviews/submit/" && method === "POST") {
+      const body = (await req.json()) as Json;
+      let slug = typeof body.slug === "string" ? body.slug : "";
+      if (!slug && typeof body.iri === "string") {
+        const m = body.iri.match(/\/case\/([^/]+)\/?$/);
+        if (m) slug = decodeURIComponent(m[1]);
+      }
+      if (!slug) return json({ detail: "slug or iri required" }, 400);
+      const c = casesBySlug.get(slug);
+      const title = c ? String(c.title || slug) : slug;
+      const review = makeReview(slug, title, 91, "PASS");
+      reviews.unshift(review);
+      return json(review, 201);
+    }
+    if (path === "/api/casework/reviews/regrade-all/" && method === "POST") {
+      return json({ regrading: 0, review_ids: [] });
+    }
+    const reviewIdMatch = path.match(/^\/api\/casework\/reviews\/(\d+)\/$/);
+    if (reviewIdMatch && method === "GET") {
+      const id = Number(reviewIdMatch[1]);
+      const r = reviews.find((x) => x.id === id);
+      return r ? json(r) : json({ detail: "Not found." }, 404);
+    }
+    // Flat list, optionally scoped to one case's runs via ?slug=.
+    if (path === "/api/casework/reviews/" && method === "GET") {
+      const slug = url.searchParams.get("slug");
+      const results = slug ? reviews.filter((r) => r.slug === slug) : reviews;
+      return json({ count: results.length, next: null, previous: null, results });
+    }
+    // Defensive: any other casework review path.
     if (path.startsWith("/api/casework/reviews")) return json(emptyPage);
     if (path === "/api/casework/rules/") return json([]);
     if (path === "/api/casework/config/") return json({});
@@ -98,6 +251,17 @@ Bun.serve({
       let results = [...casesBySlug.values()];
       const state = url.searchParams.get("state");
       if (state) results = results.filter((c) => c.state === state);
+      // Full-text search: the real /api/cases/ searches title/description/
+      // key_allegations. The mock adds slug too (harmless superset) so tests can
+      // type an ASCII token even when titles are Devanagari.
+      const search = url.searchParams.get("search");
+      if (search) {
+        const q = search.toLowerCase();
+        results = results.filter((c) =>
+          [c.title, c.slug, c.description, c.key_allegations]
+            .some((v) => String(v ?? "").toLowerCase().includes(q)),
+        );
+      }
       const pageSize = Number(url.searchParams.get("page_size") || 0);
       const count = results.length;
       if (pageSize > 0) results = results.slice(0, pageSize);
