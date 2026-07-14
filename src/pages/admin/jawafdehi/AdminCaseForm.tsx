@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
@@ -57,7 +57,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Trash2 } from "lucide-react";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
 
@@ -229,8 +229,9 @@ export default function AdminCaseForm() {
   const [form, setForm] = useState<CaseFormState>(EMPTY);
   const [original, setOriginal] = useState<CaseFormState>(EMPTY);
   const [caseState, setCaseState] = useState<string>("DRAFT");
-  // Raw multiline text for key allegations (one per line) — parsed to a list.
-  const [allegationsText, setAllegationsText] = useState("");
+  // Index of a just-added allegation row so its input can grab focus once it
+  // mounts — otherwise a row appended below the fold reads as a no-op (cf. BB-27).
+  const pendingAllegationFocus = useRef<number | null>(null);
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -265,7 +266,6 @@ export default function AdminCaseForm() {
       setForm(parsed);
       setOriginal(parsed);
       setCaseState(str(c.state ?? c.status) || "DRAFT");
-      setAllegationsText(parsed.key_allegations.join("\n"));
       setEtag(tok);
       // A fresh load resolves any prior conflict and refreshes the history.
       setHistoryKey((k) => k + 1);
@@ -281,14 +281,30 @@ export default function AdminCaseForm() {
     loadCase();
   }, [loadCase]);
 
-  // Keep the parsed allegations list in sync with the textarea.
-  useEffect(() => {
-    const list = allegationsText
-      .split("\n")
-      .map((s) => s.trim())
-      .filter((s) => s !== "");
-    setForm((f) => ({ ...f, key_allegations: list }));
-  }, [allegationsText]);
+  // Key allegations are edited as a numbered row list driving
+  // form.key_allegations directly. The editor keeps a blank trailing row the
+  // author may still be typing into; blank/whitespace rows are dropped from
+  // what actually persists (the save PATCH and the create payload).
+  const cleanedAllegations = useMemo(
+    () => form.key_allegations.map((s) => s.trim()).filter((s) => s !== ""),
+    [form.key_allegations],
+  );
+  const updateAllegation = (i: number, value: string) =>
+    set(
+      "key_allegations",
+      form.key_allegations.map((a, idx) => (idx === i ? value : a)),
+    );
+  const removeAllegation = (i: number) =>
+    set(
+      "key_allegations",
+      form.key_allegations.filter((_, idx) => idx !== i),
+    );
+  const addAllegation = () => {
+    // The appended row lands at the current end of the list; queue that index
+    // for focus so the new (empty) input is ready to type into.
+    pendingAllegationFocus.current = form.key_allegations.length;
+    set("key_allegations", [...form.key_allegations, ""]);
+  };
 
   const effectiveSlug = editing
     ? form.slug
@@ -342,8 +358,8 @@ export default function AdminCaseForm() {
     if (form.notes !== original.notes) ops.push(replaceOp("/notes", form.notes));
     if (form.missing_details !== original.missing_details)
       ops.push(replaceOp("/missing_details", form.missing_details));
-    if (changed(form.key_allegations, original.key_allegations))
-      ops.push(buildStringListPatch("/key_allegations", form.key_allegations));
+    if (changed(cleanedAllegations, original.key_allegations))
+      ops.push(buildStringListPatch("/key_allegations", cleanedAllegations));
     if (changed(form.entities, original.entities))
       ops.push(buildEntitiesPatch(form.entities));
     if (changed(form.timeline, original.timeline))
@@ -382,7 +398,7 @@ export default function AdminCaseForm() {
       form.description.trim() !== "" ||
       form.notes.trim() !== "" ||
       form.missing_details.trim() !== "" ||
-      form.key_allegations.length > 0 ||
+      cleanedAllegations.length > 0 ||
       form.bigo.trim() !== "" ||
       form.thumbnail_url.trim() !== "" ||
       form.banner_url.trim() !== "" ||
@@ -425,8 +441,8 @@ export default function AdminCaseForm() {
           description: form.description || undefined,
           notes: form.notes || undefined,
           missing_details: form.missing_details || undefined,
-          key_allegations: form.key_allegations.length
-            ? form.key_allegations
+          key_allegations: cleanedAllegations.length
+            ? cleanedAllegations
             : undefined,
         };
         if (effectiveSlug) payload.slug = effectiveSlug;
@@ -680,21 +696,58 @@ export default function AdminCaseForm() {
           />
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="allegations">
-            {t("admin.caseForm.labelAllegations")}
-          </Label>
+        <div className="space-y-2">
+          <Label>{t("admin.caseForm.labelAllegations")}</Label>
           <p className="text-xs text-muted-foreground">
             {t("admin.caseForm.allegationsHelp")}
           </p>
-          <textarea
-            id="allegations"
-            value={allegationsText}
-            onChange={(e) => setAllegationsText(e.target.value)}
-            rows={4}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            placeholder={t("admin.caseForm.allegationsPlaceholder")}
-          />
+          {form.key_allegations.length > 0 && (
+            <div className="space-y-2">
+              {form.key_allegations.map((allegation, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span
+                    className="w-6 shrink-0 select-none text-right text-sm tabular-nums text-muted-foreground"
+                    aria-hidden
+                  >
+                    {i + 1}.
+                  </span>
+                  <Input
+                    ref={(el) => {
+                      if (el && pendingAllegationFocus.current === i) {
+                        pendingAllegationFocus.current = null;
+                        el.focus();
+                        el.scrollIntoView?.({ block: "nearest" });
+                      }
+                    }}
+                    value={allegation}
+                    onChange={(e) => updateAllegation(i, e.target.value)}
+                    aria-label={t("admin.caseForm.allegationRowLabel", {
+                      number: i + 1,
+                    })}
+                    placeholder={t("admin.caseForm.allegationsPlaceholder")}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeAllegation(i)}
+                    title={t("admin.caseForm.allegationRemove")}
+                    aria-label={t("admin.caseForm.allegationRemove")}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={addAllegation}
+          >
+            <Plus className="mr-1 h-4 w-4" /> {t("admin.caseForm.allegationAdd")}
+          </Button>
         </div>
 
         {/* F6 — first-class field editors (replacing raw-JSON entry). */}
