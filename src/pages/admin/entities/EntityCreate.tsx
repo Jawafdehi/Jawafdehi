@@ -233,6 +233,11 @@ export default function EntityCreate() {
 
         <div className="space-y-1">
           <Label htmlFor="change">Change description</Label>
+          <p className="text-xs text-muted-foreground">
+            An audit note saved to this entity's change history explaining why
+            it is being created or what changed; defaults to "Created via admin
+            panel" if left blank.
+          </p>
           <Input
             id="change"
             value={changeDescription}
