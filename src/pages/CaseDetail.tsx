@@ -368,6 +368,12 @@ const CaseDetail = () => {
       <Helmet>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />
+        {/* Non-PUBLISHED cases are "unlisted": reachable by direct slug but kept
+            out of search engines (the API serves IN_REVIEW by slug, but these are
+            provisional, pre-publication records — see the under-review banner). */}
+        {caseData.state !== "PUBLISHED" && (
+          <meta name="robots" content="noindex, nofollow" />
+        )}
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="article" />
