@@ -322,6 +322,8 @@ export interface MaterialsMetrics {
   total: number;
   by_type: { material_type: string; count: number }[];
   by_source: { source: string; count: number }[];
+  /** Source×type cross-tab: how many of each document type each source holds. */
+  by_source_type: { source: string; material_type: string; count: number }[];
   counts: {
     with_description: number;
     with_url: number;

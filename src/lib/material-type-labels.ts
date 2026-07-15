@@ -16,6 +16,7 @@ export function materialTypeKeyFor(type: string): string {
     precedent: "precedent",
     court_order: "courtOrder",
     court_case: "courtCase",
+    press_release: "pressRelease",
     document: "document",
     legal_corpus: "legalCorpus",
     official_report: "officialReport",

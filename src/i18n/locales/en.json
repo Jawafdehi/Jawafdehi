@@ -1411,29 +1411,33 @@
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate.",
+      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
+      "combinedDescription": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
       "tooltip": "Materials",
       "table": {
         "source": "Source",
         "type": "Document type",
+        "types": "Document types",
+        "grouping": "Grouping",
+        "item": "Breakdown",
         "count": "Documents",
         "share": "Share"
       },
       "source": {
-        "ag": "Attorney General (charge sheets)",
+        "ag": "Office of the Attorney General",
         "nkp": "Nepal Kanun Patrika",
-        "courtOrders": "Court orders",
-        "courtRecords": "Court records",
-        "ciaaPress": "CIAA press releases",
-        "dfmis": "Digital Financial Management Information System (DFMIS)",
+        "courts": "Nepal Courts",
+        "ciaa": "Commission for the Investigation of Abuse of Authority (CIAA)",
+        "dfmis": "Development Finance Management Information System (DFMIS)",
         "jawafdehi": "Jawafdehi original documents",
-        "kanunPatrika": "Nepal Kanun Patrika",
-        "ciaaAnnual": "CIAA annual reports",
         "koshi": "Koshi Province",
-        "ppmo": "PPMO blacklist",
-        "ciaa": "CIAA",
-        "oag": "OAG (Attorney General)",
+        "ppmo": "Public Procurement Monitoring Office (PPMO)",
         "other": "Other"
+      },
+      "publishes": {
+        "dfmis": "Development-finance records",
+        "ppmo": "Blacklist / debarment records",
+        "koshi": "Provincial records"
       }
     },
     "materialsByType": {
@@ -1445,6 +1449,7 @@
         "precedent": "Court order precedents",
         "courtOrder": "Court orders",
         "courtCase": "Court case records",
+        "pressRelease": "Press releases",
         "document": "Documents",
         "legalCorpus": "Laws & legislation",
         "officialReport": "Official reports",

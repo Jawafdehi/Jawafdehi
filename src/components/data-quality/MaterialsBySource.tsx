@@ -3,44 +3,34 @@ import { useTranslation } from "react-i18next";
 import type { MaterialsMetrics } from "@/types/jds";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
-import { MaterialsTable } from "./MaterialsTable";
+import { MaterialsTable, type MaterialsSourceGroup } from "./MaterialsTable";
 
 /**
- * Two complementary evidence reads:
+ * "Where the evidence comes from" — one institution-centric table over the
+ * materials dataset. Each row is a document type, grouped under the public
+ * office/record it traces back to (Office of the Attorney General, Nepal Courts,
+ * CIAA, Nepal Kanun Patrika...). An institution that publishes more than one kind
+ * of document (CIAA → press releases AND annual reports) gets one row per type,
+ * each with its own count, under a single spanning source cell.
  *
- *  1. "Where the evidence comes from" — the original SOURCE each material traces
- *     back to (Attorney General charge sheets, Nepal Kanun Patrika precedents,
- *     court orders, CIAA releases, Jawafdehi originals...). Reads by_source.
- *  2. "What materials are hosted" — the same materials grouped by document TYPE
- *     (charge sheets, court order precedents, court orders...). Reads by_type.
+ * The raw `by_source` tokens name the record, not the institution, and split one
+ * office across several tokens (CIAA press releases vs annual reports). So we
+ * roll sources up by `sourceKeyFor` into publishing institutions, and read the
+ * per-type counts from the `by_source_type` cross-tab (`GROUP BY source,
+ * material_type`). Types are named via `materialTypeKeyFor`.
  *
- * Source and type are different axes: "Charge Sheets" / "Court Order Precedents"
- * are material TYPES (chart 2); the SOURCES they come from are the Attorney
- * General (`ag`) and Nepal Kanun Patrika (`nkp`) in chart 1. Raw tokens are
- * mapped to plain labels via the two label mappers.
+ * The `jawafdehi` source (case-attached uploads) is excluded: it conflates
+ * documents already held under other sources and reads as confusing here.
  *
- * Reads live materials.by_source / by_type from /api/statistics/.
+ * Reads live materials.by_source_type from /api/statistics/ (falls back to
+ * by_source, with no per-type rows, for pre-cross-tab snapshots).
  */
 export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics }) {
   const { t } = useTranslation();
   if (!materials) return null;
 
-  // Aggregate counts by resolved key so multiple unmapped tokens collapse into
-  // one "Other" bar instead of colliding React keys / duplicate rows. The
-  // "jawafdehi" source (case-attached uploads) is excluded here — it conflated
-  // documents we already hold elsewhere and read as confusing on this chart.
-  const sourceItems = aggregate(
-    (materials.by_source ?? []).filter((row) => row.source !== "jawafdehi"),
-    (row) => sourceKeyFor(row.source),
-    (key) => t(`dataQuality.materialsBySource.source.${key}`, key),
-  );
-  const typeItems = aggregate(
-    materials.by_type ?? [],
-    (row) => materialTypeKeyFor(row.material_type),
-    (key) => t(`dataQuality.materialsByType.type.${key}`, key),
-  );
-
-  if (!sourceItems.length && !typeItems.length) return null;
+  const groups = buildInstitutionGroups(materials, t);
+  if (!groups.length) return null;
 
   return (
     <section className="border-t border-border pt-10">
@@ -50,54 +40,87 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {t(
           "dataQuality.materialsBySource.description",
-          "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate.",
+          "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
           { total: materials.total.toLocaleString() },
         )}
       </p>
-      {sourceItems.length > 0 && (
-        <div className="mt-6">
-          <MaterialsTable
-            items={sourceItems}
-            nameHeader={t("dataQuality.materialsBySource.table.source", "Source")}
-          />
-        </div>
-      )}
-
-      {typeItems.length > 0 && (
-        <div className="mt-10">
-          <h3 className="font-display text-lg font-bold tracking-tight text-foreground md:text-xl">
-            {t("dataQuality.materialsByType.heading", "What materials are hosted")}
-          </h3>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {t(
-              "dataQuality.materialsByType.description",
-              "The same {{total}} materials, grouped by the kind of document they are.",
-              { total: materials.total.toLocaleString() },
-            )}
-          </p>
-          <div className="mt-6">
-            <MaterialsTable
-              items={typeItems}
-              nameHeader={t("dataQuality.materialsByType.table.type", "Document type")}
-            />
-          </div>
-        </div>
-      )}
+      <div className="mt-6">
+        <MaterialsTable groups={groups} />
+      </div>
     </section>
   );
 }
 
-/** Roll raw rows up by a resolved key, summing counts, into labeled bar items. */
-function aggregate<T extends { count: number }>(
-  rows: T[],
-  keyOf: (row: T) => string,
-  labelOf: (key: string) => string,
-): { label: string; count: number }[] {
-  const byKey = new Map<string, number>();
-  for (const row of rows) {
-    const key = keyOf(row);
-    const count = row.count;
-    byKey.set(key, (byKey.get(key) ?? 0) + count);
+/**
+ * Roll materials up by publishing institution, keeping each document type a
+ * separate row within the institution. Prefers the by_source_type cross-tab;
+ * falls back to by_source (one type-less row per institution) when an older
+ * snapshot lacks the cross-tab.
+ */
+function buildInstitutionGroups(
+  materials: MaterialsMetrics,
+  t: (key: string, fallback: string) => string,
+): MaterialsSourceGroup[] {
+  const crossTab = (materials.by_source_type ?? []).filter(
+    (row) => row.source !== "jawafdehi",
+  );
+
+  // key -> (typeKey -> count)
+  const byKey = new Map<string, Map<string, number>>();
+
+  if (crossTab.length > 0) {
+    for (const row of crossTab) {
+      const key = sourceKeyFor(row.source);
+      const typeCounts = byKey.get(key) ?? new Map();
+      const typeKey = materialTypeKeyFor(row.material_type);
+      typeCounts.set(typeKey, (typeCounts.get(typeKey) ?? 0) + row.count);
+      byKey.set(key, typeCounts);
+    }
+  } else {
+    // Fallback: no cross-tab — one type-less row per institution.
+    for (const row of (materials.by_source ?? []).filter((r) => r.source !== "jawafdehi")) {
+      const key = sourceKeyFor(row.source);
+      const typeCounts = byKey.get(key) ?? new Map();
+      typeCounts.set("", (typeCounts.get("") ?? 0) + row.count);
+      byKey.set(key, typeCounts);
+    }
   }
-  return [...byKey.entries()].map(([key, count]) => ({ label: labelOf(key), count }));
+
+  return [...byKey.entries()].map(([key, typeCounts]) => ({
+    key,
+    source: t(`dataQuality.materialsBySource.source.${key}`, key),
+    // Each document type its own row, biggest contributor first.
+    rows: [...typeCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([typeKey, count]) => ({
+        key: typeKey || "all",
+        type: documentTypeLabel(key, typeKey, t),
+        count,
+      })),
+  }));
+}
+
+// Sources whose materials land under the generic `document` type but whose real
+// output is specific enough to name (researched from each office's mandate):
+// DFMIS = development-finance records, PPMO = contractor blacklist/debarment
+// records, Koshi = provincial records. For these, a bare "Documents" row is
+// unhelpful, so we substitute the office's actual output.
+const SOURCE_PUBLISHES = new Set(["dfmis", "ppmo", "koshi"]);
+const GENERIC_TYPE_KEYS = new Set(["document", "other"]);
+
+/**
+ * Label a document-type row. Uses the data-driven material-type label, except
+ * where a source only carries the generic `document` type — then it names what
+ * that specific office publishes (via the source's `publishes` string).
+ */
+function documentTypeLabel(
+  sourceKey: string,
+  typeKey: string,
+  t: (key: string, fallback: string) => string,
+): string {
+  if (!typeKey) return "";
+  if (GENERIC_TYPE_KEYS.has(typeKey) && SOURCE_PUBLISHES.has(sourceKey)) {
+    return t(`dataQuality.materialsBySource.publishes.${sourceKey}`, `publishes.${sourceKey}`);
+  }
+  return t(`dataQuality.materialsByType.type.${typeKey}`, typeKey);
 }

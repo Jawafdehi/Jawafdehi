@@ -141,6 +141,24 @@ export const MOCK_STATISTICS: CaseStatistics = {
       { source: "ciaa_annual_report", count: 41 },
       { source: "ppmo_blacklist", count: 4 },
     ],
+    // Source×type cross-tab: which document types each source contributes.
+    // Sums per source match by_source; CIAA's press releases + annual reports
+    // and nkp + kanun_patrika roll up into one institution row each.
+    by_source_type: [
+      { source: "ag", material_type: "charge_sheet", count: 99750 },
+      { source: "court_order", material_type: "court_order", count: 23233 },
+      { source: "nkp", material_type: "precedent", count: 10468 },
+      { source: "ciaa_press_release", material_type: "press_release", count: 3438 },
+      { source: "dfmis", material_type: "document", count: 2117 },
+      { source: "jawafdehi", material_type: "document", count: 500 },
+      { source: "jawafdehi", material_type: "news", count: 191 },
+      { source: "jawafdehi", material_type: "official_report", count: 30 },
+      { source: "jawafdehi", material_type: "legal_corpus", count: 13 },
+      { source: "jawafdehi", material_type: "social_media", count: 10 },
+      { source: "kanun_patrika", material_type: "precedent", count: 220 },
+      { source: "ciaa_annual_report", material_type: "official_report", count: 41 },
+      { source: "ppmo_blacklist", material_type: "document", count: 4 },
+    ],
     counts: {
       with_description: 10229,
       with_url: 16288,
