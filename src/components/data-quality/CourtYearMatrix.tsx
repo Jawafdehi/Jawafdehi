@@ -141,7 +141,10 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                           : "hsl(var(--foreground))",
                       }}
                     >
-                      {count > 0 ? formatCompact(count) : "·"}
+                      <span aria-hidden="true">
+                        {count > 0 ? formatCompact(count) : "·"}
+                      </span>
+                      <span className="sr-only">{count.toLocaleString()}</span>
                     </td>
                   );
                 })}

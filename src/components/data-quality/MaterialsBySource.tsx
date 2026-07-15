@@ -88,7 +88,7 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
 }
 
 /** Roll raw rows up by a resolved key, summing counts, into labeled bar items. */
-function aggregate<T>(
+function aggregate<T extends { count: number }>(
   rows: T[],
   keyOf: (row: T) => string,
   labelOf: (key: string) => string,
@@ -96,7 +96,7 @@ function aggregate<T>(
   const byKey = new Map<string, number>();
   for (const row of rows) {
     const key = keyOf(row);
-    const count = (row as { count: number }).count;
+    const count = row.count;
     byKey.set(key, (byKey.get(key) ?? 0) + count);
   }
   return [...byKey.entries()].map(([key, count]) => ({ label: labelOf(key), count }));

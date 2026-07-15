@@ -30,7 +30,7 @@ function healthColor(pct: number): string {
 }
 
 /** One completeness metric: a label, a thin health-coloured bar, and the count. */
-function Bar({ item, t }: { item: HonestyItem; t: Translate }) {
+function CompletenessBar({ item, t }: { item: HonestyItem; t: Translate }) {
   const pct = truncPct(item.part, item.whole);
   const color = healthColor(pct);
   return (
@@ -57,7 +57,7 @@ function Bar({ item, t }: { item: HonestyItem; t: Translate }) {
             total: item.whole.toLocaleString(),
           })}
         </span>
-        {pct === 0 && (
+        {item.part === 0 && (
           <span className="text-xs text-muted-foreground/70">
             · {t("dataQuality.honesty.notStarted", "not started yet")}
           </span>
@@ -151,7 +151,11 @@ export function DataHonesty({
   // Best-first within each group: each record set leads on its strength, then
   // shows where it thins out — instead of the whole section opening on a 0%.
   for (const g of groups) {
-    g.items.sort((a, b) => truncPct(b.part, b.whole) - truncPct(a.part, a.whole));
+    g.items.sort((a, b) => {
+      const pctA = a.whole > 0 ? truncPct(a.part, a.whole) : 0;
+      const pctB = b.whole > 0 ? truncPct(b.part, b.whole) : 0;
+      return pctB - pctA;
+    });
   }
 
   return (
@@ -180,7 +184,7 @@ export function DataHonesty({
             </p>
             <ul className="mt-3 space-y-4">
               {g.items.map((item) => (
-                <Bar key={item.label} item={item} t={t} />
+                <CompletenessBar key={item.label} item={item} t={t} />
               ))}
             </ul>
           </div>

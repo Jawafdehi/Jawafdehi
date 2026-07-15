@@ -33,7 +33,7 @@ export function AccountabilityGap({
   // under-investigation bucket; the rest are drafts. When the backend provides
   // the split, the funnel shows draft vs in-review separately; otherwise it
   // keeps a single "under investigation" bar (graceful pre-deploy fallback).
-  const inReviewProvided = stats?.cases_in_review !== undefined;
+  const inReviewProvided = stats?.cases_in_review != null;
   const inReview = stats?.cases_in_review ?? 0;
   const draftOnly = Math.max(0, investigating - inReview);
 

@@ -37,7 +37,7 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
   // Data Quality & Coverage page: shares the ['statistics'] query key with the
   // home hero, so prefetching here paints the KPI strip / sections server-side
   // instead of flashing empty until the client fetch resolves.
-  if (url === '/data-quality') {
+  if (/^\/data-quality\/?(?:[?#]|$)/.test(url)) {
     await queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics });
     return;
   }

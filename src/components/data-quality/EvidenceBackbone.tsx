@@ -50,7 +50,7 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
       </p>
 
       {ngm && (
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ScaleTile
             icon={<Gavel className="h-6 w-6" />}
             value={ngm.court_cases_total}
