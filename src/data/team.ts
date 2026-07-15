@@ -132,7 +132,7 @@ export const members: TeamMember[] = [
   {
     displayName: { en: "Gaurav Karki", ne: "गौरव कार्की" },
     thumb: "/assets/teammembers/gaurav.jpg",
-    description: "Software Engineer Volunteer",
+    description: "Software Engineer",
     contacts: [
       { type: "github", value: "https://github.com/gaurav-karki" },
     ],
