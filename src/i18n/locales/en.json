@@ -24,24 +24,15 @@
     "faq": "FAQ"
   },
   "weeklyMeetings": {
-    "eyebrow": "Live every week",
+    "eyebrow": "Currently on pause",
     "title": "Weekly Corruption Series",
-    "intro": "Each week we hold a live public session breaking down Nepal's corruption cases — the records, the people, and what accountability should look like. Join us live on Zoom or watch the series on YouTube.",
+    "intro": "Our live weekly sessions breaking down Nepal's corruption cases are paused for now. In the meantime, you can revisit past presentations below.",
+    "status": {
+      "heading": "The series is on hold",
+      "body": "We've temporarily paused the live weekly meetings while our team focuses on Jawafdehi's social-media presence, where we're reaching more people with Nepal's corruption cases. We plan to bring the series back soon."
+    },
     "pastPresentations": {
       "heading": "Past presentations"
-    },
-    "schedule": {
-      "heading": "When we meet — every Friday",
-      "nepal": "Nepal",
-      "pacific": "Pacific (US)",
-      "eastern": "Eastern (US)"
-    },
-    "zoom": {
-      "heading": "Join the live meeting",
-      "description": "Hop into the live discussion on Zoom and take part in the conversation.",
-      "meetingId": "Meeting ID",
-      "passcode": "Passcode",
-      "cta": "Join Zoom Meeting"
     },
     "youtube": {
       "heading": "Watch on YouTube",
@@ -91,7 +82,7 @@
       "about": "Learn about Jawafdehi and its mission.",
       "team": "Meet the people behind Jawafdehi.",
       "products": "Explore Jawafdehi tools and products.",
-      "weeklySeries": "Join the weekly corruption series live on Zoom or watch on YouTube.",
+      "weeklySeries": "The weekly corruption series is on pause; watch past presentations on YouTube.",
       "updates": "Read recent platform updates.",
       "report": "Submit an allegation or public-interest corruption lead.",
       "feedback": "Send bugs, feature ideas, corrections, or general feedback.",

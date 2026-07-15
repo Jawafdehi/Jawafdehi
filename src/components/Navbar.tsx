@@ -48,7 +48,6 @@ const desktopNavWidthClass: Record<string, string> = {
   faq: "min-w-[4.25rem]",
   updates: "min-w-[5.5rem]",
   commitment: "min-w-[8.75rem]",
-  weeklySeries: "min-w-[7.5rem]",
   about: "min-w-[5.75rem]",
   archive: "min-w-[5.75rem]",
 };
@@ -83,7 +82,6 @@ export function Navbar() {
   const navItems = useMemo<NavItem[]>(
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
-      { key: "weeklySeries", label: t("nav.weeklySeries"), to: "/saptahik" },
       { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
       { key: "updates", label: t("nav.updates"), to: "/updates" },
     ],
