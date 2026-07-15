@@ -49,7 +49,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Damodar Dahal", ne: "दामोदर दाहाल" },
     thumb: "https://s3.jawafdehi.org/team/damodar.jpeg",
     description: "Software Engineer @ Amazon Web Services",
-    tags: ["Founding member", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "damo94761@gmail.com" },
       { type: "linkedin", value: "https://www.linkedin.com/in/damo-da/" },
@@ -60,7 +60,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.jpeg",
     description: "",
-    tags: ["Founding member"],
+    tags: ["Founding Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
@@ -69,7 +69,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Medha Sharma", ne: "मेधा शर्मा" },
     thumb: "https://s3.jawafdehi.org/team/medha2.jpeg",
     description: "President, Visible Impact",
-    tags: ["Founding member", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/shmedha/" },
       { type: "email", value: "shmedha@gmail.com" },
@@ -79,7 +79,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Rohan Raj Gautam", ne: "रोहन राज गौतम" },
     thumb: "https://s3.jawafdehi.org/team/rohan2.jpg",
     description: "Software Engineer",
-    tags: ["Founding member", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/rohanrajgautam/" },
     ],
@@ -88,7 +88,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Niroj Aryal", ne: "निरोज अर्याल" },
     thumb: "/assets/teammembers/niroj.jpeg",
     description: "",
-    tags: ["Founding member", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "nirojaryal2002@gmail.com" },
     ],

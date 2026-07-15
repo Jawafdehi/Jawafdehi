@@ -115,8 +115,8 @@ const OurTeam = () => {
                     {member.tags && member.tags.length > 0 && (
                       <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
                         {member.tags.map((tag) => {
-                          const isFounder = tag === "Founding member";
-                          const colorClasses = isFounder
+                          const isFoundingMember = tag === "Founding Member";
+                          const colorClasses = isFoundingMember
                             ? "bg-emerald-500/10 text-emerald-600"
                             : "bg-blue-500/10 text-blue-600";
                           return (
