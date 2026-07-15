@@ -57,15 +57,6 @@ export const nepalBoard: TeamMember[] = [
     ],
   },
   {
-    displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
-    thumb: "/assets/teammembers/busan.jpeg",
-    description: "",
-    tags: ["Founding Member"],
-    contacts: [
-      { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
-    ],
-  },
-  {
     displayName: { en: "Medha Sharma", ne: "मेधा शर्मा" },
     thumb: "https://s3.jawafdehi.org/team/medha2.jpeg",
     description: "President, Visible Impact",
@@ -100,6 +91,15 @@ export const nepalBoard: TeamMember[] = [
     tags: ["Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
+    ],
+  },
+  {
+    displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
+    thumb: "/assets/teammembers/busan.jpeg",
+    description: "",
+    tags: ["Founding Member"],
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
   },
 ];
@@ -144,14 +144,6 @@ export const members: TeamMember[] = [
     contacts: [
       { type: "email", value: "kandelsubodh46@gmail.com" },
       { type: "instagram", value: "https://www.instagram.com/subodh_kandel" },
-    ],
-  },
-  {
-    displayName: { en: "Shishir Bashyal", ne: "शिशिर बस्याल" },
-    thumb: "https://s3.jawafdehi.org/team/shishir.jpeg",
-    description: "CEO, Proma.ai; Volunteer",
-    contacts: [
-      { type: "linkedin", value: "https://www.linkedin.com/in/sbashyal/" },
     ],
   },
 ];
@@ -211,6 +203,14 @@ export const pastMembers: TeamMember[] = [
     description: "Content & Social Media",
     contacts: [
       { type: "linkedin", value: "https://np.linkedin.com/in/britika-khanal-217b50257" },
+    ],
+  },
+  {
+    displayName: { en: "Shishir Bashyal", ne: "शिशिर बस्याल" },
+    thumb: "https://s3.jawafdehi.org/team/shishir.jpeg",
+    description: "CEO, Proma.ai; Volunteer",
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/sbashyal/" },
     ],
   },
 ];
