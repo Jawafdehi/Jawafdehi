@@ -49,7 +49,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Damodar Dahal", ne: "दामोदर दाहाल" },
     thumb: "https://s3.jawafdehi.org/team/damodar.jpeg",
     description: "Software Engineer @ Amazon Web Services",
-    tags: ["Founder", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "damo94761@gmail.com" },
       { type: "linkedin", value: "https://www.linkedin.com/in/damo-da/" },
@@ -57,19 +57,10 @@ export const nepalBoard: TeamMember[] = [
     ],
   },
   {
-    displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
-    thumb: "/assets/teammembers/busan.jpeg",
-    description: "",
-    tags: ["Founder"],
-    contacts: [
-      { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
-    ],
-  },
-  {
     displayName: { en: "Medha Sharma", ne: "मेधा शर्मा" },
     thumb: "https://s3.jawafdehi.org/team/medha2.jpeg",
     description: "President, Visible Impact",
-    tags: ["Founder", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/shmedha/" },
       { type: "email", value: "shmedha@gmail.com" },
@@ -79,7 +70,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Rohan Raj Gautam", ne: "रोहन राज गौतम" },
     thumb: "https://s3.jawafdehi.org/team/rohan2.jpg",
     description: "Software Engineer",
-    tags: ["Founder", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/rohanrajgautam/" },
     ],
@@ -88,7 +79,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Niroj Aryal", ne: "निरोज अर्याल" },
     thumb: "/assets/teammembers/niroj.jpeg",
     description: "",
-    tags: ["Founder", "Board Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "nirojaryal2002@gmail.com" },
     ],
@@ -102,17 +93,18 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
     ],
   },
+  {
+    displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
+    thumb: "/assets/teammembers/busan.jpeg",
+    description: "",
+    tags: ["Founding Member"],
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
+    ],
+  },
 ];
 
 export const members: TeamMember[] = [
-  {
-    displayName: { en: "Raghu Sharma", ne: "रघु शर्मा" },
-    thumb: "/assets/teammembers/raghu.png",
-    description: "Software Engineer",
-    contacts: [
-      { type: "github", value: "https://github.com/Srmaraghu" },
-    ],
-  },
   {
     displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
     thumb: "/assets/teammembers/ashwini.png",
@@ -140,7 +132,7 @@ export const members: TeamMember[] = [
   {
     displayName: { en: "Gaurav Karki", ne: "गौरव कार्की" },
     thumb: "/assets/teammembers/gaurav.jpg",
-    description: "Software Engineer Volunteer",
+    description: "Software Engineer",
     contacts: [
       { type: "github", value: "https://github.com/gaurav-karki" },
     ],
@@ -148,34 +140,10 @@ export const members: TeamMember[] = [
   {
     displayName: { en: "Subodh Kandel", ne: "सुबोध कँडेल" },
     thumb: "https://jawafdehi.org/assets/teammembers/subodh.jpeg",
-    description: "Caseworker Volunteer",
+    description: "Caseworker",
     contacts: [
       { type: "email", value: "kandelsubodh46@gmail.com" },
       { type: "instagram", value: "https://www.instagram.com/subodh_kandel" },
-    ],
-  },
-  {
-    displayName: { en: "Sujata Pokharel", ne: "सुजाता पोखरेल" },
-    thumb: "/assets/teammembers/sujata.png",
-    description: "Social Media Volunteer",
-    contacts: [
-      { type: "linkedin", value: "https://www.linkedin.com/in/sujata-pokharel-293348249/" },
-    ],
-  },
-  {
-    displayName: { en: "Britika Khanal", ne: "बृतिका खनाल" },
-    thumb: "/assets/teammembers/britika.jpg",
-    description: "Content & Social Media",
-    contacts: [
-      { type: "linkedin", value: "https://np.linkedin.com/in/britika-khanal-217b50257" },
-    ],
-  },
-  {
-    displayName: { en: "Shishir Bashyal", ne: "शिशिर बस्याल" },
-    thumb: "https://s3.jawafdehi.org/team/shishir.jpeg",
-    description: "CEO, Proma.ai; Volunteer",
-    contacts: [
-      { type: "linkedin", value: "https://www.linkedin.com/in/sbashyal/" },
     ],
   },
 ];
@@ -211,6 +179,38 @@ export const pastMembers: TeamMember[] = [
     description: "Software Engineer Intern",
     contacts: [
       { type: "github", value: "https://github.com/sjungthapa" },
+    ],
+  },
+  {
+    displayName: { en: "Raghu Sharma", ne: "रघु शर्मा" },
+    thumb: "/assets/teammembers/raghu.png",
+    description: "Software Engineer",
+    contacts: [
+      { type: "github", value: "https://github.com/Srmaraghu" },
+    ],
+  },
+  {
+    displayName: { en: "Sujata Pokharel", ne: "सुजाता पोखरेल" },
+    thumb: "/assets/teammembers/sujata.png",
+    description: "Social Media Volunteer",
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/sujata-pokharel-293348249/" },
+    ],
+  },
+  {
+    displayName: { en: "Britika Khanal", ne: "बृतिका खनाल" },
+    thumb: "/assets/teammembers/britika.jpg",
+    description: "Content & Social Media",
+    contacts: [
+      { type: "linkedin", value: "https://np.linkedin.com/in/britika-khanal-217b50257" },
+    ],
+  },
+  {
+    displayName: { en: "Shishir Bashyal", ne: "शिशिर बस्याल" },
+    thumb: "https://s3.jawafdehi.org/team/shishir.jpeg",
+    description: "CEO, Proma.ai; Volunteer",
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/sbashyal/" },
     ],
   },
 ];
