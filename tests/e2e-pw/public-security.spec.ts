@@ -24,8 +24,19 @@ async function dismissConsent(page: Page) {
   );
 }
 
+// The UI defaults to Nepali (i18n is the single source of truth — see
+// src/i18n/config.ts, which reads `i18nextLng` from localStorage on boot).
+// This spec asserts on the ENGLISH UI copy (not-found affordance, admin login,
+// "no records"), so pin the language to `en` via that same source of truth —
+// otherwise those strings render in Nepali and the English matchers miss.
+// (public-smoke.spec.ts pins `ne` the same way.)
+async function pinLanguageEnglish(page: Page) {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "en"));
+}
+
 test.beforeEach(async ({ page }) => {
   await dismissConsent(page);
+  await pinLanguageEnglish(page);
 });
 
 // A distinctive title fragment per non-public case (unique to that row so a hit is
