@@ -304,11 +304,15 @@ function buildMetaTags(input: {
   type?: 'article' | 'website';
   publishedTime?: string | null;
   modifiedTime?: string | null;
+  // When set (e.g. "noindex, nofollow"), emit a robots meta so crawlers keep
+  // "unlisted" (non-PUBLISHED) records out of search — link-only, not indexed.
+  robots?: string | null;
 }): string {
   const type = input.type ?? 'article';
   return `
 <title>${escapeHtml(input.title)}</title>
 <meta name="description" content="${escapeHtml(input.description)}" />
+${input.robots ? `<meta name="robots" content="${escapeHtml(input.robots)}" />` : ''}
 <link rel="canonical" href="${escapeHtml(input.canonicalUrl)}" />
 <meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />
 <meta property="og:type" content="${escapeHtml(type)}" />
@@ -343,6 +347,7 @@ function stripOverriddenHeadTags(head: string): string {
     .replace(/<meta\b[^>]*\bproperty=["'](?:og|article):[^"']*["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']twitter:[^"']*["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']description["'][^>]*>/gi, () => '')
+    .replace(/<meta\b[^>]*\bname=["']robots["'][^>]*>/gi, () => '')
     .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
 }
 
@@ -430,6 +435,9 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     type: 'article',
     publishedTime: typeof caseData.created_at === 'string' ? caseData.created_at : null,
     modifiedTime: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
+    // IN_REVIEW cases are served by direct slug but are "unlisted": keep them
+    // out of search engines (only PUBLISHED is indexable). Share cards still work.
+    robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
   });
   return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
 }

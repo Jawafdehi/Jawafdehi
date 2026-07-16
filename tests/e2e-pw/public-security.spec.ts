@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 //
 // Adversarial (anonymous) browser checks. Jawafdehi holds pre-publication
-// allegations; a non-public case (DRAFT / IN_REVIEW / CLOSED) must never leak its
-// content to an anonymous visitor through the SPA — not on direct load, not in
-// search, not via the admin surface.
+// allegations. Visibility model:
+//   - DRAFT / CLOSED are fully hidden: content never leaks to anon (direct load
+//     404s) and they never appear in search or the admin surface (to anon).
+//   - IN_REVIEW is "unlisted": reachable by anon on DIRECT load (exact slug),
+//     rendered behind an "under review" banner and marked noindex — but NOT
+//     discoverable (absent from search + listings). Knowing a slug is allowed;
+//     enumerating slugs is not.
 //
 // These run against a REAL backend seeded by `seed_dev`, which creates:
 //   seed-published  PUBLISHED  "Published: embezzlement at Board Y"   (public)
@@ -28,11 +32,19 @@ test.beforeEach(async ({ page }) => {
 // unambiguous evidence the case leaked), plus the public case as a POSITIVE
 // CONTROL that the marker-matching is real and not always-green.
 const PUBLIC = { slug: "seed-published", marker: /embezzlement at Board Y/i };
-const NONPUBLIC = [
+// Fully hidden: direct load 404s, no content leak, absent from search.
+const HIDDEN = [
   { slug: "seed-draft", state: "DRAFT", marker: /alleged kickbacks at Dept A/i },
-  { slug: "seed-in-review", state: "IN_REVIEW", marker: /procurement fraud Ministry X/i },
   { slug: "seed-closed", state: "CLOSED", marker: /dismissed complaint Z/i },
 ];
+// Unlisted: renders on direct load (by exact slug), but not discoverable.
+const UNLISTED = {
+  slug: "seed-in-review",
+  state: "IN_REVIEW",
+  marker: /procurement fraud Ministry X/i,
+};
+// Everything that must stay OUT of search (unlisted + hidden alike).
+const ABSENT_FROM_SEARCH = [...HIDDEN, UNLISTED];
 
 test("POSITIVE CONTROL: the published case IS visible to anon (proves the leak checks have teeth)", async ({
   page,
@@ -43,7 +55,7 @@ test("POSITIVE CONTROL: the published case IS visible to anon (proves the leak c
   await expect(page.getByText(PUBLIC.marker).first()).toBeVisible();
 });
 
-for (const c of NONPUBLIC) {
+for (const c of HIDDEN) {
   test(`direct-loading the ${c.state} case /case/${c.slug} does not leak its content to anon`, async ({
     page,
   }) => {
@@ -64,6 +76,24 @@ for (const c of NONPUBLIC) {
   });
 }
 
+test(`direct-loading the IN_REVIEW case /case/${UNLISTED.slug} is unlisted-but-accessible (renders + noindex)`, async ({
+  page,
+}) => {
+  await page.goto(`/case/${UNLISTED.slug}`);
+  // Unlisted, NOT hidden: an anon visitor with the exact slug sees the case
+  // content render (the API serves IN_REVIEW by direct slug).
+  await expect(page.getByText(UNLISTED.marker).first()).toBeVisible();
+  // It renders behind an "under review" provisional banner (EN or NE copy).
+  await expect(
+    page.getByText(/under review|समीक्षा गरिरहेको/i).first(),
+  ).toBeVisible();
+  // ...and is kept out of search engines via a robots noindex directive.
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/i,
+  );
+});
+
 test("searching for a non-public-only term surfaces no non-public case", async ({
   page,
 }) => {
@@ -76,13 +106,17 @@ test("searching for a non-public-only term surfaces no non-public case", async (
 
   // For the negative query, anchor on the results surface having SETTLED (the
   // "no records found" state) before asserting absence, so the check can't pass
-  // vacuously while the query is still in flight.
-  await page.goto("/search?q=kickbacks");
-  await expect(
-    page.getByText(/no archive records found/i).first(),
-  ).toBeVisible();
-  for (const c of NONPUBLIC) {
-    await expect(page.locator(`a[href="/case/${c.slug}"]`)).toHaveCount(0);
+  // vacuously while the query is still in flight. 'kickbacks' is DRAFT-only;
+  // 'procurement' is IN_REVIEW-only — the latter proves that an unlisted case,
+  // though reachable by direct slug, is still NOT discoverable via search.
+  for (const term of ["kickbacks", "procurement"]) {
+    await page.goto(`/search?q=${term}`);
+    await expect(
+      page.getByText(/no archive records found/i).first(),
+    ).toBeVisible();
+    for (const c of ABSENT_FROM_SEARCH) {
+      await expect(page.locator(`a[href="/case/${c.slug}"]`)).toHaveCount(0);
+    }
   }
 });
 
