@@ -5,7 +5,8 @@ import neTranslations from './locales/ne.json';
 
 const isSSR = typeof window === 'undefined';
 
-const getBrowserLanguage = (): 'en' | 'ne' => {
+// Nepali-first: everyone defaults to Nepali; English is opt-in via the language toggle and remembered across visits. We intentionally do NOT auto-detect navigator.language, to avoid a Nepali->English flash on the Nepali-only prerender and to keep the stored preference the single source of truth (browser/Google auto-translation is suppressed in index.html).
+const getPreferredLanguage = (): 'en' | 'ne' => {
   if (isSSR) return 'ne';
 
   let storedLanguage: string | null = null;
@@ -14,10 +15,7 @@ const getBrowserLanguage = (): 'en' | 'ne' => {
   } catch {
     // Storage blocked or unavailable
   }
-  if (storedLanguage?.startsWith('en')) return 'en';
-  if (storedLanguage?.startsWith('ne')) return 'ne';
-
-  return window.navigator.language.toLowerCase().startsWith('en') ? 'en' : 'ne';
+  return storedLanguage?.startsWith('en') ? 'en' : 'ne';
 };
 
 i18n
@@ -57,10 +55,10 @@ if (!isSSR) {
     }
   });
 
-  const browserLanguage = getBrowserLanguage();
-  if (browserLanguage !== i18n.language) {
+  const preferredLanguage = getPreferredLanguage();
+  if (preferredLanguage !== i18n.language) {
     window.requestAnimationFrame(() => {
-      void i18n.changeLanguage(browserLanguage);
+      void i18n.changeLanguage(preferredLanguage);
     });
   }
 }
