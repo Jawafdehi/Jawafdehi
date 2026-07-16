@@ -1,25 +1,20 @@
-import { type FormEvent, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 
 import { getStatistics } from "@/services/jds-api";
-import { MissionRibbon } from "@/components/data-quality/MissionRibbon";
+import { formatFreshness } from "@/lib/data-quality";
 import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
 import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
 import { EvidenceBackbone } from "@/components/data-quality/EvidenceBackbone";
 import { MaterialsBySource } from "@/components/data-quality/MaterialsBySource";
 import { DataHonesty } from "@/components/data-quality/DataHonesty";
-import { DataLimitations } from "@/components/data-quality/DataLimitations";
+import { DataPipeline } from "@/components/data-quality/DataPipeline";
 import { UseThisData } from "@/components/data-quality/UseThisData";
-import { MethodologyFooter } from "@/components/data-quality/MethodologyFooter";
-import { SearchBar } from "@/components/ui/search-bar";
 
 const DataQuality = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [query, setQuery] = useState("");
 
   const { data, isLoading, isError } = useQuery({
     // Share the cache with the home hero — same query key + fn.
@@ -28,11 +23,7 @@ const DataQuality = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = query.trim();
-    navigate(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search");
-  };
+  const freshness = data ? formatFreshness(data.last_updated, t) : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -60,30 +51,19 @@ const DataQuality = () => {
                 "What our public datasets track today, and how complete the records are.",
               )}
             </p>
-
-            <form className="mt-6 w-full max-w-2xl" onSubmit={submitSearch}>
-              <label className="sr-only" htmlFor="data-quality-search">
-                {t("dataQuality.searchLabel", "Search the Jawafdehi archive")}
-              </label>
-              <SearchBar
-                id="data-quality-search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t(
-                  "dataQuality.searchPlaceholder",
-                  "Search cases, people, offices, court records, or materials",
-                )}
-                submitLabel={t("dataQuality.searchSubmit", "Search")}
-              />
-            </form>
+            {freshness && (
+              <p className="mt-4 flex items-center gap-1.5 text-sm italic text-muted-foreground/80">
+                <RefreshCw className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
+                {t("dataQuality.ribbon.refreshed", "Data last refreshed {{ago}}", {
+                  ago: freshness,
+                })}
+              </p>
+            )}
           </div>
         </section>
 
         <div className="container mx-auto space-y-12 px-6 py-12">
-          {/* Quiet trust strip + last-refreshed signal. */}
-          <MissionRibbon lastUpdated={data?.last_updated} />
-
-          {/* Centerpiece: the accountability gap (funnel + ratio + status mix). */}
+          {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
           <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
           {isError && !data && (
@@ -95,8 +75,8 @@ const DataQuality = () => {
           {/* Who we track: 88% people, then the institutions (live nes.by_type). */}
           <EntityBreakdown nes={data?.nes} />
 
-          {/* The scale that backs every case. */}
-          <EvidenceBackbone nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
+          {/* Court cases: the judicial record base + court x year heatmap. */}
+          <EvidenceBackbone ngm={data?.ngm} />
 
           {/* Where the evidence comes from (live materials.by_source). */}
           <MaterialsBySource materials={data?.materials} />
@@ -104,14 +84,11 @@ const DataQuality = () => {
           {/* Honest completeness / trust label. */}
           <DataHonesty nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
 
-          {/* The named limits of what's here (real facts). */}
-          <DataLimitations stats={data} />
+          {/* Where this comes from: conceptual public-record → published-case flow. */}
+          <DataPipeline />
 
-          {/* Make the data reusable: the public API. */}
+          {/* Make the data reusable: the public API + report-an-error. */}
           <UseThisData />
-
-          {/* Plain-language methodology + report-an-error. */}
-          <MethodologyFooter />
         </div>
       </main>
     </div>

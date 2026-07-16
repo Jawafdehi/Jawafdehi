@@ -1250,6 +1250,27 @@
       "withDocumentSources": "Have document sources",
       "ofTotal": "{{part}} of {{total}} ({{pct}}%)"
     },
+    "pipeline": {
+      "intro": "Every figure on this page follows the same path — from public record to published case.",
+      "stages": {
+        "sources": {
+          "title": "Public sources",
+          "caption": "Government offices, courts and registries — the Attorney General, CIAA, the courts, Nepal Kanun Patrika and more."
+        },
+        "collected": {
+          "title": "Collected records",
+          "caption": "We gather their source documents, court-case records, and the people and bodies named in them."
+        },
+        "linked": {
+          "title": "Cross-checked & linked",
+          "caption": "Duplicates are removed, entities resolved, and each document linked to the case it belongs to."
+        },
+        "cases": {
+          "title": "Accountability cases",
+          "caption": "Verified findings become the public cases you can browse and search."
+        }
+      }
+    },
     "gap": {
       "heading": "The accountability gap",
       "lead": "Every case here is a public official, office, or contract we're holding to account. Thousands are documented and under investigation, but only a handful have reached a published finding. That gap is the story.",
@@ -1258,11 +1279,21 @@
       "ofDocumented": "{{pct}}% of documented",
       "stage": {
         "documented": "Documented",
+        "inReview": "In review (being prepared)",
         "published": "Reached a published finding"
       },
       "eyebrow": "The core finding",
       "totalLabel": "Documented cases",
       "bucketsCaption": "Every documented case sits in exactly one of these. The three add up to the total above."
+    },
+    "corruptionCases": {
+      "eyebrow": "An open record",
+      "heading": "Corruption cases",
+      "lead": "A public record of corruption cases involving officials, offices, and contracts, compiled from court filings and official sources.",
+      "ciaaLabel": "CIAA prosecutions",
+      "nonCiaaLabel": "Other bodies",
+      "ciaaCaption": "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies.",
+      "browsePublished": "Browse published cases"
     },
     "backbone": {
       "heading": "The record base behind every case",
@@ -1279,19 +1310,38 @@
         "special": "Special"
       }
     },
+    "courtCases": {
+      "heading": "Court cases",
+      "description": "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
+      "trendHeading": "Court cases filed per year",
+      "trendTooltip": "Court cases",
+      "matrixHeading": "Court records by level and year",
+      "filterCourt": "Court level",
+      "filterYear": "Year",
+      "filterAll": "All",
+      "total": "Total",
+      "legendLabel": "Case volume",
+      "legendLow": "fewer",
+      "legendHigh": "more"
+    },
     "honesty": {
       "heading": "How solid is this data?",
-      "description": "What the records back up today, and where they fall short. We show the gaps rather than round them away.",
-      "holdsUp": "What holds up",
-      "stillThin": "Still thin",
+      "description": "What the records back up today, and where they fall short — we show the gaps rather than round them away.",
+      "ofTotal": "of {{total}}",
+      "notStarted": "not started yet",
       "count": "{{part}} of {{total}}",
+      "group": {
+        "court": "Court records",
+        "entities": "People & offices tracked",
+        "materials": "Source materials"
+      },
       "item": {
-        "regDate": "Court records with an official registration date",
-        "stableId": "Tracked people and offices with a stable ID",
-        "bilingual": "Entities with both an English and Nepali name",
-        "linkedEntity": "Court records linked to the people or offices they name",
-        "sourceDoc": "Court records with an attached source document",
-        "materialLink": "Materials with a working source link"
+        "regDate": "Have an official registration date",
+        "sourceDoc": "Have an attached source document",
+        "linkedEntity": "Linked to the people and offices named",
+        "stableId": "Have a stable identifier",
+        "bilingual": "Have both an English and Nepali name",
+        "materialLink": "Have a source link"
       }
     },
     "limitations": {
@@ -1315,6 +1365,7 @@
       "heading": "Who we hold to account",
       "description": "{{people}} of {{total}} tracked entities are individual people. The rest are the institutions they act through.",
       "institutionsLabel": "Institutions we track",
+      "browsePeople": "Browse all people",
       "tooltip": "Entities",
       "group": {
         "hospitals": "Hospitals",
@@ -1327,24 +1378,76 @@
         "places": "Places",
         "international": "International bodies",
         "other": "Other"
+      },
+      "sectorHeading": "What positions the people hold",
+      "sectorTooltip": "People",
+      "toggleHideUnknown": "Hide not recorded",
+      "toggleGranularity": "Group broadly",
+      "sector": {
+        "politicians": "Elected politicians",
+        "legislators": "Legislators (MPs)",
+        "civilService": "Civil servants",
+        "localGov": "Local government",
+        "judiciary": "Judiciary",
+        "security": "Security forces",
+        "business": "Business & private",
+        "other": "Other",
+        "health": "Health sector",
+        "notRecorded": "Position not recorded"
+      },
+      "coarse": {
+        "public": "Public sector",
+        "private": "Private sector",
+        "other": "Other / not recorded"
       }
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "description": "Every one of the {{total}} source materials is pulled from a public feed. This is the mix.",
+      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
+      "combinedDescription": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
       "tooltip": "Materials",
+      "table": {
+        "source": "Source",
+        "type": "Document type",
+        "types": "Document types",
+        "grouping": "Grouping",
+        "item": "Breakdown",
+        "count": "Documents",
+        "share": "Share"
+      },
       "source": {
-        "courtOrders": "Court orders",
-        "courtRecords": "Court records",
-        "ciaaPress": "CIAA press releases",
-        "dfmis": "DFMIS (financial mgmt)",
-        "jawafdehi": "Jawafdehi",
-        "kanunPatrika": "Kanun Patrika",
-        "ciaaAnnual": "CIAA annual reports",
+        "ag": "Office of the Attorney General",
+        "nkp": "Nepal Kanun Patrika",
+        "courts": "Nepal Courts",
+        "ciaa": "Commission for the Investigation of Abuse of Authority (CIAA)",
+        "dfmis": "Development Finance Management Information System (DFMIS)",
+        "jawafdehi": "Jawafdehi original documents",
         "koshi": "Koshi Province",
-        "ppmo": "PPMO blacklist",
-        "ciaa": "CIAA",
-        "oag": "OAG (Attorney General)",
+        "ppmo": "Public Procurement Monitoring Office (PPMO)",
+        "other": "Other"
+      },
+      "publishes": {
+        "dfmis": "Development-finance records",
+        "ppmo": "Blacklist / debarment records",
+        "koshi": "Provincial records"
+      }
+    },
+    "materialsByType": {
+      "heading": "What materials are hosted",
+      "description": "The same {{total}} materials, grouped by the kind of document they are.",
+      "tooltip": "Materials",
+      "type": {
+        "chargeSheet": "Charge sheets",
+        "precedent": "Court order precedents",
+        "courtOrder": "Court orders",
+        "courtCase": "Court case records",
+        "pressRelease": "Press releases",
+        "document": "Documents",
+        "legalCorpus": "Laws & legislation",
+        "officialReport": "Official reports",
+        "news": "News",
+        "socialMedia": "Social media",
+        "manuscript": "Manuscripts",
         "other": "Other"
       }
     }

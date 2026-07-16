@@ -1,12 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Check, Minus } from "lucide-react";
 
 import type {
   DataLakeMetrics,
   EntityMetrics,
   MaterialsMetrics,
 } from "@/types/jds";
-import { Progress } from "@/components/ui/progress";
 import { truncPct } from "@/lib/data-quality";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
@@ -17,31 +15,63 @@ interface HonestyItem {
   whole: number;
 }
 
-function HonestyRow({ item, t }: { item: HonestyItem; t: Translate }) {
+interface HonestyGroup {
+  key: string;
+  heading: string;
+  total: number;
+  items: HonestyItem[];
+}
+
+/** Health colour by completeness: thin (<25%) -> partial (<75%) -> solid (>=75%). */
+function healthColor(pct: number): string {
+  if (pct < 25) return "hsl(var(--alert))";
+  if (pct < 75) return "hsl(var(--muted-foreground))";
+  return "hsl(var(--success))";
+}
+
+/** One completeness metric: a label, a thin health-coloured bar, and the count. */
+function CompletenessBar({ item, t }: { item: HonestyItem; t: Translate }) {
   const pct = truncPct(item.part, item.whole);
+  const color = healthColor(pct);
   return (
-    <div>
-      <div className="mb-1 flex items-baseline justify-between gap-3">
+    <li>
+      <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm text-foreground">{item.label}</span>
-        <span className="font-mono text-sm font-bold tabular-nums text-foreground">{pct}%</span>
+        <span className="font-mono text-sm font-bold tabular-nums" style={{ color }}>
+          {pct}%
+        </span>
       </div>
-      <Progress value={pct} className="h-1.5" aria-label={item.label} />
-      <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground">
-        {t("dataQuality.honesty.count", "{{part}} of {{total}}", {
-          part: item.part.toLocaleString(),
-          total: item.whole.toLocaleString(),
-        })}
-      </p>
-    </div>
+      <div
+        className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted"
+        aria-hidden="true"
+      >
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+          {t("dataQuality.honesty.count", "{{part}} of {{total}}", {
+            part: item.part.toLocaleString(),
+            total: item.whole.toLocaleString(),
+          })}
+        </span>
+        {item.part === 0 && (
+          <span className="text-xs text-muted-foreground/70">
+            · {t("dataQuality.honesty.notStarted", "not started yet")}
+          </span>
+        )}
+      </div>
+    </li>
   );
 }
 
 /**
- * The trust close. Instead of a wall of technical completeness bars, it answers
- * one question a reader actually has: how much of what you see here holds up?
- * A plain "what holds up" / "still thin" split, translating each database field
- * into what it means for someone reading a case. Honesty is the point, so the
- * thin side is not hidden.
+ * The trust close. Completeness grouped by the three record sets it describes
+ * (court records, entities, materials), each metric a thin health-coloured bar
+ * ordered best-first within its group. Honest by construction: percentages are
+ * truncated (never rounded up), and every gap is shown rather than hidden.
  */
 export function DataHonesty({
   nes,
@@ -54,49 +84,79 @@ export function DataHonesty({
 }) {
   const { t } = useTranslation();
 
-  const holdsUp: HonestyItem[] = [];
-  const stillThin: HonestyItem[] = [];
+  const groups: HonestyGroup[] = [];
 
   if (ngm) {
-    holdsUp.push({
-      label: t("dataQuality.honesty.item.regDate", "Court records with an official registration date"),
-      part: ngm.counts.with_registration_date,
-      whole: ngm.court_cases_total,
-    });
-    stillThin.push({
-      label: t("dataQuality.honesty.item.linkedEntity", "Court records linked to the people or offices they name"),
-      part: ngm.counts.nes_resolved,
-      whole: ngm.court_cases_total,
-    });
-    stillThin.push({
-      label: t("dataQuality.honesty.item.sourceDoc", "Court records with an attached source document"),
-      part: ngm.counts.with_document_sources,
-      whole: ngm.court_cases_total,
+    groups.push({
+      key: "court",
+      heading: t("dataQuality.honesty.group.court", "Court records"),
+      total: ngm.court_cases_total,
+      items: [
+        {
+          label: t("dataQuality.honesty.item.regDate", "Have an official registration date"),
+          part: ngm.counts.with_registration_date,
+          whole: ngm.court_cases_total,
+        },
+        {
+          label: t("dataQuality.honesty.item.sourceDoc", "Have an attached source document"),
+          part: ngm.counts.with_document_sources,
+          whole: ngm.court_cases_total,
+        },
+        {
+          label: t("dataQuality.honesty.item.linkedEntity", "Linked to the people and offices named"),
+          part: ngm.counts.nes_resolved,
+          whole: ngm.court_cases_total,
+        },
+      ],
     });
   }
 
   if (nes) {
-    holdsUp.push({
-      label: t("dataQuality.honesty.item.stableId", "Tracked people and offices with a stable ID"),
-      part: nes.counts.with_identifier,
-      whole: nes.total,
-    });
-    holdsUp.push({
-      label: t("dataQuality.honesty.item.bilingual", "Entities with both an English and Nepali name"),
-      part: nes.counts.with_bilingual_name,
-      whole: nes.total,
+    groups.push({
+      key: "entities",
+      heading: t("dataQuality.honesty.group.entities", "People & offices tracked"),
+      total: nes.total,
+      items: [
+        {
+          label: t("dataQuality.honesty.item.stableId", "Have a stable identifier"),
+          part: nes.counts.with_identifier,
+          whole: nes.total,
+        },
+        {
+          label: t("dataQuality.honesty.item.bilingual", "Have both an English and Nepali name"),
+          part: nes.counts.with_bilingual_name,
+          whole: nes.total,
+        },
+      ],
     });
   }
 
   if (materials) {
-    stillThin.push({
-      label: t("dataQuality.honesty.item.materialLink", "Materials with a working source link"),
-      part: materials.counts.with_url,
-      whole: materials.total,
+    groups.push({
+      key: "materials",
+      heading: t("dataQuality.honesty.group.materials", "Source materials"),
+      total: materials.total,
+      items: [
+        {
+          label: t("dataQuality.honesty.item.materialLink", "Have a source link"),
+          part: materials.counts.with_url,
+          whole: materials.total,
+        },
+      ],
     });
   }
 
-  if (holdsUp.length === 0 && stillThin.length === 0) return null;
+  if (groups.length === 0) return null;
+
+  // Best-first within each group: each record set leads on its strength, then
+  // shows where it thins out — instead of the whole section opening on a 0%.
+  for (const g of groups) {
+    g.items.sort((a, b) => {
+      const pctA = a.whole > 0 ? truncPct(a.part, a.whole) : 0;
+      const pctB = b.whole > 0 ? truncPct(b.part, b.whole) : 0;
+      return pctB - pctA;
+    });
+  }
 
   return (
     <section className="border-t border-border pt-10">
@@ -106,42 +166,29 @@ export function DataHonesty({
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {t(
           "dataQuality.honesty.description",
-          "What the records back up today, and where they fall short. We show the gaps rather than round them away.",
+          "What the records back up today, and where they fall short — we show the gaps rather than round them away.",
         )}
       </p>
 
-      <div className="mt-8 grid grid-cols-1 gap-x-12 gap-y-10 md:grid-cols-2">
-        {holdsUp.length > 0 && (
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <Check className="h-4 w-4 text-success" aria-hidden="true" />
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                {t("dataQuality.honesty.holdsUp", "What holds up")}
-              </h3>
-            </div>
-            <div className="space-y-5">
-              {holdsUp.map((item) => (
-                <HonestyRow key={item.label} item={item} t={t} />
+      <div className="mt-8 max-w-2xl space-y-8">
+        {groups.map((g) => (
+          <div key={g.key}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {g.heading}
+              <span className="font-normal normal-case tracking-normal text-muted-foreground/70">
+                {" · "}
+                {t("dataQuality.honesty.ofTotal", "of {{total}}", {
+                  total: g.total.toLocaleString(),
+                })}
+              </span>
+            </p>
+            <ul className="mt-3 space-y-4">
+              {g.items.map((item) => (
+                <CompletenessBar key={item.label} item={item} t={t} />
               ))}
-            </div>
+            </ul>
           </div>
-        )}
-
-        {stillThin.length > 0 && (
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <Minus className="h-4 w-4 text-alert" aria-hidden="true" />
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                {t("dataQuality.honesty.stillThin", "Still thin")}
-              </h3>
-            </div>
-            <div className="space-y-5">
-              {stillThin.map((item) => (
-                <HonestyRow key={item.label} item={item} t={t} />
-              ))}
-            </div>
-          </div>
-        )}
+        ))}
       </div>
     </section>
   );

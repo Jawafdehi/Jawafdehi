@@ -259,7 +259,14 @@ export interface CaseStatistics {
   published_cases: number;
   entities_tracked: number;
   cases_under_investigation: number;
+  // Cases being prepared for publication (state IN_REVIEW) — a subset of
+  // cases_under_investigation. Optional so pre-deploy/cached payloads stay safe.
+  cases_in_review?: number;
   cases_closed: number;
+  // CIAA vs non-CIAA split, classified by the criminal "CR" court-case number.
+  // Optional so older cached payloads (and pre-deploy responses) stay type-safe.
+  cases_ciaa?: number;
+  cases_non_ciaa?: number;
   // Cross-source data-quality coverage (entities + judicial records). The
   // `nes`/`ngm` keys are the backend response field names (part of the JSON
   // contract). Optional so older cached payloads stay type-safe.
@@ -274,6 +281,9 @@ export interface EntityMetrics {
   total: number;
   by_prefix: { prefix: string; count: number }[];
   by_type: { entity_type: string; count: number }[];
+  // Persons grouped by governance/employment sector (classified server-side).
+  // Sums to the Person total; optional for pre-deploy/older payloads.
+  persons_by_sector?: { sector: string; count: number }[];
   counts: {
     with_identifier: number;
     with_provenance: number;
@@ -291,6 +301,10 @@ export interface DataLakeMetrics {
   court_cases_total: number;
   courts_total: number;
   by_court_type: { court__court_type: string; count: number }[];
+  // Court volume over time. by_year is the totals strip; by_court_type_year is
+  // the (court level x year) heatmap source. Optional for pre-deploy payloads.
+  by_year?: { year: number; count: number }[];
+  by_court_type_year?: { court__court_type: string; year: number; count: number }[];
   counts: {
     nes_resolved: number;
     with_registration_date: number;
@@ -308,6 +322,8 @@ export interface MaterialsMetrics {
   total: number;
   by_type: { material_type: string; count: number }[];
   by_source: { source: string; count: number }[];
+  /** Source×type cross-tab: how many of each document type each source holds. */
+  by_source_type: { source: string; material_type: string; count: number }[];
   counts: {
     with_description: number;
     with_url: number;
