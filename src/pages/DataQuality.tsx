@@ -1,11 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 
 import { getStatistics } from "@/services/jds-api";
-import { MOCK_STATISTICS } from "@/lib/data-quality-mock";
 import { formatFreshness } from "@/lib/data-quality";
 import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
 import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
@@ -18,27 +16,12 @@ import { UseThisData } from "@/components/data-quality/UseThisData";
 const DataQuality = () => {
   const { t } = useTranslation();
 
-  // `?mock=1` previews the page from a local fixture (data-quality-mock.ts)
-  // instead of the live API. This is the review surface for the new sections:
-  // their aggregates only land in the live payload after the backend deploys.
-  const [searchParams] = useSearchParams();
-  const useMock = searchParams.get("mock") === "1";
-
-  const {
-    data: liveData,
-    isLoading: liveLoading,
-    isError: liveError,
-  } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     // Share the cache with the home hero — same query key + fn.
     queryKey: ["statistics"],
     queryFn: getStatistics,
     staleTime: 5 * 60 * 1000,
-    enabled: !useMock,
   });
-
-  const data = useMock ? MOCK_STATISTICS : liveData;
-  const isLoading = useMock ? false : liveLoading;
-  const isError = useMock ? false : liveError;
 
   const freshness = data ? formatFreshness(data.last_updated, t) : null;
 

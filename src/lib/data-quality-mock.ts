@@ -1,18 +1,13 @@
 import type { CaseStatistics } from "@/types/jds";
 
 /**
- * Preview fixture for the Data Quality page, loaded via `?mock=1`.
+ * Test fixture for the Data Quality section components — a full, internally
+ * consistent `CaseStatistics` payload (sector counts sum to the Person total;
+ * matrix cells sum to their by_year row; CIAA split sums to all cases).
  *
- * The platform DB is reachable only through the API, so the new aggregates
- * (cases_ciaa, ngm.by_year / by_court_type_year, nes.persons_by_sector) only
- * appear in the live `/api/statistics/` after the backend deploys and the
- * snapshot refreshes. This fixture mirrors the live payload for the existing
- * fields and supplies realistic values for the new ones — shaped exactly to
- * `CaseStatistics` — so every new section can be built and reviewed pre-merge.
- *
- * Existing-field values captured from live on 2026-07-13; new-field values are
- * illustrative but internally consistent (sector counts sum to the Person
- * total; matrix cells sum to their by_year row; CIAA split sums to all cases).
+ * Formerly also the `?mock=1` preview surface for the page; that path was
+ * removed once the live `/api/statistics/` began serving every aggregate the
+ * page consumes. Now imported only by *.test.tsx files.
  */
 export const MOCK_STATISTICS: CaseStatistics = {
   published_cases: 34,
