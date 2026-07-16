@@ -35,7 +35,7 @@ export interface MaterialsSourceGroup {
  * dataset (a single denominator, so the column sums to ~100%).
  */
 export function MaterialsTable({ groups }: { groups: MaterialsSourceGroup[] }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const nonEmpty = groups.filter((g) => g.rows.length > 0);
   if (nonEmpty.length === 0) return null;
 
@@ -70,17 +70,20 @@ export function MaterialsTable({ groups }: { groups: MaterialsSourceGroup[] }) {
             group.rows.map((r, i) => (
               <TableRow key={`${group.key}:${r.key}`} className={i === 0 ? "border-t-2" : undefined}>
                 {i === 0 && (
-                  <TableCell
+                  // A real <th> so scope="rowgroup" is valid for assistive tech;
+                  // classes mirror TableCell's body styling (th defaults to
+                  // bold/centered header styling otherwise).
+                  <th
                     rowSpan={group.rows.length}
-                    className="align-top font-medium text-foreground"
+                    className="font-table-cell p-4 text-left align-top font-medium text-foreground"
                     scope="rowgroup"
                   >
                     {group.source}
-                  </TableCell>
+                  </th>
                 )}
                 <TableCell className="text-muted-foreground">{r.type}</TableCell>
                 <TableCell className="text-right font-mono tabular-nums text-foreground">
-                  {r.count.toLocaleString()}
+                  {r.count.toLocaleString(i18n.language)}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                   {grandTotal > 0 ? ((r.count / grandTotal) * 100).toFixed(1) : "0.0"}%
