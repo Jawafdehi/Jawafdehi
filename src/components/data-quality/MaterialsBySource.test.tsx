@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 
 import { MaterialsBySource } from "@/components/data-quality/MaterialsBySource";
-import { MOCK_STATISTICS } from "@/lib/data-quality-mock";
+import type { MaterialsMetrics } from "@/types/jds";
 
 // Passthrough translations: `t(key, fallback)` returns the fallback string, or
 // the key itself when no fallback is given. The component passes each i18n key's
@@ -29,8 +29,29 @@ function rowContaining(text: string): HTMLElement {
   return screen.getByText(text).closest("tr")!;
 }
 
+// Materials slice mirroring the live /api/statistics/ shape. The table is
+// driven by the by_source_type cross-tab; the rest of the metrics are unused
+// here (DataHonesty covers counts/completeness).
+const materials: MaterialsMetrics = {
+  total: 140020,
+  by_type: [],
+  by_source: [],
+  by_source_type: [
+    { source: "ag", material_type: "charge_sheet", count: 99750 },
+    { source: "court_order", material_type: "court_order", count: 23233 },
+    { source: "nkp", material_type: "precedent", count: 10468 },
+    { source: "ciaa_press_release", material_type: "press_release", count: 3438 },
+    { source: "dfmis", material_type: "document", count: 2117 },
+    { source: "jawafdehi", material_type: "document", count: 744 },
+    { source: "kanun_patrika", material_type: "precedent", count: 220 },
+    { source: "ciaa_annual_report", material_type: "official_report", count: 41 },
+    { source: "ppmo_blacklist", material_type: "document", count: 4 },
+  ],
+  counts: { with_description: 0, with_url: 0, with_date: 0 },
+  completeness: { with_description: 0, with_url: 0, with_date: 0 },
+};
+
 describe("MaterialsBySource", () => {
-  const { materials } = MOCK_STATISTICS;
 
   it("rolls sources up into publishing institutions", () => {
     render(<MaterialsBySource materials={materials} />);

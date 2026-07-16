@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
-import { MOCK_STATISTICS } from "@/lib/data-quality-mock";
+import type { CaseStatistics } from "@/types/jds";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -31,7 +31,17 @@ vi.mock("react-countup", () => ({
   ),
 }));
 
-const renderGap = (stats: typeof MOCK_STATISTICS) =>
+// Just the case-funnel scalars the component reads (the donut is stubbed above).
+const STATS: CaseStatistics = {
+  published_cases: 34,
+  cases_under_investigation: 2891,
+  cases_in_review: 512,
+  cases_closed: 1,
+  entities_tracked: 422,
+  last_updated: "2026-07-13T14:21:38Z",
+};
+
+const renderGap = (stats: CaseStatistics) =>
   render(
     <MemoryRouter>
       <AccountabilityGap stats={stats} isLoading={false} isError={false} />
@@ -40,21 +50,20 @@ const renderGap = (stats: typeof MOCK_STATISTICS) =>
 
 describe("AccountabilityGap in-review split", () => {
   it("shows an In review stage split out of under-investigation when provided", () => {
-    renderGap(MOCK_STATISTICS);
+    renderGap(STATS);
     expect(screen.getByText("In review (being prepared)")).toBeTruthy();
     // Under investigation is now draft-only = under_investigation - in_review.
-    const draftOnly =
-      MOCK_STATISTICS.cases_under_investigation - (MOCK_STATISTICS.cases_in_review ?? 0);
+    const draftOnly = STATS.cases_under_investigation - (STATS.cases_in_review ?? 0);
     expect(screen.getByText(draftOnly.toLocaleString("en-US"))).toBeTruthy();
   });
 
   it("omits the In review stage when cases_in_review is absent (pre-deploy)", () => {
-    const { cases_in_review: _omit, ...withoutInReview } = MOCK_STATISTICS;
-    renderGap(withoutInReview as typeof MOCK_STATISTICS);
+    const { cases_in_review: _omit, ...withoutInReview } = STATS;
+    renderGap(withoutInReview as CaseStatistics);
     expect(screen.queryByText("In review (being prepared)")).toBeNull();
     // Under investigation falls back to the full bundled count.
     expect(
-      screen.getByText(MOCK_STATISTICS.cases_under_investigation.toLocaleString("en-US")),
+      screen.getByText(STATS.cases_under_investigation.toLocaleString("en-US")),
     ).toBeTruthy();
   });
 });
