@@ -19,6 +19,7 @@ import { CaseOverviewSection } from "@/components/case-detail/case-overview-sect
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
 import { MissingDetailsSection } from "@/components/case-detail/missing-details-section";
 import { NotesSection } from "@/components/case-detail/notes-section";
+import { CaseByline } from "@/components/case-detail/case-byline";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
 import { CourtCasesSection } from "@/components/case-detail/court-cases-section";
@@ -565,6 +566,12 @@ const CaseDetail = () => {
                         </span>
                       </div>
                     )}
+
+                    {/* Public caseworker-authored attribution + edit-history byline
+                        (Case.public_notes). Understated, sits with the case
+                        metadata above. Empty for the public unless a caseworker set
+                        it; the internal NotesSection below is separate. */}
+                    <CaseByline markdown={caseData.public_notes} />
                   </div>
                 </div>
 

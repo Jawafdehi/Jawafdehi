@@ -179,6 +179,10 @@ export interface Case {
   state: CaseState; // Current state in the workflow
   title: string;
   short_description?: string | null;
+  // Public, caseworker-authored attribution + edit-history byline (markdown).
+  // Public counterpart to the internal `notes`: returned to everyone, so it is a
+  // lightweight field present on both the list and detail shapes.
+  public_notes?: string | null;
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
   thumbnail_url?: string | null; // URL for case card thumbnail image
@@ -205,6 +209,7 @@ export interface CaseDetail extends Case {
   timeline: TimelineEntry[];
   evidence: EvidenceEntry[];
   notes: string;
+  public_notes: string;
   bigo: number | null; // Embezzled/irregular amount in NPR (null if not applicable)
   court_cases: string[] | null;
 }

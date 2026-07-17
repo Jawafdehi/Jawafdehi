@@ -1586,6 +1586,8 @@
       "descriptionPlaceholder": "## Summary\n\nWhat happened…",
       "labelNotes": "Notes (internal)",
       "notesHelp": "Markdown. Internal casework notes (not shown publicly).",
+      "labelPublicNotes": "Public notes / byline",
+      "publicNotesHelp": "Markdown. Shown publicly on the case page — the attribution byline plus the 'first published / last edited' line. You write it by hand; it is not the internal notes and not the automatic timestamps.",
       "labelMissingDetails": "Missing details",
       "missingDetailsHelp": "Markdown. Shown publicly on the case page — note information that is not yet available or still being gathered.",
       "labelAllegations": "Key allegations",
