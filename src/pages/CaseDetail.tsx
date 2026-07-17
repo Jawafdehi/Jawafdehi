@@ -140,18 +140,25 @@ const CaseDetail = () => {
 
   useEffect(() => {
     const loadedCaseId = caseData?.id?.toString();
+    const canonicalSlug = caseData?.slug;
 
-    if (!id || !loadedCaseId || isError) {
+    if (!id || !loadedCaseId || !canonicalSlug || isError) {
       return;
     }
 
-    if (loadedCaseId !== id || trackedCaseIdRef.current === loadedCaseId) {
+    // Only fire once we're on the case's canonical slug URL. This skips the
+    // brief pre-canonical render for legacy /case/<numeric>, /case/<court-ref>,
+    // and stale-slug URLs (the effect re-runs after navigate() lands on the
+    // canonical slug). The previous guard compared the *numeric* caseData.id to
+    // the *slug* route param — once cases moved to slug URLs those never matched,
+    // so case_view silently stopped firing (0 events for ~2 months).
+    if (canonicalSlug !== id || trackedCaseIdRef.current === loadedCaseId) {
       return;
     }
 
-    trackEvent("case_view", { case_id: loadedCaseId, slug: `/case/${id}` });
+    trackEvent("case_view", { case_id: loadedCaseId, slug: `/case/${canonicalSlug}` });
     trackedCaseIdRef.current = loadedCaseId;
-  }, [id, caseData?.id, isError]);
+  }, [id, caseData?.id, caseData?.slug, isError]);
 
   const resolvedEntities: Record<string, Entity> = {};
   uniqueNesIds.forEach((nesId, i) => {

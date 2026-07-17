@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, LayoutGrid, List, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -32,6 +32,7 @@ import type {
   ArchiveSearchFacets,
   ArchiveSearchParams,
   ArchiveSearchResponse,
+  ArchiveSearchResult,
   ArchiveSearchResultType,
   ArchiveSearchSort,
   ArchiveSearchType,
@@ -412,6 +413,7 @@ export default function ArchiveSearch({
               data={displayData}
               isError={showError}
               isLoading={isInitialLoading || isRefreshing}
+              searchTerm={params.q}
               viewMode={viewMode}
             />
 
@@ -467,11 +469,13 @@ function ArchiveSearchResults({
   data,
   isError,
   isLoading,
+  searchTerm,
   viewMode,
 }: Readonly<{
   data: ArchiveSearchResponse | undefined;
   isError: boolean;
   isLoading: boolean;
+  searchTerm?: string;
   viewMode: "list" | "card";
 }>) {
   const { t } = useTranslation();
@@ -516,15 +520,23 @@ function ArchiveSearchResults({
     );
   }
 
+  // 1-based rank across the whole result set (accounts for the current page),
+  // sent with each result click so we can measure rank-of-first-click.
+  const rankOf = (index: number) => (data.page - 1) * data.page_size + index + 1;
+
   if (viewMode === "card") {
     return (
       <div className={cardGridClass}>
-        {data.results.map((result) => (
-          <SearchResultCard
+        {data.results.map((result, index) => (
+          <TrackedSearchResult
             key={`${result.type}-${result.id}`}
+            rank={rankOf(index)}
             result={result}
+            searchTerm={searchTerm}
             viewMode="card"
-          />
+          >
+            <SearchResultCard result={result} viewMode="card" />
+          </TrackedSearchResult>
         ))}
       </div>
     );
@@ -532,13 +544,51 @@ function ArchiveSearchResults({
 
   return (
     <div className="space-y-3">
-      {data.results.map((result) => (
-        <SearchResultCard
+      {data.results.map((result, index) => (
+        <TrackedSearchResult
           key={`${result.type}-${result.id}`}
+          rank={rankOf(index)}
           result={result}
+          searchTerm={searchTerm}
           viewMode="list"
-        />
+        >
+          <SearchResultCard result={result} viewMode="list" />
+        </TrackedSearchResult>
       ))}
+    </div>
+  );
+}
+
+// Wraps a result so a click that navigates to the record (lands on an <a>, not a
+// tag/filter button) emits a GA4 `select_search_result` event carrying the
+// result's 1-based rank. Click-through and rank-of-first-click can only be
+// observed client-side — the server never learns which result was chosen.
+function TrackedSearchResult({
+  rank,
+  result,
+  searchTerm,
+  viewMode,
+  children,
+}: Readonly<{
+  rank: number;
+  result: ArchiveSearchResult;
+  searchTerm?: string;
+  viewMode: "list" | "card";
+  children: ReactNode;
+}>) {
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (!(event.target as HTMLElement).closest("a")) return;
+    trackEvent("select_search_result", {
+      result_type: result.type,
+      rank,
+      search_term: searchTerm || undefined,
+    });
+  };
+  // `h-full` keeps card-grid cell heights consistent (inner card stretches to
+  // fill); list view needs no wrapper sizing.
+  return (
+    <div className={viewMode === "card" ? "h-full" : undefined} onClick={handleClick}>
+      {children}
     </div>
   );
 }

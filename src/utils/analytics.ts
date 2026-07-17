@@ -28,6 +28,10 @@ export type AnalyticsEvent =
   // observe client-side (History API) navigations. `result_type`/`results_count`
   // are extra params (register as custom dimensions/metrics to surface in reports).
   | { name: 'view_search_results'; params: { search_term: string; result_type?: string; results_count?: number } }
+  // Archive search result click — powers click-through rate and rank-of-first-
+  // click (which result, at what 1-based position, for which term). Register
+  // `rank`/`result_type`/`search_term` as custom dimensions to surface in reports.
+  | { name: 'select_search_result'; params: { result_type: string; rank: number; search_term?: string } }
   | { name: 'allegation_submitted'; params?: Record<string, never> };
 
 type AnalyticsEventParams<T extends AnalyticsEvent['name']> =
