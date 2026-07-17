@@ -68,6 +68,7 @@ import {
   uploadMaterialFile,
   listMaterials,
   deleteMaterial,
+  patchMaterialVisibilityPolicy,
   listCases,
   patchCase,
   patchCaseWithEtag,
@@ -143,6 +144,21 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
       "/api/materials/",
       "/api/materials/ciaa/press-2081-042",
     ]);
+  });
+
+  it("PATCHes a material's visibility policy to /api/materials/ addressed by ?iri=", async () => {
+    // The policy is set out-of-band (the API strips control keys from the doc),
+    // so it travels as a bare {visibility_policy} body with the full @id in ?iri=.
+    await patchMaterialVisibilityPolicy(
+      "https://jawafdehi.org/material/ciaa/press-2081-042",
+      "PRIVATE",
+    );
+    expect(calls[0]).toMatchObject({
+      method: "patch",
+      url: "/api/materials/",
+      body: { visibility_policy: "PRIVATE" },
+      config: { params: { iri: "https://jawafdehi.org/material/ciaa/press-2081-042" } },
+    });
   });
 
   it("keeps Jawafdehi cases on /api/cases and PATCHes with RFC-6902 ops", async () => {

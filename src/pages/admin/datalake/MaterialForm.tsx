@@ -16,6 +16,7 @@ import {
 } from "@/lib/datalake-forms";
 import DeleteButton from "@/components/admin/DeleteButton";
 import MaterialFileUpload from "@/components/admin/datalake/MaterialFileUpload";
+import MaterialVisibilityControl from "@/components/admin/datalake/MaterialVisibilityControl";
 import FormPageShell from "@/components/admin/FormPageShell";
 import AdminFormActions from "@/components/admin/AdminFormActions";
 import { FieldError } from "@/components/admin/FormError";
@@ -203,6 +204,17 @@ export default function MaterialForm() {
       : "";
   const rows = mediaRows(doc);
   const canSave = !saving && !loading && !rawError && iriValid && hasName;
+  // Caseworker visibility policy + its derived visibility, surfaced only on an
+  // authed read (jawafdehi:visibility[Policy]). Presence gates the out-of-band
+  // control below; the values seed it.
+  const visibilityPolicy =
+    typeof doc["jawafdehi:visibilityPolicy"] === "string"
+      ? (doc["jawafdehi:visibilityPolicy"] as string)
+      : "";
+  const visibility =
+    typeof doc["jawafdehi:visibility"] === "string"
+      ? (doc["jawafdehi:visibility"] as string)
+      : "";
 
   const setMediaRows = (next: MediaRow[]) =>
     patchDoc({
@@ -502,6 +514,19 @@ export default function MaterialForm() {
           }
         />
       </form>
+
+      {/* Visibility policy — an out-of-band caseworker control (immediate PATCH,
+          NOT part of Save). Edit-mode only, and only once an authed read has
+          surfaced jawafdehi:visibilityPolicy. Keyed on the (locked) IRI so it
+          reseeds if the loaded material changes. */}
+      {editing && visibilityPolicy && (
+        <MaterialVisibilityControl
+          key={iri}
+          iri={iri}
+          policy={visibilityPolicy}
+          visibility={visibility}
+        />
+      )}
 
       {/* F8 — file upload. Only in edit mode (the material must exist so its
           {source}/{ident} path is known). Prefer the components parsed from the

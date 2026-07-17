@@ -66,6 +66,19 @@ export const MATERIAL_SOURCE_TYPES = [
   { token: "MISC", label: "Miscellaneous" },
 ] as const;
 
+// Caseworker-controlled visibility policy (materials.models.Policy). The policy
+// is the INPUT that decides a material's cached `visibility` (LISTED / UNLISTED /
+// PRIVATE): PUBLIC always lists the document; CASE_GATED defers to the states of
+// the cases that cite it (public only once one is in review / published); PRIVATE
+// always withholds it. The policy is set out-of-band from the document body —
+// via PATCH /api/materials/ (see patchMaterialVisibilityPolicy) — because the API
+// strips these control keys from stored JSON-LD; it never rides along in a PUT.
+export const MATERIAL_VISIBILITY_POLICIES = [
+  { token: "PUBLIC", label: "Public — always listed" },
+  { token: "CASE_GATED", label: "Case-gated — follows the citing cases" },
+  { token: "PRIVATE", label: "Private — never public" },
+] as const;
+
 // Link roles for a material's associatedMedia entries (`jawafdehi:linkRole`) —
 // the DocumentSource link-role vocabulary.
 export const MATERIAL_LINK_ROLES = [
