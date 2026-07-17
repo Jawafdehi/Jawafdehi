@@ -70,9 +70,13 @@ function scalar(v: unknown): string | null {
 }
 
 // Keys handled explicitly in the header/links/full-text/provenance, never in Details.
+// The jawafdehi:visibility[Policy] pair is a caseworker-only annotation the API
+// adds on authed reads; it is an editor concern (see MaterialVisibilityControl),
+// not a public detail, so keep it out of the generic grid.
 const HANDLED_KEYS = new Set([
   "@id", "@type", "@context", "additionalType", "name", "alternateName",
   "description", "text", "url", "sameAs", "identifier", "associatedMedia",
+  "jawafdehi:visibility", "jawafdehi:visibilityPolicy",
 ]);
 
 // A roled source link (mirrors the data-lake DocumentSource link roles).

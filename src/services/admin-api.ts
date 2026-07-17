@@ -324,6 +324,24 @@ export async function replaceMaterial<T = Record<string, unknown>>(
   return data;
 }
 
+// Set a material's caseworker-controlled visibility policy (materials.models.Policy:
+// PUBLIC | CASE_GATED | PRIVATE) out-of-band from its document body. The backend
+// strips these control keys from stored JSON-LD, so the policy travels via this
+// dedicated PATCH — which writes the column, recomputes the cached `visibility`,
+// and returns the doc annotated with jawafdehi:visibility[Policy] (an authed read).
+// Addressed by full @id via ?iri= (the canonical whole-IRI form).
+export async function patchMaterialVisibilityPolicy<T = Record<string, unknown>>(
+  iri: string,
+  visibilityPolicy: string,
+): Promise<T> {
+  const { data } = await client.patch<T>(
+    "/api/materials/",
+    { visibility_policy: visibilityPolicy },
+    { params: { iri } },
+  );
+  return data;
+}
+
 // Soft-delete a material by its <source>/<ident> path components (204).
 export async function deleteMaterial(
   source: string,
