@@ -53,7 +53,7 @@ const validSorts = new Set<ArchiveSearchSort>([
   "oldest",
   "title",
 ]);
-const archiveSearchPageSize = 4;
+const archiveSearchPageSize = 12;
 const emptyFacets: ArchiveSearchFacets = {
   entity_type: [],
   case_type: [],
