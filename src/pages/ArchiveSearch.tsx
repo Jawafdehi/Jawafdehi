@@ -480,7 +480,7 @@ function ArchiveSearchResults({
     if (viewMode === "card") {
       return (
         <output aria-label={searchingLabel} className={cardGridClass}>
-          {[0, 1, 2, 3].map((index) => (
+          {Array.from({ length: archiveSearchPageSize }, (_, index) => (
             <CaseCardSkeleton key={index} />
           ))}
         </output>
@@ -493,10 +493,10 @@ function ArchiveSearchResults({
         className="space-y-3"
         role="status"
       >
-        {[false, true, false, true].map((showTags, index) => (
+        {Array.from({ length: archiveSearchPageSize }, (_, index) => (
           <SearchResultCardSkeleton
             key={index}
-            showTags={showTags}
+            showTags={index % 2 === 1}
           />
         ))}
       </div>
