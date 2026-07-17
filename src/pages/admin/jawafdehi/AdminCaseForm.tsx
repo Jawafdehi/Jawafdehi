@@ -37,6 +37,7 @@ import {
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
+import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshipsEditor";
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
@@ -645,15 +646,18 @@ export default function AdminCaseForm() {
               value={form.case_type}
               onValueChange={(v) => set("case_type", v)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="case-type" data-testid="case-type-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CASE_TYPES.map((ct) => (
-                  <SelectItem key={ct} value={ct}>
-                    {ct}
-                  </SelectItem>
-                ))}
+                {CASE_TYPES.map((ct) => {
+                  const labelKey = getCaseTypeLabelKey(ct);
+                  return (
+                    <SelectItem key={ct} value={ct}>
+                      {labelKey ? t(labelKey) : ct}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
