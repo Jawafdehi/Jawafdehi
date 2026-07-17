@@ -52,5 +52,7 @@ export function sourceKeyFor(source: string): string {
     // `document` = mixed-provenance case uploads with no single issuing office;
     // it deliberately falls through to "other".
   };
-  return map[source] ?? "other";
+  // Own-property check so built-in names ("toString", "constructor", …) resolve
+  // to "other" rather than an inherited Object.prototype member.
+  return Object.prototype.hasOwnProperty.call(map, source) ? map[source] : "other";
 }

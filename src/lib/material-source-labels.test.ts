@@ -57,4 +57,12 @@ describe("sourceKeyFor", () => {
   it("falls back to other for unknown tokens", () => {
     expect(sourceKeyFor("something_new")).toBe("other");
   });
+
+  it("falls back to other for built-in property names (no prototype lookup)", () => {
+    // A plain object inherits Object.prototype members; an own-property check
+    // keeps these from resolving to a function instead of "other".
+    expect(sourceKeyFor("toString")).toBe("other");
+    expect(sourceKeyFor("constructor")).toBe("other");
+    expect(sourceKeyFor("hasOwnProperty")).toBe("other");
+  });
 });
