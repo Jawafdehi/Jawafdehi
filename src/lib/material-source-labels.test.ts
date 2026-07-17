@@ -30,6 +30,23 @@ describe("sourceKeyFor", () => {
     expect(sourceKeyFor("ciaa")).toBe("ciaa");
   });
 
+  it("folds re-homed type-named sources into their issuing office", () => {
+    // Uploads once mis-filed under `jawafdehi` were re-homed to type-named
+    // sources; each traces to the office that issues that document.
+    expect(sourceKeyFor("charge_sheet")).toBe("ag");
+    expect(sourceKeyFor("press_release")).toBe("ciaa");
+    expect(sourceKeyFor("court_filing")).toBe("courts");
+    expect(sourceKeyFor("official_report")).toBe("auditorGeneral");
+    expect(sourceKeyFor("legal_corpus")).toBe("lawsOfNepal");
+    expect(sourceKeyFor("news")).toBe("news");
+    expect(sourceKeyFor("social_media")).toBe("socialMedia");
+  });
+
+  it("leaves generic mixed-provenance uploads under other", () => {
+    // `document` has no single issuing office, so it falls through to "other".
+    expect(sourceKeyFor("document")).toBe("other");
+  });
+
   it("still maps the smaller known feeds", () => {
     expect(sourceKeyFor("dfmis")).toBe("dfmis");
     expect(sourceKeyFor("province/koshi")).toBe("koshi");
