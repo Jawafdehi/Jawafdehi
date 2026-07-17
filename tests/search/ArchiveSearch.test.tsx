@@ -140,7 +140,7 @@ describe("ArchiveSearch", () => {
     // Default record type is "all" (the full unified corpus). "all" means no
     // `type` filter is sent to the API (undefined), and the URL carries type=all.
     expect(searchArchiveMock).toHaveBeenCalledWith(
-      expect.objectContaining({ page_size: 4, type: undefined }),
+      expect.objectContaining({ page_size: 12, type: undefined }),
     );
     expect(screen.getByTestId("location-search").textContent).toBe(
       "?type=all",
