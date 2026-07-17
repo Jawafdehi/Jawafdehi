@@ -641,7 +641,7 @@ export default function AdminCaseForm() {
             )}
           </div>
           <div className="space-y-1">
-            <Label>{t("admin.caseForm.labelCaseType")}</Label>
+            <Label htmlFor="case-type">{t("admin.caseForm.labelCaseType")}</Label>
             <Select
               value={form.case_type}
               onValueChange={(v) => set("case_type", v)}
@@ -654,7 +654,7 @@ export default function AdminCaseForm() {
                   const labelKey = getCaseTypeLabelKey(ct);
                   return (
                     <SelectItem key={ct} value={ct}>
-                      {labelKey ? t(labelKey) : ct}
+                      {labelKey ? t(labelKey, { defaultValue: ct }) : ct}
                     </SelectItem>
                   );
                 })}
