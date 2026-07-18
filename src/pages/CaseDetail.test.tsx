@@ -70,6 +70,7 @@ const makeCase = (slug: string | null): CaseDetailType => ({
   timeline: [],
   evidence: [],
   notes: "",
+  public_notes: "",
   missing_details: null,
 });
 
