@@ -22,6 +22,7 @@ export const CASE_TYPES: readonly CaseType[] = [
   "ILLEGAL_PROPERTY",
   "EXAM_RIGGING",
   "TAX_EVASION",
+  "BANKING_OFFENCE",
 ];
 
 export const CASE_STATES: readonly CaseState[] = [

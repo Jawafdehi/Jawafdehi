@@ -20,7 +20,8 @@ export type CaseType =
   | 'MONEY_LAUNDERING'
   | 'ILLEGAL_PROPERTY'
   | 'EXAM_RIGGING'
-  | 'TAX_EVASION';
+  | 'TAX_EVASION'
+  | 'BANKING_OFFENCE';
 
 export type CaseState =
   | 'DRAFT'
