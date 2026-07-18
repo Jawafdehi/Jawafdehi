@@ -43,6 +43,7 @@ const CASE_TYPE_LABEL_KEYS: Record<string, string> = {
   ILLEGAL_PROPERTY: "cases.type.illegalProperty",
   EXAM_RIGGING: "cases.type.examRigging",
   TAX_EVASION: "cases.type.taxEvasion",
+  BANKING_OFFENCE: "cases.type.bankingOffence",
 };
 
 /**

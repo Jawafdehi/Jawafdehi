@@ -54,6 +54,7 @@ describe('getCaseTypeLabelKey', () => {
   it('maps known case types', () => {
     expect(getCaseTypeLabelKey('CORRUPTION')).toBe('cases.type.corruption');
     expect(getCaseTypeLabelKey('TAX_EVASION')).toBe('cases.type.taxEvasion');
+    expect(getCaseTypeLabelKey('BANKING_OFFENCE')).toBe('cases.type.bankingOffence');
   });
 
   it('is case-insensitive (scraped court types vary in casing)', () => {
