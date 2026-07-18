@@ -16,6 +16,7 @@ import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
+import { CaseByline } from "@/components/case-detail/case-byline";
 
 interface CaseDetailBannerProps {
   caseData: CaseDetail;
@@ -321,6 +322,12 @@ export function CaseDetailBanner({
                     </div>
                   </div>
                 )}
+
+                {/* Public caseworker-authored attribution + edit-history byline
+                    (Case.public_notes). On-screen counterpart to the print-only
+                    block in CaseDetail; the banner is no-print, so it renders on
+                    screen without duplicating in the PDF. Empty = nothing shown. */}
+                <CaseByline markdown={caseData.public_notes} />
               </div>
 
               {actions || shareAction ? (
