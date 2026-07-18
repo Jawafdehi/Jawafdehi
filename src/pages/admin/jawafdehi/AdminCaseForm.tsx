@@ -70,6 +70,7 @@ interface CaseFormState {
   case_type: string;
   description: string;
   notes: string;
+  public_notes: string;
   missing_details: string;
   key_allegations: string[];
   entities: EntityRelationshipRow[];
@@ -94,6 +95,7 @@ const EMPTY: CaseFormState = {
   case_type: "CORRUPTION",
   description: "",
   notes: "",
+  public_notes: "",
   missing_details: "",
   key_allegations: [],
   entities: [],
@@ -196,6 +198,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     case_type: str(c.case_type) || "CORRUPTION",
     description: str(c.description),
     notes: str(c.notes),
+    public_notes: str(c.public_notes),
     missing_details: str(c.missing_details),
     key_allegations: allegations,
     entities: parseEntities(c),
@@ -360,6 +363,8 @@ export default function AdminCaseForm() {
     if (form.description !== original.description)
       ops.push(replaceOp("/description", form.description));
     if (form.notes !== original.notes) ops.push(replaceOp("/notes", form.notes));
+    if (form.public_notes !== original.public_notes)
+      ops.push(replaceOp("/public_notes", form.public_notes));
     if (form.missing_details !== original.missing_details)
       ops.push(replaceOp("/missing_details", form.missing_details));
     if (changed(cleanedAllegations, original.key_allegations))
@@ -401,6 +406,7 @@ export default function AdminCaseForm() {
     : form.title.trim() !== "" ||
       form.description.trim() !== "" ||
       form.notes.trim() !== "" ||
+      form.public_notes.trim() !== "" ||
       form.missing_details.trim() !== "" ||
       cleanedAllegations.length > 0 ||
       form.bigo.trim() !== "" ||
@@ -444,6 +450,7 @@ export default function AdminCaseForm() {
           case_type: form.case_type,
           description: form.description || undefined,
           notes: form.notes || undefined,
+          public_notes: form.public_notes || undefined,
           missing_details: form.missing_details || undefined,
           key_allegations: cleanedAllegations.length
             ? cleanedAllegations
@@ -685,6 +692,19 @@ export default function AdminCaseForm() {
           <MDEditor
             value={form.notes}
             onChange={(v) => set("notes", v ?? "")}
+            height={200}
+            preview="edit"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label>{t("admin.caseForm.labelPublicNotes")}</Label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.caseForm.publicNotesHelp")}
+          </p>
+          <MDEditor
+            value={form.public_notes}
+            onChange={(v) => set("public_notes", v ?? "")}
             height={200}
             preview="edit"
           />

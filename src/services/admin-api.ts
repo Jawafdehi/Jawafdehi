@@ -439,6 +439,7 @@ export interface CreateCasePayload {
   case_type: string;
   description?: string;
   notes?: string;
+  public_notes?: string;
   key_allegations?: string[];
   [k: string]: unknown;
 }

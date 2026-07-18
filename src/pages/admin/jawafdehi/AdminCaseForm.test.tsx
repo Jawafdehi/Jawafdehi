@@ -84,6 +84,20 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     expect(link.getAttribute("aria-disabled")).not.toBe("true");
   });
 
+  it("renders a public-notes / byline field distinct from the internal notes field (#4)", async () => {
+    loadCase("PUBLISHED");
+    render(<AdminCaseForm />);
+
+    // Both the internal notes and the new public byline field are present and
+    // labelled distinctly (t() passthrough returns the i18n key verbatim).
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.labelPublicNotes")).toBeTruthy(),
+    );
+    expect(screen.getByText("admin.caseForm.labelNotes")).toBeTruthy();
+    // The help text spells out that the field is public and hand-written.
+    expect(screen.getByText("admin.caseForm.publicNotesHelp")).toBeTruthy();
+  });
+
   it("disables the link (no public href) for a non-public DRAFT case", async () => {
     loadCase("DRAFT");
     render(<AdminCaseForm />);

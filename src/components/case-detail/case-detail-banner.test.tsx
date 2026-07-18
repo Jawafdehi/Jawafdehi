@@ -37,6 +37,7 @@ const makeCase = (overrides: Partial<CaseDetail> = {}): CaseDetail => ({
   timeline: [],
   evidence: [],
   notes: "",
+  public_notes: "",
   missing_details: null,
   ...overrides,
 });
