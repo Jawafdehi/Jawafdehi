@@ -129,4 +129,8 @@ export interface ArchiveSearchResponse {
   facets: ArchiveSearchFacets;
   results: ArchiveSearchResult[];
   next_cursor: string | null;
+  // Ephemeral per-response id (not a user/session id). Echoed back on a result
+  // click (POST /api/search/click) to join query → clicked result server-side.
+  // Optional: older cached responses / mocks may omit it.
+  search_id?: string;
 }

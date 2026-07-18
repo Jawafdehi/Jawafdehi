@@ -45,6 +45,7 @@ import {
 } from "@/utils/archive-search-params";
 import { getFacetItemLabel } from "@/utils/case-entities";
 import { trackEvent } from "@/utils/analytics";
+import { sendSearchClick } from "@/utils/searchClick";
 
 type RefinementName = SidebarFilterName | "type";
 
@@ -532,6 +533,7 @@ function ArchiveSearchResults({
             key={`${result.type}-${result.id}`}
             rank={rankOf(index)}
             result={result}
+            searchId={data.search_id}
             searchTerm={searchTerm}
             viewMode="card"
           >
@@ -549,6 +551,7 @@ function ArchiveSearchResults({
           key={`${result.type}-${result.id}`}
           rank={rankOf(index)}
           result={result}
+          searchId={data.search_id}
           searchTerm={searchTerm}
           viewMode="list"
         >
@@ -560,18 +563,22 @@ function ArchiveSearchResults({
 }
 
 // Wraps a result so a click that navigates to the record (lands on an <a>, not a
-// tag/filter button) emits a GA4 `select_search_result` event carrying the
-// result's 1-based rank. Click-through and rank-of-first-click can only be
-// observed client-side — the server never learns which result was chosen.
+// tag/filter button) reports the selection two ways: the GA4
+// `select_search_result` event (consent-gated) AND a server-side click beacon
+// join-keyed by `searchId` (consent-free, no identity) that lets the backend
+// learn which result was chosen at what rank — the ground truth GA's ~24% sample
+// cannot give.
 function TrackedSearchResult({
   rank,
   result,
+  searchId,
   searchTerm,
   viewMode,
   children,
 }: Readonly<{
   rank: number;
   result: ArchiveSearchResult;
+  searchId?: string;
   searchTerm?: string;
   viewMode: "list" | "card";
   children: ReactNode;
@@ -583,6 +590,7 @@ function TrackedSearchResult({
       rank,
       search_term: searchTerm || undefined,
     });
+    sendSearchClick({ searchId, rank, result });
   };
   // `h-full` keeps card-grid cell heights consistent (inner card stretches to
   // fill); list view needs no wrapper sizing.
