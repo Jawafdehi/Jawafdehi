@@ -2,9 +2,19 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { DataLakeMetrics } from "@/types/jds";
+import { useIsNarrow } from "@/hooks/useIsNarrow";
 
 /** Court levels in institutional order; anything else sorts after. */
 const COURT_ORDER = ["district", "high", "supreme", "special"];
+
+/**
+ * Year columns kept on phones before the "show all years" opt-in. The full range
+ * runs 25 columns at ~48px — a 1368px grid in a ~380px scroller, so reaching the
+ * years anyone actually asks about means dragging past two decades of sparse
+ * cells. Six recent years cut that to ~456px: a nudge of scroll rather than a
+ * journey, still enough columns to read a trend, and the rest are one tap away.
+ */
+const NARROW_YEAR_LIMIT = 6;
 
 /** Compact count for dense cells: 140000 -> "140k", 1500000 -> "1.5M". */
 function formatCompact(n: number): string {
@@ -26,6 +36,8 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
   const { t } = useTranslation();
   const [levelFilter, setLevelFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
+  const [showAllYears, setShowAllYears] = useState(false);
+  const narrow = useIsNarrow();
 
   const rows = ngm?.by_court_type_year ?? [];
 
@@ -54,12 +66,22 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
 
   const visibleTypes =
     levelFilter === "all" ? courtTypes : courtTypes.filter((c) => c === levelFilter);
-  const visibleYears =
+  // Two distinct year lists. `filteredYears` is what the reader asked for via the
+  // year <select>; `visibleYears` is what we actually paint as columns, trimmed to
+  // the most recent few on phones unless they opt into the full range.
+  const filteredYears =
     yearFilter === "all" ? years : years.filter((y) => String(y) === yearFilter);
+  const yearsTrimmed = narrow && !showAllYears && filteredYears.length > NARROW_YEAR_LIMIT;
+  const visibleYears = yearsTrimmed
+    ? filteredYears.slice(-NARROW_YEAR_LIMIT)
+    : filteredYears;
 
   const cellFor = (type: string, year: number) => cells.get(`${type}|${year}`) ?? 0;
+  // Totals deliberately span `filteredYears`, not `visibleYears`: the trim is a
+  // viewport accommodation, not a filter, so a phone and a desktop must report the
+  // same number for the same selection. The caption below says so explicitly.
   const rowTotal = (type: string) =>
-    visibleYears.reduce((sum, y) => sum + cellFor(type, y), 0);
+    filteredYears.reduce((sum, y) => sum + cellFor(type, y), 0);
 
   return (
     <div>
@@ -97,8 +119,13 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
         </label>
       </div>
 
-      {/* Grid — scrolls horizontally on narrow screens. */}
-      <div className="overflow-x-auto">
+      {/* Grid — scrolls horizontally on narrow screens.
+          `contain:paint` is load-bearing on phones: without it Chrome counts the
+          wide table towards the document's content width even though the scroller
+          clips it, expands the mobile layout viewport to fit, and shrink-to-fits
+          the whole page (everything renders zoomed out). Paint containment tells
+          the engine the clip is guaranteed, so the viewport stays device-width. */}
+      <div className="overflow-x-auto [contain:paint]">
         <table className="w-full border-separate border-spacing-1 text-sm">
           <thead>
             <tr>
@@ -156,6 +183,33 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           </tbody>
         </table>
       </div>
+
+      {/* Year-trim notice + opt-in. Only rendered on phones with a trimmed range,
+          so desktop is untouched. The count of hidden years is spelled out rather
+          than left implicit — a heatmap that quietly drops columns misreads as a
+          complete record. */}
+      {narrow && (yearsTrimmed || showAllYears) && filteredYears.length > NARROW_YEAR_LIMIT && (
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          {yearsTrimmed && (
+            <span>
+              {t(
+                "dataQuality.courtCases.yearsTrimmed",
+                "Showing the last {{shown}} years. Totals cover all {{all}}.",
+                { shown: visibleYears.length, all: filteredYears.length },
+              )}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowAllYears((v) => !v)}
+            className="rounded-md px-1 font-medium text-foreground underline underline-offset-2 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            {showAllYears
+              ? t("dataQuality.courtCases.showRecentYears", "Show recent years only")
+              : t("dataQuality.courtCases.showAllYears", "Show all years")}
+          </button>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">

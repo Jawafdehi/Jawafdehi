@@ -103,9 +103,25 @@ function buildInstitutionGroups(
 // Sources whose materials land under the generic `document` type but whose real
 // output is specific enough to name (researched from each office's mandate):
 // DFMIS = development-finance records, PPMO = contractor blacklist/debarment
-// records, Koshi = provincial records. For these, a bare "Documents" row is
-// unhelpful, so we substitute the office's actual output.
-const SOURCE_PUBLISHES = new Set(["dfmis", "ppmo", "koshi"]);
+// records, Koshi = provincial records, CIAA = annual reports, Nepal Courts =
+// filings (submissions *to* a court, as against the 23k orders issued *by* one),
+// NKP = the bound monthly issues of the law journal. For these, a bare
+// "Documents" row is unhelpful, so we substitute the office's actual output.
+//
+// Naming rather than folding these into the institution's main row is deliberate.
+// NKP's 220 issues are the volumes its 10,468 individual precedents were
+// published in — containers, not peers — so summing them would count the same
+// content twice and overstate the precedent corpus. Nepal Courts' filings are a
+// different document class from its orders. Small counts here mean "rare kind of
+// record", not "rounding error".
+//
+// Safe for the multi-type institutions because each one contributes exactly one
+// generically-typed raw source: CIAA's press releases arrive typed as
+// `press_release` and only `ciaa_annual_report` falls through as `document`;
+// likewise `court_filing` under courts and `kanun_patrika` under nkp. If a second
+// generic source is ever folded into one of these keys, its rows would wrongly
+// inherit this label — name the type at the source instead.
+const SOURCE_PUBLISHES = new Set(["dfmis", "ppmo", "koshi", "ciaa", "courts", "nkp"]);
 const GENERIC_TYPE_KEYS = new Set(["document", "other"]);
 
 /**

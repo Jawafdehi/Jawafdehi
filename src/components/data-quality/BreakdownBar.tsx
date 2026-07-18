@@ -53,11 +53,25 @@ export function BreakdownBar({
   const height = data.length * 44 + 24;
 
   // On phones the fixed label gutter eats most of a ~375px container, crushing
-  // every bar into a thin strip on the right. Shrink the gutter, the end-label
-  // margin, and the tick size below the breakpoint so the bars keep real width.
+  // every bar into a thin strip on the right. Shrink the gutter and the tick
+  // size below the breakpoint so the bars keep real width.
   const effectiveLabelWidth = narrow ? Math.min(labelWidth, 96) : labelWidth;
-  const rightMargin = narrow ? 40 : 64;
   const tickFontSize = narrow ? 11 : 12;
+
+  // The right margin has to reserve room for the widest end-label, or recharts
+  // paints it past the SVG edge and it gets clipped mid-number ("11,399" -> "11,39").
+  // A fixed 40px was too tight on phones once counts reached six digits, so size
+  // it off the actual data: monospace digits run ~0.62em, plus the gap LabelList
+  // leaves between the bar end and its label.
+  const END_LABEL_FONT_SIZE = 12;
+  const widestLabelChars = Math.max(
+    ...data.map((d) => d.count.toLocaleString().length),
+    1,
+  );
+  const rightMargin = Math.max(
+    Math.ceil(widestLabelChars * END_LABEL_FONT_SIZE * 0.62) + 12,
+    narrow ? 40 : 64,
+  );
 
   if (!mounted) {
     return <div className="w-full" style={{ height }} />;
@@ -125,7 +139,7 @@ export function BreakdownBar({
               position="right"
               formatter={(v: number) => v.toLocaleString()}
               style={{
-                fontSize: 12,
+                fontSize: END_LABEL_FONT_SIZE,
                 fontWeight: 600,
                 fill: "hsl(var(--foreground))",
                 fontFamily: MONO_STACK,
