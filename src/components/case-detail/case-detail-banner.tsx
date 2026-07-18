@@ -241,6 +241,16 @@ export function CaseDetailBanner({
                 ))}
               </div>
 
+              {/* Short description as a lead/deck under the status badge — the
+                  one-line "what is this case" summary at the top of the page.
+                  Authored content, rendered as-is (like the title/description),
+                  not run through the dynamic-text map. */}
+              {caseData.short_description?.trim() ? (
+                <p className="mb-5 max-w-3xl text-base font-medium leading-relaxed text-primary/80 md:text-lg">
+                  {caseData.short_description}
+                </p>
+              ) : null}
+
               <div className="space-y-2">
                 <div>
                   <p className={metaTitleClass}>{t("caseDetail.location")}:</p>
