@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   AlertCircle,
+  SquarePen,
 } from "lucide-react";
 import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
@@ -20,6 +21,7 @@ import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-deta
 import { MissingDetailsSection } from "@/components/case-detail/missing-details-section";
 import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseByline } from "@/components/case-detail/case-byline";
+import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
 import { CourtCasesSection } from "@/components/case-detail/court-cases-section";
@@ -73,6 +75,9 @@ const CaseDetail = () => {
   const currentLang = i18n.language;
   const { id } = useParams();
   const navigate = useNavigate();
+  // The public case page renders outside the admin auth providers; this reads any
+  // persisted session so a logged-in caseworker sees an "Edit case" link up top.
+  const isLoggedIn = useIsLoggedIn();
   const trackedCaseIdRef = useRef<string | null>(null);
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState("allegations");
@@ -418,7 +423,31 @@ const CaseDetail = () => {
       <CaseDetailBanner
         caseData={caseData}
         resolvedEntities={resolvedEntities}
-        actions={<ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />}
+        actions={
+          <>
+            {/* Staff-only "Edit case", shown at the top of the page for any
+                logged-in user (the API + admin route guards remain the
+                authorization authority). Moved here from the old bottom contact
+                strip. Opens the case admin in a new tab. */}
+            {isLoggedIn && id && (
+              <Button
+                asChild
+                variant="outline"
+                className="gap-2 border-primary/20 bg-background text-primary hover:bg-primary/5 hover:text-primary"
+              >
+                <a
+                  href={`${API_BASE_URL}/admin/cases/case/${id}/change/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <SquarePen className="h-4 w-4" aria-hidden="true" />
+                  <span className="font-semibold">{t("caseDetail.editCase")}</span>
+                </a>
+              </Button>
+            )}
+            <ReportCaseDialog caseId={id || ""} caseTitle={caseData.title} />
+          </>
+        }
         shareAction={{
           label: t("caseDetail.shareCase"),
           onClick: handleBannerShare,
@@ -652,10 +681,8 @@ const CaseDetail = () => {
               <CaseContactStrip
                 email={JAWAFDEHI_EMAIL}
                 whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
-                editUrl={`${API_BASE_URL}/admin/cases/case/${id}/change/`}
                 emailLabel={t("caseDetail.emailLabel")}
                 whatsappLabel={t("caseDetail.whatsappLabel")}
-                editLabel={t("caseDetail.editCase")}
                 title={t("caseDetail.contact")}
               />
 

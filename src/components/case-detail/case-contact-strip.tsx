@@ -1,24 +1,20 @@
-import { ExternalLink, Mail, MessageCircle } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 interface CaseContactStripProps {
   email: string;
   whatsappNumber: string;
-  editUrl: string;
   emailLabel: string;
   whatsappLabel: string;
-  editLabel: string;
   title: string;
 }
 
 export function CaseContactStrip({
   email,
   whatsappNumber,
-  editUrl,
   emailLabel,
   whatsappLabel,
-  editLabel,
   title,
 }: Readonly<CaseContactStripProps>) {
   return (
@@ -58,13 +54,6 @@ export function CaseContactStrip({
     <MessageCircle className="h-4 w-4" aria-hidden="true" />
   </a>
 </Button>
-
-          <Button asChild className="px-3" variant="disclosure" size="navCta">
-            <a href={editUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
-              <span>{editLabel}</span>
-            </a>
-          </Button>
         </div>
       </div>
     </aside>
