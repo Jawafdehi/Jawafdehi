@@ -92,7 +92,7 @@ export function Navbar() {
   const archiveNavItems = useMemo<NavItem[]>(
     () => [
       { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
-      { key: "materials", label: t("nav.materials", "Governance materials"), to: "/materials" },
+      { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
       { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
     ],
     [t],
