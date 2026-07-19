@@ -13,6 +13,23 @@ import './i18n/config';
 
 initSentry();
 
+// A Cloudflare Workers Builds deploy swaps every hashed asset atomically, so a
+// tab still running a previous build 404s when it lazy-loads a route chunk whose
+// hash no longer exists — the edge serves index.html in its place, which trips
+// "Failed to fetch dynamically imported module" and drops the user on the error
+// boundary (e.g. opening /data-quality after a deploy). Vite fires
+// `vite:preloadError` for exactly this; reload once to pull the fresh index.html
+// and its current chunk names. The sessionStorage cooldown stops a reload loop
+// when the failure is genuine (offline, real 5xx) rather than a stale build.
+window.addEventListener('vite:preloadError', (event) => {
+  const RELOAD_KEY = 'jds:chunk-reload-at';
+  const lastReload = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
+  if (Date.now() - lastReload < 10_000) return;
+  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+  event.preventDefault();
+  window.location.reload();
+});
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 1 } },
 });

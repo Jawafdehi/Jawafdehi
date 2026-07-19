@@ -44,8 +44,15 @@ interface FeedVideo {
 }
 
 function securityHeaders(): Record<string, string> {
+  // Third-party allowances layered onto the same-origin baseline:
+  //   script-src  — googletagmanager (GA4 gtag.js) + cloudflareinsights (RUM beacon.min.js)
+  //   connect-src — *.ingest.de.sentry.io (Sentry envelopes), googletagmanager +
+  //                 *.google-analytics.com / *.analytics.google.com (GA4 collect),
+  //                 cloudflareinsights.com (RUM /cdn-cgi/rum POST)
+  // Without these the SPA loads gtag/Sentry/RUM but the browser blocks every
+  // request, so analytics silently record nothing and prod errors never reach Sentry.
   return {
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.jawafdehi.org https://portal.jawafdehi.org https://jawafdehi.org https://nes.jawafdehi.org https://auth.jawafdehi.org; worker-src 'self' blob:;",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.jawafdehi.org https://portal.jawafdehi.org https://jawafdehi.org https://nes.jawafdehi.org https://auth.jawafdehi.org https://*.ingest.de.sentry.io https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://cloudflareinsights.com; worker-src 'self' blob:;",
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
