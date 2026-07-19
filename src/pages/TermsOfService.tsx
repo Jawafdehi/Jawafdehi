@@ -28,7 +28,7 @@ const TermsOfService = () => {
                 Jawafdehi Initiative Terms of Service
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: June 23, 2026
+                Last updated: July 18, 2026
               </p>
             </div>
           </div>
@@ -44,7 +44,7 @@ const TermsOfService = () => {
 
               <h2 id="about-jawafdehi">2. About Jawafdehi</h2>
               <p>
-                The Platform is operated by Jawafdehi Initiative Inc., a Michigan public benefit nonprofit corporation. Jawafdehi is Nepal's open corruption accountability platform. We document, simplify, and permanently archive CIAA (Commission for the Investigation of Abuse of Authority) corruption cases. All published case data is in the public domain and is provided for public interest, transparency, and accountability purposes.
+                The Platform is operated by Jawafdehi Initiative Inc., a Michigan public benefit nonprofit corporation. Jawafdehi is Nepal's open corruption accountability platform. We document, simplify, and permanently archive CIAA (Commission for the Investigation of Abuse of Authority) corruption cases. Published case data is licensed under Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0) and is provided for public interest, transparency, and accountability purposes.
               </p>
               <p>
                 Jawafdehi is an open-source project run with the help of volunteers. We are not a government entity, law firm, or legal authority. We do not provide legal advice.
@@ -78,9 +78,9 @@ const TermsOfService = () => {
                 We use third-party tools to manage and publish content to social media accounts that we operate (including TikTok). Our use of those accounts and the platforms' developer interfaces is additionally subject to the terms of service and policies of each platform, including those of TikTok. Information accessed through these integrations is described in our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
               </p>
 
-              <h2 id="public-domain-data">4. Public Domain Data</h2>
+              <h2 id="data-license">4. Data License (CC BY-NC 4.0)</h2>
               <p>
-                All published case records, summaries, and related data on the Platform are in the public domain. You may freely use, share, and reference this information. We encourage attribution to Jawafdehi.org when using our data, but it is not required.
+                Published case records, summaries, and related data on the Platform are licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). You may read, share, and build on this information for non-commercial purposes — journalism, research, education, advocacy — as long as you credit Jawafdehi.org. For commercial use, you must obtain a separate license from us (which carries ethical-use terms) by writing to inquiry@jawafdehi.org. We deliberately do not place this data in the public domain, so the archive remains a single authoritative, correctable source.
               </p>
               <p>
                 User-submitted information (feedback, allegations, volunteer applications) is handled according to our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
@@ -101,7 +101,7 @@ const TermsOfService = () => {
 
               <h2 id="intellectual-property">6. Intellectual Property</h2>
               <p>
-                The Jawafdehi platform codebase is open source and available on <a href="https://github.com/Jawafdehi" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub</a>. The Jawafdehi name, logo, and branding are property of the Jawafdehi project. Case data published on the platform is in the public domain.
+                The Jawafdehi platform codebase is open source and available on <a href="https://github.com/Jawafdehi" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub</a>. The Jawafdehi name, logo, and branding are property of the Jawafdehi project. Case data published on the platform is available under CC BY-NC 4.0 (see Section 4).
               </p>
 
               <h2 id="disclaimer">7. Disclaimer of Warranties</h2>
