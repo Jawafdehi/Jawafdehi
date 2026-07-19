@@ -4,7 +4,6 @@
     "entities": "Entities",
     "updates": "Updates",
     "cases": "Cases",
-    "information": "Information",
     "about": "About",
     "team": "Our Team",
     "products": "Our Products",
@@ -19,7 +18,7 @@
     "menu": "Menu",
     "archive": "Archive",
     "searchArchive": "Search archive",
-    "materials": "Governance materials",
+    "materials": "Documents & other materials",
     "courtCases": "Court cases",
     "faq": "FAQ"
   },
@@ -74,7 +73,6 @@
       "cases": "Open the dedicated case search and browsing page.",
       "archiveSearch": "Search cases, entities, locations, and evidence documents in one archive.",
       "entities": "Find tracked people, offices, and organizations.",
-      "information": "Read public information and resources.",
       "process": "See how records are reviewed and documented.",
       "commitment": "Read the principles behind the archive.",
       "volunteer": "Help build the accountability archive.",
@@ -87,7 +85,7 @@
       "report": "Submit an allegation or public-interest corruption lead.",
       "feedback": "Send bugs, feature ideas, corrections, or general feedback.",
       "privacy": "Read how Jawafdehi handles data, cookies, logs, and user information.",
-      "terms": "Read platform rules, public domain data terms, disclaimers, and permitted use.",
+      "terms": "Read platform rules, data-reuse (CC BY-NC) terms, disclaimers, and permitted use.",
       "updateDetail": "Read a Jawafdehi platform update.",
       "caseDetail": "Open a documented corruption case.",
       "entityDetail": "Open a tracked person, office, or organization.",
@@ -111,10 +109,10 @@
     "accountabilityNoExpiry": "Accountability has no expiry.",
     "permanentArchive": "Nepal's permanent public archive of CIAA corruption cases, free forever, built by Nepali volunteers.",
     "builtByNepali": "Built by Nepali",
-    "publicDomain": "Public domain",
+    "publicDomain": "Open data",
     "openSource": "Open source",
     "platform": "Platform",
-    "allDataPublicDomain": "All data is in the public domain.",
+    "allDataPublicDomain": "Case data is free to reuse under CC BY-NC.",
     "privacy": "Privacy",
     "terms": "Terms",
     "disclaimer": "The information provided on this website is for informative purposes only. We are not a judiciary body and do not have legal authority to prosecute or adjudicate cases. Our platform serves to document and raise awareness about corruption allegations and public accountability.",
@@ -141,7 +139,7 @@
         "casesDocumented": "Cases documented",
         "officialsAndEntitiesTracked": "Officials & entities tracked",
         "courtRecords": "Court records",
-        "materials": "Materials"
+        "materials": "Documents & other materials"
       }
     },
     "featuredCases": {
@@ -184,6 +182,62 @@
   "ourProcess": {
     "hero": {
       "heading": "How a <1>corruption</1> case goes from discovery to the <3>public archive</3>"
+    },
+    "steps": {
+      "discovery": {
+        "title": "Discovery",
+        "description": "Our data scraping team archives government documents, CIAA filings, court records, and CIB reports into digital text. The outreach team simultaneously works with investigative journalists, corruption watchdogs, and media organisations to surface cases not yet in the public record."
+      },
+      "research": {
+        "title": "Research",
+        "description": "Our research team investigates what constitutes corruption in each case, the role it plays in Nepali governance, and the effectiveness of existing anti-corruption frameworks. Every case is contextualised before it is written up."
+      },
+      "compilation": {
+        "title": "Compilation",
+        "description": "The compilation team structures each case: key allegations, timeline of events, entities involved, and all source documents. Cases are written in plain language so citizens — not just lawyers — can understand them."
+      },
+      "aiDrafting": {
+        "title": "AI-Assisted Drafting",
+        "description": "AI helps our team process large volumes of legal documents faster — summarising filings, extracting key facts, and flagging inconsistencies. Every AI-generated output is reviewed and approved by a human volunteer before publication."
+      },
+      "verification": {
+        "title": "Verification & Publication",
+        "description": "All cases are cross-referenced against at least two independent sources. Once approved, the case is published to the archive — permanently. Records are never altered without a visible audit trail and never deleted."
+      },
+      "ongoingTracking": {
+        "title": "Ongoing Tracking",
+        "description": "Published cases are actively monitored for developments: new court orders, verdicts, appeals, and entity responses. Updates are added to the existing case record so the full history is always visible."
+      }
+    },
+    "sources": {
+      "heading": "Where Our Data Comes From",
+      "description": "We draw from official government sources, public records, media investigations, and independent civil society — and always trace every claim back to its origin.",
+      "items": {
+        "ciaa": {
+          "label": "CIAA",
+          "desc": "Commission for the Investigation of Abuse of Authority"
+        },
+        "cib": {
+          "label": "CIB",
+          "desc": "Central Investigation Bureau"
+        },
+        "media": {
+          "label": "Media",
+          "desc": "National and regional news organisations"
+        },
+        "journalists": {
+          "label": "Investigative Journalists",
+          "desc": "Independent reporters and press groups"
+        },
+        "watchdogs": {
+          "label": "Corruption Watchdogs",
+          "desc": "Civil society accountability organisations"
+        },
+        "creators": {
+          "label": "YouTubers & Creators",
+          "desc": "Digital journalists covering governance"
+        }
+      }
     }
   },
   "commitment": {
@@ -213,12 +267,12 @@
         "body": "We use AI to process and summarize large volumes of legal documents faster. But every case summary generated by AI is reviewed by a human volunteer for factual accuracy before it is published. Speed does not come at the cost of accuracy."
       },
       "publicDomain": {
-        "title": "All data in the public domain",
-        "body": "The data we collect, clean, and structure is released into the public domain. Journalists, researchers, academics, and citizens are free to use it without restriction. Corruption knowledge should not be proprietary."
+        "title": "All data, free to reuse",
+        "body": "The data we collect, clean, and structure is published openly for the public good — free to read, share, and build on for non-commercial purposes (journalism, research, education, advocacy) under a Creative Commons Attribution-NonCommercial (CC BY-NC) license, with credit to Jawafdehi. Corruption knowledge should not be locked away."
       },
       "openSource": {
         "title": "Open source technology",
-        "body": "All of the software we build — from the case archive to the AI research tools — is open source and freely available. Any organization in any country can take our work and adapt it for their own accountability needs."
+        "body": "The software we build — from the case archive to the AI research tools — is open source and freely available. Any organization in any country can take our work and adapt it for their own accountability needs."
       },
       "freeForever": {
         "title": "Free, forever",
@@ -416,7 +470,7 @@
       "openSource": "Open source,",
       "freeToUse": "free to use",
       "builtForCivicGood": "built for civic good",
-      "description": "Every component we build is open source and free to use. The full stack is public on GitHub — built by Nepali volunteers and made available to anyone who wants to build on top of it.",
+      "description": "The components we build are open source and free to use. The full stack is public on GitHub — built by Nepali volunteers and made available to anyone who wants to build on top of it.",
       "github": "GitHub"
     }
   },
@@ -743,93 +797,9 @@
     }
   },
   "information": {
-    "title": "Understanding Corruption & Our Process",
-    "subtitle": "Learn how we verify information, what constitutes corruption, and how you can contribute to transparency.",
-    "whatIsCorruption": {
-      "title": "What is Corruption?",
-      "description": "Corruption is the abuse of entrusted power for private gain. In the context of public service, it represents a betrayal of the public trust and includes various forms of misconduct.",
-      "typesTitle": "Types of Corruption We Track:",
-      "bribery": {
-        "title": "Bribery",
-        "description": "Offering, giving, receiving, or soliciting something of value to influence the actions of an official."
-      },
-      "embezzlement": {
-        "title": "Embezzlement",
-        "description": "Theft or misappropriation of funds placed in one's trust or belonging to one's employer."
-      },
-      "nepotism": {
-        "title": "Nepotism & Favoritism",
-        "description": "Favoritism granted to relatives or friends regardless of merit, especially in hiring or contract awards."
-      },
-      "conflictOfInterest": {
-        "title": "Conflict of Interest",
-        "description": "Situations where personal interests improperly influence professional duties and decisions."
-      },
-      "abuseOfResources": {
-        "title": "Abuse of Public Resources",
-        "description": "Misuse of public funds, assets, or authority for personal benefit or unauthorized purposes."
-      }
-    },
-    "verification": {
-      "title": "How We Verify Information",
-      "description": "We maintain rigorous standards for verification to ensure accuracy and reliability. Every case undergoes a multi-stage review process before publication.",
-      "sourceCollection": {
-        "title": "1. Source Collection",
-        "description": "We gather information from government records, media reports, NGO investigations, public documents, and credible whistleblowers."
-      },
-      "crossVerification": {
-        "title": "2. Cross-Verification",
-        "description": "Multiple independent sources are required. Claims must be corroborated through official documents, witness accounts, or verifiable evidence."
-      },
-      "teamReview": {
-        "title": "3. Team Review",
-        "description": "Our moderation team reviews each case for accuracy, legal compliance, and ethical standards before approval."
-      },
-      "continuousUpdates": {
-        "title": "4. Continuous Updates",
-        "description": "Cases are monitored for developments. Updates, responses from accused entities, and investigation outcomes are added as they emerge."
-      },
-      "standards": {
-        "title": "Verification Standards",
-        "minSources": "Minimum of two independent, credible sources for each allegation",
-        "officialDocs": "Official documentation or verifiable evidence whenever possible",
-        "clearDistinction": "Clear distinction between verified facts, allegations, and ongoing investigations",
-        "rightToRespond": "Right to respond granted to all accused entities",
-        "protectSources": "Protection of sources and sensitive information"
-      }
-    },
     "faq": {
       "title": "Frequently Asked Questions",
-      "description": "We compiled a list of answers to address your most pressing questions regarding Jawafdehi.",
-      "howToReport": {
-        "question": "How can I report a corruption case?",
-        "answer1": "You can report a case through our \"Report Allegation\" form. Please provide as much detail and supporting documentation as possible. You can choose to submit anonymously or with your identity.",
-        "answer2": "All submissions are reviewed by our moderation team before being published. We may contact you for additional verification if needed."
-      },
-      "afterSubmit": {
-        "question": "What happens after I submit a report?",
-        "answer": "Your submission enters our verification queue. Our team will review the information, verify through multiple sources, and determine if it meets our publication standards. This process typically takes 7-14 days depending on case complexity. You'll be notified of the outcome if you provided contact information."
-      },
-      "anonymous": {
-        "question": "Is my identity protected if I report anonymously?",
-        "answer": "Yes. We take contributor privacy seriously. Anonymous submissions do not store any identifying information, and we have measures to protect all contributors from retaliation. Personal data like phone numbers and national ID numbers are never published."
-      },
-      "entityResponse": {
-        "question": "Can accused entities respond to allegations?",
-        "answer": "Absolutely. We believe in fair representation. For now, our team contacts accused individuals and organizations directly through credible, verifiable sources before publishing any response alongside the allegations."
-      },
-      "inaccurate": {
-        "question": "What if information on the platform is inaccurate?",
-        "answer": "Despite our rigorous verification process, errors can occur. If you find inaccurate information, please contact us immediately through our feedback form with supporting evidence. We will review and correct any verified inaccuracies promptly. All corrections are documented in the case's audit trail."
-      },
-      "funding": {
-        "question": "How is this platform funded?",
-        "answer": "Jawafdehi is funded through partnerships with civic organizations and potential grants from transparency-focused foundations. We maintain editorial independence and do not accept funding from government entities or organizations that could compromise our integrity."
-      },
-      "useInfo": {
-        "question": "Can I use information from this platform?",
-        "answer": "Yes! All information on this platform is publicly accessible and can be freely used for research, journalism, advocacy, or educational purposes. We encourage proper attribution and responsible use of the data."
-      }
+      "description": "We compiled a list of answers to address your most pressing questions regarding Jawafdehi."
     }
   },
   "report": {
@@ -897,7 +867,8 @@
       "downloadDocx": ".DOCX",
       "downloadMd": ".MD",
       "emailSubject": "Subject: Case Submission - [Brief Title]"
-    }
+    },
+    "trigger": "Report a Case"
   },
   "feedback": {
     "title": "Platform Feedback",
@@ -1670,9 +1641,9 @@
     "sort": "Sort"
   },
   "materialsPage": {
-    "heading": "Governance materials",
-    "description": "Browse public-domain government documents and records in the Jawafdehi governance archive — development projects, agency publications, and official materials.",
-    "placeholder": "Search governance materials"
+    "heading": "Documents & other materials",
+    "description": "Browse public government records and documents in the Jawafdehi archive — development projects, agency publications, and official materials.",
+    "placeholder": "Search documents & other materials"
   },
   "courtCasesPage": {
     "heading": "Court cases",
@@ -1816,7 +1787,7 @@
           {
             "id": "right-to-respond",
             "question": "Can accused entities respond to allegations?",
-            "answer": "Yes — the **right to respond** is core to how we work. There's no self-serve submission portal; instead, an accused individual or organization should **contact the Jawafdehi team directly**. We first **verify identity through established, official channels** (for example, an official social-media account or a video call), and once verified, we publish the response **alongside** the original allegation so readers get the full context."
+            "answer": "Yes — the **right to respond** is core to how we work. There's no self-serve submission portal; instead, an accused individual or organization should **contact the Jawafdehi team directly** at inquiry@jawafdehi.org. We first **verify identity through established, official channels** (for example, an official social-media account or a video call), and once verified, we publish the response **alongside** the original allegation so readers get the full context."
           }
         ]
       },
@@ -1858,7 +1829,7 @@
           {
             "id": "open-source",
             "question": "Is the platform open source?",
-            "answer": "Not entirely — we keep some internal tooling private. But our core platforms are public: the **Jawafdehi API**, our case **reviewers and graders**, **NES** (Nepal Entity Service), **NGM** (Nepal Governance Modernization), and **likhit**, our universal Markdown converter for Nepali documents. We're strong believers in open source and in giving back to the community."
+            "answer": "Yes — our core platforms are open source: the **Jawafdehi API**, our case **reviewers and graders**, **NES** (Nepal Entity Service), **NGM** (Nepal Governance Modernization), and **likhit**, our universal Markdown converter for Nepali documents. A few internal tools stay private, but we're strong believers in open source and in giving back to the community."
           }
         ]
       },
@@ -1917,5 +1888,9 @@
         ]
       }
     ]
+  },
+  "reportCta": {
+    "title": "Know of a corruption case?",
+    "description": "Help us hold the powerful accountable. Submit information about a corruption case, officials and related entities."
   }
 }

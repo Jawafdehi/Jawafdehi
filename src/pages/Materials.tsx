@@ -9,12 +9,12 @@ export default function Materials() {
   return (
     <ArchiveSearch
       lockedType="material"
-      heading={t("materialsPage.heading", "Governance materials")}
+      heading={t("materialsPage.heading", "Documents & other materials")}
       description={t(
         "materialsPage.description",
-        "Browse public-domain government documents and records in the Jawafdehi governance archive — development projects, agency publications, and official materials.",
+        "Browse public government records and documents in the Jawafdehi archive — development projects, agency publications, and official materials.",
       )}
-      placeholder={t("materialsPage.placeholder", "Search governance materials")}
+      placeholder={t("materialsPage.placeholder", "Search documents & other materials")}
       canonicalPath="/materials"
     />
   );

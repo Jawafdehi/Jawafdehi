@@ -3,7 +3,7 @@
  *
  * Data-lake records live on the Think-Big monolith under the SINGLE unified
  * `/api` root. Reads are public — materials and court cases are derived from
- * public-domain government documents.
+ * public government records.
  *
  *   GET /api/materials/<source>/<ident>          -> material JSON-LD (schema.org)
  *   GET /api/courtcases/<court>/<case_number>/   -> court case (composite key)

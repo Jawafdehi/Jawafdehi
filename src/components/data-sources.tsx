@@ -1,67 +1,46 @@
 import { Mic2, Youtube } from "lucide-react";
 import type { ElementType } from "react";
+import { useTranslation } from "react-i18next";
 import { BsCameraReelsFill } from "react-icons/bs";
 import { FaEye } from "react-icons/fa";
 
 type ExternalSource = {
+  key: string;
   icon?: ElementType;
   imageSrc?: string;
-  label: string;
-  desc: string;
 };
 
+// Icons/logos live in code; the labels and descriptions come from i18n
+// under ourProcess.sources.items.*
 const EXTERNAL_SOURCES: ExternalSource[] = [
-  {
-    imageSrc: "/assets/ciaa.png",
-    label: "CIAA",
-    desc: "Commission for the Investigation of Abuse of Authority",
-  },
-  {
-    imageSrc: "/assets/cib.png",
-    label: "CIB",
-    desc: "Central Investigation Bureau",
-  },
-  {
-    icon: BsCameraReelsFill,
-    label: "Media",
-    desc: "National and regional news organisations",
-  },
-  {
-    icon: Mic2,
-    label: "Investigative Journalists",
-    desc: "Independent reporters and press groups",
-  },
-  {
-    icon: FaEye,
-    label: "Corruption Watchdogs",
-    desc: "Civil society accountability organisations",
-  },
-  {
-    icon: Youtube,
-    label: "YouTubers & Creators",
-    desc: "Digital journalists covering governance",
-  },
+  { key: "ciaa", imageSrc: "/assets/ciaa.png" },
+  { key: "cib", imageSrc: "/assets/cib.png" },
+  { key: "media", icon: BsCameraReelsFill },
+  { key: "journalists", icon: Mic2 },
+  { key: "watchdogs", icon: FaEye },
+  { key: "creators", icon: Youtube },
 ];
 
 export function DataSources() {
+  const { t } = useTranslation();
+
   return (
     <section id="data-sources" className="bg-background py-14 md:py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto mb-12 max-w-3xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            Where Our Data Comes From
+            {t("ourProcess.sources.heading")}
           </h2>
 
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-            We draw from official government sources, public records, media investigations,
-            and independent civil society and always trace every claim back to its origin.
+            {t("ourProcess.sources.description")}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-6">
-          {EXTERNAL_SOURCES.map(({ icon: Icon, imageSrc, label, desc }) => (
+          {EXTERNAL_SOURCES.map(({ icon: Icon, imageSrc, key }) => (
             <div
-              key={label}
+              key={key}
               className="group flex flex-col items-center text-center"
             >
               <div className="mb-4 flex h-16 items-center justify-center">
@@ -82,11 +61,11 @@ export function DataSources() {
               </div>
 
               <h3 className="text-base font-bold leading-tight text-foreground">
-                {label}
+                {t(`ourProcess.sources.items.${key}.label`)}
               </h3>
 
               <p className="mt-2 max-w-[180px] text-sm leading-5 text-muted-foreground">
-                {desc}
+                {t(`ourProcess.sources.items.${key}.desc`)}
               </p>
             </div>
           ))}

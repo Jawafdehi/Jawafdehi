@@ -1,6 +1,10 @@
+import { useTranslation } from "react-i18next";
+
 import { ReportAllegationDialog } from "@/components/ReportAllegationDialog";
 
 export function ReportCaseCta() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative isolate overflow-hidden border-b border-border bg-[linear-gradient(135deg,hsl(var(--primary))_0%,hsl(var(--primary))_34%,hsl(var(--accent))_100%)] py-16 dark:bg-[linear-gradient(135deg,hsl(215_70%_12%)_0%,hsl(220_38%_18%)_42%,hsl(354_66%_37%)_100%)] md:py-20">
       <div
@@ -15,10 +19,10 @@ export function ReportCaseCta() {
       <div className="container mx-auto px-4 text-center">
         <div className="mx-auto flex max-w-3xl flex-col items-center">
           <h2 className="text-3xl font-extrabold leading-tight tracking-normal text-white md:text-4xl">
-            Know of a corruption case?
+            {t("reportCta.title")}
           </h2>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-white/90 md:text-base">
-            Help us hold the powerful accountable. Submit information about a corruption case, officials and related entities.
+            {t("reportCta.description")}
           </p>
           <ReportAllegationDialog />
         </div>

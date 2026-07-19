@@ -41,16 +41,21 @@ export function DisqusComments({ caseId, caseTitle, caseUrl }: DisqusCommentsPro
       return;
     }
 
+    // Held across the observer callback so cleanup can cancel a pending timer;
+    // otherwise an unmount between intersection and fire leaks a setShouldLoad
+    // that touches `window` after teardown.
+    let loadTimeout: ReturnType<typeof setTimeout> | undefined;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
           // Small delay to ensure smooth scroll experience
-          setTimeout(() => setShouldLoad(true), 100);
+          loadTimeout = setTimeout(() => setShouldLoad(true), 100);
           observer.disconnect();
         }
       },
-      { 
+      {
         rootMargin: "200px", // Start loading 200px before section is visible
         threshold: 0
       }
@@ -60,7 +65,12 @@ export function DisqusComments({ caseId, caseTitle, caseUrl }: DisqusCommentsPro
       observer.observe(sectionRef.current);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (loadTimeout !== undefined) {
+        clearTimeout(loadTimeout);
+      }
+    };
   }, []);
 
   // Map i18n language to Disqus language code (handles variants like "ne-NP")

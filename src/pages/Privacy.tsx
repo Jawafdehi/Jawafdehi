@@ -28,7 +28,7 @@ const Privacy = () => {
                 Jawafdehi Initiative Privacy Policy
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: July 13, 2026
+                Last updated: July 18, 2026
               </p>
             </div>
           </div>
@@ -120,7 +120,7 @@ const Privacy = () => {
                 <li>Understand site usage (analytics), where you have consented</li>
               </ul>
               <p>
-                For visitors in the European Economic Area, United Kingdom, and other regions with similar laws, our legal bases for processing are: your <strong>consent</strong> (analytics cookies); our <strong>legitimate interests</strong> (operating and securing the Platform, error monitoring, preventing abuse, and responding to submissions you send us); and the performance of tasks carried out in the <strong>public interest</strong> (documenting and archiving public-domain corruption records).
+                For visitors in the European Economic Area, United Kingdom, and other regions with similar laws, our legal bases for processing are: your <strong>consent</strong> (analytics cookies); our <strong>legitimate interests</strong> (operating and securing the Platform, error monitoring, preventing abuse, and responding to submissions you send us); and the performance of tasks carried out in the <strong>public interest</strong> (documenting and archiving publicly available corruption records).
               </p>
               <p>
                 We never sell, rent, or share personal information with third parties for commercial purposes.
@@ -128,7 +128,7 @@ const Privacy = () => {
 
               <h2 id="ai-processing">6. Automated and AI Processing</h2>
               <p>
-                To document and summarize corruption cases drawn from public records, we use third-party large language model services, including Anthropic's Claude. Published case data on the Platform is in the public domain and may be processed in this way.
+                To document and summarize corruption cases drawn from public records, we use third-party large language model services, including Anthropic's Claude. Published case data on the Platform is compiled from publicly available records and may be processed in this way.
               </p>
               <p>
                 We may also use AI services to help process and triage <strong>allegation reports</strong> that you submit. We do <strong>not</strong> send the content of general <strong>feedback submissions</strong> to AI services. Where we use Anthropic's Claude, submitted content is processed under Anthropic's commercial terms and is <strong>not used to train their models</strong>. Decisions that materially affect individuals are reviewed by humans; we do not rely solely on automated processing for such decisions.

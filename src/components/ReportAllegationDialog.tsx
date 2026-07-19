@@ -50,7 +50,7 @@ export function ReportAllegationDialog() {
           className="mt-8 bg-white font-semibold text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
         >
           <FilePlus2 className="h-5 w-5" aria-hidden="true" />
-          Report a Case
+          {t("report.trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent

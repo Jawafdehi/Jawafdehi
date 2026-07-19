@@ -258,8 +258,8 @@ export default function MaterialProfile() {
             {/* Provenance. */}
             <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
               <p>
-                <strong>Source:</strong> Jawafdehi governance archive — public-domain
-                government documents and records on Nepal&apos;s governance and judiciary.
+                <strong>Source:</strong> Jawafdehi governance archive — public
+                government records on Nepal&apos;s governance and judiciary.
               </p>
             </div>
           </article>
