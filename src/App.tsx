@@ -37,6 +37,7 @@ import UpdateDetail from "./pages/UpdateDetail";
 import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
+import ResearchCorruption from "./pages/ResearchCorruption";
 import DocumentPreviewPage from "./pages/DocumentPreviewPage";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -152,6 +153,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/commitment" element={<Commitment />} />
             <Route path="/data-quality" element={<DataQuality />} />
+            <Route path="/research/corruption-accountability" element={<ResearchCorruption />} />
             <Route path="/our-process" element={<OurProcess />} />
             <Route path="/team" element={<OurTeam />} />
             <Route path="/volunteer" element={<Volunteer />} />

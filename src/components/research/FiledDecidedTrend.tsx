@@ -1,0 +1,100 @@
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import { useMounted } from "@/hooks/useMounted";
+import { MONO_STACK } from "@/lib/data-quality";
+
+/**
+ * Cases filed vs. decided, by Bikram Sambat year — the one genuinely temporal view.
+ * Two lines (filed = navy, decided = crimson) share one y-axis; the filing peak
+ * leads the verdict peak by a few years, a rough visual proxy for pipeline lag.
+ */
+export function FiledDecidedTrend({
+  years,
+  filed,
+  decided,
+  filedLabel,
+  decidedLabel,
+}: {
+  years: readonly number[];
+  filed: readonly number[];
+  decided: readonly number[];
+  filedLabel: string;
+  decidedLabel: string;
+}) {
+  const mounted = useMounted();
+  const height = 260;
+
+  const data = years.map((year, i) => ({ year, filed: filed[i], decided: decided[i] }));
+
+  if (!mounted) return <div className="w-full" style={{ height }} />;
+
+  const ariaLabel = `${filedLabel} / ${decidedLabel}: ${data
+    .map((d) => `${d.year} ${d.filed}/${d.decided}`)
+    .join(", ")}`;
+
+  return (
+    <div className="w-full" style={{ height }} role="img" aria-label={ariaLabel}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
+          <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+          <XAxis
+            dataKey="year"
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(y: number) => String(y).slice(2)}
+            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+          />
+          <YAxis
+            width={36}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+          />
+          <Tooltip
+            labelFormatter={(y) => `BS ${y}`}
+            contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 13 }}
+            itemStyle={{ fontFamily: MONO_STACK }}
+          />
+          <Line
+            type="monotone"
+            dataKey="filed"
+            name={filedLabel}
+            stroke="hsl(var(--primary))"
+            strokeWidth={2}
+            dot={{ r: 2.5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+            activeDot={{ r: 4.5 }}
+            isAnimationActive={false}
+          />
+          <Line
+            type="monotone"
+            dataKey="decided"
+            name={decidedLabel}
+            stroke="hsl(var(--accent))"
+            strokeWidth={2}
+            dot={{ r: 2.5, fill: "hsl(var(--accent))", strokeWidth: 0 }}
+            activeDot={{ r: 4.5 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary))" }} aria-hidden="true" />
+          {filedLabel}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--accent))" }} aria-hidden="true" />
+          {decidedLabel}
+        </span>
+      </div>
+    </div>
+  );
+}

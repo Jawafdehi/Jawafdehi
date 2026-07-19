@@ -94,6 +94,7 @@ export function Navbar() {
       { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
       { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
+      { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
     ],
     [t],
   );
@@ -120,7 +121,8 @@ export function Navbar() {
       ["/cases", "/search", "/materials", "/courtcases"].includes(path) ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
-      path.startsWith("/courtcase/")
+      path.startsWith("/courtcase/") ||
+      path.startsWith("/research/")
     ) {
       return "archive";
     }
