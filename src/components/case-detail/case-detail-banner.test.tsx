@@ -68,3 +68,17 @@ describe("CaseDetailBanner short_description deck (#6)", () => {
     expect(screen.getByText("Test case title")).toBeTruthy();
   });
 });
+
+describe("CaseDetailBanner public_notes byline (on-screen)", () => {
+  it("renders the public_notes byline on screen (not just in the print block)", () => {
+    renderBanner(makeCase({ public_notes: "Case drafted by the casework team." }));
+    const byline = screen.getByTestId("case-byline");
+    expect(byline).toBeTruthy();
+    expect(byline.textContent).toContain("Case drafted by the casework team.");
+  });
+
+  it("renders nothing when public_notes is empty", () => {
+    renderBanner(makeCase({ public_notes: "" }));
+    expect(screen.queryByTestId("case-byline")).toBeNull();
+  });
+});
