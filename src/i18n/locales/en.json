@@ -4,7 +4,6 @@
     "entities": "Entities",
     "updates": "Updates",
     "cases": "Cases",
-    "information": "Information",
     "about": "About",
     "team": "Our Team",
     "products": "Our Products",
@@ -74,7 +73,6 @@
       "cases": "Open the dedicated case search and browsing page.",
       "archiveSearch": "Search cases, entities, locations, and evidence documents in one archive.",
       "entities": "Find tracked people, offices, and organizations.",
-      "information": "Read public information and resources.",
       "process": "See how records are reviewed and documented.",
       "commitment": "Read the principles behind the archive.",
       "volunteer": "Help build the accountability archive.",
@@ -799,93 +797,9 @@
     }
   },
   "information": {
-    "title": "Understanding Corruption & Our Process",
-    "subtitle": "Learn how we verify information, what constitutes corruption, and how you can contribute to transparency.",
-    "whatIsCorruption": {
-      "title": "What is Corruption?",
-      "description": "Corruption is the abuse of entrusted power for private gain. In the context of public service, it represents a betrayal of the public trust and includes various forms of misconduct.",
-      "typesTitle": "Types of Corruption We Track:",
-      "bribery": {
-        "title": "Bribery",
-        "description": "Offering, giving, receiving, or soliciting something of value to influence the actions of an official."
-      },
-      "embezzlement": {
-        "title": "Embezzlement",
-        "description": "Theft or misappropriation of funds placed in one's trust or belonging to one's employer."
-      },
-      "nepotism": {
-        "title": "Nepotism & Favoritism",
-        "description": "Favoritism granted to relatives or friends regardless of merit, especially in hiring or contract awards."
-      },
-      "conflictOfInterest": {
-        "title": "Conflict of Interest",
-        "description": "Situations where personal interests improperly influence professional duties and decisions."
-      },
-      "abuseOfResources": {
-        "title": "Abuse of Public Resources",
-        "description": "Misuse of public funds, assets, or authority for personal benefit or unauthorized purposes."
-      }
-    },
-    "verification": {
-      "title": "How We Verify Information",
-      "description": "We maintain rigorous standards for verification to ensure accuracy and reliability. Every case undergoes a multi-stage review process before publication.",
-      "sourceCollection": {
-        "title": "1. Source Collection",
-        "description": "We gather information from government records, media reports, NGO investigations, public documents, and credible whistleblowers."
-      },
-      "crossVerification": {
-        "title": "2. Cross-Verification",
-        "description": "Multiple independent sources are required. Claims must be corroborated through official documents, witness accounts, or verifiable evidence."
-      },
-      "teamReview": {
-        "title": "3. Team Review",
-        "description": "Our moderation team reviews each case for accuracy, legal compliance, and ethical standards before approval."
-      },
-      "continuousUpdates": {
-        "title": "4. Continuous Updates",
-        "description": "Cases are monitored for developments. Updates, responses from accused entities, and investigation outcomes are added as they emerge."
-      },
-      "standards": {
-        "title": "Verification Standards",
-        "minSources": "Minimum of two independent, credible sources for each allegation",
-        "officialDocs": "Official documentation or verifiable evidence whenever possible",
-        "clearDistinction": "Clear distinction between verified facts, allegations, and ongoing investigations",
-        "rightToRespond": "Right to respond granted to all accused entities",
-        "protectSources": "Protection of sources and sensitive information"
-      }
-    },
     "faq": {
       "title": "Frequently Asked Questions",
-      "description": "We compiled a list of answers to address your most pressing questions regarding Jawafdehi.",
-      "howToReport": {
-        "question": "How can I report a corruption case?",
-        "answer1": "You can report a case through our \"Report Allegation\" form. Please provide as much detail and supporting documentation as possible. You can choose to submit anonymously or with your identity.",
-        "answer2": "All submissions are reviewed by our moderation team before being published. We may contact you for additional verification if needed."
-      },
-      "afterSubmit": {
-        "question": "What happens after I submit a report?",
-        "answer": "Your submission enters our verification queue. Our team will review the information, verify through multiple sources, and determine if it meets our publication standards. This process typically takes 7-14 days depending on case complexity. You'll be notified of the outcome if you provided contact information."
-      },
-      "anonymous": {
-        "question": "Is my identity protected if I report anonymously?",
-        "answer": "Yes. We take contributor privacy seriously. Anonymous submissions do not store any identifying information, and we have measures to protect all contributors from retaliation. Personal data like phone numbers and national ID numbers are never published."
-      },
-      "entityResponse": {
-        "question": "Can accused entities respond to allegations?",
-        "answer": "Absolutely. We believe in fair representation. For now, our team contacts accused individuals and organizations directly through credible, verifiable sources before publishing any response alongside the allegations."
-      },
-      "inaccurate": {
-        "question": "What if information on the platform is inaccurate?",
-        "answer": "Despite our rigorous verification process, errors can occur. If you find inaccurate information, please contact us immediately through our feedback form with supporting evidence. We will review and correct any verified inaccuracies promptly. All corrections are documented in the case's audit trail."
-      },
-      "funding": {
-        "question": "How is this platform funded?",
-        "answer": "Jawafdehi is funded through partnerships with civic organizations and potential grants from transparency-focused foundations. We maintain editorial independence and do not accept funding from government entities or organizations that could compromise our integrity."
-      },
-      "useInfo": {
-        "question": "Can I use information from this platform?",
-        "answer": "Yes! All information on this platform is publicly accessible and can be freely used for research, journalism, advocacy, or educational purposes. We encourage proper attribution and responsible use of the data."
-      }
+      "description": "We compiled a list of answers to address your most pressing questions regarding Jawafdehi."
     }
   },
   "report": {

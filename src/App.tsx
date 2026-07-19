@@ -28,7 +28,6 @@ import OurTeam from "./pages/OurTeam";
 import Volunteer from "./pages/Volunteer";
 import OurProducts from "./pages/OurProducts";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
-import Information from "./pages/Information";
 import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
@@ -147,7 +146,8 @@ const App = () => (
             {/* Wagtail headless preview target — must precede the :slug route. */}
             <Route path="/updates/preview" element={<UpdatePreview />} />
             <Route path="/updates/:slug" element={<UpdateDetail />} />
-            <Route path="/information" element={<Information />} />
+            {/* /information retired — its FAQ duplicated /faq; redirect there. */}
+            <Route path="/information" element={<Navigate to="/faq" replace />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/commitment" element={<Commitment />} />
