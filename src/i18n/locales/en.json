@@ -21,6 +21,7 @@
     "searchArchive": "Search archive",
     "materials": "Governance materials",
     "courtCases": "Court cases",
+    "research": "Research",
     "faq": "FAQ"
   },
   "weeklyMeetings": {
@@ -1149,6 +1150,103 @@
   "courts": {
     "supreme": "Supreme Court",
     "special": "Special Court"
+  },
+  "research": {
+    "corruption": {
+      "meta": {
+        "title": "Where Nepal's corruption accountability leaks",
+        "description": "A quantitative read of CIAA corruption prosecutions at Nepal's Special Court — conviction rates, the charge types that stick, and where accountability is lost."
+      },
+      "hero": {
+        "eyebrow": "Research · Corruption Accountability",
+        "title": "Where Nepal's corruption accountability actually leaks",
+        "lead": "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.",
+        "snapshot": "Snapshot as of BS {{bs}}. Court records collected from Nepal's Special Court and wider judiciary."
+      },
+      "funnel": {
+        "eyebrow": "The funnel",
+        "heading": "About 0.2% of complaints end in a full conviction",
+        "lead": "In a single year the CIAA received roughly 37,000 complaints and filed about 137 prosecutions. Apply the measured full-conviction rate and only a few dozen end in a full conviction.",
+        "ofComplaints": "{{pct}}% of complaints",
+        "caption": "Complaint and prosecution counts: CIAA 35th annual report (FY 2081/82). The conviction stage applies this archive's measured 46% full-conviction rate to the filed count.",
+        "stage": {
+          "complaints": "Complaints to the CIAA",
+          "filed": "Prosecutions filed",
+          "convicted": "Full convictions (est.)"
+        }
+      },
+      "cite": {
+        "ciaa35": "CIAA 35th annual report",
+        "courtRecords": "Browse the court records",
+        "chargeSheets": "Charge sheets"
+      },
+      "outcome": {
+        "convicted": "Convicted",
+        "partial": "Partial",
+        "acquitted": "Acquitted"
+      },
+      "outcomes": {
+        "eyebrow": "Outcomes",
+        "heading": "Fewer than half of decided prosecutions end in a clean conviction",
+        "donutCenter": "decided",
+        "lead": "Of {{n}} decided prosecutions with a clear verdict, {{conv}}% end in a full conviction, {{acq}}% in outright acquittal, and {{part}}% in partial conviction — so {{less}}% end in something less than a clean conviction.",
+        "note": "The CIAA reports a higher “success” rate because it counts partial convictions as successes; we keep full and partial separate. Case-grain dispositions from the Special Court record."
+      },
+      "byCharge": {
+        "eyebrow": "What actually sticks",
+        "heading": "Conviction depends overwhelmingly on what was charged",
+        "lead": "Fake-credential cases convict at 88% and make up nearly half of all convictions. The signature financial-graft charges — bribery, embezzlement, illicit wealth — mostly fail, bottoming out at illegal benefit (4.6%).",
+        "avgLine": "46% court average",
+        "caption": "Decided cases per charge type, split by outcome. Cited to the underlying charge sheets and court records."
+      },
+      "justice": {
+        "eyebrow": "Which bench you draw",
+        "heading": "Full-conviction rates run from 85% to 25% across the court's judges",
+        "lead": "Bench-grain attribution — every panel member is credited with the panel's outcome, dot size scaled to caseload. Sitting on the same court, hearing the same prosecutor, benches diverge threefold. Descriptive, not causal.",
+        "bandHigh": "Convicts more (>55%)",
+        "bandMid": "Near average",
+        "bandLow": "Acquits more (<37%)",
+        "avgLine": "court avg 46%"
+      },
+      "volume": {
+        "eyebrow": "Volume",
+        "heading": "What flows through the court, and what gets charged",
+        "trendTitle": "Cases filed vs. decided, by year",
+        "trendSub": "Bikram Sambat year. The filing peak (2076) precedes the verdict peak (2080) by ~4 years.",
+        "filed": "Filed",
+        "decided": "Decided",
+        "mixTitle": "The charge mix",
+        "mixSub": "Substantive prosecutions by offense family (petitions excluded).",
+        "mixTooltip": "Prosecutions"
+      },
+      "gaps": {
+        "eyebrow": "Where the gap is",
+        "heading": "Attrition concentrates at the CIAA stage — then goes dark",
+        "intake": { "title": "Intake & screening (CIAA)", "body": "~37,000 complaints a year produce ~137 prosecutions (≈0.4%); most complaints are shelved internally with no public verdict. The single biggest, least-visible leak." },
+        "charging": { "title": "Charging strategy (CIAA)", "body": "49% of convictions are easy documentary fake-certificate cases; core financial corruption converts at ~31%, with the signature charges collapsing. The system convicts paperwork, not plunder." },
+        "adjudication": { "title": "Adjudication (Special Court)", "body": "38% outright acquittal, 54% less-than-full-conviction, and a threefold spread across benches. Year-to-year the rate swung 88% → 33%, partly on one 2078 apex-court ruling." },
+        "appeal": { "title": "Appeal (Supreme Court) — dark", "body": "The CIAA appeals many losses and defendants appeal convictions, but appellate outcomes carry no decision data in the record. How often a verdict is overturned is currently unmeasurable." },
+        "recovery": { "title": "Recovery & sanction — dark", "body": "Billions in damages are claimed each year, but no source tracks how much is ever recovered, or whether the convicted serve meaningful sanction." }
+      },
+      "appendix": {
+        "summary": "Methodology, discrepancies & sources",
+        "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as cases filed in the name of the Government of Nepal (~3,278), of which ~2,850 are substantive corruption charges after removing petitions, money-laundering (a separate agency), and unclassified matters.",
+        "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the ~92% of decided cases carrying an unambiguous disposition (2,835 of 3,069).",
+        "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat throughout.",
+        "justice": "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.",
+        "discrepancy": "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, and is fiscal-year, whereas our full-conviction rate (46%) is cumulative and separates the two. CIAA's “cases filed” per fiscal year also differ from our Bikram-Sambat-year filing counts because of year binning, case-versus-defendant counting, and record timing. Never compare the two without aligning definition and period.",
+        "entity": "Identity. Only ~3% of listed defendants (607 of 19,222) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.",
+        "limits": "Limits. These are the records in the archive as of the snapshot date; appellate outcomes are largely absent, and amount-recovered is untracked anywhere."
+      },
+      "sources": {
+        "heading": "Sources — all in-platform",
+        "ciaaReports": "CIAA annual reports (complaints, prosecutions filed, amounts claimed)",
+        "pressReleases": "CIAA charge-sheet announcements",
+        "chargeSheets": "Charge sheets (abhiyog patra)",
+        "courtRecords": "Special Court records (outcomes, charge types, verdict dates)",
+        "dataQuality": "Live coverage counts"
+      }
+    }
   },
   "dataQuality": {
     "title": "Data Quality & Coverage",

@@ -96,6 +96,14 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     sitemapTitle: "FAQ — Jawafdehi",
   },
   {
+    path: "/research/corruption-accountability",
+    titleKey: "research.corruption.meta.title",
+    descriptionKey: "research.corruption.meta.description",
+    keywords: ["research", "corruption", "conviction rate", "ciaa", "special court", "accountability", "report"],
+    icon: "FileText",
+    sitemapTitle: "Corruption Accountability — Jawafdehi",
+  },
+  {
     path: "/our-process",
     titleKey: "nav.ourProcess",
     descriptionKey: "searchCommand.descriptions.process",
