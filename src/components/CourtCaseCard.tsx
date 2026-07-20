@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
-import { getCourtCaseCauseTitle, getPartiesByRole } from "@/utils/courtCase";
 import { formatDateWithBS } from "@/utils/date";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +47,38 @@ function parseCourtIdentifier(
   }
 
   return { courtName, caseNumber };
+}
+
+// ── Defendant/Plaintiff from entities ────────────────────────────────────
+
+function getPartiesByRole(courtCase: CourtCase): {
+  plaintiffs: string[];
+  defendants: string[];
+} {
+  const plaintiffs: string[] = [];
+  const defendants: string[] = [];
+
+  // `entities` is only populated on the assembled "full" court case; the core
+  // shape used on the case-detail page omits it. Default to [] so the string
+  // plaintiff/defendant fallback below still renders instead of crashing.
+  for (const entity of courtCase.entities ?? []) {
+    const side = entity.side?.toLowerCase();
+    if (side === "plaintiff" || side === "वादी") {
+      plaintiffs.push(entity.name);
+    } else if (side === "defendant" || side === "प्रतिवादी") {
+      defendants.push(entity.name);
+    }
+  }
+
+  // Fall back to string fields if entities list is empty
+  if (plaintiffs.length === 0 && courtCase.plaintiff) {
+    plaintiffs.push(courtCase.plaintiff);
+  }
+  if (defendants.length === 0 && courtCase.defendant) {
+    defendants.push(courtCase.defendant);
+  }
+
+  return { plaintiffs, defendants };
 }
 
 function getStatusTone(status: string | null | undefined) {
@@ -136,15 +167,11 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
   const detailPath = linkToDetail ? courtCaseDetailPath(courtCaseId) : null;
   const lastUpdate = courtCase ? getLatestCourtUpdate(courtCase) : null;
 
-  // Heading = the cause title (parties) when known; the court/number identifier
-  // is demoted to a sub-line so the canonical reference is never lost. Without
-  // party data (loading / bare ref) the identifier is the heading itself.
-  const causeTitle = courtCase
-    ? getCourtCaseCauseTitle(courtCase, t("caseDetail.courtVersus", "v."))
-    : null;
-  const identifier = caseNumber ? `${caseNumber} (${courtName})` : courtName;
-
-  const headerText = <span className="break-words">{causeTitle ?? identifier}</span>;
+  const headerText = (
+    <span className="break-words">
+      {caseNumber ? `${caseNumber} (${courtName})` : courtName}
+    </span>
+  );
 
   return (
     <div className="rounded-lg border border-border p-4">
@@ -162,11 +189,6 @@ export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail 
             <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary md:text-lg">
               {headerText}
             </span>
-          )}
-          {causeTitle && (
-            <p className="mt-0.5 break-words text-xs font-normal text-primary/55">
-              {identifier}
-            </p>
           )}
         </div>
 
