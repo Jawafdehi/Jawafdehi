@@ -96,4 +96,50 @@ describe("CourtCaseCard", () => {
       container.querySelector('a[href="/courtcase/special/080-cr-0111"]'),
     ).toBeTruthy();
   });
+
+  it("uses the party cause title as the heading, demoting the court/number id", () => {
+    // Core shape (compact registry party strings, no entities) — the "…समेत N"
+    // et-al form a Special Court criminal docket carries.
+    const registryCase = {
+      ...coreCase,
+      case_number: "082-CR-0154",
+      court_identifier: "special",
+      plaintiff: "नेपाल सरकार",
+      defendant: "प्रतिवादी समेत २",
+    } as CourtCase;
+
+    render(
+      <MemoryRouter>
+        <CourtCaseCard
+          courtCaseId="https://jawafdehi.org/courtcase/special/082-cr-0154"
+          courtCase={registryCase}
+          isLoading={false}
+        />
+      </MemoryRouter>,
+    );
+
+    // Heading is the human-readable "<plaintiff> <versus> <defendant>" cause
+    // title — never the raw "special:082-cr-0154" identifier.
+    expect(screen.getByText("नेपाल सरकार v. प्रतिवादी समेत २")).toBeTruthy();
+    // The canonical court/number reference is kept as a demoted sub-line.
+    expect(screen.getByText("082-CR-0154 (Special Court)")).toBeTruthy();
+    expect(screen.queryByText(/special:082-cr-0154/i)).toBeNull();
+  });
+
+  it("falls back to the court/number identifier when no parties are known", () => {
+    const bare = { ...coreCase, plaintiff: null, defendant: null } as CourtCase;
+
+    render(
+      <MemoryRouter>
+        <CourtCaseCard
+          courtCaseId="https://jawafdehi.org/courtcase/special/080-cr-0111"
+          courtCase={bare}
+          isLoading={false}
+        />
+      </MemoryRouter>,
+    );
+
+    // No parties → the identifier is the heading itself (no duplicate sub-line).
+    expect(screen.getByText("080-CR-0111 (Special Court)")).toBeTruthy();
+  });
 });

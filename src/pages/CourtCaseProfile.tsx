@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 
@@ -7,10 +8,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { getCourtCaseFull } from "@/services/datalake-api";
+import { getCourtCaseCauseTitle } from "@/utils/courtCase";
 
 // The /courtcase/* splat tail is the courtcase IRI path component
-// `<court>/<case_number>` (e.g. `special/081-CR-0079`). CourtCaseCard wants the
-// legacy `<court>:<case_number>` id form, so we convert on the way in.
+// `<court>/<case_number>` (e.g. `special/081-CR-0079`); we rebuild the canonical
+// @id IRI from it (see `courtCaseIri`) and pass that to CourtCaseCard, whose
+// parser accepts only the IRI form.
 function parseTail(tail: string): { court: string; caseNumber: string } | null {
   const i = tail.indexOf("/");
   if (i === -1) return null;
@@ -23,10 +26,10 @@ function parseTail(tail: string): { court: string; caseNumber: string } | null {
 }
 
 export default function CourtCaseProfile() {
+  const { t } = useTranslation();
   const params = useParams();
   const tail = params["*"] || "";
   const parsed = parseTail(tail);
-  const courtCaseId = parsed ? `${parsed.court}:${parsed.caseNumber}` : "";
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["datalake-courtcase", parsed?.court, parsed?.caseNumber],
@@ -43,8 +46,15 @@ export default function CourtCaseProfile() {
   const courtCaseIri = parsed
     ? `https://jawafdehi.org/courtcase/${parsed.court.toLowerCase()}/${parsed.caseNumber.toLowerCase()}`
     : "";
+  // Prefer the human-readable cause title ("<plaintiff> विरुद्ध <defendant>") for
+  // the tab title / JSON-LD name; fall back to the bare case number when the
+  // parties are unknown.
+  const causeTitle = data
+    ? getCourtCaseCauseTitle(data, t("caseDetail.courtVersus", "v."))
+    : null;
+  const heading = causeTitle || caseNumber;
   const title = data
-    ? `${caseNumber} — ${data.case_type || "Court case"}`
+    ? `${heading} — ${data.case_type || "Court case"}`
     : caseNumber || "Court case";
 
   // schema.org JSON-LD for crawlers (parity with the retired R2 landing pages). A
@@ -92,7 +102,7 @@ export default function CourtCaseProfile() {
           </Alert>
         ) : (
           <article className="space-y-6">
-            <CourtCaseCard courtCaseId={courtCaseId} courtCase={data} isLoading={isLoading} />
+            <CourtCaseCard courtCaseId={courtCaseIri} courtCase={data} isLoading={isLoading} />
 
             {/* Provenance. */}
             <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
