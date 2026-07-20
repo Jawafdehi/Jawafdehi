@@ -97,13 +97,11 @@ describe("CourtCaseCard", () => {
     ).toBeTruthy();
   });
 
-  it("uses the party cause title as the heading, demoting the court/number id", () => {
-    // Core shape (compact registry party strings, no entities) — the "…समेत N"
-    // et-al form a Special Court criminal docket carries.
+  it("keeps the court/number identifier as the heading, not a party cause title", () => {
+    // Even when both parties are known, the heading stays the case-number/court
+    // identifier — the parties render only in the Plaintiff/Defendant row below.
     const registryCase = {
       ...coreCase,
-      case_number: "082-CR-0154",
-      court_identifier: "special",
       plaintiff: "नेपाल सरकार",
       defendant: "प्रतिवादी समेत २",
     } as CourtCase;
@@ -118,28 +116,12 @@ describe("CourtCaseCard", () => {
       </MemoryRouter>,
     );
 
-    // Heading is the human-readable "<plaintiff> <versus> <defendant>" cause
-    // title — never the raw "special:082-cr-0154" identifier.
-    expect(screen.getByText("नेपाल सरकार v. प्रतिवादी समेत २")).toBeTruthy();
-    // The canonical court/number reference is kept as a demoted sub-line.
+    // Heading is the canonical court/number reference…
     expect(screen.getByText("082-CR-0154 (Special Court)")).toBeTruthy();
-    expect(screen.queryByText(/special:082-cr-0154/i)).toBeNull();
-  });
-
-  it("falls back to the court/number identifier when no parties are known", () => {
-    const bare = { ...coreCase, plaintiff: null, defendant: null } as CourtCase;
-
-    render(
-      <MemoryRouter>
-        <CourtCaseCard
-          courtCaseId="https://jawafdehi.org/courtcase/special/080-cr-0111"
-          courtCase={bare}
-          isLoading={false}
-        />
-      </MemoryRouter>,
-    );
-
-    // No parties → the identifier is the heading itself (no duplicate sub-line).
-    expect(screen.getByText("080-CR-0111 (Special Court)")).toBeTruthy();
+    // …never a "<plaintiff> v. <defendant>" cause title.
+    expect(screen.queryByText(/नेपाल सरकार v\./)).toBeNull();
+    // Parties still surface in the dedicated Plaintiff/Defendant row.
+    expect(screen.getByText("नेपाल सरकार")).toBeTruthy();
+    expect(screen.getByText("प्रतिवादी समेत २")).toBeTruthy();
   });
 });
