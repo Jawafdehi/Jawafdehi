@@ -155,7 +155,11 @@ export function EntityDetailContainer({
           <div className="flex flex-col md:flex-row gap-6">
             {/* Photo/Avatar */}
             <Avatar className="w-32 h-32 rounded-lg flex-shrink-0">
-              <AvatarImage src={photoUrl} alt={primaryName} className="object-cover" />
+              <AvatarImage
+                src={photoUrl}
+                alt={primaryName}
+                className={entity?.type === "person" ? "object-cover" : "object-contain bg-white"}
+              />
               <AvatarFallback className="rounded-lg bg-muted">
                 {isOrganization ? (
                   <Building2 className="w-16 h-16 text-muted-foreground" />
