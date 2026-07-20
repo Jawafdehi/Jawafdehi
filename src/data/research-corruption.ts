@@ -39,6 +39,32 @@ export type FunnelStageData = {
   source: keyof typeof CITATIONS;
 };
 
+export type VerdictYearRow = {
+  /** Bikram Sambat verdict year (parsed from case status). */
+  bs: number;
+  /** ठहर — full conviction. */
+  convicted: number;
+  /** आंशिक ठहर — partial conviction. */
+  partial: number;
+  /** सफाई — acquittal. */
+  acquitted: number;
+  /** Full convictions among fake-credential cases this year. */
+  fakeConv: number;
+  /** Decided fake-credential cases this year (the ~88%-conviction charge). */
+  fakeDisp: number;
+};
+
+export type CohortRow = {
+  /** Bikram Sambat filing (registration) year. */
+  bs: number;
+  /** Cases from this cohort already decided. */
+  decided: number;
+  /** Cases from this cohort still awaiting a verdict. */
+  pending: number;
+  /** Median months from registration to verdict (decided cases only). */
+  medianMonths: number;
+};
+
 // In-platform citation targets. Each is a real public page on jawafdehi.org.
 export const CITATIONS = {
   ciaa35: "https://jawafdehi.org/material/ciaa_annual_report/ee0b4f80b24b8665",
@@ -175,10 +201,97 @@ export const REPORT = {
     distinctNames: 8384,
     resolved: 607,
   },
+
+  // --- Over time -------------------------------------------------------------
+  // Conviction/acquittal by VERDICT year and the fake-credential vs core-graft
+  // decomposition (Q13/Q14); case pace + backlog by FILING-year cohort (Q15/Q16).
+  overTime: {
+    // Outcome + fake-credential split, keyed on the parsed Bikram Sambat verdict
+    // year. BS 2083 is a partial (mid-snapshot) year and is omitted from the rate
+    // trends. `fakeDisp`/`fakeConv` isolate documentary fake-credential cases (the
+    // ~88%-conviction charge); the remainder reads as core financial graft.
+    byVerdictYear: [
+      { bs: 2069, convicted: 59, partial: 5, acquitted: 14, fakeConv: 48, fakeDisp: 56 },
+      { bs: 2070, convicted: 84, partial: 10, acquitted: 18, fakeConv: 74, fakeDisp: 83 },
+      { bs: 2071, convicted: 84, partial: 9, acquitted: 38, fakeConv: 61, fakeDisp: 70 },
+      { bs: 2072, convicted: 111, partial: 27, acquitted: 99, fakeConv: 81, fakeDisp: 98 },
+      { bs: 2073, convicted: 82, partial: 24, acquitted: 39, fakeConv: 36, fakeDisp: 40 },
+      { bs: 2074, convicted: 90, partial: 21, acquitted: 61, fakeConv: 54, fakeDisp: 68 },
+      { bs: 2075, convicted: 167, partial: 36, acquitted: 50, fakeConv: 77, fakeDisp: 82 },
+      { bs: 2076, convicted: 155, partial: 27, acquitted: 32, fakeConv: 61, fakeDisp: 64 },
+      { bs: 2077, convicted: 68, partial: 24, acquitted: 36, fakeConv: 31, fakeDisp: 33 },
+      { bs: 2078, convicted: 31, partial: 11, acquitted: 59, fakeConv: 16, fakeDisp: 16 },
+      { bs: 2079, convicted: 91, partial: 70, acquitted: 261, fakeConv: 36, fakeDisp: 43 },
+      { bs: 2080, convicted: 151, partial: 93, acquitted: 208, fakeConv: 24, fakeDisp: 26 },
+      { bs: 2081, convicted: 85, partial: 45, acquitted: 96, fakeConv: 28, fakeDisp: 30 },
+      { bs: 2082, convicted: 31, partial: 17, acquitted: 27, fakeConv: 15, fakeDisp: 18 },
+    ] satisfies VerdictYearRow[],
+
+    // Filing-year cohorts: decided vs still-pending, and the median months from
+    // registration to verdict. Cohorts through BS `completeThroughBs` are
+    // essentially fully adjudicated (<=4 pending); later cohorts are still being
+    // decided, so their median is provisional (only the fast cases have landed).
+    // pending sums to 209 = the known ongoing count; decided+pending matches the
+    // filing counts in `trend.filed`.
+    cohorts: [
+      { bs: 2069, decided: 172, pending: 0, medianMonths: 10.0 },
+      { bs: 2070, decided: 146, pending: 0, medianMonths: 12.5 },
+      { bs: 2071, decided: 349, pending: 0, medianMonths: 13.0 },
+      { bs: 2072, decided: 120, pending: 0, medianMonths: 17.0 },
+      { bs: 2073, decided: 167, pending: 0, medianMonths: 15.0 },
+      { bs: 2074, decided: 158, pending: 0, medianMonths: 14.0 },
+      { bs: 2075, decided: 355, pending: 0, medianMonths: 14.0 },
+      { bs: 2076, decided: 509, pending: 0, medianMonths: 30.0 },
+      { bs: 2077, decided: 227, pending: 2, medianMonths: 24.0 },
+      { bs: 2078, decided: 99, pending: 2, medianMonths: 19.0 },
+      { bs: 2079, decided: 194, pending: 4, medianMonths: 13.5 },
+      { bs: 2080, decided: 273, pending: 30, medianMonths: 5.0 },
+      { bs: 2081, decided: 179, pending: 19, medianMonths: 2.0 },
+      { bs: 2082, decided: 58, pending: 135, medianMonths: 3.0 },
+      { bs: 2083, decided: 6, pending: 17, medianMonths: 0.0 },
+    ] satisfies CohortRow[],
+
+    /** Filing cohorts up to and including this BS year are treated as complete. */
+    completeThroughBs: 2079,
+  },
 } as const;
 
 /** Derived: share (%) of a single outcome within a charge row. */
 export function outcomePct(row: OutcomeCounts, key: keyof OutcomeCounts): number {
   const total = row.convicted + row.partial + row.acquitted;
   return total ? (row[key] / total) * 100 : 0;
+}
+
+export type VerdictYearRates = {
+  year: number;
+  /** Decided cases this year. */
+  total: number;
+  /** Full-conviction rate (%). */
+  convPct: number;
+  /** Acquittal rate (%). */
+  acqPct: number;
+  /** Partial-conviction rate (%). */
+  partPct: number;
+  /** Full-conviction rate on everything except fake-credential cases (%). */
+  coreConvPct: number;
+  /** Fake-credential share of the decided docket (%). */
+  fakeSharePct: number;
+};
+
+/** Derived per-year rates powering the outcome-trend and decomposition charts. */
+export function verdictYearRates(rows: readonly VerdictYearRow[]): VerdictYearRates[] {
+  return rows.map((r) => {
+    const total = r.convicted + r.partial + r.acquitted;
+    const coreDisp = total - r.fakeDisp;
+    const coreConv = r.convicted - r.fakeConv;
+    return {
+      year: r.bs,
+      total,
+      convPct: total ? (r.convicted / total) * 100 : 0,
+      acqPct: total ? (r.acquitted / total) * 100 : 0,
+      partPct: total ? (r.partial / total) * 100 : 0,
+      coreConvPct: coreDisp ? (coreConv / coreDisp) * 100 : 0,
+      fakeSharePct: total ? (r.fakeDisp / total) * 100 : 0,
+    };
+  });
 }

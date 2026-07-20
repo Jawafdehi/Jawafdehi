@@ -3,13 +3,15 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-import { REPORT, CITATIONS } from "@/data/research-corruption";
+import { REPORT, CITATIONS, verdictYearRates } from "@/data/research-corruption";
 import { AccountabilityFunnel, type FunnelStage } from "@/components/data-quality/AccountabilityFunnel";
 import { StatusDonut, type DonutSegment } from "@/components/data-quality/StatusDonut";
 import { BreakdownBar } from "@/components/data-quality/BreakdownBar";
 import { ConvictionByCharge, type ChargeRow } from "@/components/research/ConvictionByCharge";
 import { JusticeSpread } from "@/components/research/JusticeSpread";
 import { FiledDecidedTrend } from "@/components/research/FiledDecidedTrend";
+import { RateTrend } from "@/components/research/RateTrend";
+import { PipelineHealth } from "@/components/research/PipelineHealth";
 
 const CANONICAL = "https://jawafdehi.org/research/corruption-accountability";
 
@@ -67,6 +69,46 @@ const ResearchCorruption = () => {
   }));
 
   const mixItems = REPORT.mix.map((m) => ({ label: lang === "ne" ? m.ne : m.en, count: m.count }));
+
+  // --- Over time: outcome-rate trend, decomposition, and pipeline pace/backlog ---
+  const rates = verdictYearRates(REPORT.overTime.byVerdictYear);
+  const outcomePoints = rates.map((r) => ({
+    year: r.year,
+    convPct: Math.round(r.convPct),
+    acqPct: Math.round(r.acqPct),
+    partPct: Math.round(r.partPct),
+  }));
+  const decompPoints = rates.map((r) => ({
+    year: r.year,
+    allConvPct: Math.round(r.convPct),
+    coreConvPct: Math.round(r.coreConvPct),
+  }));
+  const completeThrough = REPORT.overTime.completeThroughBs;
+  const pipelinePoints = REPORT.overTime.cohorts.map((c) => ({
+    year: c.bs,
+    pending: c.pending,
+    monthsSolid: c.bs <= completeThrough ? c.medianMonths : null,
+    monthsProvisional: c.bs >= completeThrough ? c.medianMonths : null,
+  }));
+
+  // Pooled narrative figures (kept in sync with the baked counts).
+  const poolConv = (pred: (bs: number) => boolean) => {
+    let c = 0;
+    let total = 0;
+    REPORT.overTime.byVerdictYear.forEach((r) => {
+      if (!pred(r.bs)) return;
+      c += r.convicted;
+      total += r.convicted + r.partial + r.acquitted;
+    });
+    return total ? Math.round((c / total) * 100) : 0;
+  };
+  const earlyConvPct = poolConv((bs) => bs <= 2071);
+  const recentConvPct = poolConv((bs) => bs >= 2079);
+  const fakeShareStart = Math.round(rates[0].fakeSharePct);
+  const fakeShareMin = Math.round(Math.min(...rates.filter((r) => r.year >= 2079).map((r) => r.fakeSharePct)));
+  const completeCohorts = REPORT.overTime.cohorts.filter((c) => c.bs <= completeThrough);
+  const peakDelayMonths = Math.max(...completeCohorts.map((c) => c.medianMonths));
+  const peakDelayYear = completeCohorts.find((c) => c.medianMonths === peakDelayMonths)?.bs ?? completeThrough;
 
   const gapKeys = ["intake", "charging", "adjudication", "appeal", "recovery"] as const;
   const gapDark = new Set(["appeal", "recovery"]);
@@ -186,10 +228,53 @@ const ResearchCorruption = () => {
             </div>
           </section>
 
-          {/* 5 · Trends + mix */}
+          {/* 5 · Over time */}
+          <section>
+            <Eyebrow>{t("research.corruption.overTime.eyebrow", "Over time")}</Eyebrow>
+            <SectionHeading>{t("research.corruption.overTime.heading", "The court convicts far less than it used to")}</SectionHeading>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
+              {t("research.corruption.overTime.lead", "In the early years the Special Court fully convicted roughly {{early}}% of the corruption defendants it decided; across BS 2079–2082 that fell to about {{recent}}%. Acquittals now routinely outnumber convictions.", { early: earlyConvPct, recent: recentConvPct })}
+            </p>
+
+            <div className="mt-8">
+              <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.rateTitle", "Outcome mix by verdict year")}</h3>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.overTime.rateSub", "Share of decided cases by Bikram Sambat verdict year. Acquittals overtook full convictions around BS 2078.")}</p>
+              <RateTrend
+                data={outcomePoints}
+                series={[
+                  { key: "convPct", label: t("research.corruption.outcome.convicted", "Convicted"), color: "hsl(var(--primary))", width: 2.25 },
+                  { key: "acqPct", label: t("research.corruption.outcome.acquitted", "Acquitted"), color: "hsl(var(--accent))", width: 2.25 },
+                  { key: "partPct", label: t("research.corruption.outcome.partial", "Partial"), color: "hsl(var(--alert))", width: 1.75 },
+                ]}
+              />
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">
+                {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~88% — fell from {{start}}% of the decided docket to as little as {{min}}%. But the conviction rate on core financial graft fell too, so the slump is not just a change of mix.", { start: fakeShareStart, min: fakeShareMin })}
+              </p>
+              <RateTrend
+                data={decompPoints}
+                series={[
+                  { key: "allConvPct", label: t("research.corruption.overTime.seriesAll", "All charges"), color: "hsl(var(--primary))", width: 2.25 },
+                  { key: "coreConvPct", label: t("research.corruption.overTime.seriesCore", "Core graft (excl. fake credential)"), color: "hsl(var(--accent))", dashed: true },
+                ]}
+                refPct={courtAvgConv}
+                refLabel={t("research.corruption.overTime.avgLine", "46% cumulative")}
+              />
+            </div>
+
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              {t("research.corruption.overTime.caption", "Full-conviction rate by verdict year, case-grain, from Special Court records. BS 2083 is a partial year and is omitted.")}{" "}
+              <Link to="/courtcases" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
+            </p>
+          </section>
+
+          {/* 6 · Volume & pace */}
           <section>
             <Eyebrow>{t("research.corruption.volume.eyebrow", "Volume")}</Eyebrow>
-            <SectionHeading>{t("research.corruption.volume.heading", "What flows through the court, and what gets charged")}</SectionHeading>
+            <SectionHeading>{t("research.corruption.volume.heading", "What flows through the court — and how long it takes")}</SectionHeading>
             <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-8">
               <div>
                 <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.trendTitle", "Cases filed vs. decided, by year")}</h3>
@@ -203,14 +288,24 @@ const ResearchCorruption = () => {
                 />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.mixTitle", "The charge mix")}</h3>
-                <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixSub", "Substantive prosecutions by offense family (petitions excluded).")}</p>
-                <BreakdownBar items={mixItems} tooltipLabel={t("research.corruption.volume.mixTooltip", "Prosecutions")} labelWidth={150} />
+                <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.paceTitle", "Time to verdict, and the backlog")}</h3>
+                <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.paceSub", "By filing cohort. Cohorts through BS 2079 took a median {{peak}} months at their slowest ({{peakYear}}); {{pending}} cases filed since are still awaiting a verdict.", { peak: peakDelayMonths, peakYear: peakDelayYear, pending: REPORT.outcome.ongoing })}</p>
+                <PipelineHealth
+                  data={pipelinePoints}
+                  monthsLabel={t("research.corruption.volume.months", "Median months to verdict")}
+                  backlogLabel={t("research.corruption.volume.backlog", "Awaiting verdict")}
+                  provisionalLabel={t("research.corruption.volume.provisional", "Provisional (cohort still open)")}
+                />
               </div>
+            </div>
+            <div className="mt-10">
+              <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.mixTitle", "The charge mix")}</h3>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixSub", "Substantive prosecutions by offense family (petitions excluded).")}</p>
+              <BreakdownBar items={mixItems} tooltipLabel={t("research.corruption.volume.mixTooltip", "Prosecutions")} labelWidth={150} />
             </div>
           </section>
 
-          {/* 6 · Gaps */}
+          {/* 7 · Gaps */}
           <section>
             <Eyebrow>{t("research.corruption.gaps.eyebrow", "Where the gap is")}</Eyebrow>
             <SectionHeading>{t("research.corruption.gaps.heading", "Attrition concentrates at the CIAA stage — then goes dark")}</SectionHeading>
@@ -243,7 +338,7 @@ const ResearchCorruption = () => {
             </div>
           </section>
 
-          {/* 7 · Appendix */}
+          {/* 8 · Appendix */}
           <section>
             <details className="rounded-xl border border-border bg-muted/20 p-5">
               <summary className="cursor-pointer text-sm font-semibold text-foreground">
@@ -253,6 +348,7 @@ const ResearchCorruption = () => {
                 <p>{t("research.corruption.appendix.corpus", "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as cases filed in the name of the Government of Nepal (~3,278), of which ~2,850 are substantive corruption charges after removing petitions, money-laundering (a separate agency), and unclassified matters.")}</p>
                 <p>{t("research.corruption.appendix.outcomes", "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the ~92% of decided cases carrying an unambiguous disposition (2,835 of 3,069).")}</p>
                 <p>{t("research.corruption.appendix.dates", "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat throughout.")}</p>
+                <p>{t("research.corruption.appendix.overTime", "Over time. Yearly rates are grouped by verdict year; the sharp rise in acquittals from BS 2079 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through BS 2079 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.")}</p>
                 <p>{t("research.corruption.appendix.justice", "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.")}</p>
                 <p>{t("research.corruption.appendix.discrepancy", "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, and is fiscal-year, whereas our full-conviction rate (46%) is cumulative and separates the two. CIAA's “cases filed” per fiscal year also differ from our Bikram-Sambat-year filing counts because of year binning, case-versus-defendant counting, and record timing. Never compare the two without aligning definition and period.")}</p>
                 <p>{t("research.corruption.appendix.entity", "Identity. Only ~3% of listed defendants (607 of 19,222) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.")}</p>
