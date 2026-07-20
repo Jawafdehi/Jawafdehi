@@ -185,7 +185,7 @@ function RelationLink({ label, refObj }: { label: string; refObj?: JsonLdRef }) 
 export default function EntityRecordProfile() {
   const params = useParams();
   const tail = params["*"] || "";
-  const [imgOk, setImgOk] = useState(true);
+  const [failedImgUrl, setFailedImgUrl] = useState<string | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["entity-record", tail],
     queryFn: async () => {
@@ -271,14 +271,14 @@ export default function EntityRecordProfile() {
         ) : data ? (
           <article className="space-y-6">
             <header className="space-y-2">
-              {imageUrl && imgOk ? (
+              {imageUrl && imageUrl !== failedImgUrl ? (
                 <div className="mb-1 flex h-24 w-fit items-center justify-center overflow-hidden rounded-xl border bg-white p-3">
                   <img
                     src={imageUrl}
                     alt={displayName}
                     loading="lazy"
                     className="max-h-full max-w-[16rem] object-contain"
-                    onError={() => setImgOk(false)}
+                    onError={() => setFailedImgUrl(imageUrl)}
                   />
                 </div>
               ) : null}

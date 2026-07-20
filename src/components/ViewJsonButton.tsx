@@ -27,7 +27,7 @@ export function ViewJsonButton({ data, title = "Raw JSON", rawUrl, disabled }: R
   const json = useMemo(() => (data == null ? "" : JSON.stringify(data, null, 2)), [data]);
 
   const copy = () => {
-    void navigator.clipboard?.writeText(json).then(
+    void navigator.clipboard?.writeText(json)?.then(
       () => {
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1500);
@@ -79,7 +79,10 @@ export function ViewJsonButton({ data, title = "Raw JSON", rawUrl, disabled }: R
                 </Button>
               ) : null}
             </div>
-            <pre className="max-h-[68vh] overflow-auto rounded-lg bg-[#0b0b0c] p-4 text-xs leading-relaxed text-slate-100">
+            <pre
+              tabIndex={0}
+              className="max-h-[68vh] overflow-auto rounded-lg bg-[#0b0b0c] p-4 text-xs leading-relaxed text-slate-100"
+            >
               {json}
             </pre>
           </div>
