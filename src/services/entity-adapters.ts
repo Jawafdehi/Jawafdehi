@@ -8,7 +8,7 @@
  * - Backend types: https://github.com/Jawafdehi/NepalEntityService-Tundikhel/blob/main/src/common/nes-types.ts
  */
 
-import type { Entity, Attribution, Name, EntityType } from '@/types/entity';
+import type { Entity, Attribution, Name, EntityType, EntityPicture } from '@/types/entity';
 
 // ============================================================================
 // schema.org JSON-LD -> Entity adapter
@@ -18,9 +18,9 @@ import type { Entity, Attribution, Name, EntityType } from '@/types/entity';
 // but the SPA's Entity model is the NES shape (names: Name[], pictures: [], contacts: [], ...).
 // Without this adaptation, consumers that read entity.names (e.g. getPrimaryName) throw
 // "Cannot read properties of undefined (reading 'find')" and take the whole case page down.
-// Map the fields the UI actually reads (name -> names[], @id/@type -> type, empty arrays for the
-// collections it iterates) and drop the rest of the schema.org payload, which the case/entity
-// views don't consume.
+// Map the fields the UI actually reads (name -> names[], @id/@type -> type, image -> pictures[],
+// empty arrays for the other collections it iterates) and drop the rest of the schema.org payload,
+// which the case/entity views don't consume.
 type JsonLdName = string | { en?: string | null; ne?: string | null } | null | undefined;
 
 interface EntityJsonLd {
@@ -29,6 +29,7 @@ interface EntityJsonLd {
   id?: string;
   name?: JsonLdName;
   description?: unknown;
+  image?: unknown;
   dateCreated?: string;
   [k: string]: unknown;
 }
@@ -64,6 +65,28 @@ function entityTypeFromJsonLd(iri: string, atType: string): EntityType {
   return 'person';
 }
 
+// NES stores an optional schema.org `image` on the entity JSON-LD — a URL string, an ImageObject
+// ({ url } / { contentUrl }), or an array of either. Surface it as the SPA's pictures[] so the avatar
+// consumers render it: CaseEntityChips.getEntityImage and EntityProfileHeader read pictures[].url,
+// preferring type 'thumb' then 'full'. One logical image -> one 'full' entry; absent/blank -> [] so
+// the type-icon fallback stands.
+function toPictures(image: unknown): EntityPicture[] {
+  const urlOf = (v: unknown): string | undefined => {
+    if (typeof v === 'string') return v.trim() || undefined;
+    if (v && typeof v === 'object') {
+      const o = v as { url?: unknown; contentUrl?: unknown };
+      const u = typeof o.url === 'string' ? o.url : typeof o.contentUrl === 'string' ? o.contentUrl : '';
+      return u.trim() || undefined;
+    }
+    return undefined;
+  };
+  const items = Array.isArray(image) ? image : [image];
+  return items
+    .map(urlOf)
+    .filter((u): u is string => !!u)
+    .map((url) => ({ type: 'full' as const, url }));
+}
+
 export function jsonLdToEntity(input: unknown): Entity {
   const raw = (input ?? {}) as EntityJsonLd;
   const iri = raw['@id'] ?? raw.id ?? '';
@@ -81,15 +104,16 @@ export function jsonLdToEntity(input: unknown): Entity {
   const description = toLangText(raw.description);
   const createdAt = typeof raw.dateCreated === 'string' ? raw.dateCreated : '';
 
-  // Empty collections keep the array-iterating consumers (pictures/contacts/...) safe. JSON-LD
-  // carries no version history, so version_summary is a neutral placeholder (version 0, no author)
-  // — filled rather than cast away so the Entity contract stays fully type-checked.
+  // pictures come from the schema.org `image` (toPictures); the remaining empty collections keep the
+  // array-iterating consumers (contacts/identifiers/...) safe. JSON-LD carries no version history, so
+  // version_summary is a neutral placeholder (version 0, no author) — filled rather than cast away so
+  // the Entity contract stays fully type-checked.
   return {
     id: iri,
     slug,
     type,
     names,
-    pictures: [],
+    pictures: toPictures(raw.image),
     contacts: [],
     identifiers: [],
     tags: [],

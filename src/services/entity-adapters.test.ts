@@ -46,6 +46,40 @@ describe('jsonLdToEntity', () => {
     expect(() => e.pictures?.find(() => true)).not.toThrow();
   });
 
+  describe('image mapping -> pictures[]', () => {
+    const withImage = (image: unknown) =>
+      jsonLdToEntity({ '@id': 'https://jawafdehi.org/entity/organization/sebon', name: { en: 'SEBON' }, image });
+
+    it('maps a schema.org image URL string to a single full picture', () => {
+      const e = withImage('https://s3.jawafdehi.org/entities/sebon.png');
+      expect(e.pictures).toEqual([{ type: 'full', url: 'https://s3.jawafdehi.org/entities/sebon.png' }]);
+    });
+
+    it('reads an ImageObject via url or contentUrl', () => {
+      expect(withImage({ '@type': 'ImageObject', url: 'https://x/u.png' }).pictures).toEqual([
+        { type: 'full', url: 'https://x/u.png' },
+      ]);
+      expect(withImage({ contentUrl: 'https://x/c.png' }).pictures).toEqual([
+        { type: 'full', url: 'https://x/c.png' },
+      ]);
+    });
+
+    it('maps an array of images, skipping blanks', () => {
+      const e = withImage(['https://x/a.png', '  ', { url: 'https://x/b.png' }]);
+      expect(e.pictures).toEqual([
+        { type: 'full', url: 'https://x/a.png' },
+        { type: 'full', url: 'https://x/b.png' },
+      ]);
+    });
+
+    it('is [] for absent, blank, or unusable image so the type-icon fallback stands', () => {
+      expect(withImage(undefined).pictures).toEqual([]);
+      expect(withImage('   ').pictures).toEqual([]);
+      expect(withImage({}).pictures).toEqual([]);
+      expect(withImage(42).pictures).toEqual([]);
+    });
+  });
+
   it('tolerates a missing/empty name and a bare-string name', () => {
     expect(jsonLdToEntity({ '@id': 'https://jawafdehi.org/entity/person/x' }).names).toEqual([]);
     const s = jsonLdToEntity({ '@id': 'https://jawafdehi.org/entity/person/y', name: 'Plain Name' });
