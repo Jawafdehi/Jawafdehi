@@ -1136,7 +1136,8 @@
         "eyebrow": "Research · Corruption Accountability",
         "title": "Where Nepal's corruption accountability actually leaks",
         "lead": "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.",
-        "snapshot": "Snapshot as of BS {{bs}}. Court records collected from Nepal's Special Court and wider judiciary."
+        "snapshot": "Snapshot as of BS {{bs}}. Court records collected from Nepal's Special Court and wider judiciary.",
+        "englishOnlyNotice": "This report is currently available in English only."
       },
       "funnel": {
         "eyebrow": "The funnel",
