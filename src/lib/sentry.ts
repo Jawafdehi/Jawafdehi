@@ -22,6 +22,12 @@ export function initSentry(): void {
     environment: import.meta.env.MODE,
     // Do not attach IP address, cookies, or other PII to events.
     sendDefaultPii: false,
+    // Cloudflare injects its RUM beacon (`beacon.min.js`) and Web Analytics at the
+    // edge; that third-party code calls `Array.prototype.at()` and throws in older
+    // browsers that lack it (e.g. `t.entries.at is not a function`). It is not our
+    // bundle and is unactionable noise, so refuse events whose frames originate
+    // from those scripts.
+    denyUrls: [/beacon\.min\.js/i, /static\.cloudflareinsights\.com/i],
     integrations: [
       Sentry.browserTracingIntegration(),
       // Mask text and block media in any captured replay.
