@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { Info } from "lucide-react";
 
 import { REPORT, CITATIONS, verdictYearRates } from "@/data/research-corruption";
 import { AccountabilityFunnel, type FunnelStage } from "@/components/data-quality/AccountabilityFunnel";
@@ -26,8 +27,15 @@ const SectionHeading = ({ children }: { children: ReactNode }) => (
 );
 
 const ResearchCorruption = () => {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language?.startsWith("ne") ? "ne" : "en";
+  // English-only for now: the Nepali copy on this page is an unreviewed first pass, so
+  // force the report body + every chart label to English regardless of the global
+  // EN/NE toggle, via a translator fixed to 'en'. `tGlobal` stays bound to the user's
+  // language so the one courtesy notice below can still speak Nepali.
+  // Re-enable Nepali = restore `const { t } = useTranslation()` and set
+  // `const lang = i18n.language?.startsWith("ne") ? "ne" : "en"`.
+  const { t: tGlobal, i18n } = useTranslation();
+  const t = useMemo(() => i18n.getFixedT("en"), [i18n]);
+  const lang: "en" | "ne" = "en";
 
   const o = REPORT.outcome;
   const decidedClean = o.convicted + o.partial + o.acquitted;
@@ -116,6 +124,8 @@ const ResearchCorruption = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
+        {/* This report is served English-only for now; keep the crawlable copy in English. */}
+        <html lang="en" />
         <title>{t("research.corruption.meta.title", "Where Nepal's corruption accountability leaks")} · Jawafdehi</title>
         <meta name="description" content={t("research.corruption.meta.description", "A quantitative read of CIAA corruption prosecutions at Nepal's Special Court — conviction rates, the charge types that stick, and where accountability is lost.")} />
         <link rel="canonical" href={CANONICAL} />
@@ -134,6 +144,10 @@ const ResearchCorruption = () => {
             </p>
             <p className="mt-4 text-sm italic text-muted-foreground/80">
               {t("research.corruption.hero.snapshot", "Snapshot as of BS {{bs}}. Court records collected from Nepal's Special Court and wider judiciary.", { bs: REPORT.snapshotBs })}
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+              <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {tGlobal("research.corruption.hero.englishOnlyNotice", "This report is currently available in English only.")}
             </p>
           </div>
         </section>
