@@ -428,7 +428,7 @@
         "cta": "Continue to PayPal",
         "copyCta": "Copy link",
         "copyAria": "Copy PayPal donation link",
-        "recipient": "Donations go to Jawafdehi Initiative (Michigan, USA).",
+        "recipient": "Donations go to Jawafdehi Initiative Inc. (Michigan, USA).",
         "feeNote": "Subject to third-party transaction fees of up to 3%."
       },
       "copy": "Copy",
@@ -457,6 +457,10 @@
         {
           "q": "Where exactly does the money go?",
           "a": "Donations fund hosting, document archiving, verification tooling, and keeping the archive free and open. Jawafdehi is volunteer-run and takes no profit."
+        },
+        {
+          "q": "Are my donations tax-deductible?",
+          "a": "For US taxpayers, yes. Jawafdehi Initiative Inc. (US EIN 42-3114954) is a 501(c)(3) tax-exempt nonprofit, so gifts to it are tax-deductible to the extent allowed by law. Donations made through our Nepal entity are not deductible under US law. Email us if you need a receipt."
         },
         {
           "q": "Can I support Jawafdehi without donating money?",
@@ -1857,7 +1861,7 @@
           {
             "id": "who-runs-jawafdehi",
             "question": "Who runs Jawafdehi? Is it affiliated with the government or a political party?",
-            "answer": "No. Jawafdehi is **volunteer-led** — built and run by Nepali volunteers, supporting a small paid team of intern lawyers and engineers, in Nepal and across the diaspora — and is operated by two aligned, independently-governed nonprofit entities that share the name **Jawafdehi Initiative**:\n\n- **Jawafdehi Initiative Inc.** — a Michigan (USA) nonprofit corporation, Michigan entity no. **900230142**, US EIN **42-3114954**, organized exclusively for charitable, educational, and research purposes.\n- **Jawafdehi Initiative** — a Profit Non-Distributing Company registered in Nepal under the Companies Act, 2006 (Nepal's legal form for a not-for-profit), registration no. **393949/82/83**, PAN **623632659**, incorporated June 2026, registered office in Biratnagar Metropolitan City Ward 5, Morang.\n\nOur boards of directors:\n\n- **Jawafdehi Initiative Inc. (US):** Bishwas Gautam, Nischal Dahal, Anish Karki.\n- **Jawafdehi Initiative (Nepal):** Damodar Dahal (Chairperson), Niroj Aryal (Secretary), Medha Sharma, Rohan Raj Gautam, Shikshita Bhandari.\n\nOur incorporation documents are public — the US Articles of Incorporation and IRS EIN letter for Jawafdehi Initiative Inc., and the Nepal certificate of incorporation for Jawafdehi Initiative. We accept **no funding from any government or political party**, and nothing that would compromise our editorial independence. We are not a government body, law firm, or legal authority."
+            "answer": "No. Jawafdehi is **volunteer-led** — built and run by Nepali volunteers, supporting a small paid team of intern lawyers and engineers, in Nepal and across the diaspora — and is operated by two aligned, independently-governed nonprofit entities that share the name **Jawafdehi Initiative**:\n\n- **Jawafdehi Initiative Inc.** — a Michigan (USA) nonprofit corporation, Michigan entity no. **900230142**, US EIN **42-3114954**, recognized by the US Internal Revenue Service as a **501(c)(3) tax-exempt organization**, organized exclusively for charitable, educational, and research purposes.\n- **Jawafdehi Initiative** — a Profit Non-Distributing Company registered in Nepal under the Companies Act, 2006 (Nepal's legal form for a not-for-profit), registration no. **393949/82/83**, PAN **623632659**, registered with Nepal's Social Welfare Council (SWC reg. no. **59304**), incorporated June 2026, registered office in Biratnagar Metropolitan City Ward 5, Morang.\n\nOur boards of directors:\n\n- **Jawafdehi Initiative Inc. (US):** Bishwas Gautam, Nischal Dahal, Anish Karki.\n- **Jawafdehi Initiative (Nepal):** Damodar Dahal (Chairperson), Niroj Aryal (Secretary), Medha Sharma, Rohan Raj Gautam, Shikshita Bhandari.\n\nOur incorporation documents are public — the US Articles of Incorporation and IRS EIN letter for Jawafdehi Initiative Inc., and the Nepal certificate of incorporation for Jawafdehi Initiative. We accept **no funding from any government or political party**, and nothing that would compromise our editorial independence. We are not a government body, law firm, or legal authority."
           }
         ]
       },
