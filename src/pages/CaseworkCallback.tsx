@@ -15,14 +15,14 @@ const CaseworkCallback = () => {
     if (auth.isLoading) return;
     if (auth.isAuthenticated) {
       // Return to the pre-login path saved in the OIDC `state`, but never back to
-      // the login/callback pages themselves — fall back to the portal home.
+      // the login/callback pages themselves — fall back to the admin dashboard.
       const saved = typeof auth.user?.state === "string" ? auth.user.state : "";
       const dest =
         saved &&
         !saved.startsWith("/admin/login") &&
         !saved.startsWith("/admin/callback")
           ? saved
-          : "/admin/reviews";
+          : "/admin";
       navigate(dest, { replace: true });
     } else if (auth.error || !hadAuthParams) {
       // A real sign-in failure, or a stray visit with no pending sign-in. Don't

@@ -14,7 +14,11 @@ interface AuthContextValue {
   user: CaseworkUser | null;
   loading: boolean;
   error: string | null;
-  login: () => void;
+  // `returnTo` is the in-app path to land on after the OIDC round-trip. Pass
+  // the page the user actually asked for (the login page captures it from the
+  // router `from` state) — omitting it falls back to the current pathname,
+  // which is the login page itself and would be discarded by the callback.
+  login: (returnTo?: string) => void;
   logout: () => void;
   isAdmin: boolean;
   // True when the user holds admin OR moderator — the UI gate for privileged
@@ -78,9 +82,9 @@ export function CaseworkAuthProvider({ children }: { children: React.ReactNode }
 
   const user = devUser ?? oidcUser;
 
-  const login = () => {
+  const login = (returnTo?: string) => {
     auth.signinRedirect({
-      state: window.location.pathname + window.location.search,
+      state: returnTo ?? window.location.pathname + window.location.search,
     });
   };
 
