@@ -51,7 +51,9 @@ export function MaterialsTable({ groups }: { groups: MaterialsSourceGroup[] }) {
   );
 
   return (
-    <div className="overflow-x-auto">
+    // `contain:paint` keeps a wide table from expanding the mobile layout
+    // viewport — see the note in CourtYearMatrix.
+    <div className="overflow-x-auto [contain:paint]">
       <Table>
         <TableHeader>
           <TableRow>

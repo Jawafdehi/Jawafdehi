@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { FormError } from "@/components/admin/FormError";
@@ -13,6 +13,18 @@ const CaseworkLogin = () => {
     useCaseworkAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  // The page the user tried to reach before the auth gate bounced them here
+  // (AdminShell sets `state.from`). Default to the dashboard, never back to a
+  // login/callback page. This becomes the OIDC `state` so the callback can
+  // return the user to where they started.
+  const rawFrom = (location.state as { from?: string } | null)?.from;
+  const returnTo =
+    rawFrom &&
+    !rawFrom.startsWith("/admin/login") &&
+    !rawFrom.startsWith("/admin/callback")
+      ? rawFrom
+      : "/admin";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -21,11 +33,11 @@ const CaseworkLogin = () => {
 
   // Already signed in (e.g. landed here after the OIDC round-trip) — go inside.
   useEffect(() => {
-    if (user) navigate("/admin", { replace: true });
-  }, [user, navigate]);
+    if (user) navigate(returnTo, { replace: true });
+  }, [user, navigate, returnTo]);
 
   const handleSignIn = () => {
-    login();
+    login(returnTo);
   };
 
   const handleDevLogin = async (e: React.FormEvent) => {
@@ -34,7 +46,7 @@ const CaseworkLogin = () => {
     setDevBusy(true);
     try {
       await devLogin(username.trim(), password);
-      navigate("/admin", { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response
         ?.status;

@@ -989,6 +989,7 @@
     "relatedCases": "सम्बन्धित मुद्दाहरू",
     "noAllegedCases": "कुनै अभियुक्त मुद्दा फेला परेन।",
     "noRelatedCases": "कुनै सम्बन्धित मुद्दा फेला परेन।",
+    "moreCases": "+{{count}} थप",
     "loading": "संस्था विवरण लोड हुँदैछ...",
     "activeCases": "सक्रिय मुद्दाहरू",
     "unknown": "अज्ञात",
@@ -1414,6 +1415,9 @@
       "filterYear": "वर्ष",
       "filterAll": "सबै",
       "total": "जम्मा",
+      "yearsTrimmed": "पछिल्ला {{shown}} वर्ष देखाइएको। जम्मामा सबै {{all}} वर्ष समावेश छन्।",
+      "showAllYears": "सबै वर्ष हेर्नुहोस्",
+      "showRecentYears": "पछिल्ला वर्ष मात्र हेर्नुहोस्",
       "legendLabel": "मुद्दाको मात्रा",
       "legendLow": "कम",
       "legendHigh": "बढी"
@@ -1527,7 +1531,10 @@
       "publishes": {
         "dfmis": "विकास वित्त अभिलेख",
         "ppmo": "कालोसूची / प्रतिबन्ध अभिलेख",
-        "koshi": "प्रादेशिक अभिलेख"
+        "koshi": "प्रादेशिक अभिलेख",
+        "ciaa": "वार्षिक प्रतिवेदन",
+        "courts": "अदालती निवेदन",
+        "nkp": "पत्रिकाका अंक"
       }
     },
     "materialsByType": {
@@ -1670,6 +1677,9 @@
       "reloadCase": "मुद्दा पुनः लोड गर्नुहोस्",
       "labelTitle": "शीर्षक",
       "titlePlaceholder": "वर्णनात्मक मुद्दा शीर्षक",
+      "labelShortDescription": "छोटो विवरण",
+      "shortDescriptionHelp": "सादा पाठ। मुद्दा कार्ड र खोज परिणामहरूमा देखिने एक वा दुई वाक्यको सारांश।",
+      "shortDescriptionPlaceholder": "मुद्दाको सारांश एक वा दुई वाक्यमा",
       "labelSlug": "स्लग",
       "slugPlaceholder": "शीर्षकबाट स्वतः निकालिन्छ",
       "slugInvalid": "साना अक्षर, अंक र हाइफनहरू प्रयोग गर्नुहोस् (जस्तै ncell-tax-case)। शीर्षकबाट स्वतः बनाउन खाली छोड्नुहोस्।",

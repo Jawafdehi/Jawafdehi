@@ -7,6 +7,7 @@ import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-reac
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
+import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -367,6 +368,10 @@ export default function EntityRecordProfile() {
                 <dd className="mt-1 break-all font-mono text-xs text-muted-foreground">{data["@id"]}</dd>
               </div>
             </dl>
+
+            {/* Published cases citing this entity (accused/alleged floated to
+                the top). Renders nothing when there are none. */}
+            {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
 
             {/* Provenance. */}
             <div className="space-y-1 rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">

@@ -989,6 +989,7 @@
     "relatedCases": "Related Cases",
     "noAllegedCases": "No accused cases found.",
     "noRelatedCases": "No related cases found.",
+    "moreCases": "+{{count}} more",
     "loading": "Loading entity details...",
     "activeCases": "Active Cases",
     "unknown": "Unknown",
@@ -1414,6 +1415,9 @@
       "filterYear": "Year",
       "filterAll": "All",
       "total": "Total",
+      "yearsTrimmed": "Showing the last {{shown}} years. Totals cover all {{all}}.",
+      "showAllYears": "Show all years",
+      "showRecentYears": "Show recent years only",
       "legendLabel": "Case volume",
       "legendLow": "fewer",
       "legendHigh": "more"
@@ -1527,7 +1531,10 @@
       "publishes": {
         "dfmis": "Development-finance records",
         "ppmo": "Blacklist / debarment records",
-        "koshi": "Provincial records"
+        "koshi": "Provincial records",
+        "ciaa": "Annual reports",
+        "courts": "Court filings",
+        "nkp": "Journal issues"
       }
     },
     "materialsByType": {
@@ -1670,6 +1677,9 @@
       "reloadCase": "Reload case",
       "labelTitle": "Title",
       "titlePlaceholder": "Descriptive case title",
+      "labelShortDescription": "Short description",
+      "shortDescriptionHelp": "Plain text. A one- or two-sentence summary shown on case cards and search results.",
+      "shortDescriptionPlaceholder": "One or two sentences summarizing the case",
       "labelSlug": "Slug",
       "slugPlaceholder": "auto-derived from title",
       "slugInvalid": "Use lowercase letters, numbers, and hyphens (e.g. ncell-tax-case). Leave blank to auto-generate from the title.",

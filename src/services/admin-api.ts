@@ -435,6 +435,7 @@ export interface PatchCaseOptions {
 // keeps the form free to send extra authoring fields).
 export interface CreateCasePayload {
   title: string;
+  short_description?: string;
   slug?: string;
   case_type: string;
   description?: string;
