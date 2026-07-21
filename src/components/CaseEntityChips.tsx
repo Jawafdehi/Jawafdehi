@@ -101,7 +101,11 @@ export function CaseEntityChips({
             <>
               <Avatar className="h-16 w-16 border border-border/80 shadow-sm transition-transform group-hover:scale-105">
                 {imageUrl ? (
-                  <AvatarImage src={imageUrl} alt={displayName} className="object-cover" />
+                  <AvatarImage
+                    src={imageUrl}
+                    alt={displayName}
+                    className={entity?.type === "person" ? "object-cover" : "object-contain bg-white"}
+                  />
                 ) : null}
                 <AvatarFallback className="bg-muted text-muted-foreground">
                   {getFallbackIcon(jawafEntity, entity)}

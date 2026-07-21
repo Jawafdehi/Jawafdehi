@@ -77,7 +77,11 @@ const EntityCard = ({ entity, jawafEntity }: EntityCardProps) => {
           <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16 flex-shrink-0">
               {profilePicUrl ? (
-                <AvatarImage src={profilePicUrl} alt={primaryName} className="object-cover" />
+                <AvatarImage
+                  src={profilePicUrl}
+                  alt={primaryName}
+                  className={entity?.type === "person" ? "object-cover" : "object-contain bg-white"}
+                />
               ) : null}
               <AvatarFallback className="bg-muted">
                 {isOrganization ? (

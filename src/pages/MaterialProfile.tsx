@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { humanizeEntityType } from "@/utils/entity-helpers";
 import { getMaterial, type Material, type MaterialBilingual } from "@/services/datalake-api";
+import { API_BASE_URL } from "@/services/http";
+import { ViewJsonButton } from "@/components/ViewJsonButton";
+import { DocumentPreviewDialog, type PreviewDocument } from "@/components/DocumentPreviewDialog";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
 
@@ -91,21 +95,42 @@ const ROLE_LABELS: Record<string, string> = {
 interface MediaLink {
   contentUrl?: string;
   url?: string;
+  encodingFormat?: string;
+  "jawafdehi:linkRole"?: string;
   "jawafdehi:role"?: string;
   role?: string;
   name?: string;
 }
 
-function sourceLinks(data: Material | undefined): Array<{ href: string; label: string }> {
+// PDFs and markdown/text transcripts open in the shared document modal; source
+// pages and other formats (doc/docx) stay as external links.
+function previewTypeOf(m: MediaLink, href: string, role: string): PreviewDocument["type"] | undefined {
+  const fmt = (m.encodingFormat || "").toLowerCase();
+  const ext = (href.split("?")[0].split(".").pop() || "").toLowerCase();
+  if (fmt.includes("pdf") || ext === "pdf") return "pdf";
+  if (role === "MARKDOWN" || fmt.includes("markdown") || ext === "md" || ext === "markdown") return "markdown";
+  return undefined;
+}
+
+type MaterialSourceLink = { href: string; label: string; previewType?: PreviewDocument["type"] };
+
+function sourceLinks(data: Material | undefined): MaterialSourceLink[] {
   if (!data) return [];
   const media = data.associatedMedia;
   const arr: MediaLink[] = Array.isArray(media) ? media : media ? [media as MediaLink] : [];
-  const links: Array<{ href: string; label: string }> = [];
+  const links: MaterialSourceLink[] = [];
   for (const m of arr) {
     const href = m.contentUrl || m.url;
     if (!href) continue;
-    const role = m["jawafdehi:role"] || m.role || "";
-    links.push({ href, label: ROLE_LABELS[role] || m.name || ROLE_LABELS.RAW });
+    const role = (m["jawafdehi:linkRole"] || m["jawafdehi:role"] || m.role || "").toUpperCase();
+    const previewType = previewTypeOf(m, href, role);
+    const label =
+      previewType === "pdf"
+        ? "View PDF"
+        : previewType === "markdown"
+          ? "View transcript"
+          : ROLE_LABELS[role] || m.name || ROLE_LABELS.RAW;
+    links.push({ href, label, previewType });
   }
   return links;
 }
@@ -131,6 +156,7 @@ export default function MaterialProfile() {
   const fullText = data ? bilingual((data.text as MaterialBilingual | string | undefined)) : { en: "", ne: "" };
   const fullTextStr = fullText.en || fullText.ne;
   const links = sourceLinks(data);
+  const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
 
   // Generic details: any presentable scalar field not handled elsewhere.
   const detailRows: Array<{ label: string; value: string }> = [];
@@ -170,12 +196,22 @@ export default function MaterialProfile() {
       </Helmet>
 
       <div className="container mx-auto max-w-3xl px-4">
-        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-          <Link to="/search?type=material">
-            <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-            Back to search
-          </Link>
-        </Button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button asChild variant="ghost" size="sm" className="-ml-2">
+            <Link to="/search?type=material">
+              <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+              Back to search
+            </Link>
+          </Button>
+          {tail ? (
+            <ViewJsonButton
+              data={data}
+              title={`${displayName} — JSON-LD`}
+              rawUrl={`${API_BASE_URL}/api/materials/${tail}`}
+              disabled={!data}
+            />
+          ) : null}
+        </div>
 
         {isError ? (
           <Alert variant="destructive">
@@ -206,13 +242,28 @@ export default function MaterialProfile() {
             {/* Source documents + external links. */}
             {links.length > 0 || data.url ? (
               <div className="flex flex-wrap gap-2">
-                {links.map((l) => (
-                  <Button asChild key={l.href} variant="outline" size="sm">
-                    <a href={l.href} target="_blank" rel="noopener noreferrer">
-                      {l.label} <ExternalLink className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
-                    </a>
-                  </Button>
-                ))}
+                {links.map((l) =>
+                  l.previewType ? (
+                    <Button
+                      key={l.href}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPreviewDocument({ title: displayName, type: l.previewType!, url: l.href })
+                      }
+                    >
+                      <FileText className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                      {l.label}
+                    </Button>
+                  ) : (
+                    <Button asChild key={l.href} variant="outline" size="sm">
+                      <a href={l.href} target="_blank" rel="noopener noreferrer">
+                        {l.label} <ExternalLink className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    </Button>
+                  ),
+                )}
                 {data.url && links.length === 0 ? (
                   <Button asChild variant="outline" size="sm">
                     <a href={data.url} target="_blank" rel="noopener noreferrer">
@@ -265,6 +316,14 @@ export default function MaterialProfile() {
           </article>
         ) : null}
       </div>
+
+      <DocumentPreviewDialog
+        document={previewDocument}
+        open={Boolean(previewDocument)}
+        onOpenChange={(open) => {
+          if (!open) setPreviewDocument(null);
+        }}
+      />
     </main>
   );
 }

@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
 
-import { http } from "@/services/http";
+import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
+import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -44,6 +46,8 @@ interface EntityRecord {
   dateCreated?: string;
   foundingDate?: string;
   leader?: string;
+  image?: unknown;
+  logo?: unknown;
   containedInPlace?: JsonLdRef;
   parentOrganization?: JsonLdRef;
   "jawafdehi:version"?: VersionInfo;
@@ -112,12 +116,12 @@ const FIELD_LABELS: Record<string, string> = {
   "jawafdehi:registrationDateBS": "Registered (BS)",
 };
 
-// Keys handled explicitly elsewhere (header/relations/links/identifiers/provenance)
+// Keys handled explicitly elsewhere (header/image/relations/links/identifiers/provenance)
 // or that are pure plumbing — never shown in the generic Details list.
 const HANDLED_KEYS = new Set([
   "@id", "@type", "@context", "additionalType", "name", "alternateName",
   "description", "address", "url", "sameAs", "identifier", "dateCreated",
-  "containedInPlace", "parentOrganization", "jawafdehi:version",
+  "containedInPlace", "parentOrganization", "jawafdehi:version", "image", "logo",
 ]);
 
 function labelFor(key: string): string {
@@ -135,6 +139,28 @@ function scalar(v: unknown): string | null {
     return [b.en, b.ne].filter(Boolean).join(" · ") || null;
   }
   return null;
+}
+
+// schema.org image/logo -> a single URL (a plain string, an ImageObject via url/contentUrl,
+// or an array of either). Returns undefined when there's nothing usable.
+function imageUrlOf(rec: EntityRecord | undefined): string | undefined {
+  const pick = (v: unknown): string | undefined => {
+    if (typeof v === "string") return v.trim() || undefined;
+    if (Array.isArray(v)) {
+      for (const x of v) {
+        const u = pick(x);
+        if (u) return u;
+      }
+      return undefined;
+    }
+    if (v && typeof v === "object") {
+      const o = v as { url?: unknown; contentUrl?: unknown };
+      if (typeof o.url === "string" && o.url.trim()) return o.url.trim();
+      if (typeof o.contentUrl === "string" && o.contentUrl.trim()) return o.contentUrl.trim();
+    }
+    return undefined;
+  };
+  return pick(rec?.image) ?? pick(rec?.logo);
 }
 
 function RelationLink({ label, refObj }: { label: string; refObj?: JsonLdRef }) {
@@ -160,6 +186,7 @@ function RelationLink({ label, refObj }: { label: string; refObj?: JsonLdRef }) 
 export default function EntityRecordProfile() {
   const params = useParams();
   const tail = params["*"] || "";
+  const [failedImgUrl, setFailedImgUrl] = useState<string | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["entity-record", tail],
     queryFn: async () => {
@@ -182,6 +209,12 @@ export default function EntityRecordProfile() {
       : data?.address?.description || data?.address?.streetAddress || "";
   const identifiers = Array.isArray(data?.identifier) ? data!.identifier! : [];
   const blacklisted = data?.["jawafdehi:blacklisted"] === true;
+  const imageUrl = imageUrlOf(data);
+  const aliases = Array.isArray(data?.alternateName)
+    ? data!.alternateName!.map((a) => bilingual(a)).map((b) => b.en || b.ne).filter(Boolean)
+    : [];
+  const created = data?.dateCreated ? String(data.dateCreated).slice(0, 10) : "";
+  const version = data?.["jawafdehi:version"];
 
   // Generic details: any presentable scalar field not handled elsewhere.
   const detailRows: Array<{ label: string; value: string }> = [];
@@ -205,12 +238,22 @@ export default function EntityRecordProfile() {
       </Helmet>
 
       <div className="container mx-auto max-w-3xl px-4">
-        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-          <Link to="/search?type=entity">
-            <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-            Back to search
-          </Link>
-        </Button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button asChild variant="ghost" size="sm" className="-ml-2">
+            <Link to="/search?type=entity">
+              <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+              Back to search
+            </Link>
+          </Button>
+          {tail ? (
+            <ViewJsonButton
+              data={data}
+              title={`${displayName} — JSON-LD`}
+              rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
+              disabled={!data}
+            />
+          ) : null}
+        </div>
 
         {isError ? (
           <Alert variant="destructive">
@@ -229,6 +272,17 @@ export default function EntityRecordProfile() {
         ) : data ? (
           <article className="space-y-6">
             <header className="space-y-2">
+              {imageUrl && imageUrl !== failedImgUrl ? (
+                <div className="mb-1 flex h-24 w-fit items-center justify-center overflow-hidden rounded-xl border bg-white p-3">
+                  <img
+                    src={imageUrl}
+                    alt={displayName}
+                    loading="lazy"
+                    className="max-h-full max-w-[16rem] object-contain"
+                    onError={() => setFailedImgUrl(imageUrl)}
+                  />
+                </div>
+              ) : null}
               <Badge variant="outline" className="capitalize">{typeLabel}</Badge>
               <h1 className="text-3xl font-extrabold text-primary md:text-4xl">{displayName}</h1>
               {name.ne && name.ne !== displayName ? (
@@ -303,6 +357,12 @@ export default function EntityRecordProfile() {
                   <dd className="mt-1 text-sm text-foreground">{id.value}</dd>
                 </div>
               ))}
+              {aliases.length > 0 ? (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Also known as</dt>
+                  <dd className="mt-1 text-sm text-foreground">{aliases.join(" · ")}</dd>
+                </div>
+              ) : null}
               <div className="sm:col-span-2">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Canonical ID</dt>
                 <dd className="mt-1 break-all font-mono text-xs text-muted-foreground">{data["@id"]}</dd>
@@ -314,11 +374,19 @@ export default function EntityRecordProfile() {
             {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
 
             {/* Provenance. */}
-            <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
+            <div className="space-y-1 rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
               <p>
                 <strong>Source:</strong> Jawafdehi entity registry — a public registry of Nepal&apos;s
                 people, organizations, and places.
               </p>
+              {created ? <p>Created {created}.</p> : null}
+              {version ? (
+                <p>
+                  Revision {version.version_number ?? "?"}
+                  {version.created_at ? ` · updated ${String(version.created_at).slice(0, 10)}` : ""}
+                  {version.change_description ? ` · ${version.change_description}` : ""}
+                </p>
+              ) : null}
             </div>
           </article>
         ) : null}
