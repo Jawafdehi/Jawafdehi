@@ -50,13 +50,14 @@ vi.mock("@/components/admin/DatePairInput", () => ({ default: () => <div /> }));
 
 import AdminCaseForm from "./AdminCaseForm";
 
-const loadCase = (state: string) =>
+const loadCase = (state: string, extra: Record<string, unknown> = {}) =>
   vi.mocked(getCaseWithEtag).mockResolvedValue({
     data: {
       slug: "ncell-tax-case",
       title: "Ncell tax case",
       case_type: "CORRUPTION",
       state,
+      ...extra,
     },
     etag: 'W/"1"',
   });
@@ -96,6 +97,27 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     expect(screen.getByText("admin.caseForm.labelNotes")).toBeTruthy();
     // The help text spells out that the field is public and hand-written.
     expect(screen.getByText("admin.caseForm.publicNotesHelp")).toBeTruthy();
+  });
+
+  it("renders an editable short-description field and loads its value from the case", async () => {
+    loadCase("PUBLISHED", { short_description: "A concise card blurb." });
+    render(<AdminCaseForm />);
+
+    // The field is present and labelled distinctly from the markdown description
+    // (t() passthrough returns the i18n key verbatim).
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.labelShortDescription")).toBeTruthy(),
+    );
+    expect(screen.getByText("admin.caseForm.shortDescriptionHelp")).toBeTruthy();
+
+    // It is a real, editable textarea seeded with the loaded value — the missing
+    // control that made short_description un-editable in the admin panel.
+    const field = document.getElementById(
+      "short_description",
+    ) as HTMLTextAreaElement | null;
+    expect(field).not.toBeNull();
+    expect(field?.tagName).toBe("TEXTAREA");
+    expect(field?.value).toBe("A concise card blurb.");
   });
 
   it("disables the link (no public href) for a non-public DRAFT case", async () => {
