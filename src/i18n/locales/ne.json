@@ -989,6 +989,7 @@
     "relatedCases": "सम्बन्धित मुद्दाहरू",
     "noAllegedCases": "कुनै अभियुक्त मुद्दा फेला परेन।",
     "noRelatedCases": "कुनै सम्बन्धित मुद्दा फेला परेन।",
+    "moreCases": "+{{count}} थप",
     "loading": "संस्था विवरण लोड हुँदैछ...",
     "activeCases": "सक्रिय मुद्दाहरू",
     "unknown": "अज्ञात",
