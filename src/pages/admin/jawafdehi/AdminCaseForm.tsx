@@ -66,6 +66,10 @@ const str = (v: unknown): string => (v == null ? "" : String(v));
 // edited by the F3/F4/F5 child editors; F6 field editors extend this shape.
 interface CaseFormState {
   title: string;
+  // Plain-text one/two-sentence summary rendered on case cards and search
+  // results (public read plane strips any markup from it). Distinct from the
+  // full markdown `description`.
+  short_description: string;
   slug: string;
   case_type: string;
   description: string;
@@ -91,6 +95,7 @@ interface CaseFormState {
 
 const EMPTY: CaseFormState = {
   title: "",
+  short_description: "",
   slug: "",
   case_type: "CORRUPTION",
   description: "",
@@ -194,6 +199,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     Array.isArray(v) ? (v as unknown[]).map(str) : [];
   return {
     title: str(c.title),
+    short_description: str(c.short_description),
     slug: str(c.slug),
     case_type: str(c.case_type) || "CORRUPTION",
     description: str(c.description),
@@ -357,6 +363,8 @@ export default function AdminCaseForm() {
   const buildPatch = (): PatchOp[] => {
     const ops: PatchOp[] = [];
     if (form.title !== original.title) ops.push(replaceOp("/title", form.title));
+    if (form.short_description !== original.short_description)
+      ops.push(replaceOp("/short_description", form.short_description));
     if (form.slug !== original.slug) ops.push(replaceOp("/slug", form.slug));
     if (form.case_type !== original.case_type)
       ops.push(replaceOp("/case_type", form.case_type));
@@ -404,6 +412,7 @@ export default function AdminCaseForm() {
   const dirty = editing
     ? buildPatch().length > 0
     : form.title.trim() !== "" ||
+      form.short_description.trim() !== "" ||
       form.description.trim() !== "" ||
       form.notes.trim() !== "" ||
       form.public_notes.trim() !== "" ||
@@ -447,6 +456,7 @@ export default function AdminCaseForm() {
       } else {
         const payload: CreateCasePayload = {
           title: form.title.trim(),
+          short_description: form.short_description || undefined,
           case_type: form.case_type,
           description: form.description || undefined,
           notes: form.notes || undefined,
@@ -622,6 +632,27 @@ export default function AdminCaseForm() {
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
             placeholder={t("admin.caseForm.titlePlaceholder")}
+          />
+        </div>
+
+        {/* Plain-text card blurb — the summary shown on case cards and search
+            results (the public read plane strips any markup), distinct from the
+            full markdown `description` below. A plain textarea, not the markdown
+            editor, since only unformatted text survives to the card. */}
+        <div className="space-y-1">
+          <Label htmlFor="short_description">
+            {t("admin.caseForm.labelShortDescription")}
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.caseForm.shortDescriptionHelp")}
+          </p>
+          <textarea
+            id="short_description"
+            value={form.short_description}
+            onChange={(e) => set("short_description", e.target.value)}
+            rows={2}
+            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            placeholder={t("admin.caseForm.shortDescriptionPlaceholder")}
           />
         </div>
 
