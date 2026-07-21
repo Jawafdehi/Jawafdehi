@@ -210,11 +210,33 @@ export async function getCasesByEntity(entityId: string, params?: CaseSearchPara
     });
 
     // Filter cases that include the entity in the unified entities array
-    const filteredCases = response.data.results.filter(caseItem => 
+    const filteredCases = response.data.results.filter(caseItem =>
       caseItem.entities?.some(e => e.nes_id === entityId)
     );
-    
+
     return filteredCases;
+  } catch (error) {
+    handleApiError(error, '/cases/');
+  }
+}
+
+/**
+ * Fetch the published cases that CITE a given entity, by its canonical NES
+ * `@id` IRI, using the server-side `?entity=` reverse-lookup filter on
+ * /api/cases/. The backend scopes to PUBLISHED for anonymous callers and orders
+ * accused/alleged citations first, then reverse-chronologically. Returns the
+ * paginated envelope so callers can surface `count` and know if more exist.
+ */
+export async function getCasesCitingEntity(
+  entityIri: string,
+  params?: { page_size?: number },
+): Promise<PaginatedCaseList> {
+  try {
+    const response = await http.get<PaginatedCaseList>('/api/cases/', {
+      params: { entity: entityIri, ...params },
+      timeout: 10000,
+    });
+    return response.data;
   } catch (error) {
     handleApiError(error, '/cases/');
   }
