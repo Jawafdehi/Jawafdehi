@@ -8,15 +8,82 @@ import { SupportingPartner } from "@/components/home/supportingpartner";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useQuery, useQueries } from "@tanstack/react-query";
-import { getCases, getStatistics } from "@/services/jds-api";
-import { getEntityById } from "@/services/api";
+import { useQuery } from "@tanstack/react-query";
+import { getStatistics } from "@/services/jds-api";
+import { searchArchive } from "@/services/search-api";
 import { useMemo } from "react";
 
-import type { Entity } from "@/types/entity";
+import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@/types/search";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
+
+const RECENT_CASE_COUNT = 6;
+
+type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
+
+function stripTags(value: string): string {
+  return value.replace(/<[^>]*>/g, "");
+}
+
+function pickText(text: BilingualText | undefined): string {
+  return stripTags(text?.en || text?.ne || "");
+}
+
+function caseSlugFromUrl(url: string): string | null {
+  const match = /\/case\/([^/?#]+)/.exec(url);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function mapCaseStatus(status: string | null | undefined): CaseCardStatus {
+  if (status === "ongoing") return "ongoing";
+  if (status === "closed") return "resolved";
+  return "under-investigation";
+}
+
+function entityNames(
+  entities: readonly CaseSearchCardEntity[],
+  fallback: string,
+): string[] {
+  return entities.map((entity) => entity.display_name || entity.nes_id || fallback);
+}
+
+function entityIds(entities: readonly CaseSearchCardEntity[]): string[] {
+  return entities
+    .map((entity) => entity.nes_id)
+    .filter((id): id is string => Boolean(id));
+}
+
+function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
+  const card = result.card;
+  const entities = card?.entities ?? [];
+  const subjectEntities = getSubjectEntities<CaseSearchCardEntity>(
+    entities,
+    (entity) => entity.type,
+  );
+  const locationEntities = entities.filter((entity) => entity.type === "location");
+  const unknownEntity = translateDynamicText("Unknown Entity", currentLang);
+  const unknownLocation = translateDynamicText("Unknown Location", currentLang);
+  const names = entityNames(subjectEntities, unknownEntity);
+  const locations = entityNames(locationEntities, unknownLocation);
+
+  return {
+    id: result.id,
+    slug: card?.slug || caseSlugFromUrl(result.url),
+    title: card?.title || pickText(result.title) || result.id,
+    entity: names[0] || unknownEntity,
+    entityNames: names,
+    location: locations.join(", ") || unknownLocation,
+    status: mapCaseStatus(card?.status || result.extra.case_status),
+    description: stripTags(card?.short_description || pickText(result.snippet)).substring(0, 200),
+    allegations: card?.key_allegations || [],
+    thumbnailUrl: card?.thumbnail_url || undefined,
+    bannerUrl: card?.banner_url || undefined,
+    tags: card?.tags || [],
+    entityIds: entityIds(subjectEntities),
+    locationIds: entityIds(locationEntities),
+  };
+}
 
 const Index = () => {
   const { t, i18n } = useTranslation();
@@ -35,99 +102,26 @@ const Index = () => {
     return value?.toLocaleString() || "0";
   };
 
-  // The "Recently Documented Cases" section renders only the top 3 cards, so
-  // fetch exactly 3 rather than the default page of 20 — this shrinks the
-  // payload and the backend per-card resolution work. Keep the query key in
-  // sync with the SSR prefetch in entry-server.tsx.
+  // Keep the query key in sync with the SSR prefetch in entry-server.tsx.
+  // Use the same newest-by-case-date search source as the archive/cases pages,
+  // not /api/cases/' creation-time ordering.
   const { data: casesData } = useQuery({
-    queryKey: ['cases', { page: 1, page_size: 3 }],
-    queryFn: () => getCases({ page: 1, page_size: 3 }),
+    queryKey: ["home-recent-cases", { page_size: RECENT_CASE_COUNT }],
+    queryFn: () =>
+      searchArchive({
+        type: "case",
+        sort: "newest",
+        page_size: RECENT_CASE_COUNT,
+      }),
     staleTime: 5 * 60 * 1000,
   });
 
-  // Resolve location entity display names via react-query so they are cached
-  // and deduped across mounts (and shared with the case-detail page's
-  // ["entity-record", id] queries) instead of an uncached imperative fetch that
-  // re-fires on every mount. Only the top 3 rendered cases' locations are read.
-  const locationNesIds = useMemo(() => {
-    const top = casesData?.results?.slice(0, 3) ?? [];
-    const ids = top
-      .flatMap(c => c.entities ?? [])
-      .filter(e => e.type === 'location' && e.nes_id)
-      .map(e => e.nes_id!);
-    return [...new Set(ids)];
-  }, [casesData]);
-
-  const entityQueries = useQueries({
-    queries: locationNesIds.map(nesId => ({
-      queryKey: ["entity-record", nesId],
-      queryFn: () => getEntityById(nesId),
-      staleTime: 10 * 60 * 1000,
-      retry: false,
-    })),
-  });
-
-  // Build the resolved-name map from the cached query results. useQueries applies
-  // structural sharing, so entityQueries keeps a stable reference until a result
-  // actually changes (including a background refetch) — depending on it directly
-  // recomputes the map exactly when data changes and no more often.
-  const resolvedEntities = useMemo(() => {
-    const map: Record<string, Entity> = {};
-    locationNesIds.forEach((nesId, i) => {
-      const entity = entityQueries[i]?.data;
-      if (entity) map[nesId] = entity;
-    });
-    return map;
-  }, [locationNesIds, entityQueries]);
-
-  // Transform API cases to CaseCard format
   const featuredCases = useMemo(() => {
     if (!casesData?.results) return [];
-    return casesData.results.slice(0, 3).map((caseItem) => {
-      // Locations and the case's subject entities. Subjects are the accused for
-      // CORRUPTION cases, else any named (non-location) entity so cases without
-      // an accused (e.g. TAX_EVASION) still name a subject.
-      const locationEntities = caseItem.entities?.filter(e => e.type === 'location') || [];
-      const namedEntities = getSubjectEntities(caseItem.entities, e => e.type);
-
-      const entityNames = namedEntities.map(e => {
-        if (e.nes_id && resolvedEntities[e.nes_id]) {
-          const entity = resolvedEntities[e.nes_id];
-          return entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
-        }
-        return e.display_name || e.nes_id || translateDynamicText('Unknown Entity', currentLang);
-      });
-      const primaryEntity = entityNames[0] || "Unknown Entity";
-
-      // Translate location names using entity resolution
-      const locationNames = locationEntities.map(e => {
-        if (e.nes_id && resolvedEntities[e.nes_id]) {
-          const entity = resolvedEntities[e.nes_id];
-          const name = entity?.names?.[0]?.en?.full || entity?.names?.[0]?.ne?.full || e.display_name || e.nes_id;
-          return translateDynamicText(name, currentLang);
-        }
-        const name = e.display_name || e.nes_id || 'Unknown';
-        return translateDynamicText(name, currentLang);
-      }).join(', ') || translateDynamicText('Unknown Location', currentLang);
-
-      return {
-        id: caseItem.id.toString(),
-        slug: caseItem.slug,
-        title: caseItem.title,
-        entity: primaryEntity,
-        entityNames,
-        location: locationNames,
-        status: "ongoing" as const, // All published cases shown as ongoing
-        description: (caseItem.short_description ?? '').replace(/<[^>]*>/g, '').substring(0, 200),
-        allegations: caseItem.key_allegations, // Pass key allegations to CaseCard
-        thumbnailUrl: caseItem.thumbnail_url ?? undefined,
-        bannerUrl: caseItem.banner_url ?? undefined,
-        tags: caseItem.tags,
-        entityIds: namedEntities.map(e => e.nes_id).filter((id): id is string => Boolean(id)),
-        locationIds: locationEntities.map(l => l.nes_id).filter((id): id is string => Boolean(id)),
-      };
-    });
-  }, [casesData, resolvedEntities, currentLang]);
+    return casesData.results
+      .slice(0, RECENT_CASE_COUNT)
+      .map((result) => recentCaseToCard(result, currentLang));
+  }, [casesData, currentLang]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -221,7 +215,7 @@ const Index = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {[1, 2, 3].map((i) => (
+                {Array.from({ length: RECENT_CASE_COUNT }, (_, i) => (
                   <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
                 ))}
               </div>

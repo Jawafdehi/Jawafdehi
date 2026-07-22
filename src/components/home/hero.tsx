@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CountUp from "react-countup";
 import { useTranslation } from "react-i18next";
+import { ArrowRight } from "lucide-react";
 
 import { SearchBar } from "@/components/ui/search-bar";
 import { cn } from "@/lib/utils";
@@ -45,28 +46,25 @@ export function Hero({
   const navigate = useNavigate();
   const [archiveQuery, setArchiveQuery] = useState("");
 
-  // All four stats link to the Data Quality dashboard, which explains what each
-  // dataset tracks and how complete it is.
   const heroStats: HeroStat[] = [
-    { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/data-quality" },
+    { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
     {
       value: officialsAndEntitiesTracked,
       label: t("home.hero.stats.officialsAndEntitiesTracked"),
-      href: "/data-quality",
+      href: "/search?type=entity",
     },
-    { value: courtRecords, label: t("home.hero.stats.courtRecords"), href: "/data-quality" },
-    { value: materials, label: t("home.hero.stats.materials"), href: "/data-quality" },
+    { value: courtRecords, label: t("home.hero.stats.courtRecords"), href: "/search?type=courtcase" },
+    { value: materials, label: t("home.hero.stats.materials"), href: "/search?type=material" },
   ];
 
   const goToSearch = (query: string) => {
     const trimmedQuery = query.trim();
+    const params = new URLSearchParams({ type: "case" });
 
-    if (!trimmedQuery) {
-      navigate("/search");
-      return;
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
     }
 
-    const params = new URLSearchParams({ q: trimmedQuery });
     navigate(`/search?${params.toString()}`);
   };
 
@@ -115,6 +113,19 @@ export function Hero({
         </form>
 
         <HeroStats stats={heroStats} />
+
+        <Link
+          className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+          to="/data-quality"
+        >
+          <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
+            {t("home.hero.coverageLink", "See what we cover")}
+          </span>
+          <ArrowRight
+            aria-hidden="true"
+            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+          />
+        </Link>
       </div>
     </section>
   );
@@ -122,15 +133,15 @@ export function Hero({
 
 function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
   return (
-    <div className="mt-10 grid w-full max-w-[min(100%,42rem)] grid-cols-2 gap-4 sm:gap-5 md:max-w-3xl md:grid-cols-4 md:gap-0">
+    <div className="mt-10 grid w-full max-w-[min(100%,42rem)] grid-cols-2 gap-3 sm:gap-4 md:max-w-3xl md:grid-cols-4">
       {stats.map(({ value, label, href }, index) => {
         const content = (
           <>
-            <p className="font-stat-value tabular-nums">
+            <p className="font-stat-value tabular-nums transition-colors group-hover:text-primary">
               <HeroStatValue value={value} />
             </p>
 
-            <p className="font-stat-label mt-2">
+            <p className="font-stat-label mt-2 transition-colors group-hover:text-foreground">
               {label}
             </p>
           </>
@@ -141,19 +152,19 @@ function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
             key={label}
             className={cn(
               "min-w-0 text-left",
-              "sm:text-center md:px-6",
-              index > 0 && "md:border-l md:border-border",
+              "sm:text-center",
+              index > 0 && "md:border-l md:border-border/70 md:pl-3",
             )}
           >
             {href ? (
               <Link
                 to={href}
-                className="group block rounded-md transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="group block h-full rounded-lg border border-transparent bg-background/45 px-3 py-3 shadow-sm shadow-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/85 hover:text-accent hover:shadow-lg hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {content}
               </Link>
             ) : (
-              content
+              <div className="px-3 py-3">{content}</div>
             )}
           </div>
         );

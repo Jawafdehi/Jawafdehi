@@ -1,9 +1,9 @@
 import { FormEvent, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, LayoutGrid, List, X } from "lucide-react";
+import { AlertCircle, ArrowRight, LayoutGrid, List, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import {
   SearchFilters,
@@ -253,6 +253,18 @@ export default function ArchiveSearch({
                 "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
               )}
           </p>
+          <Link
+            className="group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            to="/data-quality"
+          >
+            <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
+              {t("archiveSearch.coverageLink", "See what we cover")}
+            </span>
+            <ArrowRight
+              aria-hidden="true"
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+            />
+          </Link>
         </header>
 
         <form
