@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider, dehydrate } from '@tanstack/react-que
 import App from './App';
 import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
-import { getCaseById, getCases, getStatistics } from './services/jds-api';
+import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { searchArchive } from './services/search-api';
 import { http } from './services/http';
@@ -25,11 +25,14 @@ export interface RenderResult {
 }
 
 async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
-  // Home page: prefetch stats + first page of cases
+  // Home page: prefetch stats + the same recent-case search the client renders.
   if (url === '/') {
     await Promise.allSettled([
       queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
-      queryClient.prefetchQuery({ queryKey: ['cases', { page: 1, page_size: 3 }], queryFn: () => getCases({ page: 1, page_size: 3 }) }),
+      queryClient.prefetchQuery({
+        queryKey: ['home-recent-cases', { page_size: 6 }],
+        queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: 6 }),
+      }),
     ]);
     return;
   }

@@ -141,7 +141,8 @@
         "officialsAndEntitiesTracked": "Officials & entities tracked",
         "courtRecords": "Court records",
         "materials": "Documents & other materials"
-      }
+      },
+      "coverageLink": "See what we cover"
     },
     "featuredCases": {
       "title": "Featured Cases",
@@ -1764,6 +1765,7 @@
     "searchLabel": "Search the Jawafdehi archive",
     "placeholder": "Search cases, people, offices, locations, or allegations",
     "submit": "Search archive",
+    "coverageLink": "See what we cover",
     "searching": "Searching archive",
     "viewMode": "View mode",
     "listView": "List view",
