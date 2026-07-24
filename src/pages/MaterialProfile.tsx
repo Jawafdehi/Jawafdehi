@@ -318,9 +318,9 @@ export default function MaterialProfile() {
                           target="_blank"
                           rel="noopener noreferrer"
                           title={decodedUrl(r.value)}
-                          className="inline-flex max-w-full items-center gap-1 text-primary underline underline-offset-2 hover:no-underline"
+                          className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:no-underline"
                         >
-                          <span className="truncate">{hostLabel(r.value)}</span>
+                          {hostLabel(r.value)}
                           <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
                         </a>
                       ) : (
