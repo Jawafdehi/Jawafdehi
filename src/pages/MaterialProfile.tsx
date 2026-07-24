@@ -73,6 +73,34 @@ function scalar(v: unknown): string | null {
   return null;
 }
 
+// A stored value like jawafdehi:sourceUrl is a full http(s) URL — often a long,
+// unbroken, percent-encoded path (…/%E0%A5%A6…pdf). Printed verbatim it overflows
+// its grid cell and overlaps the neighbouring field, and reads as noise. Detect
+// it so the Details grid can render it as a compact host link instead.
+function isHttpUrl(s: string): boolean {
+  return /^https?:\/\//i.test(s);
+}
+
+// Short, human label for a URL: its host (sans leading `www.`). Falls back to the
+// raw string if the URL can't be parsed, so we never show nothing.
+function hostLabel(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+// Decoded URL for the hover tooltip — turns %E0%A5%A6… back into readable
+// Devanagari. Falls back to the raw URL on a malformed escape sequence.
+function decodedUrl(url: string): string {
+  try {
+    return decodeURIComponent(url);
+  } catch {
+    return url;
+  }
+}
+
 // Keys handled explicitly in the header/links/full-text/provenance, never in Details.
 // The jawafdehi:visibility[Policy] pair is a caseworker-only annotation the API
 // adds on authed reads; it is an editor concern (see MaterialVisibilityControl),
@@ -278,15 +306,33 @@ export default function MaterialProfile() {
             {detailRows.length > 0 || data.identifier ? (
               <dl className="grid gap-4 rounded-xl bg-card p-5 sm:grid-cols-2">
                 {detailRows.map((r) => (
-                  <div key={r.label}>
+                  // min-w-0: a grid item defaults to min-width:auto, which lets a
+                  // long unbroken value push past its column and overlap the next
+                  // one; allow it to shrink so break-words can actually wrap.
+                  <div key={r.label} className="min-w-0">
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</dt>
-                    <dd className="mt-1 text-sm text-foreground">{r.value}</dd>
+                    <dd className="mt-1 text-sm text-foreground break-words">
+                      {isHttpUrl(r.value) ? (
+                        <a
+                          href={r.value}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={decodedUrl(r.value)}
+                          className="inline-flex max-w-full items-center gap-1 text-primary underline underline-offset-2 hover:no-underline"
+                        >
+                          <span className="truncate">{hostLabel(r.value)}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+                        </a>
+                      ) : (
+                        r.value
+                      )}
+                    </dd>
                   </div>
                 ))}
                 {data.identifier ? (
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Identifier</dt>
-                    <dd className="mt-1 text-sm text-foreground">{data.identifier}</dd>
+                    <dd className="mt-1 text-sm text-foreground break-words">{data.identifier}</dd>
                   </div>
                 ) : null}
                 <div className="sm:col-span-2">
@@ -302,7 +348,10 @@ export default function MaterialProfile() {
                 <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                   <FileText className="h-4 w-4" aria-hidden="true" /> Document text
                 </h2>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">{fullTextStr}</p>
+                {/* break-words: transcripts carry dotted leaders (……………फरार) and
+                    other long unbroken runs that whitespace-pre-wrap will not
+                    break, overflowing the card on a narrow (mobile) viewport. */}
+                <p className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{fullTextStr}</p>
               </section>
             ) : null}
 
