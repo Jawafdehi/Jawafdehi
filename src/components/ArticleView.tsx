@@ -42,6 +42,23 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                 </div>
                             </div>
 
+                            {article.thumbnail?.url && (
+                                <figure className="mb-8">
+                                    <img
+                                        src={article.thumbnail.url}
+                                        alt={article.thumbnail.alt || article.title}
+                                        width={article.thumbnail.width}
+                                        height={article.thumbnail.height}
+                                        className="w-full rounded-lg"
+                                    />
+                                    {article.thumbnail.alt ? (
+                                        <figcaption className="font-caption mt-2 text-muted-foreground">
+                                            {article.thumbnail.alt}
+                                        </figcaption>
+                                    ) : null}
+                                </figure>
+                            )}
+
                             <div className="font-paragraph content-prose markdown-content">
                                 <StreamField blocks={article.body} />
                             </div>

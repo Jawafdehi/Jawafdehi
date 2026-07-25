@@ -59,4 +59,35 @@ describe("ArticleView", () => {
     );
     expect(screen.queryByText("Related cases")).toBeNull();
   });
+
+  it("renders the featured image when a thumbnail is set", () => {
+    render(
+      <MemoryRouter>
+        <ArticleView
+          article={{
+            ...article,
+            thumbnail: {
+              url: "https://s3.example.org/thumb.png",
+              width: 800,
+              height: 450,
+              alt: "Summit stage",
+            },
+          }}
+        />
+      </MemoryRouter>,
+    );
+    const img = screen.getByRole("img", { name: "Summit stage" });
+    expect(img.getAttribute("src")).toBe("https://s3.example.org/thumb.png");
+    // The image description doubles as the visible caption.
+    expect(screen.getByText("Summit stage").tagName).toBe("FIGCAPTION");
+  });
+
+  it("renders no featured image when the thumbnail is null", () => {
+    render(
+      <MemoryRouter>
+        <ArticleView article={{ ...article, thumbnail: null }} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("img")).toBeNull();
+  });
 });
