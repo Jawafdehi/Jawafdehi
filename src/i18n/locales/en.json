@@ -1139,19 +1139,24 @@
         "eyebrow": "Research · Corruption Accountability",
         "title": "Where Nepal's corruption accountability actually leaks",
         "lead": "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.",
-        "snapshot": "Snapshot as of BS {{bs}}. Court records collected from Nepal's Special Court and wider judiciary.",
+        "snapshot": "Snapshot as of BS {{bs}}.",
+        "methodologyLink": "How we built and cross-checked these numbers →",
         "englishOnlyNotice": "This report is currently available in English only."
       },
       "funnel": {
         "eyebrow": "The funnel",
         "heading": "About 0.2% of complaints end in a full conviction",
-        "lead": "In a single year the CIAA received roughly 37,000 complaints and filed about 137 prosecutions. Apply the measured full-conviction rate and only a few dozen end in a full conviction.",
+        "lead": "In a single year the CIAA received about 37,026 complaints. Most were screened out at intake — only 947 (2.6%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply the measured full-conviction rate and only a few dozen end in a full conviction.",
         "ofComplaints": "{{pct}}% of complaints",
-        "caption": "Complaint and prosecution counts: CIAA 35th annual report (FY 2081/82). The conviction stage applies this archive's measured 46% full-conviction rate to the filed count.",
+        "caption": "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage applies this archive's measured 46% full-conviction rate to the filed count.",
         "stage": {
           "complaints": "Complaints to the CIAA",
+          "investigated": "Complaints fully investigated",
           "filed": "Prosecutions filed",
-          "convicted": "Full convictions (est.)"
+          "convicted": "Full convictions (est.)",
+          "investigatedNote": "only 2.6% go to a full investigation",
+          "filedNote": "≈1 in 7 investigated are prosecuted",
+          "convictedNote": "≈46% of prosecutions convict"
         }
       },
       "cite": {
@@ -1214,27 +1219,50 @@
         "provisional": "Provisional (cohort still open)",
         "mixTitle": "The charge mix",
         "mixSub": "Substantive prosecutions by offense family (petitions excluded).",
-        "mixTooltip": "Prosecutions"
+        "mixTooltip": "Prosecutions",
+        "mixByYearTitle": "How the charge mix shifted, by year",
+        "mixPercentToggle": "Show as 100%",
+        "mixByYearSub": "Substantive prosecutions by Bikram Sambat filing year. Fake-credential cases (crimson) dominated the early docket — about 75% in BS 2069 — then fell to single digits by BS 2078–2080 (with a one-year rebound in 2081), while the newer illegal-benefit charge (absent before BS 2078) and loss to government grew. BS 2083 (partial year) omitted.",
+        "mixLabels": {
+          "bribery": "Bribery",
+          "fake": "Fake credential",
+          "embezzlement": "Embezzlement",
+          "benefit": "Illegal benefit",
+          "loss": "Loss to government",
+          "other": "Other"
+        },
+        "monthTitle": "When cases are filed, by Nepali month",
+        "monthSub": "Mean cases filed per Nepali month across BS 2069–2082; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.",
+        "monthMean": "Mean cases filed",
+        "monthSd": "±1 SD",
+        "monthCaption": "Bars are the mean across 14 complete Bikram Sambat years (BS 2069–2082); whiskers are ±1 standard deviation — how much each month swings from year to year. Registration date from Special Court records."
       },
       "gaps": {
         "eyebrow": "Where the gap is",
         "heading": "Attrition concentrates at the CIAA stage — then goes dark",
-        "intake": { "title": "Intake & screening (CIAA)", "body": "~37,000 complaints a year produce ~137 prosecutions (≈0.4%); most complaints are shelved internally with no public verdict. The single biggest, least-visible leak." },
+        "intake": { "title": "Intake & screening (CIAA)", "body": "~37,000 complaints a year produce ~137 prosecutions (≈0.4% of all complaints); most are screened out at intake — only ~1 in 7 of those the CIAA fully investigates is prosecuted — and the rest are shelved with no public verdict. The single biggest, least-visible leak." },
         "charging": { "title": "Charging strategy (CIAA)", "body": "49% of convictions are easy documentary fake-certificate cases; core financial corruption converts at ~31%, with the signature charges collapsing. The system convicts paperwork, not plunder." },
         "adjudication": { "title": "Adjudication (Special Court)", "body": "38% outright acquittal, 54% less-than-full-conviction, and a threefold spread across benches. Year-to-year the rate swung 88% → 33%, partly on one 2078 apex-court ruling." },
         "appeal": { "title": "Appeal (Supreme Court) — dark", "body": "The CIAA appeals many losses and defendants appeal convictions, but appellate outcomes carry no decision data in the record. How often a verdict is overturned is currently unmeasurable." },
         "recovery": { "title": "Recovery & sanction — dark", "body": "Billions in damages are claimed each year, but no source tracks how much is ever recovered, or whether the convicted serve meaningful sanction." }
       },
       "appendix": {
-        "summary": "Methodology, discrepancies & sources",
+        "eyebrow": "Methodology",
+        "heading": "How this report was built and cross-checked",
+        "summary": "Full methodology, discrepancies & limits",
+        "sourcesLead": "Two independent public records, cross-checked against each other — and both browsable on Jawafdehi. Complaint, investigation and prosecution counts come from the CIAA's own annual reports; conviction outcomes come from our mirror of Nepal's Special Court and wider judiciary. Where the two overlap — the cases filed each year — they agree. Every figure on this page links to the record behind it.",
         "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as cases filed in the name of the Government of Nepal (~3,278), of which ~2,850 are substantive corruption charges after removing petitions, money-laundering (a separate agency), and unclassified matters.",
+        "funnel": "The funnel. Of 37,026 complaints in the year, only 947 (2.6%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7 (the CIAA reports this as 13% of its investigation decisions). So “0.4% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages; the steep drop is concentrated at screening, not the courtroom.",
         "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the ~92% of decided cases carrying an unambiguous disposition (2,835 of 3,069).",
         "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat throughout.",
         "overTime": "Over time. Yearly rates are grouped by verdict year; the sharp rise in acquittals from BS 2079 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through BS 2079 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.",
         "justice": "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.",
         "discrepancy": "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, and is fiscal-year, whereas our full-conviction rate (46%) is cumulative and separates the two. CIAA's “cases filed” per fiscal year also differ from our Bikram-Sambat-year filing counts because of year binning, case-versus-defendant counting, and record timing. Never compare the two without aligning definition and period.",
         "entity": "Identity. Only ~3% of listed defendants (607 of 19,222) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.",
-        "limits": "Limits. These are the records in the archive as of the snapshot date; appellate outcomes are largely absent, and amount-recovered is untracked anywhere."
+        "likhitPre": "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ",
+        "likhitName": "likhit",
+        "likhitPost": " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.",
+        "limits": "Limits. These are the records in the archive as of the snapshot date (BS {{bs}}); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere."
       },
       "sources": {
         "heading": "Sources — all in-platform",

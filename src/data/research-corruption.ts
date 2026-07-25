@@ -65,6 +65,28 @@ export type CohortRow = {
   medianMonths: number;
 };
 
+export type ChargeMixYear = {
+  /** Bikram Sambat filing (registration) year. */
+  bs: number;
+  bribery: number;
+  fake: number;
+  embezzlement: number;
+  benefit: number;
+  loss: number;
+  /** Smaller families folded together (illicit enrichment, irregularity, etc.). */
+  other: number;
+};
+
+export type MonthFiling = {
+  /** Nepali month index: 1 = Baisakh … 12 = Chaitra. */
+  month: number;
+  name: string;
+  /** Mean cases filed in this month across complete BS years. */
+  mean: number;
+  /** ±1 sample standard deviation across those years. */
+  sd: number;
+};
+
 // In-platform citation targets. Each is a real public page on jawafdehi.org.
 export const CITATIONS = {
   ciaa35: "https://jawafdehi.org/material/ciaa_annual_report/ee0b4f80b24b8665",
@@ -73,11 +95,11 @@ export const CITATIONS = {
   ciaa32:
     "https://jawafdehi.org/material/ciaa_annual_report/4._32nd_annual_report_2078_079_fek7bv_ba92e14e",
   /** The whole CIAA annual-report series (41 materials). */
-  ciaaReports: "https://jawafdehi.org/materials?source=ciaa_annual_report",
+  ciaaReports: "https://jawafdehi.org/search?type=material&q=CIAA%20annual%20report",
   /** CIAA charge-sheet-filing announcements (3,438 press releases). */
-  ciaaPressReleases: "https://jawafdehi.org/materials?material_type=press_release",
+  ciaaPressReleases: "https://jawafdehi.org/search?type=material&q=CIAA%20press%20release",
   /** AG abhiyog-patra (charge sheets, 99,783). */
-  chargeSheets: "https://jawafdehi.org/materials?material_type=charge_sheet",
+  chargeSheets: "https://jawafdehi.org/search?type=material&q=charge%20sheet",
   /** The Special Court record base. */
   courtRecords: "https://jawafdehi.org/courtcases",
   /** Representative decided cases (verify each resolves logged-out). */
@@ -176,11 +198,60 @@ export const REPORT = {
     decided: [86, 126, 138, 251, 150, 180, 275, 251, 147, 116, 438, 529, 279, 92, 11],
   },
 
+  // --- Charge mix by filing year (BS registration year), substantive prosecutions ---
+  // Bucketed from raw case_type over plaintiff = Government of Nepal, Special Court,
+  // petitions & money-laundering excluded. `other` folds the smaller families
+  // (illicit enrichment, irregularity, false statement, land, revenue, forgery, exam).
+  // The story: fake-credential's share falls from ~75% (BS 2069) to single digits
+  // by BS 2078–2080 (with a one-year rebound in 2081), while the newer illegal-
+  // benefit charge (absent before BS 2078) and loss to government grow.
+  // BS 2083 (partial year) omitted.
+  chargeMixByYear: [
+    { bs: 2069, bribery: 7, fake: 116, embezzlement: 6, benefit: 1, loss: 0, other: 24 },
+    { bs: 2070, bribery: 17, fake: 70, embezzlement: 6, benefit: 0, loss: 0, other: 37 },
+    { bs: 2071, bribery: 62, fake: 117, embezzlement: 98, benefit: 0, loss: 11, other: 58 },
+    { bs: 2072, bribery: 43, fake: 27, embezzlement: 21, benefit: 0, loss: 3, other: 22 },
+    { bs: 2073, bribery: 53, fake: 54, embezzlement: 29, benefit: 0, loss: 0, other: 24 },
+    { bs: 2074, bribery: 89, fake: 19, embezzlement: 21, benefit: 0, loss: 1, other: 17 },
+    { bs: 2075, bribery: 130, fake: 117, embezzlement: 34, benefit: 0, loss: 1, other: 45 },
+    { bs: 2076, bribery: 244, fake: 81, embezzlement: 64, benefit: 0, loss: 11, other: 63 },
+    { bs: 2077, bribery: 93, fake: 23, embezzlement: 23, benefit: 0, loss: 24, other: 33 },
+    { bs: 2078, bribery: 28, fake: 4, embezzlement: 22, benefit: 3, loss: 13, other: 17 },
+    { bs: 2079, bribery: 24, fake: 10, embezzlement: 30, benefit: 39, loss: 30, other: 38 },
+    { bs: 2080, bribery: 55, fake: 16, embezzlement: 8, benefit: 30, loss: 36, other: 46 },
+    { bs: 2081, bribery: 37, fake: 37, embezzlement: 4, benefit: 29, loss: 8, other: 19 },
+    { bs: 2082, bribery: 34, fake: 12, embezzlement: 23, benefit: 36, loss: 36, other: 40 },
+  ] satisfies ChargeMixYear[],
+
+  // --- Cases filed per Nepali month — mean ± sample SD across complete years ---
+  // Mean and standard deviation of monthly filings across BS 2069–2082 (14 years);
+  // error bars are ±1 SD, showing year-to-year variability. Filings peak in Ashadh
+  // (fiscal year-end) and trough in Kartik (Dashain/Tihar festival month).
+  filedByMonth: [
+    { month: 1, name: "Baisakh", mean: 13.9, sd: 7.3 },
+    { month: 2, name: "Jestha", mean: 21.4, sd: 13.3 },
+    { month: 3, name: "Ashadh", mean: 27.9, sd: 15.7 },
+    { month: 4, name: "Shrawan", mean: 15.3, sd: 8.8 },
+    { month: 5, name: "Bhadra", mean: 19.6, sd: 12.9 },
+    { month: 6, name: "Ashwin", mean: 15.9, sd: 12.4 },
+    { month: 7, name: "Kartik", mean: 11.2, sd: 11.3 },
+    { month: 8, name: "Mangsir", mean: 15.2, sd: 11.1 },
+    { month: 9, name: "Poush", mean: 16.8, sd: 11.3 },
+    { month: 10, name: "Magh", mean: 15.4, sd: 8.3 },
+    { month: 11, name: "Falgun", mean: 17.9, sd: 14.9 },
+    { month: 12, name: "Chaitra", mean: 16.5, sd: 7.0 },
+  ] satisfies MonthFiling[],
+
   // --- Funnel (CIAA annual report + our court records) ---
-  // Complaint + prosecution counts from the CIAA 35th annual report (FY 2081/82);
-  // the conviction stage applies our measured 46% full-conviction rate to the filed count.
+  // Complaint, investigation + prosecution counts from the CIAA 35th annual report
+  // (FY 2081/82): 37,026 complaints, of which 947 completed a full investigation
+  // (Table 2.15) and 137 were prosecuted; the conviction stage applies our measured
+  // 46% full-conviction rate to the filed count. The `investigated` stage keeps the
+  // funnel honest — the steep drop is at intake screening, not the courtroom, and the
+  // CIAA prosecutes ~1 in 7 of the complaints it actually investigates.
   funnel: [
     { key: "complaints", count: 37026, source: "ciaa35" },
+    { key: "investigated", count: 947, source: "ciaa35" },
     { key: "filed", count: 137, source: "ciaa35" },
     { key: "convicted", count: 63, source: "courtRecords" },
   ] satisfies FunnelStageData[],

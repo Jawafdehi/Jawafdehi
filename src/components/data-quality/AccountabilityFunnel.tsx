@@ -6,6 +6,13 @@ export interface FunnelStage {
   count: number;
   /** CSS color for the bar fill (a theme token via `hsl(var(--…))`). */
   color: string;
+  /**
+   * Optional drop indicator rendered ABOVE this stage (a ↓ chip between it and
+   * the previous stage), e.g. "≈1 in 7 investigated are prosecuted". Expresses
+   * this stage's share of the *previous* stage — the funnel retention a single
+   * "% of total" denominator can't show. Omitted → no indicator rendered.
+   */
+  note?: string;
 }
 
 /**
@@ -62,6 +69,14 @@ export function AccountabilityFunnel({
 
         return (
           <li key={stage.key}>
+            {stage.note ? (
+              <div className="mb-1.5 flex items-center gap-1.5 pl-1 text-xs text-muted-foreground">
+                <svg viewBox="0 0 12 14" className="h-3.5 w-3 shrink-0 text-accent" aria-hidden="true">
+                  <path d="M6 0v10M2.5 7L6 11l3.5-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="rounded-full bg-muted px-2 py-0.5">{stage.note}</span>
+              </div>
+            ) : null}
             <div className="mb-1 flex items-baseline justify-between gap-3">
               <span className="text-sm font-medium text-foreground">{stage.label}</span>
               <span className="font-mono text-lg font-bold tabular-nums text-foreground">
