@@ -13,6 +13,8 @@ import { JusticeSpread } from "@/components/research/JusticeSpread";
 import { FiledDecidedTrend } from "@/components/research/FiledDecidedTrend";
 import { RateTrend } from "@/components/research/RateTrend";
 import { PipelineHealth } from "@/components/research/PipelineHealth";
+import { ChargeMixByYear } from "@/components/research/ChargeMixByYear";
+import { FiledByMonth } from "@/components/research/FiledByMonth";
 
 const CANONICAL = "https://jawafdehi.org/research/corruption-accountability";
 
@@ -46,6 +48,13 @@ const ResearchCorruption = () => {
   const courtAvgConv = (o.convicted / decidedClean) * 100;
 
   // Funnel — uniform accent hue; the shrinking widths + "% of complaints" tell it.
+  // Notes carry the "share of the previous stage" story the single denominator can't:
+  // the big drop is intake screening, and the CIAA prosecutes ~1 in 7 of what it investigates.
+  const funnelStageNote: Record<string, string> = {
+    investigated: t("research.corruption.funnel.stage.investigatedNote", "only 2.6% go to a full investigation"),
+    filed: t("research.corruption.funnel.stage.filedNote", "≈1 in 7 investigated are prosecuted"),
+    convicted: t("research.corruption.funnel.stage.convictedNote", "≈46% of prosecutions convict"),
+  };
   const funnelStages: FunnelStage[] = REPORT.funnel.map((s) => ({
     key: s.key,
     label: t(
@@ -53,6 +62,7 @@ const ResearchCorruption = () => {
       (
         {
           complaints: "Complaints to the CIAA",
+          investigated: "Complaints fully investigated",
           filed: "Prosecutions filed",
           convicted: "Full convictions (est.)",
         } as Record<string, string>
@@ -60,6 +70,7 @@ const ResearchCorruption = () => {
     ),
     count: s.count,
     color: "hsl(var(--accent))",
+    note: funnelStageNote[s.key],
   }));
 
   const outcomeSegments: DonutSegment[] = [
@@ -143,7 +154,19 @@ const ResearchCorruption = () => {
               {t("research.corruption.hero.lead", "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.")}
             </p>
             <p className="mt-4 text-sm italic text-muted-foreground/80">
-              {t("research.corruption.hero.snapshot", "Snapshot as of BS {{bs}}. Court records collected from Nepal's Special Court and wider judiciary.", { bs: REPORT.snapshotBs })}
+              {t("research.corruption.hero.snapshot", "Snapshot as of BS {{bs}}.", { bs: REPORT.snapshotBs })}{" "}
+              <a
+                href="#methodology"
+                onClick={(e) => {
+                  // <base href="/"> makes a bare "#methodology" resolve to the site
+                  // root, so scroll in-page ourselves instead of letting it navigate.
+                  e.preventDefault();
+                  document.getElementById("methodology")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="font-medium not-italic text-accent hover:underline"
+              >
+                {t("research.corruption.hero.methodologyLink", "How we built and cross-checked these numbers →")}
+              </a>
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
               <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -158,7 +181,7 @@ const ResearchCorruption = () => {
             <Eyebrow>{t("research.corruption.funnel.eyebrow", "The funnel")}</Eyebrow>
             <SectionHeading>{t("research.corruption.funnel.heading", "About 0.2% of complaints end in a full conviction")}</SectionHeading>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-              {t("research.corruption.funnel.lead", "In a single year the CIAA received roughly 37,000 complaints and filed about 137 prosecutions. Apply the measured full-conviction rate and only a few dozen end in a full conviction.")}
+              {t("research.corruption.funnel.lead", "In a single year the CIAA received about 37,026 complaints. Most were screened out at intake — only 947 (2.6%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply the measured full-conviction rate and only a few dozen end in a full conviction.")}
             </p>
             <div className="mt-8">
               <AccountabilityFunnel
@@ -169,7 +192,7 @@ const ResearchCorruption = () => {
               />
             </div>
             <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              {t("research.corruption.funnel.caption", "Complaint and prosecution counts: CIAA 35th annual report (FY 2081/82). The conviction stage applies this archive's measured 46% full-conviction rate to the filed count.")}{" "}
+              {t("research.corruption.funnel.caption", "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage applies this archive's measured 46% full-conviction rate to the filed count.")}{" "}
               <a href={CITATIONS.ciaa35} className="text-accent hover:underline">{t("research.corruption.cite.ciaa35", "CIAA 35th annual report")}</a>
             </p>
           </section>
@@ -317,6 +340,35 @@ const ResearchCorruption = () => {
               <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixSub", "Substantive prosecutions by offense family (petitions excluded).")}</p>
               <BreakdownBar items={mixItems} tooltipLabel={t("research.corruption.volume.mixTooltip", "Prosecutions")} labelWidth={150} />
             </div>
+
+            <div className="mt-10">
+              <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.mixByYearTitle", "How the charge mix shifted, by year")}</h3>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixByYearSub", "Substantive prosecutions by Bikram Sambat filing year. Fake-credential cases (crimson) dominated the early docket — about 75% in BS 2069 — then fell to single digits by BS 2078–2080 (with a one-year rebound in 2081), while the newer illegal-benefit charge (absent before BS 2078) and loss to government grew. BS 2083 (partial year) omitted.")}</p>
+              <ChargeMixByYear
+                data={REPORT.chargeMixByYear}
+                percentLabel={t("research.corruption.volume.mixPercentToggle", "Show as 100%")}
+                labels={{
+                  bribery: t("research.corruption.volume.mixLabels.bribery", "Bribery"),
+                  fake: t("research.corruption.volume.mixLabels.fake", "Fake credential"),
+                  embezzlement: t("research.corruption.volume.mixLabels.embezzlement", "Embezzlement"),
+                  benefit: t("research.corruption.volume.mixLabels.benefit", "Illegal benefit"),
+                  loss: t("research.corruption.volume.mixLabels.loss", "Loss to government"),
+                  other: t("research.corruption.volume.mixLabels.other", "Other"),
+                }}
+              />
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.monthTitle", "When cases are filed, by Nepali month")}</h3>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.monthSub", "Mean cases filed per Nepali month across BS 2069–2082; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.")}</p>
+              <FiledByMonth
+                data={REPORT.filedByMonth}
+                peakMonth={3}
+                meanLabel={t("research.corruption.volume.monthMean", "Mean cases filed")}
+                sdLabel={t("research.corruption.volume.monthSd", "±1 SD")}
+              />
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">{t("research.corruption.volume.monthCaption", "Bars are the mean across 14 complete Bikram Sambat years (BS 2069–2082); whiskers are ±1 standard deviation — how much each month swings from year to year. Registration date from Special Court records.")}</p>
+            </div>
           </section>
 
           {/* 7 · Gaps */}
@@ -340,7 +392,7 @@ const ResearchCorruption = () => {
                   </h3>
                   <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                     {t(`research.corruption.gaps.${k}.body`, {
-                      intake: "~37,000 complaints a year produce ~137 prosecutions (≈0.4%); most complaints are shelved internally with no public verdict. The single biggest, least-visible leak.",
+                      intake: "~37,000 complaints a year produce ~137 prosecutions (≈0.4% of all complaints); most are screened out at intake — only ~1 in 7 of those the CIAA fully investigates is prosecuted — and the rest are shelved with no public verdict. The single biggest, least-visible leak.",
                       charging: "49% of convictions are easy documentary fake-certificate cases; core financial corruption converts at ~31%, with the signature charges collapsing. The system convicts paperwork, not plunder.",
                       adjudication: "38% outright acquittal, 54% less-than-full-conviction, and a threefold spread across benches. Year-to-year the rate swung 88% → 33%, partly on one 2078 apex-court ruling.",
                       appeal: "The CIAA appeals many losses and defendants appeal convictions, but appellate outcomes carry no decision data in the record. How often a verdict is overturned is currently unmeasurable.",
@@ -352,21 +404,32 @@ const ResearchCorruption = () => {
             </div>
           </section>
 
-          {/* 8 · Appendix */}
-          <section>
-            <details className="rounded-xl border border-border bg-muted/20 p-5">
+          {/* 8 · Methodology — the single, global methodology for the whole report */}
+          <section id="methodology" className="scroll-mt-24">
+            <Eyebrow>{t("research.corruption.appendix.eyebrow", "Methodology")}</Eyebrow>
+            <SectionHeading>{t("research.corruption.appendix.heading", "How this report was built and cross-checked")}</SectionHeading>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
+              {t("research.corruption.appendix.sourcesLead", "Two independent public records, cross-checked against each other — and both browsable on Jawafdehi. Complaint, investigation and prosecution counts come from the CIAA's own annual reports; conviction outcomes come from our mirror of Nepal's Special Court and wider judiciary. Where the two overlap — the cases filed each year — they agree. Every figure on this page links to the record behind it.")}
+            </p>
+            <details className="mt-6 rounded-xl border border-border bg-muted/20 p-5">
               <summary className="cursor-pointer text-sm font-semibold text-foreground">
-                {t("research.corruption.appendix.summary", "Methodology, discrepancies & sources")}
+                {t("research.corruption.appendix.summary", "Full methodology, discrepancies & limits")}
               </summary>
               <div className="mt-4 space-y-3 text-xs leading-5 text-muted-foreground">
                 <p>{t("research.corruption.appendix.corpus", "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as cases filed in the name of the Government of Nepal (~3,278), of which ~2,850 are substantive corruption charges after removing petitions, money-laundering (a separate agency), and unclassified matters.")}</p>
+                <p>{t("research.corruption.appendix.funnel", "The funnel. Of 37,026 complaints in the year, only 947 (2.6%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7 (the CIAA reports this as 13% of its investigation decisions). So “0.4% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages; the steep drop is concentrated at screening, not the courtroom.")}</p>
                 <p>{t("research.corruption.appendix.outcomes", "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the ~92% of decided cases carrying an unambiguous disposition (2,835 of 3,069).")}</p>
                 <p>{t("research.corruption.appendix.dates", "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat throughout.")}</p>
                 <p>{t("research.corruption.appendix.overTime", "Over time. Yearly rates are grouped by verdict year; the sharp rise in acquittals from BS 2079 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through BS 2079 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.")}</p>
                 <p>{t("research.corruption.appendix.justice", "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.")}</p>
                 <p>{t("research.corruption.appendix.discrepancy", "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, and is fiscal-year, whereas our full-conviction rate (46%) is cumulative and separates the two. CIAA's “cases filed” per fiscal year also differ from our Bikram-Sambat-year filing counts because of year binning, case-versus-defendant counting, and record timing. Never compare the two without aligning definition and period.")}</p>
                 <p>{t("research.corruption.appendix.entity", "Identity. Only ~3% of listed defendants (607 of 19,222) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.")}</p>
-                <p>{t("research.corruption.appendix.limits", "Limits. These are the records in the archive as of the snapshot date; appellate outcomes are largely absent, and amount-recovered is untracked anywhere.")}</p>
+                <p>
+                  {t("research.corruption.appendix.likhitPre", "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ")}
+                  <a href="https://github.com/Jawafdehi/likhit" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{t("research.corruption.appendix.likhitName", "likhit")}</a>
+                  {t("research.corruption.appendix.likhitPost", " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.")}
+                </p>
+                <p>{t("research.corruption.appendix.limits", "Limits. These are the records in the archive as of the snapshot date (BS {{bs}}); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere.", { bs: REPORT.snapshotBs })}</p>
               </div>
             </details>
 
