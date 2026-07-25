@@ -11,8 +11,11 @@ function createUserManager(): UserManager {
   // (Zitadel) format — revisit if the IdP changes.
   const authority =
     import.meta.env.VITE_OIDC_AUTHORITY || "https://auth.jawafdehi.org";
+  // The SPA client now lives in the gated Zitadel project (login is restricted to
+  // staff via a project grant); tokens still request the public project's audience
+  // scope below so the API sees the caller's roles.
   const client_id =
-    import.meta.env.VITE_OIDC_CLIENT_ID || "377887299569975664";
+    import.meta.env.VITE_OIDC_CLIENT_ID || "383260434469224721";
   const audience =
     import.meta.env.VITE_OIDC_AUDIENCE || "377760393168159088";
   const origin = window.location.origin;
