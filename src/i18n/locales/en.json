@@ -1198,7 +1198,7 @@
         "heading": "About 0.2% of complaints end in a full conviction",
         "lead": "In a single year the CIAA registered about 28,554 new complaints. Most were screened out at intake — only 947 (3.3%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply the measured full-conviction rate and only a few dozen end in a full conviction.",
         "ofComplaints": "{{pct}}% of complaints",
-        "caption": "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage applies this archive's measured 46% full-conviction rate to the filed count.",
+        "caption": "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage applies this archive's measured 45% full-conviction rate to the filed count.",
         "stage": {
           "complaints": "Complaints to the CIAA",
           "investigated": "Complaints fully investigated",
@@ -1206,7 +1206,7 @@
           "convicted": "Full convictions (est.)",
           "investigatedNote": "only 3.3% go to a full investigation",
           "filedNote": "≈1 in 7 investigated are prosecuted",
-          "convictedNote": "≈46% of prosecutions convict"
+          "convictedNote": "≈45% of prosecutions convict"
         }
       },
       "cite": {
@@ -1229,41 +1229,41 @@
       "byCharge": {
         "eyebrow": "What actually sticks",
         "heading": "Conviction depends overwhelmingly on what was charged",
-        "lead": "Fake-credential cases convict at 88% and make up nearly half of all convictions. The signature financial-graft charges — bribery, embezzlement, illicit wealth — mostly fail, bottoming out at illegal benefit (4.6%).",
-        "avgLine": "46% court average",
+        "lead": "Fake-credential cases convict at 90% and make up nearly half of all convictions. The signature financial-graft charges — bribery, embezzlement, illicit wealth — mostly fail, bottoming out at illegal benefit (4.5%).",
+        "avgLine": "45% court average",
         "caption": "Decided cases per charge type, split by outcome. Cited to the underlying charge sheets and court records."
       },
       "justice": {
         "eyebrow": "Which bench you draw",
-        "heading": "Full-conviction rates run from 85% to 25% across the court's judges",
-        "lead": "Bench-grain attribution — every panel member is credited with the panel's outcome, dot size scaled to caseload. Sitting on the same court, hearing the same prosecutor, benches diverge threefold. Descriptive, not causal.",
+        "heading": "Full-conviction rates run from 78% to 21% across the court's judges",
+        "lead": "Bench-grain attribution — every panel member is credited with the panel's outcome, dot size scaled to caseload. Sitting on the same court, hearing the same prosecutor, benches diverge more than threefold. Descriptive, not causal.",
         "bandHigh": "Convicts more (>55%)",
         "bandMid": "Near average",
         "bandLow": "Acquits more (<37%)",
-        "avgLine": "court avg 46%"
+        "avgLine": "court avg 45%"
       },
       "overTime": {
         "eyebrow": "Over time",
         "heading": "The court convicts far less than it used to",
-        "lead": "In the early years the Special Court fully convicted roughly {{early}}% of the corruption defendants it decided; across BS 2079–2082 that fell to about {{recent}}%. Acquittals now routinely outnumber convictions.",
+        "lead": "In the early years the Special Court fully convicted roughly {{early}}% of the corruption defendants it decided; across FY2079/80–2082/83 that fell to about {{recent}}%. Acquittals now routinely outnumber convictions.",
         "rateTitle": "Outcome mix by verdict year",
-        "rateSub": "Share of decided cases by Bikram Sambat verdict year. Acquittals overtook full convictions around BS 2078.",
+        "rateSub": "Share of decided cases by verdict fiscal year. Acquittals overtook full convictions around FY2078/79.",
         "decompTitle": "Is the decline real? Easy wins vs. core graft",
-        "decompSub": "Documentary fake-credential cases — which convict at ~88% — fell from {{start}}% of the decided docket to as little as {{min}}%. But the conviction rate on core financial graft fell too, so the slump is not just a change of mix.",
+        "decompSub": "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. But the conviction rate on core financial graft fell too, so the slump is not just a change of mix.",
         "seriesAll": "All charges",
         "seriesCore": "Core graft (excl. fake credential)",
-        "avgLine": "46% cumulative",
-        "caption": "Full-conviction rate by verdict year, case-grain, from Special Court records. BS 2083 is a partial year and is omitted."
+        "avgLine": "45% cumulative",
+        "caption": "Full-conviction rate by verdict fiscal year, case-grain, from Special Court records."
       },
       "volume": {
         "eyebrow": "Volume",
         "heading": "What flows through the court — and how long it takes",
         "trendTitle": "Cases filed vs. decided, by year",
-        "trendSub": "Bikram Sambat year. The filing peak (2076) precedes the verdict peak (2080) by ~4 years.",
+        "trendSub": "Fiscal year. The filing peak (FY2076/77) precedes the decided peak (FY2080/81) by ~4 years.",
         "filed": "Filed",
         "decided": "Decided",
         "paceTitle": "Time to verdict, and the backlog",
-        "paceSub": "By filing cohort. Cohorts through BS 2079 took a median {{peak}} months at their slowest ({{peakYear}}); {{pending}} cases filed since are still awaiting a verdict.",
+        "paceSub": "By filing cohort. Cohorts through FY2079/80 took a median {{peak}} months at their slowest (FY{{peakYear}}); {{pending}} cases filed since are still awaiting a verdict.",
         "months": "Median months to verdict",
         "backlog": "Awaiting verdict",
         "provisional": "Provisional (cohort still open)",
@@ -1272,7 +1272,7 @@
         "mixTooltip": "Prosecutions",
         "mixByYearTitle": "How the charge mix shifted, by year",
         "mixPercentToggle": "Show as 100%",
-        "mixByYearSub": "Substantive prosecutions by Bikram Sambat filing year. Fake-credential cases (crimson) dominated the early docket — about 75% in BS 2069 — then fell to single digits by BS 2078–2080 (with a one-year rebound in 2081), while the newer illegal-benefit charge (absent before BS 2078) and loss to government grew. BS 2083 (partial year) omitted.",
+        "mixByYearSub": "Substantive prosecutions by fiscal filing year. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80 (with a rebound in FY2080/81), while the newer illegal-benefit charge (absent before FY2078/79) and loss to government grew.",
         "mixLabels": {
           "bribery": "Bribery",
           "fake": "Fake credential",
@@ -1282,17 +1282,17 @@
           "other": "Other"
         },
         "monthTitle": "When cases are filed, by Nepali month",
-        "monthSub": "Mean cases filed per Nepali month across BS 2069–2082; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.",
+        "monthSub": "Mean cases filed per Nepali month across FY2069/70–2082/83; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.",
         "monthMean": "Mean cases filed",
         "monthSd": "±1 SD",
-        "monthCaption": "Bars are the mean across 14 complete Bikram Sambat years (BS 2069–2082); whiskers are ±1 standard deviation — how much each month swings from year to year. Registration date from Special Court records."
+        "monthCaption": "Bars are the mean across 14 complete fiscal years (FY2069/70–2082/83); whiskers are ±1 standard deviation — how much each month swings from year to year. Registration date from Special Court records."
       },
       "gaps": {
         "eyebrow": "Where the gap is",
         "heading": "Attrition concentrates at the CIAA stage — then goes dark",
         "intake": { "title": "Intake & screening (CIAA)", "body": "~28,600 new complaints a year produce ~137 prosecutions (≈0.5% of all complaints); most are screened out at intake — only ~1 in 7 of those the CIAA fully investigates is prosecuted — and the rest are shelved with no public verdict. The single biggest, least-visible leak." },
-        "charging": { "title": "Charging strategy (CIAA)", "body": "49% of convictions are easy documentary fake-certificate cases; core financial corruption converts at ~31%, with the signature charges collapsing. The system convicts paperwork, not plunder." },
-        "adjudication": { "title": "Adjudication (Special Court)", "body": "38% outright acquittal, 54% less-than-full-conviction, and a threefold spread across benches. Year-to-year the rate swung 88% → 33%, partly on one 2078 apex-court ruling." },
+        "charging": { "title": "Charging strategy (CIAA)", "body": "46% of convictions are easy documentary fake-certificate cases; core financial corruption converts at ~32%, with the signature charges collapsing. The system convicts paperwork, not plunder." },
+        "adjudication": { "title": "Adjudication (Special Court)", "body": "39% outright acquittal, 55% less-than-full conviction, and more than a threefold spread across benches. Year-to-year the full-conviction rate swung from ~86% to ~14%, partly on one FY2078/79 apex-court ruling." },
         "appeal": { "title": "Appeal (Supreme Court) — dark", "body": "The CIAA appeals many losses and defendants appeal convictions, but appellate outcomes carry no decision data in the record. How often a verdict is overturned is currently unmeasurable." },
         "recovery": { "title": "Recovery & sanction — dark", "body": "Billions in damages are claimed each year, but no source tracks how much is ever recovered, or whether the convicted serve meaningful sanction." }
       },
@@ -1301,14 +1301,14 @@
         "heading": "How this report was built and cross-checked",
         "summary": "Full methodology, discrepancies & limits",
         "sourcesLead": "Two independent public records, cross-checked against each other — and both browsable on Jawafdehi. Complaint, investigation and prosecution counts come from the CIAA's own annual reports; conviction outcomes come from our mirror of Nepal's Special Court and wider judiciary. Where the two overlap — the cases filed each year — they agree. Every figure on this page links to the record behind it.",
-        "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as cases filed in the name of the Government of Nepal (~3,278), of which ~2,850 are substantive corruption charges after removing petitions, money-laundering (a separate agency), and unclassified matters.",
+        "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as the Special Court's -CR- criminal register — 2,880 cases filed FY2069/70–2082/83 (the register is the definition; no plaintiff filter) — of which 2,726 are substantive corruption charges after removing money-laundering (a separate statute) and unclassified matters.",
         "funnel": "The funnel. Of 28,554 newly registered complaints in the year, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7 (the CIAA reports this as 13% of its investigation decisions). So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages; the steep drop is concentrated at screening, not the courtroom.",
-        "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the ~92% of decided cases carrying an unambiguous disposition (2,835 of 3,069).",
-        "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat throughout.",
-        "overTime": "Over time. Yearly rates are grouped by verdict year; the sharp rise in acquittals from BS 2079 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through BS 2079 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.",
+        "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the 2,728 register cases carrying an unambiguous ठहर / आंशिक / सफाई disposition.",
+        "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat dates throughout; by-year charts bin by fiscal year (Shrawan–Ashadh).",
+        "overTime": "Over time. Yearly rates are grouped by verdict fiscal year; the sharp rise in acquittals from FY2078/79 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through FY2079/80 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.",
         "justice": "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.",
-        "discrepancy": "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, and is fiscal-year, whereas our full-conviction rate (46%) is cumulative and separates the two. CIAA's “cases filed” per fiscal year also differ from our Bikram-Sambat-year filing counts because of year binning, case-versus-defendant counting, and record timing. Never compare the two without aligning definition and period.",
-        "entity": "Identity. Only ~3% of listed defendants (607 of 19,222) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.",
+        "discrepancy": "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, whereas our full-conviction rate (45%) is cumulative and separates the two. Both bin by fiscal year, but CIAA's “cases filed” per year can still differ from ours because of case-versus-defendant counting and record timing. Never compare the two without aligning definition and period.",
+        "entity": "Identity. Only ~7% of distinct defendants (607 of 8,114) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.",
         "likhitPre": "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ",
         "likhitName": "likhit",
         "likhitPost": " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.",

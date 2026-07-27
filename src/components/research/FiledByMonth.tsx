@@ -16,7 +16,7 @@ import { MONO_STACK } from "@/lib/data-quality";
 
 /**
  * Cases filed per Nepali month — mean bar with ±1 SD error bars across complete
- * Bikram Sambat years. Surfaces the filing seasonality: a peak in Ashadh (the
+ * fiscal years. Surfaces the filing seasonality: a peak in Ashadh (the
  * fiscal year-end) and a trough in Kartik (the Dashain/Tihar festival month).
  * The tall error bars are themselves the point — filing volume swings widely
  * year to year.

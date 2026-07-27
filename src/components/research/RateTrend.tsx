@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { fyLabel } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
 
@@ -26,7 +27,7 @@ export type RateSeries = {
 export type RatePoint = { year: number } & Record<string, number | null>;
 
 /**
- * A percentage-over-time line chart (0–100% y-axis) over Bikram Sambat years —
+ * A percentage-over-time line chart (0–100% y-axis) over fiscal years —
  * one line per series. Used for the outcome-rate decline (conviction vs acquittal)
  * and the fake-credential vs core-graft decomposition. Dashed series mark the
  * derived read; an optional reference line marks the cumulative court average.
@@ -51,7 +52,7 @@ export function RateTrend({
     .map(
       (s) =>
         `${s.label}: ${data
-          .map((d) => `${d.year} ${Math.round((d[s.key] as number | null) ?? 0)}%`)
+          .map((d) => `${fyLabel(d.year)} ${Math.round((d[s.key] as number | null) ?? 0)}%`)
           .join(", ")}`,
     )
     .join("; ");
@@ -65,7 +66,7 @@ export function RateTrend({
             dataKey="year"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(y: number) => String(y).slice(2)}
+            tickFormatter={(y: number) => fyLabel(y).slice(2)}
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
@@ -78,7 +79,7 @@ export function RateTrend({
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
           />
           <Tooltip
-            labelFormatter={(y) => `BS ${y}`}
+            labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
             formatter={(v) => `${Math.round(v as number)}%`}
             contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 13 }}
             itemStyle={{ fontFamily: MONO_STACK }}
