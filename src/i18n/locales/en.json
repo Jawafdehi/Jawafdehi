@@ -407,31 +407,81 @@
     },
     "ways": {
       "eyebrow": "Ways to give",
-      "title": "Choose the option that fits you",
-      "description": "Support Jawafdehi through a local bank transfer in Nepal or PayPal from abroad. Every contribution, large or small, keeps the archive running.",
+      "title": "Two ways to give",
+      "description": "Give directly through a Nepal bank account — no fees, and the way we prefer — or to our US 501(c)(3), Jawafdehi Initiative, Inc., by check, Crowded, or PayPal.",
+      "preferredBadge": "Preferred",
+      "quiz": {
+        "back": "Back",
+        "restart": "Start over",
+        "showAll": "Or see all ways to give",
+        "guided": "Back to the guided steps",
+        "taxpayer": {
+          "q": "Are you a US taxpayer?",
+          "help": "Only US taxpayers can claim a deduction for gifts to our US 501(c)(3).",
+          "yes": "Yes, I file US taxes",
+          "no": "No"
+        },
+        "receipt": {
+          "q": "Would you like a US tax-deductible receipt?",
+          "help": "A receipt means giving to our US 501(c)(3), which carries processing fees.",
+          "yes": "Yes, I'd like a receipt",
+          "no": "No, not needed"
+        },
+        "nepal": {
+          "q": "Do you have a Nepal bank account?",
+          "help": "A local transfer in Nepal sends 100% of your gift, with no fees.",
+          "yes": "Yes",
+          "no": "No"
+        },
+        "resultNepal": {
+          "eyebrow": "Recommended for you",
+          "intro": "Give directly in Nepal — it sends 100% of your gift, with no fees. This is the way we prefer."
+        },
+        "resultUs": {
+          "eyebrow": "Recommended for you",
+          "intro": "Give to our US 501(c)(3), Jawafdehi Initiative, Inc. Choose the rail that suits you below."
+        }
+      },
       "nepali": {
-        "eyebrow": "Nepali community",
+        "eyebrow": "Give in Nepal",
+        "whoFor": "You have a Nepal bank account",
         "title": "Bank transfer",
-        "preferredNote": "Nepali bank account preferred.",
         "nameLabel": "Name",
         "accountName": "Jawafdehi Initiative",
         "accountLabel": "A/c no.",
         "bankLabel": "Bank",
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
-        "copyAria": "Copy Nepali bank account number"
+        "copyAria": "Copy Nepali bank account number",
+        "feeNote": "No fees — 100% reaches Jawafdehi.",
+        "deductibleNote": "Not tax-deductible under US law."
       },
-      "paypal": {
-        "eyebrow": "International community",
-        "title": "PayPal",
-        "qrAlt": "Open PayPal donation checkout",
-        "qrTitle": "Scan to donate",
-        "qrDescription": "Use your phone camera to open the PayPal donation checkout, or continue on this device.",
-        "cta": "Continue to PayPal",
-        "copyCta": "Copy link",
-        "copyAria": "Copy PayPal donation link",
-        "recipient": "Donations go to Jawafdehi Initiative Inc. (Michigan, USA).",
-        "feeNote": "Subject to third-party transaction fees of up to 3%."
+      "us": {
+        "eyebrow": "Give in the US",
+        "whoFor": "You want a US tax receipt, or don't have a Nepal account",
+        "title": "Jawafdehi Initiative, Inc.",
+        "deductibleNote": "Tax-deductible for US taxpayers — 501(c)(3), EIN 42-3114954.",
+        "check": {
+          "title": "Check",
+          "detail": "Payable to “Jawafdehi Initiative, Inc.”",
+          "fee": "No fees",
+          "payee": "Jawafdehi Initiative, Inc.",
+          "copyAria": "Copy check payee name",
+          "addressNote": "Email us for the mailing address."
+        },
+        "crowded": {
+          "title": "Crowded",
+          "detail": "Card & bank transfer (ACH)",
+          "fee": "Fees apply",
+          "feesLink": "See fee schedule",
+          "cta": "Donate via Crowded"
+        },
+        "paypal": {
+          "title": "PayPal",
+          "detail": "Card or PayPal balance",
+          "fee": "≈2% + $0.49",
+          "cta": "Donate via PayPal"
+        }
       },
       "copy": "Copy",
       "copied": "Copied",

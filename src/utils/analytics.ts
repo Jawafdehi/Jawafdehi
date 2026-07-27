@@ -32,6 +32,35 @@ export type AnalyticsEvent =
   // click (which result, at what 1-based position, for which term). Register
   // `rank`/`result_type`/`search_term` as custom dimensions to surface in reports.
   | { name: 'select_search_result'; params: { result_type: string; rank: number; search_term?: string } }
+  // Donate page click tracking. `method` is the payment rail (or `nav` for the
+  // hero CTAs); `action` is what was clicked. Intent only — GA cannot observe
+  // completed donations (they finish off-site or fully offline), so Nepal-direct
+  // is structurally undercounted. Register method/action/link_url as custom
+  // dimensions to surface them in reports.
+  | {
+      name: 'donate_click';
+      params: {
+        method: 'nepal_bank' | 'crowded' | 'paypal' | 'check' | 'quiz' | 'nav';
+        action:
+          | 'copy_account'
+          | 'copy_payee'
+          | 'outbound'
+          | 'view_fees'
+          | 'give_now'
+          | 'contact'
+          // Guided-workflow funnel: `answer` (a question was answered),
+          // `result` (a recommendation was shown), `restart`, `show_all`.
+          | 'answer'
+          | 'result'
+          | 'restart'
+          | 'show_all';
+        link_url?: string;
+        // Quiz-only: `step` is the question key, `choice` the answer picked
+        // (or the result destination for the `result` action).
+        step?: string;
+        choice?: string;
+      };
+    }
   | { name: 'allegation_submitted'; params?: Record<string, never> };
 
 type AnalyticsEventParams<T extends AnalyticsEvent['name']> =
