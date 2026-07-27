@@ -154,7 +154,7 @@ const ResearchCorruption = () => {
               {t("research.corruption.hero.lead", "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.")}
             </p>
             <p className="mt-4 text-sm italic text-muted-foreground/80">
-              {t("research.corruption.hero.snapshot", "Snapshot as of BS {{bs}}.", { bs: REPORT.snapshotBs })}{" "}
+              {t("research.corruption.hero.snapshot", "Snapshot as of {{bs}} BS, spanning 14 fiscal years of court records (FY2069/70–2082/83).", { bs: REPORT.snapshotBs })}{" "}
               <a
                 href="#methodology"
                 onClick={(e) => {
@@ -429,7 +429,7 @@ const ResearchCorruption = () => {
                   <a href="https://github.com/Jawafdehi/likhit" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{t("research.corruption.appendix.likhitName", "likhit")}</a>
                   {t("research.corruption.appendix.likhitPost", " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.")}
                 </p>
-                <p>{t("research.corruption.appendix.limits", "Limits. These are the records in the archive as of the snapshot date (BS {{bs}}); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere.", { bs: REPORT.snapshotBs })}</p>
+                <p>{t("research.corruption.appendix.limits", "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere.", { bs: REPORT.snapshotBs })}</p>
               </div>
             </details>
 

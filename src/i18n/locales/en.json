@@ -1189,7 +1189,7 @@
         "eyebrow": "Research · Corruption Accountability",
         "title": "Where Nepal's corruption accountability actually leaks",
         "lead": "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.",
-        "snapshot": "Snapshot as of BS {{bs}}.",
+        "snapshot": "Snapshot as of {{bs}} BS, spanning 14 fiscal years of court records (FY2069/70–2082/83).",
         "methodologyLink": "How we built and cross-checked these numbers →",
         "englishOnlyNotice": "This report is currently available in English only."
       },
@@ -1312,7 +1312,7 @@
         "likhitPre": "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ",
         "likhitName": "likhit",
         "likhitPost": " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.",
-        "limits": "Limits. These are the records in the archive as of the snapshot date (BS {{bs}}); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere."
+        "limits": "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere."
       },
       "sources": {
         "heading": "Sources — all in-platform",
