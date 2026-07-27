@@ -244,13 +244,15 @@ export const REPORT = {
 
   // --- Funnel (CIAA annual report + our court records) ---
   // Complaint, investigation + prosecution counts from the CIAA 35th annual report
-  // (FY 2081/82): 37,026 complaints, of which 947 completed a full investigation
-  // (Table 2.15) and 137 were prosecuted; the conviction stage applies our measured
-  // 46% full-conviction rate to the filed count. The `investigated` stage keeps the
-  // funnel honest — the steep drop is at intake screening, not the courtroom, and the
-  // CIAA prosecutes ~1 in 7 of the complaints it actually investigates.
+  // (FY 2081/82): 28,554 newly registered complaints (Table 2.2, चालु आ.व. column) — the
+  // 37,026 "दर्ता" headline also counts 8,472 prior-year backlog re-processed this year, so
+  // it is total workload, not single-year intake. Of these, 947 completed a full
+  // investigation and 137 were prosecuted; the conviction stage applies our measured
+  // full-conviction rate to the filed count. The `investigated` stage keeps the funnel
+  // honest — the steep drop is at intake screening, not the courtroom, and the CIAA
+  // prosecutes ~1 in 7 of the complaints it actually investigates.
   funnel: [
-    { key: "complaints", count: 37026, source: "ciaa35" },
+    { key: "complaints", count: 28554, source: "ciaa35" },
     { key: "investigated", count: 947, source: "ciaa35" },
     { key: "filed", count: 137, source: "ciaa35" },
     { key: "convicted", count: 63, source: "courtRecords" },
@@ -258,12 +260,12 @@ export const REPORT = {
 
   // Figures that originate in the CIAA annual reports (cite the report materials).
   ciaa: {
-    complaintsYear: 37026, // 35th report, FY 2081/82
+    complaintsYear: 28554, // 35th report, FY 2081/82 — newly registered (excl. 8,472 carryover; 37,026 total workload)
     casesFiledYear: 137,
-    successRatePct: 52.67, // CIAA counts full + partial as "success"
-    damagesClaimed5yrBn: 31.5, // 5-year cumulative, Rs
-    complaints5yr: 166520,
-    casesFiled5yr: 798,
+    successRatePct: 52.67, // CIAA counts full + partial as "success" (single year, volatile YoY ~33–72%)
+    damagesClaimedYearBn: 6.02, // FY 2081/82 damages (bigo) demanded, Rs (verified Rs 6,018,472,692)
+    complaints5yr: 107050, // FY2077/78–2081/82 new registrations (5yr workload 148,235 minus 41,185 recycled backlog)
+    casesFiled5yr: 744, // FY2077/78–2081/82 (113+131+162+201+137)
   },
 
   // --- Defendant identity resolution (Q10) ---
