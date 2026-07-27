@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 import { Community } from "@/components/donate/community";
-import { DonationDescription } from "@/components/donate/description";
+// import { DonationDescription } from "@/components/donate/description";
 import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
 import { DonationInfo } from "@/components/donate/info";
@@ -27,7 +27,7 @@ const Donate = () => {
 
       <section className="flex-1">
         <DonateHero />
-        <DonationDescription />
+        {/* <DonationDescription /> */}
         <DonationInfo />
         <Community />
         <DonationFaq />
