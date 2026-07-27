@@ -222,9 +222,25 @@ function UsCard() {
         {/* Crowded — card + ACH */}
         <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-lg font-extrabold tracking-tight text-primary">
-              {t("donate.ways.us.crowded.title")}
-            </span>
+            {/* Crowded wordmark. The source SVG ships un-filled (renders black),
+                so we drive it as a CSS mask and paint it in Crowded's brand blue
+                on light backgrounds / white on dark, matching the card in both
+                themes. */}
+            <span
+              role="img"
+              aria-label={t("donate.ways.us.crowded.title")}
+              className="inline-block h-5 w-24 bg-[#1858F0] dark:bg-white"
+              style={{
+                maskImage: "url('/assets/crowded-logo.svg')",
+                WebkitMaskImage: "url('/assets/crowded-logo.svg')",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
+                maskSize: "contain",
+                WebkitMaskSize: "contain",
+                maskPosition: "left center",
+                WebkitMaskPosition: "left center",
+              }}
+            />
             <span className="shrink-0 text-[11px] font-medium text-foreground/50">
               {t("donate.ways.us.crowded.fee")}
             </span>
