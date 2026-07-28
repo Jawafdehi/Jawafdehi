@@ -1249,7 +1249,7 @@
         "rateTitle": "Outcome mix by verdict year",
         "rateSub": "Share of decided cases by verdict fiscal year. Acquittals overtook full convictions around FY2078/79.",
         "decompTitle": "Is the decline real? Easy wins vs. core graft",
-        "decompSub": "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. But the conviction rate on core financial graft fell too, so the slump is not just a change of mix.",
+        "decompSub": "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft, though, convicts in the same ~30% band throughout — so the headline decline is mostly that change of mix (the easy wins leaving), not the court convicting serious graft any less. The sharp dips (FY2078/79, FY2080/81) are acquittal spikes.",
         "seriesAll": "All charges",
         "seriesCore": "Core graft (excl. fake credential)",
         "avgLine": "45% cumulative",

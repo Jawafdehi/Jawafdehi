@@ -289,7 +289,7 @@ const ResearchCorruption = () => {
             <div className="mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. But the conviction rate on core financial graft fell too, so the slump is not just a change of mix.", { start: fakeShareStart, min: fakeShareMin })}
+                {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft, though, convicts in the same ~30% band throughout — so the headline decline is mostly that change of mix (the easy wins leaving), not the court convicting serious graft any less. The sharp dips (FY2078/79, FY2080/81) are acquittal spikes.", { start: fakeShareStart, min: fakeShareMin })}
               </p>
               <RateTrend
                 data={decompPoints}
