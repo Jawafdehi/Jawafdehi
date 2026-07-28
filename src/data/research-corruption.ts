@@ -130,7 +130,14 @@ export const REPORT = {
     substantive: 2726, // minus money-laundering (93) + unclassified other (61)
   },
 
-  // --- Outcomes (corpus) — case-grain clean dispositions ---
+  // --- Outcomes (corpus) — case-grain dispositions ---
+  // Two denominators, by design (matches the notebook):
+  //   • convicted + partial + acquitted = 2,728 clean dispositions (ठहर / आंशिक / सफाई) —
+  //     the conviction-rate denominator and the donut total.
+  //   • `decided` = 2,710 cases whose case_status starts फैसला — 18 fewer, because a few
+  //     carry a deciding-hearing disposition without that status; this is what the
+  //     filed-vs-decided trend (`trend.decided`) sums to.
+  // `ongoing` = 169 cases with a status but no terminal disposition (= sum of cohort `pending`).
   outcome: {
     convicted: 1230,
     partial: 442,
