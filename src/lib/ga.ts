@@ -8,7 +8,10 @@
  * of those paths, and if the tag is already live (visitor navigated in from a
  * public page) it is muted via gtag's `ga-disable-<id>` opt-out flag — which
  * suppresses ALL hits for the property, including Enhanced Measurement's
- * history-change page_views, not just the ones this app fires explicitly.
+ * history-change page_views, not just the ones this app fires explicitly. The
+ * flag is set synchronously inside the history navigation itself (see
+ * `installAnalyticsNavigationSuppression`) so it wins the race against Enhanced
+ * Measurement's own history listener, even on the first hop into an admin route.
  */
 import {
   JAWAFDEHI_GA_MEASUREMENT_ID,
@@ -39,6 +42,59 @@ function setGaDisabled(disabled: boolean): void {
 export function applyAnalyticsPathSuppression(pathname: string): void {
   if (typeof window === "undefined") return;
   setGaDisabled(isAnalyticsExcludedPath(pathname));
+}
+
+/** Set the opt-out flag for a history entry's target URL (the 3rd pushState arg). */
+function suppressForHistoryUrl(url: string | URL | null | undefined): void {
+  if (url == null) {
+    // Same-URL state replacement: reconcile against the current location.
+    applyAnalyticsPathSuppression(window.location.pathname);
+    return;
+  }
+  try {
+    setGaDisabled(
+      isAnalyticsExcludedPath(new URL(String(url), window.location.href).pathname),
+    );
+  } catch {
+    // Malformed URL: leave the flag as-is rather than guess.
+  }
+}
+
+let navigationSuppressionInstalled = false;
+
+/**
+ * Close the SPA race against GA4 Enhanced Measurement. GA auto-collects a
+ * `page_view` on `history.pushState`/`replaceState`/`popstate`; on a
+ * client-side navigation INTO an admin route that fires synchronously, before a
+ * React route effect could set the opt-out flag — so a `useEffect` alone can
+ * leak the first admin hit.
+ *
+ * Wrapping the history methods ourselves sets `ga-disable` for the TARGET path
+ * as part of the same synchronous navigation call, before the URL commits.
+ * Enhanced Measurement wraps these same methods and reads `location` only after
+ * the original runs, so the flag is already set when it decides whether to send
+ * — regardless of which wrapper loaded first. Idempotent; call once on the
+ * client, as early as possible (ideally before gtag.js loads).
+ */
+export function installAnalyticsNavigationSuppression(): void {
+  if (typeof window === "undefined" || navigationSuppressionInstalled) return;
+  navigationSuppressionInstalled = true;
+
+  for (const method of ["pushState", "replaceState"] as const) {
+    const original = window.history[method];
+    window.history[method] = function patchedHistoryMethod(
+      this: History,
+      ...args: Parameters<History["pushState"]>
+    ): void {
+      suppressForHistoryUrl(args[2]);
+      return original.apply(this, args);
+    } as History[typeof method];
+  }
+
+  // Back/forward: the URL is already current by the time popstate fires.
+  window.addEventListener("popstate", () => {
+    applyAnalyticsPathSuppression(window.location.pathname);
+  });
 }
 
 export function loadGoogleAnalytics(): void {
