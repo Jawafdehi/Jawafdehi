@@ -41,6 +41,7 @@ import ResearchCorruption from "./pages/ResearchCorruption";
 import DocumentPreviewPage from "./pages/DocumentPreviewPage";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { AnalyticsRouteGate } from "@/components/AnalyticsRouteGate";
 
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
@@ -93,6 +94,7 @@ const App = () => (
       </ClientOnly>
       <Suspense fallback={<RouteLoadingFallback />}>
         <ScrollToTop />
+        <AnalyticsRouteGate />
         <Routes>
           {/* Embed route for oEmbed iframe */}
           <Route path="/embed/case/:id" element={<EmbedCaseCard />} />
