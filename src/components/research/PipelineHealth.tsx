@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { fyLabel } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
 
@@ -23,7 +24,7 @@ export type PipelinePoint = {
 };
 
 /**
- * Case pace and backlog by Bikram Sambat FILING-year cohort. Bars = cases still
+ * Case pace and backlog by fiscal FILING-year cohort. Bars = cases still
  * awaiting a verdict (backlog, right axis); the line = median months from
  * registration to verdict (left axis). The line is solid only for cohorts that
  * are essentially fully decided; recent cohorts are still being adjudicated, so
@@ -47,7 +48,7 @@ export function PipelineHealth({
   if (!mounted) return <div className="w-full" style={{ height }} />;
 
   const ariaLabel = `${monthsLabel} / ${backlogLabel}: ${data
-    .map((d) => `${d.year} ${Math.round((d.monthsSolid ?? d.monthsProvisional) ?? 0)}m, ${d.pending} pending`)
+    .map((d) => `${fyLabel(d.year)} ${Math.round((d.monthsSolid ?? d.monthsProvisional) ?? 0)}m, ${d.pending} pending`)
     .join("; ")}`;
 
   return (
@@ -59,7 +60,7 @@ export function PipelineHealth({
             dataKey="year"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(y: number) => String(y).slice(2)}
+            tickFormatter={(y: number) => fyLabel(y).slice(2)}
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
@@ -78,7 +79,7 @@ export function PipelineHealth({
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
           />
           <Tooltip
-            labelFormatter={(y) => `BS ${y}`}
+            labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
             contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 13 }}
             itemStyle={{ fontFamily: MONO_STACK }}
           />

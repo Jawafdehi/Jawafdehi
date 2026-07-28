@@ -8,11 +8,12 @@ import {
   YAxis,
 } from "recharts";
 
+import { fyLabel } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
 
 /**
- * Cases filed vs. decided, by Bikram Sambat year — the one genuinely temporal view.
+ * Cases filed vs. decided, by fiscal year — the one genuinely temporal view.
  * Two lines (filed = navy, decided = crimson) share one y-axis; the filing peak
  * leads the verdict peak by a few years, a rough visual proxy for pipeline lag.
  */
@@ -37,7 +38,7 @@ export function FiledDecidedTrend({
   if (!mounted) return <div className="w-full" style={{ height }} />;
 
   const ariaLabel = `${filedLabel} / ${decidedLabel}: ${data
-    .map((d) => `${d.year} ${d.filed}/${d.decided}`)
+    .map((d) => `${fyLabel(d.year)} ${d.filed}/${d.decided}`)
     .join(", ")}`;
 
   return (
@@ -49,7 +50,7 @@ export function FiledDecidedTrend({
             dataKey="year"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(y: number) => String(y).slice(2)}
+            tickFormatter={(y: number) => fyLabel(y).slice(2)}
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
@@ -59,7 +60,7 @@ export function FiledDecidedTrend({
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
           />
           <Tooltip
-            labelFormatter={(y) => `BS ${y}`}
+            labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
             contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 13 }}
             itemStyle={{ fontFamily: MONO_STACK }}
           />

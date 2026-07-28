@@ -9,7 +9,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { ChargeMixYear } from "@/data/research-corruption";
+import { fyLabel, type ChargeMixYear } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
 import { Switch } from "@/components/ui/switch";
@@ -31,10 +31,10 @@ const rowTotal = (d: ChargeMixYear) =>
   d.bribery + d.fake + d.embezzlement + d.benefit + d.loss + d.other;
 
 /**
- * Charge mix by Bikram Sambat filing year — a stacked bar per year over the
+ * Charge mix by fiscal filing year — a stacked bar per year over the
  * substantive prosecution corpus. Reads as both volume (bar height) and
  * composition (segments): the crimson fake-credential band dominates the early
- * years and thins sharply after BS 2077 (with a one-year rebound in 2081). A
+ * years and thins sharply after FY2077/78 (with a rebound in FY2080/81). A
  * toggle switches to a 100%-share view
  * (equal-height bars) to isolate the composition shift from the volume swings;
  * it is off by default, so absolute case counts show first.
@@ -53,8 +53,8 @@ export function ChargeMixByYear({
   const toggleId = useId();
   const height = 300;
 
-  const ariaLabel = `Charge mix by filing year: ${data
-    .map((d) => `BS ${d.bs} — ${SERIES.map((s) => `${labels[s.key]} ${d[s.key]}`).join(", ")}`)
+  const ariaLabel = `Charge mix by fiscal filing year: ${data
+    .map((d) => `FY ${fyLabel(d.fy)} — ${SERIES.map((s) => `${labels[s.key]} ${d[s.key]}`).join(", ")}`)
     .join("; ")}`;
 
   return (
@@ -76,10 +76,10 @@ export function ChargeMixByYear({
           >
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
             <XAxis
-              dataKey="bs"
+              dataKey="fy"
               tickLine={false}
               axisLine={false}
-              tickFormatter={(y: number) => String(y).slice(2)}
+              tickFormatter={(y: number) => fyLabel(y).slice(2)}
               tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
             />
             <YAxis
@@ -91,7 +91,7 @@ export function ChargeMixByYear({
               tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
             />
             <Tooltip
-              labelFormatter={(y) => `BS ${y}`}
+              labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
               contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 13 }}
               itemStyle={{ fontFamily: MONO_STACK }}
               formatter={(value: number, name: string, entry: { payload?: ChargeMixYear }) => {
