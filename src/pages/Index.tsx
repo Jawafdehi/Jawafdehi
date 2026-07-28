@@ -11,6 +11,7 @@ import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
 import { searchArchive } from "@/services/search-api";
+import { formatBigo } from "@/utils/number";
 import { useMemo } from "react";
 
 import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@/types/search";
@@ -97,9 +98,17 @@ const Index = () => {
     retry: 2,
   });
 
-  const getStatValue = (value: number | undefined): string => {
-    if (statsError || statsLoading) return "—";
-    return value?.toLocaleString() || "0";
+  // Shared loading/error/missing guard for the hero stats. With no formatter a
+  // resolved value renders as a plain grouped count; pass one (e.g. formatBigo
+  // for the currency tile) to render it differently. A missing value (an absent
+  // optional field on an older/pre-deploy payload) renders the "—" placeholder
+  // rather than "0" / "Rs 0", so an absent stat never reads as a real zero.
+  const getStatValue = (
+    value: number | undefined,
+    format: (v: number) => string = (v) => v.toLocaleString(),
+  ): string => {
+    if (statsError || statsLoading || value == null) return "—";
+    return format(value);
   };
 
   // Keep the query key in sync with the SSR prefetch in entry-server.tsx.
@@ -173,7 +182,7 @@ const Index = () => {
         <Hero
           casesDocumented={getStatValue(stats?.published_cases)}
           officialsAndEntitiesTracked={getStatValue(stats?.nes?.total)}
-          courtRecords={getStatValue(stats?.ngm?.court_cases_total)}
+          totalBigo={getStatValue(stats?.total_bigo, formatBigo)}
           materials={getStatValue(stats?.materials?.total)}
         />
 

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 type HeroProps = {
   casesDocumented: string;
   officialsAndEntitiesTracked: string;
-  courtRecords: string;
+  totalBigo: string;
   materials: string;
 };
 
@@ -39,7 +39,7 @@ const heroMapImages: HeroMapImage[] = [
 export function Hero({
   casesDocumented,
   officialsAndEntitiesTracked,
-  courtRecords,
+  totalBigo,
   materials,
 }: Readonly<HeroProps>) {
   const { t } = useTranslation();
@@ -53,7 +53,7 @@ export function Hero({
       label: t("home.hero.stats.officialsAndEntitiesTracked"),
       href: "/search?type=entity",
     },
-    { value: courtRecords, label: t("home.hero.stats.courtRecords"), href: "/search?type=courtcase" },
+    { value: totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search?type=case" },
     { value: materials, label: t("home.hero.stats.materials"), href: "/search?type=material" },
   ];
 

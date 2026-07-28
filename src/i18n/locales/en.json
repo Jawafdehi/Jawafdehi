@@ -140,7 +140,7 @@
       "stats": {
         "casesDocumented": "Cases documented",
         "officialsAndEntitiesTracked": "Officials & entities tracked",
-        "courtRecords": "Court records",
+        "totalBigo": "Total embezzled amount",
         "materials": "Documents & other materials"
       },
       "coverageLink": "See what we cover"

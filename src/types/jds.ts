@@ -273,6 +273,9 @@ export interface CaseStatistics {
   // Optional so older cached payloads (and pre-deploy responses) stay type-safe.
   cases_ciaa?: number;
   cases_non_ciaa?: number;
+  // Total bigo (बिगो) — summed disputed/embezzled amount (NPR) across published
+  // cases. Optional so older cached payloads (and pre-deploy responses) stay safe.
+  total_bigo?: number;
   // Cross-source data-quality coverage (entities + judicial records). The
   // `nes`/`ngm` keys are the backend response field names (part of the JSON
   // contract). Optional so older cached payloads stay type-safe.
