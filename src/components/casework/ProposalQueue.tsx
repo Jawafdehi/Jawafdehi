@@ -31,8 +31,8 @@ import {
   FileJson,
   Hash,
   Inbox,
-  Layers,
   Loader2,
+  Pencil,
   Search,
   X,
 } from "lucide-react";
@@ -44,9 +44,12 @@ export interface ProposalQueueProps {
   // May return a promise: approve/reject are non-idempotent writes, so the pane
   // awaits it to keep the buttons disabled until the request settles.
   onDecision?: (id: string, decision: Decision, notes: string) => void | Promise<void>;
+  // Correct a pending proposal's change before approving. Omit to hide the editor
+  // (e.g. for a read-only viewer). Should REJECT on failure so the pane can show why.
+  onEditIntent?: (id: string, intent: Intent) => void | Promise<void>;
 }
 
-const STATUS_FILTERS: (ProposalStatus | "all")[] = ["all", "pending", "approved", "rejected", "superseded"];
+const STATUS_FILTERS: (ProposalStatus | "all")[] = ["all", "pending", "approved", "rejected"];
 
 const SOURCE_OPTIONS: SignalSource[] = ["ngm_docket", "court_order", "ciaa_press", "news", "caseworker"];
 
@@ -58,7 +61,7 @@ function Pill({ className, children }: { className?: string; children: React.Rea
   );
 }
 
-export default function ProposalQueue({ proposals, onDecision }: ProposalQueueProps) {
+export default function ProposalQueue({ proposals, onDecision, onEditIntent }: ProposalQueueProps) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<ProposalStatus | "all">("pending");
   const [source, setSource] = useState<SignalSource | "all">("all");
@@ -166,7 +169,7 @@ export default function ProposalQueue({ proposals, onDecision }: ProposalQueuePr
         </div>
 
         <div className="lg:sticky lg:top-20 lg:self-start">
-          {selected ? <DetailPane key={selected.id} p={selected} onDecision={onDecision} /> : (
+          {selected ? <DetailPane key={selected.id} p={selected} onDecision={onDecision} onEditIntent={onEditIntent} /> : (
             <p className="rounded-xl border border-dashed bg-white px-4 py-12 text-center text-sm text-muted-foreground">
               {t("admin.proposals.selectPrompt", "Select a proposal to review.")}
             </p>
@@ -188,7 +191,6 @@ function ProposalRow({ p, active, onClick }: { p: CaseUpdateProposal; active: bo
       className={cn(
         "w-full rounded-xl border bg-white px-3 py-3 text-left transition-colors",
         active ? "border-primary/40 ring-1 ring-primary/20" : "hover:bg-slate-50",
-        p.status === "superseded" && "opacity-60",
       )}
     >
       <div className="flex items-center gap-2">
@@ -204,11 +206,6 @@ function ProposalRow({ p, active, onClick }: { p: CaseUpdateProposal; active: bo
       <div className="mt-2 flex items-center gap-1.5">
         <Pill className={band.pill}>{band.label} · {pct(p.confidence)}</Pill>
         {p.status !== "pending" && <Pill className={statusPill(p.status)}>{statusLabel(p.status, t)}</Pill>}
-        {p.provenance.supersedes && (
-          <Pill className="bg-slate-100 text-slate-500 border-slate-200">
-            <Layers className="h-3 w-3" /> {t("admin.proposals.supersedesShort", "supersedes")}
-          </Pill>
-        )}
       </div>
     </button>
   );
@@ -220,6 +217,7 @@ function DetailPane({
 }: {
   p: CaseUpdateProposal;
   onDecision?: (id: string, d: Decision, notes: string) => void | Promise<void>;
+  onEditIntent?: (id: string, intent: Intent) => void | Promise<void>;
 }) {
   const { t } = useTranslation();
   const [notes, setNotes] = useState("");
@@ -227,6 +225,10 @@ function DetailPane({
   // onto the case), so a double-click must not fire two requests. The pane is
   // remounted per proposal via `key`, so this resets on selection change.
   const [submitting, setSubmitting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [editError, setEditError] = useState("");
+  const [saving, setSaving] = useState(false);
   const band = confidenceBand(p.confidence, t);
   const src = sourceMeta(p.source_kind, t);
   const SrcIcon = src.icon;
@@ -239,6 +241,45 @@ function DetailPane({
       await onDecision?.(p.id, decision, notes);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const startEditing = () => {
+    setDraft(JSON.stringify(p.intent, null, 2));
+    setEditError("");
+    setEditing(true);
+  };
+
+  const saveEdit = async () => {
+    if (saving) return;
+    // Parse locally first so a typo is a caught mistake rather than a 400 round-trip.
+    // The backend re-validates the shape regardless — this only catches the obvious.
+    let parsed: Intent;
+    try {
+      parsed = JSON.parse(draft) as Intent;
+    } catch (e) {
+      setEditError(
+        t("admin.proposals.invalidJson", {
+          defaultValue: "That isn't valid JSON: {{message}}",
+          message: e instanceof Error ? e.message : String(e),
+        }),
+      );
+      return;
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || !("type" in parsed)) {
+      setEditError(t("admin.proposals.intentNeedsType", "The change must be an object with a `type`."));
+      return;
+    }
+    setEditError("");
+    setSaving(true);
+    try {
+      await onEditIntent?.(p.id, parsed);
+      setEditing(false);
+    } catch (e) {
+      // Server-side rejection (unknown type, missing entry.date, decided proposal).
+      setEditError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -278,13 +319,54 @@ function DetailPane({
         </div>
       </div>
 
-      {/* The proposed change */}
+      {/* The proposed change — correctable while pending */}
       <div className="rounded-xl border bg-slate-50/60 p-3">
-        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{t("admin.proposals.proposedChange", "Proposed change")}</div>
-        <IntentBody intent={p.intent} />
-        <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
-          <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {applyEffect(p.intent, t)}
-        </p>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{t("admin.proposals.proposedChange", "Proposed change")}</div>
+          {isPending && onEditIntent && !editing && (
+            <button
+              onClick={startEditing}
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-primary hover:bg-primary/10"
+            >
+              <Pencil className="h-3 w-3" /> {t("admin.proposals.edit", "Edit")}
+            </button>
+          )}
+        </div>
+
+        {editing ? (
+          <div className="space-y-2">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              spellCheck={false}
+              aria-label={t("admin.proposals.editIntentLabel", "Proposed change as JSON")}
+              className="min-h-[180px] w-full rounded-lg border bg-white p-2 font-mono text-[11px] leading-relaxed text-slate-800"
+            />
+            <p className="text-[11px] text-slate-500">
+              {t(
+                "admin.proposals.editHint",
+                "Only the proposed change is editable — provenance and confidence record where the fact came from and stay as filed.",
+              )}
+            </p>
+            {editError && <p className="text-[11px] font-medium text-red-600">{editError}</p>}
+            <div className="flex items-center gap-2">
+              <Button size="sm" disabled={saving} onClick={saveEdit}>
+                {saving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1 h-3.5 w-3.5" />}
+                {t("admin.proposals.saveEdit", "Save change")}
+              </Button>
+              <Button size="sm" variant="ghost" disabled={saving} onClick={() => setEditing(false)}>
+                {t("admin.proposals.cancelEdit", "Cancel")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <IntentBody intent={p.intent} />
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
+              <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {applyEffect(p.intent, t)}
+            </p>
+          </>
+        )}
       </div>
 
       {/* Provenance */}
@@ -302,11 +384,6 @@ function DetailPane({
         <Field label={t("admin.proposals.dedupKey", "Dedup key")} full>
           <code className="break-all font-mono text-[11px] text-slate-600">{p.provenance.dedup_key}</code>
         </Field>
-        {p.provenance.supersedes && (
-          <Field label={t("admin.proposals.supersedes", "Supersedes")} full>
-            <code className="font-mono text-[11px] text-slate-600">{p.provenance.supersedes}</code>
-          </Field>
-        )}
       </dl>
 
       {/* Linked records (subject_refs) */}
@@ -333,13 +410,15 @@ function DetailPane({
             className="min-h-[64px] text-sm"
           />
           <div className="flex items-center gap-2">
-            <Button disabled={submitting} className="bg-green-600 hover:bg-green-700" onClick={() => decide("approved")}>
+            {/* Disabled while editing: approving with an unsaved draft would apply the
+                ORIGINAL intent and silently discard the correction. */}
+            <Button disabled={submitting || editing} className="bg-green-600 hover:bg-green-700" onClick={() => decide("approved")}>
               {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
               {submitting
                 ? t("admin.proposals.deciding", "Working…")
                 : t("admin.proposals.approve", "Approve & apply")}
             </Button>
-            <Button disabled={submitting} variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => decide("rejected")}>
+            <Button disabled={submitting || editing} variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => decide("rejected")}>
               <X className="mr-1 h-4 w-4" /> {t("admin.proposals.reject", "Reject")}
             </Button>
             <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-slate-400">
@@ -396,15 +475,6 @@ function IntentBody({ intent }: { intent: Intent }) {
         </div>
       );
     }
-    case "set_status":
-      return (
-        <div className="flex items-center gap-2 text-sm">
-          <code className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-xs">{intent.from ?? "—"}</code>
-          <ArrowRight className="h-4 w-4 text-slate-400" />
-          <code className="rounded bg-green-100 px-1.5 py-0.5 font-mono text-xs text-green-800">{intent.to}</code>
-          <span className="text-xs text-slate-400">({intent.field})</span>
-        </div>
-      );
     case "link_material":
       return (
         <div className="space-y-1 text-sm">

@@ -27,12 +27,13 @@ vi.mock("axios", () => {
   const instance = {
     get: record("get"),
     post: record("post"),
+    patch: record("patch"),
     interceptors: { request: { use: () => undefined } },
   };
   return { default: { create: () => instance } };
 });
 
-import { listProposals } from "./proposals-api";
+import { editProposalIntent, listProposals } from "./proposals-api";
 
 // Minimal wire row — only the fields adapt() reads are needed.
 function row(id: number) {
@@ -47,7 +48,6 @@ function row(id: number) {
     source: "",
     detected_by: "consumer:proposal-builder",
     dedup_key: `docket:${id}`,
-    supersedes: null,
     origin_subject: "",
     origin_msg_id: "",
     subject_refs: [],
@@ -121,13 +121,30 @@ describe("listProposals pagination", () => {
     expect(out.length).toBeLessThanOrEqual(50);
   });
 
-  it("normalises nullable reviewer / notes / supersedes", async () => {
+  it("normalises nullable reviewer / notes", async () => {
     responses.get = [page([1], null)];
 
     const [p] = await listProposals();
 
     expect(p.review.reviewer).toBeNull();
     expect(p.review.notes).toBe("");
-    expect(p.provenance.supersedes).toBeUndefined();
+  });
+});
+
+describe("editProposalIntent", () => {
+  it("PATCHes the intent sub-resource and adapts the response", async () => {
+    const corrected = {
+      type: "append_timeline_entry" as const,
+      entry: { date: "2026-08-19", title: "Corrected" },
+    };
+    responses.patch = [{ data: { ...row(7), intent: corrected } }];
+
+    const out = await editProposalIntent("7", corrected);
+
+    expect(calls).toEqual([
+      { method: "patch", url: "/api/case-update-proposals/7/intent/", config: undefined },
+    ]);
+    expect(out.id).toBe("7");
+    expect(out.intent).toEqual(corrected);
   });
 });

@@ -1730,8 +1730,6 @@
       "detectedBy": "पहिचान गर्ने",
       "sourceLabel": "स्रोत",
       "dedupKey": "दोहोरोपन कुञ्जी",
-      "supersedes": "प्रतिस्थापित प्रस्ताव",
-      "supersedesShort": "प्रतिस्थापन",
       "linkedRecords": "सम्बन्धित अभिलेख",
       "notesPlaceholder": "समीक्षा टिप्पणी (वैकल्पिक)…",
       "approve": "स्वीकृत गरी लागू गर्नुहोस्",
@@ -1751,12 +1749,19 @@
       "toastDetail": "“{{title}}” मा {{intent}}।",
       "opCount_one": "{{count}} कार्य",
       "opCount_other": "{{count}} कार्यहरू",
+      "edit": "सम्पादन",
+      "editIntentLabel": "प्रस्तावित परिवर्तन (JSON)",
+      "editHint": "प्रस्तावित परिवर्तन मात्र सम्पादन गर्न सकिन्छ — स्रोत र विश्वसनीयता तथ्य कहाँबाट आयो भन्ने अभिलेख हुनाले दर्ता भएअनुसार यथावत् रहन्छ।",
+      "saveEdit": "परिवर्तन सुरक्षित गर्नुहोस्",
+      "cancelEdit": "रद्द गर्नुहोस्",
+      "invalidJson": "यो मान्य JSON होइन: {{message}}",
+      "intentNeedsType": "परिवर्तनमा `type` सहितको वस्तु हुनुपर्छ।",
+      "editFailed": "परिवर्तन सुरक्षित गर्न सकिएन।",
       "filters": {
         "all": "सबै",
         "pending": "विचाराधीन",
         "approved": "स्वीकृत",
-        "rejected": "अस्वीकृत",
-        "superseded": "प्रतिस्थापित"
+        "rejected": "अस्वीकृत"
       },
       "band": {
         "high": "उच्च",
@@ -1772,21 +1777,18 @@
       },
       "intents": {
         "append_timeline_entry": "समयरेखामा प्रविष्टि थप्नुहोस्",
-        "set_status": "स्थिति परिवर्तन गर्नुहोस्",
         "link_material": "सामग्री जोड्नुहोस्",
         "raw_patch": "प्रत्यक्ष प्याच"
       },
       "effects": {
         "append_timeline_entry": "यो प्रविष्टि मुद्दाको सार्वजनिक समयरेखामा थपिनेछ।",
-        "set_status": "मुद्दाको {{field}} फिल्ड “{{to}}” मा राखिनेछ।",
         "link_material": "पहिले नै रहेको कागजात मुद्दासँग जोडिनेछ (नयाँ कागजात बन्दैन)।",
         "raw_patch": "यी RFC-6902 कार्यहरू मुद्दाको अभिलेखमा लागू गरिनेछन्।"
       },
       "statuses": {
         "pending": "विचाराधीन",
         "approved": "स्वीकृत",
-        "rejected": "अस्वीकृत",
-        "superseded": "प्रतिस्थापित"
+        "rejected": "अस्वीकृत"
       }
     },
     "caseForm": {

@@ -1,8 +1,7 @@
-// PROTOTYPE — types for the caseworker "case update proposal" review queue.
-// Mirrors work/2026-07-27-case-enrichment-events/DESIGN.md §9 + PROPOSAL-EXAMPLES.md.
-// This is a design prototype fed by mock data; no backend endpoint exists yet.
+// Types for the caseworker "case update proposal" review queue, mirroring the
+// CaseUpdateProposal model served by /api/case-update-proposals/.
 
-export type ProposalStatus = "pending" | "approved" | "rejected" | "superseded";
+export type ProposalStatus = "pending" | "approved" | "rejected";
 
 // Where the raw signal came from — a UI convenience classification (in the real
 // system this is derived from provenance.source / the subject it arrived on).
@@ -35,9 +34,11 @@ export interface JsonPatchOp {
 
 // The tagged-union "change intent" — typed intents for the common cases + a raw
 // RFC-6902 patch escape hatch. This is the ONLY part the LLM (`claude -p`) emits.
+// Must stay in step with SUPPORTED_INTENT_TYPES on the backend, which accepts and
+// applies exactly these three (`set_status` was dropped: a Case has no legal-status
+// field, so status facts go in the timeline and raw_patch covers the rest).
 export type Intent =
   | { type: "append_timeline_entry"; entry: TimelineEntry }
-  | { type: "set_status"; field: string; from?: string; to: string }
   | { type: "link_material"; material: string; relation: string }
   | { type: "raw_patch"; patch: JsonPatchOp[] };
 
@@ -47,7 +48,6 @@ export interface Provenance {
   source: string;
   detected_by: string; // "consumer:proposal-builder" | "caseworker:<id>"
   dedup_key: string;
-  supersedes?: string;
 }
 
 export interface OriginEvent {

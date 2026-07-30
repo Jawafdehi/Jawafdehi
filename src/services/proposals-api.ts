@@ -25,7 +25,6 @@ interface ApiRow {
   dedup_key: string;
   // Nullable on the wire (blank CharFields / an unset reviewer); adapt() below
   // normalises each into the shape the UI wants.
-  supersedes: string | null;
   origin_subject: string;
   origin_msg_id: string;
   subject_refs: string[];
@@ -50,7 +49,6 @@ function adapt(row: ApiRow): CaseUpdateProposal {
       source: row.source,
       detected_by: row.detected_by,
       dedup_key: row.dedup_key,
-      supersedes: row.supersedes || undefined,
     },
     origin_event: {
       subject: row.origin_subject,
@@ -120,6 +118,16 @@ export async function listProposals(params?: {
     if (!page) break;
   }
   return rows.map(adapt);
+}
+
+// Correct a PENDING proposal's proposed change before approving it. Only the
+// intent is editable server-side; provenance and confidence are immutable.
+export async function editProposalIntent(
+  id: string,
+  intent: CaseUpdateProposal["intent"],
+): Promise<CaseUpdateProposal> {
+  const { data } = await client.patch<ApiRow>(`${BASE}/${id}/intent/`, { intent });
+  return adapt(data);
 }
 
 export async function approveProposal(id: string, notes = ""): Promise<CaseUpdateProposal> {
