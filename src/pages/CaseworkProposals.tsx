@@ -8,11 +8,12 @@ import CaseworkLayout from "@/components/CaseworkLayout";
 import ProposalQueue from "@/components/casework/ProposalQueue";
 import {
   approveProposal,
+  editProposalIntent,
   listProposals,
   proposalErrorMessage,
   rejectProposal,
 } from "@/services/proposals-api";
-import type { CaseUpdateProposal } from "@/types/proposals";
+import type { CaseUpdateProposal, Intent } from "@/types/proposals";
 import { intentLabel } from "@/lib/proposal-ui";
 import { toast } from "@/hooks/use-toast";
 
@@ -71,6 +72,21 @@ export default function CaseworkProposals() {
     }
   };
 
+  // Deliberately RE-THROWS: ProposalQueue shows the reason inline next to the JSON
+  // it rejected, which is where the reviewer is looking. A toast here would move the
+  // explanation away from the text that caused it and let the editor close as if the
+  // save had worked.
+  const onEditIntent = async (id: string, intent: Intent) => {
+    try {
+      const updated = await editProposalIntent(id, intent);
+      setProposals((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    } catch (e) {
+      throw new Error(
+        proposalErrorMessage(e, t("admin.proposals.editFailed", "Could not save the change.")),
+      );
+    }
+  };
+
   return (
     <CaseworkLayout>
       {loading ? (
@@ -80,7 +96,7 @@ export default function CaseworkProposals() {
       ) : err ? (
         <p className="text-sm text-red-600">{err}</p>
       ) : (
-        <ProposalQueue proposals={proposals} onDecision={onDecision} />
+        <ProposalQueue proposals={proposals} onDecision={onDecision} onEditIntent={onEditIntent} />
       )}
     </CaseworkLayout>
   );

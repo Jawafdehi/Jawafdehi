@@ -1758,8 +1758,6 @@
       "detectedBy": "Detected by",
       "sourceLabel": "Source",
       "dedupKey": "Dedup key",
-      "supersedes": "Supersedes",
-      "supersedesShort": "supersedes",
       "linkedRecords": "Linked records",
       "notesPlaceholder": "Review note (optional)…",
       "approve": "Approve & apply",
@@ -1779,12 +1777,19 @@
       "toastDetail": "{{intent}} on “{{title}}”.",
       "opCount_one": "{{count}} op",
       "opCount_other": "{{count}} ops",
+      "edit": "Edit",
+      "editIntentLabel": "Proposed change as JSON",
+      "editHint": "Only the proposed change is editable — provenance and confidence record where the fact came from and stay as filed.",
+      "saveEdit": "Save change",
+      "cancelEdit": "Cancel",
+      "invalidJson": "That isn't valid JSON: {{message}}",
+      "intentNeedsType": "The change must be an object with a `type`.",
+      "editFailed": "Could not save the change.",
       "filters": {
         "all": "All",
         "pending": "Pending",
         "approved": "Approved",
-        "rejected": "Rejected",
-        "superseded": "Superseded"
+        "rejected": "Rejected"
       },
       "band": {
         "high": "High",
@@ -1800,21 +1805,18 @@
       },
       "intents": {
         "append_timeline_entry": "Add timeline entry",
-        "set_status": "Change status",
         "link_material": "Link material",
         "raw_patch": "Raw patch"
       },
       "effects": {
         "append_timeline_entry": "Appends this entry to the case's public timeline.",
-        "set_status": "Sets the case {{field}} field to “{{to}}”.",
         "link_material": "Attaches an existing document to the case (no new document is created).",
         "raw_patch": "Applies these RFC-6902 operations to the case record."
       },
       "statuses": {
         "pending": "Pending",
         "approved": "Approved",
-        "rejected": "Rejected",
-        "superseded": "Superseded"
+        "rejected": "Rejected"
       }
     },
     "caseForm": {

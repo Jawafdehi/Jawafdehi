@@ -63,8 +63,6 @@ export function statusPill(s: ProposalStatus): string {
       return "bg-blue-100 text-blue-800 border-blue-200";
     case "rejected":
       return "bg-red-100 text-red-700 border-red-200";
-    case "superseded":
-      return "bg-slate-100 text-slate-500 border-slate-200";
   }
 }
 
@@ -114,7 +112,6 @@ const STATUS_FALLBACK: Record<ProposalStatus, string> = {
   pending: "Pending",
   approved: "Approved",
   rejected: "Rejected",
-  superseded: "Superseded",
 };
 
 export function statusLabel(s: ProposalStatus, t: TFunction): string {
@@ -125,7 +122,6 @@ export function statusLabel(s: ProposalStatus, t: TFunction): string {
 
 const INTENT_FALLBACK: Record<IntentType, string> = {
   append_timeline_entry: "Add timeline entry",
-  set_status: "Change status",
   link_material: "Link material",
   raw_patch: "Raw patch",
 };
@@ -139,8 +135,6 @@ export function intentSummary(i: Intent, t: TFunction): string {
   switch (i.type) {
     case "append_timeline_entry":
       return i.entry.title;
-    case "set_status":
-      return `${i.from ?? "—"} → ${i.to}`;
     case "link_material":
       return `${i.relation}: ${shortIri(i.material)}`;
     case "raw_patch": {
@@ -161,12 +155,6 @@ export function applyEffect(i: Intent, t: TFunction): string {
         "admin.proposals.effects.append_timeline_entry",
         "Appends this entry to the case's public timeline.",
       );
-    case "set_status":
-      return t("admin.proposals.effects.set_status", {
-        defaultValue: "Sets the case {{field}} field to “{{to}}”.",
-        field: i.field,
-        to: i.to,
-      });
     case "link_material":
       return t(
         "admin.proposals.effects.link_material",
