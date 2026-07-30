@@ -35,6 +35,7 @@ import CaseworkCaseReviews from "./pages/CaseworkCaseReviews";
 import CaseworkRunRedirect from "./pages/CaseworkRunRedirect";
 import CaseworkRules from "./pages/CaseworkRules";
 import CaseworkHow from "./pages/CaseworkHow";
+import CaseworkProposals from "./pages/CaseworkProposals";
 
 // Wraps the panel in the OIDC AuthProvider. Built as a component (not a spread
 // of a config object) so the UserManager is only constructed when this renders
@@ -161,6 +162,7 @@ const AdminApp = () => (
               /api/sources/ write endpoint. Evidence is linked as material IRIs
               on the case; manage docs under Data Lake → Materials. */}
           {/* Casework (folded in from /portal) */}
+          <Route path="proposals" element={<CaseworkProposals />} />
           <Route path="reviews" element={<CaseworkReviews />} />
           <Route path="reviews/case/:slug" element={<CaseworkCaseReviews />} />
           <Route path="reviews/:id" element={<CaseworkRunRedirect />} />

@@ -1647,6 +1647,7 @@
       "casesGroup": "जवाफदेही — मुद्दाहरू",
       "cases": "मुद्दाहरू",
       "casework": "केसवर्क",
+      "proposals": "प्रस्तावहरू",
       "reviews": "समीक्षाहरू",
       "rules": "नियमहरू",
       "moderation": "मध्यस्थता"
@@ -1710,6 +1711,83 @@
       "dismissedFailure": "मुद्दा खारेज गर्न असफल भयो",
       "dismissConfirmTitle": "यो पेश खारेज गर्ने?",
       "dismissConfirmBody": "खारेज गर्दा मुद्दा बन्द हुन्छ र मध्यस्थता लामबाट हट्छ। तपाईं यसलाई पछि मस्यौदाको रूपमा पुनः खोल्न सक्नुहुन्छ। तपाईंले उल्लेख गरेको कारण (यदि छ भने) मुद्दाको इतिहासमा राखिन्छ।"
+    },
+    "proposals": {
+      "title": "अद्यावधिक प्रस्तावहरू",
+      "subtitle": "स्वचालित प्रणालीले तयार पारेका मुद्दा अद्यावधिकहरू समीक्षाको प्रतीक्षामा छन्। मुद्दामा परिवर्तन लागू गर्न स्वीकृत गर्नुहोस्, आवश्यक नभए अस्वीकृत गर्नुहोस्।",
+      "pendingCount": "{{count}} विचाराधीन",
+      "loadFailed": "प्रस्तावहरू लोड गर्न असफल भयो।",
+      "loading": "प्रस्तावहरू लोड हुँदै…",
+      "allSources": "सबै स्रोत",
+      "filterBySource": "स्रोत अनुसार छान्नुहोस्",
+      "searchLabel": "प्रस्ताव खोज्नुहोस्",
+      "searchPlaceholder": "खोज्नुहोस्…",
+      "noneMatch": "कुनै प्रस्ताव मिल्दैन।",
+      "selectPrompt": "समीक्षा गर्न प्रस्ताव छान्नुहोस्।",
+      "caseLabel": "मुद्दा",
+      "confidence": "विश्वसनीयता",
+      "proposedChange": "प्रस्तावित परिवर्तन",
+      "detectedBy": "पहिचान गर्ने",
+      "sourceLabel": "स्रोत",
+      "dedupKey": "दोहोरोपन कुञ्जी",
+      "supersedes": "प्रतिस्थापित प्रस्ताव",
+      "supersedesShort": "प्रतिस्थापन",
+      "linkedRecords": "सम्बन्धित अभिलेख",
+      "notesPlaceholder": "समीक्षा टिप्पणी (वैकल्पिक)…",
+      "approve": "स्वीकृत गरी लागू गर्नुहोस्",
+      "reject": "अस्वीकृत गर्नुहोस्",
+      "deciding": "प्रक्रियामा…",
+      "filed": "दर्ता {{date}}",
+      "decidedBy": "{{who}} द्वारा {{status}}",
+      "automation": "स्वचालित प्रणाली",
+      "caseworkerManual": "मुद्दा अधिकृत (हातैले)",
+      "caseworkerNamed": "मुद्दा अधिकृत ({{who}})",
+      "relation": "सम्बन्ध: {{relation}}",
+      "rfcPatch": "RFC-6902 प्याच",
+      "approvedToast": "प्रस्ताव स्वीकृत गरियो",
+      "rejectedToast": "प्रस्ताव अस्वीकृत गरियो",
+      "actionFailed": "कार्य असफल भयो",
+      "actionFailedBody": "प्रस्ताव अद्यावधिक गर्न सकिएन।",
+      "toastDetail": "“{{title}}” मा {{intent}}।",
+      "opCount_one": "{{count}} कार्य",
+      "opCount_other": "{{count}} कार्यहरू",
+      "filters": {
+        "all": "सबै",
+        "pending": "विचाराधीन",
+        "approved": "स्वीकृत",
+        "rejected": "अस्वीकृत",
+        "superseded": "प्रतिस्थापित"
+      },
+      "band": {
+        "high": "उच्च",
+        "medium": "मध्यम",
+        "low": "न्यून"
+      },
+      "sources": {
+        "ngm_docket": "अदालती लगत",
+        "court_order": "अदालती आदेश",
+        "ciaa_press": "अख्तियारको प्रेस विज्ञप्ति",
+        "news": "समाचार",
+        "caseworker": "मुद्दा अधिकृत"
+      },
+      "intents": {
+        "append_timeline_entry": "समयरेखामा प्रविष्टि थप्नुहोस्",
+        "set_status": "स्थिति परिवर्तन गर्नुहोस्",
+        "link_material": "सामग्री जोड्नुहोस्",
+        "raw_patch": "प्रत्यक्ष प्याच"
+      },
+      "effects": {
+        "append_timeline_entry": "यो प्रविष्टि मुद्दाको सार्वजनिक समयरेखामा थपिनेछ।",
+        "set_status": "मुद्दाको {{field}} फिल्ड “{{to}}” मा राखिनेछ।",
+        "link_material": "पहिले नै रहेको कागजात मुद्दासँग जोडिनेछ (नयाँ कागजात बन्दैन)।",
+        "raw_patch": "यी RFC-6902 कार्यहरू मुद्दाको अभिलेखमा लागू गरिनेछन्।"
+      },
+      "statuses": {
+        "pending": "विचाराधीन",
+        "approved": "स्वीकृत",
+        "rejected": "अस्वीकृत",
+        "superseded": "प्रतिस्थापित"
+      }
     },
     "caseForm": {
       "backToCases": "मुद्दाहरू",

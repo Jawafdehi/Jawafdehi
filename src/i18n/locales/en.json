@@ -1675,6 +1675,7 @@
       "casesGroup": "Jawafdehi — Cases",
       "cases": "Cases",
       "casework": "Casework",
+      "proposals": "Proposals",
       "reviews": "Reviews",
       "rules": "Rules",
       "moderation": "Moderation"
@@ -1738,6 +1739,83 @@
       "dismissedFailure": "Failed to dismiss case",
       "dismissConfirmTitle": "Dismiss this submission?",
       "dismissConfirmBody": "Dismissing closes the case and removes it from the moderation queue. You can reopen it as a draft later. The reason you entered (if any) is recorded in the case history."
+    },
+    "proposals": {
+      "title": "Update proposals",
+      "subtitle": "Automation-drafted case updates awaiting review. Approve to apply the change to the case, reject to dismiss it.",
+      "pendingCount": "{{count}} pending",
+      "loadFailed": "Failed to load proposals.",
+      "loading": "Loading proposals…",
+      "allSources": "All sources",
+      "filterBySource": "Filter by source",
+      "searchLabel": "Search proposals",
+      "searchPlaceholder": "Search…",
+      "noneMatch": "No proposals match.",
+      "selectPrompt": "Select a proposal to review.",
+      "caseLabel": "Case",
+      "confidence": "Confidence",
+      "proposedChange": "Proposed change",
+      "detectedBy": "Detected by",
+      "sourceLabel": "Source",
+      "dedupKey": "Dedup key",
+      "supersedes": "Supersedes",
+      "supersedesShort": "supersedes",
+      "linkedRecords": "Linked records",
+      "notesPlaceholder": "Review note (optional)…",
+      "approve": "Approve & apply",
+      "reject": "Reject",
+      "deciding": "Working…",
+      "filed": "filed {{date}}",
+      "decidedBy": "{{status}} by {{who}}",
+      "automation": "Automation",
+      "caseworkerManual": "Caseworker (manual)",
+      "caseworkerNamed": "Caseworker ({{who}})",
+      "relation": "Relation: {{relation}}",
+      "rfcPatch": "RFC-6902 patch",
+      "approvedToast": "Proposal approved",
+      "rejectedToast": "Proposal rejected",
+      "actionFailed": "Action failed",
+      "actionFailedBody": "Could not update the proposal.",
+      "toastDetail": "{{intent}} on “{{title}}”.",
+      "opCount_one": "{{count}} op",
+      "opCount_other": "{{count}} ops",
+      "filters": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "superseded": "Superseded"
+      },
+      "band": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "sources": {
+        "ngm_docket": "Court docket",
+        "court_order": "Court order",
+        "ciaa_press": "CIAA press",
+        "news": "News",
+        "caseworker": "Caseworker"
+      },
+      "intents": {
+        "append_timeline_entry": "Add timeline entry",
+        "set_status": "Change status",
+        "link_material": "Link material",
+        "raw_patch": "Raw patch"
+      },
+      "effects": {
+        "append_timeline_entry": "Appends this entry to the case's public timeline.",
+        "set_status": "Sets the case {{field}} field to “{{to}}”.",
+        "link_material": "Attaches an existing document to the case (no new document is created).",
+        "raw_patch": "Applies these RFC-6902 operations to the case record."
+      },
+      "statuses": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "superseded": "Superseded"
+      }
     },
     "caseForm": {
       "backToCases": "Cases",

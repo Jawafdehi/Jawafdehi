@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   ClipboardCheck,
   FileText,
+  Inbox,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -93,6 +94,7 @@ const NAV: NavGroup[] = [
   {
     headingKey: "admin.nav.casework",
     items: [
+      { to: "/admin/proposals", labelKey: "admin.nav.proposals", icon: Inbox },
       { to: "/admin/reviews", labelKey: "admin.nav.reviews", icon: ClipboardCheck },
       { to: "/admin/rules", labelKey: "admin.nav.rules", icon: ScrollText },
       {
