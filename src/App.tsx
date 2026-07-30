@@ -61,6 +61,11 @@ const CourtCases = lazy(() => import("./pages/CourtCases"));
 const NewsletterUnsubscribe = lazy(() => import("./pages/NewsletterUnsubscribe"));
 const NewsletterConfirmed = lazy(() => import("./pages/NewsletterConfirmed"));
 
+// PROTOTYPE: dev-only, unauthenticated preview of the proposal review queue
+// (mock data) so it can be exercised with `bun dev` and zero backend. The live
+// API-backed page is at /admin/proposals (CaseworkProposals). Guarded by DEV.
+const ProposalsPreview = lazy(() => import("./pages/CaseworkProposalsPreview"));
+
 // The entire /admin/* subtree — including the OIDC client, admin CRUD forms and
 // casework pages — lives behind this single lazy boundary. /admin is auth-gated
 // and never pre-rendered, so none of it belongs in the public entry chunk.
@@ -99,6 +104,12 @@ const App = () => (
           {/* Embed route for oEmbed iframe */}
           <Route path="/embed/case/:id" element={<EmbedCaseCard />} />
           <Route path="/document-viewer" element={<DocumentPreviewPage />} />
+
+          {/* PROTOTYPE: dev-only preview of the caseworker proposal queue,
+              outside the /admin auth gate so it runs with no backend. */}
+          {import.meta.env.DEV && (
+            <Route path="/dev/proposals" element={<ProposalsPreview />} />
+          )}
 
           {/* Unified admin panel — standalone full-screen, mounted at /admin.
               Folds in the former /portal casework pages. Auth: OIDC + an
