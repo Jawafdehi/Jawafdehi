@@ -23,13 +23,15 @@ interface ApiRow {
   source: string;
   detected_by: string;
   dedup_key: string;
-  supersedes: string;
+  // Nullable on the wire (blank CharFields / an unset reviewer); adapt() below
+  // normalises each into the shape the UI wants.
+  supersedes: string | null;
   origin_subject: string;
   origin_msg_id: string;
   subject_refs: string[];
-  reviewer: string;
+  reviewer: string | null;
   reviewed_at: string | null;
-  review_notes: string;
+  review_notes: string | null;
   created_at: string;
 }
 
@@ -71,15 +73,52 @@ interface Paginated<T> {
   results: T[];
 }
 
+// Hard cap on pages walked, so a malformed/cyclic `next` chain can't spin forever.
+const MAX_PAGES = 50;
+
+// Pull the `page` cursor out of a DRF `next` link. We deliberately re-request the
+// RELATIVE path with that cursor rather than following `next` verbatim: `next` is
+// absolute and built from the request host, which behind the CDN/proxy can come
+// back as an origin the browser shouldn't (or can't) call, and an absolute URL
+// would also bypass the client's baseURL and auth setup.
+function nextPage(next: string | null | undefined): number | null {
+  if (!next) return null;
+  const page = new URL(next, "https://placeholder.invalid").searchParams.get("page");
+  const n = Number(page);
+  return Number.isFinite(n) && n > 1 ? n : null;
+}
+
+// Fetches EVERY page, not just the first. The monolith paginates all list
+// endpoints by default (PAGE_SIZE 20), so returning only page one silently hides
+// proposal 21 onward — and a review queue that quietly omits pending work is
+// worse than one that is slow. The queue also filters and sorts client-side, so
+// it needs the whole set to be correct.
+//
+// No `page` parameter: this returns all pages by definition, so asking for one
+// of them would be contradictory. `page_size` is still honoured (it just trades
+// round-trips for response size).
 export async function listProposals(params?: {
   status?: string;
   source_kind?: string;
   case_slug?: string;
-  page?: number;
   page_size?: number;
 }): Promise<CaseUpdateProposal[]> {
-  const { data } = await client.get<Paginated<ApiRow> | ApiRow[]>(`${BASE}/`, { params });
-  const rows = Array.isArray(data) ? data : (data?.results ?? []);
+  const rows: ApiRow[] = [];
+  let page: number | null = null;
+
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const { data } = await client.get<Paginated<ApiRow> | ApiRow[]>(`${BASE}/`, {
+      params: page ? { ...params, page } : params,
+    });
+    if (Array.isArray(data)) {
+      // Pagination disabled server-side — one unwrapped array, nothing to follow.
+      rows.push(...data);
+      break;
+    }
+    rows.push(...(data?.results ?? []));
+    page = nextPage(data?.next);
+    if (!page) break;
+  }
   return rows.map(adapt);
 }
 
