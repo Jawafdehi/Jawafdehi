@@ -1,6 +1,6 @@
-// PROTOTYPE — the caseworker "case update proposal" review queue (master/detail).
-// Presentational + self-contained (no auth/provider deps) so it renders both in
-// the admin panel (/admin/proposals) and the dev preview (/dev/proposals).
+// The caseworker "case update proposal" review queue (master/detail).
+// Presentational + self-contained (no auth/provider deps); the API-backed page
+// at /admin/proposals (CaseworkProposals) supplies the data and decision handler.
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
