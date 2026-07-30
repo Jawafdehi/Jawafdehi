@@ -214,6 +214,7 @@ function ProposalRow({ p, active, onClick }: { p: CaseUpdateProposal; active: bo
 function DetailPane({
   p,
   onDecision,
+  onEditIntent,
 }: {
   p: CaseUpdateProposal;
   onDecision?: (id: string, d: Decision, notes: string) => void | Promise<void>;
