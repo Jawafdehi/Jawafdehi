@@ -1,10 +1,11 @@
 // Baked, point-in-time dataset for the "Corruption Accountability" research report
 // (/research/corruption-accountability). Frozen snapshot — regenerate from the
-// reproducible notebook in the meta repo
-// (work/2026-07-24-corruption-research-notebook: corpus_data.py derives every table
-// from the Special Court -CR- criminal register; assumptions.csv holds the CIAA
-// annual-report figures). The by-year axis is FISCAL YEAR (2069/70 … 2082/83), the
-// same fiscal-year binning the notebook uses — never single Bikram-Sambat years.
+// reproducible research pack at github.com/Jawafdehi/corruption-research
+// (corpus_data.py derives every table from the Special Court -CR- criminal register;
+// dataset/assumptions.csv holds the CIAA annual-report figures). Reading it needs no
+// credentials: `python -c "import corpus_data as cd; print(cd.build_frames()['<table>'])"`.
+// The by-year axis is FISCAL YEAR (2069/70 … 2082/83), the same fiscal-year binning
+// the notebook uses — never single Bikram-Sambat years.
 //
 // Every figure is sourced to an IN-PLATFORM material or court record (see `citations`),
 // never an external news site. Public copy never names the internal court-data pipeline;
@@ -90,6 +91,22 @@ export type MonthFiling = {
   sd: number;
 };
 
+export type SourceAgreementRow = {
+  /** Fiscal year the filing is attributed to, as its start year — 2069 = FY 2069/70. */
+  fy: number;
+  /** Filings the CIAA's own annual reports publish for that year. */
+  ciaaFiled: number;
+  /** Register cases plausibly CIAA-filed: all -CR- minus the non-CIAA streams. */
+  registerComparable: number;
+};
+
+/** A reason a register case is absent from the CIAA's own filing table, and how many. */
+export type SurplusReason = {
+  en: string;
+  ne: string;
+  count: number;
+};
+
 /** Fiscal-year label from its start year: 2069 → "2069/70", 2082 → "2082/83". */
 export const fyLabel = (fy: number): string => `${fy}/${String((fy + 1) % 100).padStart(2, "0")}`;
 
@@ -126,25 +143,36 @@ export const REPORT = {
   // filter — the register *is* the definition), FY2069/70–2082/83.
   corpus: {
     specialCourtRows: 12601, // full Special Court archive (all registers)
-    ciaaProsecutions: 2880, // -CR- criminal register, FY2069/70–2082/83 (no plaintiff filter)
-    substantive: 2726, // minus money-laundering (93) + unclassified other (61)
+    ciaaProsecutions: 2949, // -CR- criminal register, FY2069/70–2082/83 (no plaintiff filter)
+    substantive: 2795, // minus money-laundering (93) + unclassified other (61)
   },
 
   // --- Outcomes (corpus) — case-grain dispositions ---
-  // Two denominators, by design (matches the notebook):
+  // Two denominators, by design (matches the notebook), and they are OVERLAPPING sets,
+  // not nested — do not describe one as a subset of the other:
   //   • convicted + partial + acquitted = 2,728 clean dispositions (ठहर / आंशिक / सफाई) —
   //     the conviction-rate denominator and the donut total.
-  //   • `decided` = 2,710 cases whose case_status starts फैसला — 18 fewer, because a few
-  //     carry a deciding-hearing disposition without that status; this is what the
-  //     filed-vs-decided trend (`trend.decided`) sums to.
-  // `ongoing` = 169 cases with a status but no terminal disposition (= sum of cohort `pending`).
+  //   • `decided` = 2,740 cases whose case_status starts फैसला — what the filed-vs-decided
+  //     trend (`trend.decided`) sums to.
+  // 2,628 cases are in both. 112 are marked decided but carry no hearing with a
+  // decision_type (mostly the mirror's latest backfill); 100 carry a disposition
+  // without a फैसला status.
+  // `ongoing` = 206 cases with a status but no terminal disposition (= sum of cohort `pending`).
   outcome: {
     convicted: 1230,
     partial: 442,
     acquitted: 1056,
-    decided: 2710,
-    ongoing: 169,
+    decided: 2740,
+    ongoing: 206,
   } satisfies OutcomeCounts & { decided: number; ongoing: number },
+
+  /**
+   * Verdicts READ OUT OF JUDGMENT TEXT by a model rather than published by the court on a
+   * cause list (37 ठहर / 26 सफाई / 6 आंशिक ठहर). Every rate on this page EXCLUDES them —
+   * the notebook drops them before computing anything and reports the count, so the
+   * exclusion is a visible number rather than a silent filter.
+   */
+  verdictsModelDerivedExcluded: 69,
 
   // --- Conviction by charge type, sorted high → low conviction rate ---
   byCharge: [
@@ -163,20 +191,22 @@ export const REPORT = {
     { en: "Illegal benefit", ne: "गैरकानुनी लाभ", convicted: 6, partial: 39, acquitted: 89 },
   ] satisfies ChargeOutcome[],
 
-  // --- Offense mix — substantive prosecutions filed by offense family ---
+  // --- Offense mix — prosecutions filed by offense family ---
+  // Sums to 2,888 = the 2,795 substantive cases PLUS the 93 money-laundering ones, which
+  // get their own row here. Only the unclassifiable `other` bucket (61) is left out.
   mix: [
-    { en: "Bribery", ne: "रिसवत / घुस", count: 933 },
-    { en: "Fake credential", ne: "नक्कली प्रमाण पत्र", count: 644 },
-    { en: "Embezzlement", ne: "रकम हिनामिना", count: 387 },
-    { en: "Loss to government", ne: "हानीनोक्सानी", count: 176 },
-    { en: "Illegal benefit", ne: "गैरकानुनी लाभ", count: 140 },
+    { en: "Bribery", ne: "रिसवत / घुस", count: 935 },
+    { en: "Fake credential", ne: "नक्कली प्रमाण पत्र", count: 680 },
+    { en: "Embezzlement", ne: "रकम हिनामिना", count: 393 },
+    { en: "Loss to government", ne: "हानीनोक्सानी", count: 186 },
+    { en: "Illegal benefit", ne: "गैरकानुनी लाभ", count: 143 },
     { en: "Irregularity", ne: "अनियमितता", count: 136 },
-    { en: "Illicit enrichment", ne: "गैरकानूनी सम्पत्ति", count: 107 },
+    { en: "Illicit enrichment", ne: "गैरकानूनी सम्पत्ति", count: 110 },
     { en: "Money laundering", ne: "सम्पत्ति शुद्धीकरण", count: 93 },
-    { en: "False statement", ne: "झुठ्ठा विवरण", count: 61 },
-    { en: "Govt land misregistration", ne: "सरकारी जग्गा", count: 42 },
-    { en: "Revenue leakage", ne: "राजश्व चुहावट", count: 37 },
-    { en: "Forged document", ne: "गलत लिखत", count: 34 },
+    { en: "False statement", ne: "झुठ्ठा विवरण", count: 63 },
+    { en: "Govt land misregistration", ne: "सरकारी जग्गा", count: 43 },
+    { en: "Revenue leakage", ne: "राजश्व चुहावट", count: 39 },
+    { en: "Forged document", ne: "गलत लिखत", count: 38 },
     { en: "Exam rigging", ne: "परीक्षा फेरबदल", count: 29 },
   ],
 
@@ -226,8 +256,8 @@ export const REPORT = {
   // --- Filed vs decided, by fiscal year (years = FY start; 2069 = FY 2069/70) ---
   trend: {
     years: [2069, 2070, 2071, 2072, 2073, 2074, 2075, 2076, 2077, 2078, 2079, 2080, 2081, 2082],
-    filed: [126, 185, 310, 150, 164, 197, 369, 445, 127, 135, 176, 211, 143, 142],
-    decided: [35, 87, 191, 218, 171, 176, 229, 172, 135, 339, 270, 503, 130, 54],
+    filed: [126, 188, 319, 159, 168, 197, 371, 450, 127, 135, 176, 211, 143, 179],
+    decided: [35, 87, 202, 222, 179, 176, 230, 178, 135, 339, 270, 503, 130, 54],
   },
 
   // --- Charge mix by fiscal filing year, substantive prosecutions ---
@@ -238,36 +268,36 @@ export const REPORT = {
   // and loss to government grow.
   chargeMixByYear: [
     { fy: 2069, bribery: 7, fake: 79, embezzlement: 2, benefit: 1, loss: 0, other: 24 },
-    { fy: 2070, bribery: 22, fake: 78, embezzlement: 15, benefit: 0, loss: 2, other: 64 },
-    { fy: 2071, bribery: 68, fake: 91, embezzlement: 90, benefit: 0, loss: 10, other: 50 },
-    { fy: 2072, bribery: 47, fake: 46, embezzlement: 25, benefit: 0, loss: 2, other: 26 },
-    { fy: 2073, bribery: 62, fake: 40, embezzlement: 28, benefit: 0, loss: 1, other: 27 },
+    { fy: 2070, bribery: 22, fake: 81, embezzlement: 15, benefit: 0, loss: 2, other: 64 },
+    { fy: 2071, bribery: 68, fake: 99, embezzlement: 91, benefit: 0, loss: 10, other: 50 },
+    { fy: 2072, bribery: 47, fake: 54, embezzlement: 25, benefit: 0, loss: 2, other: 27 },
+    { fy: 2073, bribery: 62, fake: 44, embezzlement: 28, benefit: 0, loss: 1, other: 27 },
     { fy: 2074, bribery: 97, fake: 58, embezzlement: 21, benefit: 0, loss: 0, other: 17 },
-    { fy: 2075, bribery: 148, fake: 91, embezzlement: 51, benefit: 0, loss: 1, other: 69 },
-    { fy: 2076, bribery: 222, fake: 79, embezzlement: 58, benefit: 0, loss: 18, other: 58 },
+    { fy: 2075, bribery: 148, fake: 93, embezzlement: 51, benefit: 0, loss: 1, other: 69 },
+    { fy: 2076, bribery: 222, fake: 84, embezzlement: 58, benefit: 0, loss: 18, other: 58 },
     { fy: 2077, bribery: 70, fake: 3, embezzlement: 11, benefit: 0, loss: 18, other: 11 },
     { fy: 2078, bribery: 32, fake: 6, embezzlement: 31, benefit: 9, loss: 26, other: 28 },
     { fy: 2079, bribery: 31, fake: 8, embezzlement: 21, benefit: 40, loss: 22, other: 43 },
     { fy: 2080, bribery: 48, fake: 31, embezzlement: 7, benefit: 40, loss: 34, other: 43 },
     { fy: 2081, bribery: 36, fake: 27, embezzlement: 10, benefit: 30, loss: 16, other: 22 },
-    { fy: 2082, bribery: 40, fake: 7, embezzlement: 17, benefit: 20, loss: 26, other: 25 },
+    { fy: 2082, bribery: 41, fake: 13, embezzlement: 22, benefit: 23, loss: 36, other: 36 },
   ] satisfies ChargeMixYear[],
 
   // --- Cases filed per Nepali month — mean ± sample SD across complete years ---
   // Filings peak in Ashadh (fiscal year-end) and trough in Kartik (Dashain/Tihar).
   filedByMonth: [
-    { month: 1, name: "Baisakh", mean: 14.1, sd: 7.2 },
-    { month: 2, name: "Jestha", mean: 21.0, sd: 13.8 },
-    { month: 3, name: "Ashadh", mean: 24.6, sd: 15.0 },
-    { month: 4, name: "Shrawan", mean: 15.4, sd: 8.7 },
-    { month: 5, name: "Bhadra", mean: 19.6, sd: 12.9 },
+    { month: 1, name: "Baisakh", mean: 14.9, sd: 7.4 },
+    { month: 2, name: "Jestha", mean: 21.3, sd: 13.6 },
+    { month: 3, name: "Ashadh", mean: 26.6, sd: 13.9 },
+    { month: 4, name: "Shrawan", mean: 15.6, sd: 8.8 },
+    { month: 5, name: "Bhadra", mean: 19.9, sd: 13.2 },
     { month: 6, name: "Ashwin", mean: 16.1, sd: 12.3 },
-    { month: 7, name: "Kartik", mean: 11.6, sd: 11.4 },
-    { month: 8, name: "Mangsir", mean: 15.4, sd: 11.3 },
-    { month: 9, name: "Poush", mean: 17.0, sd: 11.3 },
-    { month: 10, name: "Magh", mean: 15.8, sd: 8.1 },
-    { month: 11, name: "Falgun", mean: 18.1, sd: 14.8 },
-    { month: 12, name: "Chaitra", mean: 16.9, sd: 7.0 },
+    { month: 7, name: "Kartik", mean: 11.7, sd: 11.8 },
+    { month: 8, name: "Mangsir", mean: 15.5, sd: 11.1 },
+    { month: 9, name: "Poush", mean: 17.4, sd: 12.0 },
+    { month: 10, name: "Magh", mean: 15.9, sd: 8.1 },
+    { month: 11, name: "Falgun", mean: 18.3, sd: 15.0 },
+    { month: 12, name: "Chaitra", mean: 17.6, sd: 7.5 },
   ] satisfies MonthFiling[],
 
   // --- Funnel (CIAA annual report + our court records) ---
@@ -298,8 +328,8 @@ export const REPORT = {
 
   // --- Defendant identity resolution ---
   entityResolution: {
-    defendantRows: 9321,
-    distinctNames: 8114,
+    defendantRows: 9576,
+    distinctNames: 8321,
     resolved: 607,
   },
 
@@ -330,26 +360,85 @@ export const REPORT = {
     // Filing-year cohorts (fiscal): decided vs still-pending, and median months from
     // registration to verdict. Cohorts through `completeThroughFy` are essentially
     // fully adjudicated; later cohorts are still open, so their median is provisional.
-    // pending sums to 169 = outcome.ongoing; decided+pending ≈ trend.filed per year.
+    // pending sums to 206 = outcome.ongoing; decided+pending ≈ trend.filed per year.
     cohorts: [
       { fy: 2069, decided: 126, pending: 0, medianMonths: 11.0 },
-      { fy: 2070, decided: 185, pending: 0, medianMonths: 13.0 },
-      { fy: 2071, decided: 310, pending: 0, medianMonths: 13.0 },
-      { fy: 2072, decided: 150, pending: 0, medianMonths: 15.5 },
-      { fy: 2073, decided: 164, pending: 0, medianMonths: 16.0 },
+      { fy: 2070, decided: 188, pending: 0, medianMonths: 12.5 },
+      { fy: 2071, decided: 319, pending: 0, medianMonths: 13.0 },
+      { fy: 2072, decided: 157, pending: 0, medianMonths: 14.0 },
+      { fy: 2073, decided: 168, pending: 0, medianMonths: 16.0 },
       { fy: 2074, decided: 197, pending: 0, medianMonths: 14.0 },
-      { fy: 2075, decided: 369, pending: 0, medianMonths: 19.0 },
-      { fy: 2076, decided: 445, pending: 0, medianMonths: 30.0 },
+      { fy: 2075, decided: 371, pending: 0, medianMonths: 19.0 },
+      { fy: 2076, decided: 450, pending: 0, medianMonths: 30.0 },
       { fy: 2077, decided: 127, pending: 0, medianMonths: 22.0 },
       { fy: 2078, decided: 135, pending: 0, medianMonths: 19.0 },
       { fy: 2079, decided: 176, pending: 0, medianMonths: 12.0 },
       { fy: 2080, decided: 209, pending: 2, medianMonths: 5.0 },
       { fy: 2081, decided: 90, pending: 53, medianMonths: 4.0 },
-      { fy: 2082, decided: 27, pending: 114, medianMonths: 3.0 },
+      { fy: 2082, decided: 27, pending: 151, medianMonths: 3.0 },
     ] satisfies CohortRow[],
 
     /** Filing cohorts up to and including this fiscal year are treated as complete. */
     completeThroughFy: 2079,
+  },
+
+  // --- Cross-check: the CIAA's own reports against the court's register ------------
+  // Two independent written records of the same event — the CIAA deciding to prosecute,
+  // and the Special Court opening a docket. Neither is a copy of the other, so where they
+  // agree the number is corroborated twice and where they diverge it can be settled case
+  // by case, because both name the accused.
+  //
+  // `registerComparable` = every -CR- case registered that fiscal year, minus 154 cases in
+  // streams the CIAA does not file (93 money laundering, 33 petitions filed *against* the
+  // CIAA, 24 offences outside its jurisdiction, 4 mixed dockets). That exclusion is
+  // marginally over-broad and the page says so: the FY2081/82 report shows the CIAA filed
+  // two money-laundering cases itself.
+  //
+  // FY2082/83 is deliberately absent — the 36th annual report is unpublished, so there is
+  // no CIAA figure to compare against.
+  sourceAgreement: [
+    { fy: 2069, ciaaFiled: 93, registerComparable: 100 },
+    { fy: 2070, ciaaFiled: 168, registerComparable: 167 },
+    { fy: 2071, ciaaFiled: 303, registerComparable: 310 },
+    { fy: 2072, ciaaFiled: 144, registerComparable: 147 },
+    { fy: 2073, ciaaFiled: 154, registerComparable: 158 },
+    { fy: 2074, ciaaFiled: 194, registerComparable: 193 },
+    { fy: 2075, ciaaFiled: 351, registerComparable: 358 },
+    { fy: 2076, ciaaFiled: 441, registerComparable: 440 },
+    { fy: 2077, ciaaFiled: 113, registerComparable: 113 },
+    { fy: 2078, ciaaFiled: 131, registerComparable: 132 },
+    { fy: 2079, ciaaFiled: 162, registerComparable: 165 },
+    { fy: 2080, ciaaFiled: 201, registerComparable: 202 },
+    { fy: 2081, ciaaFiled: 137, registerComparable: 139 },
+  ] satisfies SourceAgreementRow[],
+
+  crossCheck: {
+    /** Fiscal years with a published CIAA figure to compare against. */
+    yearsCompared: 13,
+    /** Column totals of `sourceAgreement` — 1.2% apart. */
+    ciaaFiledTotal: 2592,
+    registerComparableTotal: 2624,
+    /** Register cases removed as streams the CIAA does not file. */
+    nonCiaaStreams: 154,
+    /** Net difference across the 8 years where a category-level comparison is possible. */
+    netDelta: 28,
+    /** Of that net difference, how much is fake-credential cases alone. */
+    fakeCertDelta: 22,
+    /** The three widest-divergence years (FY2069/70, FY2071/72, FY2075/76), checked case by case. */
+    yearsExamined: 3,
+    /** Cases those three reports list as filed, read off their own per-case filing tables. */
+    ciaaListed: 254,
+    /** How many of those 254 were found in the register. All of them. */
+    foundInRegister: 254,
+    /** Register cases in those years that the reports' own filing tables never list. */
+    registerSurplus: 19,
+    /** Why those 19 are missing. Sums to `registerSurplus`. */
+    surplusReasons: [
+      { en: "Counted in the previous year's report", ne: "अघिल्लो वर्षको प्रतिवेदनमा गणना", count: 5 },
+      { en: "Omitted, but confirmed by a later report", ne: "छुटेको, तर पछिको प्रतिवेदनले पुष्टि गरेको", count: 4 },
+      { en: "Recorded under a different offence label", ne: "फरक कसुर शीर्षकमा अभिलेखित", count: 1 },
+      { en: "Still unexplained", ne: "अझै अस्पष्ट", count: 9 },
+    ] satisfies SurplusReason[],
   },
 } as const;
 
