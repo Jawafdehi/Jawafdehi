@@ -139,9 +139,9 @@
       "searchSubmit": "जवाफदेहीमा खोज्नुहोस्",
       "stats": {
         "casesDocumented": "दस्तावेजीकृत मुद्दाहरू",
-        "officialsAndEntitiesTracked": "अनुगमन गरिएका व्यक्ति/संस्था",
         "totalBigo": "कुल बिगो रकम",
-        "materials": "कागजात तथा अन्य सामग्री"
+        "materials": "कागजात तथा अन्य सामग्री",
+        "courtCasesTracked": "अनुगमन गरिएका अदालती मुद्दा"
       },
       "coverageLink": "हामी के के समेट्छौं"
     },

@@ -139,9 +139,9 @@
       "searchSubmit": "Search Jawafdehi",
       "stats": {
         "casesDocumented": "Cases documented",
-        "officialsAndEntitiesTracked": "Officials & entities tracked",
         "totalBigo": "Total embezzled amount",
-        "materials": "Documents & other materials"
+        "materials": "Documents & other materials",
+        "courtCasesTracked": "Court cases tracked"
       },
       "coverageLink": "See what we cover"
     },
