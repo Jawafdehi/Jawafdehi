@@ -1246,7 +1246,7 @@
       "byCharge": {
         "eyebrow": "What actually sticks",
         "heading": "Conviction depends overwhelmingly on what was charged",
-        "lead": "Fake-credential cases convict at 90% and make up nearly half of all convictions. The signature financial-graft charges — bribery, embezzlement, illicit wealth — mostly fail, bottoming out at illegal benefit (4.5%).",
+        "lead": "Two charges carry the court. Fake-credential cases convict at {{fakePct}}% and supply {{fakeShare}}% of every full conviction. Bribery — the largest docket on the court, {{briberyDecided}} decided cases — convicts at {{briberyPct}}%, the second-highest rate of any charge and a shade above the court average, and supplies another {{briberyShare}}%. Between them that is four in five convictions. It is the rest of the docket that mostly fails: embezzlement, illicit enrichment and loss to government all convert in the low twenties or below, and illegal benefit sits at the bottom on {{benefitPct}}%.",
         "avgLine": "45% court average",
         "caption": "Decided cases per charge type, split by outcome. Cited to the underlying charge sheets and court records."
       },
@@ -1316,7 +1316,7 @@
         "charging": {
           "owner": "CIAA",
           "title": "Investigation & charging",
-          "body": "Of the complaints it fully investigates the CIAA prosecutes about 1 in 7, and what it chooses to charge decides the outcome more than anything the court does. Documentary fake-certificate cases supply 46% of all convictions; core financial corruption converts at around 32%. The system convicts paperwork more reliably than plunder."
+          "body": "Of the complaints it fully investigates the CIAA prosecutes about 1 in 7, and what it charges shapes the outcome more than anything the court does. Two charges do almost all the work: fake credentials convict at {{fakePct}}% and bribery at {{briberyPct}}%, and between them they account for four in five convictions. Take those two out and the rest of the docket converts at {{rest}}%."
         },
         "adjudication": {
           "owner": "Special Court",

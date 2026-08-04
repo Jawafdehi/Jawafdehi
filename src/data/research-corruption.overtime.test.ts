@@ -71,3 +71,47 @@ describe("cross-check — CIAA reports vs the court register", () => {
     expect(cc.foundInRegister).toBe(cc.ciaaListed); // 254 of 254
   });
 });
+
+// The "what actually sticks" lead makes five specific claims about bribery and
+// fake-credential cases. An earlier version of that copy called bribery one of the charges
+// that "mostly fail" when it is in fact second-highest and above the court average — the
+// kind of claim that reads fine, contradicts the chart beside it, and survives a refresh
+// unnoticed. One assertion per claim.
+describe("conviction by charge — the claims the lead copy makes", () => {
+  const rate = (c: (typeof REPORT.byCharge)[number]) =>
+    (c.convicted / (c.convicted + c.partial + c.acquitted)) * 100;
+  const decided = (c: (typeof REPORT.byCharge)[number]) => c.convicted + c.partial + c.acquitted;
+  const byRate = [...REPORT.byCharge].sort((a, b) => rate(b) - rate(a));
+  const find = (en: string) => {
+    const c = REPORT.byCharge.find((x) => x.en === en);
+    if (!c) throw new Error(`charge family missing: ${en}`);
+    return c;
+  };
+  const fake = find("Fake credential");
+  const bribery = find("Bribery");
+  const courtAvg = (REPORT.outcome.convicted / (REPORT.outcome.convicted + REPORT.outcome.partial + REPORT.outcome.acquitted)) * 100;
+
+  it("has fake credential first and bribery second by conviction rate", () => {
+    expect(byRate[0].en).toBe("Fake credential"); // ~90%
+    expect(byRate[1].en).toBe("Bribery"); // ~47%
+  });
+
+  it("has bribery above the court average, not among the failures", () => {
+    expect(rate(bribery)).toBeGreaterThan(courtAvg); // 46.8 > 45.1
+  });
+
+  it("has bribery as the largest decided docket", () => {
+    const largest = [...REPORT.byCharge].sort((a, b) => decided(b) - decided(a))[0];
+    expect(largest.en).toBe("Bribery"); // 903 decided
+  });
+
+  it("has the two of them supplying four in five full convictions", () => {
+    const share = (fake.convicted + bribery.convicted) / REPORT.outcome.convicted;
+    expect(share).toBeGreaterThan(0.78);
+    expect(share).toBeLessThan(0.85); // ~81%
+  });
+
+  it("has illegal benefit at the bottom", () => {
+    expect(byRate.at(-1)?.en).toBe("Illegal benefit"); // 4.5%
+  });
+});

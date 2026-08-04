@@ -89,6 +89,38 @@ const ResearchCorruption = () => {
     { key: "acquitted", label: t("research.corruption.outcome.acquitted", "Acquitted"), value: o.acquitted, color: "hsl(var(--accent))" },
   ];
 
+  // Per-charge figures for the prose, derived so they cannot drift from the chart beside them.
+  // `share` is out of all full convictions, i.e. the same denominator as the outcome donut.
+  const charge = (en: string) => {
+    const c = REPORT.byCharge.find((x) => x.en === en);
+    if (!c) return { pct: 0, share: 0, decided: 0 };
+    const decided = c.convicted + c.partial + c.acquitted;
+    const raw = (c.convicted / decided) * 100;
+    return {
+      pct: Math.round(raw),
+      // One decimal for the low end, where rounding to an integer loses real precision:
+      // illegal benefit is 4.5%, and 4% reads as a different claim.
+      pct1: raw.toFixed(1),
+      share: Math.round((c.convicted / o.convicted) * 100),
+      decided,
+    };
+  };
+  const fake = charge("Fake credential");
+  const bribery = charge("Bribery");
+  const benefit = charge("Illegal benefit");
+  // What is left once the two charges that carry the court are removed — the honest measure
+  // of how the rest of the financial-graft docket does.
+  const restOfDocket = (() => {
+    let cv = 0;
+    let dec = 0;
+    REPORT.byCharge.forEach((c) => {
+      if (c.en === "Fake credential" || c.en === "Bribery") return;
+      cv += c.convicted;
+      dec += c.convicted + c.partial + c.acquitted;
+    });
+    return dec ? Math.round((cv / dec) * 100) : 0;
+  })();
+
   const chargeRows: ChargeRow[] = REPORT.byCharge.map((c) => ({
     label: lang === "ne" ? c.ne : c.en,
     sublabel: lang === "ne" ? c.en : c.ne,
@@ -155,7 +187,7 @@ const ResearchCorruption = () => {
       key: "charging",
       owner: t("research.corruption.gaps.charging.owner", "CIAA"),
       title: t("research.corruption.gaps.charging.title", "Investigation & charging"),
-      body: t("research.corruption.gaps.charging.body", "Of the complaints it fully investigates the CIAA prosecutes about 1 in 7, and what it chooses to charge decides the outcome more than anything the court does. Documentary fake-certificate cases supply 46% of all convictions; core financial corruption converts at around 32%. The system convicts paperwork more reliably than plunder."),
+      body: t("research.corruption.gaps.charging.body", "Of the complaints it fully investigates the CIAA prosecutes about 1 in 7, and what it charges shapes the outcome more than anything the court does. Two charges do almost all the work: fake credentials convict at {{fakePct}}% and bribery at {{briberyPct}}%, and between them they account for four in five convictions. Take those two out and the rest of the docket converts at {{rest}}%.", { fakePct: fake.pct, briberyPct: bribery.pct, rest: restOfDocket }),
     },
     {
       key: "adjudication",
@@ -333,7 +365,7 @@ const ResearchCorruption = () => {
             <Eyebrow>{t("research.corruption.byCharge.eyebrow", "What actually sticks")}</Eyebrow>
             <SectionHeading>{t("research.corruption.byCharge.heading", "Conviction depends overwhelmingly on what was charged")}</SectionHeading>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-              {t("research.corruption.byCharge.lead", "Fake-credential cases convict at 90% and make up nearly half of all convictions. The signature financial-graft charges — bribery, embezzlement, illicit wealth — mostly fail, bottoming out at illegal benefit (4.5%).")}
+              {t("research.corruption.byCharge.lead", "Two charges carry the court. Fake-credential cases convict at {{fakePct}}% and supply {{fakeShare}}% of every full conviction. Bribery — the largest docket on the court, {{briberyDecided}} decided cases — convicts at {{briberyPct}}%, the second-highest rate of any charge and a shade above the court average, and supplies another {{briberyShare}}%. Between them that is four in five convictions. It is the rest of the docket that mostly fails: embezzlement, illicit enrichment and loss to government all convert in the low twenties or below, and illegal benefit sits at the bottom on {{benefitPct}}%.", { fakePct: fake.pct, fakeShare: fake.share, briberyDecided: bribery.decided.toLocaleString(), briberyPct: bribery.pct, briberyShare: bribery.share, benefitPct: benefit.pct1 })}
             </p>
             <div className="mt-8">
               <ConvictionByCharge
