@@ -1220,12 +1220,12 @@
       "crossCheck": {
         "eyebrow": "Cross-check",
         "heading": "Do the two records agree?",
-        "lead": "The CIAA's annual reports and the Special Court's register are independent accounts of the same events — the Commission deciding to prosecute, and the court opening a docket. Across {{years}} fiscal years they agree to {{gap}}%: {{ciaa}} filings the CIAA published against {{register}} comparable cases in the register. Where they diverge it is almost entirely one offence — fake-credential cases account for {{fake}} of the {{net}} net difference, while every offence both sources label the same way matches exactly.",
+        "lead": "The CIAA's annual reports and the Special Court's register are independent accounts of the same events — the Commission deciding to prosecute, and the court opening a docket. Across {{years}} fiscal years they agree to {{gap}}%: {{ciaa}} filings the CIAA published against {{register}} comparable cases in the register, and no single year differs by more than {{worst}}. Where they diverge, one offence dominates. In the {{netYears}} years whose reports break filings down by offence, the register runs {{net}} cases ahead, and {{fake}} of those {{net}} are fake-credential cases alone.",
         "caseLevelLead": "For the {{years}} years where the gap is widest we checked it case by case, matching the accused named in the reports' own filing tables against the accused named in the register. The direction of the divergence turns out to be the opposite of what a missing-records story would predict: every one of the {{listed}} cases the CIAA says it filed is in the register. What the register holds instead is {{surplus}} fake-credential cases that those years' own filing tables never list.",
         "surplusTitle": "Why {{n}} register cases are missing from the CIAA's own tables",
         "surplusSub": "Two of these reasons are documented rather than inferred. Five cases are a difference of principle about which year a filing belongs to: the CIAA attributes it to the year the Commission decided to prosecute, the court to the year the docket was registered — and all five appear in the previous year's report, with decision dates in Ashadh and filing dates that match the register's registration date to the day. Four more are absent from one year's report but described in the next report as prosecutions the CIAA filed at the Special Court and won: one CIAA document contradicting another.",
         "surplusTooltip": "Cases",
-        "caption": "Filing counts from the CIAA's annual reports, cross-checked against the Special Court register. The register side removes {{excluded}} cases in streams the CIAA does not file — money laundering, petitions filed against the CIAA itself, and offences outside its jurisdiction — an exclusion that is marginally over-broad, since the FY2081/82 report shows the CIAA filed two money-laundering cases itself. Three limits travel with this: only {{years}} of the 14 years and one of the 13 offence families have been checked at case level; {{unexplained}} of the {{surplus}} surplus cases remain unexplained; and the reading that the annual report under-counts its own fake-credential filings is established for four specific cases and well supported for the rest, not proven for all."
+        "caption": "Filing counts from the CIAA's annual reports, cross-checked against the Special Court register. The register side removes {{excluded}} cases in streams the CIAA does not file — money laundering, petitions filed against the CIAA itself, offences outside its jurisdiction, and a few mixed dockets — an exclusion that is marginally over-broad, since the FY2081/82 report shows the CIAA filed two money-laundering cases itself. Three limits travel with this: only {{years}} of the 14 years and one of the 13 offence families have been checked at case level; {{unexplained}} of the {{surplus}} surplus cases remain unexplained; and the reading that the annual report under-counts its own fake-credential filings is established for four specific cases and well supported for the rest, not proven for all."
       },
       "outcome": {
         "convicted": "Convicted",
@@ -1237,7 +1237,7 @@
         "heading": "Fewer than half of decided prosecutions end in a clean conviction",
         "donutCenter": "cases decided",
         "lead": "Of {{n}} decided cases with a clear verdict, {{conv}}% end in a full conviction, {{acq}}% in outright acquittal, and {{part}}% in partial conviction — so {{less}}% end in something less than a clean conviction.",
-        "note": "The CIAA reports a higher “success” rate because it counts partial convictions as successes; we keep full and partial separate and lead with the stricter number.",
+        "note": "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. On that same definition this archive gives {{incl}}% — so matching the CIAA's definition does not close the gap with our {{full}}%, it reverses it. We keep full and partial separate and lead with the stricter number.",
         "grainTitle": "What these numbers count, and what “partial” covers",
         "grainCases": "These are cases, not people. The court records one verdict per case and publishes no outcome for each accused separately, so nothing here is a per-person conviction rate and none of it should be read as the share of individuals convicted. A single case may have one accused or a dozen.",
         "grainPartial": "That is also why the middle category does two jobs at once. A partial verdict (आंशिक ठहर) covers a case where one accused was convicted on some charges and cleared of others, AND a case with several accused where some were convicted and others acquitted. The court's record does not distinguish the two, so neither can we. A partial verdict tells you the prosecution did not fail outright; it does not tell you how many people were convicted, or of what.",
@@ -1248,7 +1248,7 @@
         "heading": "Conviction depends overwhelmingly on what was charged",
         "lead": "Two charges carry the court. Fake-credential cases convict at {{fakePct}}% and supply {{fakeShare}}% of every full conviction. Bribery — the largest docket on the court, {{briberyDecided}} decided cases — convicts at {{briberyPct}}%, the second-highest rate of any charge and a shade above the court average, and supplies another {{briberyShare}}%. Between them that is four in five convictions. It is the rest of the docket that mostly fails: embezzlement, illicit enrichment and loss to government all convert in the low twenties or below, and illegal benefit sits at the bottom on {{benefitPct}}%.",
         "avgLine": "45% court average",
-        "caption": "Decided cases per charge type, split by outcome. Cited to the underlying charge sheets and court records."
+        "caption": "Decided cases per charge type, split by outcome — {{n}} of the {{clean}} cases with a clear verdict; the rest carry charge text we could not classify. Money laundering keeps its own row here even though it sits outside the substantive corpus, because it is prosecuted under a separate statute. Every rate is per case, never per accused. Cited to the underlying charge sheets and court records."
       },
       "justice": {
         "eyebrow": "Which bench you draw",
@@ -1257,16 +1257,17 @@
         "bandHigh": "Convicts more (>55%)",
         "bandMid": "Near average",
         "bandLow": "Acquits more (<37%)",
-        "avgLine": "court avg 45%"
+        "avgLine": "court avg 45%",
+        "caption": "Justices who sat on at least {{min}} decided cases — {{n}} of the 41 in the record; below that a rate turns on a handful of verdicts and means little. Because every member of a panel is credited with the panel's outcome, the {{n}} shown are credited with {{decisions}} decisions between them, well above the {{cases}} cases those decisions came from."
       },
       "overTime": {
         "eyebrow": "Over time",
         "heading": "The court convicts far less than it used to",
-        "lead": "In the early years the Special Court fully convicted roughly {{early}}% of the corruption cases it decided; across FY2079/80–2082/83 that fell to about {{recent}}%. Acquittals now routinely outnumber full convictions.",
+        "lead": "In its first three years the Special Court fully convicted roughly {{early}}% of the corruption cases it decided; across FY2079/80–2082/83 that fell to about {{recent}}%. Acquittals have drawn level rather than taken over: across those recent years they slightly outnumber full convictions, {{acq}} to {{conv}}, but in only {{aheadYears}} of the 14 years did they finish a year ahead.",
         "rateTitle": "Outcome mix by verdict year",
-        "rateSub": "Share of decided cases by verdict fiscal year. Acquittals overtook full convictions around FY2078/79.",
+        "rateSub": "Share of decided cases by verdict fiscal year. Acquittals spike above full convictions in FY2078/79 and FY2080/81 — and edge ahead again in FY2082/83 — but they do not stay there.",
         "decompTitle": "Is the decline real? Easy wins vs. core graft",
-        "decompSub": "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft, though, convicts in the same ~30% band throughout — so the headline decline is mostly that change of mix (the easy wins leaving), not the court convicting serious graft any less. The sharp dips (FY2078/79, FY2080/81) are acquittal spikes.",
+        "decompSub": "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft converts at much the same level now as it did then: {{coreEarly}}% across the first three years against {{coreRecent}}% across the last four. So the headline decline is mostly that change of mix — the easy wins leaving — not the court convicting serious graft any less. Read the dashed line as a level, not a trend: it swings from {{coreHigh}}% in FY{{coreHighYear}} to {{coreLow}}% in FY{{coreLowYear}} because in some years only a few dozen core-graft cases were decided.",
         "seriesAll": "All charges",
         "seriesCore": "Core graft (excl. fake credential)",
         "avgLine": "45% cumulative",
@@ -1290,7 +1291,7 @@
         "provisional": "Provisional (cohort still open)",
         "mixByYearTitle": "How the charge mix shifted, by year",
         "mixPercentToggle": "Show as 100%",
-        "mixByYearSub": "Substantive prosecutions by fiscal filing year. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80 (with a rebound in FY2080/81), while the newer illegal-benefit charge (absent before FY2078/79) and loss to government grew.",
+        "mixByYearSub": "Register cases by fiscal filing year — {{n}} of the {{corpus}}, money laundering excluded. “Other” folds together seven smaller charge families and the matters whose charge text could not be classified. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80, with a rebound in FY2080/81. The illegal-benefit charge was barely used before FY2078/79 (a single earlier case, in FY2069/70) and loss to government grew.",
         "mixLabels": {
           "bribery": "Bribery",
           "fake": "Fake credential",
@@ -1303,7 +1304,7 @@
         "monthSub": "Mean cases filed per Nepali month across FY2069/70–2082/83; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.",
         "monthMean": "Mean cases filed",
         "monthSd": "±1 SD",
-        "monthCaption": "Bars are the mean across 14 complete fiscal years (FY2069/70–2082/83); whiskers are ±1 standard deviation — how much each month swings from year to year. Registration date from Special Court records."
+        "monthCaption": "Bars are the mean across the 14 fiscal years FY2069/70–2082/83 — all complete for filings, which is what this chart measures; the most recent cases are filed but many are still awaiting a verdict. Whiskers are ±1 standard deviation, i.e. how much each month swings from year to year. Registration date from Special Court records."
       },
       "gaps": {
         "eyebrow": "Where the gap is",
@@ -1326,7 +1327,7 @@
         "appeal": {
           "owner": "Supreme Court",
           "title": "Appeal",
-          "body": "The CIAA appeals many losses and defendants appeal convictions, but the record carries no decision data for those appeals. How often a Special Court verdict survives — or is overturned — cannot currently be measured from any public source."
+          "body": "The volume is on the record: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. The outcomes are not. Those appeals do get decided — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but no source publishes the results as data, so how often a Special Court verdict survives cannot be measured."
         },
         "recovery": {
           "owner": "State",
@@ -1335,7 +1336,7 @@
         },
         "lead": "Follow one complaint from the day it is filed to the day someone is sanctioned for it. Five stages, two institutions — and the public record stops before the end.",
         "darkLabel": "Not measurable",
-        "caption": "The dashed stages are not stages we failed to measure — they are stages no public source reports at all. That distinction matters: an unmeasured appeal outcome could be anything, and nobody is currently in a position to say."
+        "caption": "The dashed stages are not stages we failed to measure — they are stages whose outcomes no public source reports. Their inputs are published (appeals filed, damages demanded); what becomes of them is not. That distinction matters: an unmeasured appeal outcome could be anything, and nobody is currently in a position to say. Appeal and damages figures: CIAA 35th annual report (FY2081/82)."
       },
       "appendix": {
         "eyebrow": "Methodology",
@@ -1343,13 +1344,13 @@
         "summary": "Full methodology, discrepancies & limits",
         "sourcesLead": "Two independent public records, cross-checked against each other — and both browsable on Jawafdehi. Complaint, investigation and prosecution counts come from the CIAA's own annual reports; conviction outcomes come from our mirror of Nepal's Special Court and wider judiciary. Where the two overlap — the cases filed each year — they agree to 1.2%, and the section above sets out case by case where they do not. Every figure on this page links to the record behind it.",
         "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as the Special Court's -CR- criminal register — 2,949 cases filed FY2069/70–2082/83 (the register is the definition; no plaintiff filter) — of which 2,795 are substantive corruption charges after removing money-laundering (a separate statute, 93 cases) and unclassified matters (61).",
-        "funnel": "The funnel. Of 28,554 newly registered complaints in the year, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7 (the CIAA reports this as 13% of its investigation decisions). So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages; the steep drop is concentrated at screening, not the courtroom.",
+        "funnel": "The funnel. Of 28,554 newly registered complaints in the year, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7. The 37,026 “दर्ता” headline for the same year is the Commission's total workload, which adds 8,472 complaints carried over unresolved from earlier years; starting the funnel there would count those twice. So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages.",
         "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the 2,728 register cases carrying an unambiguous ठहर / आंशिक / सफाई disposition. That is a different set from the 2,740 whose case status reads फैसला (which the filed-vs-decided trend counts), and neither contains the other: 2,628 cases are in both, 112 are marked decided but carry no hearing with a recorded disposition, and 100 carry a disposition without the corresponding status.",
         "derivedVerdicts": "Where a verdict came from. Cases that reached the mirror without ever appearing on a published cause list carry no court-published disposition, so the only way to count them at all is to read the verdict out of the judgment text. {{n}} verdicts were recovered that way (37 conviction, 26 acquittal, 6 partial) and every one of them is EXCLUDED from every rate on this page — a rate that quietly mixed court-published and machine-read verdicts would misrepresent its own source. We report the number rather than filtering silently.",
         "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat dates throughout; by-year charts bin by fiscal year (Shrawan–Ashadh).",
         "overTime": "Over time. Yearly rates are grouped by verdict fiscal year; the sharp rise in acquittals from FY2078/79 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through FY2079/80 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.",
-        "justice": "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.",
-        "discrepancy": "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, whereas our full-conviction rate (45%) is cumulative and separates the two. Never compare the two without aligning definition and period. The filing counts are a separate question, measured rather than assumed — see the cross-check section above.",
+        "justice": "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. The chart shows only justices with at least 30 decided cases — 39 of the 41 in the record — so it is a filtered view. It is descriptive, and small differences are noise.",
+        "discrepancy": "Discrepancy with CIAA figures. The CIAA's {{ciaa}}% “success” rate for FY2081/82 counts full and partial convictions together — its 35th report states it as 87 full plus 120 partial of 393 verdicts. Our headline {{full}}% is full convictions only. Applying the CIAA's own definition to this archive gives {{incl}}%, which is above its figure, not below it — so the two differ by period at least as much as by definition: the CIAA's is one volatile year (its published rates range from 33% to 88%), ours is cumulative across 14. Never compare them without aligning both.",
         "crossCheck": "The cross-check. Matching the reports' per-case filing tables to the register is name matching, not a key lookup: the early high-divergence years print no case number at all, and a case number alone does not identify a court in any event — the same NNN-CR-NNNN format is used by the Special Court, the Supreme Court and the district courts, so a number lifted out of its column resolves to the wrong case. Names were matched after folding Devanagari spelling variants, and the residue was resolved by hand on the date: every pair we accepted matches the printed filing date to the register's registration date to the day. Three pairs were accepted this way and are flagged as such in the published data, so a reader who rejects them can re-derive the totals without them.",
         "entity": "Identity. Only ~7% of distinct defendants (607 of 8,321) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.",
         "likhitPre": "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ",
