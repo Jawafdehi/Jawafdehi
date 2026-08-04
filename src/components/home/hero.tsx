@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 
 type HeroProps = {
   casesDocumented: string;
-  officialsAndEntitiesTracked: string;
   totalBigo: string;
   materials: string;
+  courtCasesTracked: string;
 };
 
 type HeroStat = {
@@ -38,9 +38,9 @@ const heroMapImages: HeroMapImage[] = [
 
 export function Hero({
   casesDocumented,
-  officialsAndEntitiesTracked,
   totalBigo,
   materials,
+  courtCasesTracked,
 }: Readonly<HeroProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -48,13 +48,13 @@ export function Hero({
 
   const heroStats: HeroStat[] = [
     { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
-    {
-      value: officialsAndEntitiesTracked,
-      label: t("home.hero.stats.officialsAndEntitiesTracked"),
-      href: "/search?type=entity",
-    },
     { value: totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search?type=case" },
     { value: materials, label: t("home.hero.stats.materials"), href: "/search?type=material" },
+    {
+      value: courtCasesTracked,
+      label: t("home.hero.stats.courtCasesTracked"),
+      href: "/search?type=courtcase",
+    },
   ];
 
   const goToSearch = (query: string) => {

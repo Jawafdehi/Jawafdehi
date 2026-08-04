@@ -181,9 +181,9 @@ const Index = () => {
       <div className="flex-1">
         <Hero
           casesDocumented={getStatValue(stats?.published_cases)}
-          officialsAndEntitiesTracked={getStatValue(stats?.nes?.total)}
           totalBigo={getStatValue(stats?.total_bigo, formatBigo)}
           materials={getStatValue(stats?.materials?.total)}
+          courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
 
 
