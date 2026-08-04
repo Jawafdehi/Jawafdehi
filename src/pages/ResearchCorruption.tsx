@@ -428,9 +428,9 @@ const ResearchCorruption = () => {
               first so the bench spread is read against them, not instead of them. */}
           <section>
             <Eyebrow>{t("research.corruption.justice.eyebrow", "Which bench you draw")}</Eyebrow>
-            <SectionHeading>{t("research.corruption.justice.heading", "Full-conviction rates run from 78% to 21% across the court's judges")}</SectionHeading>
+            <SectionHeading>{t("research.corruption.justice.heading", "Full-conviction rates run from 78% to 21% across the court's benches")}</SectionHeading>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-              {t("research.corruption.justice.lead", "Bench-grain attribution — every panel member is credited with the panel's outcome, dot size scaled to caseload. Sitting on the same court, hearing the same prosecutor, benches diverge more than threefold. Descriptive, not causal: some of this spread is the charge mix and the era a bench sat in, which the two sections above set out.")}
+              {t("research.corruption.justice.lead", "The court records one verdict per case and no individual vote, so this is a property of the panels a justice sat on rather than of the justice: every panel member is credited with the panel's outcome, and a judge who dissented is credited with it too. Dot size is scaled to caseload. Sitting on the same court, hearing the same prosecutor, benches diverge more than threefold — but descriptively, not causally: some of that spread is the charge mix and the era a bench sat in, which the two sections above set out.")}
             </p>
             <div className="mt-8">
               <JusticeSpread

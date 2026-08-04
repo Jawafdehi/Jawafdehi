@@ -198,6 +198,14 @@ export const REPORT = {
   // unclassifiable `other` bucket (61) is left out.
 
   // --- Per-justice full-conviction rate (bench-grain, ≥30 decisions), high → low ---
+  // BENCH-grain, not judge-grain: there is no per-judge vote in the source. Every panel
+  // member is credited with the panel's outcome, so this describes the benches a justice
+  // sat on. Copy must never call it an individual judge's rate.
+  //
+  // Transcribe these names EXACTLY as the notebook emits them and re-read them once after.
+  // श्रीकान्त पौडेल shipped for a while as "कान्त पौडेल" because the notebook stripped
+  // honorifics by substring and श्री is also the first syllable of his name — fixed upstream
+  // in corpus_data.py, but a name is the one field here no arithmetic check can catch.
   justices: [
     { name: "केदार प्रसाद चालिसे", decisions: 111, convPct: 77.5 },
     { name: "कृष्ण गिरी", decisions: 93, convPct: 76.3 },
@@ -234,7 +242,7 @@ export const REPORT = {
     { name: "हेमन्त रावल", decisions: 65, convPct: 29.2 },
     { name: "सुदर्शनदेव भट्ट", decisions: 69, convPct: 29.0 },
     { name: "खुशी प्रसाद थारु", decisions: 453, convPct: 27.8 },
-    { name: "कान्त पौडेल", decisions: 411, convPct: 26.8 },
+    { name: "श्रीकान्त पौडेल", decisions: 411, convPct: 26.8 },
     { name: "बलभद्र बास्तोला", decisions: 339, convPct: 25.1 },
     { name: "उमेश कोइराला", decisions: 57, convPct: 22.8 },
     { name: "रमेशकुमार पोखरेल", decisions: 143, convPct: 21.0 },
