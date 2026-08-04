@@ -16,11 +16,6 @@ import { MONO_STACK } from "@/lib/data-quality";
  * Cases filed vs. decided, by fiscal year — the one genuinely temporal view.
  * Two lines (filed = navy, decided = crimson) share one y-axis; the filing peak
  * leads the verdict peak by a few years, a rough visual proxy for pipeline lag.
- *
- * Also reused, with different labels, for the CIAA-reports-vs-court-register
- * cross-check: any two comparable series keyed on fiscal year fit. The `filed` /
- * `decided` prop names are historical — the labels are what the reader sees, and
- * the aria description is built from them.
  */
 export function FiledDecidedTrend({
   years,
@@ -28,21 +23,12 @@ export function FiledDecidedTrend({
   decided,
   filedLabel,
   decidedLabel,
-  overlapping = false,
 }: {
   years: readonly number[];
   filed: readonly number[];
   decided: readonly number[];
   filedLabel: string;
   decidedLabel: string;
-  /**
-   * Set when the two series are expected to very nearly coincide. Drawing them both
-   * solid at the same width then renders as ONE line — the second simply covers the
-   * first — which reads as a single series and hides the very thing the chart is for.
-   * With this on, the first series is drawn wider and dashed so both stay legible and
-   * the gaps between them are what the eye picks up.
-   */
-  overlapping?: boolean;
 }) {
   const mounted = useMounted();
   const height = 260;
@@ -83,9 +69,8 @@ export function FiledDecidedTrend({
             dataKey="filed"
             name={filedLabel}
             stroke="hsl(var(--primary))"
-            strokeWidth={overlapping ? 4 : 2}
-            strokeOpacity={overlapping ? 0.45 : 1}
-            dot={overlapping ? false : { r: 2.5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+            strokeWidth={2}
+            dot={{ r: 2.5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
             isAnimationActive={false}
           />
@@ -95,7 +80,6 @@ export function FiledDecidedTrend({
             name={decidedLabel}
             stroke="hsl(var(--accent))"
             strokeWidth={2}
-            strokeDasharray={overlapping ? "5 4" : undefined}
             dot={{ r: 2.5, fill: "hsl(var(--accent))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
             isAnimationActive={false}
@@ -104,19 +88,11 @@ export function FiledDecidedTrend({
       </ResponsiveContainer>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span
-            className="h-2.5 w-4 rounded-sm"
-            style={{ backgroundColor: "hsl(var(--primary))", opacity: overlapping ? 0.45 : 1 }}
-            aria-hidden="true"
-          />
+          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary))" }} aria-hidden="true" />
           {filedLabel}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span
-            className="h-2.5 w-4 rounded-sm"
-            style={{ backgroundColor: "hsl(var(--accent))", opacity: overlapping ? 0.75 : 1 }}
-            aria-hidden="true"
-          />
+          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--accent))" }} aria-hidden="true" />
           {decidedLabel}
         </span>
       </div>

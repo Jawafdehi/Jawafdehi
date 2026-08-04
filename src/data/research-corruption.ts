@@ -191,24 +191,11 @@ export const REPORT = {
     { en: "Illegal benefit", ne: "गैरकानुनी लाभ", convicted: 6, partial: 39, acquitted: 89 },
   ] satisfies ChargeOutcome[],
 
-  // --- Offense mix — prosecutions filed by offense family ---
-  // Sums to 2,888 = the 2,795 substantive cases PLUS the 93 money-laundering ones, which
-  // get their own row here. Only the unclassifiable `other` bucket (61) is left out.
-  mix: [
-    { en: "Bribery", ne: "रिसवत / घुस", count: 935 },
-    { en: "Fake credential", ne: "नक्कली प्रमाण पत्र", count: 680 },
-    { en: "Embezzlement", ne: "रकम हिनामिना", count: 393 },
-    { en: "Loss to government", ne: "हानीनोक्सानी", count: 186 },
-    { en: "Illegal benefit", ne: "गैरकानुनी लाभ", count: 143 },
-    { en: "Irregularity", ne: "अनियमितता", count: 136 },
-    { en: "Illicit enrichment", ne: "गैरकानूनी सम्पत्ति", count: 110 },
-    { en: "Money laundering", ne: "सम्पत्ति शुद्धीकरण", count: 93 },
-    { en: "False statement", ne: "झुठ्ठा विवरण", count: 63 },
-    { en: "Govt land misregistration", ne: "सरकारी जग्गा", count: 43 },
-    { en: "Revenue leakage", ne: "राजश्व चुहावट", count: 39 },
-    { en: "Forged document", ne: "गलत लिखत", count: 38 },
-    { en: "Exam rigging", ne: "परीक्षा फेरबदल", count: 29 },
-  ],
+  // The notebook's `offense_mix` table is deliberately NOT baked here. Its chart (a flat
+  // all-years composition bar) was cut as redundant — `chargeMixByYear` shows the same
+  // composition and how it moved. Re-add it from `offense_mix` if that chart comes back,
+  // and note it sums to 2,888, not 2,795: money laundering gets its own row and only the
+  // unclassifiable `other` bucket (61) is left out.
 
   // --- Per-justice full-conviction rate (bench-grain, ≥30 decisions), high → low ---
   justices: [
@@ -319,6 +306,14 @@ export const REPORT = {
   // Figures that originate in the CIAA annual reports (cite the report materials).
   ciaa: {
     complaintsYear: 28554, // 35th report, FY2081/82 — newly registered (excl. 8,472 carryover; 37,026 total workload)
+    /**
+     * The CIAA's "दर्ता" headline for the same year — its total WORKLOAD, i.e.
+     * `complaintsYear` plus the complaints carried over unresolved from earlier years.
+     * This is the number most reporting quotes, so the page reconciles the two rather than
+     * silently using the smaller one; starting the funnel here would double-count the
+     * carryover, which was already counted in an earlier year's total.
+     */
+    complaintsWorkloadYear: 37026,
     casesFiledYear: 137,
     successRatePct: 52.67, // CIAA counts full + partial as "success" (single year, volatile YoY ~33–72%)
     damagesClaimedYearBn: 6.02, // FY2081/82 damages (bigo) demanded, Rs (verified Rs 6,018,472,692)
@@ -396,6 +391,11 @@ export const REPORT = {
   //
   // FY2082/83 is deliberately absent — the 36th annual report is unpublished, so there is
   // no CIAA figure to compare against.
+  //
+  // No chart renders this any more (the cross-check moved into the methodology section as
+  // prose). It is kept because it is the arithmetic behind the two totals that prose
+  // quotes, and the unit tests assert the columns sum to `crossCheck.ciaaFiledTotal` and
+  // `.registerComparableTotal` — so the headline figures cannot drift from their own basis.
   sourceAgreement: [
     { fy: 2069, ciaaFiled: 93, registerComparable: 100 },
     { fy: 2070, ciaaFiled: 168, registerComparable: 167 },
