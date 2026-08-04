@@ -22,10 +22,48 @@ describe("verdictYearRates — corruption accountability over time", () => {
     expect(byYear[2080].acqPct).toBeGreaterThan(byYear[2080].convPct);
   });
 
-  it("shows core-graft conviction also collapsing — the decline is not only a mix shift", () => {
+  // The core-graft series swings far too widely to be described as a band or a level in any
+  // single year: an earlier version of the page copy called it "the same ~30% band throughout"
+  // while these very assertions pinned 64% and 7%. Keep both facts adjacent so the next person
+  // to write that sentence has to reckon with the range.
+  it("has a core-graft series that swings violently year to year", () => {
     expect(Math.round(byYear[2076].coreConvPct)).toBe(64); // 84 / 131
     expect(Math.round(byYear[2078].coreConvPct)).toBe(7); // 21 / 300
-    expect(byYear[2078].coreConvPct).toBeLessThan(byYear[2076].coreConvPct);
+    const spread = Math.max(...rates.map((r) => r.coreConvPct)) - Math.min(...rates.map((r) => r.coreConvPct));
+    expect(spread).toBeGreaterThan(50); // 64.1 − 7.0 — never call this a "~30% band"
+  });
+
+  // The claim the decomposition sub-caption actually makes. Pooled, core graft is flat-to-up,
+  // which is what licenses "the decline is mostly a change of mix".
+  it("has core-graft conviction essentially flat between the early and recent windows", () => {
+    const pool = (pred: (fy: number) => boolean) => {
+      let conv = 0;
+      let total = 0;
+      REPORT.overTime.byVerdictYear.forEach((r) => {
+        if (!pred(r.fy)) return;
+        conv += r.convicted - r.fakeConv;
+        total += r.convicted + r.partial + r.acquitted - r.fakeDisp;
+      });
+      return (conv / total) * 100;
+    };
+    const earlyCore = pool((fy) => fy <= 2071); // 26.0%
+    const recentCore = pool((fy) => fy >= 2079); // 30.0%
+    expect(Math.round(earlyCore)).toBe(26);
+    expect(Math.round(recentCore)).toBe(30);
+    // Recent is no WORSE than early — so copy must not say the court convicts core graft less.
+    expect(recentCore).toBeGreaterThanOrEqual(earlyCore);
+  });
+
+  // "Acquittals now routinely outnumber full convictions" was false: it happened in 3 of 14
+  // years. The defensible version is pooled over the recent window only.
+  it("has acquittals ahead only in a minority of years, though ahead pooled recently", () => {
+    const ahead = REPORT.overTime.byVerdictYear.filter((r) => r.acquitted > r.convicted);
+    expect(ahead.map((r) => r.fy)).toEqual([2078, 2080, 2082]);
+    expect(ahead.length).toBeLessThan(REPORT.overTime.byVerdictYear.length / 2);
+    const recent = REPORT.overTime.byVerdictYear.filter((r) => r.fy >= 2079);
+    const acq = recent.reduce((s, r) => s + r.acquitted, 0);
+    const conv = recent.reduce((s, r) => s + r.convicted, 0);
+    expect(acq).toBeGreaterThan(conv); // 386 vs 345
   });
 
   it("shows the fake-credential share of the docket shrinking over time", () => {
@@ -69,6 +107,86 @@ describe("cross-check — CIAA reports vs the court register", () => {
 
   it("records that every CIAA-listed case was found in the register", () => {
     expect(cc.foundInRegister).toBe(cc.ciaaListed); // 254 of 254
+  });
+
+  // `netDelta` (28, over 8 offence-breakdown years) is NOT the difference between the two
+  // column totals (32, over all 13). Copy that quotes 28 next to the totals without saying
+  // which years it covers leaves a reader unable to reconcile the two, which is how the
+  // earlier draft of this section read.
+  it("keeps netDelta distinct from the 13-year column difference", () => {
+    expect(cc.registerComparableTotal - cc.ciaaFiledTotal).toBe(32);
+    expect(cc.netDelta).not.toBe(cc.registerComparableTotal - cc.ciaaFiledTotal);
+    expect(cc.netDeltaYears).toBeLessThan(cc.yearsCompared); // 8 of 13
+  });
+
+  // fakeCertDelta < netDelta, so some divergence sits outside fake credential. An earlier
+  // draft claimed "every offence both sources label the same way matches exactly", which
+  // this difference contradicts.
+  it("leaves divergence unaccounted for by fake credential alone", () => {
+    expect(cc.fakeCertDelta).toBeLessThan(cc.netDelta); // 22 of 28 — 6 elsewhere
+  });
+
+  it("marks exactly one surplus bucket as the unexplained residual", () => {
+    const residual = cc.surplusReasons.filter((r) => r.unexplained);
+    expect(residual).toHaveLength(1);
+    expect(residual[0].count).toBe(9);
+  });
+});
+
+// Chart totals the captions disclose. Each of these three differs from the others and from
+// the corpus counts, for a documented reason — so a caption that quotes the wrong one is a
+// silent error, not a visible one.
+describe("chart denominators — what each chart actually covers", () => {
+  const mixTotal = REPORT.chargeMixByYear.reduce(
+    (s, r) => s + r.bribery + r.fake + r.embezzlement + r.benefit + r.loss + r.other,
+    0,
+  );
+  const chargeDecided = REPORT.byCharge.reduce((s, c) => s + c.convicted + c.partial + c.acquitted, 0);
+  const clean = REPORT.outcome.convicted + REPORT.outcome.partial + REPORT.outcome.acquitted;
+
+  it("has the charge-mix chart covering more than the substantive corpus", () => {
+    // 2,852 = 2,949 register − 93 money laundering − 4 petitions. It still carries the 61
+    // unclassified matters inside `other`, which `substantive` (2,795) removes — so this
+    // chart must NOT be captioned "substantive prosecutions".
+    expect(mixTotal).toBe(2852);
+    expect(mixTotal).toBeGreaterThan(REPORT.corpus.substantive);
+    expect(mixTotal).toBe(REPORT.corpus.ciaaProsecutions - 93 - 4);
+  });
+
+  it("has the by-charge chart covering fewer cases than the outcome donut", () => {
+    expect(chargeDecided).toBe(2702);
+    expect(chargeDecided).toBeLessThan(clean); // 26 decided cases have unclassifiable charge text
+  });
+
+  it("still includes money laundering in the by-charge chart", () => {
+    // Outside `substantive`, but present as its own row — the caption has to say so.
+    expect(REPORT.byCharge.some((c) => c.en === "Money laundering")).toBe(true);
+  });
+
+  it("shows illegal benefit was used before FY2078/79, if barely", () => {
+    // One FY2069/70 case, so copy must say "barely used", never "absent".
+    const early = REPORT.chargeMixByYear.filter((r) => r.fy < 2078);
+    expect(early.reduce((s, r) => s + r.benefit, 0)).toBe(1);
+  });
+
+  it("shows every baked bench clearing the disclosed decision threshold", () => {
+    expect(REPORT.justices).toHaveLength(39);
+    expect(Math.min(...REPORT.justices.map((j) => j.decisions))).toBeGreaterThanOrEqual(
+      REPORT.justiceMinDecisions,
+    );
+  });
+});
+
+// The CIAA "success" rate comparison. Aligning definitions REVERSES the gap rather than
+// closing it, which is the opposite of what the page used to imply.
+describe("CIAA success rate vs this archive", () => {
+  const clean = REPORT.outcome.convicted + REPORT.outcome.partial + REPORT.outcome.acquitted;
+  const fullPct = (REPORT.outcome.convicted / clean) * 100;
+  const inclPct = ((REPORT.outcome.convicted + REPORT.outcome.partial) / clean) * 100;
+
+  it("sits above our full-conviction rate but below our including-partial rate", () => {
+    expect(REPORT.ciaa.successRatePct).toBeGreaterThan(fullPct); // 52.67 > 45.1
+    expect(REPORT.ciaa.successRatePct).toBeLessThan(inclPct); // 52.67 < 61.3
   });
 });
 
