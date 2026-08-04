@@ -105,6 +105,13 @@ export type SurplusReason = {
   en: string;
   ne: string;
   count: number;
+  /**
+   * Set on the residual bucket — the cases we could not account for. Flagged rather than
+   * matched on label text so the copy can quote the unexplained count without hardcoding it
+   * (an earlier draft wrote the 9 in by hand, which is exactly how a figure drifts from
+   * the data it describes).
+   */
+  unexplained?: true;
 };
 
 /** Fiscal-year label from its start year: 2069 → "2069/70", 2082 → "2082/83". */
@@ -197,6 +204,13 @@ export const REPORT = {
   // and note it sums to 2,888, not 2,795: money laundering gets its own row and only the
   // unclassifiable `other` bucket (61) is left out.
 
+  /**
+   * Minimum decisions a justice must have sat on to appear in `justices`. The court-published
+   * rows yield 41 name buckets; 39 clear this bar. The chart is therefore a filtered view, and
+   * the copy has to say so — an unstated threshold reads as "every justice on the court".
+   */
+  justiceMinDecisions: 30,
+
   // --- Per-justice full-conviction rate (bench-grain, ≥30 decisions), high → low ---
   // BENCH-grain, not judge-grain: there is no per-judge vote in the source. Every panel
   // member is credited with the panel's outcome, so this describes the benches a justice
@@ -255,12 +269,18 @@ export const REPORT = {
     decided: [35, 87, 202, 222, 179, 176, 230, 178, 135, 339, 270, 503, 130, 54],
   },
 
-  // --- Charge mix by fiscal filing year, substantive prosecutions ---
-  // `other` folds the smaller families (illicit enrichment, irregularity, false
-  // statement, land, revenue, forgery, exam). Fake-credential's share falls from
-  // ~70% (FY2069/70) to single digits by FY2077/78–2079/80 (with a rebound in
-  // FY2080/81), while the newer illegal-benefit charge (absent before FY2078/79)
-  // and loss to government grow.
+  // --- Charge mix by fiscal filing year ---
+  // These rows sum to 2,852, which is NOT `corpus.substantive` (2,795) — do not label the
+  // chart "substantive prosecutions". The notebook builds this table from the register minus
+  // money laundering (93) and minus 4 procedural petitions, so `other` still carries the 61
+  // unclassifiable matters that the substantive count removes: 2,949 − 93 − 4 = 2,852.
+  // `other` = the seven smaller families (illicit enrichment, irregularity, false statement,
+  // land, revenue, forgery, exam = 458) PLUS those 61 unclassified.
+  //
+  // Fake-credential's share falls from ~70% (FY2069/70) to single digits by
+  // FY2077/78–2079/80 (with a rebound in FY2080/81), while the newer illegal-benefit charge
+  // and loss to government grow. Illegal benefit is not strictly absent before FY2078/79 —
+  // there is a single FY2069/70 case — so copy must say "barely used", not "absent".
   chargeMixByYear: [
     { fy: 2069, bribery: 7, fake: 79, embezzlement: 2, benefit: 1, loss: 0, other: 24 },
     { fy: 2070, bribery: 22, fake: 81, embezzlement: 15, benefit: 0, loss: 2, other: 64 },
@@ -323,7 +343,24 @@ export const REPORT = {
      */
     complaintsWorkloadYear: 37026,
     casesFiledYear: 137,
-    successRatePct: 52.67, // CIAA counts full + partial as "success" (single year, volatile YoY ~33–72%)
+    /**
+     * The CIAA's own "success" rate for FY2081/82, verified in the 35th report (¶16): of 393
+     * verdicts received, 87 full + 120 partial = 207 = 52.67%. So it counts partial
+     * convictions as successes. Applying that same full+partial definition to this archive
+     * gives 61.3%, i.e. HIGHER than the CIAA's own figure — the gap between 52.67% and our
+     * headline 45.1% is mostly definition, but aligning the definition reverses the sign.
+     * Single year and volatile besides (~33–88% across the reports).
+     */
+    successRatePct: 52.67,
+    /**
+     * Appeals the CIAA filed to the Supreme Court in FY2081/82 (35th report ¶17): 178 cases
+     * where guilt was not established at all + 73 where only partly = 251. Quantifies the
+     * INPUT to the appeal stage; no source publishes the outcomes, which is what makes that
+     * stage dark. The same paragraph notes 5 review petitions (पुनरावलोकन निवेदन) against
+     * Supreme Court decisions on its own appeals — proof the appeals do get decided.
+     */
+    appealsFiledYear: 251,
+    appealReviewPetitionsYear: 5,
     damagesClaimedYearBn: 6.02, // FY2081/82 damages (bigo) demanded, Rs (verified Rs 6,018,472,692)
     complaints5yr: 107050, // FY2077/78–2081/82 new registrations (5yr workload 148,235 minus 41,185 recycled backlog)
     casesFiled5yr: 744, // FY2077/78–2081/82 (113+131+162+201+137)
@@ -428,9 +465,20 @@ export const REPORT = {
     registerComparableTotal: 2624,
     /** Register cases removed as streams the CIAA does not file. */
     nonCiaaStreams: 154,
-    /** Net difference across the 8 years where a category-level comparison is possible. */
+    /**
+     * Net difference across the `netDeltaYears` years where the reports break filings down by
+     * offence, so a category-level comparison is possible. NOT the difference between
+     * `ciaaFiledTotal` and `registerComparableTotal` (that is 32, over all 13 years) — copy
+     * that quotes 28 must say which years it covers, or a reader who subtracts the two totals
+     * gets 32 and cannot reconcile it.
+     */
     netDelta: 28,
-    /** Of that net difference, how much is fake-credential cases alone. */
+    netDeltaYears: 8,
+    /**
+     * Of that net difference, how much is fake-credential cases alone. The remaining 6 are
+     * spread across other offences, so copy must not claim every other offence matches
+     * exactly — only that fake credential dominates the divergence.
+     */
     fakeCertDelta: 22,
     /** The three widest-divergence years (FY2069/70, FY2071/72, FY2075/76), checked case by case. */
     yearsExamined: 3,
@@ -445,7 +493,7 @@ export const REPORT = {
       { en: "Counted in the previous year's report", ne: "अघिल्लो वर्षको प्रतिवेदनमा गणना", count: 5 },
       { en: "Omitted, but confirmed by a later report", ne: "छुटेको, तर पछिको प्रतिवेदनले पुष्टि गरेको", count: 4 },
       { en: "Recorded under a different offence label", ne: "फरक कसुर शीर्षकमा अभिलेखित", count: 1 },
-      { en: "Still unexplained", ne: "अझै अस्पष्ट", count: 9 },
+      { en: "Still unexplained", ne: "अझै अस्पष्ट", count: 9, unexplained: true },
     ] satisfies SurplusReason[],
   },
 } as const;

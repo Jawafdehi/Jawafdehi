@@ -121,6 +121,16 @@ const ResearchCorruption = () => {
     return dec ? Math.round((cv / dec) * 100) : 0;
   })();
 
+  // Chart totals, derived so the captions that disclose them cannot drift. The by-charge chart
+  // covers fewer cases than the donut (unclassifiable charge text) and the mix chart covers
+  // more than the substantive corpus (it keeps the unclassified matters inside "Other").
+  const chargeDecidedTotal = REPORT.byCharge.reduce((s, c) => s + c.convicted + c.partial + c.acquitted, 0);
+  const mixTotal = REPORT.chargeMixByYear.reduce(
+    (s, r) => s + r.bribery + r.fake + r.embezzlement + r.benefit + r.loss + r.other,
+    0,
+  );
+  const justiceDecisions = REPORT.justices.reduce((s, j) => s + j.decisions, 0);
+
   const chargeRows: ChargeRow[] = REPORT.byCharge.map((c) => ({
     label: lang === "ne" ? c.ne : c.en,
     sublabel: lang === "ne" ? c.en : c.ne,
@@ -133,6 +143,10 @@ const ResearchCorruption = () => {
   const cc = REPORT.crossCheck;
   const agreementGapPct = ((cc.registerComparableTotal - cc.ciaaFiledTotal) / cc.ciaaFiledTotal) * 100;
   const surplusItems = cc.surplusReasons.map((r) => ({ label: lang === "ne" ? r.ne : r.en, count: r.count }));
+  // Derived, not typed: the residual bucket and the widest single-year gap both belong to the
+  // table and must move with it.
+  const surplusUnexplained = cc.surplusReasons.find((r) => r.unexplained)?.count ?? 0;
+  const worstYearGap = Math.max(...REPORT.sourceAgreement.map((r) => Math.abs(r.registerComparable - r.ciaaFiled)));
 
   // --- Over time: outcome-rate trend, decomposition, and pipeline pace/backlog ---
   const rates = verdictYearRates(REPORT.overTime.byVerdictYear);
@@ -155,19 +169,40 @@ const ResearchCorruption = () => {
     monthsProvisional: c.fy >= completeThrough ? c.medianMonths : null,
   }));
 
-  // Pooled narrative figures (kept in sync with the baked counts).
-  const poolConv = (pred: (fy: number) => boolean) => {
-    let c = 0;
+  // Pooled narrative figures. Pooling is not a stylistic choice here: annual denominators run
+  // as low as 32 decided cases, and the core-graft denominator as low as 13, so a single year's
+  // rate turns on a handful of verdicts. Copy must describe the pooled LEVEL and treat the
+  // year-to-year line as noise — never the other way round.
+  const pool = (pred: (fy: number) => boolean) => {
+    let conv = 0;
+    let acq = 0;
     let total = 0;
+    let coreConv = 0;
+    let coreTotal = 0;
     REPORT.overTime.byVerdictYear.forEach((r) => {
       if (!pred(r.fy)) return;
-      c += r.convicted;
-      total += r.convicted + r.partial + r.acquitted;
+      const t = r.convicted + r.partial + r.acquitted;
+      conv += r.convicted;
+      acq += r.acquitted;
+      total += t;
+      coreConv += r.convicted - r.fakeConv;
+      coreTotal += t - r.fakeDisp;
     });
-    return total ? Math.round((c / total) * 100) : 0;
+    return {
+      conv,
+      acq,
+      convPct: total ? Math.round((conv / total) * 100) : 0,
+      corePct: coreTotal ? Math.round((coreConv / coreTotal) * 100) : 0,
+    };
   };
-  const earlyConvPct = poolConv((fy) => fy <= 2071);
-  const recentConvPct = poolConv((fy) => fy >= 2079);
+  const early = pool((fy) => fy <= 2071);
+  const recent = pool((fy) => fy >= 2079);
+  // How often acquittals actually finished ahead of full convictions in a year. Three of
+  // fourteen — so "acquittals now outnumber convictions" is a pooled fact about the recent
+  // window, not a description of the line.
+  const acqAheadYears = REPORT.overTime.byVerdictYear.filter((r) => r.acquitted > r.convicted).length;
+  const coreLow = rates.reduce((a, b) => (b.coreConvPct < a.coreConvPct ? b : a));
+  const coreHigh = rates.reduce((a, b) => (b.coreConvPct > a.coreConvPct ? b : a));
   const fakeShareStart = Math.round(rates[0].fakeSharePct);
   const fakeShareMin = Math.round(Math.min(...rates.filter((r) => r.year >= 2079).map((r) => r.fakeSharePct)));
   const completeCohorts = REPORT.overTime.cohorts.filter((c) => c.fy <= completeThrough);
@@ -199,7 +234,7 @@ const ResearchCorruption = () => {
       key: "appeal",
       owner: t("research.corruption.gaps.appeal.owner", "Supreme Court"),
       title: t("research.corruption.gaps.appeal.title", "Appeal"),
-      body: t("research.corruption.gaps.appeal.body", "The CIAA appeals many losses and defendants appeal convictions, but the record carries no decision data for those appeals. How often a Special Court verdict survives — or is overturned — cannot currently be measured from any public source."),
+      body: t("research.corruption.gaps.appeal.body", "The volume is on the record: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. The outcomes are not. Those appeals do get decided — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but no source publishes the results as data, so how often a Special Court verdict survives cannot be measured.", { appeals: REPORT.ciaa.appealsFiledYear, reviews: REPORT.ciaa.appealReviewPetitionsYear }),
       dark: true,
     },
     {
@@ -303,7 +338,7 @@ const ResearchCorruption = () => {
                   {t("research.corruption.outcomes.lead", "Of {{n}} decided cases with a clear verdict, {{conv}}% end in a full conviction, {{acq}}% in outright acquittal, and {{part}}% in partial conviction — so {{less}}% end in something less than a clean conviction.", { n: decidedClean.toLocaleString(), conv: convPct, acq: acqPct, part: partPct, less: lessThanFull })}
                 </p>
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                  {t("research.corruption.outcomes.note", "The CIAA reports a higher “success” rate because it counts partial convictions as successes; we keep full and partial separate and lead with the stricter number.")}{" "}
+                  {t("research.corruption.outcomes.note", "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. On that same definition this archive gives {{incl}}% — so matching the CIAA's definition does not close the gap with our {{full}}%, it reverses it. We keep full and partial separate and lead with the stricter number.", { ciaa: REPORT.ciaa.successRatePct, incl: convPct + partPct, full: convPct })}{" "}
                   <Link to="/courtcases" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
                 </p>
               </div>
@@ -344,7 +379,7 @@ const ResearchCorruption = () => {
 
             <div className="mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.mixByYearTitle", "How the charge mix shifted, by year")}</h3>
-              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixByYearSub", "Substantive prosecutions by fiscal filing year. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80 (with a rebound in FY2080/81), while the newer illegal-benefit charge (absent before FY2078/79) and loss to government grew.")}</p>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixByYearSub", "Register cases by fiscal filing year — {{n}} of the {{corpus}}, money laundering excluded. “Other” folds together seven smaller charge families and the matters whose charge text could not be classified. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80, with a rebound in FY2080/81. The illegal-benefit charge was barely used before FY2078/79 (a single earlier case, in FY2069/70) and loss to government grew.", { n: mixTotal.toLocaleString(), corpus: REPORT.corpus.ciaaProsecutions.toLocaleString() })}</p>
               <ChargeMixByYear
                 data={REPORT.chargeMixByYear}
                 percentLabel={t("research.corruption.volume.mixPercentToggle", "Show as 100%")}
@@ -380,7 +415,7 @@ const ResearchCorruption = () => {
               />
             </div>
             <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              {t("research.corruption.byCharge.caption", "Decided cases per charge type, split by outcome. Cited to the underlying charge sheets and court records.")}{" "}
+              {t("research.corruption.byCharge.caption", "Decided cases per charge type, split by outcome — {{n}} of the {{clean}} cases with a clear verdict; the rest carry charge text we could not classify. Money laundering keeps its own row here even though it sits outside the substantive corpus, because it is prosecuted under a separate statute. Every rate is per case, never per accused. Cited to the underlying charge sheets and court records.", { n: chargeDecidedTotal.toLocaleString(), clean: decidedClean.toLocaleString() })}{" "}
               <a href={CITATIONS.chargeSheets} className="text-accent hover:underline">{t("research.corruption.cite.chargeSheets", "Charge sheets")}</a>
             </p>
           </section>
@@ -390,12 +425,12 @@ const ResearchCorruption = () => {
             <Eyebrow>{t("research.corruption.overTime.eyebrow", "Over time")}</Eyebrow>
             <SectionHeading>{t("research.corruption.overTime.heading", "The court convicts far less than it used to")}</SectionHeading>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-              {t("research.corruption.overTime.lead", "In the early years the Special Court fully convicted roughly {{early}}% of the corruption cases it decided; across FY2079/80–2082/83 that fell to about {{recent}}%. Acquittals now routinely outnumber full convictions.", { early: earlyConvPct, recent: recentConvPct })}
+              {t("research.corruption.overTime.lead", "In its first three years the Special Court fully convicted roughly {{early}}% of the corruption cases it decided; across FY2079/80–2082/83 that fell to about {{recent}}%. Acquittals have drawn level rather than taken over: across those recent years they slightly outnumber full convictions, {{acq}} to {{conv}}, but in only {{aheadYears}} of the 14 years did they finish a year ahead.", { early: early.convPct, recent: recent.convPct, acq: recent.acq, conv: recent.conv, aheadYears: acqAheadYears })}
             </p>
 
             <div className="mt-8">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.rateTitle", "Outcome mix by verdict year")}</h3>
-              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.overTime.rateSub", "Share of decided cases by verdict fiscal year. Acquittals overtook full convictions around FY2078/79.")}</p>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.overTime.rateSub", "Share of decided cases by verdict fiscal year. Acquittals spike above full convictions in FY2078/79 and FY2080/81 — and edge ahead again in FY2082/83 — but they do not stay there.")}</p>
               <RateTrend
                 data={outcomePoints}
                 series={[
@@ -409,7 +444,7 @@ const ResearchCorruption = () => {
             <div className="mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft, though, convicts in the same ~30% band throughout — so the headline decline is mostly that change of mix (the easy wins leaving), not the court convicting serious graft any less. The sharp dips (FY2078/79, FY2080/81) are acquittal spikes.", { start: fakeShareStart, min: fakeShareMin })}
+                {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft converts at much the same level now as it did then: {{coreEarly}}% across the first three years against {{coreRecent}}% across the last four. So the headline decline is mostly that change of mix — the easy wins leaving — not the court convicting serious graft any less. Read the dashed line as a level, not a trend: it swings from {{coreHigh}}% in FY{{coreHighYear}} to {{coreLow}}% in FY{{coreLowYear}} because in some years only a few dozen core-graft cases were decided.", { start: fakeShareStart, min: fakeShareMin, coreEarly: early.corePct, coreRecent: recent.corePct, coreHigh: Math.round(coreHigh.coreConvPct), coreHighYear: fyLabel(coreHigh.year), coreLow: Math.round(coreLow.coreConvPct), coreLowYear: fyLabel(coreLow.year) })}
               </p>
               <RateTrend
                 data={decompPoints}
@@ -452,7 +487,7 @@ const ResearchCorruption = () => {
                 meanLabel={t("research.corruption.volume.monthMean", "Mean cases filed")}
                 sdLabel={t("research.corruption.volume.monthSd", "±1 SD")}
               />
-              <p className="mt-3 text-xs leading-5 text-muted-foreground">{t("research.corruption.volume.monthCaption", "Bars are the mean across 14 complete fiscal years (FY2069/70–2082/83); whiskers are ±1 standard deviation — how much each month swings from year to year. Registration date from Special Court records.")}</p>
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">{t("research.corruption.volume.monthCaption", "Bars are the mean across the 14 fiscal years FY2069/70–2082/83 — all complete for filings, which is what this chart measures; the most recent cases are filed but many are still awaiting a verdict. Whiskers are ±1 standard deviation, i.e. how much each month swings from year to year. Registration date from Special Court records.")}</p>
             </div>
           </section>
 
@@ -476,6 +511,9 @@ const ResearchCorruption = () => {
                 avgLabel={t("research.corruption.justice.avgLine", "court avg 45%")}
               />
             </div>
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              {t("research.corruption.justice.caption", "Justices who sat on at least {{min}} decided cases — {{n}} of the 41 in the record; below that a rate turns on a handful of verdicts and means little. Because every member of a panel is credited with the panel's outcome, the {{n}} shown are credited with {{decisions}} decisions between them, well above the {{cases}} cases those decisions came from.", { min: REPORT.justiceMinDecisions, n: REPORT.justices.length, decisions: justiceDecisions.toLocaleString(), cases: decidedClean.toLocaleString() })}
+            </p>
           </section>
 
           {/* 8 · The pipeline, stage by stage */}
@@ -489,7 +527,8 @@ const ResearchCorruption = () => {
               <AccountabilityStages stages={stages} darkLabel={t("research.corruption.gaps.darkLabel", "Not measurable")} />
             </div>
             <p className="mt-6 text-xs leading-5 text-muted-foreground">
-              {t("research.corruption.gaps.caption", "The dashed stages are not stages we failed to measure — they are stages no public source reports at all. That distinction matters: an unmeasured appeal outcome could be anything, and nobody is currently in a position to say.")}
+              {t("research.corruption.gaps.caption", "The dashed stages are not stages we failed to measure — they are stages whose outcomes no public source reports. Their inputs are published (appeals filed, damages demanded); what becomes of them is not. That distinction matters: an unmeasured appeal outcome could be anything, and nobody is currently in a position to say. Appeal and damages figures: CIAA 35th annual report (FY2081/82).")}{" "}
+              <a href={CITATIONS.ciaa35} className="text-accent hover:underline">{t("research.corruption.cite.ciaa35", "CIAA 35th annual report")}</a>
             </p>
           </section>
 
@@ -505,7 +544,7 @@ const ResearchCorruption = () => {
             <div className="mt-8">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.crossCheck.heading", "Do the two records agree?")}</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {t("research.corruption.crossCheck.lead", "The CIAA's annual reports and the court's register are independent accounts of the same events — the Commission deciding to prosecute, and the court opening a docket. Across {{years}} fiscal years they agree to {{gap}}%: {{ciaa}} filings the CIAA published against {{register}} comparable cases in the register, with no single year differing by more than seven. Where they do diverge it is almost entirely one offence: fake-credential cases account for {{fake}} of the {{net}} net difference, while every offence both sources label the same way matches exactly.", { years: cc.yearsCompared, gap: agreementGapPct.toFixed(1), ciaa: cc.ciaaFiledTotal.toLocaleString(), register: cc.registerComparableTotal.toLocaleString(), fake: cc.fakeCertDelta, net: cc.netDelta })}
+                {t("research.corruption.crossCheck.lead", "The CIAA's annual reports and the Special Court's register are independent accounts of the same events — the Commission deciding to prosecute, and the court opening a docket. Across {{years}} fiscal years they agree to {{gap}}%: {{ciaa}} filings the CIAA published against {{register}} comparable cases in the register, and no single year differs by more than {{worst}}. Where they diverge, one offence dominates. In the {{netYears}} years whose reports break filings down by offence, the register runs {{net}} cases ahead, and {{fake}} of those {{net}} are fake-credential cases alone.", { years: cc.yearsCompared, gap: agreementGapPct.toFixed(1), ciaa: cc.ciaaFiledTotal.toLocaleString(), register: cc.registerComparableTotal.toLocaleString(), worst: worstYearGap, netYears: cc.netDeltaYears, fake: cc.fakeCertDelta, net: cc.netDelta })}
               </p>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
                 {t("research.corruption.crossCheck.caseLevelLead", "For the {{years}} years where the gap is widest we checked it case by case, matching the accused named in the reports' own filing tables against those named in the register. The divergence runs the opposite way to what a missing-records story would predict: every one of the {{listed}} cases the CIAA says it filed is in the register. What the register holds instead is {{surplus}} fake-credential cases those years' own filing tables never list.", { years: cc.yearsExamined, listed: cc.ciaaListed, surplus: cc.registerSurplus })}
@@ -516,7 +555,7 @@ const ResearchCorruption = () => {
                 <BreakdownBar items={surplusItems} tooltipLabel={t("research.corruption.crossCheck.surplusTooltip", "Cases")} labelWidth={230} />
               </div>
               <p className="mt-4 text-xs leading-5 text-muted-foreground">
-                {t("research.corruption.crossCheck.caption", "The register side removes {{excluded}} cases in streams the CIAA does not file — money laundering, petitions filed against the CIAA itself, and offences outside its jurisdiction — an exclusion that is marginally over-broad, since the FY2081/82 report shows the CIAA filed two money-laundering cases itself. Three limits travel with this: only {{years}} of the 14 years and one of the 13 offence families have been checked at case level; {{unexplained}} of the {{surplus}} surplus cases remain unexplained; and the reading that the annual report under-counts its own fake-credential filings is established for four specific cases and well supported for the rest, not proven for all.", { excluded: cc.nonCiaaStreams, years: cc.yearsExamined, unexplained: 9, surplus: cc.registerSurplus })}{" "}
+                {t("research.corruption.crossCheck.caption", "Filing counts from the CIAA's annual reports, cross-checked against the Special Court register. The register side removes {{excluded}} cases in streams the CIAA does not file — money laundering, petitions filed against the CIAA itself, offences outside its jurisdiction, and a few mixed dockets — an exclusion that is marginally over-broad, since the FY2081/82 report shows the CIAA filed two money-laundering cases itself. Three limits travel with this: only {{years}} of the 14 years and one of the 13 offence families have been checked at case level; {{unexplained}} of the {{surplus}} surplus cases remain unexplained; and the reading that the annual report under-counts its own fake-credential filings is established for four specific cases and well supported for the rest, not proven for all.", { excluded: cc.nonCiaaStreams, years: cc.yearsExamined, unexplained: surplusUnexplained, surplus: cc.registerSurplus })}{" "}
                 <a href={CITATIONS.ciaaReports} className="text-accent hover:underline">{t("research.corruption.cite.ciaaReports", "CIAA annual reports")}</a>
               </p>
             </div>
@@ -528,13 +567,13 @@ const ResearchCorruption = () => {
               <div className="mt-4 space-y-3 text-xs leading-5 text-muted-foreground">
                 <p>{t("research.corruption.appendix.corpus", "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as the Special Court's -CR- criminal register — 2,949 cases filed FY2069/70–2082/83 (the register is the definition; no plaintiff filter) — of which 2,795 are substantive corruption charges after removing money-laundering (a separate statute, 93 cases) and unclassified matters (61).")}</p>
                 <p>{t("research.corruption.appendix.grain", "Grain. One verdict per case, because that is all the court publishes — there is no per-accused outcome in the record, so no figure on this page is a per-person rate. “Partial” therefore covers both a single accused convicted on some charges only and a multi-accused case split between conviction and acquittal; the two are indistinguishable in the source.")}</p>
-                <p>{t("research.corruption.appendix.funnel", "The funnel. Of 28,554 newly registered complaints in the year, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7 (the CIAA reports this as 13% of its investigation decisions). The 37,026 “दर्ता” headline for the same year is the Commission's total workload, which adds 8,472 complaints carried over unresolved from earlier years; starting the funnel there would count those twice. So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages.")}</p>
+                <p>{t("research.corruption.appendix.funnel", "The funnel. Of 28,554 newly registered complaints in the year, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7. The 37,026 “दर्ता” headline for the same year is the Commission's total workload, which adds 8,472 complaints carried over unresolved from earlier years; starting the funnel there would count those twice. So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages.")}</p>
                 <p>{t("research.corruption.appendix.outcomes", "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the 2,728 register cases carrying an unambiguous ठहर / आंशिक / सफाई disposition. That is a different set from the 2,740 whose case status reads फैसला (which the filed-vs-decided trend counts), and neither contains the other: 2,628 cases are in both, 112 are marked decided but carry no hearing with a recorded disposition, and 100 carry a disposition without the corresponding status.")}</p>
                 <p>{t("research.corruption.appendix.derivedVerdicts", "Where a verdict came from. Cases that reached the mirror without ever appearing on a published cause list carry no court-published disposition, so the only way to count them at all is to read the verdict out of the judgment text. {{n}} verdicts were recovered that way (37 conviction, 26 acquittal, 6 partial) and every one of them is EXCLUDED from every rate on this page — a rate that quietly mixed court-published and machine-read verdicts would misrepresent its own source. We report the number rather than filtering silently.", { n: REPORT.verdictsModelDerivedExcluded })}</p>
                 <p>{t("research.corruption.appendix.dates", "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat dates throughout; by-year charts bin by fiscal year (Shrawan–Ashadh).")}</p>
                 <p>{t("research.corruption.appendix.overTime", "Over time. Yearly rates are grouped by verdict fiscal year; the sharp rise in acquittals from FY2078/79 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through FY2079/80 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.")}</p>
                 <p>{t("research.corruption.appendix.justice", "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.")}</p>
-                <p>{t("research.corruption.appendix.discrepancy", "Discrepancy with CIAA figures. The CIAA reports a ~53% “success” rate; that counts full + partial convictions together, whereas our full-conviction rate (45%) is cumulative and separates the two. Never compare the two without aligning definition and period.")}</p>
+                <p>{t("research.corruption.appendix.discrepancy", "Discrepancy with CIAA figures. The CIAA's {{ciaa}}% “success” rate for FY2081/82 counts full and partial convictions together — its 35th report states it as 87 full plus 120 partial of 393 verdicts. Our headline {{full}}% is full convictions only. Applying the CIAA's own definition to this archive gives {{incl}}%, which is above its figure, not below it — so the two differ by period at least as much as by definition: the CIAA's is one volatile year (its published rates range from 33% to 88%), ours is cumulative across 14. Never compare them without aligning both.", { ciaa: REPORT.ciaa.successRatePct, full: convPct, incl: convPct + partPct })}</p>
                 <p>{t("research.corruption.appendix.crossCheck", "The cross-check, in detail. Matching the reports' per-case filing tables to the register is name matching, not a key lookup: the early high-divergence years print no case number at all, and a case number alone does not identify a court in any event — the same NNN-CR-NNNN format is used by the Special Court, the Supreme Court and the district courts, so a number lifted out of its column resolves to the wrong case. Names were matched after folding Devanagari spelling variants, and the residue was resolved by hand on the date: every pair we accepted matches the printed filing date to the register's registration date to the day. Three pairs were accepted this way and are flagged as such in the published data, so a reader who rejects them can re-derive the totals without them.")}</p>
                 <p>{t("research.corruption.appendix.entity", "Identity. Only ~7% of distinct defendants (607 of 8,321) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.")}</p>
                 <p>
