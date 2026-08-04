@@ -1308,7 +1308,7 @@
       },
       "gaps": {
         "eyebrow": "Where the gap is",
-        "heading": "Attrition concentrates at the CIAA stage — then goes dark",
+        "heading": "Attrition concentrates at the CIAA stage — then we lose the trail",
         "intake": {
           "owner": "CIAA",
           "title": "Complaint intake & screening",
@@ -1327,16 +1327,17 @@
         "appeal": {
           "owner": "Supreme Court",
           "title": "Appeal",
-          "body": "The volume is on the record: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. The outcomes are not. Those appeals do get decided — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but no source publishes the results as data, so how often a Special Court verdict survives cannot be measured."
+          "body": "We can see how many appeals are filed: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. We cannot see how they end. They clearly do end — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but our court records hold no decision for them and we have not found the outcomes published anywhere as data. So we cannot tell you how often a Special Court verdict survives on appeal. That is a gap in what we have, not a claim that the answer is unknowable."
         },
         "recovery": {
           "owner": "State",
           "title": "Recovery & sanction",
-          "body": "Billions of rupees in damages are demanded each year. No source tracks how much is ever recovered, or whether those convicted serve a meaningful sanction. The pipeline ends without anyone publishing what it produced."
+          "body": "Billions of rupees in damages are demanded each year — Rs 6.02 billion in FY2081/82 alone. How much of it is ever collected, and whether those convicted serve a meaningful sanction, we do not know: we have not found a source that tracks either, and we hold no data of our own on it. It may be recorded somewhere we have not looked. What we can say is that we cannot follow the money past the verdict."
         },
-        "lead": "Follow one complaint from the day it is filed to the day someone is sanctioned for it. Five stages, two institutions — and the public record stops before the end.",
-        "darkLabel": "Not measurable",
-        "caption": "The dashed stages are not stages we failed to measure — they are stages whose outcomes no public source reports. Their inputs are published (appeals filed, damages demanded); what becomes of them is not. That distinction matters: an unmeasured appeal outcome could be anything, and nobody is currently in a position to say. Appeal and damages figures: CIAA 35th annual report (FY2081/82)."
+        "lead": "Follow one complaint from the day it is filed to the day someone is sanctioned for it. Five stages, two institutions — and our record of it runs out before the end.",
+        "caption": "The dashed stages mark the limits of our own record, not a verdict on what happens inside them. We can see what goes in — appeals filed, damages demanded, both published by the CIAA. We have not been able to find what comes out. Whether that is because nobody publishes it or because we have not looked in the right place, we cannot tell from here, so we are not going to claim the stronger version. If you know of a dataset, report or registry covering appeal outcomes or amounts recovered, please tell us and we will fold it in.",
+        "captionSource": " · Appeal and damages figures: ",
+        "noDataLabel": "No data yet"
       },
       "appendix": {
         "eyebrow": "Methodology",
@@ -1356,7 +1357,7 @@
         "likhitPre": "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ",
         "likhitName": "likhit",
         "likhitPost": " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.",
-        "limits": "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere.",
+        "limits": "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely missing from what we hold, and we have not found any source for amounts actually recovered — so treat both as open questions on our side rather than settled absences. Corrections and pointers to sources we have missed are welcome.",
         "grain": "Grain. One verdict per case, because that is all the court publishes — there is no per-accused outcome in the record, so no figure on this page is a per-person rate. “Partial” therefore covers both a single accused convicted on some charges only and a multi-accused case split between conviction and acquittal; the two are indistinguishable in the source."
       },
       "sources": {

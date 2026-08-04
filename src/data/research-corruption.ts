@@ -355,9 +355,11 @@ export const REPORT = {
     /**
      * Appeals the CIAA filed to the Supreme Court in FY2081/82 (35th report ¶17): 178 cases
      * where guilt was not established at all + 73 where only partly = 251. Quantifies the
-     * INPUT to the appeal stage; no source publishes the outcomes, which is what makes that
-     * stage dark. The same paragraph notes 5 review petitions (पुनरावलोकन निवेदन) against
-     * Supreme Court decisions on its own appeals — proof the appeals do get decided.
+     * INPUT to the appeal stage. We have not found the OUTCOMES published anywhere, and our
+     * court records carry no decision for them — state that as our gap, not as an absence in
+     * the world, which we are not in a position to establish. The same paragraph notes 5
+     * review petitions (पुनरावलोकन निवेदन) against Supreme Court decisions on its own
+     * appeals, which is proof the appeals do get decided even though we cannot see how.
      */
     appealsFiledYear: 251,
     appealReviewPetitionsYear: 5,

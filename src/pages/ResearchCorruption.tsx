@@ -209,8 +209,13 @@ const ResearchCorruption = () => {
   const peakDelayMonths = Math.max(...completeCohorts.map((c) => c.medianMonths));
   const peakDelayYear = completeCohorts.find((c) => c.medianMonths === peakDelayMonths)?.fy ?? completeThrough;
 
-  // The pipeline as an ordered walk. The last two stages are `dark` — they exist, but no
-  // source publishes their outcome, which is a different claim from "we measured nothing".
+  // The pipeline as an ordered walk. The last two stages are `noData`: they happen, and we
+  // hold nothing on what they produce.
+  //
+  // Say that as a fact about US, not about the world. "Not measurable" and "no source reports
+  // it" are claims we are not in a position to make — we searched and came up empty, which is
+  // weaker and is all we can defend. It also happens to be the more useful claim, because it
+  // invites the correction that would close the gap.
   const stages: AccountabilityStage[] = [
     {
       key: "intake",
@@ -234,15 +239,15 @@ const ResearchCorruption = () => {
       key: "appeal",
       owner: t("research.corruption.gaps.appeal.owner", "Supreme Court"),
       title: t("research.corruption.gaps.appeal.title", "Appeal"),
-      body: t("research.corruption.gaps.appeal.body", "The volume is on the record: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. The outcomes are not. Those appeals do get decided — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but no source publishes the results as data, so how often a Special Court verdict survives cannot be measured.", { appeals: REPORT.ciaa.appealsFiledYear, reviews: REPORT.ciaa.appealReviewPetitionsYear }),
-      dark: true,
+      body: t("research.corruption.gaps.appeal.body", "We can see how many appeals are filed: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. We cannot see how they end. They clearly do end — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but our court records hold no decision for them and we have not found the outcomes published anywhere as data. So we cannot tell you how often a Special Court verdict survives on appeal. That is a gap in what we have, not a claim that the answer is unknowable.", { appeals: REPORT.ciaa.appealsFiledYear, reviews: REPORT.ciaa.appealReviewPetitionsYear }),
+      noData: true,
     },
     {
       key: "recovery",
       owner: t("research.corruption.gaps.recovery.owner", "State"),
       title: t("research.corruption.gaps.recovery.title", "Recovery & sanction"),
-      body: t("research.corruption.gaps.recovery.body", "Billions of rupees in damages are demanded each year. No source tracks how much is ever recovered, or whether those convicted serve a meaningful sanction. The pipeline ends without anyone publishing what it produced."),
-      dark: true,
+      body: t("research.corruption.gaps.recovery.body", "Billions of rupees in damages are demanded each year — Rs 6.02 billion in FY2081/82 alone. How much of it is ever collected, and whether those convicted serve a meaningful sanction, we do not know: we have not found a source that tracks either, and we hold no data of our own on it. It may be recorded somewhere we have not looked. What we can say is that we cannot follow the money past the verdict."),
+      noData: true,
     },
   ];
 
@@ -519,15 +524,17 @@ const ResearchCorruption = () => {
           {/* 8 · The pipeline, stage by stage */}
           <section>
             <Eyebrow>{t("research.corruption.gaps.eyebrow", "Where the gap is")}</Eyebrow>
-            <SectionHeading>{t("research.corruption.gaps.heading", "Attrition concentrates at the CIAA stage — then goes dark")}</SectionHeading>
+            <SectionHeading>{t("research.corruption.gaps.heading", "Attrition concentrates at the CIAA stage — then we lose the trail")}</SectionHeading>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-              {t("research.corruption.gaps.lead", "Follow one complaint from the day it is filed to the day someone is sanctioned for it. Five stages, two institutions — and the public record stops before the end.")}
+              {t("research.corruption.gaps.lead", "Follow one complaint from the day it is filed to the day someone is sanctioned for it. Five stages, two institutions — and our record of it runs out before the end.")}
             </p>
             <div className="mt-8">
-              <AccountabilityStages stages={stages} darkLabel={t("research.corruption.gaps.darkLabel", "Not measurable")} />
+              <AccountabilityStages stages={stages} noDataLabel={t("research.corruption.gaps.noDataLabel", "No data yet")} />
             </div>
             <p className="mt-6 text-xs leading-5 text-muted-foreground">
-              {t("research.corruption.gaps.caption", "The dashed stages are not stages we failed to measure — they are stages whose outcomes no public source reports. Their inputs are published (appeals filed, damages demanded); what becomes of them is not. That distinction matters: an unmeasured appeal outcome could be anything, and nobody is currently in a position to say. Appeal and damages figures: CIAA 35th annual report (FY2081/82).")}{" "}
+              {t("research.corruption.gaps.caption", "The dashed stages mark the limits of our own record, not a verdict on what happens inside them. We can see what goes in — appeals filed, damages demanded, both published by the CIAA. We have not been able to find what comes out. Whether that is because nobody publishes it or because we have not looked in the right place, we cannot tell from here, so we are not going to claim the stronger version. If you know of a dataset, report or registry covering appeal outcomes or amounts recovered, please tell us and we will fold it in.")}{" "}
+              <a href="mailto:inquiry@jawafdehi.org" className="text-accent hover:underline">inquiry@jawafdehi.org</a>
+              {t("research.corruption.gaps.captionSource", " · Appeal and damages figures: ")}
               <a href={CITATIONS.ciaa35} className="text-accent hover:underline">{t("research.corruption.cite.ciaa35", "CIAA 35th annual report")}</a>
             </p>
           </section>
@@ -581,7 +588,7 @@ const ResearchCorruption = () => {
                   <a href="https://github.com/Jawafdehi/likhit" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{t("research.corruption.appendix.likhitName", "likhit")}</a>
                   {t("research.corruption.appendix.likhitPost", " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.")}
                 </p>
-                <p>{t("research.corruption.appendix.limits", "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely absent, and amount-recovered is untracked anywhere.", { bs: REPORT.snapshotBs })}</p>
+                <p>{t("research.corruption.appendix.limits", "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely missing from what we hold, and we have not found any source for amounts actually recovered — so treat both as open questions on our side rather than settled absences. Corrections and pointers to sources we have missed are welcome.", { bs: REPORT.snapshotBs })}</p>
               </div>
             </details>
 
