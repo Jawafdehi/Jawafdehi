@@ -431,10 +431,24 @@ export const REPORT = {
   // by case, because both name the accused.
   //
   // `registerComparable` = every -CR- case registered that fiscal year, minus 154 cases in
-  // streams the CIAA does not file (93 money laundering, 33 petitions filed *against* the
-  // CIAA, 24 offences outside its jurisdiction, 4 mixed dockets). That exclusion is
-  // marginally over-broad and the page says so: the FY2081/82 report shows the CIAA filed
-  // two money-laundering cases itself.
+  // streams the CIAA does not file. The split, counted off `excluded_as` in `ngm_excluded.csv`
+  // in the published pack, is 98 / 33 / 23:
+  //   • 98 money_laundering — itself 93 सम्पत्ति शुद्धीकरण + 4 रिसवत(घुस) र सम्पत्ति शुद्धीकरण
+  //     (mixed bribery-and-laundering dockets) + 1 terrorist-financing case.
+  //   • 33 nirnaya_vadar — petitions filed *against* the CIAA rather than by it.
+  //   • 23 other_agency — offences outside its jurisdiction (forest, narcotics, trafficking,
+  //     foreign exchange, contempt, offences against the state).
+  //
+  // NOTE the 93 here is NOT `corpus.substantive`'s money-laundering figure by coincidence —
+  // it is the same 93 cases. `substantive` removes those 93 only; this exclusion removes 98,
+  // because it also drops the 4 mixed dockets and the 1 terrorist-financing case, which the
+  // notebook's charge-type filter keeps. Two nearby numbers, both correct, different scopes.
+  // An earlier version of this comment listed 93 / 33 / 24 / 4 — it summed to 154 but put the
+  // mixed dockets at top level and the terrorist-financing case inside other_agency. If you
+  // quote the split, count the CSV rather than copying it from here.
+  //
+  // That exclusion is marginally over-broad and the page says so: the FY2081/82 report shows
+  // the CIAA filed two money-laundering cases itself.
   //
   // FY2082/83 is deliberately absent — the 36th annual report is unpublished, so there is
   // no CIAA figure to compare against.
