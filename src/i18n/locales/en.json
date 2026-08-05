@@ -1189,14 +1189,14 @@
         "eyebrow": "Research · Corruption Accountability",
         "title": "Where Nepal's corruption accountability actually leaks",
         "lead": "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.",
-        "snapshot": "Snapshot as of {{bs}} BS, spanning 14 fiscal years of court records (FY2069/70–2082/83).",
+        "snapshot": "Based on a 14-fiscal-year analysis of court records (FY2069/70–2082/83) and the CIAA's annual reports through FY2081/82, the most recent published.",
         "methodologyLink": "How we built and cross-checked these numbers →",
         "englishOnlyNotice": "This report is currently available in English only."
       },
       "funnel": {
         "eyebrow": "The funnel",
         "heading": "About 0.2% of complaints end in a full conviction",
-        "lead": "In a single year the CIAA registered about 28,554 new complaints. Most were screened out at intake — only 947 (3.3%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply the measured full-conviction rate and only a few dozen end in a full conviction.",
+        "lead": "In FY2081/82 the CIAA registered 28,554 new complaints. Most were screened out at intake — only 947 (3.3%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply the measured full-conviction rate and only a few dozen end in a full conviction.",
         "ofComplaints": "{{pct}}% of complaints",
         "caption": "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage applies this archive's measured 45% full-conviction rate to the filed count.",
         "stage": {
@@ -1209,7 +1209,7 @@
           "convictedNote": "≈45% of prosecuted cases convict"
         },
         "workloadTitle": "Why this starts at {{intake}} and not {{workload}}",
-        "workloadBody": "You will more often see {{workload}} complaints quoted for this year, and that number is also the CIAA's own. It is the Commission's total workload: {{intake}} complaints newly registered during the year plus {{carried}} still open from previous years. Both appear in the same table of the 35th report. A funnel that starts at {{workload}} would count those {{carried}} a second time, having already counted them in an earlier year, so this one starts at new intake — which also makes the percentage at each stage smaller and more conservative than the headline version."
+        "workloadBody": "You will more often see {{workload}} complaints quoted for FY2081/82, and that number is also the CIAA's own. It is the Commission's total workload: {{intake}} complaints newly registered during the year plus {{carried}} still open from previous years. Both appear in the same table of the 35th report. A funnel that starts at {{workload}} would count those {{carried}} a second time, having already counted them in an earlier year, so this one starts at new intake — which also makes the percentage at each stage smaller and more conservative than the headline version."
       },
       "cite": {
         "ciaa35": "CIAA 35th annual report",
@@ -1312,7 +1312,7 @@
         "intake": {
           "owner": "CIAA",
           "title": "Complaint intake & screening",
-          "body": "About 28,600 new complaints arrive a year and roughly 137 prosecutions come out the far end — near 0.5%. Most are screened out here: shelved, referred elsewhere, or closed for want of evidence or jurisdiction, and much of that is legitimate. But it happens with no public verdict on any individual complaint, which makes this both the largest drop in the pipeline and the least visible."
+          "body": "In FY2081/82, 28,554 new complaints arrived and 137 prosecutions came out the far end — near 0.5%. Most are screened out here: shelved, referred elsewhere, or closed for want of evidence or jurisdiction, and much of that is legitimate. But it happens with no public verdict on any individual complaint, which makes this both the largest drop in the pipeline and the least visible."
         },
         "charging": {
           "owner": "CIAA",
@@ -1345,7 +1345,7 @@
         "summary": "Full methodology, discrepancies & limits",
         "sourcesLead": "Two independent public records, cross-checked against each other — and both browsable on Jawafdehi. Complaint, investigation and prosecution counts come from the CIAA's own annual reports; conviction outcomes come from our mirror of Nepal's Special Court and wider judiciary. Where the two overlap — the cases filed each year — they agree to 1.2%, and the section above sets out case by case where they do not. Every figure on this page links to the record behind it.",
         "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as the Special Court's -CR- criminal register — 2,949 cases filed FY2069/70–2082/83 (the register is the definition; no plaintiff filter) — of which 2,795 are substantive corruption charges after removing money-laundering (a separate statute, 93 cases) and unclassified matters (61).",
-        "funnel": "The funnel. Of 28,554 newly registered complaints in the year, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7. The 37,026 “दर्ता” headline for the same year is the Commission's total workload, which adds 8,472 complaints carried over unresolved from earlier years; starting the funnel there would count those twice. So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages.",
+        "funnel": "The funnel. Of the 28,554 complaints newly registered in FY2081/82, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7. The 37,026 “दर्ता” headline for the same year is the Commission's total workload, which adds 8,472 complaints carried over unresolved from earlier years; starting the funnel there would count those twice. So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages.",
         "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the 2,728 register cases carrying an unambiguous ठहर / आंशिक / सफाई disposition. That is a different set from the 2,740 whose case status reads फैसला (which the filed-vs-decided trend counts), and neither contains the other: 2,628 cases are in both, 112 are marked decided but carry no hearing with a recorded disposition, and 100 carry a disposition without the corresponding status.",
         "derivedVerdicts": "Where a verdict came from. Cases that reached the mirror without ever appearing on a published cause list carry no court-published disposition, so the only way to count them at all is to read the verdict out of the judgment text. {{n}} verdicts were recovered that way (37 conviction, 26 acquittal, 6 partial) and every one of them is EXCLUDED from every rate on this page — a rate that quietly mixed court-published and machine-read verdicts would misrepresent its own source. We report the number rather than filtering silently.",
         "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat dates throughout; by-year charts bin by fiscal year (Shrawan–Ashadh).",
