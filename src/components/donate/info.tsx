@@ -16,11 +16,8 @@ import { trackEvent } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.).
 const PAYPAL_DONATE_URL =
-  "https://www.paypal.com/donate/?hosted_button_id=ZYCQYYBFK7SDY";
+  "https://www.paypal.com/us/fundraiser/charity/6001485";
 // Public donation collection on Crowded (Jawafdehi Initiative, Inc.).
-const CROWDED_DONATE_URL =
-  "https://collect.bankingcrowded.com/collection/873a5d71-f293-4c7c-bd5a-5cffec63cfc4";
-const CROWDED_FEES_URL = "https://bankingcrowded.com/pricing/";
 const NEPALI_BANK_ACCOUNT_NUMBER = "04601000000088900197";
 
 // Best-effort clipboard write. Prefers the async Clipboard API but falls back to
@@ -219,72 +216,6 @@ function UsCard() {
       </p>
 
       <ul className="mt-5 flex flex-col divide-y divide-border/60">
-        {/* Crowded — card + ACH */}
-        <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
-          <div className="flex items-center justify-between gap-3">
-            {/* Crowded wordmark. The source SVG ships un-filled (renders black),
-                so we drive it as a CSS mask and paint it in Crowded's brand blue
-                on light backgrounds / white on dark, matching the card in both
-                themes. */}
-            <span
-              role="img"
-              aria-label={t("donate.ways.us.crowded.title")}
-              className="inline-block h-5 w-24 bg-[#1858F0] dark:bg-white"
-              style={{
-                maskImage: "url('/assets/crowded-logo.svg')",
-                WebkitMaskImage: "url('/assets/crowded-logo.svg')",
-                maskRepeat: "no-repeat",
-                WebkitMaskRepeat: "no-repeat",
-                maskSize: "contain",
-                WebkitMaskSize: "contain",
-                maskPosition: "left center",
-                WebkitMaskPosition: "left center",
-              }}
-            />
-            <span className="shrink-0 text-[11px] font-medium text-foreground/50">
-              {t("donate.ways.us.crowded.fee")}
-            </span>
-          </div>
-          <p className="text-sm leading-5 text-card-foreground/70">
-            {t("donate.ways.us.crowded.detail")}
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <Button asChild variant="primary" size="sm" className="gap-1.5">
-              <a
-                href={CROWDED_DONATE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent("donate_click", {
-                    method: "crowded",
-                    action: "outbound",
-                    link_url: CROWDED_DONATE_URL,
-                  })
-                }
-              >
-                <span>{t("donate.ways.us.crowded.cta")}</span>
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
-              </a>
-            </Button>
-            <a
-              href={CROWDED_FEES_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent("donate_click", {
-                  method: "crowded",
-                  action: "view_fees",
-                  link_url: CROWDED_FEES_URL,
-                })
-              }
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary underline underline-offset-2 transition-colors hover:text-accent"
-            >
-              {t("donate.ways.us.crowded.feesLink")}
-              <ExternalLink className="h-3 w-3" aria-hidden="true" />
-            </a>
-          </div>
-        </li>
-
         {/* PayPal — card / balance */}
         <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
           <div className="flex items-center justify-between gap-3">
