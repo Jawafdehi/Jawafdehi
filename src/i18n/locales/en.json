@@ -1534,9 +1534,10 @@
     "courtCases": {
       "heading": "Court cases",
       "description": "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
-      "trendHeading": "Court cases filed per year",
+      "trendHeading": "Court cases filed per year (Bikram Sambat)",
       "trendTooltip": "Court cases",
-      "matrixHeading": "Court records by level and year",
+      "matrixHeading": "Court records by level and year (Bikram Sambat)",
+      "yearLabel": "BS {{bs}} (AD {{ad}})",
       "filterCourt": "Court level",
       "filterYear": "Year",
       "filterAll": "All",

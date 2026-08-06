@@ -11,6 +11,7 @@ import {
 
 import type { DataLakeMetrics } from "@/types/jds";
 import { useMounted } from "@/hooks/useMounted";
+import { bsYearRows, bsYearWithAd } from "@/lib/data-quality";
 
 /** Compact axis ticks: 140000 -> "140k", 1500000 -> "1.5M". */
 function formatCompact(n: number): string {
@@ -22,25 +23,27 @@ function formatCompact(n: number): string {
 /**
  * Court-case volume over time — the one genuinely temporal series on the page,
  * so it gets the one area chart. A single accent series (fill = accent opacity
- * gradient, 2px line) over registration years in ascending order. Renders
- * nothing until ngm.by_year is present.
+ * gradient, 2px line) over Bikram Sambat registration years in ascending order.
+ * Ticks are bare BS years (the section heading names the calendar); the tooltip
+ * spells it out and adds the Gregorian span. Renders nothing until ngm.by_year
+ * is present.
  */
 export function CourtYearTrend({ ngm }: { ngm?: DataLakeMetrics }) {
   const { t } = useTranslation();
   const mounted = useMounted();
-  const byYear = ngm?.by_year;
+  const byYear = bsYearRows(ngm?.by_year);
   const height = 200;
 
-  if (!byYear?.length) return null;
+  if (!byYear.length) return null;
 
-  const data = [...byYear].sort((a, b) => a.year - b.year);
+  const data = [...byYear].sort((a, b) => a.bs_year - b.bs_year);
 
   if (!mounted) {
     return <div className="w-full" style={{ height }} />;
   }
 
   const ariaLabel = `${t("dataQuality.courtCases.trendTooltip", "Court cases")}: ${data
-    .map((d) => `${d.year} ${d.count.toLocaleString()}`)
+    .map((d) => `${bsYearWithAd(d.bs_year, t)} ${d.count.toLocaleString()}`)
     .join(", ")}`;
 
   return (
@@ -55,7 +58,7 @@ export function CourtYearTrend({ ngm }: { ngm?: DataLakeMetrics }) {
           </defs>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
           <XAxis
-            dataKey="year"
+            dataKey="bs_year"
             tickLine={false}
             axisLine={false}
             tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
@@ -72,7 +75,7 @@ export function CourtYearTrend({ ngm }: { ngm?: DataLakeMetrics }) {
               v.toLocaleString(),
               t("dataQuality.courtCases.trendTooltip", "Court cases"),
             ]}
-            labelFormatter={(label) => String(label)}
+            labelFormatter={(label) => bsYearWithAd(Number(label), t)}
             contentStyle={{
               borderRadius: 8,
               border: "1px solid hsl(var(--border))",
