@@ -24,7 +24,6 @@ export interface ArchiveSearchParams {
   q?: string;
   type?: ArchiveSearchResultType;
   // Exact-match refine facets (each a repeatable query param).
-  entity_type?: string[];
   case_type?: string[];
   tags?: string[];
   // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
@@ -44,7 +43,6 @@ export interface SearchFacetItem {
 // The refine facets the unified service aggregates (the `role` facet from the
 // legacy contract is intentionally gone — relationship data is not indexed).
 export interface ArchiveSearchFacets {
-  entity_type: SearchFacetItem[];
   case_type: SearchFacetItem[];
   tags: SearchFacetItem[];
   status: SearchFacetItem[];

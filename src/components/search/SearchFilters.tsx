@@ -12,7 +12,7 @@ import type {
 } from "@/types/search";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
-export type SidebarFilterName = "entity_type" | "case_type" | "tags";
+export type SidebarFilterName = "case_type" | "tags";
 
 // The four indexed result domains, in display order, with their record-type label.
 const RECORD_TYPES: { value: ArchiveSearchType; label: string }[] = [
@@ -23,7 +23,6 @@ const RECORD_TYPES: { value: ArchiveSearchType; label: string }[] = [
 ];
 
 const FILTER_GROUPS: { name: SidebarFilterName; title: string }[] = [
-  { name: "entity_type", title: "Entity type" },
   { name: "case_type", title: "Case type" },
   { name: "tags", title: "Tags" },
 ];
