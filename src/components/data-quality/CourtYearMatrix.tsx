@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { DataLakeMetrics } from "@/types/jds";
 import { useIsNarrow } from "@/hooks/useIsNarrow";
+import { bsYearRows, bsYearWithAd } from "@/lib/data-quality";
 
 /** Court levels in institutional order; anything else sorts after. */
 const COURT_ORDER = ["district", "high", "supreme", "special"];
@@ -24,11 +25,16 @@ function formatCompact(n: number): string {
 }
 
 /**
- * Court x year heatmap: court levels as rows, years as columns, cell shading =
- * case volume on a sequential single-hue (accent) scale. A right-hand column
- * carries each level's total (the standalone per-level bars are removed, so the
- * level distribution lives here). Two filters subset rows (court level) and
- * columns (year). The grid scrolls horizontally rather than crushing on mobile.
+ * Court x year heatmap: court levels as rows, Bikram Sambat registration years
+ * as columns, cell shading = case volume on a sequential single-hue (accent)
+ * scale. A right-hand column carries each level's total (the standalone per-level
+ * bars are removed, so the level distribution lives here). Two filters subset
+ * rows (court level) and columns (year). The grid scrolls horizontally rather
+ * than crushing on mobile.
+ *
+ * Column headers are bare BS years — the section heading names the calendar, and
+ * a marker repeated across 25 columns is noise — with the full "BS 2081 (AD
+ * 2024/25)" form in each cell's tooltip.
  *
  * Reads ngm.by_court_type_year; renders nothing until that field is present.
  */
@@ -39,7 +45,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
   const [showAllYears, setShowAllYears] = useState(false);
   const narrow = useIsNarrow();
 
-  const rows = ngm?.by_court_type_year ?? [];
+  const rows = bsYearRows(ngm?.by_court_type_year);
 
   const { cells, years, courtTypes, maxCount } = useMemo(() => {
     const cellMap = new Map<string, number>();
@@ -47,9 +53,9 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
     const typeSet = new Set<string>();
     for (const r of rows) {
       const type = (r.court__court_type || "other").toLowerCase();
-      const key = `${type}|${r.year}`;
+      const key = `${type}|${r.bs_year}`;
       cellMap.set(key, (cellMap.get(key) ?? 0) + r.count);
-      yearSet.add(r.year);
+      yearSet.add(r.bs_year);
       typeSet.add(type);
     }
     const years = [...yearSet].sort((a, b) => a - b);
@@ -110,9 +116,11 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
             className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
           >
             <option value="all">{t("dataQuality.courtCases.filterAll", "All")}</option>
+            {/* The dropdown has room the column headers don't, and it is where a
+                reader deliberately picks a year — so spell the calendar out. */}
             {years.map((y) => (
               <option key={y} value={String(y)}>
-                {y}
+                {bsYearWithAd(y, t)}
               </option>
             ))}
           </select>
@@ -156,7 +164,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                   return (
                     <td
                       key={year}
-                      title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${year}: ${count.toLocaleString()}`}
+                      title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${bsYearWithAd(year, t)}: ${count.toLocaleString()}`}
                       className="rounded px-2 py-2 text-center font-mono text-[11px] tabular-nums"
                       style={{
                         backgroundColor:

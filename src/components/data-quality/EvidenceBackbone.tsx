@@ -3,6 +3,7 @@ import CountUp from "react-countup";
 import { Gavel, Landmark } from "lucide-react";
 
 import type { DataLakeMetrics } from "@/types/jds";
+import { bsYearRows } from "@/lib/data-quality";
 import { CourtYearMatrix } from "./CourtYearMatrix";
 import { CourtYearTrend } from "./CourtYearTrend";
 
@@ -64,19 +65,27 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
         </div>
       )}
 
-      {ngm?.by_year?.length ? (
+      {/* Both guards mirror the charts' own BS-year filter, so a pre-cutover
+          payload leaves no orphan heading above an empty chart. */}
+      {bsYearRows(ngm?.by_year).length ? (
         <div className="mt-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("dataQuality.courtCases.trendHeading", "Court cases filed per year")}
+            {t(
+              "dataQuality.courtCases.trendHeading",
+              "Court cases filed per year (Bikram Sambat)",
+            )}
           </p>
           <CourtYearTrend ngm={ngm} />
         </div>
       ) : null}
 
-      {ngm?.by_court_type_year?.length ? (
+      {bsYearRows(ngm?.by_court_type_year).length ? (
         <div className="mt-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("dataQuality.courtCases.matrixHeading", "Court records by level and year")}
+            {t(
+              "dataQuality.courtCases.matrixHeading",
+              "Court records by level and year (Bikram Sambat)",
+            )}
           </p>
           <CourtYearMatrix ngm={ngm} />
         </div>

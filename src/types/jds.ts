@@ -312,8 +312,11 @@ export interface DataLakeMetrics {
   by_court_type: { court__court_type: string; count: number }[];
   // Court volume over time. by_year is the totals strip; by_court_type_year is
   // the (court level x year) heatmap source. Optional for pre-deploy payloads.
-  by_year?: { year: number; count: number }[];
-  by_court_type_year?: { court__court_type: string; year: number; count: number }[];
+  // bs_year is a BIKRAM SAMBAT year, read off the court register itself (the API
+  // derives its Gregorian dates from it, not the other way round) — BS 2081 spans
+  // mid-April 2024 to mid-April 2025, so never render one as if it were AD.
+  by_year?: { bs_year: number; count: number }[];
+  by_court_type_year?: { court__court_type: string; bs_year: number; count: number }[];
   counts: {
     nes_resolved: number;
     with_registration_date: number;
