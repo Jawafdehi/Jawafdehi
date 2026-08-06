@@ -57,6 +57,7 @@ const validSorts = new Set<ArchiveSearchSort>([
 ]);
 const archiveSearchPageSize = 12;
 const emptyFacets: ArchiveSearchFacets = {
+  entity_type: [],
   case_type: [],
   tags: [],
   status: [],
@@ -180,7 +181,7 @@ export default function ArchiveSearch({
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "case_type", "tags"] as RefinementName[]
+      ["type", "entity_type", "case_type", "tags"] as RefinementName[]
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -192,6 +193,7 @@ export default function ArchiveSearch({
   };
 
   const selectedSidebarFilters = {
+    entity_type: params.entity_type || [],
     case_type: params.case_type || [],
     tags: params.tags || [],
   };
@@ -465,6 +467,7 @@ function readParams(
   return {
     q: searchParams.get("q") || undefined,
     type: selectedRecordType === "all" ? undefined : selectedRecordType,
+    entity_type: searchParams.getAll("entity_type"),
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
     sort: requestedSort && validSorts.has(requestedSort) ? requestedSort : "relevance",

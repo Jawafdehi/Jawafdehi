@@ -39,6 +39,7 @@ const baseResponse: ArchiveSearchResponse = {
     courtcase: 0,
   },
   facets: {
+    entity_type: [{ name: "Person", count: 4 }],
     case_type: [{ name: "CORRUPTION", count: 7 }],
     tags: [{ name: "CIAA", count: 6 }],
     status: [{ name: "ongoing", count: 5 }],
@@ -230,6 +231,36 @@ describe("ArchiveSearch", () => {
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ type: "case" }),
     );
+  });
+
+  it("shows the Entity type filter only while browsing Entities", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    // Default "All records" view: Entity type is hidden (its buckets are
+    // either irrelevant or, as originally reported, collapse to one
+    // confusing value when browsing anything other than Entities). The
+    // filter panel renders twice at every viewport (mobile + desktop), same
+    // as "Filters" elsewhere in this file, so assert on the count.
+    expect(screen.queryAllByText("Entity type").length).toBe(0);
+
+    fireEvent.click(
+      screen.getAllByRole("radio", { name: "Entities: 3 results" })[0],
+    );
+
+    await waitFor(() => {
+      expect(screen.queryAllByText("Entity type").length).toBeGreaterThan(0);
+    });
+    expect(
+      screen.getAllByRole("checkbox", { name: "Person: 4 results" })[0],
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+
+    await waitFor(() => {
+      expect(screen.queryAllByText("Entity type").length).toBe(0);
+    });
   });
 
   it("adds a hydrated case tag as a URL refinement", async () => {
