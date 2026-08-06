@@ -39,7 +39,6 @@ const baseResponse: ArchiveSearchResponse = {
     courtcase: 0,
   },
   facets: {
-    entity_type: [{ name: "Person", count: 4 }],
     case_type: [{ name: "CORRUPTION", count: 7 }],
     tags: [{ name: "CIAA", count: 6 }],
     status: [{ name: "ongoing", count: 5 }],
@@ -158,14 +157,14 @@ describe("ArchiveSearch", () => {
 
     fireEvent.click(
       screen.getAllByRole("checkbox", {
-        name: "Person: 4 results",
+        name: "CIAA: 6 results",
       })[0],
     );
 
     await waitFor(() => {
       expect(
         screen
-          .getAllByRole("checkbox", { name: "Person: 4 results" })[0]
+          .getAllByRole("checkbox", { name: "CIAA: 6 results" })[0]
           .getAttribute("data-state"),
       ).toBe("checked");
     });
@@ -329,7 +328,7 @@ describe("ArchiveSearch", () => {
 
     fireEvent.click(
       screen.getAllByRole("checkbox", {
-        name: "Person: 4 results",
+        name: "CIAA: 6 results",
       })[0],
     );
 
