@@ -138,12 +138,19 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           <thead>
             <tr>
               <th className="sticky left-0 bg-background px-2 py-1 text-left text-xs font-semibold text-muted-foreground" />
+              {/* Sighted readers get the bare year and take the calendar from the
+                  section heading, which a screen reader announcing a single cell
+                  never reaches — so the header's accessible name carries it. Naming
+                  the calendar here rather than in each cell means a table-mode
+                  reader hears "District, BS 2081 (AD 2024/25), 252,431" without
+                  repeating the label a hundred times in the DOM. */}
               {visibleYears.map((y) => (
                 <th
                   key={y}
                   className="px-2 py-1 text-center font-mono text-xs font-semibold tabular-nums text-muted-foreground"
                 >
-                  {y}
+                  <span aria-hidden="true">{y}</span>
+                  <span className="sr-only">{bsYearWithAd(y, t)}</span>
                 </th>
               ))}
               <th className="px-2 py-1 text-right text-xs font-semibold text-muted-foreground">
