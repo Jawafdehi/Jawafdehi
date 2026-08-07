@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CourtCaseCard } from "@/components/CourtCaseCard";
+import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { getCourtCaseFull } from "@/services/datalake-api";
 
 // The /courtcase/* splat tail is the courtcase IRI path component
@@ -93,6 +94,10 @@ export default function CourtCaseProfile() {
         ) : (
           <article className="space-y-6">
             <CourtCaseCard courtCaseId={courtCaseIri} courtCase={data} isLoading={isLoading} />
+
+            {/* The reverse of the case -> court-case link: published Jawafdehi
+                cases citing this court case. Self-hiding when there are none. */}
+            <CourtCaseRelatedCases courtCaseIri={courtCaseIri} />
 
             {/* Provenance. */}
             <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">

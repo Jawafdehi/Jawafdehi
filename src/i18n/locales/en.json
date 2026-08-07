@@ -1179,6 +1179,10 @@
     "supreme": "Supreme Court",
     "special": "Special Court"
   },
+  "courtCaseDetail": {
+    "relatedCases": "Related Jawafdehi Cases",
+    "moreCases": "+{{count}} more"
+  },
   "research": {
     "corruption": {
       "meta": {
