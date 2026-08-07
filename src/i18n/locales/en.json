@@ -683,9 +683,10 @@
       "heading": "Where this case stands",
       "caveat": "Reconstructed from the court dockets we hold. It describes our record, not the court's file.",
       "currentLabel": "Now",
-      "noAppealRecorded": "We hold no record of an appeal. The 35-day window under the Special Court Act, 2059 (s.17) has passed, but an appeal we have not found may still exist.",
+      "noAppealRecorded": "We hold no record of an appeal. The time to file one has passed, but an appeal we have not found may still exist — nothing links a Supreme Court docket back to its Special Court original.",
       "noOutcomeRecorded": "The appeal is on record; we hold no decision for it yet.",
-      "appealWindowOpen": "Appeal window open — {{days}} days remain under the Special Court Act, 2059 (s.17).",
+      "appealWindowOpen": "Appeal window open — {{days}} days remain of the 35 allowed by the Special Court Act, 2059 (s.17).",
+      "appealExtensionPossible": "The 35-day appeal period (Special Court Act, 2059 s.17) has passed. Section 11 allows an extension of up to 15 days, so an appeal may still be filed.",
       "forum": {
         "ciaa": "CIAA",
         "special": "Special Court",
@@ -710,7 +711,7 @@
         "charge_filed": "Charge filed",
         "trial": "On trial",
         "appeal_window": "Verdict — appeal window open",
-        "no_appeal_recorded": "Special Court verdict",
+        "no_appeal_recorded": "Special Court verdict — no appeal found",
         "appeal_pending": "Under appeal",
         "appeal_decided": "Appeal decided"
       }

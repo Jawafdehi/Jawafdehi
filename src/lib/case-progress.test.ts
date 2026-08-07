@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { APPEAL_WINDOW_DAYS, deriveCaseProgress } from "./case-progress";
+import { APPEAL_PERIOD_DAYS, APPEAL_WINDOW_DAYS, deriveCaseProgress } from "./case-progress";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 
 const NOW = new Date("2026-08-07T00:00:00Z");
@@ -25,6 +25,9 @@ function docket(over: Partial<CourtCase> & Pick<CourtCase, "case_number" | "cour
     verdict_date_ad: null,
     verdict_judge: null,
     status: "enriched",
+    // Loaded and genuinely empty. Distinct from `undefined`, which means the
+    // sub-resource request failed — see the indeterminate-hearings test.
+    hearings: [],
     ...over,
   };
 }
@@ -157,15 +160,55 @@ describe("deriveCaseProgress", () => {
     expect(full?.nodes.find((n) => n.key === "trial_verdict")?.verdict).toBe("CONVICTED");
   });
 
-  it("keeps a fresh verdict inside the appeal window", () => {
-    const recent = new Date(NOW);
-    recent.setDate(recent.getDate() - 10);
-    const progress = deriveCaseProgress(
-      [{ ...TRIAL_ACQUITTED, verdict_date_ad: recent.toISOString().slice(0, 10) }],
-      NOW,
-    );
+  /** A trial docket whose verdict landed `daysAgo` days before NOW. */
+  function decidedDaysAgo(daysAgo: number): CourtCase {
+    const d = new Date(NOW);
+    d.setDate(d.getDate() - daysAgo);
+    return { ...TRIAL_ACQUITTED, verdict_date_ad: d.toISOString().slice(0, 10) };
+  }
+
+  it("counts down only the 35 statutory days, inside the statutory period", () => {
+    const progress = deriveCaseProgress([decidedDaysAgo(10)], NOW);
     expect(progress?.stage).toBe("appeal_window");
-    expect(progress?.appealDaysRemaining).toBe(APPEAL_WINDOW_DAYS - 10);
+    expect(progress?.appealDaysRemaining).toBe(APPEAL_PERIOD_DAYS - 10);
+    expect(progress?.appealExtensionPossible).toBeUndefined();
+  });
+
+  it("does not count down an extension nobody told us was granted", () => {
+    // Day 36 is past दफा १७. Days 36-50 exist only if a दफा ११ extension was
+    // granted, and we hold no evidence either way — so the copy has to be
+    // conditional. Saying "14 days remain under s.17" here would assert both a
+    // deadline that has already passed and an extension we never saw.
+    const progress = deriveCaseProgress([decidedDaysAgo(36)], NOW);
+    expect(progress?.stage).toBe("appeal_window");
+    expect(progress?.appealDaysRemaining).toBeUndefined();
+    expect(progress?.appealExtensionPossible).toBe(true);
+  });
+
+  it("treats day 35 as the last statutory day and day 51 as elapsed", () => {
+    expect(deriveCaseProgress([decidedDaysAgo(35)], NOW)?.appealDaysRemaining).toBe(0);
+    expect(deriveCaseProgress([decidedDaysAgo(APPEAL_WINDOW_DAYS)], NOW)?.stage).toBe("appeal_window");
+    expect(deriveCaseProgress([decidedDaysAgo(APPEAL_WINDOW_DAYS + 1)], NOW)?.stage).toBe(
+      "no_appeal_recorded",
+    );
+  });
+
+  it("refuses to derive anything when hearings could not be loaded", () => {
+    // getCourtCaseFull yields `undefined` hearings on a failed sub-resource and
+    // `[]` when there genuinely are none. Collapsing the two would let a
+    // transient error report a decided case as still on trial, so an
+    // undetermined trial outcome must produce no rail at all.
+    const unavailable = docket({
+      case_number: "081-CR-0091",
+      court_identifier: "special",
+      case_status: "चलिरहेको",
+      hearings: undefined,
+    });
+    expect(deriveCaseProgress([unavailable], NOW)).toBeNull();
+
+    // Loaded-and-empty is real evidence and must still derive.
+    const empty = { ...unavailable, hearings: [] };
+    expect(deriveCaseProgress([empty], NOW)?.stage).toBe("charge_filed");
   });
 
   it("says no appeal is RECORDED once the window has closed", () => {

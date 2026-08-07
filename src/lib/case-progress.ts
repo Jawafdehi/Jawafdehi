@@ -55,14 +55,26 @@ function verdictFromDecisionType(decisionType: string | null | undefined): strin
 }
 
 /**
- * Statutory window to appeal a Special Court decision to the Supreme Court:
- * 35 days under विशेष अदालत ऐन, २०५९ दफा १७, extendable once by up to 15 under
- * दफा ११ for causes beyond a party's control. 50 is the outer bound.
+ * Statutory period to appeal a Special Court decision to the Supreme Court:
+ * 35 days under विशेष अदालत ऐन, २०५९ दफा १७.
  *
  * NOT the 70-day general government-case period — नि.नं. ७२२० holds that the
  * later Act's own provision displaces it for Special Court matters.
  */
-export const APPEAL_WINDOW_DAYS = 50;
+export const APPEAL_PERIOD_DAYS = 35;
+
+/**
+ * Outer bound before we stop expecting an appeal: the 35 statutory days plus
+ * the maximum 15-day extension दफा ११ allows for causes beyond a party's
+ * control.
+ *
+ * Days 36–50 are NOT "the appeal window" — they only exist if an extension was
+ * granted, and we hold no evidence either way. The two phases therefore get
+ * different copy: a countdown inside the statutory period, and a plainly
+ * conditional statement after it. Reporting "15 days remain under s.17" on day
+ * 40 would assert both a deadline that has passed and an extension we never saw.
+ */
+export const APPEAL_WINDOW_DAYS = APPEAL_PERIOD_DAYS + 15;
 
 export interface StageNode {
   key: string;
@@ -85,12 +97,26 @@ export interface CaseProgress {
   nodes: StageNode[];
   trialDocket: CourtCase;
   appealDocket?: CourtCase;
-  /** Days left to appeal, when the window is still open. */
+  /** Days left in the 35-day statutory period. Only set inside that period. */
   appealDaysRemaining?: number;
+  /**
+   * The statutory period has lapsed but the दफा ११ extension could still be
+   * running. Distinct from `appealDaysRemaining` because we cannot count down
+   * an extension nobody has told us was granted.
+   */
+  appealExtensionPossible?: boolean;
+}
+
+interface TrialOutcome {
+  verdict: string | null;
+  dateBs: string | null;
+  dateAd: string | null;
+  /** Hearings could not be loaded, so "no verdict" is unproven, not a fact. */
+  indeterminate?: boolean;
 }
 
 /** Terminal verdict for a docket: the typed column first, hearings as fallback. */
-function trialOutcome(docket: CourtCase): { verdict: string | null; dateBs: string | null; dateAd: string | null } {
+function trialOutcome(docket: CourtCase): TrialOutcome {
   // The promoted column is authoritative when present.
   if (docket.verdict_type && TRIAL_VERDICTS.has(docket.verdict_type)) {
     return {
@@ -99,11 +125,18 @@ function trialOutcome(docket: CourtCase): { verdict: string | null; dateBs: stri
       dateAd: docket.verdict_date_ad ?? null,
     };
   }
+  // No typed verdict, so the hearings decide it — and we must know we actually
+  // have them. `undefined` means the sub-resource request failed; treating that
+  // as "no hearings" would let a transient error report a decided case as still
+  // on trial. `[]` means loaded and genuinely none, which IS evidence.
+  if (docket.hearings === undefined) {
+    return { verdict: null, dateBs: null, dateAd: null, indeterminate: true };
+  }
   // Fallback: the verdict lands on the HEARING row and the case row is never
   // updated. 9 of the 49 published-case dockets are in exactly that state —
   // case_status still reads चलिरहेको while a फैसला hearing carries the outcome.
   // Reading only the case row would report those cases as still on trial.
-  const terminal = [...(docket.hearings ?? [])]
+  const terminal = [...docket.hearings]
     .filter((h) => TERMINAL_HEARING_STATUSES.has((h.case_status || "").trim()))
     .sort((a, b) => (a.hearing_date_bs || "").localeCompare(b.hearing_date_bs || ""))
     .pop();
@@ -153,6 +186,11 @@ export function deriveCaseProgress(
     .sort((a, b) => (a.registration_date_bs || "").localeCompare(b.registration_date_bs || ""))[0];
 
   const trial = trialOutcome(trialDocket);
+  // Without hearings we cannot tell "no verdict yet" from "verdict we could not
+  // read", and every downstream stage hangs off that. Render nothing rather
+  // than pick one — a wrong stage is worse than no stage.
+  if (trial.indeterminate) return null;
+
   const appealVerdict =
     appealDocket?.verdict_type && APPELLATE_VERDICTS.has(appealDocket.verdict_type)
       ? appealDocket.verdict_type
@@ -160,6 +198,7 @@ export function deriveCaseProgress(
 
   let stage: CaseStage;
   let appealDaysRemaining: number | undefined;
+  let appealExtensionPossible: boolean | undefined;
   if (!trial.verdict) {
     // Registration at the Special Court IS the charge filing, so a case with no
     // hearings yet is still at the filing step rather than in trial.
@@ -170,9 +209,15 @@ export function deriveCaseProgress(
     stage = "appeal_pending";
   } else {
     const elapsed = daysSince(trial.dateAd, now);
-    if (elapsed !== null && elapsed <= APPEAL_WINDOW_DAYS) {
+    if (elapsed !== null && elapsed <= APPEAL_PERIOD_DAYS) {
+      // Inside the statutory period — a real deadline we can count down.
       stage = "appeal_window";
-      appealDaysRemaining = Math.max(0, APPEAL_WINDOW_DAYS - elapsed);
+      appealDaysRemaining = Math.max(0, APPEAL_PERIOD_DAYS - elapsed);
+    } else if (elapsed !== null && elapsed <= APPEAL_WINDOW_DAYS) {
+      // Past दफा १७ but inside the maximum दफा ११ extension. Say only that an
+      // appeal may still be filed; do not count down an extension we never saw.
+      stage = "appeal_window";
+      appealExtensionPossible = true;
     } else {
       stage = "no_appeal_recorded";
     }
@@ -234,5 +279,5 @@ export function deriveCaseProgress(
     }
   }
 
-  return { stage, nodes, trialDocket, appealDocket, appealDaysRemaining };
+  return { stage, nodes, trialDocket, appealDocket, appealDaysRemaining, appealExtensionPossible };
 }

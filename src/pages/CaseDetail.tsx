@@ -151,13 +151,21 @@ const CaseDetail = () => {
     })),
   });
 
+  // Derive ONLY from a complete set of dockets. A pending or failed query would
+  // otherwise silently drop out of the array, and the derivation reads absence
+  // as evidence — a Supreme docket that merely failed to load would render as
+  // "no appeal on record", which is a confident public claim manufactured from
+  // a network error. Until every docket is in, show no rail.
+  //
   // Not memoised: a few array ops over one or two dockets, and the inputs are
-  // fresh objects on every render anyway, so a dep array would either thrash or
-  // — worse — go stale and miss the verdict arriving. Null for the 13 of 62
-  // cases with no Special Court -CR- docket; those pages render as before.
-  const caseProgress = deriveCaseProgress(
-    courtCaseQueries.map((q) => q.data).filter((d): d is CourtCase => Boolean(d)),
-  );
+  // fresh objects each render, so a dep array would either thrash or go stale
+  // and miss the verdict arriving. Null for the 13 of 62 cases with no Special
+  // Court -CR- docket; those pages render exactly as before.
+  const allDocketsLoaded =
+    courtCaseQueries.length > 0 && courtCaseQueries.every((q) => q.isSuccess && q.data);
+  const caseProgress = allDocketsLoaded
+    ? deriveCaseProgress(courtCaseQueries.map((q) => q.data as CourtCase))
+    : null;
 
   useEffect(() => {
     const loadedCaseId = caseData?.id?.toString();

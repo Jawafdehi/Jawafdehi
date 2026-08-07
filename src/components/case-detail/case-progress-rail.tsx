@@ -91,9 +91,18 @@ export function CaseProgressRail({ progress, className }: { progress: CaseProgre
                   </p>
                 )}
 
+                {/* Two distinct claims, never conflated: a countable deadline
+                    inside the 35-day statutory period, and a plainly
+                    conditional statement once only the दफा ११ extension could
+                    still be running. */}
                 {node.key === "trial_verdict" && progress.appealDaysRemaining !== undefined && (
                   <p className="font-caption mt-1 text-muted-foreground">
                     {t("caseDetail.progress.appealWindowOpen", { days: progress.appealDaysRemaining })}
+                  </p>
+                )}
+                {node.key === "trial_verdict" && progress.appealExtensionPossible && (
+                  <p className="font-caption mt-1 text-muted-foreground">
+                    {t("caseDetail.progress.appealExtensionPossible")}
                   </p>
                 )}
 
