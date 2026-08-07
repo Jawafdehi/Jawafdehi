@@ -17,9 +17,13 @@ import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { CaseByline } from "@/components/case-detail/case-byline";
+import { CaseProgressRail } from "@/components/case-detail/case-progress-rail";
+import type { CaseProgress } from "@/lib/case-progress";
 
 interface CaseDetailBannerProps {
   caseData: CaseDetail;
+  /** Docket-derived progress; null when this is not a Special Court -CR- case. */
+  caseProgress?: CaseProgress | null;
   resolvedEntities: Record<string, Entity>;
   homeLabel?: string;
   casesLabel?: string;
@@ -84,6 +88,7 @@ function getCaseBannerSrc(caseData: CaseDetail) {
 
 export function CaseDetailBanner({
   caseData,
+  caseProgress,
   resolvedEntities,
   homeLabel,
   casesLabel,
@@ -110,10 +115,20 @@ export function CaseDetailBanner({
     setImageSrc(bannerSrc);
   }, [bannerSrc]);
 
-  // Derive the chip from state + end date so a concluded case (one with a
-  // `case_end_date`) no longer reads "Ongoing".
-  const effectiveStatus = deriveCaseStatus(caseData.state, caseData.case_end_date);
-  const statusLabel = t(getCaseStatusLabelKey(effectiveStatus));
+  // The chip follows the dockets when we have them. `case_end_date` holds the
+  // Special Court's फैसला date, so the old state+end-date rule called a case
+  // "Concluded" the moment the trial court ruled — wrong on 12 published cases
+  // that were under appeal at the time. Fall back to that rule only for cases
+  // with no Special Court -CR- docket to derive from.
+  //
+  // The chip and the rail below MUST agree: a rail reading "under appeal" beside
+  // a chip reading "Concluded" is worse than either alone.
+  const effectiveStatus = caseProgress
+    ? caseProgress.stage
+    : deriveCaseStatus(caseData.state, caseData.case_end_date);
+  const statusLabel = caseProgress
+    ? t(`caseDetail.progress.badge.${caseProgress.stage}`)
+    : t(getCaseStatusLabelKey(effectiveStatus));
   // A known case type localizes; an unknown/scraped one humanizes its raw value
   // rather than mislabelling (getCaseTypeLabelKey returns null when unknown).
   const caseTypeLabelKey = getCaseTypeLabelKey(caseData.case_type);
@@ -322,6 +337,12 @@ export function CaseDetailBanner({
                     </div>
                   </div>
                 )}
+
+                {/* Where the case sits on the CIAA -> Special Court -> appeal
+                    ladder. Sits directly under the docket links it is derived
+                    from, and next to the chip it must agree with. Absent for
+                    cases with no Special Court -CR- docket. */}
+                {caseProgress && <CaseProgressRail progress={caseProgress} className="mt-1" />}
 
                 {/* Public caseworker-authored attribution + edit-history byline
                     (Case.public_notes). On-screen counterpart to the print-only

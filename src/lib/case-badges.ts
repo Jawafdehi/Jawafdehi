@@ -34,6 +34,17 @@ const statusPillClassNames: Record<string, string> = {
   "under-investigation": "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
   UNDER_INVESTIGATION: "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
   others: "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
+
+  // Docket-derived stages (see lib/case-progress.ts). Green is reserved for
+  // "nothing further is on foot": a case under appeal is amber however
+  // emphatically the trial court ruled, which is the whole point — the old rule
+  // painted 12 cases green while the CIAA's appeal was live at the Supreme Court.
+  charge_filed: "border-transparent bg-alert text-alert-foreground hover:bg-alert/90",
+  trial: "border-transparent bg-alert text-alert-foreground hover:bg-alert/90",
+  appeal_window: "border-transparent bg-alert text-alert-foreground hover:bg-alert/90",
+  appeal_pending: "border-transparent bg-alert text-alert-foreground hover:bg-alert/90",
+  no_appeal_recorded: "border-transparent bg-success text-success-foreground hover:bg-success/90",
+  appeal_decided: "border-transparent bg-success text-success-foreground hover:bg-success/90",
 };
 
 const caseTypePillClassNames: Record<string, string> = {

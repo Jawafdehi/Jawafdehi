@@ -678,7 +678,43 @@
     },
     "breadcrumbFallback": "Case",
     "readMore": "Read more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "progress": {
+      "heading": "Where this case stands",
+      "caveat": "Reconstructed from the court dockets we hold. It describes our record, not the court's file.",
+      "currentLabel": "Now",
+      "noAppealRecorded": "We hold no record of an appeal. The 35-day window under the Special Court Act, 2059 (s.17) has passed, but an appeal we have not found may still exist.",
+      "noOutcomeRecorded": "The appeal is on record; we hold no decision for it yet.",
+      "appealWindowOpen": "Appeal window open — {{days}} days remain under the Special Court Act, 2059 (s.17).",
+      "forum": {
+        "ciaa": "CIAA",
+        "special": "Special Court",
+        "supreme": "Supreme Court"
+      },
+      "stage": {
+        "charge_filed": "Charge sheet filed",
+        "trial": "Trial at the Special Court",
+        "trial_verdict": "Special Court verdict",
+        "appeal_filed": "Appeal to the Supreme Court",
+        "appeal_verdict": "Supreme Court decision"
+      },
+      "verdict": {
+        "ACQUITTED": "Acquitted",
+        "CONVICTED": "Convicted",
+        "PARTIALLY_CONVICTED": "Partially convicted",
+        "AFFIRMED": "Lower decision affirmed",
+        "REVERSED": "Lower decision reversed",
+        "PARTIALLY_REVERSED": "Lower decision partly reversed"
+      },
+      "badge": {
+        "charge_filed": "Charge filed",
+        "trial": "On trial",
+        "appeal_window": "Verdict — appeal window open",
+        "no_appeal_recorded": "Special Court verdict",
+        "appeal_pending": "Under appeal",
+        "appeal_decided": "Appeal decided"
+      }
+    }
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",

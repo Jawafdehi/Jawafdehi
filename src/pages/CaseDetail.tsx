@@ -30,7 +30,8 @@ import { InvolvedPartiesSection } from "@/components/case-detail/involved-partie
 import { KeyAllegationsSection } from "@/components/case-detail/key-allegations-section";
 import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
 import { API_BASE_URL } from "@/services/http";
-import { getCourtCase } from "@/services/datalake-api";
+import { getCourtCaseFull } from "@/services/datalake-api";
+import { deriveCaseProgress } from "@/lib/case-progress";
 import { getEntityById } from "@/services/api";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
@@ -135,14 +136,28 @@ const CaseDetail = () => {
     })),
   });
 
+  // `getCourtCaseFull`, not `getCourtCase`: the progress rail needs hearings.
+  // For 9 of the 49 published-case dockets the Special Court verdict lands on a
+  // hearing row while the case row still reads चलिरहेको with every verdict
+  // column NULL — core-only would report those decided cases as still on trial,
+  // which is the exact bug this feature exists to fix. Hearings also populate
+  // the court-case card's table, which was always empty on this page before.
   const courtCaseQueries = useQueries({
     queries: (caseData?.court_cases ?? []).map((courtCaseId) => ({
-      queryKey: ["court-case", courtCaseId],
-      queryFn: () => getCourtCase(courtCaseId),
+      queryKey: ["court-case-full", courtCaseId],
+      queryFn: () => getCourtCaseFull(courtCaseId),
       staleTime: 10 * 60 * 1000,
       retry: false,
     })),
   });
+
+  // Not memoised: a few array ops over one or two dockets, and the inputs are
+  // fresh objects on every render anyway, so a dep array would either thrash or
+  // — worse — go stale and miss the verdict arriving. Null for the 13 of 62
+  // cases with no Special Court -CR- docket; those pages render as before.
+  const caseProgress = deriveCaseProgress(
+    courtCaseQueries.map((q) => q.data).filter((d): d is CourtCase => Boolean(d)),
+  );
 
   useEffect(() => {
     const loadedCaseId = caseData?.id?.toString();
@@ -422,6 +437,7 @@ const CaseDetail = () => {
 
       <CaseDetailBanner
         caseData={caseData}
+        caseProgress={caseProgress}
         resolvedEntities={resolvedEntities}
         actions={
           <>
