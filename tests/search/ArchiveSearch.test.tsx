@@ -263,6 +263,45 @@ describe("ArchiveSearch", () => {
     });
   });
 
+  it("drops a selected entity type when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=entity");
+    await screen.findByText("Original result");
+
+    fireEvent.click(
+      screen.getAllByRole("checkbox", { name: "Person: 4 results" })[0],
+    );
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ entity_type: ["Person"], type: "entity" }),
+      );
+    });
+
+    // Switching record type must not leave the (now hidden) Entity type facet
+    // filtering the results behind the user's back.
+    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ entity_type: [], type: "case" }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "entity_type",
+    );
+  });
+
+  it("ignores an entity_type carried in by a non-entity URL", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&entity_type=Person");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ entity_type: [], type: "case" }),
+    );
+  });
+
   it("adds a hydrated case tag as a URL refinement", async () => {
     searchArchiveMock.mockResolvedValue(baseResponse);
     renderSearch();

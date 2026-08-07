@@ -167,7 +167,13 @@ export default function ArchiveSearch({
   };
 
   const updateRecordType = (type?: ArchiveSearchType) => {
-    updateParams({ type: type || "all", page: 1 });
+    let next = setArchiveSearchParam(searchParams, "type", type || "all");
+    next = setArchiveSearchParam(next, "page", 1);
+    // The "Entity type" facet only renders while browsing Entities, so leaving a
+    // stale entity_type behind would silently filter the new record type through
+    // a control the user can no longer see.
+    if (type !== "entity") next.delete("entity_type");
+    setSearchParams(next);
   };
 
   const removeRefinement = (name: RefinementName, value: string) => {
@@ -467,7 +473,13 @@ function readParams(
   return {
     q: searchParams.get("q") || undefined,
     type: selectedRecordType === "all" ? undefined : selectedRecordType,
-    entity_type: searchParams.getAll("entity_type"),
+    // Only honour entity_type while browsing Entities. A hand-edited or
+    // bookmarked URL can still carry it into another record type, where the
+    // facet is hidden and the filter would drop results with no visible cause.
+    entity_type:
+      selectedRecordType === "entity"
+        ? searchParams.getAll("entity_type")
+        : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
     sort: requestedSort && validSorts.has(requestedSort) ? requestedSort : "relevance",
