@@ -1957,7 +1957,12 @@
     "cardView": "कार्ड दृश्य",
     "results_one": "{{count}} नतिजा",
     "results_other": "{{count}} नतिजाहरू",
-    "sort": "क्रमबद्ध"
+    "sort": "क्रमबद्ध",
+    "filters": {
+      "entityType": "संस्था प्रकार",
+      "caseType": "मुद्दा प्रकार",
+      "tags": "ट्यागहरू"
+    }
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

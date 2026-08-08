@@ -22,10 +22,24 @@ const RECORD_TYPES: { value: ArchiveSearchType; label: string }[] = [
   { value: "courtcase", label: "Court cases" },
 ];
 
-const FILTER_GROUPS: { name: SidebarFilterName; title: string }[] = [
-  { name: "entity_type", title: "Entity type" },
-  { name: "case_type", title: "Case type" },
-  { name: "tags", title: "Tags" },
+// `title` is the English fallback; `titleKey` resolves the Nepali label from the
+// bilingual bundle (see src/i18n/locales/*.json → archiveSearch.filters).
+const FILTER_GROUPS: {
+  name: SidebarFilterName;
+  titleKey: string;
+  title: string;
+}[] = [
+  {
+    name: "entity_type",
+    titleKey: "archiveSearch.filters.entityType",
+    title: "Entity type",
+  },
+  {
+    name: "case_type",
+    titleKey: "archiveSearch.filters.caseType",
+    title: "Case type",
+  },
+  { name: "tags", titleKey: "archiveSearch.filters.tags", title: "Tags" },
 ];
 
 type SearchFiltersProps = {
@@ -51,6 +65,8 @@ export function SearchFilters({
   onClear,
   hideTypeSelector,
 }: Readonly<SearchFiltersProps>) {
+  const { t } = useTranslation();
+
   return (
     <aside
       aria-label="Archive search filters"
@@ -72,16 +88,21 @@ export function SearchFilters({
           selectedType={selectedType}
         />
       )}
-      {FILTER_GROUPS.map(({ name, title }) => (
-        <FilterGroup
-          items={facets[name]}
-          key={name}
-          name={name}
-          onToggle={onToggle}
-          selectedValues={selected[name]}
-          title={title}
-        />
-      ))}
+      {FILTER_GROUPS
+        // "Entity type" only makes sense while browsing Entities — for every
+        // other record type (or "all") its buckets are either irrelevant or,
+        // as originally reported, collapse to a single confusing value.
+        .filter(({ name }) => name !== "entity_type" || selectedType === "entity")
+        .map(({ name, titleKey, title }) => (
+          <FilterGroup
+            items={facets[name]}
+            key={name}
+            name={name}
+            onToggle={onToggle}
+            selectedValues={selected[name]}
+            title={t(titleKey, title)}
+          />
+        ))}
     </aside>
   );
 }

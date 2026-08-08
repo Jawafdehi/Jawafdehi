@@ -158,14 +158,14 @@ describe("ArchiveSearch", () => {
 
     fireEvent.click(
       screen.getAllByRole("checkbox", {
-        name: "Person: 4 results",
+        name: "CIAA: 6 results",
       })[0],
     );
 
     await waitFor(() => {
       expect(
         screen
-          .getAllByRole("checkbox", { name: "Person: 4 results" })[0]
+          .getAllByRole("checkbox", { name: "CIAA: 6 results" })[0]
           .getAttribute("data-state"),
       ).toBe("checked");
     });
@@ -230,6 +230,75 @@ describe("ArchiveSearch", () => {
     ).toBe("checked");
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ type: "case" }),
+    );
+  });
+
+  it("shows the Entity type filter only while browsing Entities", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    // Default "All records" view: Entity type is hidden (its buckets are
+    // either irrelevant or, as originally reported, collapse to one
+    // confusing value when browsing anything other than Entities). The
+    // filter panel renders twice at every viewport (mobile + desktop), same
+    // as "Filters" elsewhere in this file, so assert on the count.
+    expect(screen.queryAllByText("Entity type").length).toBe(0);
+
+    fireEvent.click(
+      screen.getAllByRole("radio", { name: "Entities: 3 results" })[0],
+    );
+
+    await waitFor(() => {
+      expect(screen.queryAllByText("Entity type").length).toBeGreaterThan(0);
+    });
+    expect(
+      screen.getAllByRole("checkbox", { name: "Person: 4 results" })[0],
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+
+    await waitFor(() => {
+      expect(screen.queryAllByText("Entity type").length).toBe(0);
+    });
+  });
+
+  it("drops a selected entity type when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=entity");
+    await screen.findByText("Original result");
+
+    fireEvent.click(
+      screen.getAllByRole("checkbox", { name: "Person: 4 results" })[0],
+    );
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ entity_type: ["Person"], type: "entity" }),
+      );
+    });
+
+    // Switching record type must not leave the (now hidden) Entity type facet
+    // filtering the results behind the user's back.
+    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ entity_type: [], type: "case" }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "entity_type",
+    );
+  });
+
+  it("ignores an entity_type carried in by a non-entity URL", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&entity_type=Person");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ entity_type: [], type: "case" }),
     );
   });
 
@@ -329,7 +398,7 @@ describe("ArchiveSearch", () => {
 
     fireEvent.click(
       screen.getAllByRole("checkbox", {
-        name: "Person: 4 results",
+        name: "CIAA: 6 results",
       })[0],
     );
 

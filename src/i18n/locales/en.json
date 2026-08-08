@@ -1982,7 +1982,12 @@
     "cardView": "Card view",
     "results_one": "{{count}} result",
     "results_other": "{{count}} results",
-    "sort": "Sort"
+    "sort": "Sort",
+    "filters": {
+      "entityType": "Entity type",
+      "caseType": "Case type",
+      "tags": "Tags"
+    }
   },
   "materialsPage": {
     "heading": "Documents & other materials",
