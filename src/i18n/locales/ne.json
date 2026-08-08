@@ -1179,6 +1179,10 @@
     "supreme": "सर्वोच्च अदालत",
     "special": "विशेष अदालत"
   },
+  "courtCaseDetail": {
+    "relatedCases": "सम्बन्धित जवाफदेहि मुद्दाहरू",
+    "moreCases": "+{{count}} थप"
+  },
   "research": {
     "corruption": {
       "meta": {

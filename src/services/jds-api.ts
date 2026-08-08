@@ -242,6 +242,34 @@ export async function getCasesCitingEntity(
   }
 }
 
+/**
+ * Fetch the published Jawafdehi cases that CITE a given court case, by its
+ * canonical court-case `@id` IRI, using the server-side `?courtcase=`
+ * reverse-lookup filter on /api/cases/. The reverse of the case -> court-case
+ * link (`CaseCourtCaseReference`).
+ *
+ * Unlike `getCasesCitingEntity`, this is PUBLISHED-only for every caller
+ * including signed-in caseworkers: a court-case page is a public archive record,
+ * not a casework surface. Ordered reverse-chronologically — there is no
+ * accused/alleged tier to float, since a court-case reference carries no
+ * relationship type. Returns the paginated envelope so callers can surface
+ * `count` and know if more exist.
+ */
+export async function getCasesCitingCourtCase(
+  courtCaseIri: string,
+  params?: { page_size?: number },
+): Promise<PaginatedCaseList> {
+  try {
+    const response = await http.get<PaginatedCaseList>('/api/cases/', {
+      params: { courtcase: courtCaseIri, ...params },
+      timeout: 10000,
+    });
+    return response.data;
+  } catch (error) {
+    handleApiError(error, '/cases/');
+  }
+}
+
 // ============================================================================
 // Statistics API Functions
 // ============================================================================
