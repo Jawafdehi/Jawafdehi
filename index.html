@@ -5,6 +5,10 @@
   <meta charset="UTF-8" />
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- The app ships a single light design system. Declaring the scheme (and using
+       `only` to opt out of Chrome's Auto Dark Theme) stops browsers from
+       auto-inverting our colors into a dark theme we never designed. -->
+  <meta name="color-scheme" content="only light" />
   <!-- The in-app EN/NE language switcher is the single source of truth for language; suppress browser/Google page auto-translation so it can't compete with or re-translate curated content. -->
   <meta name="google" content="notranslate" />
   <!--helmet-title-->

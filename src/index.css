@@ -88,6 +88,11 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Light-only design system. Mirrors the <meta name="color-scheme"> in
+       index.html so UA widgets (form controls, scrollbars) stay light and
+       browser auto-dark features leave our palette alone. */
+    color-scheme: only light;
+
     --background: 60 23.1% 97.5%; /* #FAFAF7 */
     --foreground: 215 28% 17%;
 
