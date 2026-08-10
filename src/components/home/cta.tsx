@@ -48,7 +48,7 @@ export function Cta({ className }: Readonly<CtaProps>) {
               asChild
               variant="primary"
               size="lg"
-              className="bg-white text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary dark:hover:bg-white/90"
+              className="bg-white text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary-surface dark:hover:bg-white/90"
             >
               <a
                 href="https://discord.gg/jawafdehi"

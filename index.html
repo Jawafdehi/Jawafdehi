@@ -11,6 +11,21 @@
        Declaring it keeps UA widgets in step and still stops browsers
        auto-inverting a theme we own. -->
   <meta name="color-scheme" content="light dark" />
+
+  <!-- Applies the theme class before first paint. ThemeProvider intentionally
+       mounts only after hydration, so next-themes' own blocking script never
+       runs; without this a dark-preference visitor gets a full light page and
+       then an abrupt flip. Reads the same localStorage key next-themes uses. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        var dark = t === "dark" || ((!t || t === "system") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+      } catch (e) {}
+    })();
+  </script>
   <!-- The in-app EN/NE language switcher is the single source of truth for language; suppress browser/Google page auto-translation so it can't compete with or re-translate curated content. -->
   <meta name="google" content="notranslate" />
   <!--helmet-title-->

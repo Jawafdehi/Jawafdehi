@@ -120,7 +120,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
             aria-pressed={status === s}
             className={cn(
               "rounded-full border px-3 py-1 text-xs transition-colors",
-              status === s ? "bg-primary-surface/10 border-primary/30 text-primary font-medium" : "bg-white text-muted-foreground hover:bg-muted",
+              status === s ? "bg-primary-surface/10 border-primary/30 text-primary font-medium" : "bg-background text-muted-foreground hover:bg-muted",
             )}
           >
             {s === "all"
@@ -133,7 +133,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
           value={source}
           onChange={(e) => setSource(e.target.value as SignalSource | "all")}
           aria-label={t("admin.proposals.filterBySource", "Filter by source")}
-          className="rounded-md border bg-white px-2 py-1 text-xs text-foreground"
+          className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
         >
           <option value="all">{t("admin.proposals.allSources", "All sources")}</option>
           {SOURCE_OPTIONS.map((k) => (
@@ -149,7 +149,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("admin.proposals.searchPlaceholder", "Search…")}
             aria-label={t("admin.proposals.searchLabel", "Search proposals")}
-            className="rounded-md border bg-white py-1 pl-7 pr-2 text-xs text-foreground placeholder:text-muted-foreground"
+            className="rounded-md border bg-background py-1 pl-7 pr-2 text-xs text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
       <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <div className="space-y-2">
           {filtered.length === 0 ? (
-            <p className="rounded-xl border border-dashed bg-white px-4 py-8 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-card px-4 py-8 text-center text-sm text-muted-foreground">
               {t("admin.proposals.noneMatch", "No proposals match.")}
             </p>
           ) : (
@@ -170,7 +170,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
 
         <div className="lg:sticky lg:top-20 lg:self-start">
           {selected ? <DetailPane key={selected.id} p={selected} onDecision={onDecision} onEditIntent={onEditIntent} /> : (
-            <p className="rounded-xl border border-dashed bg-white px-4 py-12 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-card px-4 py-12 text-center text-sm text-muted-foreground">
               {t("admin.proposals.selectPrompt", "Select a proposal to review.")}
             </p>
           )}
@@ -341,7 +341,7 @@ function DetailPane({
               onChange={(e) => setDraft(e.target.value)}
               spellCheck={false}
               aria-label={t("admin.proposals.editIntentLabel", "Proposed change as JSON")}
-              className="min-h-[180px] w-full rounded-lg border bg-white p-2 font-mono text-[11px] leading-relaxed text-foreground"
+              className="min-h-[180px] w-full rounded-lg border bg-background p-2 font-mono text-[11px] leading-relaxed text-foreground"
             />
             <p className="text-[11px] text-muted-foreground">
               {t(

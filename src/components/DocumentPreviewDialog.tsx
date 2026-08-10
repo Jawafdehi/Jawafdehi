@@ -358,15 +358,15 @@ export function DocumentPreviewViewer({
       <div ref={previewContainerRef} className="flex min-h-0 flex-1 overflow-hidden bg-[#050505]">
         {isMarkdown ? (
           <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-auto px-4 py-6">
-            <div className="mx-auto min-h-full max-w-4xl rounded-sm bg-white px-6 py-8 text-foreground shadow-2xl sm:px-10">
+            <div className="mx-auto min-h-full max-w-4xl rounded-sm bg-paper px-6 py-8 text-paper-foreground shadow-2xl sm:px-10">
               {isLoadingMarkdown && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-paper-muted">
                   {t("documentPreview.loading")}
                 </p>
               )}
 
               {markdownError && (
-                <div className="rounded-lg border border-dashed border-border bg-muted p-4 text-sm text-foreground">
+                <div className="rounded-lg border border-dashed border-paper-line bg-paper-line/30 p-4 text-sm text-paper-foreground">
                   {t("documentPreview.markdownError")}
                 </div>
               )}

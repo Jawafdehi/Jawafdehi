@@ -40,7 +40,7 @@ const CaseworkCallback = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-surface to-navy-light px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+      <div className="w-full max-w-sm bg-card rounded-2xl shadow-2xl p-8 space-y-6">
         <div className="text-center space-y-2">
           <p className="text-foreground">
             {auth.error ? "Sign-in failed. Redirecting…" : "Signing you in…"}

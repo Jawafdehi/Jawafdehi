@@ -62,7 +62,7 @@ const CaseworkLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-surface to-navy-light px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+      <div className="w-full max-w-sm bg-card rounded-2xl shadow-2xl p-8 space-y-6">
         <div className="text-center space-y-1">
           <div className="flex justify-center mb-3">
             <div className="h-12 w-12 rounded-xl bg-primary-surface/10 flex items-center justify-center">

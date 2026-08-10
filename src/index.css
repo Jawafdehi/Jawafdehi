@@ -180,6 +180,16 @@ All colors MUST be HSL.
     --code-surface: 222 47% 11%;
     --code-surface-foreground: 215 20% 95%;
 
+    /* "Paper" — rendered documents, PDF page chrome and the external embed
+       card. A rendered page is a picture of a physical document and an embed
+       lives on someone else's site, so neither follows our theme. These are
+       deliberately NOT overridden in .dark; keeping them as tokens means the
+       lint rule still applies and the intent is written down. */
+    --paper: 0 0% 100%;
+    --paper-foreground: 215 28% 17%;
+    --paper-muted: 215 15% 44%;
+    --paper-line: 215 20% 88%;
+
     /* Error / informational states. --danger is deliberately NOT --accent:
        accent is the brand red (eyebrows, CTAs) and must not double as an
        error colour, or every error reads as branding. --alert stays the
@@ -214,7 +224,7 @@ All colors MUST be HSL.
        These encode *category*, not severity — source types, rule categories,
        signal provenance. Each is dark enough to pass AA as text on light
        surfaces; use opacity for fills and borders:
-         text-tone-media   bg-tone-media/10   border-tone-media/25
+         text-tone-blue   bg-tone-blue/10   border-tone-blue/25
        Spaced for perceptual separation: minimum pairwise deltaE across the set
        is 25.2 (was 4.0 — amber/orange, blue/indigo and rose/pink were close to
        indistinguishable). Lightness is held in a 27-38% band so no category
@@ -250,6 +260,14 @@ All colors MUST be HSL.
      (--background #090E16 and --card #131A24): text-capable tokens clear
      WCAG AA 4.5:1, chart fills clear 3:1 for graphical objects.
      ===================================================================== */
+  /* `color-scheme: light dark` on :root advertises support for both, but the UA
+     picks by OS preference -- so a user who chooses light on a dark-preference
+     OS would still get dark scrollbars, form controls and caret over a light
+     page. Pin each case explicitly. */
+  html:not(.dark) {
+    color-scheme: light;
+  }
+
   .dark {
     color-scheme: dark;
 

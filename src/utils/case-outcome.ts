@@ -32,7 +32,7 @@ const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
   charged:
     "border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong",
   abated:
-    "border-transparent bg-muted text-muted-foreground dark:bg-muted-foreground dark:text-muted-foreground",
+    "border-transparent bg-muted text-muted-foreground",
 };
 
 // Coerce any incoming value to a known outcome, defaulting to `charged`. Guards

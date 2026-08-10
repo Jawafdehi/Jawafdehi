@@ -109,7 +109,7 @@ const EmbedCaseCard = () => {
     "";
 
   return (
-    <div className="flex h-full min-h-[360px] flex-col bg-white font-sans text-foreground">
+    <div className="flex h-full min-h-[360px] flex-col bg-paper font-sans text-paper-foreground">
       <Helmet>
         <title>{caseData.title} - Jawafdehi</title>
       </Helmet>

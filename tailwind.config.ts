@@ -83,6 +83,13 @@ export default {
           DEFAULT: "hsl(var(--code-surface))",
           foreground: "hsl(var(--code-surface-foreground))",
         },
+        // Fixed document/embed surface — see src/index.css. Same in both themes.
+        paper: {
+          DEFAULT: "hsl(var(--paper))",
+          foreground: "hsl(var(--paper-foreground))",
+          muted: "hsl(var(--paper-muted))",
+          line: "hsl(var(--paper-line))",
+        },
         danger: {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
@@ -101,7 +108,7 @@ export default {
           5: "hsl(var(--chart-5))",
         },
         // Categorical tones — see src/index.css. Use opacity for fills and
-        // borders (bg-tone-media/10, border-tone-media/25).
+        // borders (bg-tone-blue/10, border-tone-blue/25).
         tone: {
           blue: "hsl(var(--tone-blue))",
           amber: "hsl(var(--tone-amber))",

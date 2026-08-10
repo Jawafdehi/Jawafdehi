@@ -14,7 +14,7 @@ interface TimelineItemProps {
 const statusConfig = {
   'Under Investigation': { label: 'Under Investigation', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
   'Confirmed': { label: 'Confirmed', class: 'bg-danger/10 text-danger dark:text-danger' },
-  'Dismissed': { label: 'Dismissed', class: 'bg-muted-foreground text-muted-foreground dark:text-muted-foreground' },
+  'Dismissed': { label: 'Dismissed', class: 'bg-muted-foreground/10 text-muted-foreground dark:text-muted-foreground' },
   'Pending': { label: 'Pending', class: 'bg-info/10 text-info dark:text-info' },
   'Resolved': { label: 'Resolved', class: 'bg-success-strong/10 text-success-strong dark:text-success-strong' },
 };

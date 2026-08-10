@@ -234,7 +234,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                 className={`text-xs px-2.5 py-1 rounded-full border ${
                   filter === f
                     ? "bg-primary-surface text-primary-foreground border-primary"
-                    : "bg-white text-foreground border-border hover:bg-muted"
+                    : "bg-background text-foreground border-border hover:bg-muted"
                 }`}
               >
                 {f === "all"
@@ -332,7 +332,7 @@ function RuleCard({
   onToggle: () => void;
 }) {
   return (
-    <div className={`border rounded-lg p-3 ${rr.gate_failed ? "border-danger/25 bg-danger/40" : "bg-white"}`}>
+    <div className={`border rounded-lg p-3 ${rr.gate_failed ? "border-danger/25 bg-danger/10" : "bg-card"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

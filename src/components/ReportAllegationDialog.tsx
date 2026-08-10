@@ -47,7 +47,7 @@ export function ReportAllegationDialog() {
       <DialogTrigger asChild>
         <Button
           size="lg"
-          className="mt-8 bg-white font-semibold text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary dark:hover:bg-white/90"
+          className="mt-8 bg-white font-semibold text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary-surface dark:hover:bg-white/90"
         >
           <FilePlus2 className="h-5 w-5" aria-hidden="true" />
           {t("report.trigger")}

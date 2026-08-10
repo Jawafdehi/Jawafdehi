@@ -430,7 +430,7 @@ export default function Moderation() {
                           {entities.map((e, i) => (
                             <span
                               key={i}
-                              className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-foreground ring-1 ring-border"
+                              className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground ring-1 ring-border"
                             >
                               {str(e.name) || str(e.nes_id) || str(e.id) || "entity"}
                             </span>

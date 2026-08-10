@@ -467,6 +467,11 @@ export function Navbar() {
                       aria-hidden="true"
                       className="hidden h-8 w-auto object-contain dark:block"
                     />
+                    {/* SheetTitle supplies the dialog's accessible name. In dark
+                        the light logo is display:none (so its alt leaves the a11y
+                        tree) and the dark one is aria-hidden, which would leave
+                        the dialog unnamed. This carries the name in both themes. */}
+                    <span className="sr-only">Jawafdehi</span>
                   </SheetTitle>
                 </SheetHeader>
 

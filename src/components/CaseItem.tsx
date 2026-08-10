@@ -13,7 +13,7 @@ interface CaseItemProps {
 
 const statusConfig = {
   'Active': { label: 'Active', class: 'bg-success-strong/10 text-success-strong dark:text-success-strong' },
-  'Closed': { label: 'Closed', class: 'bg-muted-foreground text-muted-foreground dark:text-muted-foreground' },
+  'Closed': { label: 'Closed', class: 'bg-muted-foreground/10 text-muted-foreground dark:text-muted-foreground' },
   'Pending': { label: 'Pending', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
   'Under Review': { label: 'Under Review', class: 'bg-info/10 text-info dark:text-info' },
 };
