@@ -25,7 +25,7 @@ export function CaseProgressRail({ progress, className }: { progress: CaseProgre
   const { nodes } = progress;
 
   return (
-    <div className={cn("rounded-lg border border-primary/10 bg-bg/60 p-4 sm:p-5", className)}>
+    <div className={className}>
       <h2 className="font-section-title mb-1 text-primary">{t("caseDetail.progress.heading")}</h2>
       {/* The rail states what OUR RECORD holds, not what the courts did. The
           caveat is part of the claim, so it sits with it rather than in a

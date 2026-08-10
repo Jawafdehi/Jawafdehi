@@ -23,6 +23,7 @@ import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseByline } from "@/components/case-detail/case-byline";
 import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
+import { CaseStandsSection } from "@/components/case-detail/case-stands-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
 import { CourtCasesSection } from "@/components/case-detail/court-cases-section";
 import { EvidenceSection } from "@/components/case-detail/evidence-section";
@@ -166,6 +167,9 @@ const CaseDetail = () => {
   const caseProgress = allDocketsLoaded
     ? deriveCaseProgress(courtCaseQueries.map((q) => q.data as CourtCase))
     : null;
+  // A stable dep for the jump nav: `caseProgress` is a fresh object each render
+  // and would defeat the memo, but only its presence changes the nav.
+  const hasProgress = Boolean(caseProgress);
 
   useEffect(() => {
     const loadedCaseId = caseData?.id?.toString();
@@ -208,7 +212,12 @@ const CaseDetail = () => {
     const sections: Array<CaseJumpSection | false> = [
       { id: "allegations", label: t("caseDetail.allegations") },
       hasInvolvedParties && { id: "parties-involved", label: t("caseDetail.partiesInvolved") },
-      hasTimeline && { id: "timeline", label: t("caseDetail.timeline") },
+      // One slot, two possible occupants: the derived rail when we have one,
+      // otherwise the editorial timeline. Same anchor either way.
+      (hasProgress || hasTimeline) && {
+        id: "timeline",
+        label: hasProgress ? t("caseDetail.progress.heading") : t("caseDetail.timeline"),
+      },
       { id: "overview", label: t("caseDetail.overview") },
       hasCourtCases && { id: "court-case", label: t("caseDetail.courtUpdates", "Court updates") },
       hasEvidence && { id: "evidence", label: t("caseDetail.evidence") },
@@ -223,6 +232,7 @@ const CaseDetail = () => {
     hasInvolvedParties,
     hasMissingDetails,
     hasNotes,
+    hasProgress,
     hasTimeline,
     t,
   ]);
@@ -660,13 +670,47 @@ const CaseDetail = () => {
                       />
                     )}
 
-                    {hasTimeline && (
-                      <CaseTimelineSection
-                        className="mb-12 print:static print:mb-8"
-                        language={currentLang}
-                        timeline={caseData.timeline || []}
-                        title={t("caseDetail.timeline")}
-                      />
+                    {/* "Where this case stands" holds the slot the editorial
+                        timeline used to, and moves that timeline into a dialog.
+                        Without a derived rail there is no short answer to lead
+                        with, so the timeline stays a section of its own. */}
+                    {caseProgress ? (
+                      <>
+                        <CaseStandsSection
+                          className="mb-12 print:mb-8"
+                          language={currentLang}
+                          progress={caseProgress}
+                          timeline={caseData.timeline || []}
+                          timelineTitle={t("caseDetail.timeline")}
+                        />
+
+                        {/* A dialog does not print, and the printout is meant to
+                            be the whole public record — so the print sheet
+                            carries the timeline in full whether or not the
+                            reader ever opened it. */}
+                        {hasTimeline && (
+                          <div className="mb-8 hidden print:block">
+                            <h2 className="font-section-title mb-4 text-primary">
+                              {t("caseDetail.timeline")}
+                            </h2>
+                            <CaseTimelineSection
+                              language={currentLang}
+                              presentation="embedded"
+                              timeline={caseData.timeline || []}
+                              title={t("caseDetail.timeline")}
+                            />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      hasTimeline && (
+                        <CaseTimelineSection
+                          className="mb-12 print:static print:mb-8"
+                          language={currentLang}
+                          timeline={caseData.timeline || []}
+                          title={t("caseDetail.timeline")}
+                        />
+                      )
                     )}
 
                     <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />

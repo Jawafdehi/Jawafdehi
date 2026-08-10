@@ -17,12 +17,15 @@ import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { CaseByline } from "@/components/case-detail/case-byline";
-import { CaseProgressRail } from "@/components/case-detail/case-progress-rail";
 import type { CaseProgress } from "@/lib/case-progress";
 
 interface CaseDetailBannerProps {
   caseData: CaseDetail;
-  /** Docket-derived progress; null when this is not a Special Court -CR- case. */
+  /**
+   * Docket-derived progress; null when this is not a Special Court -CR- case.
+   * Used for the status chip only — the rail itself renders further down the
+   * page, in `CaseStandsSection`.
+   */
   caseProgress?: CaseProgress | null;
   resolvedEntities: Record<string, Entity>;
   homeLabel?: string;
@@ -121,8 +124,10 @@ export function CaseDetailBanner({
   // that were under appeal at the time. Fall back to that rule only for cases
   // with no Special Court -CR- docket to derive from.
   //
-  // The chip and the rail below MUST agree: a rail reading "under appeal" beside
-  // a chip reading "Concluded" is worse than either alone.
+  // The chip and the rail in "Where this case stands" MUST agree: a rail reading
+  // "under appeal" above a chip reading "Concluded" is worse than either alone.
+  // They stay in step because both read the same derivation, not because they
+  // sit next to each other.
   const effectiveStatus = caseProgress
     ? caseProgress.stage
     : deriveCaseStatus(caseData.state, caseData.case_end_date);
@@ -337,12 +342,6 @@ export function CaseDetailBanner({
                     </div>
                   </div>
                 )}
-
-                {/* Where the case sits on the CIAA -> Special Court -> appeal
-                    ladder. Sits directly under the docket links it is derived
-                    from, and next to the chip it must agree with. Absent for
-                    cases with no Special Court -CR- docket. */}
-                {caseProgress && <CaseProgressRail progress={caseProgress} className="mt-1" />}
 
                 {/* Public caseworker-authored attribution + edit-history byline
                     (Case.public_notes). On-screen counterpart to the print-only

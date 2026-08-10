@@ -682,6 +682,7 @@
     "progress": {
       "heading": "Where this case stands",
       "caveat": "Reconstructed from the court dockets we hold. It describes our record, not the court's file.",
+      "openTimeline": "Read the full case timeline",
       "currentLabel": "Now",
       "noAppealRecorded": "We hold no record of an appeal. The time to file one has passed, but an appeal we have not found may still exist — nothing links a Supreme Court docket back to its Special Court original.",
       "noOutcomeRecorded": "The appeal is on record; we hold no decision for it yet.",
