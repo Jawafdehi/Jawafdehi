@@ -35,7 +35,7 @@ export function SearchTabs({ counts, activeType, onChange }: Readonly<SearchTabs
             className={cn(
               "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isActive
-                ? "border-primary bg-primary text-primary-foreground"
+                ? "border-primary bg-primary-surface text-primary-foreground"
                 : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground",
             )}
             key={tab.type}

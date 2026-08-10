@@ -105,7 +105,7 @@ export function PdfDocumentPreview({
                 className={cn(
                   "mb-3 block w-full rounded-md border bg-white p-1 text-left text-black transition",
                   currentPage === pageNumber
-                    ? "border-blue-400 ring-2 ring-blue-400"
+                    ? "border-info/25 ring-2 ring-info"
                     : "border-white/20 hover:border-white/70",
                 )}
                 onClick={() => goToPage(pageNumber)}
@@ -115,7 +115,7 @@ export function PdfDocumentPreview({
                   <Page pageNumber={pageNumber} width={64} renderAnnotationLayer={false} renderTextLayer={false} />
                 ) : (
                   <div
-                    className="flex w-16 items-center justify-center bg-slate-100 text-xs font-semibold text-slate-400"
+                    className="flex w-16 items-center justify-center bg-muted text-xs font-semibold text-muted-foreground"
                     style={{ height: getPageHeight(pageNumber, 64) }}
                   >
                     {pageNumber}
@@ -166,7 +166,7 @@ export function PdfDocumentPreview({
                       />
                     ) : (
                       <div
-                        className="flex items-center justify-center bg-white text-sm font-medium text-slate-300 shadow-2xl ring-1 ring-black/60"
+                        className="flex items-center justify-center bg-white text-sm font-medium text-muted-foreground shadow-2xl ring-1 ring-black/60"
                         style={{
                           height: getPageHeight(pageNumber, renderedPageWidth),
                           width: renderedPageWidth,

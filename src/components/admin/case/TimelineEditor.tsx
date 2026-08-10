@@ -121,7 +121,7 @@ export default function TimelineEditor({ rows, onChange }: Props) {
                         onClick={() => remove(i)}
                         title="Remove"
                       >
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                        <Trash2 className="h-4 w-4 text-danger" />
                       </Button>
                     </div>
                   </div>

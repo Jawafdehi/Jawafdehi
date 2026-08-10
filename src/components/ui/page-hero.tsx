@@ -78,7 +78,7 @@ function PageHeroBackdrop() {
       >
         <div className="absolute right-[4%] top-10 h-[66%] w-[54%] rounded-full bg-accent opacity-85" />
         <div className="absolute left-[32%] top-24 h-[52%] w-[42%] rounded-full bg-accent opacity-55" />
-        <div className="absolute -left-[14%] top-[46%] h-[34%] w-[26%] rounded-full bg-primary opacity-35" />
+        <div className="absolute -left-[14%] top-[46%] h-[34%] w-[26%] rounded-full bg-primary-surface opacity-35" />
       </div>
       <div
         aria-hidden="true"

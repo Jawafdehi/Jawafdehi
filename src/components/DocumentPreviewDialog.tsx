@@ -221,7 +221,7 @@ export function DocumentPreviewViewer({
   }, [isMarkdown, pageCount, renderedPageWidth]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0b0b0c] text-white">
+    <div className="flex h-full min-h-0 flex-col bg-code-surface text-white">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-black px-3">
         {onClose && (
           <Button
@@ -236,7 +236,7 @@ export function DocumentPreviewViewer({
           </Button>
         )}
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-red-600 text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-danger text-white">
           <FileText className="h-4 w-4" aria-hidden="true" />
         </div>
 
@@ -267,7 +267,7 @@ export function DocumentPreviewViewer({
       </div>
 
       {!isMarkdown && (
-        <div className="flex shrink-0 items-center gap-2 bg-[#0b0b0c] px-3 py-2">
+        <div className="flex shrink-0 items-center gap-2 bg-code-surface px-3 py-2">
           <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-[#303134] px-3 py-2 text-sm text-white/85 shadow-sm">
             <span className="hidden text-white/70 sm:inline">{t("documentPreview.page")}</span>
             <input
@@ -358,15 +358,15 @@ export function DocumentPreviewViewer({
       <div ref={previewContainerRef} className="flex min-h-0 flex-1 overflow-hidden bg-[#050505]">
         {isMarkdown ? (
           <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-auto px-4 py-6">
-            <div className="mx-auto min-h-full max-w-4xl rounded-sm bg-white px-6 py-8 text-slate-950 shadow-2xl sm:px-10">
+            <div className="mx-auto min-h-full max-w-4xl rounded-sm bg-white px-6 py-8 text-foreground shadow-2xl sm:px-10">
               {isLoadingMarkdown && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   {t("documentPreview.loading")}
                 </p>
               )}
 
               {markdownError && (
-                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+                <div className="rounded-lg border border-dashed border-border bg-muted p-4 text-sm text-foreground">
                   {t("documentPreview.markdownError")}
                 </div>
               )}
@@ -429,7 +429,7 @@ export function DocumentPreviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         overlayClassName="bg-black/85"
-        className="h-[94vh] w-[min(98vw,1280px)] max-w-none overflow-hidden border-white/10 bg-[#0b0b0c] p-0 shadow-2xl sm:rounded-xl [&>button:last-child]:hidden"
+        className="h-[94vh] w-[min(98vw,1280px)] max-w-none overflow-hidden border-white/10 bg-code-surface p-0 shadow-2xl sm:rounded-xl [&>button:last-child]:hidden"
       >
         <DialogTitle className="sr-only">{document.title}</DialogTitle>
         <DialogDescription className="sr-only">

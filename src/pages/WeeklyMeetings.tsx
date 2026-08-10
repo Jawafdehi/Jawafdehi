@@ -78,7 +78,7 @@ const WeeklyMeetings = () => {
             </p>
           </div>
 
-          <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-primary/30 bg-primary/5 px-6 py-5">
+          <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-primary/30 bg-primary-surface/5 px-6 py-5">
             <div className="flex items-center gap-2">
               <PauseCircle className="h-5 w-5 shrink-0 text-primary" />
               <p className="text-sm font-semibold text-foreground">
@@ -134,7 +134,7 @@ const WeeklyMeetings = () => {
                         loading="lazy"
                       />
                       <span className="absolute inset-0 flex items-center justify-center">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white transition-colors duration-200 group-hover:bg-primary">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white transition-colors duration-200 group-hover:bg-primary-surface">
                           <Play className="h-5 w-5 translate-x-0.5 fill-current" />
                         </span>
                       </span>

@@ -42,7 +42,7 @@ const UpdateCard = ({ article, viewMode }: UpdateCardProps) => {
                     />
                 </div>
             ) : (
-                <div className="flex h-52 items-center justify-center border-b border-border/70 bg-gradient-to-br from-slate-200 via-slate-100 to-white text-primary md:data-[view=list]:h-auto md:data-[view=list]:min-h-52 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
+                <div className="flex h-52 items-center justify-center border-b border-border/70 bg-gradient-to-br from-secondary via-muted to-background text-primary md:data-[view=list]:h-auto md:data-[view=list]:min-h-52 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
                     <div className="grid h-16 w-16 place-items-center rounded-2xl border border-primary/15 bg-background shadow-sm">
                         <FileText className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
                     </div>

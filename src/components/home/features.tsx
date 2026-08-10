@@ -24,7 +24,7 @@ function useFeatures(): Feature[] {
       detailKey: t("home.features.caseArchive.detail"),
       icon: Archive,
       iconClassName: "text-primary",
-      iconWrapClassName: "bg-primary/10",
+      iconWrapClassName: "bg-primary-surface/10",
     },
     {
       id: "plain-language",
@@ -32,15 +32,15 @@ function useFeatures(): Feature[] {
       detailKey: t("home.features.plainLanguage.detail"),
       icon: Scale,
       iconClassName: "text-primary",
-      iconWrapClassName: "bg-primary/10",
+      iconWrapClassName: "bg-primary-surface/10",
     },
     {
       id: "ai-research",
       titleKey: t("home.features.aiResearch.title"),
       detailKey: t("home.features.aiResearch.detail"),
       icon: Sparkles,
-      iconClassName: "text-amber-600",
-      iconWrapClassName: "bg-amber-500/10",
+      iconClassName: "text-alert-strong",
+      iconWrapClassName: "bg-alert-strong/10",
       badgeKey: t("home.features.aiResearch.badge"),
     },
   ];
@@ -97,7 +97,7 @@ function FeatureDetail({ feature }: Readonly<{ feature: Feature }>) {
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-xl font-bold text-foreground">{feature.titleKey}</h3>
               {feature.badgeKey ? (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                <span className="rounded-full bg-alert-strong/10 px-2 py-0.5 text-xs font-semibold text-alert-strong">
                   {feature.badgeKey}
                 </span>
               ) : null}
@@ -146,7 +146,7 @@ function FeatureCard({
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <h3 className="text-xl font-bold text-foreground">{feature.titleKey}</h3>
         {feature.badgeKey ? (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+          <span className="rounded-full bg-alert-strong/10 px-2 py-0.5 text-xs font-semibold text-alert-strong">
             {feature.badgeKey}
           </span>
         ) : null}

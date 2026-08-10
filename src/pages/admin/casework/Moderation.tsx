@@ -80,8 +80,8 @@ function ageColor(iso: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "text-muted-foreground";
   const days = (Date.now() - then) / MS_PER_DAY;
-  if (days > 7) return "text-red-600 font-medium";
-  if (days > 3) return "text-amber-600 font-medium";
+  if (days > 7) return "text-danger font-medium";
+  if (days > 3) return "text-alert-strong font-medium";
   return "text-muted-foreground";
 }
 
@@ -311,11 +311,11 @@ export default function Moderation() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : rows.length === 0 ? (
-        <p className="rounded-md border border-dashed bg-slate-50 px-3 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed bg-muted px-3 py-6 text-center text-sm text-muted-foreground">
           {t("admin.moderation.nothingAwaiting")}
         </p>
       ) : visibleRows.length === 0 ? (
-        <p className="rounded-md border border-dashed bg-slate-50 px-3 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed bg-muted px-3 py-6 text-center text-sm text-muted-foreground">
           {t("admin.moderation.noneMatchFilter")}
         </p>
       ) : (
@@ -345,7 +345,7 @@ export default function Moderation() {
                       onClick={() =>
                         setExpanded((prev) => ({ ...prev, [slug]: !prev[slug] }))
                       }
-                      className="mt-0.5 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                      className="mt-0.5 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                       aria-label={
                         isOpen
                           ? t("admin.moderation.collapsePreview")
@@ -360,7 +360,7 @@ export default function Moderation() {
                       )}
                     </button>
                     <div className="min-w-0">
-                      <div className="font-mono text-xs text-slate-500">{slug}</div>
+                      <div className="font-mono text-xs text-muted-foreground">{slug}</div>
                       <div className="font-medium">{str(r.title) || "—"}</div>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{str(r.case_type)}</span>
@@ -384,7 +384,7 @@ export default function Moderation() {
                             {review.disposition ? ` · ${review.disposition}` : ""}
                           </Link>
                         ) : (
-                          <span className="text-slate-400">
+                          <span className="text-muted-foreground">
                             {t("admin.moderation.noReview")}
                           </span>
                         )}
@@ -400,21 +400,21 @@ export default function Moderation() {
                 </div>
 
                 {isOpen && (
-                  <div className="mt-3 space-y-2 rounded-lg border bg-slate-50 p-3 text-sm">
+                  <div className="mt-3 space-y-2 rounded-lg border bg-muted p-3 text-sm">
                     <div>
-                      <div className="text-xs font-semibold uppercase text-slate-500">
+                      <div className="text-xs font-semibold uppercase text-muted-foreground">
                         {t("admin.moderation.description")}
                       </div>
-                      <p className="whitespace-pre-wrap text-slate-700">
+                      <p className="whitespace-pre-wrap text-foreground">
                         {description ? truncate(description) : "—"}
                       </p>
                     </div>
                     {allegations.length > 0 && (
                       <div>
-                        <div className="text-xs font-semibold uppercase text-slate-500">
+                        <div className="text-xs font-semibold uppercase text-muted-foreground">
                           {t("admin.moderation.keyAllegations")}
                         </div>
-                        <ul className="list-disc pl-5 text-slate-700">
+                        <ul className="list-disc pl-5 text-foreground">
                           {allegations.map((a, i) => (
                             <li key={i}>{str(a)}</li>
                           ))}
@@ -423,14 +423,14 @@ export default function Moderation() {
                     )}
                     {entities.length > 0 && (
                       <div>
-                        <div className="text-xs font-semibold uppercase text-slate-500">
+                        <div className="text-xs font-semibold uppercase text-muted-foreground">
                           {t("admin.moderation.entities")}
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {entities.map((e, i) => (
                             <span
                               key={i}
-                              className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-slate-600 ring-1 ring-slate-200"
+                              className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-foreground ring-1 ring-border"
                             >
                               {str(e.name) || str(e.nes_id) || str(e.id) || "entity"}
                             </span>
@@ -438,7 +438,7 @@ export default function Moderation() {
                         </div>
                       </div>
                     )}
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {t("admin.moderation.evidence", { count: evidence.length })}
                     </div>
                   </div>

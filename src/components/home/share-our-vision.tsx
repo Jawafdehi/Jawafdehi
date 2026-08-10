@@ -15,7 +15,7 @@ export function ShareOurVision() {
   return (
     <section
       id="share-our-vision"
-      className="border-b border-primary bg-primary py-12 text-primary-foreground md:py-16"
+      className="border-b border-primary bg-primary-surface py-12 text-primary-foreground md:py-16"
       aria-labelledby="share-our-vision-title"
     >
       <div className="container mx-auto px-4">

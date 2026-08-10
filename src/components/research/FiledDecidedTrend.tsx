@@ -68,9 +68,9 @@ export function FiledDecidedTrend({
             type="monotone"
             dataKey="filed"
             name={filedLabel}
-            stroke="hsl(var(--primary))"
+            stroke="hsl(var(--primary-surface))"
             strokeWidth={2}
-            dot={{ r: 2.5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+            dot={{ r: 2.5, fill: "hsl(var(--primary-surface))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
             isAnimationActive={false}
           />
@@ -88,7 +88,7 @@ export function FiledDecidedTrend({
       </ResponsiveContainer>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary))" }} aria-hidden="true" />
+          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary-surface))" }} aria-hidden="true" />
           {filedLabel}
         </span>
         <span className="inline-flex items-center gap-1.5">

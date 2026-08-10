@@ -91,7 +91,7 @@ function getStatusTone(status: string | null | undefined) {
     normalized.includes("decided") ||
     normalized.includes("verdict")
   ) {
-    return "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200";
+    return "border-success-strong/25 bg-success-strong/10 text-success-strong dark:border-success-strong/25 dark:bg-success-strong/10 dark:text-success-strong";
   }
 
   if (
@@ -101,10 +101,10 @@ function getStatusTone(status: string | null | undefined) {
     normalized.includes("चालु") ||
     normalized.includes("ongoing")
   ) {
-    return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200";
+    return "border-border bg-muted text-foreground dark:border-border dark:bg-card dark:text-foreground";
   }
 
-  return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200";
+  return "border-alert-strong/25 bg-alert-strong/10 text-alert-strong dark:border-alert-strong/25 dark:bg-alert-strong/10 dark:text-alert-strong";
 }
 
 function getLatestCourtUpdate(courtCase: CourtCase) {

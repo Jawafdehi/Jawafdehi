@@ -12,10 +12,10 @@ interface CaseItemProps {
 }
 
 const statusConfig = {
-  'Active': { label: 'Active', class: 'bg-green-500/10 text-green-700 dark:text-green-400' },
-  'Closed': { label: 'Closed', class: 'bg-gray-500/10 text-gray-700 dark:text-gray-400' },
-  'Pending': { label: 'Pending', class: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
-  'Under Review': { label: 'Under Review', class: 'bg-blue-500/10 text-blue-700 dark:text-blue-400' },
+  'Active': { label: 'Active', class: 'bg-success-strong/10 text-success-strong dark:text-success-strong' },
+  'Closed': { label: 'Closed', class: 'bg-muted-foreground text-muted-foreground dark:text-muted-foreground' },
+  'Pending': { label: 'Pending', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
+  'Under Review': { label: 'Under Review', class: 'bg-info/10 text-info dark:text-info' },
 };
 
 const CaseItem = ({ case: caseData }: CaseItemProps) => {

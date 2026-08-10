@@ -30,7 +30,7 @@ export function ConvictionByCharge({
   const mounted = useMounted();
 
   const segs = [
-    { key: "convicted" as const, color: "hsl(var(--primary))", text: "hsl(var(--primary-foreground))" },
+    { key: "convicted" as const, color: "hsl(var(--primary-surface))", text: "hsl(var(--primary-foreground))" },
     { key: "partial" as const, color: "hsl(var(--alert))", text: "hsl(var(--foreground))" },
     { key: "acquitted" as const, color: "hsl(var(--accent))", text: "hsl(var(--accent-foreground))" },
   ];

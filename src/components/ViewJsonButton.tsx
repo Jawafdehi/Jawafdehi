@@ -81,7 +81,7 @@ export function ViewJsonButton({ data, title = "Raw JSON", rawUrl, disabled }: R
             </div>
             <pre
               tabIndex={0}
-              className="max-h-[68vh] overflow-auto rounded-lg bg-[#0b0b0c] p-4 text-xs leading-relaxed text-slate-100"
+              className="max-h-[68vh] overflow-auto rounded-lg bg-code-surface p-4 text-xs leading-relaxed text-code-surface-foreground"
             >
               {json}
             </pre>

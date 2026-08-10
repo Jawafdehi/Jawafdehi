@@ -61,15 +61,15 @@ const CaseworkLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-surface to-navy-light px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 space-y-6">
         <div className="text-center space-y-1">
           <div className="flex justify-center mb-3">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-xl bg-primary-surface/10 flex items-center justify-center">
               <ClipboardCheck className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-foreground">
             {t("admin.login.title")}
           </h1>
         </div>
@@ -92,11 +92,11 @@ const CaseworkLogin = () => {
           {devAuthEnabled && (
             <>
               <div className="flex items-center gap-2 pt-1">
-                <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs uppercase tracking-wide text-slate-400">
+                <div className="h-px flex-1 bg-secondary" />
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
                   {t("admin.login.devDivider")}
                 </span>
-                <div className="h-px flex-1 bg-slate-200" />
+                <div className="h-px flex-1 bg-secondary" />
               </div>
 
               <form onSubmit={handleDevLogin} className="space-y-3">
@@ -137,7 +137,7 @@ const CaseworkLogin = () => {
                   ) : null}
                   {t("admin.login.devSubmit")}
                 </Button>
-                <p className="text-xs text-slate-400 text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   {t("admin.login.devNote")}
                 </p>
               </form>

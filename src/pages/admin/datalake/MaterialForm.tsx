@@ -465,7 +465,7 @@ export default function MaterialForm() {
                   onClick={() => setMediaRows(rows.filter((_, idx) => idx !== i))}
                   title="Remove link"
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-danger" />
                 </Button>
               </div>
             ))
@@ -474,7 +474,7 @@ export default function MaterialForm() {
 
         {/* The full document remains editable for fields the form doesn't
             surface (about, additionalType, jawafdehi:* extensions, …). */}
-        <details className="rounded-md border bg-slate-50">
+        <details className="rounded-md border bg-muted">
           <summary className="cursor-pointer select-none px-4 py-2 text-sm font-medium">
             Advanced: raw JSON-LD
           </summary>

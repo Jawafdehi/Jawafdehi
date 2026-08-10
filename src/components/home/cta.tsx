@@ -20,14 +20,14 @@ export function Cta({ className }: Readonly<CtaProps>) {
       )}
       aria-labelledby="contribute-title"
     >
-      <div className="relative isolate overflow-hidden rounded-lg bg-[linear-gradient(135deg,hsl(var(--primary))_0%,hsl(var(--primary))_34%,hsl(var(--accent))_100%)] px-6 py-10 shadow-xl shadow-accent/10 dark:bg-[linear-gradient(135deg,hsl(215_70%_12%)_0%,hsl(220_38%_18%)_42%,hsl(354_66%_37%)_100%)] sm:px-10 md:px-12 md:py-12">
+      <div className="relative isolate overflow-hidden rounded-lg bg-[linear-gradient(135deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface))_34%,hsl(var(--accent))_100%)] px-6 py-10 shadow-xl shadow-accent/10 dark:bg-[linear-gradient(135deg,hsl(215_70%_12%)_0%,hsl(220_38%_18%)_42%,hsl(354_66%_37%)_100%)] sm:px-10 md:px-12 md:py-12">
         <div
           aria-hidden="true"
           className="absolute -right-20 -top-28 -z-10 h-80 w-80 rounded-full bg-secondary/30 blur-3xl"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_20%,hsl(var(--secondary)/0.24),transparent_34%),linear-gradient(135deg,hsl(var(--primary)/0.3)_0%,transparent_48%,hsl(var(--accent)/0.2)_100%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_20%,hsl(var(--secondary)/0.24),transparent_34%),linear-gradient(135deg,hsl(var(--primary-surface)/0.3)_0%,transparent_48%,hsl(var(--accent)/0.2)_100%)]"
         />
 
         <div className="flex max-w-3xl flex-col items-start">
@@ -48,7 +48,7 @@ export function Cta({ className }: Readonly<CtaProps>) {
               asChild
               variant="primary"
               size="lg"
-              className="bg-white text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+              className="bg-white text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary dark:hover:bg-white/90"
             >
               <a
                 href="https://discord.gg/jawafdehi"

@@ -124,10 +124,10 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
                 onError={handleImageError}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-slate-900/5 to-white/10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
             </>
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-slate-200 via-slate-100 to-white" />
+            <div className="h-full w-full bg-gradient-to-br from-secondary via-muted to-background" />
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">

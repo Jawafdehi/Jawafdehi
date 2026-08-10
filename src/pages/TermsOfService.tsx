@@ -21,7 +21,7 @@ const TermsOfService = () => {
       </Helmet>
 
       <main id="main-content" className="flex-1">
-        <section id="terms-hero" className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
+        <section id="terms-hero" className="bg-gradient-to-br from-primary-surface via-navy-dark to-foreground py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
               <h1 className="font-page-title font-page-title-inverse mb-4">

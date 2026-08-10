@@ -44,7 +44,7 @@ export const AllegationTimeline = ({ allegations }: AllegationTimelineProps) => 
               <div key={item.id} className="relative pl-10">
                 {/* Timeline dot */}
                 <div className="absolute left-0 top-2 h-8 w-8 flex items-center justify-center rounded-full bg-background border-2 border-primary">
-                  <div className="h-3 w-3 rounded-full bg-primary" />
+                  <div className="h-3 w-3 rounded-full bg-primary-surface" />
                 </div>
                 
                 <Link 

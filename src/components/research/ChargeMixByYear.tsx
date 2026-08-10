@@ -19,11 +19,11 @@ type MixKey = "bribery" | "fake" | "embezzlement" | "benefit" | "loss" | "other"
 // Fixed categorical order + colours (validated CVD-safe set; `other` is neutral).
 // Fake-credential is crimson so the eye tracks the family whose share collapses.
 const SERIES: readonly { key: MixKey; color: string }[] = [
-  { key: "bribery", color: "#2a78d6" },
-  { key: "fake", color: "#B5242C" },
-  { key: "embezzlement", color: "#1baf7a" },
-  { key: "benefit", color: "#4a3aa7" },
-  { key: "loss", color: "#eda100" },
+  { key: "bribery", color: "hsl(var(--chart-1))" },
+  { key: "fake", color: "hsl(var(--chart-2))" },
+  { key: "embezzlement", color: "hsl(var(--chart-3))" },
+  { key: "benefit", color: "hsl(var(--chart-4))" },
+  { key: "loss", color: "hsl(var(--chart-5))" },
   { key: "other", color: "hsl(var(--muted-foreground))" },
 ];
 

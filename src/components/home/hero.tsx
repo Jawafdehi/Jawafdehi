@@ -104,7 +104,7 @@ export function Hero({
 
           <SearchBar
             id="hero-archive-search"
-            inputClassName="bg-background/95 shadow-lg shadow-primary/5"
+            inputClassName="bg-background/95 shadow-lg shadow-primary-surface/5"
             onChange={(event) => setArchiveQuery(event.target.value)}
             placeholder={t("home.hero.searchPlaceholder")}
             submitLabel={t("home.hero.searchSubmit")}
@@ -159,7 +159,7 @@ function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
             {href ? (
               <Link
                 to={href}
-                className="group block h-full rounded-lg border border-transparent bg-background/45 px-3 py-3 shadow-sm shadow-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/85 hover:text-accent hover:shadow-lg hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="group block h-full rounded-lg border border-transparent bg-background/45 px-3 py-3 shadow-sm shadow-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/85 hover:text-accent hover:shadow-lg hover:shadow-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {content}
               </Link>
@@ -204,7 +204,7 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
       {/* Desktop/tablet: warm glow behind map */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
+        className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary-surface)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
       />
 
       {/* Desktop/tablet only: responsive Nepal map */}

@@ -29,7 +29,7 @@ const DocumentBlock = ({ value }: { value: StreamDocumentValue }) => {
       href={value.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="not-prose my-4 flex items-start gap-3 rounded-lg border border-border/70 bg-background p-3 no-underline transition-colors hover:border-primary/20 hover:bg-primary/[0.03]"
+      className="not-prose my-4 flex items-start gap-3 rounded-lg border border-border/70 bg-background p-3 no-underline transition-colors hover:border-primary/20 hover:bg-primary-surface/[0.03]"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
         <FileText className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
@@ -54,7 +54,7 @@ const CaseBlock = ({ value }: { value: StreamCaseValue }) => {
   return (
     <Link
       to={`/case/${value.case.slug}`}
-      className="not-prose my-4 flex items-center justify-between gap-3 rounded-lg border border-primary/15 bg-primary/[0.03] p-4 no-underline transition-colors hover:border-primary/30"
+      className="not-prose my-4 flex items-center justify-between gap-3 rounded-lg border border-primary/15 bg-primary-surface/[0.03] p-4 no-underline transition-colors hover:border-primary/30"
     >
       <span className="min-w-0">
         <span className="block text-xs font-semibold uppercase tracking-wide text-primary">

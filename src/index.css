@@ -93,57 +93,149 @@ All colors MUST be HSL.
        browser auto-dark features leave our palette alone. */
     color-scheme: only light;
 
-    --background: 60 23.1% 97.5%; /* #FAFAF7 */
-    --foreground: 215 28% 17%;
+    /* ---------------------------------------------------------------------
+       LAYER 1 — PRIMITIVES
+       Raw values only. Never reference these from a component; they exist so a
+       value shared by several semantic tokens is defined exactly once. To
+       retheme the product, edit this block.
+       --------------------------------------------------------------------- */
+    --base-white: 0 0% 100%;
+    --base-cream: 36 100% 99%;
+    --base-paper: 60 23.1% 97.5%;      /* #FAFAF7 */
+    --base-paper-sunk: 60 10.3% 94.3%; /* #F2F2EF */
+    --base-ink: 215 28% 17%;
+    --base-navy: 217 62% 14%;          /* #0E1F3B — trust and authority */
+    --base-crimson: 357 67% 43%;       /* #B5242C — brand red */
+    --base-line: 215 20% 88%;
+    --base-amber: 25 95% 53%;
 
-    --card: 60 10.3% 94.3%; /* #F2F2EF */
-    --card-foreground: 215 28% 17%;
+    /* ---------------------------------------------------------------------
+       LAYER 2 — SEMANTIC TOKENS
+       What a colour MEANS. These are what components use. Several are aliases
+       of the same primitive: that is deliberate — they agree today but are
+       independently changeable tomorrow (e.g. restyling --input must not
+       restyle every --border).
+       --------------------------------------------------------------------- */
+    --background: var(--base-paper);
+    --foreground: var(--base-ink);
 
-    --popover: 60 23.1% 97.5%; /* #FAFAF7 */
-    --popover-foreground: 215 28% 17%;
+    --card: var(--base-paper-sunk);
+    --card-foreground: var(--base-ink);
 
-    /* Navy blue - trust and authority | #0E1F3B */
-    --primary: 217 62% 14%;
-    --primary-foreground: 36 100% 99%;
+    --popover: var(--base-paper);
+    --popover-foreground: var(--base-ink);
+
+    /* --primary is the *text* role (headings, stat values, ledes — 325 uses).
+       --primary-surface is the *fill* role (buttons, hero gradients, glows).
+       They are the same navy in light, and deliberately diverge in dark: the
+       approved design renders every primary-coloured text element at
+       --foreground while keeping the navy for button fills. One token cannot
+       do both — navy text on the dark page measures 1.49:1. */
+    --primary: var(--base-navy);
+    --primary-surface: var(--base-navy);
+    --primary-foreground: var(--base-cream);
 
     /* Light slate - secondary surfaces */
     --secondary: 215 28% 83%;
-    --secondary-foreground: 215 28% 17%;
+    --secondary-foreground: var(--base-ink);
 
     --muted: 215 20% 96%;
-    --muted-foreground: 215 15% 45%;
+    /* 44%, not 45%: at 45% this measures 4.49:1 against --card, just under the
+       4.5:1 AA floor for body text. One point darker clears it on both
+       --background and --card, and is visually indistinguishable. */
+    --muted-foreground: 215 15% 44%;
 
-    --accent: 357 67% 43%; /* #B5242C */
-    --accent-foreground: 36 100% 99%;
+    --accent: var(--base-crimson);
+    --accent-foreground: var(--base-cream);
 
-    /* Amber - urgent/corruption indicator */
-    --destructive: 25 95% 53%;
-    --destructive-foreground: 0 0% 100%;
+    /* shadcn contract name. Shares --base-amber with --alert; decoupling them
+       is a one-line change here rather than a find-and-replace. */
+    --destructive: var(--base-amber);
+    --destructive-foreground: var(--base-ink);
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 217 62% 14%;
+    --border: var(--base-line);
+    --input: var(--base-line);
+    --ring: var(--base-navy);
 
     --radius: 0.5rem;
 
-    /* Custom PAP colors */
-    --alert: 25 95% 53%;
-    --alert-foreground: 0 0% 100%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    
+    --alert: var(--base-amber);
+    /* Dark ink, not white: white on this amber measures 2.78:1, well under AA.
+       These fills carry dark labels — the same rule the dark theme uses. */
+    --alert-foreground: var(--base-ink);
+
+    /* 38%, not 36%: the fill carries a dark label, and at 36% base-ink
+       measured 4.36:1 — two points lighter clears AA. */
+    --success: 142 76% 37%;
+    --success-foreground: var(--base-ink);
+
     --navy-dark: 215 85% 20%;
     --navy-light: 215 85% 30%;
-    
-    --slate-50: 215 20% 98%;
-    --slate-100: 215 20% 95%;
-    --slate-200: 215 20% 90%;
-    --slate-700: 215 25% 27%;
-    --slate-800: 215 30% 20%;
+
+    /* Dark "terminal" surface for raw JSON, payload dumps and <pre> blocks.
+       Deliberately not themed with the rest of the palette: these read as
+       machine output, not page content. */
+    --code-surface: 222 47% 11%;
+    --code-surface-foreground: 215 20% 95%;
+
+    /* Error / informational states. --danger is deliberately NOT --accent:
+       accent is the brand red (eyebrows, CTAs) and must not double as an
+       error colour, or every error reads as branding. --alert stays the
+       warning amber. */
+    --danger: 0 70% 35%;
+    --danger-foreground: var(--base-white);
+
+    --info: 200 90% 27%;
+    --info-foreground: var(--base-white);
+
+    /* --success and --alert are FILL colours, carrying a dark label
+       (bg-success text-success-foreground). As *text* on a light surface they
+       measure 3.19:1 and 2.66:1 — both below the 4.5:1 AA floor — so coloured
+       text and thin borders use these darkened variants instead.
+       --danger and --info are already dark enough (8.0:1, 7.2:1) and need no
+       equivalent. In dark mode the fills invert light enough to serve as text
+       themselves, so the .dark block aliases -strong back onto the base. */
+    --success-strong: 142 72% 23%;
+    --alert-strong: 23 83% 31%;
+
+    /* Chart series — the research and data-quality visualisations.
+       This is a validated CVD-safe set; the exact values matter, so do not
+       re-pick them casually. `other`/neutral series use --muted-foreground.
+       Charts pass these to recharts as hsl(var(--chart-N)). */
+    --chart-1: 213 68% 50%;            /* #2a78d6 */
+    --chart-2: var(--base-crimson);    /* #B5242C */
+    --chart-3: 159 73% 40%;            /* #1baf7a */
+    --chart-4: 249 48% 44%;            /* #4a3aa7 */
+    --chart-5: 41 100% 46%;            /* #eda100 */
+
+    /* Categorical tones.
+       These encode *category*, not severity — source types, rule categories,
+       signal provenance. Each is dark enough to pass AA as text on light
+       surfaces; use opacity for fills and borders:
+         text-tone-media   bg-tone-media/10   border-tone-media/25
+       Spaced for perceptual separation: minimum pairwise deltaE across the set
+       is 25.2 (was 4.0 — amber/orange, blue/indigo and rose/pink were close to
+       indistinguishable). Lightness is held in a 27-38% band so no category
+       reads heavier than another. If you add a tone, re-check separation. */
+    --tone-red: 359 82% 38%;
+    --tone-orange: 15 79% 27%;
+    --tone-amber: 36 71% 29%;
+    --tone-lime: 86 69% 27%;
+    --tone-emerald: 163 93% 25%;
+    --tone-teal: 183 73% 29%;
+    --tone-cyan: 202 50% 27%;
+    --tone-sky: 203 92% 35%;
+    --tone-blue: 215 91% 38%;
+    --tone-indigo: 241 67% 27%;
+    --tone-violet: 266 73% 38%;
+    --tone-fuchsia: 299 66% 35%;
+    --tone-pink: 328 66% 38%;
+    --tone-rose: 345 75% 37%;
   }
 
 }
+
+
 
 @layer base {
   * {

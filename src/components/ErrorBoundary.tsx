@@ -23,7 +23,7 @@ const ErrorFallback: FallbackRender = ({ error, resetError }) => {
         )}
         <button
           onClick={resetError}
-          className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+          className="rounded-md bg-primary-surface px-4 py-2 text-primary-foreground hover:bg-primary-surface/90"
         >
           Try again
         </button>

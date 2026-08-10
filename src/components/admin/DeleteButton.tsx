@@ -67,7 +67,7 @@ export default function DeleteButton({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} className="text-red-600">
+        <Button variant={variant} size={size} className="text-danger">
           <Trash2 className="mr-1 h-4 w-4" />
           {buttonLabel}
         </Button>

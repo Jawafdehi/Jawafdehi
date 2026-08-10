@@ -47,7 +47,7 @@ export function ReportAllegationDialog() {
       <DialogTrigger asChild>
         <Button
           size="lg"
-          className="mt-8 bg-white font-semibold text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+          className="mt-8 bg-white font-semibold text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary dark:hover:bg-white/90"
         >
           <FilePlus2 className="h-5 w-5" aria-hidden="true" />
           {t("report.trigger")}
@@ -55,9 +55,9 @@ export function ReportAllegationDialog() {
       </DialogTrigger>
       <DialogContent
         overlayClassName="bg-black/65 backdrop-blur-[2px]"
-        className="flex h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.25rem)] max-w-[calc(100vw-1.25rem)] flex-col gap-0 overflow-hidden rounded-[2rem] border-0 bg-background p-0 shadow-2xl shadow-black/25 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-3xl sm:rounded-[2rem] [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-9 [&>button]:w-9 [&>button]:items-center [&>button]:justify-center [&>button]:!rounded-full [&>button]:bg-primary/[0.06] [&>button]:text-primary [&>button]:opacity-100 [&>button]:transition-colors [&>button:hover]:bg-accent/10 [&>button:hover]:text-accent"
+        className="flex h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.25rem)] max-w-[calc(100vw-1.25rem)] flex-col gap-0 overflow-hidden rounded-[2rem] border-0 bg-background p-0 shadow-2xl shadow-black/25 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-3xl sm:rounded-[2rem] [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-9 [&>button]:w-9 [&>button]:items-center [&>button]:justify-center [&>button]:!rounded-full [&>button]:bg-primary-surface/[0.06] [&>button]:text-primary [&>button]:opacity-100 [&>button]:transition-colors [&>button:hover]:bg-accent/10 [&>button:hover]:text-accent"
       >
-        <DialogHeader className="shrink-0 bg-primary/[0.035] px-6 pb-5 pt-7 text-left sm:px-8 sm:pb-6 sm:pt-8">
+        <DialogHeader className="shrink-0 bg-primary-surface/[0.035] px-6 pb-5 pt-7 text-left sm:px-8 sm:pb-6 sm:pt-8">
           <DialogTitle className="pr-10 text-2xl font-extrabold tracking-normal text-primary sm:text-3xl">
             {t("report.title")}
           </DialogTitle>
@@ -180,7 +180,7 @@ export function ReportAllegationDialog() {
                     </p>
                     <label
                       htmlFor="evidence"
-                      className="block cursor-pointer rounded-2xl border-2 border-dashed border-border/80 bg-muted/20 p-6 text-center transition-colors hover:border-primary/60 hover:bg-primary/[0.03] has-[:focus-visible]:border-primary has-[:focus-visible]:outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
+                      className="block cursor-pointer rounded-2xl border-2 border-dashed border-border/80 bg-muted/20 p-6 text-center transition-colors hover:border-primary/60 hover:bg-primary-surface/[0.03] has-[:focus-visible]:border-primary has-[:focus-visible]:outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
                     >
                       <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-1">{t("report.evidenceUpload")}</p>
@@ -269,7 +269,7 @@ export function ReportAllegationDialog() {
                       {t("report.templateDownload.description")}
                     </p>
 
-                    <div className="space-y-4 rounded-2xl bg-primary/[0.045] p-5">
+                    <div className="space-y-4 rounded-2xl bg-primary-surface/[0.045] p-5">
                       <p className="text-sm font-medium leading-6 text-foreground/80">
                         {t("report.templateDownload.instructions")}
                       </p>
@@ -278,7 +278,7 @@ export function ReportAllegationDialog() {
                           href="mailto:report@jawafdehi.org"
                           className="group flex min-h-11 items-center gap-3 rounded-lg text-sm font-semibold text-primary outline-none transition-colors hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors group-hover:bg-accent">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-surface text-primary-foreground transition-colors group-hover:bg-accent">
                             <Mail className="h-4 w-4" aria-hidden="true" />
                           </span>
                           <span className="truncate">
@@ -311,7 +311,7 @@ export function ReportAllegationDialog() {
                         <a
                           href="/case-entry-template/case-entry-template.docx"
                           download
-                          className="inline-flex h-9 min-w-20 items-center justify-center rounded-md bg-primary px-3 text-xs font-bold tracking-wide text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="inline-flex h-9 min-w-20 items-center justify-center rounded-md bg-primary-surface px-3 text-xs font-bold tracking-wide text-primary-foreground shadow-sm transition-colors hover:bg-primary-surface/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                           <span>{t("report.templateDownload.downloadDocx")}</span>
                         </a>

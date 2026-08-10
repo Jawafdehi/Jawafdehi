@@ -41,12 +41,12 @@ const footerBadges: FooterBadge[] = [
   {
     labelKey: "footer.publicDomain",
     icon: Unlock,
-    iconClassName: "text-emerald-500 dark:text-emerald-300",
+    iconClassName: "text-success-strong dark:text-success-strong",
   },
   {
     labelKey: "footer.openSource",
     icon: OpenSourceFilledIcon,
-    iconClassName: "text-emerald-500 dark:text-emerald-300",
+    iconClassName: "text-success-strong dark:text-success-strong",
   },
 ];
 
@@ -159,7 +159,7 @@ export const Footer = () => {
     <footer
       className={cn(
         "relative isolate overflow-hidden border-t bg-[var(--footer-bg)] text-[var(--footer-fg)]",
-        "[--footer-bg:hsl(var(--primary))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
+        "[--footer-bg:hsl(var(--primary-surface))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
         "[--footer-title:#FF000E]",
         "[--footer-soft:hsl(var(--primary-foreground)/0.10)] [--footer-soft-hover:hsl(var(--primary-foreground)/0.16)]",
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",

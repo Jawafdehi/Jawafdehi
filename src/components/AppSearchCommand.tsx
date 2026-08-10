@@ -340,7 +340,7 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
                   onSelect={() => navigateTo(item)}
                   className="group mb-2.5 flex min-h-[82px] cursor-pointer items-center gap-4 overflow-hidden rounded-xl border border-border/55 bg-background px-4 py-3.5 shadow-[0_1px_2px_hsl(var(--foreground)/0.04)] transition-[background-color,border-color,box-shadow] last:mb-0 hover:border-border/80 hover:bg-secondary/25 data-[selected=true]:border-border/80 data-[selected=true]:bg-secondary/55 data-[selected=true]:text-foreground data-[selected=true]:shadow-[0_2px_8px_hsl(var(--foreground)/0.06)]"
                 >
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600 transition-colors dark:bg-slate-800/70 dark:text-slate-300 group-data-[selected=true]:bg-background/85">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-muted text-foreground transition-colors dark:bg-muted/70 dark:text-muted-foreground group-data-[selected=true]:bg-background/85">
                     <Icon className="h-[15px] w-[15px]" />
                   </span>
                   <span className="min-w-0 flex-1">

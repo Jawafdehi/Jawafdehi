@@ -80,7 +80,7 @@ export default function CaseHistoryPanel({ slug, refreshKey = 0 }: Props) {
           <li
             key={c.id}
             className={`rounded-md border px-3 py-2 text-sm ${
-              isReturn(c) ? "border-amber-200 bg-amber-50" : "border-slate-100"
+              isReturn(c) ? "border-alert-strong/25 bg-alert-strong/10" : "border-border"
             }`}
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -95,7 +95,7 @@ export default function CaseHistoryPanel({ slug, refreshKey = 0 }: Props) {
               </span>
             </div>
             {c.reason && (
-              <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+              <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
                 <Badge variant="secondary" className="mr-1 align-middle">
                   {t("admin.history.reason")}
                 </Badge>
