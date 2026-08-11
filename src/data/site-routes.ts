@@ -196,6 +196,14 @@ export const PRE_RENDERED_STATIC_ROUTES = [
     sitemapTitle: "Feedback — Jawafdehi",
   },
   {
+    path: "/report",
+    titleKey: "searchCommand.pageTitles.report",
+    descriptionKey: "searchCommand.descriptions.report",
+    keywords: ["report", "tip", "whistleblower", "corruption", "submit", "anonymous", "उजुरी"],
+    icon: "ShieldCheck",
+    sitemapTitle: "Report a Case — Jawafdehi",
+  },
+  {
     path: "/privacy",
     titleKey: "searchCommand.pageTitles.privacy",
     descriptionKey: "searchCommand.descriptions.privacy",

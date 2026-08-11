@@ -370,7 +370,18 @@ Bun.serve({
 
     // --- misc ----------------------------------------------------------------
     if (path === "/api/health") return json({ status: "ok" });
-    if (path === "/api/feedback/") return json({ ok: true }, 201);
+    if (path === "/api/feedback/")
+      return json(
+        {
+          id: 4242,
+          feedbackType: "general",
+          subject: "",
+          status: "new",
+          submittedAt: "2026-08-10T00:00:00Z",
+          message: "Thank you for your submission.",
+        },
+        201,
+      );
     if (path.startsWith("/api/cms")) return json({ items: [], meta: { total_count: 0 } });
 
     console.log(`[mock-api] UNHANDLED ${method} ${path}${url.search}`);

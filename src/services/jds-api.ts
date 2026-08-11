@@ -26,7 +26,9 @@ import type {
 // Feedback Types
 // ============================================================================
 
-export type FeedbackType = 'bug' | 'feature' | 'usability' | 'content' | 'general';
+// 'case_report' is the corruption-case channel behind /report. It shares this
+// table, but the API records no IP address or user-agent against it.
+export type FeedbackType = 'bug' | 'feature' | 'usability' | 'content' | 'general' | 'case_report';
 export type ContactMethodType = 'email' | 'phone' | 'whatsapp' | 'instagram' | 'facebook' | 'other';
 
 export interface ContactMethod {

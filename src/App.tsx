@@ -32,6 +32,7 @@ import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
 import Feedback from "./pages/Feedback";
+import ReportCase from "./pages/ReportCase";
 import Updates from "./pages/Updates";
 import UpdateDetail from "./pages/UpdateDetail";
 import Privacy from "./pages/Privacy";
@@ -145,6 +146,7 @@ const App = () => (
                 the old public /moderation path (and any stale bookmarks) there. */}
             <Route path="/moderation" element={<Navigate to="/admin/moderation" replace />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/report" element={<ReportCase />} />
             <Route path="/updates" element={<Updates />} />
             {/* Wagtail headless preview target — must precede the :slug route. */}
             <Route path="/updates/preview" element={<UpdatePreview />} />
