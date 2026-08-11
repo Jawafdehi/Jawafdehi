@@ -357,17 +357,8 @@ export default function ArchiveSearch({
               className="flex items-center rounded-full border p-0.5"
               role="group"
             >
-              <Button
-                aria-label={t("archiveSearch.listView", "List view")}
-                aria-pressed={viewMode === "list"}
-                className="h-9 w-9 rounded-full"
-                onClick={() => setViewMode("list")}
-                size="icon"
-                type="button"
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+              {/* Card first, then list — the toggle reads in the same order as
+                  the defaults, with the default view in the leading position. */}
               <Button
                 aria-label={t("archiveSearch.cardView", "Card view")}
                 aria-pressed={viewMode === "card"}
@@ -378,6 +369,17 @@ export default function ArchiveSearch({
                 variant={viewMode === "card" ? "secondary" : "ghost"}
               >
                 <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                aria-label={t("archiveSearch.listView", "List view")}
+                aria-pressed={viewMode === "list"}
+                className="h-9 w-9 rounded-full"
+                onClick={() => setViewMode("list")}
+                size="icon"
+                type="button"
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+              >
+                <List className="h-4 w-4" />
               </Button>
             </div>
             <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">

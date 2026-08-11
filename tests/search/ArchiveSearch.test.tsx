@@ -404,7 +404,9 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Indexed card title");
 
-    expect(screen.getByText("Indexed card summary")).toBeTruthy();
+    // The card leads with the title and the facts below it — the summary
+    // paragraph lives on the case detail page, not on the card.
+    expect(screen.queryByText("Indexed card summary")).toBeNull();
     expect(screen.getByText("Indexed Person")).toBeTruthy();
     expect(document.querySelector('img[src="https://example.com/indexed-card.jpg"]')).toBeTruthy();
     expect(getCaseByIdMock).not.toHaveBeenCalled();
@@ -421,6 +423,14 @@ describe("ArchiveSearch", () => {
     expect(
       screen.getByRole("button", { name: "List view" }).getAttribute("aria-pressed"),
     ).toBe("false");
+
+    // Card sits first in the toggle, so the default view leads.
+    const toggles = Array.from(
+      screen
+        .getByRole("group", { name: "View mode" })
+        .querySelectorAll("button"),
+    ).map((button) => button.getAttribute("aria-label"));
+    expect(toggles).toEqual(["Card view", "List view"]);
   });
 
   it("shows बिगो on case cards in both views, and omits it when there is no amount", async () => {

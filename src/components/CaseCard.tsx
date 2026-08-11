@@ -27,8 +27,6 @@ interface CaseCardProps {
   location: string;
   status: "ongoing" | "resolved" | "under-investigation";
   tags?: string[];
-  description: string;
-  allegations?: string[]; // Key allegations array
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   thumbnailUrl?: string; //Thumbnail image
@@ -37,7 +35,6 @@ interface CaseCardProps {
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
   viewMode?: "grid" | "list";
-  hideDescription?: boolean;
   // When set, tags render as buttons that invoke this instead of plain badges —
   // the archive search uses it to toggle a tag as a URL refinement.
   onTagClick?: (tag: string) => void;
@@ -77,7 +74,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", hideDescription, onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -192,13 +189,9 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
           </CardHeader>
 
           <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4 sm:px-5">
-            {!hideDescription && (
-              <p className="line-clamp-3 text-sm leading-7 text-muted-foreground">
-                {allegations && allegations.length > 0 ? allegations[0] : description}
-              </p>
-            )}
-
-            <div className={hideDescription ? "mt-2 border-t border-border/70 pt-4" : "mt-5 border-t border-border/70 pt-4"}>
+            {/* No summary paragraph: the card leads with the title and the facts
+                below it. The full description lives on the case detail page. */}
+            <div className="mt-2 border-t border-border/70 pt-4">
               {/* This meta block is deliberately NOT branched on `viewMode` —
                   grid and list differ only in the outer layout, so every field
                   added here shows up in both /search views and on /cases. */}
