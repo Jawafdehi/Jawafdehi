@@ -121,8 +121,11 @@
     "social": {
       "facebook": "फेसबुक",
       "x": "एक्स (ट्विटर)",
+      "instagram": "इन्स्टाग्राम",
+      "tiktok": "टिकटक",
       "youtube": "युट्युब",
       "linkedin": "लिंक्डइन",
+      "discord": "डिस्कोर्ड",
       "whatsapp": "व्हाट्सएप",
       "linktree": "लिंकट्री"
     }

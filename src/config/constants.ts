@@ -1,11 +1,20 @@
 export const JAWAFDEHI_WHATSAPP_NUMBER = "+977 9768630501";
 export const JAWAFDEHI_EMAIL = "inquiry@jawafdehi.org";
 
+// Every channel the organisation actually runs. Keep this in step with the
+// canonical list in the meta repo at docs/branding/narrative.md §13 — that is
+// where the URLs get re-checked, and it is what the newsletters link to.
+// Note the TikTok handle: it is @jawafdehi, not @jawafdehi_initiative. The
+// latter is a dead account that still returns HTTP 200, so a status-code link
+// check will never catch it.
 export const JAWAFDEHI_SOCIALS = {
   facebook: "https://www.facebook.com/jawafdehi",
   x: "https://x.com/jawafdehi",
+  instagram: "https://www.instagram.com/jawafdehi",
+  tiktok: "https://www.tiktok.com/@jawafdehi",
   youtube: "https://www.youtube.com/@Jawafdehi",
   linkedin: "https://www.linkedin.com/company/jawafdehi",
+  discord: "https://discord.gg/grpRaczPq4",
   whatsapp: "https://api.whatsapp.com/send?phone=9779768630501",
   linktree: "https://linktr.ee/jawafdehi",
 };
