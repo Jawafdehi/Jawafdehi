@@ -165,6 +165,9 @@ export const Footer = () => {
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",
         "border-[var(--footer-border)]",
         "dark:[--footer-bg:hsl(var(--card))] dark:[--footer-fg:hsl(var(--card-foreground))] dark:[--footer-muted:hsl(var(--card-foreground)/0.82)]",
+        // Dark mode paints the footer with --card, a light cream, so the title
+        // reverts to the ordinary accent; --accent-on-dark exists for the navy.
+        "dark:[--footer-title:hsl(var(--accent))]",
         "dark:[--footer-soft:hsl(var(--background)/0.70)] dark:[--footer-soft-hover:hsl(var(--secondary)/0.45)]",
         "dark:[--footer-border:hsl(var(--border)/0.70)] dark:[--footer-border-hover:hsl(var(--foreground)/0.20)] dark:[--footer-dot:hsl(var(--border))]",
       )}
