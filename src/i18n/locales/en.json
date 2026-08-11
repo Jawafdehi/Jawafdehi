@@ -116,7 +116,7 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "disclaimer": "The information provided on this website is for informative purposes only. We are not a judiciary body and do not have legal authority to prosecute or adjudicate cases. Our platform serves to document and raise awareness about corruption allegations and public accountability.",
-    "copyright": "© {{year}} Jawafdehi Nepal. All rights reserved.",
+    "copyright": "© {{year}} Jawafdehi Initiative. All rights reserved.",
     "social": {
       "facebook": "Facebook",
       "x": "X (Twitter)",
@@ -926,7 +926,7 @@
     },
     "trigger": "Report a Case",
     "page": {
-      "metaTitle": "Report a Corruption Case | Jawafdehi Nepal",
+      "metaTitle": "Report a Corruption Case | Jawafdehi Initiative",
       "metaDescription": "Send Jawafdehi information about a corruption case in Nepal. Submit the form, email report@jawafdehi.org, or message us on WhatsApp. Anonymous reports are accepted.",
       "formTitle": "Send us the case",
       "formDescription": "Fill in what you know. Only the title and the description are required — a partial report is still useful.",
@@ -2128,7 +2128,7 @@
   },
   "faqPage": {
     "meta": {
-      "title": "FAQ | Jawafdehi Nepal",
+      "title": "FAQ | Jawafdehi Initiative",
       "description": "Answers to common questions about Jawafdehi, the corruption cases we document, verification, reporting, data use, privacy, volunteering, funding, and legal disclaimers.",
       "socialDescription": "Answers to common questions about Jawafdehi, reporting corruption cases, verification, data reuse, privacy, volunteering, and funding."
     },

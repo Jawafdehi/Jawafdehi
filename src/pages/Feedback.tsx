@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MessageSquare } from "lucide-react";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { Seo } from "@/components/Seo";
-import { SITE_URL } from "@/utils/seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 export default function Feedback() {
   const { t } = useTranslation();
@@ -11,7 +11,7 @@ export default function Feedback() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
-        title="Submit Feedback | Jawafdehi Nepal"
+        title={`Submit Feedback | ${SITE_NAME}`}
         description="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform."
         canonicalUrl={`${SITE_URL}/feedback/`}
       />

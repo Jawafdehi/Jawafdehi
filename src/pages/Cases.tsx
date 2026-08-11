@@ -13,7 +13,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { searchArchive } from "@/services/search-api";
 import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
-import { SITE_URL } from "@/utils/seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 type CaseLifecycleStatus = "ongoing" | "closed" | "others";
 type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
@@ -132,7 +132,7 @@ const Cases = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
-        title="Corruption Cases | Jawafdehi Nepal"
+        title={`Corruption Cases | ${SITE_NAME}`}
         description="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources."
         canonicalUrl={`${SITE_URL}/cases/`}
       />

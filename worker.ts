@@ -3,6 +3,7 @@ import { matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
+  SITE_NAME,
   SITE_URL,
   SOCIAL_IMAGE_URL,
   buildHeadTags,
@@ -434,7 +435,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
   const description = truncateMeta(
     stripMarkdown(stripHtml(typeof caseData.description === 'string' ? caseData.description : '')) ||
     allegationText ||
-    'A verified corruption and misconduct case documented by Jawafdehi Nepal.',
+    `A verified corruption and misconduct case documented by ${SITE_NAME}.`,
   );
   const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
   const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
@@ -484,7 +485,7 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
   const titleRaw = String(article.title || 'Jawafdehi Update');
   const description = truncateMeta(
     stripHtml(typeof article.excerpt === 'string' ? article.excerpt : '') ||
-    'An update from Jawafdehi Nepal.',
+    `An update from ${SITE_NAME}.`,
   );
   const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
   const thumbnail = article.thumbnail as { url?: string; alt?: string } | null | undefined;

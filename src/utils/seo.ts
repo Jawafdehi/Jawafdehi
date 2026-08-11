@@ -1,10 +1,27 @@
 export const SITE_URL = "https://jawafdehi.org";
-// TODO: the org name is spelled five different ways across our own accounts —
-// "Jawafdehi Nepal" here, "Jawafdehi Initiative" on YouTube/LinkedIn/TikTok/
-// Linktree, "Jawafdehi | जवाफदेही" on X, "Jawafdehi.org" on Discord, and bare
-// "Jawafdehi" in our own <title> tags. That decision is still open (meta repo,
-// docs/branding/narrative.md §1). Centralised here so settling it is one edit.
-export const SITE_NAME = "Jawafdehi Nepal";
+
+// The organisation's name, settled 2026-08-11: **Jawafdehi Initiative**, on
+// every surface. It was spelled six different ways — "Jawafdehi Nepal" here,
+// "Jawafdehi Initiative" on YouTube/LinkedIn/TikTok/Linktree, "Jawafdehi |
+// जवाफदेही" on X, "Jawafdehi.org" on Discord, bare "Jawafdehi" in our own
+// <title> tags, and "जवाफदेही नेपाल" in the Nepali footer.
+//
+// "Jawafdehi Initiative" is also the registered English name (singular, never
+// "Initiatives") per board consensus 2026-07-01, so this aligns the site with
+// the legal name and with the four platforms that already used it.
+export const SITE_NAME = "Jawafdehi Initiative";
+
+// The Nepali name, standardised by the same board consensus: दीर्घ ही (not
+// जवाफदेहि), श (not सि), भ (not व). Used where a field has room for an alternate
+// name — JSON-LD alternateName, the Nepali footer — rather than appended to
+// SITE_NAME, which would double the length of every <title>.
+//
+// Careful with any search-and-replace near this string. "जवाफदेही नेपाल" appears
+// inside ordinary Nepali prose in ne.json ("जवाफदेही नेपालीहरूद्वारा निर्मित" —
+// built by Nepalis; "जवाफदेही नेपाल र विश्वभर" — in Nepal and worldwide) where it
+// is not the organisation's name at all. Same trap as जवाफदेहिता, the ordinary
+// noun for accountability, which must never be "corrected" to जवाफदेही.
+export const SITE_NAME_NEPALI = "जवाफदेही इनिशिएटिभ";
 // The canonical descriptor, from the same doc. 140 chars — the "Long" cut, which
 // every field on this site can hold. Do not paraphrase it: the branding audit
 // found five paraphrases live simultaneously, two of them in this repo.

@@ -18,7 +18,7 @@ import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
-import { SITE_DESCRIPTION, SITE_URL } from "@/utils/seo";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_NEPALI, SITE_URL } from "@/utils/seo";
 
 const RECENT_CASE_COUNT = 6;
 
@@ -136,15 +136,18 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
-        title="Jawafdehi — Nepal's Corruption Case Archive"
+        title={`${SITE_NAME} — Nepal's Corruption Case Archive`}
         description={SITE_DESCRIPTION}
         canonicalUrl={`${SITE_URL}/`}
       >
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          "name": "Jawafdehi",
-          "alternateName": "Jawafdehi Nepal",
+          "name": SITE_NAME,
+          // schema.org's slot for the same organisation under another name, and
+          // the one identity field with room for the Nepali. Appending it to
+          // SITE_NAME instead would double the length of every <title>.
+          "alternateName": [SITE_NAME_NEPALI, "Jawafdehi"],
           "url": "https://jawafdehi.org",
           "description": SITE_DESCRIPTION,
           "inLanguage": ["en", "ne"],
