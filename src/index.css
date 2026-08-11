@@ -116,6 +116,10 @@ All colors MUST be HSL.
     --accent: 357 67% 43%; /* #B5242C */
     --accent-foreground: 36 100% 99%;
 
+    /* The accent at brand hue, lightened for dark surfaces. The accent itself
+       is only 2.6:1 on --primary, so it cannot carry text on the navy footer. */
+    --accent-on-dark: 357 85% 62%; /* #F04C54 — 4.6:1 on --primary */
+
     /* Amber - urgent/corruption indicator */
     --destructive: 25 95% 53%;
     --destructive-foreground: 0 0% 100%;

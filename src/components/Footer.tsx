@@ -160,11 +160,14 @@ export const Footer = () => {
       className={cn(
         "relative isolate overflow-hidden border-t bg-[var(--footer-bg)] text-[var(--footer-fg)]",
         "[--footer-bg:hsl(var(--primary))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
-        "[--footer-title:#FF000E]",
+        "[--footer-title:hsl(var(--accent-on-dark))]",
         "[--footer-soft:hsl(var(--primary-foreground)/0.10)] [--footer-soft-hover:hsl(var(--primary-foreground)/0.16)]",
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",
         "border-[var(--footer-border)]",
         "dark:[--footer-bg:hsl(var(--card))] dark:[--footer-fg:hsl(var(--card-foreground))] dark:[--footer-muted:hsl(var(--card-foreground)/0.82)]",
+        // Dark mode paints the footer with --card, a light cream, so the title
+        // reverts to the ordinary accent; --accent-on-dark exists for the navy.
+        "dark:[--footer-title:hsl(var(--accent))]",
         "dark:[--footer-soft:hsl(var(--background)/0.70)] dark:[--footer-soft-hover:hsl(var(--secondary)/0.45)]",
         "dark:[--footer-border:hsl(var(--border)/0.70)] dark:[--footer-border-hover:hsl(var(--foreground)/0.20)] dark:[--footer-dot:hsl(var(--border))]",
       )}
@@ -177,13 +180,15 @@ export const Footer = () => {
               aria-label="Jawafdehi home"
               className="inline-flex rounded-full transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
+              {/* Light mode paints the footer navy, so it takes the white
+                  wordmark; dark mode paints it cream and takes the navy one. */}
               <img
                 src="/assets/logo-dark.svg"
                 alt="Jawafdehi"
                 className="h-9 w-auto object-contain dark:hidden"
               />
               <img
-                src="/assets/logo-dark.svg"
+                src="/assets/logo.svg"
                 alt="Jawafdehi"
                 className="hidden h-9 w-auto object-contain dark:block"
               />
