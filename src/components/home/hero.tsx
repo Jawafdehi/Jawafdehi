@@ -199,7 +199,7 @@ function HeroMapSmall({ images }: Readonly<{ images: HeroMapImage[] }>) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute -top-28 bottom-[-12px] left-1/2 w-screen -translate-x-1/2 opacity-[0.34] md:hidden dark:opacity-[0.20]"
+      className="pointer-events-none absolute -top-[104px] bottom-[-20px] left-1/2 w-screen -translate-x-1/2 opacity-[0.34] md:hidden dark:opacity-[0.20]"
     >
       {images.map(({ src, className }) => (
         <img
