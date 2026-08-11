@@ -526,6 +526,26 @@ export default {
         ? securityHeadersAllowFrame()
         : securityHeaders();
 
+    // The social card used to ship under two names. /og-favicon.png was the
+    // original, kept byte-identical to /assets/social-preview.png purely so
+    // shares already cached against the old filename kept resolving. The file is
+    // gone now, so this 301 does that job instead: a scraper re-fetching an old
+    // og:image URL still lands on the current card.
+    //
+    // This is only reachable because the file was deleted — the assets binding
+    // answers before the Worker on any path it holds, so while og-favicon.png
+    // existed this branch could never run.
+    if (path === '/og-favicon.png') {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': '/assets/social-preview.png',
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Short alias: /weekly → /saptahik (301)
     if (path === '/weekly' || path === '/weekly/') {
       return new Response(null, {
