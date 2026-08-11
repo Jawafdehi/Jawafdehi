@@ -21,8 +21,19 @@ type ViewMode = "cards" | "list";
 
 // Shared by the loaded grid and its skeleton so the two can't drift out of step —
 // the placeholder has to occupy the same layout the articles land in.
+//
+// `auto-rows-fr` is what keeps card heights consistent: a plain grid only
+// equalises cells *within* a row, so a row of short excerpts renders visibly
+// shorter cards than the row above it. Sizing every implicit row to the same
+// fraction makes the whole grid uniform, and <UpdateCard>'s `min-h-full` +
+// `justify-between` then fill the cell and pin "Read More" to the bottom edge.
+//
+// Breakpoints follow /cases (`md` → 2 columns, `lg` → 3), which is the canonical
+// content-card grid on the site. List view stays single-column, so it must NOT
+// get `auto-rows-fr` — the excerpt is unclamped there and equalising rows would
+// pad every short entry out to the tallest one.
 const gridClass = (isCardView: boolean) =>
-    isCardView ? "grid gap-6 md:grid-cols-2 xl:grid-cols-3" : "grid gap-5";
+    isCardView ? "grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3" : "grid gap-5";
 
 // Enough placeholders to fill the fold without over-promising how much is coming:
 // two rows of the desktop card grid, or three of the much taller list rows.
