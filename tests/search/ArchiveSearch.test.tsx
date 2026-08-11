@@ -158,8 +158,10 @@ describe("ArchiveSearch", () => {
     expect(
       screen.getByRole("status", { name: "Searching archive" }),
     ).toBeTruthy();
+    // One skeleton, not one per viewport: the filter panel is rendered once and
+    // positioned with CSS, so the loading placeholder is single too.
     expect(document.querySelectorAll('aside[aria-hidden="true"]').length).toBe(
-      2,
+      1,
     );
     expect(
       document.querySelector('div[aria-live="polite"] [aria-hidden="true"]'),
@@ -189,15 +191,15 @@ describe("ArchiveSearch", () => {
     await screen.findByText("Original result");
 
     fireEvent.click(
-      screen.getAllByRole("checkbox", {
+      screen.getByRole("checkbox", {
         name: "CIAA: 6 results",
-      })[0],
+      }),
     );
 
     await waitFor(() => {
       expect(
         screen
-          .getAllByRole("checkbox", { name: "CIAA: 6 results" })[0]
+          .getByRole("checkbox", { name: "CIAA: 6 results" })
           .getAttribute("data-state"),
       ).toBe("checked");
     });
@@ -240,7 +242,7 @@ describe("ArchiveSearch", () => {
     // Default selection is "All records" (the full unified corpus).
     expect(
       screen
-        .getAllByRole("radio", { name: "All records" })[0]
+        .getByRole("radio", { name: "All records" })
         .getAttribute("data-state"),
     ).toBe("checked");
     // "all" sends no type filter to the API.
@@ -248,7 +250,7 @@ describe("ArchiveSearch", () => {
       expect.objectContaining({ type: undefined }),
     );
 
-    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
 
     await waitFor(() => {
       expect(screen.getByTestId("location-search").textContent).toContain(
@@ -257,7 +259,7 @@ describe("ArchiveSearch", () => {
     });
     expect(
       screen
-        .getAllByRole("radio", { name: "Cases: 8 results" })[0]
+        .getByRole("radio", { name: "Cases: 8 results" })
         .getAttribute("data-state"),
     ).toBe("checked");
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -272,26 +274,24 @@ describe("ArchiveSearch", () => {
 
     // Default "All records" view: Entity type is hidden (its buckets are
     // either irrelevant or, as originally reported, collapse to one
-    // confusing value when browsing anything other than Entities). The
-    // filter panel renders twice at every viewport (mobile + desktop), same
-    // as "Filters" elsewhere in this file, so assert on the count.
-    expect(screen.queryAllByText("Entity type").length).toBe(0);
+    // confusing value when browsing anything other than Entities).
+    expect(screen.queryByText("Entity type")).toBeNull();
 
     fireEvent.click(
-      screen.getAllByRole("radio", { name: "Entities: 3 results" })[0],
+      screen.getByRole("radio", { name: "Entities: 3 results" }),
     );
 
     await waitFor(() => {
-      expect(screen.queryAllByText("Entity type").length).toBeGreaterThan(0);
+      expect(screen.getByText("Entity type")).toBeTruthy();
     });
     expect(
-      screen.getAllByRole("checkbox", { name: "Person: 4 results" })[0],
+      screen.getByRole("checkbox", { name: "Person: 4 results" }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
 
     await waitFor(() => {
-      expect(screen.queryAllByText("Entity type").length).toBe(0);
+      expect(screen.queryByText("Entity type")).toBeNull();
     });
   });
 
@@ -301,7 +301,7 @@ describe("ArchiveSearch", () => {
     await screen.findByText("Original result");
 
     fireEvent.click(
-      screen.getAllByRole("checkbox", { name: "Person: 4 results" })[0],
+      screen.getByRole("checkbox", { name: "Person: 4 results" }),
     );
 
     await waitFor(() => {
@@ -312,7 +312,7 @@ describe("ArchiveSearch", () => {
 
     // Switching record type must not leave the (now hidden) Entity type facet
     // filtering the results behind the user's back.
-    fireEvent.click(screen.getAllByRole("radio", { name: "Cases: 8 results" })[0]);
+    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -544,9 +544,9 @@ describe("ArchiveSearch", () => {
     await screen.findByText("Original result");
 
     fireEvent.click(
-      screen.getAllByRole("checkbox", {
+      screen.getByRole("checkbox", {
         name: "CIAA: 6 results",
-      })[0],
+      }),
     );
 
     expect(
@@ -597,5 +597,75 @@ describe("ArchiveSearch", () => {
     expect(searchArchiveMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ sort: "featured" }),
     );
+  });
+
+  // The panel was previously rendered twice — into a mobile <details> and into
+  // the desktop sidebar — so every facet control existed twice in the DOM at
+  // every viewport while at most one set was ever visible. It is now rendered
+  // once and positioned by `display`; these tests pin that contract, since a
+  // regression is invisible on screen and only shows up as payload and
+  // hydration cost. (The getBy* queries in the tests above guard it too: they
+  // throw on a second match.)
+  describe("single filter panel", () => {
+    it("renders the facet controls and the landmark exactly once", async () => {
+      searchArchiveMock.mockResolvedValue(baseResponse);
+      renderSearch();
+      await screen.findByText("Original result");
+
+      expect(
+        document.querySelectorAll('aside[aria-label="Archive search filters"]')
+          .length,
+      ).toBe(1);
+      expect(screen.getAllByRole("checkbox").length).toBe(2);
+      expect(screen.getAllByRole("radio").length).toBe(5);
+      expect(document.querySelectorAll("details").length).toBe(0);
+    });
+
+    it("keeps the single panel in the desktop sidebar while collapsed on mobile", async () => {
+      searchArchiveMock.mockResolvedValue(baseResponse);
+      renderSearch();
+      await screen.findByText("Original result");
+
+      const toggle = screen.getByRole("button", { name: "Filters" });
+      const panel = document.getElementById(
+        toggle.getAttribute("aria-controls") || "",
+      );
+
+      // Collapsed on phones, but `lg:block` still reveals the same node as the
+      // desktop sidebar — that pairing is what makes one instance serve both,
+      // with no breakpoint hook and so no pre-render/hydration mismatch.
+      expect(toggle.getAttribute("aria-expanded")).toBe("false");
+      expect(toggle.className).toContain("lg:hidden");
+      expect(panel?.className).toContain("hidden");
+      expect(panel?.className).toContain("lg:block");
+      expect(panel?.querySelector('aside[aria-label="Archive search filters"]'))
+        .toBeTruthy();
+    });
+
+    it("expands and collapses the panel on mobile and counts active refinements", async () => {
+      searchArchiveMock.mockResolvedValue(baseResponse);
+      renderSearch();
+      await screen.findByText("Original result");
+
+      const toggle = screen.getByRole("button", { name: "Filters" });
+      const panel = document.getElementById(
+        toggle.getAttribute("aria-controls") || "",
+      );
+
+      fireEvent.click(toggle);
+      expect(toggle.getAttribute("aria-expanded")).toBe("true");
+      expect(panel?.className).not.toContain("hidden");
+
+      fireEvent.click(toggle);
+      expect(toggle.getAttribute("aria-expanded")).toBe("false");
+      expect(panel?.className).toContain("hidden");
+
+      // The collapsed control has to report how many refinements are hidden
+      // behind it, the way the old <summary> did.
+      fireEvent.click(screen.getByRole("checkbox", { name: "CIAA: 6 results" }));
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
+      });
+    });
   });
 });
