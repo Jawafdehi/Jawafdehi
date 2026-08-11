@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
 import { API_BASE_URL } from "@/services/http";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const PRODUCTS = [
   {
@@ -58,6 +58,8 @@ const OurProducts = () => {
       <meta property="og:image" content={SOCIAL_IMAGE_URL} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+      <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Our Products — Jawafdehi" />
       <meta name="twitter:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />

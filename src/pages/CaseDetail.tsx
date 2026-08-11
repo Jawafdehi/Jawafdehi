@@ -37,7 +37,7 @@ import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
-import { previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -395,7 +395,8 @@ const CaseDetail = () => {
         <meta property="og:description" content={metaDescription} />
         <meta property="og:image" content={ogImage} />
         <meta property="og:image:alt" content={caseData.title} />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
         <meta property="article:published_time" content={caseData.created_at} />
         <meta property="article:modified_time" content={caseData.updated_at} />
         {caseData.tags.map((tag) => (

@@ -5,7 +5,7 @@ import { Community } from "@/components/donate/community";
 import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
 import { DonationInfo } from "@/components/donate/info";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const Donate = () => {
   return (
@@ -22,6 +22,8 @@ const Donate = () => {
         <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Donate — Jawafdehi" />
         <meta name="twitter:description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />

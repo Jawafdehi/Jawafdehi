@@ -18,7 +18,7 @@ import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
-import { SITE_DESCRIPTION, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_DESCRIPTION, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const RECENT_CASE_COUNT = 6;
 
@@ -147,7 +147,8 @@ const Index = () => {
         <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
         <meta name="twitter:description" content={SITE_DESCRIPTION} />

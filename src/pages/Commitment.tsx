@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { CommitmentList } from "@/components/commitment/commitment";
 import { CommitmentHero } from "@/components/commitment/hero";
 import { CommitmentMission } from "@/components/commitment/mission";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const Commitment = () => {
   return (
@@ -20,6 +20,8 @@ const Commitment = () => {
         <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Our Commitment — Jawafdehi" />
         <meta name="twitter:description" content="Jawafdehi's commitments to the Nepali public: permanent records, factual accuracy, open source technology, and free access forever." />

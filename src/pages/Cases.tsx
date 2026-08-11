@@ -13,7 +13,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { searchArchive } from "@/services/search-api";
 import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 type CaseLifecycleStatus = "ongoing" | "closed" | "others";
 type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
@@ -143,7 +143,8 @@ const Cases = () => {
         <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Corruption Cases | Jawafdehi Nepal" />
         <meta name="twitter:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
