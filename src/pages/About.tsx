@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { CoreValues } from "@/components/about/core-values";
 import { AboutHero } from "@/components/about/hero";
 import { Seo } from "@/components/Seo";
-import { SITE_URL } from "@/utils/seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const About = () => {
   const { t } = useTranslation();
@@ -10,7 +10,7 @@ const About = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
-        title="About | Jawafdehi Nepal"
+        title={`About | ${SITE_NAME}`}
         description="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases."
         canonicalUrl={`${SITE_URL}/about/`}
       />

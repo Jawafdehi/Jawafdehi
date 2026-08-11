@@ -14,7 +14,7 @@ import {
     List,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { SITE_URL } from "@/utils/seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 type ViewMode = "cards" | "list";
 
@@ -86,7 +86,7 @@ const Updates = () => {
     return (
         <div className="min-h-screen flex flex-col bg-background">
             <Seo
-                title="Updates | Jawafdehi Nepal"
+                title={`Updates | ${SITE_NAME}`}
                 description="Latest news, announcements, and updates from the Jawafdehi team on Nepal's corruption accountability platform."
                 canonicalUrl={`${SITE_URL}/updates/`}
             />
