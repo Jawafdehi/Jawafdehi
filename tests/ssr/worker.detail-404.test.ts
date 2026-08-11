@@ -60,6 +60,28 @@ describe('detail routes that the API says do not exist', () => {
     expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
   });
 
+  // /updates/preview is a route in its own right — the Wagtail headless preview
+  // target — not an article slug. Matching it with a regex for /updates/:slug
+  // sent it to the CMS, which has no article called "preview", so the editor
+  // previewing a draft got a 404 with noindex and no-store on it.
+  it('does not treat the Wagtail preview target as a missing article', async () => {
+    stubApi(() => new Response(JSON.stringify({ items: [] }), { status: 200 }));
+
+    const res = await worker.fetch(new Request('https://jawafdehi.org/updates/preview'), makeEnv());
+
+    // noindex here is the preview route's own policy (an unsaved draft), not the
+    // 404 branch — that one sends a bare "noindex" plus Cache-Control: no-store.
+    expect({
+      status: res.status,
+      robots: res.headers.get('X-Robots-Tag'),
+      cacheControl: res.headers.get('Cache-Control'),
+    }).toEqual({
+      status: 200,
+      robots: 'noindex, nofollow',
+      cacheControl: null,
+    });
+  });
+
   it('keeps 200 when the API does not answer at all', async () => {
     stubApi(() => {
       throw new Error('connection reset');

@@ -1,5 +1,5 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
-import { isKnownRoute, normalizePath } from './src/data/route-patterns';
+import { matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
@@ -513,9 +513,9 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     // Endpoints the Worker owns are matched on the trailing-slash-normalised
-    // path, the same form isKnownRoute uses. Comparing against the raw pathname
-    // let /api/latest-videos/ miss its handler and fall through to the SPA
-    // shell, which answered 200 with HTML where the caller expected JSON.
+    // path, the same form the route match below uses. Comparing against the raw
+    // pathname let /api/latest-videos/ miss its handler and fall through to the
+    // SPA shell, which answered 200 with HTML where the caller expected JSON.
     const endpoint = normalizePath(path);
 
     // Handle oEmbed endpoint
@@ -535,12 +535,17 @@ export default {
       return handleLatestVideos(request);
     }
 
+    // Which SPA route this path resolves to, if any. One match decides the frame
+    // policy below, the detail-metadata fallbacks, and the final status line —
+    // rather than three hand-written regexes each re-deciding it.
+    const matched = matchRoute(path);
+
     // The case-embed widget and the Wagtail headless preview both render inside
     // an <iframe>, so neither can send X-Frame-Options: DENY. The embed widget
     // is framable anywhere; the preview (an unsaved draft) is scoped to the CMS
     // admin and marked noindex — see previewSecurityHeaders.
-    const isEmbedRoute = /^\/embed\/case\//.test(path);
-    const isPreviewRoute = /^\/updates\/preview\/?$/.test(path);
+    const isEmbedRoute = matched?.path === '/embed/case/:id';
+    const isPreviewRoute = matched?.path === '/updates/preview';
     const secHeaders = isPreviewRoute
       ? previewSecurityHeaders()
       : isEmbedRoute
@@ -630,14 +635,17 @@ export default {
     // Inject the record's real Open Graph / Twitter tags so link previews are
     // correct on every platform. Numeric / court-ref case URLs are already
     // redirected to their canonical slug above, so only slugs reach here.
-    const caseSlugMatch = path.match(/^\/case\/([^/]+)\/?$/);
-    if (caseSlugMatch) {
-      const metaResponse = await handleCaseMetaFallback(request, env, decodeURIComponent(caseSlugMatch[1]));
+    //
+    // Gating on the matched route rather than a regex keeps sibling literal
+    // routes out of it: /updates/preview is the Wagtail preview target, not an
+    // article, and asking the CMS for an article named "preview" 404'd it.
+    // Params come back percent-decoded.
+    if (matched?.path === '/case/:id' && matched.params.id) {
+      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
       if (metaResponse) return metaResponse;
     }
-    const updateSlugMatch = path.match(/^\/updates\/([^/]+)\/?$/);
-    if (updateSlugMatch) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, decodeURIComponent(updateSlugMatch[1]));
+    if (matched?.path === '/updates/:slug' && matched.params.slug) {
+      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
       if (metaResponse) return metaResponse;
     }
 
@@ -649,7 +657,7 @@ export default {
     // link checkers the site had no broken links at all. The body is still the
     // shell so React Router renders the styled NotFound page — only the status
     // line changes, which is the part crawlers read.
-    const status = isKnownRoute(path) ? 200 : 404;
+    const status = matched ? 200 : 404;
     const spaResponse = new Response(indexResponse.body, {
       status,
       headers: indexResponse.headers,
