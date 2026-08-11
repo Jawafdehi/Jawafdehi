@@ -188,26 +188,18 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
   return <CountUp end={numericValue} duration={0.9} separator="," />;
 }
 
-const EYEBROW_CUTOUT =
-  "linear-gradient(to bottom,#000 0 98px,transparent 110px,transparent 136px,#000 148px)";
-
 /**
  * Below md the hero is text top to bottom, so a full-width map — the artwork is
  * 1.68:1 and fills its canvas, so width dictates height — cannot avoid the copy.
- * It is anchored to the eyebrow/title block and sized to the viewport, then the
- * one line it must not sit behind is masked out: the eyebrow is 12px accent red,
- * which measures 4.56:1 on a clean dark background and so has nothing to spare.
- * The title carries the rest at 8:1, well clear of the 3:1 it needs, and the
- * lede is left untouched below. Mask offsets are px from the box top, which is a
- * fixed -112px from the eyebrow, so the cut-out tracks the text rather than
- * drifting with viewport height or locale the way a percentage would.
+ * Anchoring it to the eyebrow/title block and sizing it to the viewport puts the
+ * whole country on screen and keeps it off the lede, which at 5.03:1 has no room
+ * to spare. Opacity matches the md+ backdrop so the two read as one treatment.
  */
 function HeroMapSmall({ images }: Readonly<{ images: HeroMapImage[] }>) {
   return (
     <div
       aria-hidden="true"
-      style={{ maskImage: EYEBROW_CUTOUT, WebkitMaskImage: EYEBROW_CUTOUT }}
-      className="pointer-events-none absolute -top-28 bottom-[-12px] left-1/2 w-screen -translate-x-1/2 opacity-[0.34] md:hidden dark:opacity-[0.30]"
+      className="pointer-events-none absolute -top-28 bottom-[-12px] left-1/2 w-screen -translate-x-1/2 opacity-[0.34] md:hidden dark:opacity-[0.20]"
     >
       {images.map(({ src, className }) => (
         <img
