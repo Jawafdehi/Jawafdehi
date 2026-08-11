@@ -83,6 +83,21 @@ describe("CaseCard image fallback", () => {
     expect(image.getAttribute("alt")).toBe("");
   });
 
+  it("reaches the placeholder when the thumbnail and banner are the same broken URL", () => {
+    // Scraped cases routinely carry one url as both thumbnail and banner (e.g.
+    // case-081-cr-0136-oxygen-plant). Advancing from that url to an identical
+    // one changes no attribute, so no second error event would ever arrive —
+    // the card used to sit on the broken image forever.
+    const sameUrl = "https://thahamun.gov.np/files/img/slider/thahabuilding.jpg";
+    const { image } = renderCard({ thumbnailUrl: sameUrl, bannerUrl: sameUrl });
+
+    expect(image.getAttribute("src")).toBe(sameUrl);
+
+    fireEvent.error(image);
+    expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
+    expect(image.getAttribute("alt")).toBe("");
+  });
+
   it("stays on the placeholder if the placeholder itself fails to load", () => {
     const { image } = renderCard({ thumbnailUrl: "https://news.example.org/article" });
 

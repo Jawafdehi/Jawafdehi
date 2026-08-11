@@ -35,11 +35,27 @@ export function isValidCaseImage(url?: string | null): boolean {
  * Usable case images in preference order, best first. Blank and non-public URLs
  * are dropped; the placeholder is always last, so the caller can walk the list
  * on load errors and still end up with something to show.
+ *
+ * Duplicates are collapsed, and that is load-bearing rather than tidiness. Many
+ * scraped cases carry the SAME url as both thumbnail and banner. A caller that
+ * advances through candidates on `error` would then "advance" from that url to
+ * itself: the src attribute does not change, the browser issues no new request,
+ * no second error event ever fires, and the card stays stuck on a broken image
+ * instead of reaching the placeholder.
  */
 export function caseImageCandidates(...urls: Array<string | null | undefined>): string[] {
-  const usable = urls
-    .map((url) => url?.trim())
-    .filter((url): url is string => isValidCaseImage(url));
+  const usable: string[] = [];
+
+  for (const url of urls) {
+    const trimmedUrl = url?.trim();
+
+    if (!trimmedUrl || !isValidCaseImage(trimmedUrl) || usable.includes(trimmedUrl)) continue;
+
+    usable.push(trimmedUrl);
+  }
+
+  // A case whose own image IS the placeholder needs no second copy of it.
+  if (usable.includes(CASE_PLACEHOLDER_IMAGE)) return usable;
 
   return [...usable, CASE_PLACEHOLDER_IMAGE];
 }
