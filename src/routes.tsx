@@ -35,6 +35,12 @@ import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
 import ResearchCorruption from "./pages/ResearchCorruption";
+// /materials and /courtcases carry page metadata as of 2026-08-11, so they are
+// pre-rendered and the policy above makes them eager. It costs almost nothing:
+// both are twenty-line wrappers whose only dependency is ArchiveSearch, already
+// eager above, so their lazy chunks held next to no code of their own.
+import Materials from "./pages/Materials";
+import CourtCases from "./pages/CourtCases";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,
 // so per the policy above they must be eager. They were lazy() until 2026-08-11
 // and pre-rendered to exactly what that policy predicts: an empty <title> and no
@@ -53,8 +59,6 @@ const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
 const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
-const Materials = lazy(() => import("./pages/Materials"));
-const CourtCases = lazy(() => import("./pages/CourtCases"));
 const NewsletterUnsubscribe = lazy(() => import("./pages/NewsletterUnsubscribe"));
 const NewsletterConfirmed = lazy(() => import("./pages/NewsletterConfirmed"));
 

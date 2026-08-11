@@ -32,6 +32,7 @@ interface RenderResult {
       script?: { toString(): string };
       style?: { toString(): string };
       noscript?: { toString(): string };
+      htmlAttributes?: { toString(): string };
     }
   };
   dehydratedState: unknown;
@@ -144,11 +145,25 @@ function injectIntoTemplate(template: string, result: RenderResult): string {
   const json = JSON.stringify(dehydratedState).replace(/<\//g, '<\\/');
   const stateScript = `<script id="__REACT_QUERY_STATE__" type="application/json">${json}</script>`;
 
+  // A page may override the document language via Helmet's <html lang="…" />.
+  // Only the title and the meta block were substituted here, so that override
+  // was silently dropped and every pre-rendered page shipped index.html's
+  // lang="ne" — including /research/corruption-accountability, which is served
+  // English-only and declares lang="en". A crawler then read Nepali markup
+  // language with an en_US og:locale, which is the same contradiction #300 set
+  // out to remove, just from the other side.
+  //
+  // Narrow on purpose: lang is the only attribute any page overrides, and
+  // rewriting the whole <html> tag from htmlAttributes would drop the
+  // translate="no" the template carries.
+  const lang = h?.htmlAttributes?.toString().match(/lang="([^"]+)"/)?.[1];
+
   return template
     .replace('<!--app-html-->', () => html)
     .replace('<!--helmet-title-->', () => title)
     .replace('<!--helmet-meta-->', () => meta)
-    .replace('<!--dehydrated-state-->', () => stateScript);
+    .replace('<!--dehydrated-state-->', () => stateScript)
+    .replace(/<html lang="[^"]*"/, (match) => (lang ? `<html lang="${lang}"` : match));
 }
 
 function stripHtml(value: string | null | undefined): string {
