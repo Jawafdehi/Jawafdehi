@@ -1,33 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { CoreValues } from "@/components/about/core-values";
 import { AboutHero } from "@/components/about/hero";
-import { Helmet } from "react-helmet-async";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 const About = () => {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>About | Jawafdehi Nepal</title>
-        <meta name="description" content="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases." />
-        <link rel="canonical" href="https://jawafdehi.org/about/" />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/about/" />
-        <meta property="og:title" content="About | Jawafdehi Nepal" />
-        <meta property="og:description" content="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases." />
-        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="About | Jawafdehi Nepal" />
-        <meta name="twitter:description" content="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases." />
-        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
-      </Helmet>
+      <Seo
+        title="About | Jawafdehi Nepal"
+        description="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases."
+        canonicalUrl={`${SITE_URL}/about/`}
+      />
 
       <div className="flex-1">
         <AboutHero />

@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { usBoard, nepalBoard, members, pastMembers } from "@/data/team";
@@ -6,7 +5,8 @@ import type { Contact } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
 import { PageHero } from "@/components/ui/page-hero";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 const ContactIcon = ({ contact }: { contact: Contact }) => {
   const href = contact.type === "email" ? `mailto:${contact.value}` : contact.value;
@@ -38,25 +38,11 @@ const OurTeam = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Our Team — Jawafdehi</title>
-        <meta name="description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
-        <link rel="canonical" href="https://jawafdehi.org/team/" />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/team/" />
-        <meta property="og:title" content="Our Team — Jawafdehi" />
-        <meta property="og:description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
-        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Our Team — Jawafdehi" />
-        <meta name="twitter:description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
-        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
-      </Helmet>
+      <Seo
+        title="Our Team — Jawafdehi"
+        description="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive."
+        canonicalUrl={`${SITE_URL}/team/`}
+      />
 
       <main id="main-content" className="flex-1">
         <PageHero

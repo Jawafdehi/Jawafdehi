@@ -1,6 +1,6 @@
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Cta } from "@/components/home/cta";
+import { Seo } from "@/components/Seo";
 import { VolunteerHero } from "@/components/volunteer/hero";
 import {
   BookOpen,
@@ -14,7 +14,7 @@ import {
   Search,
   type LucideIcon,
 } from "lucide-react";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { SITE_URL } from "@/utils/seo";
 
 type TeamEntry = {
   icon: LucideIcon;
@@ -69,25 +69,11 @@ const Volunteer = () => {
   const profiles = getProfiles();
   return (
   <div className="min-h-screen flex flex-col bg-background">
-    <Helmet>
-      <title>Volunteer with Us — Jawafdehi</title>
-      <meta name="description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
-      <link rel="canonical" href="https://jawafdehi.org/volunteer/" />
-      <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://jawafdehi.org/volunteer/" />
-      <meta property="og:title" content="Volunteer with Us — Jawafdehi" />
-      <meta property="og:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
-      <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-      <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="Volunteer with Us — Jawafdehi" />
-      <meta name="twitter:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
-      <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
-    </Helmet>
+    <Seo
+      title="Volunteer with Us — Jawafdehi"
+      description="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator."
+      canonicalUrl={`${SITE_URL}/volunteer/`}
+    />
 
     <main id="main-content" className="flex-1">
       <VolunteerHero />

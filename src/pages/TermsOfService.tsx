@@ -1,28 +1,14 @@
-import { Helmet } from "react-helmet-async";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Jawafdehi Initiative Terms of Service</title>
-        <meta name="description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
-        <link rel="canonical" href="https://jawafdehi.org/terms/" />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/terms/" />
-        <meta property="og:title" content="Jawafdehi Initiative Terms of Service" />
-        <meta property="og:description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
-        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Jawafdehi Initiative Terms of Service" />
-        <meta name="twitter:description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
-        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
-      </Helmet>
+      <Seo
+        title="Jawafdehi Initiative Terms of Service"
+        description="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive."
+        canonicalUrl={`${SITE_URL}/terms/`}
+      />
 
       <main id="main-content" className="flex-1">
         <section id="terms-hero" className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">

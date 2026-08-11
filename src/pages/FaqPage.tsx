@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
@@ -15,11 +14,11 @@ import {
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
-import { ogLocale, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 export default function FaqPage() {
   const { t, i18n } = useTranslation();
-  const locales = ogLocale(i18n.language);
   const location = useLocation();
   const rawSections = t("faqPage.sections", { returnObjects: true });
   const sections = Array.isArray(rawSections)
@@ -55,34 +54,13 @@ export default function FaqPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{t("faqPage.meta.title")}</title>
-        <meta
-          name="description"
-          content={t("faqPage.meta.description")}
-        />
-        <link rel="canonical" href="https://jawafdehi.org/faq/" />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/faq/" />
-        <meta property="og:title" content={t("faqPage.meta.title")} />
-        <meta
-          property="og:description"
-          content={t("faqPage.meta.socialDescription")}
-        />
-        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={locales.locale} />
-        <meta property="og:locale:alternate" content={locales.alternate} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={t("faqPage.meta.title")} />
-        <meta
-          name="twitter:description"
-          content={t("faqPage.meta.socialDescription")}
-        />
-        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
-      </Helmet>
+      <Seo
+        title={t("faqPage.meta.title")}
+        description={t("faqPage.meta.description")}
+        socialDescription={t("faqPage.meta.socialDescription")}
+        canonicalUrl={`${SITE_URL}/faq/`}
+        language={i18n.language}
+      />
 
       <main id="main-content">
         <section className="relative overflow-hidden py-10 md:py-14 lg:py-16">
