@@ -39,6 +39,14 @@ import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
 import ResearchCorruption from "./pages/ResearchCorruption";
+// /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,
+// so per the policy above they must be eager. They were lazy() until 2026-08-11
+// and pre-rendered to exactly what that policy predicts: an empty <title> and no
+// og: tags at all. tests/ssr/prerendered-routes-eager.test.ts now enforces the
+// rule so the two lists cannot silently drift apart again.
+import Donate from "./pages/Donate";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 import DocumentPreviewPage from "./pages/DocumentPreviewPage";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -46,11 +54,6 @@ import { AnalyticsRouteGate } from "@/components/AnalyticsRouteGate";
 
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
-const Donate = lazy(() => import("./pages/Donate"));
-// Post-donation return targets (/donate/success, /donate/cancel) — not
-// pre-rendered, so lazy() per the split policy above.
-const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
-const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const DataQuality = lazy(() => import("./pages/DataQuality"));
 const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
