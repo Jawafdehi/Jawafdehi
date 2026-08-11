@@ -476,8 +476,11 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Special Court 081-CR-0060");
 
-    // The metadata line in particular used to be `truncate`d to one line in card
-    // view while the list row wrapped it in full, hiding the court and status.
+    // The metadata line used to be `truncate`d to one line in card view while the
+    // list row wrapped it in full, hiding the court and status. That regression is
+    // CSS-only, and jsdom has no layout — asserting the text is present would pass
+    // against the broken code too. So compare the classes that decide how much of
+    // each field is shown, not just that the field exists.
     const renderedFields = () => ({
       badge: screen.getByText("Court case").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
@@ -486,12 +489,30 @@ describe("ArchiveSearch", () => {
       metadata: screen.getByText("special court · 081-CR-0060 · sub judice")
         .textContent,
       cta: screen.getByText("View").textContent,
+      // Description and metadata are clamped identically in both modes; only the
+      // title scales with the shell, so its classes are compared separately below.
+      descriptionClamp: screen.getByText("Charge sheet filed against the accused")
+        .className,
+      metadataClamp: screen.getByText("special court · 081-CR-0060 · sub judice")
+        .className,
     });
 
     const cardView = renderedFields();
     fireEvent.click(screen.getByRole("button", { name: "List view" }));
+    const listView = renderedFields();
 
-    expect(renderedFields()).toEqual(cardView);
+    expect(listView).toEqual(cardView);
+    // Neither mode may truncate a field to a single line.
+    expect(cardView.metadataClamp).not.toContain("truncate");
+    expect(cardView.descriptionClamp).not.toContain("truncate");
+    // The title clamps to the same number of lines in both, at different sizes,
+    // and sits at the same heading level as <CaseCard>'s title (h3) rather than
+    // the h2 the list row used to render.
+    const heading = () =>
+      screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" });
+    expect(heading().className).toContain("line-clamp-2");
+    fireEvent.click(screen.getByRole("button", { name: "Card view" }));
+    expect(heading().className).toContain("line-clamp-2");
   });
 
   it("does not show an empty state after an initial request failure", async () => {
