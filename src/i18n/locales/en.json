@@ -1163,7 +1163,9 @@
     "readMore": "Read More",
     "backToUpdates": "Back to Updates",
     "documentsAndResources": "Documents & Resources",
-    "view": "View"
+    "view": "View",
+    "loading": "Loading updates",
+    "loadingUpdate": "Loading update"
   },
   "share": {
     "share": "Share",

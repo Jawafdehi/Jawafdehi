@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Seo } from "@/components/Seo";
 import { getArticles } from "@/services/cms-api";
+import { UpdateCardSkeleton } from "@/components/UpdateCardSkeleton";
 import type { ArticleListItem } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { formatPublicationDate } from "@/utils/date";
@@ -17,6 +18,15 @@ import { useTranslation } from "react-i18next";
 import { SITE_URL } from "@/utils/seo";
 
 type ViewMode = "cards" | "list";
+
+// Shared by the loaded grid and its skeleton so the two can't drift out of step —
+// the placeholder has to occupy the same layout the articles land in.
+const gridClass = (isCardView: boolean) =>
+    isCardView ? "grid gap-6 md:grid-cols-2 xl:grid-cols-3" : "grid gap-5";
+
+// Enough placeholders to fill the fold without over-promising how much is coming:
+// two rows of the desktop card grid, or three of the much taller list rows.
+const SKELETON_COUNT = { cards: 6, list: 3 } as const;
 
 type UpdateCardProps = {
     article: ArticleListItem;
@@ -154,11 +164,18 @@ const Updates = () => {
                                 We couldn't load updates right now. Please try again later.
                             </p>
                         ) : isLoading ? (
-                            <p className="text-muted-foreground">Loading updates…</p>
+                            <output
+                                aria-label={t("updates.loading", "Loading updates")}
+                                className={gridClass(isCardView)}
+                            >
+                                {Array.from({ length: SKELETON_COUNT[viewMode] }, (_, index) => (
+                                    <UpdateCardSkeleton key={index} viewMode={viewMode} />
+                                ))}
+                            </output>
                         ) : !articles || articles.length === 0 ? (
                             <p className="text-muted-foreground">No updates have been published yet.</p>
                         ) : (
-                            <div className={isCardView ? "grid gap-6 md:grid-cols-2 xl:grid-cols-3" : "grid gap-5"}>
+                            <div className={gridClass(isCardView)}>
                                 {articles.map((article) => (
                                     <UpdateCard key={article.id} article={article} viewMode={viewMode} />
                                 ))}
