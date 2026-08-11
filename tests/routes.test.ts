@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { isKnownRoute } from "../src/data/route-patterns";
+import { isKnownRoute, matchRoute } from "../src/data/route-patterns";
 import { PRE_RENDERED_STATIC_ROUTES, SITE_ROUTES } from "../src/data/site-routes";
 
 // SITE_ROUTES is the one route table; App.tsx renders from it and the Worker
@@ -99,19 +99,38 @@ describe("isKnownRoute", () => {
   // These are the cases a hand-written regex list kept getting wrong, and the
   // reason matching now goes through React Router's own matcher: it applies the
   // app's real ranking rules rather than an approximation of them.
-  it("prefers the more specific route the same way the app does", () => {
+  //
+  // Asserting the *selected pattern*, not just that something matched. A path
+  // resolving to the wrong route still "exists" — /updates/preview matching
+  // /updates/:slug is what sent the Wagtail preview target to the CMS as an
+  // article slug and 404'd it.
+  it("selects the same route the app would", () => {
+    const selected = (path: string) => matchRoute(path)?.path ?? null;
+
     expect({
-      numericEntity: isKnownRoute("/entity/42"),
-      iriEntity: isKnownRoute("/entity/organization/np/gov/tu"),
-      preview: isKnownRoute("/updates/preview"),
-      slug: isKnownRoute("/updates/some-post"),
-      overDeep: isKnownRoute("/case/a/b"),
+      numericEntity: selected("/entity/42"),
+      iriEntity: selected("/entity/organization/np/gov/tu"),
+      preview: selected("/updates/preview"),
+      slug: selected("/updates/some-post"),
+      caseSlug: selected("/case/some-slug"),
+      overDeep: selected("/case/a/b"),
+      junk: selected("/wp-login.php"),
     }).toEqual({
-      numericEntity: true,
-      iriEntity: true,
-      preview: true,
-      slug: true,
-      overDeep: false,
+      numericEntity: "/entity/:id",
+      iriEntity: "/entity/*",
+      preview: "/updates/preview",
+      slug: "/updates/:slug",
+      caseSlug: "/case/:id",
+      overDeep: null,
+      junk: null,
     });
+  });
+
+  it("exposes the decoded params the Worker passes to the API", () => {
+    // The Worker hands these straight to the cases/CMS lookups, so a double
+    // decode or a missed one would query for the wrong record.
+    expect(matchRoute("/case/%E0%A4%9C%E0%A4%A8")?.params.id).toBe("जन");
+    expect(matchRoute("/case/100%25-pure")?.params.id).toBe("100%-pure");
+    expect(matchRoute("/updates/some-post")?.params.slug).toBe("some-post");
   });
 });
