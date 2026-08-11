@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,12 @@ import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
+import {
+  CASE_PLACEHOLDER_DARK_CLASS,
+  CASE_PLACEHOLDER_IMAGE,
+  caseImageCandidates,
+} from "@/lib/case-images";
+import { cn } from "@/lib/utils";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
 
@@ -79,16 +85,32 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Candidate images, best first: thumbnail, then banner. Cases sometimes carry
-  // a non-image thumbnail URL (an article/page link), so a load error must fall
-  // through to the banner before giving up on the gradient placeholder.
-  const imageCandidates = [thumbnailUrl, bannerUrl]
-    .map((url) => url?.trim())
-    .filter((url): url is string => Boolean(url));
+  // Candidate images, best first: thumbnail, then banner, then the shared
+  // placeholder illustration the case detail banner also falls back to. Cases
+  // sometimes carry a non-image thumbnail URL (an article/page link), so a load
+  // error must fall through to the banner before landing on the placeholder.
+  const imageCandidates = caseImageCandidates(thumbnailUrl, bannerUrl);
   const [imageIndex, setImageIndex] = useState(0);
-  const imageSrc = imageCandidates[imageIndex] ?? null;
 
-  // Handle image load errors by advancing to the next candidate (or hiding).
+  // React reuses a card instance when a list re-sorts or refetches, so another
+  // case's images can arrive on the component that already advanced past a
+  // broken one. Without this the index survives and the card opens on a later
+  // candidate — often the placeholder — instead of the new thumbnail.
+  //
+  // Keyed on the candidate list, not the raw props: a prop change that yields
+  // the same list (whitespace, or a duplicate collapsing) must NOT discard an
+  // error-advance, or the card would swing back to a URL known to fail.
+  const candidateKey = imageCandidates.join("|");
+  useEffect(() => {
+    setImageIndex(0);
+  }, [candidateKey]);
+
+  // Clamped, not `?? placeholder`: if the placeholder itself fails to load,
+  // advancing past it must not reset the card to a real URL that already failed.
+  const imageSrc = imageCandidates[Math.min(imageIndex, imageCandidates.length - 1)];
+  const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
+
+  // Handle image load errors by advancing to the next candidate.
   const handleImageError = () => {
     setImageIndex((i) => i + 1);
   };
@@ -114,20 +136,28 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
         <div className={`relative overflow-hidden ${imageContainerClass}`}>
-          {imageSrc ? (
-            <>
-              <img
-                src={imageSrc}
-                alt={t("caseCard.thumbnailAlt", { title })}
-                loading="lazy"
-                decoding="async"
-                onError={handleImageError}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-slate-900/5 to-white/10" />
-            </>
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-slate-200 via-slate-100 to-white" />
+          <img
+            src={imageSrc}
+            // The placeholder illustration carries no information about this
+            // case, so it stays out of the accessibility tree entirely rather
+            // than announcing a thumbnail that does not exist.
+            alt={isPlaceholder ? "" : t("caseCard.thumbnailAlt", { title })}
+            loading="lazy"
+            decoding="async"
+            onError={handleImageError}
+            className={cn(
+              "h-full w-full object-cover",
+              // Zoom-on-hover reads as "there is a photograph here"; it only
+              // makes the placeholder illustration lurch.
+              !isPlaceholder && "transition-transform duration-500 group-hover:scale-105",
+              isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
+            )}
+          />
+          {/* Legibility scrim for the status badge over a real photograph. The
+              placeholder is a near-flat light panel and needs no scrim — and in
+              dark mode the inverted placeholder would tint it the wrong way. */}
+          {!isPlaceholder && (
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-slate-900/5 to-white/10" />
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
