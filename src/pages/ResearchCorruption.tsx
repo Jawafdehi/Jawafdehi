@@ -17,7 +17,7 @@ import { ChargeMixByYear } from "@/components/research/ChargeMixByYear";
 import { FiledByMonth } from "@/components/research/FiledByMonth";
 import { AccountabilityStages, type AccountabilityStage } from "@/components/research/AccountabilityStages";
 
-const CANONICAL = "https://jawafdehi.org/research/corruption-accountability";
+const CANONICAL = "https://jawafdehi.org/research/corruption-accountability/";
 
 const Eyebrow = ({ children }: { children: ReactNode }) => (
   <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">{children}</p>

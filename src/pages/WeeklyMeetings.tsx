@@ -6,7 +6,7 @@ import { PauseCircle, Play, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JAWAFDEHI_WEEKLY_SERIES } from "@/config/constants";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 type LatestVideo = {
   videoId: string;
@@ -46,16 +46,16 @@ const WeeklyMeetings = () => {
           name="description"
           content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
         />
-        <link rel="canonical" href="https://jawafdehi.org/saptahik" />
+        <link rel="canonical" href="https://jawafdehi.org/saptahik/" />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/saptahik" />
+        <meta property="og:url" content="https://jawafdehi.org/saptahik/" />
         <meta property="og:title" content="Weekly Corruption Series — Jawafdehi" />
         <meta
           property="og:description"
           content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
         />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -64,7 +64,7 @@ const WeeklyMeetings = () => {
           name="twitter:description"
           content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
         />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       </Helmet>
 
       <main id="main-content" className="flex-1">
