@@ -96,7 +96,10 @@ export default function ArchiveSearch({
     [searchParams, selectedRecordType],
   );
   const [query, setQuery] = useState(params.q || "");
-  const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  // Card (grid) view is the default: results lead with the case artwork, status,
+  // entities and बिगो rather than a text row. The choice is intentionally NOT
+  // persisted across visits or mirrored into the URL — that's a separate change.
+  const [viewMode, setViewMode] = useState<"list" | "card">("card");
 
   useEffect(() => setQuery(params.q || ""), [params.q]);
   useEffect(() => {

@@ -60,6 +60,38 @@ const baseResponse: ArchiveSearchResponse = {
   ],
 };
 
+// A case hit carrying the denormalized index card payload (the common path on
+// new docs), so <CaseCard> renders without hydrating the detail endpoint.
+function caseResult(
+  slug: string,
+  title: string,
+  card: Partial<NonNullable<ArchiveSearchResult["card"]>> = {},
+): ArchiveSearchResult {
+  return {
+    ...baseResponse.results[0],
+    id: `https://jawafdehi.org/case/${slug}`,
+    title: { ne: null, en: title },
+    url: `/case/${slug}`,
+    card: {
+      slug,
+      title,
+      short_description: `${title} summary`,
+      key_allegations: [],
+      tags: [],
+      case_type: "CORRUPTION",
+      status: "ongoing",
+      case_start_date: "2024-01-01",
+      case_end_date: null,
+      bigo: null,
+      thumbnail_url: null,
+      banner_url: null,
+      timeline: [],
+      entities: [],
+      ...card,
+    },
+  };
+}
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -376,6 +408,90 @@ describe("ArchiveSearch", () => {
     expect(screen.getByText("Indexed Person")).toBeTruthy();
     expect(document.querySelector('img[src="https://example.com/indexed-card.jpg"]')).toBeTruthy();
     expect(getCaseByIdMock).not.toHaveBeenCalled();
+  });
+
+  it("opens in card view", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    expect(
+      screen.getByRole("button", { name: "Card view" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen.getByRole("button", { name: "List view" }).getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+
+  it("shows बिगो on case cards in both views, and omits it when there is no amount", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        caseResult("with-amount", "Case with an amount", { bigo: 24_940_110 }),
+        caseResult("zero-amount", "Case with a zero amount", { bigo: 0 }),
+        caseResult("no-amount", "Case with no amount", { bigo: null }),
+      ],
+    });
+
+    renderSearch();
+    await screen.findByText("Case with an amount");
+
+    // Card view (the default).
+    expect(screen.getByText("Rs 2.49 Crore")).toBeTruthy();
+    // A 0/null amount means "no amount recorded", not "nothing was embezzled" —
+    // rendering formatBigo(0) as "Rs 0" would assert a finding the case doesn't make.
+    expect(screen.queryByText("Rs 0")).toBeNull();
+
+    // Same field in list view: <CaseCard>'s meta block is not mode-branched, so
+    // one mapping fix surfaces बिगो in both.
+    fireEvent.click(screen.getByRole("button", { name: "List view" }));
+
+    expect(screen.getByText("Rs 2.49 Crore")).toBeTruthy();
+    expect(screen.queryByText("Rs 0")).toBeNull();
+  });
+
+  it("shows the same fields for a non-case result in both views", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "courtcase",
+          id: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+          source_app: "jawafdehi",
+          title: { ne: null, en: "Special Court 081-CR-0060" },
+          snippet: { ne: null, en: "Charge sheet filed against the accused" },
+          url: "/courtcase/special/081-cr-0060",
+          api_url: null,
+          matched_fields: [],
+          score: 1,
+          extra: {
+            court: "SPECIAL_COURT",
+            case_number: "081-CR-0060",
+            case_status: "SUB_JUDICE",
+          },
+        },
+      ],
+    });
+
+    renderSearch();
+    await screen.findByText("Special Court 081-CR-0060");
+
+    // The metadata line in particular used to be `truncate`d to one line in card
+    // view while the list row wrapped it in full, hiding the court and status.
+    const renderedFields = () => ({
+      badge: screen.getByText("Court case").textContent,
+      title: screen.getByText("Special Court 081-CR-0060").textContent,
+      description: screen.getByText("Charge sheet filed against the accused")
+        .textContent,
+      metadata: screen.getByText("special court · 081-CR-0060 · sub judice")
+        .textContent,
+      cta: screen.getByText("View").textContent,
+    });
+
+    const cardView = renderedFields();
+    fireEvent.click(screen.getByRole("button", { name: "List view" }));
+
+    expect(renderedFields()).toEqual(cardView);
   });
 
   it("does not show an empty state after an initial request failure", async () => {
