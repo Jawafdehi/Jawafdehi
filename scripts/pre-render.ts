@@ -42,6 +42,7 @@ interface PaginatedCaseList {
   next: string | null;
   results: Array<{
     id: number;
+    slug?: string | null;
     title?: string | null;
     description?: string | null;
     updated_at: string;
@@ -244,19 +245,29 @@ function withSearchLines(entry: SearchIndexEntry, html: string): SearchIndexEntr
   };
 }
 
-function caseToSearchEntry(caseItem: PaginatedCaseList['results'][number], html: string): SearchIndexEntry {
+// Cases carry no `lines`: they are not pre-rendered (see the case block in
+// main()), so there is no rendered HTML to mine. Nothing is lost — the 32 lines
+// this used to attach were the header and footer, identical for all 67 cases and
+// containing no case text at all. Title and description come from the API, which
+// is where they always came from.
+function caseToSearchEntry(
+  caseItem: PaginatedCaseList['results'][number],
+  slug: string,
+): SearchIndexEntry {
   const title = stripHtml(caseItem.title) || `Case ${caseItem.id}`;
   const description = truncate(stripHtml(caseItem.description), 180);
 
-  return withSearchLines({
-    path: `/case/${caseItem.id}`,
+  return {
+    path: `/case/${slug}`,
     title,
+    // Slugs embed the court reference (case-081-cr-0090-…), so indexing the slug
+    // makes "081-CR-0090" find the case even when the title never spells it out.
+    keywords: ['case', 'corruption', 'archive', String(caseItem.id), slug, title],
     descriptionKey: description ? undefined : 'searchCommand.descriptions.caseDetail',
     description,
-    keywords: ['case', 'corruption', 'archive', String(caseItem.id), title],
     icon: 'FileText',
     group: 'cases',
-  }, html);
+  };
 }
 
 function entityToSearchEntry(entityId: number, name: string | null | undefined, html: string): SearchIndexEntry {
@@ -354,22 +365,33 @@ async function main() {
   }
 
   if (apiReachable) {
-    // Render case routes
-    await withConcurrency(cases, CONCURRENCY, async (caseItem) => {
-      const caseId = String(caseItem.id);
-      const path = `/case/${encodeURIComponent(caseId)}`;
-      const outFile = join(ROOT, 'dist', 'case', caseId, 'index.html');
-      try {
-        const result = await render(path);
-        const html = injectIntoTemplate(template, result);
-        await writeHtml(outFile, html);
-        searchEntries.push(caseToSearchEntry(caseItem, result.html));
-        console.log(`[pre-render] ✓ ${path}`);
-      } catch (err) {
-        console.error(`[pre-render] ERROR rendering ${path}:`, err);
-        if (err instanceof Error) console.error(err.stack);
+    // Case pages are deliberately NOT pre-rendered.
+    //
+    // They used to be, one file per numeric id at dist/case/<id>/index.html. All
+    // 67 were empty: the case detail API is keyed on slug, so SSR fetched nothing
+    // and every file was the same chrome-only shell — no case text, an empty
+    // <title>, and no Open Graph, Twitter or canonical tags. The URLs were dead
+    // in the browser too, since /case/<numeric> only resolves for the 28 ids in
+    // LEGACY_CASE_MAP and none of the 67 were in it.
+    //
+    // Writing those files was actively harmful: a static asset wins over the SPA
+    // fallback, so the blank page shadowed worker.ts's handleCaseMetaFallback,
+    // which fetches the case at the edge and injects a real title, description,
+    // canonical and share card. Emitting nothing lets the working path serve.
+    //
+    // Cases stay in the search index — their title and description come from the
+    // API, unchanged — but pointed at /case/<slug>, the URL that resolves.
+    for (const caseItem of cases) {
+      const slug = caseItem.slug?.trim();
+      if (!slug) {
+        console.warn(
+          `[pre-render] Case ${caseItem.id} has no slug; omitting from the search ` +
+          `index rather than linking it to a URL that cannot resolve.`,
+        );
+        continue;
       }
-    });
+      searchEntries.push(caseToSearchEntry(caseItem, slug));
+    }
 
     const entityNames = new Map<number, string | null | undefined>();
     for (const caseItem of cases) {
