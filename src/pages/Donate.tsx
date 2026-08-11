@@ -5,7 +5,7 @@ import { Community } from "@/components/donate/community";
 import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
 import { DonationInfo } from "@/components/donate/info";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const Donate = () => {
   return (
@@ -13,19 +13,19 @@ const Donate = () => {
       <Helmet>
         <title>Donate — Jawafdehi</title>
         <meta name="description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />
-        <link rel="canonical" href="https://jawafdehi.org/donate" />
+        <link rel="canonical" href="https://jawafdehi.org/donate/" />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/donate" />
+        <meta property="og:url" content="https://jawafdehi.org/donate/" />
         <meta property="og:title" content="Donate — Jawafdehi" />
         <meta property="og:description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Donate — Jawafdehi" />
         <meta name="twitter:description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       </Helmet>
 
       <section className="flex-1">

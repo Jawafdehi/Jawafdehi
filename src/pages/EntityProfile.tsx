@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -70,14 +70,14 @@ export default function EntityProfile() {
             <meta property="og:url" content={canonicalUrl} />
             <meta property="og:title" content={pageTitle} />
             <meta property="og:description" content={pageDescription} />
-            <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+            <meta property="og:image" content={SOCIAL_IMAGE_URL} />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
             <meta property="og:locale" content={isNepali ? 'ne_NP' : 'en_US'} />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content={pageTitle} />
             <meta name="twitter:description" content={pageDescription} />
-            <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+            <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
             <link rel="alternate" type="application/json" href={`${API_BASE_URL}/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
           </Helmet>
         );

@@ -15,7 +15,7 @@ import {
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 export default function FaqPage() {
   const { t, i18n } = useTranslation();
@@ -60,16 +60,16 @@ export default function FaqPage() {
           name="description"
           content={t("faqPage.meta.description")}
         />
-        <link rel="canonical" href="https://jawafdehi.org/faq" />
+        <link rel="canonical" href="https://jawafdehi.org/faq/" />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/faq" />
+        <meta property="og:url" content="https://jawafdehi.org/faq/" />
         <meta property="og:title" content={t("faqPage.meta.title")} />
         <meta
           property="og:description"
           content={t("faqPage.meta.socialDescription")}
         />
-        <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
@@ -82,7 +82,7 @@ export default function FaqPage() {
           name="twitter:description"
           content={t("faqPage.meta.socialDescription")}
         />
-        <meta name="twitter:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       </Helmet>
 
       <main id="main-content">

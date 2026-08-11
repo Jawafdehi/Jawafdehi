@@ -13,7 +13,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { searchArchive } from "@/services/search-api";
 import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 type CaseLifecycleStatus = "ongoing" | "closed" | "others";
 type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
@@ -134,20 +134,20 @@ const Cases = () => {
       <Helmet>
         <title>Corruption Cases | Jawafdehi Nepal</title>
         <meta name="description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <link rel="canonical" href="https://jawafdehi.org/cases" />
+        <link rel="canonical" href="https://jawafdehi.org/cases/" />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/cases" />
+        <meta property="og:url" content="https://jawafdehi.org/cases/" />
         <meta property="og:title" content="Corruption Cases | Jawafdehi Nepal" />
         <meta property="og:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Corruption Cases | Jawafdehi Nepal" />
         <meta name="twitter:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       </Helmet>
 
       <div className="flex-1 py-8 md:py-12">

@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const Privacy = () => {
   return (
@@ -7,20 +7,20 @@ const Privacy = () => {
       <Helmet>
         <title>Jawafdehi Initiative Privacy Policy</title>
         <meta name="description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <link rel="canonical" href="https://jawafdehi.org/privacy" />
+        <link rel="canonical" href="https://jawafdehi.org/privacy/" />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/privacy" />
+        <meta property="og:url" content="https://jawafdehi.org/privacy/" />
         <meta property="og:title" content="Jawafdehi Initiative Privacy Policy" />
         <meta property="og:description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Jawafdehi Initiative Privacy Policy" />
         <meta name="twitter:description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       </Helmet>
 
       <main id="main-content" className="flex-1">

@@ -9,9 +9,9 @@ import { SiLinktree } from "react-icons/si";
 import { CaseReportForm } from "@/components/CaseReportForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { JAWAFDEHI_SOCIALS, JAWAFDEHI_WHATSAPP_NUMBER } from "@/config/constants";
-import { SITE_NAME } from "@/utils/seo";
+import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
-const PAGE_URL = "https://jawafdehi.org/report";
+const PAGE_URL = "https://jawafdehi.org/report/";
 const REPORT_EMAIL = "report@jawafdehi.org";
 
 type Channel = {
@@ -60,13 +60,13 @@ export default function ReportCase() {
         <meta property="og:url" content={PAGE_URL} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       </Helmet>
 
       <div className="container mx-auto max-w-3xl px-4 py-8 md:py-12">

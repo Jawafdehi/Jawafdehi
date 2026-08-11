@@ -243,7 +243,7 @@ export default function ArchiveSearch({
           }
           name="description"
         />
-        <link href={`https://jawafdehi.org${canonicalPath || "/search"}`} rel="canonical" />
+        <link href={`https://jawafdehi.org${canonicalPath || "/search/"}`} rel="canonical" />
       </Helmet>
 
       <div className="container mx-auto px-4">
