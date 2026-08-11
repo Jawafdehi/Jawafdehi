@@ -73,7 +73,7 @@ export default function EntityProfile() {
         );
       })()}
 
-      <main id="main-content" className="flex-1 container mx-auto px-4 py-8">
+      <main id="main-content" className="flex-1 layout-container py-8">
         <Button variant="ghost" asChild className="mb-6">
           <Link to="/search?type=entity">{t("entityProfile.backToEntities")}</Link>
         </Button>

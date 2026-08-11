@@ -139,7 +139,7 @@ const Cases = () => {
       />
 
       <div className="flex-1 py-8 md:py-12">
-        <div className="container mx-auto px-4">
+        <div className="layout-container">
           <section id="cases-intro" className="mb-10">
             <h1 className="text-4xl font-bold text-foreground mb-3">{t("cases.title")}</h1>
             <p className="text-muted-foreground text-lg">{t("cases.description")}</p>

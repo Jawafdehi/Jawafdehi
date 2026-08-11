@@ -286,7 +286,7 @@ export default function ArchiveSearch({
         robots={isFilteredResultSet ? "noindex, follow" : null}
       />
 
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <header className="max-w-3xl">
 
           <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">

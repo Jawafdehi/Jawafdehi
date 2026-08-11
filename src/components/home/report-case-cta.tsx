@@ -18,7 +18,7 @@ export function ReportCaseCta() {
         className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_20%,hsl(var(--secondary)/0.24),transparent_34%),linear-gradient(135deg,hsl(var(--primary)/0.3)_0%,transparent_48%,hsl(var(--accent)/0.2)_100%)]"
       />
 
-      <div className="container mx-auto px-4 text-center">
+      <div className="layout-container text-center">
         <div className="mx-auto flex max-w-3xl flex-col items-center">
           <h2 className="text-3xl font-extrabold leading-tight tracking-normal text-white md:text-4xl">
             {t("reportCta.title")}

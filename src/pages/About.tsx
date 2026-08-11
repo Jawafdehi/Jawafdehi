@@ -20,7 +20,7 @@ const About = () => {
 
         {/* About Us Section */}
         <section id="about-us" className="bg-muted/10 pt-12 pb-8 md:pt-14 md:pb-10 lg:pt-16 lg:pb-10">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="grid gap-9 md:grid-cols-2 md:gap-12 lg:gap-16">
               <div className="max-w-[44rem]">
                 <p className="font-eyebrow mb-3">

@@ -11,7 +11,7 @@ export function Community() {
       className="overflow-hidden bg-background "
       aria-labelledby="donate-community-title"
     >
-      <div className="container mx-auto flex flex-col items-center px-4 text-center">
+      <div className="layout-container flex flex-col items-center text-center">
         <div className="mx-auto max-w-5xl">
           <Eyebrow className="mb-3">
             {t("donate.community.eyebrow")}

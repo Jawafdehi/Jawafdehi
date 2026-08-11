@@ -47,7 +47,7 @@ const WeeklyMeetings = () => {
       />
 
       <main id="main-content" className="flex-1">
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="layout-container py-12 md:py-16">
           <div className="mx-auto max-w-3xl text-center">
             <p className="font-eyebrow font-eyebrow-display text-primary">
               {t("weeklyMeetings.eyebrow")}

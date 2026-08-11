@@ -92,10 +92,12 @@ export function CookieConsentBanner() {
       aria-label={t("cookieConsent.ariaLabel", "Cookie consent")}
       className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm p-3 sm:p-4 shadow-lg no-print"
     >
-      {/* Deliberately not `container`: its 2rem side padding is unconditional,
-          and on a 360px screen that is 64px this bar cannot spare. `sm:px-8`
-          restores it from the `sm` breakpoint up, and `max-w-[1400px]` matches
-          the cap `container` applies, so wider screens are laid out as before. */}
+      {/* Deliberately NOT `container`/`layout-container`: their side padding is
+          unconditional, and on a 360px screen that costs 64px (32px under
+          `layout-container`, which resolves to `container … px-4`) that this bar
+          cannot spare — #305 measured it. `sm:px-8` restores it from the `sm`
+          breakpoint up, and `max-w-[1400px]` matches the cap `container`
+          applies, so wider screens are laid out as before. */}
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-8">
         <p className="text-sm text-muted-foreground max-w-3xl">
           <Trans

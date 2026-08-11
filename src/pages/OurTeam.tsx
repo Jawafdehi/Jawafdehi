@@ -67,7 +67,7 @@ const OurTeam = () => {
           { id: "past-members", heading: t("team.sections.pastMembers", "Past Members"), data: pastMembers },
         ].map(({ id, heading, data }) => (
           <section key={id} id={id} className="py-12 md:py-16">
-            <div className="container mx-auto px-4">
+            <div className="layout-container">
               <h2 className="text-2xl font-bold text-primary mb-8">{heading}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {data.map((member) => (

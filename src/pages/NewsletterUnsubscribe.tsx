@@ -31,7 +31,7 @@ export default function NewsletterUnsubscribe() {
   if (state === "idle" || state === "submitting") {
     return (
       <main className="bg-background py-16 md:py-24">
-        <div className="container mx-auto max-w-xl px-4 text-center">
+        <div className="layout-container max-w-xl text-center">
           <div className="space-y-6">
             <div className="space-y-3">
               <h1 className="text-3xl font-bold text-primary md:text-4xl">
@@ -59,7 +59,7 @@ export default function NewsletterUnsubscribe() {
 
   return (
     <main className="bg-background py-16 md:py-24">
-      <div className="container mx-auto max-w-xl px-4 text-center">
+      <div className="layout-container max-w-xl text-center">
         <div className="space-y-6">
           <Icon
             className={"mx-auto h-10 w-10 " + (isSuccess ? "text-success" : "text-destructive")}

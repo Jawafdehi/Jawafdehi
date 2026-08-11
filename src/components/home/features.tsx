@@ -54,7 +54,7 @@ export function Features() {
   return (
     <div onMouseLeave={() => setActiveFeatureId(null)}>
       <section id="features" className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container mx-auto px-4">
+        <div className="layout-container">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
             {features.map((feature) => (
               <FeatureCard
@@ -81,7 +81,7 @@ function FeatureDetail({ feature }: Readonly<{ feature: Feature }>) {
       id="feature-detail"
       className="border-b border-border bg-muted/30 py-7 transition-all duration-300 md:py-9"
     >
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-5">
           <div
             className={cn(

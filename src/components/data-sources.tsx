@@ -26,7 +26,7 @@ export function DataSources() {
 
   return (
     <section id="data-sources" className="bg-background py-14 md:py-20">
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <div className="mx-auto mb-12 max-w-3xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
             {t("ourProcess.sources.heading")}

@@ -64,7 +64,7 @@ export default function FaqPage() {
 
       <main id="main-content">
         <section className="relative overflow-hidden py-10 md:py-14 lg:py-16">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="max-w-3xl">
               <Eyebrow className="mb-4">{t("faqPage.hero.eyebrow")}</Eyebrow>
               <h1 className="font-page-title">
@@ -78,7 +78,7 @@ export default function FaqPage() {
         </section>
 
         <section className="pb-12 md:pb-16">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="grid gap-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14">
               <aside className="lg:sticky lg:top-24 lg:self-start">
                 <div className="rounded-lg bg-card p-3">

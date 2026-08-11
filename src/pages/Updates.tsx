@@ -119,7 +119,7 @@ const Updates = () => {
                         className="absolute inset-0 -z-10 opacity-[0.24] [background-image:radial-gradient(hsl(var(--foreground)/0.14)_0.75px,transparent_0.75px)] [background-size:18px_18px]"
                     />
 
-                    <div className="container mx-auto space-y-8 px-4 animate-fade-in">
+                    <div className="layout-container space-y-8 animate-fade-in">
                         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                             <div className="max-w-3xl">
                                 <h1 className="text-4xl font-extrabold leading-tight tracking-normal text-primary md:text-5xl">

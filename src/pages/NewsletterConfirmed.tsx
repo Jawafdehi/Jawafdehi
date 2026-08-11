@@ -20,7 +20,7 @@ export default function NewsletterConfirmed() {
         <title>{t("newsletter.confirmed.title")} — Jawafdehi</title>
         <meta name="robots" content="noindex" />
       </Helmet>
-      <div className="container mx-auto max-w-xl px-4 text-center">
+      <div className="layout-container max-w-xl text-center">
         <div className="space-y-6">
           <CheckCircle2 className="mx-auto h-10 w-10 text-success" aria-hidden="true" />
           <div className="space-y-3">

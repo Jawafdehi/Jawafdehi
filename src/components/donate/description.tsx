@@ -31,7 +31,7 @@ export function DonationDescription() {
       className="bg-muted/10 pb-10 pt-12 md:pb-12 md:pt-14 lg:pt-16"
       aria-labelledby="donate-impact-title"
     >
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow className="mb-3">
             {t("donate.impact.eyebrow")}
