@@ -17,6 +17,8 @@ const OurProcess = () => (
       <meta property="og:title" content="Our Process — Jawafdehi" />
       <meta property="og:description" content="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive." />
       <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Our Process — Jawafdehi" />
       <meta name="twitter:description" content="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive." />

@@ -19,6 +19,8 @@ export default function Feedback() {
         <meta property="og:title" content="Submit Feedback | Jawafdehi Nepal" />
         <meta property="og:description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
         <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Submit Feedback | Jawafdehi Nepal" />

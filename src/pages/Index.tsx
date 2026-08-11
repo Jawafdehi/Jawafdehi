@@ -144,6 +144,8 @@ const Index = () => {
         <meta property="og:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
         <meta property="og:description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
         <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Jawafdehi — Nepal's Corruption Case Archive" />

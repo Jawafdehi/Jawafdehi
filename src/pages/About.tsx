@@ -18,6 +18,8 @@ const About = () => {
         <meta property="og:title" content="About | Jawafdehi Nepal" />
         <meta property="og:description" content="Learn about Jawafdehi — Nepal's open corruption accountability platform. Meet the team behind Let's Build Nepal and  working to promote transparency." />
         <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="About | Jawafdehi Nepal" />
