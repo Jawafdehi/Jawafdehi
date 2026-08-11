@@ -15,6 +15,7 @@ import {
   FileText,
   Gavel,
   Loader2,
+  MessageSquare,
   Network,
   ShieldCheck,
 } from "lucide-react";
@@ -75,6 +76,13 @@ const SECTIONS: Section[] = [
     icon: ShieldCheck,
     titleKey: "admin.dashboard.sections.moderationTitle",
     bodyKey: "admin.dashboard.sections.moderationBody",
+    canAccess: isModerator,
+  },
+  {
+    to: "/admin/feedback",
+    icon: MessageSquare,
+    titleKey: "admin.dashboard.sections.feedbackTitle",
+    bodyKey: "admin.dashboard.sections.feedbackBody",
     canAccess: isModerator,
   },
 ];
