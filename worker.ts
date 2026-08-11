@@ -1,4 +1,5 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
+import { matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
@@ -283,11 +284,14 @@ async function fetchWithTimeout(url: string): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), META_FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(url, {
+    // Returned whatever the status, so callers can tell "the API says this
+    // record does not exist" (404 → serve a real 404) apart from "the API did
+    // not answer" (null → fall through to the shell rather than deindex a
+    // live page over a slow backend).
+    return await fetch(url, {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });
-    return response.ok ? response : null;
   } catch {
     return null;
   } finally {
@@ -368,8 +372,12 @@ function injectHeadMeta(indexHtml: string, metaTags: string): string {
   return indexHtml;
 }
 
+// Fetches the built index.html to use as a shell. The request is constructed
+// fresh rather than from `request` as init: inheriting the incoming request
+// would also inherit its AbortSignal, which nothing here needs and which fails
+// the cross-realm instanceof check under vitest.
 async function fetchIndexHtml(request: Request, env: Env): Promise<string | null> {
-  const indexRequest = new Request(new URL('/', request.url).toString(), request);
+  const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });
   const indexResponse = await env.ASSETS.fetch(indexRequest);
   if (!indexResponse.ok) return null;
   return indexResponse.text();
@@ -386,10 +394,31 @@ function metaHtmlResponse(html: string): Response {
   });
 }
 
+// The SPA shell at 404. Used when the API positively reports that a detail
+// record does not exist — a renamed case slug, a deleted article. React Router
+// renders NotFound from this body; only the status line differs.
+async function notFoundShellResponse(request: Request, env: Env): Promise<Response | null> {
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+  return new Response(indexHtml, {
+    status: 404,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex',
+      ...securityHeaders(),
+    },
+  });
+}
+
 // Inject share metadata for a published case not yet captured by pre-render.
 async function handleCaseMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
   const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/cases/${encodeURIComponent(slug)}/`);
   if (!apiResponse) return null;
+  // Case slugs get renamed, and the old URL stays in circulation. The API
+  // saying 404 is a positive answer, unlike a timeout.
+  if (apiResponse.status === 404) return notFoundShellResponse(request, env);
+  if (!apiResponse.ok) return null;
 
   let caseData: Record<string, unknown>;
   try {
@@ -439,6 +468,7 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     `${CMS_API_BASE}/pages/?type=content.ArticlePage&slug=${encodeURIComponent(slug)}&fields=*`,
   );
   if (!apiResponse) return null;
+  if (!apiResponse.ok) return null;
 
   let article: Record<string, unknown> | undefined;
   try {
@@ -447,7 +477,9 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
   } catch {
     return null;
   }
-  if (!article) return null;
+  // The CMS answers an unknown slug with 200 and an empty list, which is a
+  // positive "no such article" — serve a real 404 rather than the shell.
+  if (!article) return notFoundShellResponse(request, env);
 
   const titleRaw = String(article.title || 'Jawafdehi Update');
   const description = truncateMeta(
@@ -480,30 +512,40 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+    // Endpoints the Worker owns are matched on the trailing-slash-normalised
+    // path, the same form the route match below uses. Comparing against the raw
+    // pathname let /api/latest-videos/ miss its handler and fall through to the
+    // SPA shell, which answered 200 with HTML where the caller expected JSON.
+    const endpoint = normalizePath(path);
 
     // Handle oEmbed endpoint
-    if (path === '/oembed' || path === '/oembed/') {
+    if (endpoint === '/oembed') {
       return handleOembed(request);
     }
 
-    if (path === '/document-preview' || path === '/document-preview/') {
+    if (endpoint === '/document-preview') {
       return handleDocumentPreview(request);
     }
 
     // Latest YouTube uploads for the Weekly Series "Past presentations" section
-    if (path === '/api/latest-videos') {
+    if (endpoint === '/api/latest-videos') {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return new Response('Method Not Allowed', { status: 405 });
       }
       return handleLatestVideos(request);
     }
 
+    // Which SPA route this path resolves to, if any. One match decides the frame
+    // policy below, the detail-metadata fallbacks, and the final status line —
+    // rather than three hand-written regexes each re-deciding it.
+    const matched = matchRoute(path);
+
     // The case-embed widget and the Wagtail headless preview both render inside
     // an <iframe>, so neither can send X-Frame-Options: DENY. The embed widget
     // is framable anywhere; the preview (an unsaved draft) is scoped to the CMS
     // admin and marked noindex — see previewSecurityHeaders.
-    const isEmbedRoute = /^\/embed\/case\//.test(path);
-    const isPreviewRoute = /^\/updates\/preview\/?$/.test(path);
+    const isEmbedRoute = matched?.path === '/embed/case/:id';
+    const isPreviewRoute = matched?.path === '/updates/preview';
     const secHeaders = isPreviewRoute
       ? previewSecurityHeaders()
       : isEmbedRoute
@@ -531,7 +573,7 @@ export default {
     }
 
     // Short alias: /weekly → /saptahik (301)
-    if (path === '/weekly' || path === '/weekly/') {
+    if (endpoint === '/weekly') {
       return new Response(null, {
         status: 301,
         headers: {
@@ -585,7 +627,7 @@ export default {
       return response;
     }
 
-    // SPA fallback: serve index.html with 200
+    // SPA fallback. Everything below is a path ASSETS does not hold.
     if (request.method !== 'GET' && request.method !== 'HEAD') return asset;
 
     // Case / update detail pages published after the last build aren't
@@ -593,25 +635,41 @@ export default {
     // Inject the record's real Open Graph / Twitter tags so link previews are
     // correct on every platform. Numeric / court-ref case URLs are already
     // redirected to their canonical slug above, so only slugs reach here.
-    const caseSlugMatch = path.match(/^\/case\/([^/]+)\/?$/);
-    if (caseSlugMatch) {
-      const metaResponse = await handleCaseMetaFallback(request, env, decodeURIComponent(caseSlugMatch[1]));
+    //
+    // Gating on the matched route rather than a regex keeps sibling literal
+    // routes out of it: /updates/preview is the Wagtail preview target, not an
+    // article, and asking the CMS for an article named "preview" 404'd it.
+    // Params come back percent-decoded.
+    if (matched?.path === '/case/:id' && matched.params.id) {
+      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
       if (metaResponse) return metaResponse;
     }
-    const updateSlugMatch = path.match(/^\/updates\/([^/]+)\/?$/);
-    if (updateSlugMatch) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, decodeURIComponent(updateSlugMatch[1]));
+    if (matched?.path === '/updates/:slug' && matched.params.slug) {
+      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
       if (metaResponse) return metaResponse;
     }
 
-    const indexRequest = new Request(new URL('/', request.url).toString(), request);
+    const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });
     const indexResponse = await env.ASSETS.fetch(indexRequest);
+
+    // A path the SPA has no route for is a real 404, not a page. Serving the
+    // shell at 200 made every typo and every dead link indexable, and told
+    // link checkers the site had no broken links at all. The body is still the
+    // shell so React Router renders the styled NotFound page — only the status
+    // line changes, which is the part crawlers read.
+    const status = matched ? 200 : 404;
     const spaResponse = new Response(indexResponse.body, {
-      status: 200,
+      status,
       headers: indexResponse.headers,
     });
     for (const [key, value] of Object.entries(secHeaders)) {
       spaResponse.headers.set(key, value);
+    }
+    if (status === 404) {
+      // Do not let a 404 sit in an edge or browser cache: the same path can
+      // become real the moment a case is published.
+      spaResponse.headers.set('Cache-Control', 'no-store');
+      spaResponse.headers.set('X-Robots-Tag', 'noindex');
     }
     return spaResponse;
   },
