@@ -63,7 +63,7 @@
       "entities": "Entities"
     },
     "pageTitles": {
-      "report": "Report Allegation",
+      "report": "Report a Case",
       "archiveSearch": "Archive Search",
       "feedback": "Submit Feedback",
       "privacy": "Privacy Policy",
@@ -83,7 +83,7 @@
       "products": "Explore Jawafdehi tools and products.",
       "weeklySeries": "The weekly corruption series is on pause; watch past presentations on YouTube.",
       "updates": "Read recent platform updates.",
-      "report": "Submit an allegation or public-interest corruption lead.",
+      "report": "Send us information about a corruption case — by form, email, or WhatsApp.",
       "feedback": "Send bugs, feature ideas, corrections, or general feedback.",
       "privacy": "Read how Jawafdehi handles data, cookies, logs, and user information.",
       "terms": "Read platform rules, data-reuse (CC BY-NC) terms, disclaimers, and permitted use.",
@@ -912,7 +912,8 @@
     "saveDraft": "Save as Draft",
     "submitted": {
       "title": "Report Submitted",
-      "description": "Your allegation has been submitted for moderation review. Thank you for contributing to public accountability."
+      "description": "Your allegation has been submitted for moderation review. Thank you for contributing to public accountability.",
+      "reference": "Your reference number is {{reference}}. Keep it if you want to follow up with us."
     },
     "templateDownload": {
       "title": "Download Case Entry Template",
@@ -925,7 +926,28 @@
       "downloadMd": ".MD",
       "emailSubject": "Subject: Case Submission - [Brief Title]"
     },
-    "trigger": "Report a Case"
+    "trigger": "Report a Case",
+    "page": {
+      "metaTitle": "Report a Corruption Case | Jawafdehi Nepal",
+      "metaDescription": "Send Jawafdehi information about a corruption case in Nepal. Submit the form, email report@jawafdehi.org, or message us on WhatsApp. Anonymous reports are accepted.",
+      "formTitle": "Send us the case",
+      "formDescription": "Fill in what you know. Only the title and the description are required — a partial report is still useful.",
+      "safetyTitle": "Read this before you write",
+      "safetyIntro": "Jawafdehi is an independent civic archive, not a government body. We cannot offer you legal protection or witness protection, so take your own precautions first.",
+      "safetyPoint1": "Do not use a work computer, a work email address, or an office network. Use a personal device on a connection that is not tied to the organisation you are reporting.",
+      "safetyPoint2": "If you choose \"Submit anonymously\", we store no name and no contact details. Reports sent through this page never record your IP address or your browser.",
+      "safetyPoint3": "Send copies, never the only original of a document. Files carry hidden metadata such as the author's name or a photo's location — strip it, or send a screenshot instead.",
+      "safetyPoint4": "We publish only what we can independently verify against public records, so a report may sit unpublished for a long time. That is not a judgement on whether we believe you.",
+      "channelsTitle": "Other ways to reach us",
+      "channelsDescription": "If you would rather not use the form, any of these reaches the same team.",
+      "emailLabel": "Email",
+      "whatsappLabel": "WhatsApp",
+      "socialTitle": "Our social accounts",
+      "socialDescription": "These are the only accounts we run. A social message is public or semi-public — do not put case details in one; ask us to move to email or WhatsApp instead.",
+      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp."
+    },
+    "submitAnother": "Submit another report",
+    "howToReachYou": "How we can reach you"
   },
   "feedback": {
     "title": "Platform Feedback",

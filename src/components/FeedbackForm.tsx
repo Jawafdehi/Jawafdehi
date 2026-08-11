@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Mail, Phone, MessageCircle, HelpCircle, Loader2, AlertCircle, Plus, X, Instagram, Facebook, Paperclip, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { useFeedbackSubmit } from "@/hooks/useFeedbackSubmit";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { submitFeedback, JDSApiError, type FeedbackSubmission, type ContactMethod as ApiContactMethod, type FeedbackType, type ContactMethodType } from "@/services/jds-api";
+import { type FeedbackSubmission, type ContactMethod as ApiContactMethod, type FeedbackType, type ContactMethodType } from "@/services/jds-api";
 
 const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -24,10 +25,6 @@ interface FeedbackFormProps {
 interface ContactMethod {
     type: ContactMethodType;
     value: string;
-}
-
-interface ValidationError {
-    [key: string]: string[] | ValidationError;
 }
 
 export function FeedbackForm({
@@ -56,11 +53,15 @@ export function FeedbackForm({
     const [attachmentError, setAttachmentError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [validationErrors, setValidationErrors] = useState<ValidationError | null>(null);
-    const [generalError, setGeneralError] = useState<string | null>(null);
-    const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
-    const [countdown, setCountdown] = useState<number>(0);
+    const {
+        submit,
+        isSubmitting,
+        generalError,
+        getFieldError,
+        countdown,
+        isRateLimited,
+        formatCountdown,
+    } = useFeedbackSubmit();
 
     const addContactMethod = () => {
         if (contactMethods.length >= 5) {
@@ -88,27 +89,6 @@ export function FeedbackForm({
         setContactMethods(updated);
     };
 
-    // Countdown timer effect for rate limiting
-    useEffect(() => {
-        if (!rateLimitedUntil) return;
-
-        const updateCountdown = () => {
-            const now = Date.now();
-            const remaining = Math.max(0, Math.ceil((rateLimitedUntil - now) / 1000));
-            setCountdown(remaining);
-
-            if (remaining === 0) {
-                setRateLimitedUntil(null);
-                setGeneralError(null);
-            }
-        };
-
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
-
-        return () => clearInterval(interval);
-    }, [rateLimitedUntil]);
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
         setAttachmentError(null);
@@ -123,126 +103,69 @@ export function FeedbackForm({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        setValidationErrors(null);
-        setGeneralError(null);
 
-        try {
-            const submission: FeedbackSubmission = {
-                feedbackType: formData.feedbackType,
-                subject: formData.subject,
-                description: formData.description,
-            };
+        const submission: FeedbackSubmission = {
+            feedbackType: formData.feedbackType,
+            subject: formData.subject,
+            description: formData.description,
+        };
 
-            if (formData.relatedPage.trim()) {
-                submission.relatedPage = formData.relatedPage;
-            }
-
-            const hasContactInfo = formData.name.trim() || contactMethods.some(m => m.value.trim());
-            if (hasContactInfo) {
-                submission.contactInfo = {};
-                if (formData.name.trim()) {
-                    submission.contactInfo.name = formData.name;
-                }
-                const filledContactMethods = contactMethods.filter(m => m.value.trim()) as ApiContactMethod[];
-                if (filledContactMethods.length > 0) {
-                    submission.contactInfo.contactMethods = filledContactMethods;
-                }
-            }
-
-            if (attachment) {
-                submission.attachment = attachment;
-            }
-
-            const response = await submitFeedback(submission);
-
-            toast({
-                title: t("feedback.submitted.title"),
-                description: response.message || t("feedback.submitted.description"),
-            });
-
-            // Reset form
-            setFormData({
-                feedbackType: initialFeedbackType,
-                subject: initialSubject,
-                description: "",
-                relatedPage: initialRelatedPage,
-                name: "",
-            });
-            setContactMethods([{ type: "email", value: "" }]);
-            setAttachment(null);
-            setAttachmentError(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-
-            if (onSuccess) onSuccess();
-
-        } catch (error) {
-            console.error('Feedback submission error:', error);
-            if (error instanceof JDSApiError) {
-                if (error.statusCode === 429 && error.retryAfter) {
-                    // Rate limited - set countdown timer
-                    const retryAfterMs = error.retryAfter * 1000;
-                    const unlockTime = Date.now() + retryAfterMs;
-                    setRateLimitedUntil(unlockTime);
-                    
-                    const minutes = Math.floor(error.retryAfter / 60);
-                    const seconds = error.retryAfter % 60;
-                    const minuteStr = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-                    const secondStr = `${seconds} second${seconds !== 1 ? 's' : ''}`;
-                    const builtTime = minutes > 0
-                        ? `${minuteStr}${seconds > 0 ? ` and ${secondStr}` : ''}`
-                        : secondStr;
-                    const timeString = minutes > 0
-                        ? t("feedback.error.rateLimitWaitTime", { value: builtTime, defaultValue: builtTime })
-                        : t("feedback.error.rateLimitWaitTimeSeconds", { value: builtTime, defaultValue: builtTime });
-                    
-                    setGeneralError(
-                        t("feedback.error.rateLimitMessage", { 
-                            time: timeString,
-                            defaultValue: `Too many submissions. Please wait ${timeString} before trying again.`
-                        })
-                    );
-                } else if (error.statusCode === 400 && error.validationErrors) {
-                    setValidationErrors(error.validationErrors);
-                } else {
-                    setGeneralError(error.message);
-                }
-            } else {
-                setGeneralError("Network error. Please try again.");
-            }
-        } finally {
-            setIsSubmitting(false);
+        if (formData.relatedPage.trim()) {
+            submission.relatedPage = formData.relatedPage;
         }
-    };
 
-    const getFieldError = (fieldName: string): string | null => {
-        if (!validationErrors) return null;
-        const error = validationErrors[fieldName];
-        if (Array.isArray(error)) return error[0];
-        return null;
-    };
-
-    const formatCountdown = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        if (mins > 0) {
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        const hasContactInfo = formData.name.trim() || contactMethods.some(m => m.value.trim());
+        if (hasContactInfo) {
+            submission.contactInfo = {};
+            if (formData.name.trim()) {
+                submission.contactInfo.name = formData.name;
+            }
+            const filledContactMethods = contactMethods.filter(m => m.value.trim()) as ApiContactMethod[];
+            if (filledContactMethods.length > 0) {
+                submission.contactInfo.contactMethods = filledContactMethods;
+            }
         }
-        return `${secs}s`;
+
+        if (attachment) {
+            submission.attachment = attachment;
+        }
+
+        const response = await submit(submission);
+        if (!response) return;
+
+        toast({
+            title: t("feedback.submitted.title"),
+            description: response.message || t("feedback.submitted.description"),
+        });
+
+        // Reset form
+        setFormData({
+            feedbackType: initialFeedbackType,
+            subject: initialSubject,
+            description: "",
+            relatedPage: initialRelatedPage,
+            name: "",
+        });
+        setContactMethods([{ type: "email", value: "" }]);
+        setAttachment(null);
+        setAttachmentError(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+
+        if (onSuccess) onSuccess();
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             {generalError && (
                 <Alert variant="destructive">
-                    {rateLimitedUntil ? (
+                    {isRateLimited ? (
                         <Clock className="h-4 w-4" />
                     ) : (
                         <AlertCircle className="h-4 w-4" />
                     )}
                     <AlertDescription>
                         {generalError}
-                        {rateLimitedUntil && countdown > 0 && (
+                        {isRateLimited && (
                             <div className="mt-2 font-mono text-sm">
                                 {t("feedback.error.rateLimitCountdown", { 
                                     time: formatCountdown(countdown),
@@ -418,15 +341,15 @@ export function FeedbackForm({
             <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isSubmitting || (rateLimitedUntil !== null && countdown > 0)}
+                disabled={isSubmitting || isRateLimited}
             >
                 {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : rateLimitedUntil && countdown > 0 ? (
+                ) : isRateLimited ? (
                     <Clock className="h-4 w-4 mr-2" />
                 ) : null}
-                {rateLimitedUntil && countdown > 0 
-                    ? t("feedback.rateLimitedButton", { 
+                {isRateLimited
+                    ? t("feedback.rateLimitedButton", {
                         time: formatCountdown(countdown),
                         defaultValue: `Wait ${formatCountdown(countdown)}`
                       })

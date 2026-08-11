@@ -9,7 +9,6 @@ interface ImportMetaEnv {
   readonly VITE_OIDC_AUDIENCE?: string;
   // DEV-ONLY: enables the username/password login form ("true"/"false").
   readonly VITE_DEV_AUTH?: string;
-  readonly VITE_ENABLE_CASE_SUBMISSION_FORM?: string;
   readonly VITE_SENTRY_DSN?: string;
 }
 
