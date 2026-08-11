@@ -290,8 +290,30 @@ export const SITE_ROUTES = [
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },
   // Data-lake single-type browse pages (unified-archive search, type-pinned).
-  { path: "/materials", chrome: "app" },
-  { path: "/courtcases", chrome: "app" },
+  //
+  // Both render ArchiveSearch with the record type pinned (see Materials.tsx and
+  // CourtCases.tsx). They carried no page metadata until 2026-08-11, so they were
+  // filtered out of PRE_RENDERED_STATIC_ROUTES below and never pre-rendered: a
+  // crawl or a share of either got index.html's bare shell. Metadata in the
+  // component cannot fix that on its own, because nothing runs the client render.
+  {
+    path: "/materials",
+    chrome: "app",
+    titleKey: "materialsPage.heading",
+    descriptionKey: "materialsPage.description",
+    keywords: ["materials", "documents", "records", "projects", "publications", "government"],
+    icon: "FileText",
+    sitemapTitle: "Documents & Other Materials — Jawafdehi",
+  },
+  {
+    path: "/courtcases",
+    chrome: "app",
+    titleKey: "courtCasesPage.heading",
+    descriptionKey: "courtCasesPage.description",
+    keywords: ["court", "cases", "hearings", "orders", "supreme", "special", "district", "judiciary"],
+    icon: "ShieldCheck",
+    sitemapTitle: "Court Cases — Jawafdehi",
+  },
   // Wagtail headless preview target.
   { path: "/updates/preview", chrome: "app" },
   { path: "/updates/:slug", chrome: "app" },

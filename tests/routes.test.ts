@@ -44,6 +44,8 @@ describe("the route table", () => {
       "/report",
       "/privacy",
       "/terms",
+      "/materials",
+      "/courtcases",
     ]);
   });
 
