@@ -50,6 +50,23 @@ check("channels section renders", (await page.locator("#report-channels-heading"
 check("report@ mailto present", (await page.locator('a[href="mailto:report@jawafdehi.org"]').count()) === 1);
 check("whatsapp link present", (await page.locator('a[href*="api.whatsapp.com"]').count()) >= 1);
 check("linktree listed", (await page.locator('a[href*="linktr.ee"]').count()) >= 1);
+// Every channel the org runs, because the page's whole job is "here is how to
+// reach us" and a silently missing one is indistinguishable from not having it.
+// Instagram, TikTok and Discord were all absent from the shared socials
+// constant until 2026-08-11, so the footer was short three channels too.
+// These assert the link is present, not that the account behind it is alive —
+// the DOM cannot tell you that.
+for (const [name, needle] of [
+  ["facebook", "facebook.com/jawafdehi"],
+  ["x", "x.com/jawafdehi"],
+  ["instagram", "instagram.com/jawafdehi"],
+  ["tiktok", "tiktok.com/@jawafdehi"],
+  ["youtube", "youtube.com/@Jawafdehi"],
+  ["linkedin", "linkedin.com/company/jawafdehi"],
+  ["discord", "discord.gg/"],
+]) {
+  check(`${name} listed`, (await page.locator(`a[href*="${needle}"]`).count()) >= 1);
+}
 check("docx template link", (await page.locator('a[href$="case-entry-template.docx"]').count()) === 1);
 check("no untranslated keys", !/report\.page\.|report\.submitted\./.test(body), body.match(/report\.[a-zA-Z.]+/)?.[0]);
 

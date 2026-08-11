@@ -2,8 +2,8 @@ import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import { FileDown, Mail, ShieldAlert } from "lucide-react";
-import { FaFacebook, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { FaDiscord, FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
+import { FaTiktok, FaXTwitter } from "react-icons/fa6";
 import { SiLinktree } from "react-icons/si";
 
 import { CaseReportForm } from "@/components/CaseReportForm";
@@ -25,11 +25,16 @@ export default function ReportCase() {
   const title = t("report.page.metaTitle");
   const description = t("report.page.metaDescription");
 
+  // Every channel except WhatsApp, which gets its own card above because it is
+  // the one people actually send tip-offs to. Mirrors the footer list.
   const socialChannels: Channel[] = [
     { label: t("footer.social.facebook"), href: JAWAFDEHI_SOCIALS.facebook, icon: FaFacebook },
     { label: t("footer.social.x"), href: JAWAFDEHI_SOCIALS.x, icon: FaXTwitter },
+    { label: t("footer.social.instagram"), href: JAWAFDEHI_SOCIALS.instagram, icon: FaInstagram },
+    { label: t("footer.social.tiktok"), href: JAWAFDEHI_SOCIALS.tiktok, icon: FaTiktok },
     { label: t("footer.social.youtube"), href: JAWAFDEHI_SOCIALS.youtube, icon: FaYoutube },
     { label: t("footer.social.linkedin"), href: JAWAFDEHI_SOCIALS.linkedin, icon: FaLinkedin },
+    { label: t("footer.social.discord"), href: JAWAFDEHI_SOCIALS.discord, icon: FaDiscord },
     { label: t("footer.social.linktree"), href: JAWAFDEHI_SOCIALS.linktree, icon: SiLinktree },
   ];
 
