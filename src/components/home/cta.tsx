@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { FaDiscord } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
+import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
 type CtaProps = {
@@ -51,7 +52,7 @@ export function Cta({ className }: Readonly<CtaProps>) {
               className="bg-white text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
             >
               <a
-                href="https://discord.gg/jawafdehi"
+                href={JAWAFDEHI_SOCIALS.discord}
                 target="_blank"
                 rel="noopener noreferrer"
               >
