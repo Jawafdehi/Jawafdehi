@@ -79,6 +79,8 @@ const Volunteer = () => {
       <meta property="og:title" content="Volunteer with Us — Jawafdehi" />
       <meta property="og:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
       <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Volunteer with Us — Jawafdehi" />
       <meta name="twitter:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />

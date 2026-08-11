@@ -70,6 +70,8 @@ export default function FaqPage() {
           content={t("faqPage.meta.socialDescription")}
         />
         <meta property="og:image" content="https://jawafdehi.org/og-favicon.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta
           property="og:locale"
           content={i18n.language?.startsWith("ne") ? "ne_NP" : "en_US"}

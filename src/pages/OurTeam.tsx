@@ -48,6 +48,8 @@ const OurTeam = () => {
         <meta property="og:title" content="Our Team — Jawafdehi" />
         <meta property="og:description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
         <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Our Team — Jawafdehi" />
         <meta name="twitter:description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />

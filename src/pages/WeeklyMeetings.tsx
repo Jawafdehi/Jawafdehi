@@ -56,6 +56,8 @@ const WeeklyMeetings = () => {
           content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
         />
         <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Weekly Corruption Series — Jawafdehi" />
         <meta
