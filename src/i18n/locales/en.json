@@ -121,8 +121,11 @@
     "social": {
       "facebook": "Facebook",
       "x": "X (Twitter)",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
       "youtube": "YouTube",
       "linkedin": "LinkedIn",
+      "discord": "Discord",
       "whatsapp": "WhatsApp",
       "linktree": "Linktree"
     }
