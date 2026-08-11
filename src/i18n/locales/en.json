@@ -1754,7 +1754,8 @@
       "proposals": "Proposals",
       "reviews": "Reviews",
       "rules": "Rules",
-      "moderation": "Moderation"
+      "moderation": "Moderation",
+      "feedback": "Feedback"
     },
     "dashboard": {
       "title": "Admin",
@@ -1779,7 +1780,9 @@
         "reviewsTitle": "Casework Reviews",
         "reviewsBody": "AI-assisted casework reviews, grading rules, and the review job queue.",
         "moderationTitle": "Moderation",
-        "moderationBody": "Triage and approve incoming submissions (admin / moderator only)."
+        "moderationBody": "Triage and approve incoming submissions (admin / moderator only).",
+        "feedbackTitle": "Feedback",
+        "feedbackBody": "Messages and corruption reports sent in from the website."
       }
     },
     "moderation": {
@@ -1815,6 +1818,49 @@
       "dismissedFailure": "Failed to dismiss case",
       "dismissConfirmTitle": "Dismiss this submission?",
       "dismissConfirmBody": "Dismissing closes the case and removes it from the moderation queue. You can reopen it as a draft later. The reason you entered (if any) is recorded in the case history."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "subtitle": "Messages and corruption reports submitted through the website.",
+      "privacyNotice": "Reporters' contact details, IP addresses and attachments are not shown here. An administrator can retrieve them if a report needs following up.",
+      "loadFailed": "Could not load feedback.",
+      "notFound": "That submission could not be loaded.",
+      "noPermission": "Feedback is available to caseworkers and administrators.",
+      "empty": "Nothing to show.",
+      "allStatuses": "All statuses",
+      "allTypes": "All types",
+      "searchPlaceholder": "Search",
+      "itemCount_one": "{{count}} submission",
+      "itemCount_other": "{{count}} submissions",
+      "backToQueue": "Back to feedback",
+      "hide": "Hide",
+      "description": "What was reported",
+      "statusLabel": "Status",
+      "notesLabel": "Internal notes",
+      "notesPlaceholder": "Visible to staff only",
+      "saved": "Triage saved",
+      "saveFailed": "Could not save triage.",
+      "lastUpdated": "Last updated {{when}}",
+      "hasContact": "Contactable",
+      "contactHint": "Contact details were supplied. They are not shown here — ask an administrator.",
+      "hasAttachment": "Attachment",
+      "attachmentHint": "A file was attached. It is not shown here — ask an administrator.",
+      "status": {
+        "submitted": "New",
+        "in_review": "In review",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "type": {
+        "bug": "Bug",
+        "feature": "Feature request",
+        "usability": "Usability",
+        "content": "Content",
+        "general": "General",
+        "case_report": "Corruption report"
+      },
+      "range": "{{from}}–{{to}} of {{total}}",
+      "typeLabel": "Type"
     },
     "proposals": {
       "title": "Update proposals",

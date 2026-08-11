@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquare,
   Network,
   Gavel,
   ScrollText,
@@ -104,6 +105,16 @@ const NAV: NavGroup[] = [
         // v3: privileged casework action → the single content-staff role
         // (or superuser). Use the shared helper so it stays in sync with
         // lib/roles and admits a group-less superuser via the is_admin flag.
+        canAccess: isModerator,
+      },
+      {
+        to: "/admin/feedback",
+        labelKey: "admin.nav.feedback",
+        icon: MessageSquare,
+        // Backend gate: cases/api_views.py IsFeedbackTriager (superuser or
+        // Caseworker). ReadOnly is excluded there — a submission is a message
+        // from a member of the public, not a platform record — so the same
+        // content-staff helper is the right predicate here.
         canAccess: isModerator,
       },
     ],
