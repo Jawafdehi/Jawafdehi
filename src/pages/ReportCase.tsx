@@ -9,6 +9,7 @@ import { SiLinktree } from "react-icons/si";
 import { CaseReportForm } from "@/components/CaseReportForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { JAWAFDEHI_SOCIALS, JAWAFDEHI_WHATSAPP_NUMBER } from "@/config/constants";
+import { SITE_NAME } from "@/utils/seo";
 
 const PAGE_URL = "https://jawafdehi.org/report";
 const REPORT_EMAIL = "report@jawafdehi.org";
@@ -54,7 +55,7 @@ export default function ReportCase() {
         <title>{title}</title>
         <meta name="description" content={description} />
         <link rel="canonical" href={PAGE_URL} />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={PAGE_URL} />
         <meta property="og:title" content={title} />

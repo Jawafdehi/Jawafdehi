@@ -14,6 +14,7 @@ import {
   Search,
   type LucideIcon,
 } from "lucide-react";
+import { SITE_NAME } from "@/utils/seo";
 
 type TeamEntry = {
   icon: LucideIcon;
@@ -72,7 +73,7 @@ const Volunteer = () => {
       <title>Volunteer with Us — Jawafdehi</title>
       <meta name="description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />
       <link rel="canonical" href="https://jawafdehi.org/volunteer" />
-      <meta property="og:site_name" content="Jawafdehi Nepal" />
+      <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://jawafdehi.org/volunteer" />
       <meta property="og:title" content="Volunteer with Us — Jawafdehi" />

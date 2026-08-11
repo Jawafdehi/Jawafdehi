@@ -106,7 +106,6 @@
     "searchCases": "Search cases",
     "searchEntities": "Search entities",
     "feedback": "Feedback",
-    "letsBuildNepal": "Let's Build Nepal",
     "accountabilityNoExpiry": "Accountability has no expiry.",
     "permanentArchive": "Nepal's permanent public archive of CIAA corruption cases, free forever, built by Nepali volunteers.",
     "builtByNepali": "Built by Nepali",
@@ -823,11 +822,7 @@
       }
     },
     "partners": {
-      "title": "Our Partners",
-      "lbn": {
-        "title": "Let's Build Nepal (LBN)",
-        "description": "A civic tech organization focused on building technology solutions for social good in Nepal. LBN brings technical expertise and development resources to the platform."
-      }
+      "title": "Our Partners"
     },
     "whatWeDo": {
       "title": "What We Do",

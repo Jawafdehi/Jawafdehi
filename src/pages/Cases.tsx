@@ -13,6 +13,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { searchArchive } from "@/services/search-api";
 import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
+import { SITE_NAME } from "@/utils/seo";
 
 type CaseLifecycleStatus = "ongoing" | "closed" | "others";
 type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
@@ -134,7 +135,7 @@ const Cases = () => {
         <title>Corruption Cases | Jawafdehi Nepal</title>
         <meta name="description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
         <link rel="canonical" href="https://jawafdehi.org/cases" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/cases" />
         <meta property="og:title" content="Corruption Cases | Jawafdehi Nepal" />

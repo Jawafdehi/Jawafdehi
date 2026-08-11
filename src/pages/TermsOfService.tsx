@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { SITE_NAME } from "@/utils/seo";
 
 const TermsOfService = () => {
   return (
@@ -7,7 +8,7 @@ const TermsOfService = () => {
         <title>Jawafdehi Initiative Terms of Service</title>
         <meta name="description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
         <link rel="canonical" href="https://jawafdehi.org/terms" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/terms" />
         <meta property="og:title" content="Jawafdehi Initiative Terms of Service" />
