@@ -81,14 +81,18 @@ export function Hero({
       <HeroBackdrop images={heroMapImages} />
 
       <div className="layout-container relative z-10 flex min-h-[72svh] flex-col items-start justify-center py-14 text-left sm:items-center sm:py-16 sm:text-center md:min-h-[74svh] md:py-20 lg:min-h-[76svh] lg:py-24">
-        <p className="font-eyebrow font-eyebrow-display max-w-full">
-          <em>{t("home.hero.eyebrow")}</em>
-        </p>
+        <div className="relative w-full">
+          <HeroMapSmall images={heroMapImages} />
 
-        <h1 className="font-home-hero-title mt-5">
-          {t("home.hero.titlePrefix")} <span className="text-accent">{t("home.hero.titleHighlight")}</span>{" "}
-          {t("home.hero.titleSuffix")}
-        </h1>
+          <p className="font-eyebrow font-eyebrow-display relative max-w-full">
+            <em>{t("home.hero.eyebrow")}</em>
+          </p>
+
+          <h1 className="font-home-hero-title relative mt-5">
+            {t("home.hero.titlePrefix")} <span className="text-accent">{t("home.hero.titleHighlight")}</span>{" "}
+            {t("home.hero.titleSuffix")}
+          </h1>
+        </div>
 
         <p className="font-home-hero-lede measure-intro mt-6">
           {t("home.hero.description")}
@@ -184,10 +188,48 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
   return <CountUp end={numericValue} duration={0.9} separator="," />;
 }
 
+const EYEBROW_CUTOUT =
+  "linear-gradient(to bottom,#000 0 98px,transparent 110px,transparent 136px,#000 148px)";
+
+/**
+ * Below md the hero is text top to bottom, so a full-width map — the artwork is
+ * 1.68:1 and fills its canvas, so width dictates height — cannot avoid the copy.
+ * It is anchored to the eyebrow/title block and sized to the viewport, then the
+ * one line it must not sit behind is masked out: the eyebrow is 12px accent red,
+ * which measures 4.56:1 on a clean dark background and so has nothing to spare.
+ * The title carries the rest at 8:1, well clear of the 3:1 it needs, and the
+ * lede is left untouched below. Mask offsets are px from the box top, which is a
+ * fixed -112px from the eyebrow, so the cut-out tracks the text rather than
+ * drifting with viewport height or locale the way a percentage would.
+ */
+function HeroMapSmall({ images }: Readonly<{ images: HeroMapImage[] }>) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{ maskImage: EYEBROW_CUTOUT, WebkitMaskImage: EYEBROW_CUTOUT }}
+      className="pointer-events-none absolute -top-28 bottom-[-12px] left-1/2 w-screen -translate-x-1/2 opacity-[0.34] md:hidden dark:opacity-[0.30]"
+    >
+      {images.map(({ src, className }) => (
+        <img
+          key={src}
+          src={src}
+          alt=""
+          decoding="async"
+          fetchPriority="low"
+          className={cn(
+            className,
+            "absolute inset-0 h-full w-full max-w-none object-contain saturate-[1.18] contrast-[1.03] mix-blend-multiply dark:mix-blend-screen",
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
 function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
   return (
     <>
-      {/* Mobile: subtle red wash under the map */}
+      {/* Mobile: subtle red wash */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 md:hidden"
@@ -207,10 +249,11 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary-surface)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
       />
 
-      {/* Responsive Nepal map, scaled down rather than dropped on small screens */}
+      {/* md and up the map is a full-bleed backdrop; below that it is anchored
+          to the title instead — see HeroMapSmall. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[46%] z-0 h-[250px] w-[min(430px,115vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.65] md:top-[48%] md:h-[500px] md:w-[min(1280px,112vw)] md:opacity-[0.45] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.60] md:dark:opacity-[0.40]"
+        className="pointer-events-none absolute left-1/2 top-[48%] z-0 hidden h-[500px] w-[min(1280px,112vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:block lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
       >
         {images.map(({ src, className }) => (
           <img
@@ -227,16 +270,11 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         ))}
       </div>
 
-      {/* Readability wash. The lede is the only hero copy the map sits behind,
-          and at 5.03:1 on a clean background it has no room to spare — so below
-          lg the wash is a horizontal scrim banded over the lede (30–58% of the
-          section) and near-clear above and below, which lets the map run at a
-          visible opacity everywhere else. The band is wide enough to hold the
-          taller Nepali copy. From lg the text column is narrow enough that a
-          radial can do the same job and still show the map at the sides. */}
+      {/* Readability wash for the full-bleed backdrop. Not needed below md,
+          where the map is confined to the title's box. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0.10)_0%,hsl(var(--background)/0.10)_20%,hsl(var(--background)/0.92)_30%,hsl(var(--background)/0.92)_58%,hsl(var(--background)/0.10)_68%,hsl(var(--background)/0.10)_100%)] lg:bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
+        className="pointer-events-none absolute inset-0 z-0 hidden bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)] md:block"
       />
     </>
   );
