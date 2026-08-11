@@ -14,7 +14,7 @@ import {
   Search,
   type LucideIcon,
 } from "lucide-react";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 type TeamEntry = {
   icon: LucideIcon;
@@ -81,6 +81,8 @@ const Volunteer = () => {
       <meta property="og:image" content={SOCIAL_IMAGE_URL} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+      <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Volunteer with Us — Jawafdehi" />
       <meta name="twitter:description" content="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator." />

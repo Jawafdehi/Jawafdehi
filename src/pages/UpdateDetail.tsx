@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug } from "@/services/cms-api";
 import { ArticleView } from "@/components/ArticleView";
 import NotFound from "./NotFound";
-import { previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
 
 const UpdateDetail = () => {
     const { slug } = useParams();
@@ -49,7 +49,8 @@ const UpdateDetail = () => {
                 <meta property="og:description" content={description} />
                 <meta property="og:image" content={ogImage} />
                 <meta property="og:image:alt" content={imageAlt} />
-                <meta property="og:locale" content="en_US" />
+                <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+                <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
 
                 {article.meta.first_published_at && (
                     <meta property="article:published_time" content={article.meta.first_published_at} />

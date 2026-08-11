@@ -4,7 +4,7 @@ import { DataSources } from "@/components/data-sources";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { OurProcessHero } from "@/components/ourprocess/hero";
 import { ProcessTimeline } from "@/components/ourprocess/timeline";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 const OurProcess = () => (
   <div className="min-h-screen flex flex-col bg-background">
@@ -20,6 +20,8 @@ const OurProcess = () => (
       <meta property="og:image" content={SOCIAL_IMAGE_URL} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+      <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Our Process — Jawafdehi" />
       <meta name="twitter:description" content="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive." />

@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { ogLocale, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -60,6 +60,7 @@ export default function EntityProfile() {
           ? `${entityName} सँग सम्बन्धित भ्रष्टाचारका मुद्दाहरू हेर्नुहोस् — जवाफदेही नेपालको खुला जवाफदेहिता डेटाबेस।`
           : `View corruption cases and allegations involving ${entityName} on Jawafdehi — Nepal's open accountability database.`;
         const canonicalUrl = `https://jawafdehi.org/entity/${jawafEntity.id}`;
+        const locales = ogLocale(currentLang);
         return (
           <Helmet>
             <title>{pageTitle}</title>
@@ -73,7 +74,8 @@ export default function EntityProfile() {
             <meta property="og:image" content={SOCIAL_IMAGE_URL} />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
-            <meta property="og:locale" content={isNepali ? 'ne_NP' : 'en_US'} />
+            <meta property="og:locale" content={locales.locale} />
+            <meta property="og:locale:alternate" content={locales.alternate} />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content={pageTitle} />
             <meta name="twitter:description" content={pageDescription} />

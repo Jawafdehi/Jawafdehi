@@ -15,10 +15,11 @@ import {
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { ogLocale, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 export default function FaqPage() {
   const { t, i18n } = useTranslation();
+  const locales = ogLocale(i18n.language);
   const location = useLocation();
   const rawSections = t("faqPage.sections", { returnObjects: true });
   const sections = Array.isArray(rawSections)
@@ -72,10 +73,8 @@ export default function FaqPage() {
         <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta
-          property="og:locale"
-          content={i18n.language?.startsWith("ne") ? "ne_NP" : "en_US"}
-        />
+        <meta property="og:locale" content={locales.locale} />
+        <meta property="og:locale:alternate" content={locales.alternate} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={t("faqPage.meta.title")} />
         <meta

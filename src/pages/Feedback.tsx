@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { FeedbackForm } from "@/components/FeedbackForm";
-import { SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
 
 export default function Feedback() {
   const { t } = useTranslation();
@@ -22,7 +22,8 @@ export default function Feedback() {
         <meta property="og:image" content={SOCIAL_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
+        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Submit Feedback | Jawafdehi Nepal" />
         <meta name="twitter:description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
