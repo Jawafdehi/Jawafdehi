@@ -210,7 +210,7 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
       {/* Responsive Nepal map, scaled down rather than dropped on small screens */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[46%] z-0 h-[250px] w-[min(430px,115vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.28] md:top-[48%] md:h-[500px] md:w-[min(1280px,112vw)] md:opacity-[0.30] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.32] md:dark:opacity-[0.20]"
+        className="pointer-events-none absolute left-1/2 top-[46%] z-0 h-[250px] w-[min(430px,115vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.65] md:top-[48%] md:h-[500px] md:w-[min(1280px,112vw)] md:opacity-[0.45] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.60] md:dark:opacity-[0.40]"
       >
         {images.map(({ src, className }) => (
           <img
@@ -227,12 +227,16 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         ))}
       </div>
 
-      {/* Readability wash. Below lg the copy runs nearly the full width, so the
-          wash keeps a floor everywhere rather than fading out at the edges; from
-          lg the text column is narrow enough to let the map show at the sides. */}
+      {/* Readability wash. The lede is the only hero copy the map sits behind,
+          and at 5.03:1 on a clean background it has no room to spare — so below
+          lg the wash is a horizontal scrim banded over the lede (30–58% of the
+          section) and near-clear above and below, which lets the map run at a
+          visible opacity everywhere else. The band is wide enough to hold the
+          taller Nepali copy. From lg the text column is narrow enough that a
+          radial can do the same job and still show the map at the sides. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.88)_0%,hsl(var(--background)/0.84)_38%,hsl(var(--background)/0.80)_70%,hsl(var(--background)/0.80)_100%)] lg:bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
+        className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0.10)_0%,hsl(var(--background)/0.10)_20%,hsl(var(--background)/0.92)_30%,hsl(var(--background)/0.92)_58%,hsl(var(--background)/0.10)_68%,hsl(var(--background)/0.10)_100%)] lg:bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
       />
     </>
   );
