@@ -11,7 +11,6 @@ import {
 
 import { AppSearchCommand } from "@/components/AppSearchCommand";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -373,15 +372,6 @@ export function Navbar() {
               >
                 <Search className="h-4 w-4" />
               </Button>
-
-              <ThemeToggle
-                quiet={!isScrolled}
-                className={cn(
-                  "h-9 w-9",
-                  isScrolled &&
-                    "border-border/70 bg-white/70 dark:border-border/70 dark:bg-background/70",
-                )}
-              />
             </div>
 
             <Button
@@ -431,13 +421,6 @@ export function Navbar() {
             >
               <Search className="h-5 w-5" />
             </Button>
-            <ThemeToggle
-              quiet={!isScrolled}
-              className={cn(
-                isScrolled &&
-                  "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70",
-              )}
-            />
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button
