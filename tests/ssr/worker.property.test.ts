@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import worker from '../../worker';
-import { isKnownRoute } from '../../src/data/route-patterns';
+import { isKnownRoute, isWorkerOwnedPath } from '../../src/data/route-patterns';
 
 describe('Property 13: Worker returns correct pre-rendered HTML for known routes', () => {
   it('returns the asset response as-is when ASSETS.fetch returns non-404', async () => {
@@ -54,8 +54,10 @@ describe('Property 14: Worker returns a real 404 for unrouted paths', () => {
         async (url, indexBody) => {
           // fc.webUrl() overwhelmingly yields paths with no SPA route; skip the
           // rare generated path that happens to be real so the property stays
-          // about the unrouted case.
-          fc.pre(!isKnownRoute(new URL(url).pathname));
+          // about the unrouted case. Worker-owned endpoints answer before the
+          // SPA fallback, so they are not unrouted either.
+          const pathname = new URL(url).pathname;
+          fc.pre(!isKnownRoute(pathname) && !isWorkerOwnedPath(pathname));
 
           const result = await worker.fetch(new Request(url), shellOnlyEnv(indexBody));
 

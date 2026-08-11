@@ -1,5 +1,5 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
-import { isKnownRoute } from './src/data/route-patterns';
+import { isKnownRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
@@ -512,18 +512,23 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+    // Endpoints the Worker owns are matched on the trailing-slash-normalised
+    // path, the same form isKnownRoute uses. Comparing against the raw pathname
+    // let /api/latest-videos/ miss its handler and fall through to the SPA
+    // shell, which answered 200 with HTML where the caller expected JSON.
+    const endpoint = normalizePath(path);
 
     // Handle oEmbed endpoint
-    if (path === '/oembed' || path === '/oembed/') {
+    if (endpoint === '/oembed') {
       return handleOembed(request);
     }
 
-    if (path === '/document-preview' || path === '/document-preview/') {
+    if (endpoint === '/document-preview') {
       return handleDocumentPreview(request);
     }
 
     // Latest YouTube uploads for the Weekly Series "Past presentations" section
-    if (path === '/api/latest-videos') {
+    if (endpoint === '/api/latest-videos') {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return new Response('Method Not Allowed', { status: 405 });
       }
@@ -563,7 +568,7 @@ export default {
     }
 
     // Short alias: /weekly → /saptahik (301)
-    if (path === '/weekly' || path === '/weekly/') {
+    if (endpoint === '/weekly') {
       return new Response(null, {
         status: 301,
         headers: {
