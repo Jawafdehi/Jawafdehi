@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,20 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   // error must fall through to the banner before landing on the placeholder.
   const imageCandidates = caseImageCandidates(thumbnailUrl, bannerUrl);
   const [imageIndex, setImageIndex] = useState(0);
+
+  // React reuses a card instance when a list re-sorts or refetches, so another
+  // case's images can arrive on the component that already advanced past a
+  // broken one. Without this the index survives and the card opens on a later
+  // candidate — often the placeholder — instead of the new thumbnail.
+  //
+  // Keyed on the candidate list, not the raw props: a prop change that yields
+  // the same list (whitespace, or a duplicate collapsing) must NOT discard an
+  // error-advance, or the card would swing back to a URL known to fail.
+  const candidateKey = imageCandidates.join("|");
+  useEffect(() => {
+    setImageIndex(0);
+  }, [candidateKey]);
+
   // Clamped, not `?? placeholder`: if the placeholder itself fails to load,
   // advancing past it must not reset the card to a real URL that already failed.
   const imageSrc = imageCandidates[Math.min(imageIndex, imageCandidates.length - 1)];

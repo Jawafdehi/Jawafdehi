@@ -25,7 +25,7 @@ const baseProps = {
 };
 
 function renderCard(props: Partial<React.ComponentProps<typeof CaseCard>> = {}) {
-  const { container } = render(
+  const { container, rerender } = render(
     <MemoryRouter>
       <CaseCard {...baseProps} {...props} />
     </MemoryRouter>,
@@ -34,7 +34,22 @@ function renderCard(props: Partial<React.ComponentProps<typeof CaseCard>> = {}) 
   const image = container.querySelector("img");
   if (!image) throw new Error("CaseCard rendered no <img>");
 
-  return { container, image };
+  // Re-renders the SAME instance with new props, which is what a list re-sort
+  // or refetch does — the point at which stale image state would show.
+  const rerenderCard = (nextProps: Partial<React.ComponentProps<typeof CaseCard>>) => {
+    rerender(
+      <MemoryRouter>
+        <CaseCard {...baseProps} {...nextProps} />
+      </MemoryRouter>,
+    );
+
+    const nextImage = container.querySelector("img");
+    if (!nextImage) throw new Error("CaseCard rendered no <img>");
+
+    return nextImage;
+  };
+
+  return { container, image, rerenderCard };
 }
 
 describe("CaseCard image fallback", () => {
@@ -96,6 +111,46 @@ describe("CaseCard image fallback", () => {
     fireEvent.error(image);
     expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
     expect(image.getAttribute("alt")).toBe("");
+  });
+
+  it("starts from the new thumbnail when the same card is reused for another case", () => {
+    const { image, rerenderCard } = renderCard({
+      thumbnailUrl: "https://news.example.org/article",
+      bannerUrl: "https://cdn.example.org/banner.jpg",
+    });
+
+    fireEvent.error(image);
+    expect(image.getAttribute("src")).toBe("https://cdn.example.org/banner.jpg");
+
+    // A list re-sort or refetch hands this instance a different case. The
+    // fallback position belonged to the old images, so it must not carry over —
+    // otherwise the new case opens on its banner, or on the placeholder.
+    const nextImage = rerenderCard({
+      thumbnailUrl: "https://cdn.example.org/next-thumb.jpg",
+      bannerUrl: "https://cdn.example.org/next-banner.jpg",
+    });
+
+    expect(nextImage.getAttribute("src")).toBe("https://cdn.example.org/next-thumb.jpg");
+  });
+
+  it("keeps its place when a re-render yields the same candidates", () => {
+    const { image, rerenderCard } = renderCard({
+      thumbnailUrl: "https://news.example.org/article",
+      bannerUrl: "https://cdn.example.org/banner.jpg",
+    });
+
+    fireEvent.error(image);
+    expect(image.getAttribute("src")).toBe("https://cdn.example.org/banner.jpg");
+
+    // Same URLs, only re-trimmed. Resetting on raw prop identity would send the
+    // card back to the thumbnail that just failed, and it would flicker between
+    // the two on every render.
+    const nextImage = rerenderCard({
+      thumbnailUrl: "  https://news.example.org/article  ",
+      bannerUrl: "https://cdn.example.org/banner.jpg",
+    });
+
+    expect(nextImage.getAttribute("src")).toBe("https://cdn.example.org/banner.jpg");
   });
 
   it("stays on the placeholder if the placeholder itself fails to load", () => {
