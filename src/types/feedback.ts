@@ -52,8 +52,14 @@ export interface FeedbackSubmissionRow {
   updatedAt: string;
 }
 
-/** The only fields triage may move. */
+/**
+ * The only fields triage may move. Send just the ones that changed — a blanket
+ * PATCH would carry this tab's stale copy of the others and silently revert a
+ * concurrent edit by another triager.
+ */
 export interface FeedbackTriagePatch {
   status?: FeedbackStatus;
   adminNotes?: string;
+  /** Re-file a mis-classified submission (e.g. a corruption report sent as "general"). */
+  feedbackType?: AdminFeedbackType;
 }

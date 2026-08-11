@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getFeedback, feedbackErrorMessage } from "@/services/feedback-api";
+import { getFeedback } from "@/services/feedback-api";
+import { extractErrorMessage } from "@/services/http";
 import type { FeedbackSubmissionRow } from "@/types/feedback";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { FormError } from "@/components/admin/FormError";
@@ -21,24 +22,43 @@ export default function FeedbackDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Not a dependency of `load` — see the note in Feedback.tsx: a language
+  // toggle would otherwise refetch and remount the card mid-edit.
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
     try {
-      setRow(await getFeedback(id));
+      const fetched = await getFeedback(id);
+      if (!mountedRef.current) return;
+      setRow(fetched);
     } catch (err) {
+      if (!mountedRef.current) return;
       setError(
-        feedbackErrorMessage(
+        extractErrorMessage(
           err,
-          t("admin.feedback.notFound", "That submission could not be loaded."),
+          tRef.current(
+            "admin.feedback.notFound",
+            "That submission could not be loaded.",
+          ),
         ),
       );
       setRow(null);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  }, [id, t]);
+  }, [id]);
 
   useEffect(() => {
     if (allowed) load();

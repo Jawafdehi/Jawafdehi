@@ -1718,9 +1718,7 @@
       "signOut": "Sign out",
       "refresh": "Refresh",
       "open": "Open",
-      "reload": "Reload",
-      "previous": "Previous",
-      "next": "Next"
+      "reload": "Reload"
     },
     "login": {
       "title": "Jawafdehi Admin",
@@ -1832,7 +1830,6 @@
       "itemCount_one": "{{count}} submission",
       "itemCount_other": "{{count}} submissions",
       "backToQueue": "Back to feedback",
-      "open": "Open",
       "hide": "Hide",
       "description": "What was reported",
       "statusLabel": "Status",
@@ -1858,7 +1855,9 @@
         "content": "Content",
         "general": "General",
         "case_report": "Corruption report"
-      }
+      },
+      "range": "{{from}}–{{to}} of {{total}}",
+      "typeLabel": "Type"
     },
     "proposals": {
       "title": "Update proposals",

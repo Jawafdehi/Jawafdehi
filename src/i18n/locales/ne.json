@@ -1693,9 +1693,7 @@
       "signOut": "साइन आउट",
       "refresh": "ताजा गर्नुहोस्",
       "open": "खोल्नुहोस्",
-      "reload": "पुनः लोड गर्नुहोस्",
-      "previous": "अघिल्लो",
-      "next": "अर्को"
+      "reload": "पुनः लोड गर्नुहोस्"
     },
     "login": {
       "title": "जवाफदेही एडमिन",
@@ -1807,7 +1805,6 @@
       "itemCount_one": "{{count}} पेश",
       "itemCount_other": "{{count}} पेशहरू",
       "backToQueue": "प्रतिक्रियामा फर्कनुहोस्",
-      "open": "खोल्नुहोस्",
       "hide": "लुकाउनुहोस्",
       "description": "के उजुरी गरियो",
       "statusLabel": "स्थिति",
@@ -1833,7 +1830,9 @@
         "content": "सामग्री",
         "general": "सामान्य",
         "case_report": "भ्रष्टाचार उजुरी"
-      }
+      },
+      "range": "{{total}} मध्ये {{from}}–{{to}}",
+      "typeLabel": "प्रकार"
     },
     "proposals": {
       "title": "अद्यावधिक प्रस्तावहरू",

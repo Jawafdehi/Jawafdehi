@@ -6,14 +6,16 @@
 // is a 405, not a listing. The staff read/triage surface is a separate route
 // because the public one runs with authentication disabled so an anonymous
 // reporter can always post. Don't "simplify" these onto one path.
-import { http as client, extractErrorMessage } from "./http";
+import { http as client } from "./http";
 import type { Paginated } from "./admin-api";
 import type {
   FeedbackSubmissionRow,
   FeedbackTriagePatch,
 } from "@/types/feedback";
 
-export const feedbackErrorMessage = extractErrorMessage;
+// No `feedbackErrorMessage` re-alias here: casework-api.ts marks its identical
+// alias @deprecated in favour of importing `extractErrorMessage` from
+// services/http directly, so callers do that.
 
 const BASE = "/api/feedback-submissions";
 

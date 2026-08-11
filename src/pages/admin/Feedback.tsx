@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { listFeedback, feedbackErrorMessage } from "@/services/feedback-api";
+import { listFeedback } from "@/services/feedback-api";
+import { extractErrorMessage } from "@/services/http";
 import {
   FEEDBACK_STATUSES,
   FEEDBACK_TYPES,
@@ -60,7 +61,22 @@ export default function Feedback() {
     };
   }, []);
 
+  // Monotonic request id. The filter Selects stay enabled while a fetch is in
+  // flight (disabling them makes the page feel stuck), so two requests can
+  // overlap and the slower one can land last — applying a result set that
+  // doesn't match the controls the user is now looking at. Only the newest
+  // request may write state.
+  const reqIdRef = useRef(0);
+
+  // `t` is deliberately NOT a dependency. react-i18next hands out a new `t`
+  // identity on every language change, which would make this callback — and so
+  // the effect below — re-run and refetch the whole queue just because someone
+  // toggled EN/NE. Read the translation through a ref instead.
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const load = useCallback(async () => {
+    const reqId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -71,51 +87,41 @@ export default function Feedback() {
         ...(type !== ALL ? { feedback_type: type } : {}),
         ...(search ? { search } : {}),
       });
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || reqId !== reqIdRef.current) return;
       setRows(data.results ?? []);
       setCount(data.count ?? 0);
       setHasNext(Boolean(data.next));
     } catch (err) {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || reqId !== reqIdRef.current) return;
       setError(
-        feedbackErrorMessage(
+        extractErrorMessage(
           err,
-          t("admin.feedback.loadFailed", "Could not load feedback."),
+          tRef.current("admin.feedback.loadFailed", "Could not load feedback."),
         ),
       );
+      // Clear the counters too — leaving them would render "1–20 of 137" and an
+      // enabled Next button under an empty list and an error banner.
       setRows([]);
+      setCount(0);
+      setHasNext(false);
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && reqId === reqIdRef.current) setLoading(false);
     }
-  }, [page, status, type, search, t]);
+  }, [page, status, type, search]);
 
   useEffect(() => {
     if (allowed) load();
   }, [load, allowed]);
 
-  // Any filter change invalidates the current page number — page 3 of "all"
-  // is not page 3 of "corruption reports".
-  const resetTo = useCallback((apply: () => void) => {
-    apply();
-    setPage(1);
-  }, []);
-
   const from = count === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const to = Math.min(page * PAGE_SIZE, count || page * PAGE_SIZE);
+  // NOT `count || page * PAGE_SIZE` — count is legitimately 0 on an empty
+  // queue, and the falsy fallback rendered "0–20 of 0" under "Nothing to show."
+  const to = Math.min(page * PAGE_SIZE, count);
 
   // Replace one row in place after a save, so the list doesn't jump or refetch.
   const onSaved = useCallback((updated: FeedbackSubmissionRow) => {
     setRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
   }, []);
-
-  const statusOptions = useMemo(
-    () => FEEDBACK_STATUSES.map((s) => ({ value: s, label: statusLabel(s, t) })),
-    [t],
-  );
-  const typeOptions = useMemo(
-    () => FEEDBACK_TYPES.map((ft) => ({ value: ft, label: typeLabel(ft, t) })),
-    [t],
-  );
 
   if (!allowed) {
     return (
@@ -160,7 +166,10 @@ export default function Feedback() {
       <div className="flex flex-wrap items-center gap-2">
         <Select
           value={status}
-          onValueChange={(v) => resetTo(() => setStatus(v))}
+          onValueChange={(v) => {
+            setStatus(v);
+            setPage(1);
+          }}
         >
           <SelectTrigger className="h-9 w-[170px]">
             <SelectValue />
@@ -169,15 +178,21 @@ export default function Feedback() {
             <SelectItem value={ALL}>
               {t("admin.feedback.allStatuses", "All statuses")}
             </SelectItem>
-            {statusOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
+            {FEEDBACK_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {statusLabel(s, t)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={type} onValueChange={(v) => resetTo(() => setType(v))}>
+        <Select
+          value={type}
+          onValueChange={(v) => {
+            setType(v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="h-9 w-[190px]">
             <SelectValue />
           </SelectTrigger>
@@ -185,9 +200,9 @@ export default function Feedback() {
             <SelectItem value={ALL}>
               {t("admin.feedback.allTypes", "All types")}
             </SelectItem>
-            {typeOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
+            {FEEDBACK_TYPES.map((ft) => (
+              <SelectItem key={ft} value={ft}>
+                {typeLabel(ft, t)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -197,7 +212,8 @@ export default function Feedback() {
           className="flex items-center gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            resetTo(() => setSearch(query.trim()));
+            setSearch(query.trim());
+            setPage(1);
           }}
         >
           <Input
@@ -213,11 +229,18 @@ export default function Feedback() {
         </form>
 
         <span className="ml-auto text-xs text-muted-foreground">
-          {t("admin.feedback.itemCount", { count })}
+          {t("admin.feedback.itemCount", {
+            count,
+            defaultValue: "{{count}} submissions",
+            defaultValue_one: "{{count}} submission",
+          })}
         </span>
       </div>
 
-      {loading ? (
+      {/* Only blank the list on the FIRST load. Swapping the rows for a spinner
+          on every refetch would unmount each FeedbackCard, discarding any triage
+          note typed but not yet saved. */}
+      {loading && rows.length === 0 ? (
         <div className="flex min-h-[30vh] items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
@@ -226,7 +249,7 @@ export default function Feedback() {
           {t("admin.feedback.empty", "Nothing to show.")}
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className={loading ? "space-y-3 opacity-60" : "space-y-3"}>
           {rows.map((row) => (
             <FeedbackCard key={row.id} row={row} onSaved={onSaved} />
           ))}
@@ -235,7 +258,11 @@ export default function Feedback() {
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          {from}–{to} of {count.toLocaleString()}
+          {t("admin.feedback.range", "{{from}}–{{to}} of {{total}}", {
+            from,
+            to,
+            total: count,
+          })}
         </span>
         <div className="flex gap-2">
           <Button
@@ -244,7 +271,7 @@ export default function Feedback() {
             disabled={page === 1 || loading}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
-            {t("admin.common.previous", "Previous")}
+            {t("pagination.previous")}
           </Button>
           <Button
             variant="outline"
@@ -252,7 +279,7 @@ export default function Feedback() {
             disabled={!hasNext || loading}
             onClick={() => setPage((p) => p + 1)}
           >
-            {t("admin.common.next", "Next")}
+            {t("pagination.next")}
           </Button>
         </div>
       </div>
