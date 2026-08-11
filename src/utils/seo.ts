@@ -1,5 +1,15 @@
 export const SITE_URL = "https://jawafdehi.org";
+// TODO: the org name is spelled five different ways across our own accounts —
+// "Jawafdehi Nepal" here, "Jawafdehi Initiative" on YouTube/LinkedIn/TikTok/
+// Linktree, "Jawafdehi | जवाफदेही" on X, "Jawafdehi.org" on Discord, and bare
+// "Jawafdehi" in our own <title> tags. That decision is still open (meta repo,
+// docs/branding/narrative.md §1). Centralised here so settling it is one edit.
 export const SITE_NAME = "Jawafdehi Nepal";
+// The canonical descriptor, from the same doc. 140 chars — the "Long" cut, which
+// every field on this site can hold. Do not paraphrase it: the branding audit
+// found five paraphrases live simultaneously, two of them in this repo.
+export const SITE_DESCRIPTION =
+  "Nepal's Permanent Corruption Case Archive. We arrange corruption-related evidence and facts into a structured format of who, what, and when.";
 export const SOCIAL_IMAGE_URL = `${SITE_URL}/assets/social-preview.png`;
 
 export function absoluteUrl(value: string | null | undefined, base = SITE_URL): string | null {

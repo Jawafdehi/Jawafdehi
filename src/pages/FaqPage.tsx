@@ -15,6 +15,7 @@ import {
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
+import { SITE_NAME } from "@/utils/seo";
 
 export default function FaqPage() {
   const { t, i18n } = useTranslation();
@@ -60,7 +61,7 @@ export default function FaqPage() {
           content={t("faqPage.meta.description")}
         />
         <link rel="canonical" href="https://jawafdehi.org/faq" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/faq" />
         <meta property="og:title" content={t("faqPage.meta.title")} />

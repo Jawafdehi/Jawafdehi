@@ -18,6 +18,7 @@ import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/utils/seo";
 
 const RECENT_CASE_COUNT = 6;
 
@@ -136,18 +137,18 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
         <title>Jawafdehi — Nepal's Corruption Case Archive</title>
-        <meta name="description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
+        <meta name="description" content={SITE_DESCRIPTION} />
         <link rel="canonical" href="https://jawafdehi.org/" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/" />
         <meta property="og:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
-        <meta property="og:description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
+        <meta property="og:description" content={SITE_DESCRIPTION} />
         <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
-        <meta name="twitter:description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
+        <meta name="twitter:description" content={SITE_DESCRIPTION} />
         <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -155,7 +156,7 @@ const Index = () => {
           "name": "Jawafdehi",
           "alternateName": "Jawafdehi Nepal",
           "url": "https://jawafdehi.org",
-          "description": "Nepal's permanent public archive of CIAA corruption cases — every filing, every document, forever.",
+          "description": SITE_DESCRIPTION,
           "inLanguage": ["en", "ne"],
           "potentialAction": [
             {

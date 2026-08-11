@@ -5,6 +5,7 @@ import { Community } from "@/components/donate/community";
 import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
 import { DonationInfo } from "@/components/donate/info";
+import { SITE_NAME } from "@/utils/seo";
 
 const Donate = () => {
   return (
@@ -13,7 +14,7 @@ const Donate = () => {
         <title>Donate — Jawafdehi</title>
         <meta name="description" content="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone." />
         <link rel="canonical" href="https://jawafdehi.org/donate" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/donate" />
         <meta property="og:title" content="Donate — Jawafdehi" />

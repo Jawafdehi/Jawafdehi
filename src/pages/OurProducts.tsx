@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
 import { API_BASE_URL } from "@/services/http";
+import { SITE_NAME } from "@/utils/seo";
 
 const PRODUCTS = [
   {
@@ -49,7 +50,7 @@ const OurProducts = () => {
       <title>Our Products — Jawafdehi</title>
       <meta name="description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
       <link rel="canonical" href="https://jawafdehi.org/products" />
-      <meta property="og:site_name" content="Jawafdehi Nepal" />
+      <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://jawafdehi.org/products" />
       <meta property="og:title" content="Our Products — Jawafdehi" />

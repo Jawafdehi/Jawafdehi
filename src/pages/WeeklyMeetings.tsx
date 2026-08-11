@@ -6,6 +6,7 @@ import { PauseCircle, Play, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JAWAFDEHI_WEEKLY_SERIES } from "@/config/constants";
+import { SITE_NAME } from "@/utils/seo";
 
 type LatestVideo = {
   videoId: string;
@@ -46,7 +47,7 @@ const WeeklyMeetings = () => {
           content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
         />
         <link rel="canonical" href="https://jawafdehi.org/saptahik" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/saptahik" />
         <meta property="og:title" content="Weekly Corruption Series — Jawafdehi" />

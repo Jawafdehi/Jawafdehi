@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
+import { SITE_NAME } from "@/utils/seo";
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -64,7 +65,7 @@ export default function EntityProfile() {
             <title>{pageTitle}</title>
             <meta name="description" content={pageDescription} />
             <link rel="canonical" href={canonicalUrl} />
-            <meta property="og:site_name" content="Jawafdehi Nepal" />
+            <meta property="og:site_name" content={SITE_NAME} />
             <meta property="og:type" content="profile" />
             <meta property="og:url" content={canonicalUrl} />
             <meta property="og:title" content={pageTitle} />

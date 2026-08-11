@@ -14,6 +14,7 @@ import {
     List,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SITE_NAME } from "@/utils/seo";
 
 type ViewMode = "cards" | "list";
 
@@ -88,7 +89,7 @@ const Updates = () => {
                 <title>Updates | Jawafdehi Nepal</title>
                 <meta name="description" content="Latest news, announcements, and updates from the Jawafdehi team on Nepal's corruption accountability platform." />
                 <link rel="canonical" href="https://jawafdehi.org/updates" />
-                <meta property="og:site_name" content="Jawafdehi Nepal" />
+                <meta property="og:site_name" content={SITE_NAME} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content="https://jawafdehi.org/updates" />
                 <meta property="og:title" content="Updates | Jawafdehi Nepal" />

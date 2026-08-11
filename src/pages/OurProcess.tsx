@@ -4,6 +4,7 @@ import { DataSources } from "@/components/data-sources";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { OurProcessHero } from "@/components/ourprocess/hero";
 import { ProcessTimeline } from "@/components/ourprocess/timeline";
+import { SITE_NAME } from "@/utils/seo";
 
 const OurProcess = () => (
   <div className="min-h-screen flex flex-col bg-background">
@@ -11,7 +12,7 @@ const OurProcess = () => (
       <title>Our Process — Jawafdehi</title>
       <meta name="description" content="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive." />
       <link rel="canonical" href="https://jawafdehi.org/our-process" />
-      <meta property="og:site_name" content="Jawafdehi Nepal" />
+      <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://jawafdehi.org/our-process" />
       <meta property="og:title" content="Our Process — Jawafdehi" />

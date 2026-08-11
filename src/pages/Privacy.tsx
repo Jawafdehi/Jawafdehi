@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { SITE_NAME } from "@/utils/seo";
 
 const Privacy = () => {
   return (
@@ -7,7 +8,7 @@ const Privacy = () => {
         <title>Jawafdehi Initiative Privacy Policy</title>
         <meta name="description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
         <link rel="canonical" href="https://jawafdehi.org/privacy" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/privacy" />
         <meta property="og:title" content="Jawafdehi Initiative Privacy Policy" />

@@ -6,6 +6,7 @@ import type { Contact } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
 import { PageHero } from "@/components/ui/page-hero";
+import { SITE_NAME } from "@/utils/seo";
 
 const ContactIcon = ({ contact }: { contact: Contact }) => {
   const href = contact.type === "email" ? `mailto:${contact.value}` : contact.value;
@@ -41,7 +42,7 @@ const OurTeam = () => {
         <title>Our Team — Jawafdehi</title>
         <meta name="description" content="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive." />
         <link rel="canonical" href="https://jawafdehi.org/team" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://jawafdehi.org/team" />
         <meta property="og:title" content="Our Team — Jawafdehi" />
