@@ -163,7 +163,7 @@ const Privacy = () => {
                 <li><strong>UptimeRobot</strong>: external uptime monitoring.</li>
               </ul>
               <p>
-                Links to external websites (e.g., GitHub, social media, Let's Build Nepal) are governed by their respective privacy policies.
+                Links to external websites (e.g., GitHub, social media) are governed by their respective privacy policies.
               </p>
 
               <h2 id="data-retention">10. Data Retention</h2>
