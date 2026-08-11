@@ -97,7 +97,13 @@ const PaginationControls = ({
   const totalPages = Math.max(1, Math.ceil(totalItems / safePageSize));
   if (totalPages <= 1) return null;
 
-  const pageItems = getPageItems(page, totalPages);
+  // `page` is whatever the caller asked for — search echoes back the requested
+  // ?page= even when it is past the end — so clamp before deriving any display
+  // state. Unclamped, page 10 of 9 read "Page 10 of 9" and highlighted no page
+  // at all in the numbered list.
+  const safePage = clampPage(page, totalPages);
+
+  const pageItems = getPageItems(safePage, totalPages);
   return (
     <Pagination className={cn("mt-8", className)}>
       <PaginationContent className="w-full justify-between gap-2 sm:w-auto sm:justify-center sm:gap-1">
@@ -105,8 +111,8 @@ const PaginationControls = ({
           <Button
             aria-label={t("pagination.goToPrevPage")}
             className="h-10 rounded-full px-4"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
+            disabled={safePage <= 1}
+            onClick={() => onPageChange(safePage - 1)}
             type="button"
             variant="outline"
           >
@@ -122,15 +128,15 @@ const PaginationControls = ({
                 <PaginationEllipsis />
               ) : (
                 <Button
-                  aria-current={item === page ? "page" : undefined}
+                  aria-current={item === safePage ? "page" : undefined}
                   aria-label={t("pagination.goToPage", { page: item })}
                   className={cn(
                     "h-10 w-10 rounded-full p-0",
-                    item === page && "pointer-events-none",
+                    item === safePage && "pointer-events-none",
                   )}
                   onClick={() => onPageChange(item)}
                   type="button"
-                  variant={item === page ? "default" : "ghost"}
+                  variant={item === safePage ? "default" : "ghost"}
                 >
                   {item}
                 </Button>
@@ -141,7 +147,7 @@ const PaginationControls = ({
 
         <PaginationItem className="sm:hidden">
           <span className="text-sm text-muted-foreground">
-            {t("pagination.pageOf", { page, totalPages })}
+            {t("pagination.pageOf", { page: safePage, totalPages })}
           </span>
         </PaginationItem>
 
@@ -149,8 +155,8 @@ const PaginationControls = ({
           <Button
             aria-label={t("pagination.goToNextPage")}
             className="h-10 rounded-full px-4"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
+            disabled={safePage >= totalPages}
+            onClick={() => onPageChange(safePage + 1)}
             type="button"
             variant="outline"
           >
@@ -163,6 +169,12 @@ const PaginationControls = ({
   );
 };
 PaginationControls.displayName = "PaginationControls";
+
+/** Fold any requested page — past the end, zero, negative, NaN — into 1..totalPages. */
+function clampPage(page: number, totalPages: number) {
+  const requested = Number.isFinite(page) ? Math.trunc(page) : 1;
+  return Math.min(Math.max(requested, 1), Math.max(1, totalPages));
+}
 
 function getPageItems(currentPage: number, totalPages: number) {
   if (totalPages <= 7) {
