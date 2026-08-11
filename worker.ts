@@ -347,10 +347,16 @@ function stripOverriddenHeadTags(head: string): string {
 // sequences (`$$`, `$&`, `` $` ``, `$'`) in the injected title / meta — which
 // escapeHtml does NOT neutralize — are inserted literally and cannot inject
 // markup into the head.
-function injectHeadMeta(indexHtml: string, title: string, metaTags: string): string {
+//
+// metaTags already opens with the <title> element, so the title marker is
+// simply removed rather than filled: it stands for a whole element (that is
+// what pre-render.ts substitutes into it), and filling it with the escaped
+// title as well left the record's name stranded as loose text in the head,
+// ahead of the real element.
+function injectHeadMeta(indexHtml: string, metaTags: string): string {
   if (indexHtml.includes('<!--helmet-meta-->')) {
     return indexHtml
-      .replace('<!--helmet-title-->', () => escapeHtml(title))
+      .replace('<!--helmet-title-->', () => '')
       .replace('<!--helmet-meta-->', () => metaTags);
   }
   const headEnd = indexHtml.indexOf('</head>');
@@ -424,7 +430,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     // out of search engines (only PUBLISHED is indexable). Share cards still work.
     robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
   });
-  return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.
@@ -467,7 +473,7 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     publishedTime: meta?.first_published_at || date,
     modifiedTime: date,
   });
-  return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
 export default {

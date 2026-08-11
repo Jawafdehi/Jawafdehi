@@ -23,13 +23,23 @@ const INDEX_HTML =
   '<link rel="canonical" href="https://jawafdehi.org/" />' +
   '</head><body></body></html>';
 
-function makeEnv() {
+// The raw template, as opposed to the pre-rendered shell above: the head is
+// still placeholders. pre-render.ts substitutes helmet's own <title> element for
+// the title marker, so the marker stands for a whole element, not bare text.
+const TEMPLATE_HTML =
+  '<!doctype html><html><head>' +
+  '<meta name="twitter:site" content="@jawafdehi" />' +
+  '<!--helmet-title-->' +
+  '<!--helmet-meta-->' +
+  '</head><body></body></html>';
+
+function makeEnv(indexHtml: string = INDEX_HTML) {
   return {
     ASSETS: {
       fetch: async (req: Request) => {
         const path = new URL(req.url).pathname;
         if (path === '/') {
-          return new Response(INDEX_HTML, {
+          return new Response(indexHtml, {
             status: 200,
             headers: { 'content-type': 'text/html' },
           });
@@ -39,6 +49,13 @@ function makeEnv() {
     },
   };
 }
+
+// A deliberately fictional municipality. Test data on this repo is Nepali, but
+// a fixture asserting corruption must not name a real body: the allegation here
+// is invented, and inventing one against a real entity is exactly what this
+// project exists to avoid. The Devanagari is the point — it checks the case
+// name survives the Worker's escaping into the share card unmangled.
+const CASE_TITLE = 'नमुना नगरपालिका खरिद प्रकरण';
 
 function stubCaseApi() {
   vi.stubGlobal(
@@ -53,11 +70,11 @@ function stubCaseApi() {
       if (url.includes('/cases/')) {
         return new Response(
           JSON.stringify({
-            title: 'Some Case',
-            slug: 'some-case',
+            title: CASE_TITLE,
+            slug: 'namuna-nagarpalika-kharid-prakaran',
             state: 'PUBLISHED',
-            description: 'A description of the case.',
-            key_allegations: ['An allegation'],
+            description: 'नमुना नगरपालिकाको खरिद प्रक्रियासम्बन्धी परीक्षण विवरण।',
+            key_allegations: ['खरिद प्रक्रियामा अनियमितता भएको आरोप'],
             created_at: '2026-01-01T00:00:00Z',
             updated_at: '2026-01-02T00:00:00Z',
           }),
@@ -69,10 +86,10 @@ function stubCaseApi() {
   );
 }
 
-async function caseHead(): Promise<string> {
+async function caseHead(indexHtml = INDEX_HTML): Promise<string> {
   const res = await worker.fetch(
     new Request('https://jawafdehi.org/case/some-case'),
-    makeEnv(),
+    makeEnv(indexHtml),
   );
   return res.text();
 }
@@ -103,6 +120,27 @@ describe('worker case-meta fallback: language and site handle', () => {
     expect(html.match(/<title>/g)).toHaveLength(1);
   });
 
+  it('emits one title, and no bare title text, when the shell is the raw template', async () => {
+    stubCaseApi();
+    const html = await caseHead(TEMPLATE_HTML);
+    const head = html.slice(0, html.indexOf('</head>'));
+
+    expect(head).not.toContain('<!--helmet-title-->');
+    expect(head).not.toContain('<!--helmet-meta-->');
+    expect(head.match(/<title>/g)).toHaveLength(1);
+
+    // Everything in a head is an element. Strip them all — including the title's
+    // own text — and nothing should be left over. The title marker stands for a
+    // whole <title> element (that is what pre-render.ts substitutes), so filling
+    // it with bare text would strand the case name as loose text in the head,
+    // which is what a scraper reads before it reaches the real element.
+    const leftover = head
+      .replace(/<title>[\s\S]*?<\/title>/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    expect(leftover).toBe('');
+  });
+
   it('keeps the site-wide twitter:site while replacing the other twitter tags', async () => {
     stubCaseApi();
     const html = await caseHead();
@@ -111,5 +149,16 @@ describe('worker case-meta fallback: language and site handle', () => {
     // The shell's own card copy is gone, replaced by the case's.
     expect(html).not.toContain('content="Home page"');
     expect(html).toContain('twitter:title');
+  });
+
+  it('carries the Nepali case name through to the share card intact', async () => {
+    stubCaseApi();
+    const html = await caseHead();
+
+    // Devanagari is not escaped away or mojibaked on its way into the head.
+    expect(html).toContain(`<title>${CASE_TITLE} | Jawafdehi</title>`);
+    expect(html).toContain(`content="${CASE_TITLE} | Jawafdehi"`);
+    expect(html).toContain('property="og:image:alt" content="नमुना नगरपालिका खरिद प्रकरण"');
+    expect(html).not.toContain('&#');
   });
 });
