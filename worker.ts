@@ -2,10 +2,12 @@ import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
-  SITE_NAME,
   SITE_URL,
   SOCIAL_IMAGE_URL,
+  buildHeadTags,
+  escapeHtml,
   previewImageUrl,
+  renderHeadTagsToHtml,
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
@@ -275,15 +277,6 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
 // read the same Open Graph / Twitter Card tags, so one injection covers them.
 // --------------------------------------------------------------------------
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 // Fetch with a hard timeout. Resolves to null (rather than throwing) on timeout,
 // network error, or non-OK status, so callers cleanly fall through to the SPA.
 async function fetchWithTimeout(url: string): Promise<Response | null> {
@@ -315,27 +308,9 @@ function buildMetaTags(input: {
   // "unlisted" (non-PUBLISHED) records out of search — link-only, not indexed.
   robots?: string | null;
 }): string {
-  const type = input.type ?? 'article';
-  return `
-<title>${escapeHtml(input.title)}</title>
-<meta name="description" content="${escapeHtml(input.description)}" />
-${input.robots ? `<meta name="robots" content="${escapeHtml(input.robots)}" />` : ''}
-<link rel="canonical" href="${escapeHtml(input.canonicalUrl)}" />
-<meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />
-<meta property="og:type" content="${escapeHtml(type)}" />
-<meta property="og:url" content="${escapeHtml(input.canonicalUrl)}" />
-<meta property="og:title" content="${escapeHtml(input.title)}" />
-<meta property="og:description" content="${escapeHtml(input.description)}" />
-<meta property="og:image" content="${escapeHtml(input.imageUrl)}" />
-<meta property="og:image:alt" content="${escapeHtml(input.imageAlt)}" />
-<meta property="og:locale" content="en_US" />
-${input.publishedTime ? `<meta property="article:published_time" content="${escapeHtml(input.publishedTime)}" />` : ''}
-${input.modifiedTime ? `<meta property="article:modified_time" content="${escapeHtml(input.modifiedTime)}" />` : ''}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="${escapeHtml(input.title)}" />
-<meta name="twitter:description" content="${escapeHtml(input.description)}" />
-<meta name="twitter:image" content="${escapeHtml(input.imageUrl)}" />
-<meta name="twitter:image:alt" content="${escapeHtml(input.imageAlt)}" />`.trim();
+  // The tag list is shared with <Seo> so the head a scraper gets from the edge
+  // matches the head the app renders — see buildHeadTags in src/utils/seo.
+  return renderHeadTagsToHtml(buildHeadTags({ ...input, type: input.type ?? 'article' }));
 }
 
 // Strip the head tags we are about to override (title, canonical, and the
@@ -352,7 +327,10 @@ function stripOverriddenHeadTags(head: string): string {
   return head
     .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, () => '')
     .replace(/<meta\b[^>]*\bproperty=["'](?:og|article):[^"']*["'][^>]*>/gi, () => '')
-    .replace(/<meta\b[^>]*\bname=["']twitter:[^"']*["'][^>]*>/gi, () => '')
+    // twitter:site is site-wide (index.html) and buildHeadTags does not re-emit
+    // it, so stripping it here would drop the @handle from every shared case and
+    // update — the only pages this override runs for.
+    .replace(/<meta\b[^>]*\bname=["']twitter:(?!site\b)[^"']*["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']description["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']robots["'][^>]*>/gi, () => '')
     .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');

@@ -1,7 +1,7 @@
 import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
+import { Seo } from "@/components/Seo";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -37,7 +37,7 @@ import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
+import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -378,35 +378,21 @@ const CaseDetail = () => {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        {/* Non-PUBLISHED cases are "unlisted": reachable by direct slug but kept
-            out of search engines (the API serves IN_REVIEW by slug, but these are
-            provisional, pre-publication records — see the under-review banner). */}
-        {caseData.state !== "PUBLISHED" && (
-          <meta name="robots" content="noindex, nofollow" />
-        )}
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:image:alt" content={caseData.title} />
-        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-        <meta property="article:published_time" content={caseData.created_at} />
-        <meta property="article:modified_time" content={caseData.updated_at} />
-        {caseData.tags.map((tag) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content={ogImage} />
-        <meta name="twitter:image:alt" content={caseData.title} />
+      <Seo
+        title={metaTitle}
+        description={metaDescription}
+        canonicalUrl={canonicalUrl}
+        type="article"
+        imageUrl={ogImage}
+        imageAlt={caseData.title}
+        publishedTime={caseData.created_at}
+        modifiedTime={caseData.updated_at}
+        tags={caseData.tags}
+        // Non-PUBLISHED cases are "unlisted": reachable by direct slug but kept
+        // out of search engines (the API serves IN_REVIEW by slug, but these are
+        // provisional, pre-publication records — see the under-review banner).
+        robots={caseData.state !== "PUBLISHED" ? "noindex, nofollow" : null}
+      >
         <link
           rel="alternate"
           type="application/json"
@@ -416,10 +402,10 @@ const CaseDetail = () => {
         <link
           rel="alternate"
           type="application/json+oembed"
-          href={`https://jawafdehi.org/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`}
+          href={`${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`}
           title={`${caseData.title} oEmbed`}
         />
-      </Helmet>
+      </Seo>
 
       <CaseDetailBanner
         caseData={caseData}

@@ -1,34 +1,20 @@
 import { useTranslation } from "react-i18next";
-import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { FeedbackForm } from "@/components/FeedbackForm";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 export default function Feedback() {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Submit Feedback | Jawafdehi Nepal</title>
-        <meta name="description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
-        <link rel="canonical" href="https://jawafdehi.org/feedback/" />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/feedback/" />
-        <meta property="og:title" content="Submit Feedback | Jawafdehi Nepal" />
-        <meta property="og:description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
-        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Submit Feedback | Jawafdehi Nepal" />
-        <meta name="twitter:description" content="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform." />
-        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
-      </Helmet>
+      <Seo
+        title="Submit Feedback | Jawafdehi Nepal"
+        description="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform."
+        canonicalUrl={`${SITE_URL}/feedback/`}
+      />
 
       <main id="main-content" className="flex-1">
         <div className="container mx-auto px-4 py-8 md:py-12 max-w-2xl">

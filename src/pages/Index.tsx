@@ -7,7 +7,7 @@ import { ShareOurVision } from "@/components/home/share-our-vision";
 import { SupportingPartner } from "@/components/home/supportingpartner";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
 import { searchArchive } from "@/services/search-api";
@@ -18,7 +18,7 @@ import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
-import { OG_LOCALE_ENGLISH, OG_LOCALE_NEPALI, SITE_DESCRIPTION, SITE_NAME, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { SITE_DESCRIPTION, SITE_URL } from "@/utils/seo";
 
 const RECENT_CASE_COUNT = 6;
 
@@ -135,24 +135,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Jawafdehi — Nepal's Corruption Case Archive</title>
-        <meta name="description" content={SITE_DESCRIPTION} />
-        <link rel="canonical" href="https://jawafdehi.org/" />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/" />
-        <meta property="og:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
-        <meta property="og:description" content={SITE_DESCRIPTION} />
-        <meta property="og:image" content={SOCIAL_IMAGE_URL} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={OG_LOCALE_NEPALI} />
-        <meta property="og:locale:alternate" content={OG_LOCALE_ENGLISH} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
-        <meta name="twitter:description" content={SITE_DESCRIPTION} />
-        <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
+      <Seo
+        title="Jawafdehi — Nepal's Corruption Case Archive"
+        description={SITE_DESCRIPTION}
+        canonicalUrl={`${SITE_URL}/`}
+      >
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
@@ -180,7 +167,7 @@ const Index = () => {
             }
           ]
         })}</script>
-      </Helmet>
+      </Seo>
 
       <div className="flex-1">
         <Hero

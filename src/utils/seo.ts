@@ -73,3 +73,162 @@ export function truncateMeta(value: string | null | undefined, maxLength = 160):
 export function stripHtml(value: string | null | undefined): string {
   return (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
+
+// The social card's intrinsic size. Emitted as og:image:width/height so scrapers
+// can lay out the card before they have fetched the bytes. Only ever attached to
+// an image we actually know the dimensions of — see buildHeadTags.
+export const SOCIAL_IMAGE_WIDTH = 1200;
+export const SOCIAL_IMAGE_HEIGHT = 630;
+
+// One head tag, as data. The share metadata for a page used to be written out
+// three times — once per page as JSX, once in worker.ts as an HTML string, and
+// once as placeholders in index.html — so a tag added to one copy silently
+// missed the others. (og:locale was fixed across 20 pages in #300 while the
+// worker, the copy that social scrapers actually fetch for /case/* and
+// /updates/*, kept saying en_US.) Describing the tags as data instead lets both
+// renderers share one list: <Seo> renders them as react-helmet children, the
+// worker renders them as escaped HTML.
+export type HeadTag =
+  | { kind: "title"; content: string }
+  | { kind: "meta"; attr: "name" | "property"; key: string; content: string }
+  | { kind: "link"; rel: string; href: string; type?: string; title?: string };
+
+export interface HeadTagInput {
+  title: string;
+  description: string;
+  canonicalUrl: string;
+  /** Absolute URL. Defaults to the site social card. */
+  imageUrl?: string;
+  imageAlt?: string;
+  /** Set only for an image whose size is known; omitted otherwise. */
+  imageWidth?: number;
+  imageHeight?: number;
+  type?: "website" | "article" | "profile";
+  /**
+   * The reader's active language, for the og:locale pair. Pass i18n.language on
+   * pages that translate their own copy; omit it on pages whose copy does not
+   * switch, which get the Nepali-first default. See ogLocale.
+   */
+  language?: string;
+  /** Open Graph / Twitter description, when it differs from the meta one. */
+  socialDescription?: string;
+  publishedTime?: string | null;
+  modifiedTime?: string | null;
+  tags?: string[];
+  /** e.g. "noindex, nofollow" — keeps unlisted records out of search. */
+  robots?: string | null;
+}
+
+// Build the ordered head tags for a page. The order matches what the pages and
+// the worker emitted before this became shared, so the rendered head is
+// unchanged apart from the drift this collapses.
+export function buildHeadTags(input: HeadTagInput): HeadTag[] {
+  const imageUrl = input.imageUrl ?? SOCIAL_IMAGE_URL;
+  const social = input.socialDescription ?? input.description;
+  const locales = ogLocale(input.language);
+
+  // Dimensions describe the bytes, so they may only be emitted for an image
+  // whose size we know: the site social card, or a caller that measured it.
+  // Case banners and CMS images reach here at arbitrary sizes — claiming
+  // 1200x630 for those would hand scrapers a wrong aspect ratio.
+  const isSocialCard = imageUrl === SOCIAL_IMAGE_URL;
+  const width = input.imageWidth ?? (isSocialCard ? SOCIAL_IMAGE_WIDTH : undefined);
+  const height = input.imageHeight ?? (isSocialCard ? SOCIAL_IMAGE_HEIGHT : undefined);
+
+  const tags: HeadTag[] = [
+    { kind: "title", content: input.title },
+    { kind: "meta", attr: "name", key: "description", content: input.description },
+  ];
+
+  if (input.robots) {
+    tags.push({ kind: "meta", attr: "name", key: "robots", content: input.robots });
+  }
+
+  tags.push(
+    { kind: "link", rel: "canonical", href: input.canonicalUrl },
+    { kind: "meta", attr: "property", key: "og:site_name", content: SITE_NAME },
+    { kind: "meta", attr: "property", key: "og:type", content: input.type ?? "website" },
+    { kind: "meta", attr: "property", key: "og:url", content: input.canonicalUrl },
+    { kind: "meta", attr: "property", key: "og:title", content: input.title },
+    { kind: "meta", attr: "property", key: "og:description", content: social },
+    { kind: "meta", attr: "property", key: "og:image", content: imageUrl },
+  );
+
+  if (input.imageAlt) {
+    tags.push({ kind: "meta", attr: "property", key: "og:image:alt", content: input.imageAlt });
+  }
+  if (width !== undefined && height !== undefined) {
+    tags.push(
+      { kind: "meta", attr: "property", key: "og:image:width", content: String(width) },
+      { kind: "meta", attr: "property", key: "og:image:height", content: String(height) },
+    );
+  }
+
+  tags.push(
+    { kind: "meta", attr: "property", key: "og:locale", content: locales.locale },
+    { kind: "meta", attr: "property", key: "og:locale:alternate", content: locales.alternate },
+  );
+
+  if (input.publishedTime) {
+    tags.push({
+      kind: "meta",
+      attr: "property",
+      key: "article:published_time",
+      content: input.publishedTime,
+    });
+  }
+  if (input.modifiedTime) {
+    tags.push({
+      kind: "meta",
+      attr: "property",
+      key: "article:modified_time",
+      content: input.modifiedTime,
+    });
+  }
+  for (const tag of input.tags ?? []) {
+    tags.push({ kind: "meta", attr: "property", key: "article:tag", content: tag });
+  }
+
+  // twitter:site is site-wide and lives in index.html, so it is deliberately
+  // absent here — emitting it per page would duplicate it in the pre-rendered
+  // head. The worker preserves the static one instead of stripping it.
+  tags.push(
+    { kind: "meta", attr: "name", key: "twitter:card", content: "summary_large_image" },
+    { kind: "meta", attr: "name", key: "twitter:title", content: input.title },
+    { kind: "meta", attr: "name", key: "twitter:description", content: social },
+    { kind: "meta", attr: "name", key: "twitter:image", content: imageUrl },
+  );
+  if (input.imageAlt) {
+    tags.push({ kind: "meta", attr: "name", key: "twitter:image:alt", content: input.imageAlt });
+  }
+
+  return tags;
+}
+
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Render head tags as an HTML fragment, for the Worker injecting share metadata
+// into the SPA shell. Every value is escaped, which the head-stripping regexes
+// in worker.ts rely on to keep `[^>]*` from overrunning an attribute.
+export function renderHeadTagsToHtml(tags: HeadTag[]): string {
+  return tags
+    .map((tag) => {
+      if (tag.kind === "title") {
+        return `<title>${escapeHtml(tag.content)}</title>`;
+      }
+      if (tag.kind === "meta") {
+        return `<meta ${tag.attr}="${escapeHtml(tag.key)}" content="${escapeHtml(tag.content)}" />`;
+      }
+      const type = tag.type ? ` type="${escapeHtml(tag.type)}"` : "";
+      const title = tag.title ? ` title="${escapeHtml(tag.title)}"` : "";
+      return `<link rel="${escapeHtml(tag.rel)}"${type} href="${escapeHtml(tag.href)}"${title} />`;
+    })
+    .join("\n");
+}
