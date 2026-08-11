@@ -28,7 +28,10 @@ import { telemetryAllowedHere } from "@/lib/telemetry";
 export function CookieConsentBanner() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
-  const isNarrow = useIsNarrow();
+  // 639.98 rather than the hook's default 640: Tailwind's `sm:` is a
+  // `min-width: 640px` rule, so at exactly 640px a `max-width: 640px` query
+  // matches too and the short copy would render inside the wide row layout.
+  const isNarrow = useIsNarrow(639.98);
   const bannerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -118,7 +121,17 @@ export function CookieConsentBanner() {
           <Button variant="outline" size="sm" onClick={decline}>
             {t("cookieConsent.decline", "Decline")}
           </Button>
-          <Button size="sm" onClick={accept}>
+          {/* The visible label shortens to fit, but the accessible name keeps
+              saying what is being accepted — "Accept" alone is a poor label for
+              a consent control read out of context in a screen reader's button
+              list. */}
+          <Button
+            size="sm"
+            onClick={accept}
+            aria-label={
+              isNarrow ? t("cookieConsent.accept", "Accept analytics") : undefined
+            }
+          >
             {isNarrow
               ? t("cookieConsent.acceptShort", "Accept")
               : t("cookieConsent.accept", "Accept analytics")}

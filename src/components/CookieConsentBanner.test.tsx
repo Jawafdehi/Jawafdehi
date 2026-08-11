@@ -33,6 +33,7 @@ const BANNER_HEIGHT = 109;
  */
 describe("CookieConsentBanner", () => {
   let narrow = false;
+  let originalOffsetHeight: PropertyDescriptor | undefined;
 
   const renderBanner = () =>
     render(
@@ -65,6 +66,10 @@ describe("CookieConsentBanner", () => {
 
     // jsdom reports every element as 0px tall; give the bar a height so the
     // space it reserves is a number the assertions can distinguish from "unset".
+    originalOffsetHeight = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "offsetHeight",
+    );
     Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
       configurable: true,
       get: () => BANNER_HEIGHT,
@@ -72,6 +77,13 @@ describe("CookieConsentBanner", () => {
   });
 
   afterEach(() => {
+    if (originalOffsetHeight) {
+      Object.defineProperty(
+        HTMLElement.prototype,
+        "offsetHeight",
+        originalOffsetHeight,
+      );
+    }
     document.body.style.paddingBottom = "";
   });
 
@@ -82,8 +94,11 @@ describe("CookieConsentBanner", () => {
     // Six wrapped lines of the desktop paragraph were most of the 201px.
     expect(screen.getByText(shortCopy)).toBeTruthy();
     expect(screen.queryByText(longCopy)).toBeNull();
-    // "Accept analytics" wraps the button to two lines in Nepali at 360px.
-    expect(screen.getByRole("button", { name: "Accept" })).toBeTruthy();
+    // "Accept analytics" wraps the button to two lines in Nepali at 360px, so
+    // the visible label shortens — but the accessible name must still say what
+    // is being accepted.
+    const accept = screen.getByRole("button", { name: "Accept analytics" });
+    expect(accept.textContent).toBe("Accept");
   });
 
   it("keeps the full explanation where there is room for it", () => {
@@ -105,10 +120,16 @@ describe("CookieConsentBanner", () => {
     // config. On a 360px screen that is 64px, on top of the bar's own padding,
     // leaving a 264px text column that forced the copy to wrap further.
     const bar = screen.getByRole("dialog");
-    expect(bar.firstElementChild?.className).not.toContain("container");
+    const wrapper = bar.firstElementChild?.className ?? "";
+    expect(wrapper).not.toContain("container");
     // The bar's own padding tightens on small screens too.
     expect(bar.className).toContain("p-3");
     expect(bar.className).toContain("sm:p-4");
+    // Above `sm` the wrapper still has to reproduce what `container` gave the
+    // desktop bar — its 2rem side padding and its 1400px cap — so this stays a
+    // phone-only change.
+    expect(wrapper).toContain("sm:px-8");
+    expect(wrapper).toContain("max-w-[1400px]");
   });
 
   it("reserves its height at the foot of the page, and releases it on dismiss", () => {
