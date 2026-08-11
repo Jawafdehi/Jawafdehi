@@ -1021,6 +1021,7 @@
     "switchToDark": "Switch to dark theme"
   },
   "caseCard": {
+    "thumbnailAlt": "Thumbnail image for the case: {{title}}",
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",

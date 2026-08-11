@@ -1021,6 +1021,7 @@
     "switchToDark": "गाढा थिममा स्विच गर्नुहोस्"
   },
   "caseCard": {
+    "thumbnailAlt": "मुद्दाको थम्बनेल तस्बिर: {{title}}",
     "status": {
       "ongoing": "चलिरहेको",
       "resolved": "समाधान भएको",
