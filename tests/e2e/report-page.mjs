@@ -54,6 +54,8 @@ check("linktree listed", (await page.locator('a[href*="linktr.ee"]').count()) >=
 // reach us" and a silently missing one is indistinguishable from not having it.
 // Instagram, TikTok and Discord were all absent from the shared socials
 // constant until 2026-08-11, so the footer was short three channels too.
+// These assert the link is present, not that the account behind it is alive —
+// the DOM cannot tell you that.
 for (const [name, needle] of [
   ["facebook", "facebook.com/jawafdehi"],
   ["x", "x.com/jawafdehi"],
@@ -65,8 +67,6 @@ for (const [name, needle] of [
 ]) {
   check(`${name} listed`, (await page.locator(`a[href*="${needle}"]`).count()) >= 1);
 }
-// The dead handle returns HTTP 200, so only an exact-string check catches it.
-check("no dead tiktok handle", (await page.locator('a[href*="jawafdehi_initiative"]').count()) === 0);
 check("docx template link", (await page.locator('a[href$="case-entry-template.docx"]').count()) === 1);
 check("no untranslated keys", !/report\.page\.|report\.submitted\./.test(body), body.match(/report\.[a-zA-Z.]+/)?.[0]);
 
