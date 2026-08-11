@@ -187,7 +187,7 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
 function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
   return (
     <>
-      {/* Mobile: subtle red wash, no Nepal map */}
+      {/* Mobile: subtle red wash under the map */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 md:hidden"
@@ -207,16 +207,18 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary-surface)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
       />
 
-      {/* Desktop/tablet only: responsive Nepal map */}
+      {/* Responsive Nepal map, scaled down rather than dropped on small screens */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[48%] z-0 hidden h-[500px] w-[min(1280px,112vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:block lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
+        className="pointer-events-none absolute left-1/2 top-[46%] z-0 h-[250px] w-[min(430px,115vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.28] md:top-[48%] md:h-[500px] md:w-[min(1280px,112vw)] md:opacity-[0.30] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.32] md:dark:opacity-[0.20]"
       >
         {images.map(({ src, className }) => (
           <img
             key={src}
             src={src}
             alt=""
+            decoding="async"
+            fetchPriority="low"
             className={cn(
               className,
               "absolute inset-0 h-full w-full max-w-none object-contain saturate-[1.18] contrast-[1.03] mix-blend-multiply dark:mix-blend-screen",
@@ -225,10 +227,12 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         ))}
       </div>
 
-      {/* Desktop/tablet readability wash */}
+      {/* Readability wash. Below lg the copy runs nearly the full width, so the
+          wash keeps a floor everywhere rather than fading out at the edges; from
+          lg the text column is narrow enough to let the map show at the sides. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 hidden bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.86)_0%,hsl(var(--background)/0.70)_30%,hsl(var(--background)/0.38)_56%,transparent_84%)] md:block lg:bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.84)_0%,hsl(var(--background)/0.66)_30%,hsl(var(--background)/0.34)_56%,transparent_84%)]"
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.88)_0%,hsl(var(--background)/0.84)_38%,hsl(var(--background)/0.80)_70%,hsl(var(--background)/0.80)_100%)] lg:bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
       />
     </>
   );
