@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
-import { searchArchive } from "@/services/search-api";
+import { featuredCasesQuery, FEATURED_CASE_COUNT } from "@/queries/home";
 import { formatBigo } from "@/utils/number";
 import { useMemo } from "react";
 
@@ -19,8 +19,6 @@ import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_NEPALI, SITE_URL } from "@/utils/seo";
-
-const RECENT_CASE_COUNT = 6;
 
 type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
 
@@ -112,24 +110,19 @@ const Index = () => {
     return format(value);
   };
 
-  // Keep the query key in sync with the SSR prefetch in entry-server.tsx.
-  // Use the same newest-by-case-date search source as the archive/cases pages,
-  // not /api/cases/' creation-time ordering.
+  // Query key + params live in queries/home.ts, shared verbatim with the SSR
+  // prefetch in entry-server.tsx — the two must agree or the prefetch is wasted.
+  // Still the search source (not /api/cases/), which is where the editorial
+  // `weight` ordering lives.
   const { data: casesData } = useQuery({
-    queryKey: ["home-recent-cases", { page_size: RECENT_CASE_COUNT }],
-    queryFn: () =>
-      searchArchive({
-        type: "case",
-        sort: "newest",
-        page_size: RECENT_CASE_COUNT,
-      }),
+    ...featuredCasesQuery(),
     staleTime: 5 * 60 * 1000,
   });
 
   const featuredCases = useMemo(() => {
     if (!casesData?.results) return [];
     return casesData.results
-      .slice(0, RECENT_CASE_COUNT)
+      .slice(0, FEATURED_CASE_COUNT)
       .map((result) => recentCaseToCard(result, currentLang));
   }, [casesData, currentLang]);
 
@@ -196,16 +189,21 @@ const Index = () => {
 
         {/* <Features /> */}
 
-        {/* ── Recently Documented Cases ── */}
+        {/* ── Featured Cases ── */}
+        {/* The `recent-cases` id is kept on purpose: nothing in src links to it,
+            but external links to jawafdehi.org/#recent-cases would break. */}
         <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  {t("home.recentCases.heading", "Recently Documented Cases")}
+                  {t("home.featuredCases.heading", "Featured Cases")}
                 </h2>
                 <p className="text-muted-foreground mt-1">
-                  {t("home.recentCases.subtitle", "Latest cases added to the archive")}
+                  {t(
+                    "home.featuredCases.subtitle",
+                    "Recent high-impact corruption cases under public scrutiny",
+                  )}
                 </p>
               </div>
             </div>
@@ -218,7 +216,7 @@ const Index = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {Array.from({ length: RECENT_CASE_COUNT }, (_, i) => (
+                {Array.from({ length: FEATURED_CASE_COUNT }, (_, i) => (
                   <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
                 ))}
               </div>
@@ -227,7 +225,7 @@ const Index = () => {
             <div className="text-center mt-10 mb-4 flex justify-center">
               <Button variant="primary" size="xl" asChild>
                 <Link to="/search?type=case">
-                  {t("home.recentCases.viewAll", "View all cases")}{" "}
+                  {t("home.featuredCases.viewAll", "View all cases")}{" "}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
