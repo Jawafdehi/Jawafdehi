@@ -81,18 +81,14 @@ export function Hero({
       <HeroBackdrop images={heroMapImages} />
 
       <div className="layout-container relative z-10 flex min-h-[72svh] flex-col items-start justify-center py-14 text-left sm:items-center sm:py-16 sm:text-center md:min-h-[74svh] md:py-20 lg:min-h-[76svh] lg:py-24">
-        <div className="relative w-full">
-          <HeroMapSmall images={heroMapImages} />
+        <p className="font-eyebrow font-eyebrow-display max-w-full">
+          <em>{t("home.hero.eyebrow")}</em>
+        </p>
 
-          <p className="font-eyebrow font-eyebrow-display relative max-w-full">
-            <em>{t("home.hero.eyebrow")}</em>
-          </p>
-
-          <h1 className="font-home-hero-title relative mt-5">
-            {t("home.hero.titlePrefix")} <span className="text-accent">{t("home.hero.titleHighlight")}</span>{" "}
-            {t("home.hero.titleSuffix")}
-          </h1>
-        </div>
+        <h1 className="font-home-hero-title mt-5">
+          {t("home.hero.titlePrefix")} <span className="text-accent">{t("home.hero.titleHighlight")}</span>{" "}
+          {t("home.hero.titleSuffix")}
+        </h1>
 
         <p className="font-home-hero-lede measure-intro mt-6">
           {t("home.hero.description")}
@@ -119,7 +115,7 @@ export function Hero({
         <HeroStats stats={heroStats} />
 
         <Link
-          className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+          className="group mt-6 inline-flex items-center gap-2 self-center text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
           to="/data-quality"
         >
           <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -188,36 +184,6 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
   return <CountUp end={numericValue} duration={0.9} separator="," />;
 }
 
-/**
- * Below md the hero is text top to bottom, so a full-width map — the artwork is
- * 1.68:1 and fills its canvas, so width dictates height — cannot avoid the copy.
- * Anchoring it to the eyebrow/title block and sizing it to the viewport puts the
- * whole country on screen and keeps it off the lede, which at 5.03:1 has no room
- * to spare. Opacity matches the md+ backdrop so the two read as one treatment.
- */
-function HeroMapSmall({ images }: Readonly<{ images: HeroMapImage[] }>) {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute -top-[104px] bottom-[-20px] left-1/2 w-screen -translate-x-1/2 opacity-[0.34] md:hidden dark:opacity-[0.20]"
-    >
-      {images.map(({ src, className }) => (
-        <img
-          key={src}
-          src={src}
-          alt=""
-          decoding="async"
-          fetchPriority="low"
-          className={cn(
-            className,
-            "absolute inset-0 h-full w-full max-w-none object-contain saturate-[1.18] contrast-[1.03] mix-blend-multiply dark:mix-blend-screen",
-          )}
-        />
-      ))}
-    </div>
-  );
-}
-
 function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
   return (
     <>
@@ -241,11 +207,12 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary-surface)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
       />
 
-      {/* md and up the map is a full-bleed backdrop; below that it is anchored
-          to the title instead — see HeroMapSmall. */}
+      {/* Full-bleed map backdrop, same treatment at every width: the wash below
+          veils it to a few percent wherever copy sits and lets it run at full
+          strength out in the margins. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[48%] z-0 hidden h-[500px] w-[min(1280px,112vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:block lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
+        className="pointer-events-none absolute left-1/2 top-[48%] z-0 h-[250px] w-[112vw] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:h-[500px] md:w-[min(1280px,112vw)] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
       >
         {images.map(({ src, className }) => (
           <img
@@ -262,11 +229,12 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         ))}
       </div>
 
-      {/* Readability wash for the full-bleed backdrop. Not needed below md,
-          where the map is confined to the title's box. */}
+      {/* Readability wash. This is what makes the backdrop safe: it sits between
+          map and copy and drops the map to a few percent wherever text is, then
+          falls to nothing at the edges. Applies at every width. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 hidden bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)] md:block"
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
       />
     </>
   );
