@@ -13,8 +13,11 @@ export type ArchiveSearchResultType =
 export type ArchiveSearchType = "all" | ArchiveSearchResultType;
 
 // `featured` orders by the editorial `weight` on Case, then newest-by-case-date.
-// Deliberately absent from ArchiveSearch's `validSorts`: it is a homepage
-// curation mode, not a sort we offer in the public search UI.
+// It began as a homepage-only curation mode, but the archive search offers it too
+// and defaults to it while browsing: with no query text every document scores the
+// same, so `relevance` there is not a ranking at all — just the `iri` tiebreaker,
+// i.e. alphabetical by slug. Non-case records carry no weight and tie at 0, so
+// they fall through to newest-first.
 export type ArchiveSearchSort = "relevance" | "newest" | "oldest" | "title" | "featured";
 
 // Bilingual text: either side may be null (a record can carry only one script).

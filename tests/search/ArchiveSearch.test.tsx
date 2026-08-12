@@ -409,4 +409,46 @@ describe("ArchiveSearch", () => {
     expect(screen.queryByText("Original result")).toBeNull();
     expect(screen.queryByText("No archive records found")).toBeNull();
   });
+
+  // Browsing with no query text is a curated shelf, not a ranking: OpenSearch
+  // gives every document an identical score, so `relevance` would collapse to the
+  // `iri` tiebreaker and order the archive alphabetically by slug.
+  it("sorts by editorial weight while browsing without a query", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case");
+
+    await waitFor(() =>
+      expect(searchArchiveMock).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: "featured", type: "case" }),
+      ),
+    );
+  });
+
+  it("sorts by relevance once there is query text", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&q=ncell");
+
+    await waitFor(() =>
+      expect(searchArchiveMock).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: "relevance", q: "ncell" }),
+      ),
+    );
+  });
+
+  // Regression guard: `sort` must stay out of archive-search-params' defaultValues.
+  // Listing it there strips ?sort=relevance from the URL, and the browse default
+  // then re-resolves it to `featured` — silently reverting the user's choice.
+  it("honours an explicitly chosen relevance sort while browsing", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&sort=relevance");
+
+    await waitFor(() =>
+      expect(searchArchiveMock).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: "relevance" }),
+      ),
+    );
+    expect(searchArchiveMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ sort: "featured" }),
+    );
+  });
 });
