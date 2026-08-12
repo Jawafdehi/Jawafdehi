@@ -173,10 +173,9 @@ triage list, and the moderator approves or rejects it. This reuses the existing
   per-row Approve / Reject-to-DRAFT / Dismiss actions + reason field. Role-gated
   to Admin/Moderator (nav already scoped, `AdminLayout.tsx:43`); API is the
   authority.
-- **Out of scope / future:** if a public submission form is later added
-  (`VITE_ENABLE_CASE_SUBMISSION_FORM`), it would create DRAFT cases that flow
-  into the same queue — the queue design above already accommodates it without
-  change.
+- **Out of scope / future:** the public submission form at `/report` files a
+  `case_report` Feedback row, not a DRAFT case. Promoting those rows into this
+  queue is a later step; the queue design already accommodates it unchanged.
 
 ---
 

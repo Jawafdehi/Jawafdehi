@@ -1,6 +1,6 @@
 # Internationalization (i18n) Guide
 
-This directory contains all internationalization configuration and translation files for the Public Accountability Platform.
+This directory contains all internationalization configuration and translation files for Jawafdehi Initiative.
 
 ## Overview
 
@@ -87,7 +87,7 @@ function MyComponent() {
 ```json
 {
   "footer": {
-    "copyright": "© {{year}} Public Accountability Platform Nepal. All rights reserved."
+    "copyright": "© {{year}} Jawafdehi Initiative. All rights reserved."
   }
 }
 ```

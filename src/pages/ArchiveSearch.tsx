@@ -1,7 +1,6 @@
 import { FormEvent, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight, LayoutGrid, List, X } from "lucide-react";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -46,6 +45,8 @@ import {
 import { getFacetItemLabel } from "@/utils/case-entities";
 import { trackEvent } from "@/utils/analytics";
 import { sendSearchClick } from "@/utils/searchClick";
+import { Seo } from "@/components/Seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 type RefinementName = SidebarFilterName | "type";
 
@@ -83,7 +84,7 @@ export default function ArchiveSearch({
   placeholder,
   canonicalPath,
 }: ArchiveSearchProps = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedRecordType = useMemo(
     () => lockedType ?? readRecordType(searchParams),
@@ -147,6 +148,45 @@ export default function ArchiveSearch({
   const isRefreshing = isFetching && !isInitialLoading;
   const showError = isError && !isFetching;
   const showFilters = isInitialLoading || Boolean(displayData);
+
+  // Share metadata. This component backs three routes — /search, /materials and
+  // /courtcases (see Materials.tsx and CourtCases.tsx, which pass heading,
+  // description and canonicalPath) — so all three inherit whatever is set here.
+  // Until now that was a title, a description and a canonical, and no og: tags
+  // at all: a share of any of the three rendered as a bare link with no card.
+  //
+  // The fallbacks come from i18n rather than being hardcoded English, so the
+  // <title> matches the <h1> the page actually renders. The previous literals
+  // were a third paraphrase of the archive description, alongside the two in
+  // en.json and ne.json.
+  const pageHeading = heading || t("archiveSearch.heading", "Archive Search");
+  const pageDescription =
+    description ||
+    t(
+      "archiveSearch.description",
+      "Search Jawafdehi's public accountability archive across cases, people, offices, locations, charges, and evidence documents.",
+    );
+
+  // Every URL on this site 307s to its trailing-slash form, so a canonical
+  // without one points at a redirect. Materials and CourtCases both pass a path
+  // with no trailing slash; normalise here rather than in the callers, so a
+  // future caller cannot reintroduce it.
+  const canonicalUrl = useMemo(() => {
+    const path = canonicalPath || "/search/";
+    return `${SITE_URL}${path.endsWith("/") ? path : `${path}/`}`;
+  }, [canonicalPath]);
+
+  // A result set is not a landing page. The bare browse view of each of these
+  // three routes is worth indexing; the same view narrowed by a query or paged
+  // past the first is thin, near-duplicate content, and Google's own guidance is
+  // to keep internal search results out of the index. `follow` is deliberate —
+  // the crawler should still walk through to the records themselves.
+  //
+  // This is a meta tag and not a robots.txt rule on purpose: a disallowed URL is
+  // never fetched, so the crawler would never read the tag that drops it, and
+  // /search is listed in sitemap.xml — which robots.txt would then contradict.
+  // See the note at the bottom of public/robots.txt.
+  const isFilteredResultSet = Boolean(params.q) || params.page > 1;
 
   const updateParams = (updates: Record<string, string | number | undefined>) => {
     let next = new URLSearchParams(searchParams);
@@ -234,17 +274,13 @@ export default function ArchiveSearch({
 
   return (
     <div className="min-h-screen bg-background py-8 md:py-12">
-      <Helmet>
-        <title>{heading ? `${heading} | Jawafdehi Nepal` : "Archive Search | Jawafdehi Nepal"}</title>
-        <meta
-          content={
-            description ||
-            "Search Jawafdehi's public archive across accountability cases, tracked entities, locations, and evidence documents."
-          }
-          name="description"
-        />
-        <link href={`https://jawafdehi.org${canonicalPath || "/search"}`} rel="canonical" />
-      </Helmet>
+      <Seo
+        title={`${pageHeading} | ${SITE_NAME}`}
+        description={pageDescription}
+        canonicalUrl={canonicalUrl}
+        language={i18n.language}
+        robots={isFilteredResultSet ? "noindex, follow" : null}
+      />
 
       <div className="container mx-auto px-4">
         <header className="max-w-3xl">

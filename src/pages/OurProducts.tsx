@@ -1,10 +1,11 @@
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Bot, Code2, LayoutDashboard, Github, ExternalLink, SquareDashedBottomCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
+import { Seo } from "@/components/Seo";
 import { API_BASE_URL } from "@/services/http";
+import { SITE_URL } from "@/utils/seo";
 
 const PRODUCTS = [
   {
@@ -45,21 +46,11 @@ const OurProducts = () => {
   const { t } = useTranslation();
   return (
   <div className="min-h-screen flex flex-col bg-background">
-    <Helmet>
-      <title>Our Products — Jawafdehi</title>
-      <meta name="description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
-      <link rel="canonical" href="https://jawafdehi.org/products" />
-      <meta property="og:site_name" content="Jawafdehi Nepal" />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://jawafdehi.org/products" />
-      <meta property="og:title" content="Our Products — Jawafdehi" />
-      <meta property="og:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
-      <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="Our Products — Jawafdehi" />
-      <meta name="twitter:description" content="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services." />
-      <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
-    </Helmet>
+    <Seo
+      title="Our Products — Jawafdehi"
+      description="Every product Jawafdehi builds is open source and free to use. Explore our public APIs, web platform, and civic data services."
+      canonicalUrl={`${SITE_URL}/products/`}
+    />
 
     <main id="main-content" className="flex-1">
       <PageHero

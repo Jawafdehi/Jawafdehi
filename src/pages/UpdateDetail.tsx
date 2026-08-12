@@ -1,10 +1,10 @@
 import { useParams } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug } from "@/services/cms-api";
 import { ArticleView } from "@/components/ArticleView";
+import { Seo } from "@/components/Seo";
 import NotFound from "./NotFound";
-import { previewImageUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
+import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
 
 const UpdateDetail = () => {
     const { slug } = useParams();
@@ -37,31 +37,16 @@ const UpdateDetail = () => {
 
     return (
         <>
-            <Helmet>
-                <title>{metaTitle}</title>
-                <meta name="description" content={description} />
-                <link rel="canonical" href={canonicalUrl} />
-
-                <meta property="og:site_name" content={SITE_NAME} />
-                <meta property="og:type" content="article" />
-                <meta property="og:url" content={canonicalUrl} />
-                <meta property="og:title" content={metaTitle} />
-                <meta property="og:description" content={description} />
-                <meta property="og:image" content={ogImage} />
-                <meta property="og:image:alt" content={imageAlt} />
-                <meta property="og:locale" content="en_US" />
-
-                {article.meta.first_published_at && (
-                    <meta property="article:published_time" content={article.meta.first_published_at} />
-                )}
-                <meta property="article:modified_time" content={article.date} />
-
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={metaTitle} />
-                <meta name="twitter:description" content={description} />
-                <meta name="twitter:image" content={ogImage} />
-                <meta name="twitter:image:alt" content={imageAlt} />
-            </Helmet>
+            <Seo
+                title={metaTitle}
+                description={description}
+                canonicalUrl={canonicalUrl}
+                type="article"
+                imageUrl={ogImage}
+                imageAlt={imageAlt}
+                publishedTime={article.meta.first_published_at}
+                modifiedTime={article.date}
+            />
 
             <ArticleView article={article} />
         </>

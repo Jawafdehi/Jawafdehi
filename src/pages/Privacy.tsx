@@ -1,24 +1,14 @@
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 const Privacy = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Jawafdehi Initiative Privacy Policy</title>
-        <meta name="description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <link rel="canonical" href="https://jawafdehi.org/privacy" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/privacy" />
-        <meta property="og:title" content="Jawafdehi Initiative Privacy Policy" />
-        <meta property="og:description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-        <meta property="og:locale" content="en_US" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Jawafdehi Initiative Privacy Policy" />
-        <meta name="twitter:description" content="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
-      </Helmet>
+      <Seo
+        title="Jawafdehi Initiative Privacy Policy"
+        description="Jawafdehi's privacy policy — how we handle data, cookies, analytics, and user information on Nepal's open corruption accountability platform."
+        canonicalUrl={`${SITE_URL}/privacy/`}
+      />
 
       <main id="main-content" className="flex-1">
         <section id="privacy-hero" className="bg-gradient-to-br from-primary-surface via-navy-dark to-foreground py-16 md:py-20">
@@ -162,7 +152,7 @@ const Privacy = () => {
                 <li><strong>UptimeRobot</strong>: external uptime monitoring.</li>
               </ul>
               <p>
-                Links to external websites (e.g., GitHub, social media, Let's Build Nepal) are governed by their respective privacy policies.
+                Links to external websites (e.g., GitHub, social media) are governed by their respective privacy policies.
               </p>
 
               <h2 id="data-retention">10. Data Retention</h2>

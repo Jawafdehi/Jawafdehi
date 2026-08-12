@@ -1,24 +1,14 @@
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Jawafdehi Initiative Terms of Service</title>
-        <meta name="description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
-        <link rel="canonical" href="https://jawafdehi.org/terms" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/terms" />
-        <meta property="og:title" content="Jawafdehi Initiative Terms of Service" />
-        <meta property="og:description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-        <meta property="og:locale" content="en_US" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Jawafdehi Initiative Terms of Service" />
-        <meta name="twitter:description" content="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
-      </Helmet>
+      <Seo
+        title="Jawafdehi Initiative Terms of Service"
+        description="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive."
+        canonicalUrl={`${SITE_URL}/terms/`}
+      />
 
       <main id="main-content" className="flex-1">
         <section id="terms-hero" className="bg-gradient-to-br from-primary-surface via-navy-dark to-foreground py-16 md:py-20">

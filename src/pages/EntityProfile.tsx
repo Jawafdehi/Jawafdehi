@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { EntityDetailContainer } from "@/components/EntityDetailContainer";
+import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
+import { SITE_URL } from "@/utils/seo";
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -58,25 +59,17 @@ export default function EntityProfile() {
         const pageDescription = isNepali
           ? `${entityName} सँग सम्बन्धित भ्रष्टाचारका मुद्दाहरू हेर्नुहोस् — जवाफदेही नेपालको खुला जवाफदेहिता डेटाबेस।`
           : `View corruption cases and allegations involving ${entityName} on Jawafdehi — Nepal's open accountability database.`;
-        const canonicalUrl = `https://jawafdehi.org/entity/${jawafEntity.id}`;
+        const canonicalUrl = `${SITE_URL}/entity/${jawafEntity.id}`;
         return (
-          <Helmet>
-            <title>{pageTitle}</title>
-            <meta name="description" content={pageDescription} />
-            <link rel="canonical" href={canonicalUrl} />
-            <meta property="og:site_name" content="Jawafdehi Nepal" />
-            <meta property="og:type" content="profile" />
-            <meta property="og:url" content={canonicalUrl} />
-            <meta property="og:title" content={pageTitle} />
-            <meta property="og:description" content={pageDescription} />
-            <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-            <meta property="og:locale" content={isNepali ? 'ne_NP' : 'en_US'} />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content={pageTitle} />
-            <meta name="twitter:description" content={pageDescription} />
-            <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+          <Seo
+            title={pageTitle}
+            description={pageDescription}
+            canonicalUrl={canonicalUrl}
+            type="profile"
+            language={currentLang}
+          >
             <link rel="alternate" type="application/json" href={`${API_BASE_URL}/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
-          </Helmet>
+          </Seo>
         );
       })()}
 

@@ -28,10 +28,22 @@
   </script>
   <!-- The in-app EN/NE language switcher is the single source of truth for language; suppress browser/Google page auto-translation so it can't compete with or re-translate curated content. -->
   <meta name="google" content="notranslate" />
+  <!-- Icons. None of these were declared before, so /apple-touch-icon.png and
+       /site.webmanifest fell through to the SPA and answered with HTML: saving
+       the site to an iOS home screen got a screenshot instead of the logo. -->
+  <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0E1F3A" />
+  <!-- Site-wide, so it lives here rather than in all 19 per-page Helmets. -->
+  <meta name="twitter:site" content="@jawafdehi" />
   <!--helmet-title-->
   <!--helmet-meta-->
   <!-- fallback static meta for non-JS crawlers -->
-  <meta name="author" content="Let's Build Nepal" />
+  <!-- Let's Build Nepal is a supporting partner, not the author of this site.
+       See src/components/home/supportingpartner.tsx for where they belong. -->
+  <meta name="author" content="Jawafdehi Initiative" />
 </head>
 
 <body>

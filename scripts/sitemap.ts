@@ -52,23 +52,23 @@ async function fetchWithTimeout(url: string): Promise<Response> {
   }
 }
 
-function buildDate(): string {
-  return toYMD(new Date().toISOString());
+// <title> is not a valid child of <url> in the sitemaps.org 0.9 schema, so it
+// is not emitted. lastmod is optional: omitting it is honest when we have no
+// real modification date, whereas stamping every URL with today's date trains
+// crawlers to ignore the field.
+function urlEntry(loc: string, lastmod?: string): string {
+  const lastmodLine = lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : '';
+  return `  <url>\n    <loc>${loc}</loc>${lastmodLine}\n  </url>`;
 }
 
-/** Escape XML special characters so titles are safe inside element content. */
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-function urlEntry(loc: string, lastmod: string, title?: string): string {
-  const titleLine = title ? `\n    <title>${escapeXml(title)}</title>` : '';
-  return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>${titleLine}\n  </url>`;
+// Prerendered static routes are served from <path>/index.html, so the edge 307s
+// the slashless form. Advertising the redirecting URL in the sitemap — and in
+// rel=canonical — asks crawlers to index a redirect. Slug routes (/case/*,
+// /updates/*) and /entity/* are not prerendered and answer 200 without a
+// slash, so they are deliberately left alone. Measured against production
+// 2026-08-11: 17 of 90 sitemap URLs were 307ing, all of them static routes.
+function withTrailingSlash(path: string): string {
+  return path === '/' || path.endsWith('/') ? path : `${path}/`;
 }
 
 async function fetchAllCases(): Promise<CaseSummary[]> {
@@ -116,8 +116,6 @@ async function fetchAllArticles(): Promise<ArticleListItem[]> {
 }
 
 async function main() {
-  const today = buildDate();
-
   // A reachable API is a hard requirement: a static-only sitemap that silently
   // omits every case and update would hide entire sections from search engines
   // while the build stays green. Fetch failures abort instead.
@@ -149,16 +147,6 @@ async function main() {
     process.exit(1);
   }
 
-  // Build a map of entity id → display_name from all cases
-  const entityMap = new Map<number, string | null>();
-  for (const c of cases) {
-    for (const e of c.entities) {
-      if (!entityMap.has(e.id)) {
-        entityMap.set(e.id, e.display_name);
-      }
-    }
-  }
-
   const entityIds = [...new Set(
     cases.flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
   )];
@@ -166,19 +154,15 @@ async function main() {
   const entries: string[] = [
     ...PRE_RENDERED_STATIC_ROUTES
       .filter(shouldIncludeStaticRouteInSitemap)
-      .map(r => urlEntry(`${CANONICAL}${r.path}`, today, r.sitemapTitle)),
+      .map(r => urlEntry(`${CANONICAL}${withTrailingSlash(r.path)}`)),
     ...articles
       .filter(a => a.meta.slug)
       .map(a => urlEntry(
         `${CANONICAL}/updates/${a.meta.slug}`,
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
-        a.title ? `${a.title} — Jawafdehi` : undefined,
       )),
-    ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.slug || c.id}`, toYMD(c.updated_at), c.title ? `${c.title} — Jawafdehi` : undefined)),
-    ...entityIds.map(id => {
-      const name = entityMap.get(id);
-      return urlEntry(`${CANONICAL}/entity/${id}`, today, name ? `${name} — Jawafdehi` : undefined);
-    }),
+    ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.slug || c.id}`, toYMD(c.updated_at))),
+    ...entityIds.map(id => urlEntry(`${CANONICAL}/entity/${id}`)),
   ];
 
   const xml = [

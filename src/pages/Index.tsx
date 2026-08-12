@@ -7,7 +7,7 @@ import { ShareOurVision } from "@/components/home/share-our-vision";
 import { SupportingPartner } from "@/components/home/supportingpartner";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
 import { searchArchive } from "@/services/search-api";
@@ -18,6 +18,7 @@ import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { useTranslation } from "react-i18next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_NEPALI, SITE_URL } from "@/utils/seo";
 
 const RECENT_CASE_COUNT = 6;
 
@@ -134,28 +135,21 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Jawafdehi — Nepal's Corruption Case Archive</title>
-        <meta name="description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
-        <link rel="canonical" href="https://jawafdehi.org/" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/" />
-        <meta property="og:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
-        <meta property="og:description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-        <meta property="og:locale" content="en_US" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Jawafdehi — Nepal's Corruption Case Archive" />
-        <meta name="twitter:description" content="Every CIAA corruption case documented, simplified, and permanently accessible. Nepal's authoritative public record of corruption cases and official documents." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
+      <Seo
+        title={`${SITE_NAME} — Nepal's Corruption Case Archive`}
+        description={SITE_DESCRIPTION}
+        canonicalUrl={`${SITE_URL}/`}
+      >
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          "name": "Jawafdehi",
-          "alternateName": "Jawafdehi Nepal",
+          "name": SITE_NAME,
+          // schema.org's slot for the same organisation under another name, and
+          // the one identity field with room for the Nepali. Appending it to
+          // SITE_NAME instead would double the length of every <title>.
+          "alternateName": [SITE_NAME_NEPALI, "Jawafdehi"],
           "url": "https://jawafdehi.org",
-          "description": "Nepal's permanent public archive of CIAA corruption cases — every filing, every document, forever.",
+          "description": SITE_DESCRIPTION,
           "inLanguage": ["en", "ne"],
           "potentialAction": [
             {
@@ -176,7 +170,7 @@ const Index = () => {
             }
           ]
         })}</script>
-      </Helmet>
+      </Seo>
 
       <div className="flex-1">
         <Hero

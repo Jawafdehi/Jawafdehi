@@ -1,11 +1,22 @@
 export const JAWAFDEHI_WHATSAPP_NUMBER = "+977 9768630501";
 export const JAWAFDEHI_EMAIL = "inquiry@jawafdehi.org";
 
+// Every channel the organisation actually runs. Keep this in step with the
+// canonical list in the meta repo at docs/branding/narrative.md §13 — that is
+// where the URLs get re-checked, and it is what the newsletters link to.
+// Verify Discord invites against https://discord.com/api/v10/invites/<code>.
+// discord.gg 301s to discord.com/invite/<code> and serves 200 even for an
+// invite that no longer exists, so a link checker cannot tell you anything
+// useful. The home CTA had a dead invite hardcoded past this constant.
 export const JAWAFDEHI_SOCIALS = {
   facebook: "https://www.facebook.com/jawafdehi",
   x: "https://x.com/jawafdehi",
+  instagram: "https://www.instagram.com/jawafdehi",
+  tiktok: "https://www.tiktok.com/@jawafdehi",
   youtube: "https://www.youtube.com/@Jawafdehi",
   linkedin: "https://www.linkedin.com/company/jawafdehi",
+  // No expiry. Supersedes grpRaczPq4.
+  discord: "https://discord.gg/mRYbcEAuaQ",
   whatsapp: "https://api.whatsapp.com/send?phone=9779768630501",
   linktree: "https://linktr.ee/jawafdehi",
 };

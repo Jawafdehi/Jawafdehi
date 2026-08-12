@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { CaseCard } from "@/components/CaseCard";
+import { Seo } from "@/components/Seo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { searchArchive } from "@/services/search-api";
 import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 type CaseLifecycleStatus = "ongoing" | "closed" | "others";
 type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
@@ -130,22 +131,11 @@ const Cases = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Corruption Cases | Jawafdehi Nepal</title>
-        <meta name="description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <link rel="canonical" href="https://jawafdehi.org/cases" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/cases" />
-        <meta property="og:title" content="Corruption Cases | Jawafdehi Nepal" />
-        <meta property="og:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-        <meta property="og:locale" content="en_US" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Corruption Cases | Jawafdehi Nepal" />
-        <meta name="twitter:description" content="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
-      </Helmet>
+      <Seo
+        title={`Corruption Cases | ${SITE_NAME}`}
+        description="Browse verified corruption and misconduct cases in Nepal. Search by entity, location, or case type. All cases are documented with evidence and sources."
+        canonicalUrl={`${SITE_URL}/cases/`}
+      />
 
       <div className="flex-1 py-8 md:py-12">
         <div className="container mx-auto px-4">

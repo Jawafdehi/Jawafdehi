@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { PauseCircle, Play, Youtube } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Seo } from "@/components/Seo";
 import { JAWAFDEHI_WEEKLY_SERIES } from "@/config/constants";
+import { SITE_URL } from "@/utils/seo";
 
 type LatestVideo = {
   videoId: string;
@@ -39,30 +40,11 @@ const WeeklyMeetings = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Weekly Corruption Series — Jawafdehi</title>
-        <meta
-          name="description"
-          content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
-        />
-        <link rel="canonical" href="https://jawafdehi.org/saptahik" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/saptahik" />
-        <meta property="og:title" content="Weekly Corruption Series — Jawafdehi" />
-        <meta
-          property="og:description"
-          content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
-        />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Weekly Corruption Series — Jawafdehi" />
-        <meta
-          name="twitter:description"
-          content="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
-        />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
-      </Helmet>
+      <Seo
+        title="Weekly Corruption Series — Jawafdehi"
+        description="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
+        canonicalUrl={`${SITE_URL}/saptahik/`}
+      />
 
       <main id="main-content" className="flex-1">
         <section className="container mx-auto px-4 py-12 md:py-16">

@@ -150,6 +150,15 @@ All colors MUST be HSL.
     --accent: var(--base-crimson);
     --accent-foreground: var(--base-cream);
 
+    /* The accent at brand hue, lightened for dark surfaces. The accent itself
+       is only 2.6:1 on --primary, so it cannot carry text on the navy footer.
+       (From #285, which fixed the footer tagline; kept as a literal rather than
+       aliased to --base-crimson because it is a distinct lightness, and it is
+       deliberately NOT restated in .dark — the footer sits on --primary-surface,
+       which stays navy in both themes, so the contrast it was measured against
+       does not change.) */
+    --accent-on-dark: 357 85% 62%; /* #F04C54 — 4.6:1 on --primary */
+
     /* shadcn contract name. Shares --base-amber with --alert; decoupling them
        is a one-line change here rather than a find-and-replace. */
     --destructive: var(--base-amber);

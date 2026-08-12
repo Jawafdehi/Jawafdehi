@@ -6,6 +6,11 @@ import { Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
+import {
+  CASE_PLACEHOLDER_DARK_CLASS,
+  CASE_PLACEHOLDER_IMAGE,
+  isValidCaseImage,
+} from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
@@ -29,8 +34,6 @@ interface CaseDetailBannerProps {
     onClick: () => void;
   };
 }
-
-const PLACEHOLDER_IMAGE = "/assets/placeholder.png";
 
 const COURT_NAME_MAP: Record<string, { en: string; ne: string }> = {
   supreme: {
@@ -64,12 +67,6 @@ function formatCourtCaseRef(courtCase: string, language: "en" | "ne") {
   };
 }
 
-function isValidCaseImage(url?: string | null) {
-  const trimmedUrl = url?.trim();
-
-  return Boolean(trimmedUrl) && !trimmedUrl?.includes("/admin/");
-}
-
 function getCaseBannerSrc(caseData: CaseDetail) {
   if (isValidCaseImage(caseData.banner_url)) {
     return caseData.banner_url!.trim();
@@ -79,7 +76,7 @@ function getCaseBannerSrc(caseData: CaseDetail) {
     return caseData.thumbnail_url!.trim();
   }
 
-  return PLACEHOLDER_IMAGE;
+  return CASE_PLACEHOLDER_IMAGE;
 }
 
 export function CaseDetailBanner({
@@ -184,18 +181,17 @@ export function CaseDetailBanner({
             src={imageSrc}
             alt={title}
             onError={() => {
-              if (imageSrc !== PLACEHOLDER_IMAGE) {
-                setImageSrc(PLACEHOLDER_IMAGE);
+              if (imageSrc !== CASE_PLACEHOLDER_IMAGE) {
+                setImageSrc(CASE_PLACEHOLDER_IMAGE);
               }
             }}
             className={cn(
               "order-2 h-52 w-full object-cover object-top sm:h-[440px] lg:order-none lg:h-[520px] xl:h-[560px]",
-              // placeholder.png is 98% #F5F5F5, so on the dark page it renders as
-              // a white slab. invert + hue-rotate flips its lightness while
-              // restoring the hue, which turns it into a dark panel with the
-              // illustration intact. Applied ONLY to the placeholder — real case
-              // photographs must never be inverted.
-              imageSrc === PLACEHOLDER_IMAGE && "dark:invert dark:hue-rotate-180",
+              // This branch hand-wrote the invert/hue-rotate treatment against a
+              // PLACEHOLDER_IMAGE constant that never existed here. Main landed
+              // the same idea in #299 as two shared exports, with the rationale
+              // recorded at the constant, so use those rather than a local copy.
+              imageSrc === CASE_PLACEHOLDER_IMAGE && CASE_PLACEHOLDER_DARK_CLASS,
             )}
           />
 

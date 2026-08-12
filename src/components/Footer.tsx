@@ -2,8 +2,8 @@ import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, Unlock } from "lucide-react";
-import { FaFacebook, FaYoutube, FaLinkedin, FaWhatsapp } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin, FaDiscord, FaWhatsapp } from "react-icons/fa";
+import { FaXTwitter, FaTiktok } from "react-icons/fa6";
 import { SiLinktree } from "react-icons/si";
 
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
@@ -149,8 +149,11 @@ export const Footer = () => {
   const socialLinks: FooterSocialLink[] = [
     { label: t("footer.social.facebook"), href: JAWAFDEHI_SOCIALS.facebook, icon: FaFacebook },
     { label: t("footer.social.x"), href: JAWAFDEHI_SOCIALS.x, icon: FaXTwitter },
+    { label: t("footer.social.instagram"), href: JAWAFDEHI_SOCIALS.instagram, icon: FaInstagram },
+    { label: t("footer.social.tiktok"), href: JAWAFDEHI_SOCIALS.tiktok, icon: FaTiktok },
     { label: t("footer.social.youtube"), href: JAWAFDEHI_SOCIALS.youtube, icon: FaYoutube },
     { label: t("footer.social.linkedin"), href: JAWAFDEHI_SOCIALS.linkedin, icon: FaLinkedin },
+    { label: t("footer.social.discord"), href: JAWAFDEHI_SOCIALS.discord, icon: FaDiscord },
     { label: t("footer.social.whatsapp"), href: JAWAFDEHI_SOCIALS.whatsapp, icon: FaWhatsapp },
     { label: t("footer.social.linktree"), href: JAWAFDEHI_SOCIALS.linktree, icon: SiLinktree },
   ];
@@ -159,12 +162,22 @@ export const Footer = () => {
     <footer
       className={cn(
         "relative isolate overflow-hidden border-t bg-[var(--footer-bg)] text-[var(--footer-fg)]",
+        // --primary-surface, not --primary: a footer background is the *fill*
+        // role. They are the same navy in light, but --primary becomes light ink
+        // in dark, which would paint the footer cream. This is the divergence
+        // this branch exists to fix.
         "[--footer-bg:hsl(var(--primary-surface))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
-        "[--footer-title:#FF000E]",
+        // Was #FF000E on this branch — pure red, and a hex literal this branch's
+        // own lint rule forbids. #285 replaced it with the token on main; taking
+        // main's side, which also matches the dark override below.
+        "[--footer-title:hsl(var(--accent-on-dark))]",
         "[--footer-soft:hsl(var(--primary-foreground)/0.10)] [--footer-soft-hover:hsl(var(--primary-foreground)/0.16)]",
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",
         "border-[var(--footer-border)]",
         "dark:[--footer-bg:hsl(var(--card))] dark:[--footer-fg:hsl(var(--card-foreground))] dark:[--footer-muted:hsl(var(--card-foreground)/0.82)]",
+        // Dark mode paints the footer with --card, a light cream, so the title
+        // reverts to the ordinary accent; --accent-on-dark exists for the navy.
+        "dark:[--footer-title:hsl(var(--accent))]",
         "dark:[--footer-soft:hsl(var(--background)/0.70)] dark:[--footer-soft-hover:hsl(var(--secondary)/0.45)]",
         "dark:[--footer-border:hsl(var(--border)/0.70)] dark:[--footer-border-hover:hsl(var(--foreground)/0.20)] dark:[--footer-dot:hsl(var(--border))]",
       )}
@@ -177,13 +190,15 @@ export const Footer = () => {
               aria-label="Jawafdehi home"
               className="inline-flex rounded-full transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
+              {/* Light mode paints the footer navy, so it takes the white
+                  wordmark; dark mode paints it cream and takes the navy one. */}
               <img
                 src="/assets/logo-dark.svg"
                 alt="Jawafdehi"
                 className="h-9 w-auto object-contain dark:hidden"
               />
               <img
-                src="/assets/logo-dark.svg"
+                src="/assets/logo.svg"
                 alt="Jawafdehi"
                 className="hidden h-9 w-auto object-contain dark:block"
               />

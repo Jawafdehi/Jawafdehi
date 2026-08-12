@@ -1,5 +1,4 @@
 import { useMemo, type ReactNode } from "react";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Info } from "lucide-react";
@@ -16,8 +15,10 @@ import { PipelineHealth } from "@/components/research/PipelineHealth";
 import { ChargeMixByYear } from "@/components/research/ChargeMixByYear";
 import { FiledByMonth } from "@/components/research/FiledByMonth";
 import { AccountabilityStages, type AccountabilityStage } from "@/components/research/AccountabilityStages";
+import { Seo } from "@/components/Seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
-const CANONICAL = "https://jawafdehi.org/research/corruption-accountability";
+const CANONICAL = `${SITE_URL}/research/corruption-accountability/`;
 
 const Eyebrow = ({ children }: { children: ReactNode }) => (
   <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">{children}</p>
@@ -253,13 +254,20 @@ const ResearchCorruption = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
+      {/* language="en" is load-bearing, not decoration. This report is served
+          English-only (see <html lang="en"> below), so the site-wide Nepali-first
+          default for og:locale would tell every scraper the opposite of what the
+          markup says — which is the exact bug #300 fixed everywhere else. */}
+      <Seo
+        title={`${t("research.corruption.meta.title", "Where Nepal's corruption accountability leaks")} | ${SITE_NAME}`}
+        description={t("research.corruption.meta.description", "A quantitative read of CIAA corruption prosecutions at Nepal's Special Court — conviction rates, the charge types that stick, and where accountability is lost.")}
+        canonicalUrl={CANONICAL}
+        type="article"
+        language="en"
+      >
         {/* This report is served English-only for now; keep the crawlable copy in English. */}
         <html lang="en" />
-        <title>{t("research.corruption.meta.title", "Where Nepal's corruption accountability leaks")} · Jawafdehi</title>
-        <meta name="description" content={t("research.corruption.meta.description", "A quantitative read of CIAA corruption prosecutions at Nepal's Special Court — conviction rates, the charge types that stick, and where accountability is lost.")} />
-        <link rel="canonical" href={CANONICAL} />
-      </Helmet>
+      </Seo>
 
       <main id="main-content" className="flex-1">
         {/* Hero */}

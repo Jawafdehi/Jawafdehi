@@ -28,6 +28,8 @@ import FirmForm from "./pages/admin/datalake/FirmForm";
 import AdminCases from "./pages/admin/jawafdehi/AdminCases";
 import AdminCaseForm from "./pages/admin/jawafdehi/AdminCaseForm";
 import Moderation from "./pages/admin/casework/Moderation";
+import AdminFeedback from "./pages/admin/Feedback";
+import AdminFeedbackDetail from "./pages/admin/FeedbackDetail";
 import CaseworkLogin from "./pages/CaseworkLogin";
 import CaseworkCallback from "./pages/CaseworkCallback";
 import CaseworkReviews from "./pages/CaseworkReviews";
@@ -169,6 +171,12 @@ const AdminApp = () => (
           <Route path="rules" element={<CaseworkRules />} />
           <Route path="how" element={<CaseworkHow />} />
           <Route path="moderation" element={<Moderation />} />
+          {/* Public feedback + corruption reports. The detail route is what the
+              case-report notification email links to, so it must keep resolving
+              a bare id. Declared before the list route for consistency with the
+              literal-before-param ordering used above. */}
+          <Route path="feedback/:id" element={<AdminFeedbackDetail />} />
+          <Route path="feedback" element={<AdminFeedback />} />
         </Route>
       </Routes>
     </CaseworkAuthProvider>

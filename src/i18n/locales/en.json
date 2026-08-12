@@ -63,7 +63,7 @@
       "entities": "Entities"
     },
     "pageTitles": {
-      "report": "Report Allegation",
+      "report": "Report a Case",
       "archiveSearch": "Archive Search",
       "feedback": "Submit Feedback",
       "privacy": "Privacy Policy",
@@ -83,7 +83,7 @@
       "products": "Explore Jawafdehi tools and products.",
       "weeklySeries": "The weekly corruption series is on pause; watch past presentations on YouTube.",
       "updates": "Read recent platform updates.",
-      "report": "Submit an allegation or public-interest corruption lead.",
+      "report": "Send us information about a corruption case — by form, email, or WhatsApp.",
       "feedback": "Send bugs, feature ideas, corrections, or general feedback.",
       "privacy": "Read how Jawafdehi handles data, cookies, logs, and user information.",
       "terms": "Read platform rules, data-reuse (CC BY-NC) terms, disclaimers, and permitted use.",
@@ -106,7 +106,6 @@
     "searchCases": "Search cases",
     "searchEntities": "Search entities",
     "feedback": "Feedback",
-    "letsBuildNepal": "Let's Build Nepal",
     "accountabilityNoExpiry": "Accountability has no expiry.",
     "permanentArchive": "Nepal's permanent public archive of CIAA corruption cases, free forever, built by Nepali volunteers.",
     "builtByNepali": "Built by Nepali",
@@ -117,12 +116,15 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "disclaimer": "The information provided on this website is for informative purposes only. We are not a judiciary body and do not have legal authority to prosecute or adjudicate cases. Our platform serves to document and raise awareness about corruption allegations and public accountability.",
-    "copyright": "© {{year}} Jawafdehi Nepal. All rights reserved.",
+    "copyright": "© {{year}} Jawafdehi Initiative. All rights reserved.",
     "social": {
       "facebook": "Facebook",
       "x": "X (Twitter)",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
       "youtube": "YouTube",
       "linkedin": "LinkedIn",
+      "discord": "Discord",
       "whatsapp": "WhatsApp",
       "linktree": "Linktree"
     }
@@ -820,11 +822,7 @@
       }
     },
     "partners": {
-      "title": "Our Partners",
-      "lbn": {
-        "title": "Let's Build Nepal (LBN)",
-        "description": "A civic tech organization focused on building technology solutions for social good in Nepal. LBN brings technical expertise and development resources to the platform."
-      }
+      "title": "Our Partners"
     },
     "whatWeDo": {
       "title": "What We Do",
@@ -912,7 +910,8 @@
     "saveDraft": "Save as Draft",
     "submitted": {
       "title": "Report Submitted",
-      "description": "Your allegation has been submitted for moderation review. Thank you for contributing to public accountability."
+      "description": "Your allegation has been submitted for moderation review. Thank you for contributing to public accountability.",
+      "reference": "Your reference number is {{reference}}. Keep it if you want to follow up with us."
     },
     "templateDownload": {
       "title": "Download Case Entry Template",
@@ -925,7 +924,28 @@
       "downloadMd": ".MD",
       "emailSubject": "Subject: Case Submission - [Brief Title]"
     },
-    "trigger": "Report a Case"
+    "trigger": "Report a Case",
+    "page": {
+      "metaTitle": "Report a Corruption Case | Jawafdehi Initiative",
+      "metaDescription": "Send Jawafdehi information about a corruption case in Nepal. Submit the form, email report@jawafdehi.org, or message us on WhatsApp. Anonymous reports are accepted.",
+      "formTitle": "Send us the case",
+      "formDescription": "Fill in what you know. Only the title and the description are required — a partial report is still useful.",
+      "safetyTitle": "Read this before you write",
+      "safetyIntro": "Jawafdehi is an independent civic archive, not a government body. We cannot offer you legal protection or witness protection, so take your own precautions first.",
+      "safetyPoint1": "Do not use a work computer, a work email address, or an office network. Use a personal device on a connection that is not tied to the organisation you are reporting.",
+      "safetyPoint2": "If you choose \"Submit anonymously\", we store no name and no contact details. Reports sent through this page never record your IP address or your browser.",
+      "safetyPoint3": "Send copies, never the only original of a document. Files carry hidden metadata such as the author's name or a photo's location — strip it, or send a screenshot instead.",
+      "safetyPoint4": "We publish only what we can independently verify against public records, so a report may sit unpublished for a long time. That is not a judgement on whether we believe you.",
+      "channelsTitle": "Other ways to reach us",
+      "channelsDescription": "If you would rather not use the form, any of these reaches the same team.",
+      "emailLabel": "Email",
+      "whatsappLabel": "WhatsApp",
+      "socialTitle": "Our social accounts",
+      "socialDescription": "These are the only accounts we run. A social message is public or semi-public — do not put case details in one; ask us to move to email or WhatsApp instead.",
+      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp."
+    },
+    "submitAnother": "Submit another report",
+    "howToReachYou": "How we can reach you"
   },
   "feedback": {
     "title": "Platform Feedback",
@@ -1001,6 +1021,7 @@
     "switchToDark": "Switch to dark theme"
   },
   "caseCard": {
+    "thumbnailAlt": "Thumbnail image for the case: {{title}}",
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",
@@ -1729,7 +1750,8 @@
       "proposals": "Proposals",
       "reviews": "Reviews",
       "rules": "Rules",
-      "moderation": "Moderation"
+      "moderation": "Moderation",
+      "feedback": "Feedback"
     },
     "dashboard": {
       "title": "Admin",
@@ -1754,7 +1776,9 @@
         "reviewsTitle": "Casework Reviews",
         "reviewsBody": "AI-assisted casework reviews, grading rules, and the review job queue.",
         "moderationTitle": "Moderation",
-        "moderationBody": "Triage and approve incoming submissions (admin / moderator only)."
+        "moderationBody": "Triage and approve incoming submissions (admin / moderator only).",
+        "feedbackTitle": "Feedback",
+        "feedbackBody": "Messages and corruption reports sent in from the website."
       }
     },
     "moderation": {
@@ -1790,6 +1814,49 @@
       "dismissedFailure": "Failed to dismiss case",
       "dismissConfirmTitle": "Dismiss this submission?",
       "dismissConfirmBody": "Dismissing closes the case and removes it from the moderation queue. You can reopen it as a draft later. The reason you entered (if any) is recorded in the case history."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "subtitle": "Messages and corruption reports submitted through the website.",
+      "privacyNotice": "Reporters' contact details, IP addresses and attachments are not shown here. An administrator can retrieve them if a report needs following up.",
+      "loadFailed": "Could not load feedback.",
+      "notFound": "That submission could not be loaded.",
+      "noPermission": "Feedback is available to caseworkers and administrators.",
+      "empty": "Nothing to show.",
+      "allStatuses": "All statuses",
+      "allTypes": "All types",
+      "searchPlaceholder": "Search",
+      "itemCount_one": "{{count}} submission",
+      "itemCount_other": "{{count}} submissions",
+      "backToQueue": "Back to feedback",
+      "hide": "Hide",
+      "description": "What was reported",
+      "statusLabel": "Status",
+      "notesLabel": "Internal notes",
+      "notesPlaceholder": "Visible to staff only",
+      "saved": "Triage saved",
+      "saveFailed": "Could not save triage.",
+      "lastUpdated": "Last updated {{when}}",
+      "hasContact": "Contactable",
+      "contactHint": "Contact details were supplied. They are not shown here — ask an administrator.",
+      "hasAttachment": "Attachment",
+      "attachmentHint": "A file was attached. It is not shown here — ask an administrator.",
+      "status": {
+        "submitted": "New",
+        "in_review": "In review",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "type": {
+        "bug": "Bug",
+        "feature": "Feature request",
+        "usability": "Usability",
+        "content": "Content",
+        "general": "General",
+        "case_report": "Corruption report"
+      },
+      "range": "{{from}}–{{to}} of {{total}}",
+      "typeLabel": "Type"
     },
     "proposals": {
       "title": "Update proposals",
@@ -2061,7 +2128,7 @@
   },
   "faqPage": {
     "meta": {
-      "title": "FAQ | Jawafdehi Nepal",
+      "title": "FAQ | Jawafdehi Initiative",
       "description": "Answers to common questions about Jawafdehi, the corruption cases we document, verification, reporting, data use, privacy, volunteering, funding, and legal disclaimers.",
       "socialDescription": "Answers to common questions about Jawafdehi, reporting corruption cases, verification, data reuse, privacy, volunteering, and funding."
     },

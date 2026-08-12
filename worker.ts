@@ -1,11 +1,15 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
+import { matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
   SITE_NAME,
   SITE_URL,
   SOCIAL_IMAGE_URL,
+  buildHeadTags,
+  escapeHtml,
   previewImageUrl,
+  renderHeadTagsToHtml,
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
@@ -275,26 +279,20 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
 // read the same Open Graph / Twitter Card tags, so one injection covers them.
 // --------------------------------------------------------------------------
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 // Fetch with a hard timeout. Resolves to null (rather than throwing) on timeout,
 // network error, or non-OK status, so callers cleanly fall through to the SPA.
 async function fetchWithTimeout(url: string): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), META_FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(url, {
+    // Returned whatever the status, so callers can tell "the API says this
+    // record does not exist" (404 → serve a real 404) apart from "the API did
+    // not answer" (null → fall through to the shell rather than deindex a
+    // live page over a slow backend).
+    return await fetch(url, {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });
-    return response.ok ? response : null;
   } catch {
     return null;
   } finally {
@@ -315,27 +313,9 @@ function buildMetaTags(input: {
   // "unlisted" (non-PUBLISHED) records out of search — link-only, not indexed.
   robots?: string | null;
 }): string {
-  const type = input.type ?? 'article';
-  return `
-<title>${escapeHtml(input.title)}</title>
-<meta name="description" content="${escapeHtml(input.description)}" />
-${input.robots ? `<meta name="robots" content="${escapeHtml(input.robots)}" />` : ''}
-<link rel="canonical" href="${escapeHtml(input.canonicalUrl)}" />
-<meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />
-<meta property="og:type" content="${escapeHtml(type)}" />
-<meta property="og:url" content="${escapeHtml(input.canonicalUrl)}" />
-<meta property="og:title" content="${escapeHtml(input.title)}" />
-<meta property="og:description" content="${escapeHtml(input.description)}" />
-<meta property="og:image" content="${escapeHtml(input.imageUrl)}" />
-<meta property="og:image:alt" content="${escapeHtml(input.imageAlt)}" />
-<meta property="og:locale" content="en_US" />
-${input.publishedTime ? `<meta property="article:published_time" content="${escapeHtml(input.publishedTime)}" />` : ''}
-${input.modifiedTime ? `<meta property="article:modified_time" content="${escapeHtml(input.modifiedTime)}" />` : ''}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="${escapeHtml(input.title)}" />
-<meta name="twitter:description" content="${escapeHtml(input.description)}" />
-<meta name="twitter:image" content="${escapeHtml(input.imageUrl)}" />
-<meta name="twitter:image:alt" content="${escapeHtml(input.imageAlt)}" />`.trim();
+  // The tag list is shared with <Seo> so the head a scraper gets from the edge
+  // matches the head the app renders — see buildHeadTags in src/utils/seo.
+  return renderHeadTagsToHtml(buildHeadTags({ ...input, type: input.type ?? 'article' }));
 }
 
 // Strip the head tags we are about to override (title, canonical, and the
@@ -352,7 +332,10 @@ function stripOverriddenHeadTags(head: string): string {
   return head
     .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, () => '')
     .replace(/<meta\b[^>]*\bproperty=["'](?:og|article):[^"']*["'][^>]*>/gi, () => '')
-    .replace(/<meta\b[^>]*\bname=["']twitter:[^"']*["'][^>]*>/gi, () => '')
+    // twitter:site is site-wide (index.html) and buildHeadTags does not re-emit
+    // it, so stripping it here would drop the @handle from every shared case and
+    // update — the only pages this override runs for.
+    .replace(/<meta\b[^>]*\bname=["']twitter:(?!site\b)[^"']*["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']description["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']robots["'][^>]*>/gi, () => '')
     .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
@@ -369,10 +352,16 @@ function stripOverriddenHeadTags(head: string): string {
 // sequences (`$$`, `$&`, `` $` ``, `$'`) in the injected title / meta — which
 // escapeHtml does NOT neutralize — are inserted literally and cannot inject
 // markup into the head.
-function injectHeadMeta(indexHtml: string, title: string, metaTags: string): string {
+//
+// metaTags already opens with the <title> element, so the title marker is
+// simply removed rather than filled: it stands for a whole element (that is
+// what pre-render.ts substitutes into it), and filling it with the escaped
+// title as well left the record's name stranded as loose text in the head,
+// ahead of the real element.
+function injectHeadMeta(indexHtml: string, metaTags: string): string {
   if (indexHtml.includes('<!--helmet-meta-->')) {
     return indexHtml
-      .replace('<!--helmet-title-->', () => escapeHtml(title))
+      .replace('<!--helmet-title-->', () => '')
       .replace('<!--helmet-meta-->', () => metaTags);
   }
   const headEnd = indexHtml.indexOf('</head>');
@@ -384,8 +373,12 @@ function injectHeadMeta(indexHtml: string, title: string, metaTags: string): str
   return indexHtml;
 }
 
+// Fetches the built index.html to use as a shell. The request is constructed
+// fresh rather than from `request` as init: inheriting the incoming request
+// would also inherit its AbortSignal, which nothing here needs and which fails
+// the cross-realm instanceof check under vitest.
 async function fetchIndexHtml(request: Request, env: Env): Promise<string | null> {
-  const indexRequest = new Request(new URL('/', request.url).toString(), request);
+  const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });
   const indexResponse = await env.ASSETS.fetch(indexRequest);
   if (!indexResponse.ok) return null;
   return indexResponse.text();
@@ -402,10 +395,31 @@ function metaHtmlResponse(html: string): Response {
   });
 }
 
+// The SPA shell at 404. Used when the API positively reports that a detail
+// record does not exist — a renamed case slug, a deleted article. React Router
+// renders NotFound from this body; only the status line differs.
+async function notFoundShellResponse(request: Request, env: Env): Promise<Response | null> {
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+  return new Response(indexHtml, {
+    status: 404,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex',
+      ...securityHeaders(),
+    },
+  });
+}
+
 // Inject share metadata for a published case not yet captured by pre-render.
 async function handleCaseMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
   const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/cases/${encodeURIComponent(slug)}/`);
   if (!apiResponse) return null;
+  // Case slugs get renamed, and the old URL stays in circulation. The API
+  // saying 404 is a positive answer, unlike a timeout.
+  if (apiResponse.status === 404) return notFoundShellResponse(request, env);
+  if (!apiResponse.ok) return null;
 
   let caseData: Record<string, unknown>;
   try {
@@ -421,7 +435,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
   const description = truncateMeta(
     stripMarkdown(stripHtml(typeof caseData.description === 'string' ? caseData.description : '')) ||
     allegationText ||
-    'A verified corruption and misconduct case documented by Jawafdehi Nepal.',
+    `A verified corruption and misconduct case documented by ${SITE_NAME}.`,
   );
   const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
   const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
@@ -446,7 +460,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     // out of search engines (only PUBLISHED is indexable). Share cards still work.
     robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
   });
-  return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.
@@ -455,6 +469,7 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     `${CMS_API_BASE}/pages/?type=content.ArticlePage&slug=${encodeURIComponent(slug)}&fields=*`,
   );
   if (!apiResponse) return null;
+  if (!apiResponse.ok) return null;
 
   let article: Record<string, unknown> | undefined;
   try {
@@ -463,12 +478,14 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
   } catch {
     return null;
   }
-  if (!article) return null;
+  // The CMS answers an unknown slug with 200 and an empty list, which is a
+  // positive "no such article" — serve a real 404 rather than the shell.
+  if (!article) return notFoundShellResponse(request, env);
 
   const titleRaw = String(article.title || 'Jawafdehi Update');
   const description = truncateMeta(
     stripHtml(typeof article.excerpt === 'string' ? article.excerpt : '') ||
-    'An update from Jawafdehi Nepal.',
+    `An update from ${SITE_NAME}.`,
   );
   const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
   const thumbnail = article.thumbnail as { url?: string; alt?: string } | null | undefined;
@@ -489,45 +506,75 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     publishedTime: meta?.first_published_at || date,
     modifiedTime: date,
   });
-  return metaHtmlResponse(injectHeadMeta(indexHtml, `${titleRaw} | Jawafdehi`, metaTags));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+    // Endpoints the Worker owns are matched on the trailing-slash-normalised
+    // path, the same form the route match below uses. Comparing against the raw
+    // pathname let /api/latest-videos/ miss its handler and fall through to the
+    // SPA shell, which answered 200 with HTML where the caller expected JSON.
+    const endpoint = normalizePath(path);
 
     // Handle oEmbed endpoint
-    if (path === '/oembed' || path === '/oembed/') {
+    if (endpoint === '/oembed') {
       return handleOembed(request);
     }
 
-    if (path === '/document-preview' || path === '/document-preview/') {
+    if (endpoint === '/document-preview') {
       return handleDocumentPreview(request);
     }
 
     // Latest YouTube uploads for the Weekly Series "Past presentations" section
-    if (path === '/api/latest-videos') {
+    if (endpoint === '/api/latest-videos') {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return new Response('Method Not Allowed', { status: 405 });
       }
       return handleLatestVideos(request);
     }
 
+    // Which SPA route this path resolves to, if any. One match decides the frame
+    // policy below, the detail-metadata fallbacks, and the final status line —
+    // rather than three hand-written regexes each re-deciding it.
+    const matched = matchRoute(path);
+
     // The case-embed widget and the Wagtail headless preview both render inside
     // an <iframe>, so neither can send X-Frame-Options: DENY. The embed widget
     // is framable anywhere; the preview (an unsaved draft) is scoped to the CMS
     // admin and marked noindex — see previewSecurityHeaders.
-    const isEmbedRoute = /^\/embed\/case\//.test(path);
-    const isPreviewRoute = /^\/updates\/preview\/?$/.test(path);
+    const isEmbedRoute = matched?.path === '/embed/case/:id';
+    const isPreviewRoute = matched?.path === '/updates/preview';
     const secHeaders = isPreviewRoute
       ? previewSecurityHeaders()
       : isEmbedRoute
         ? securityHeadersAllowFrame()
         : securityHeaders();
 
+    // The social card used to ship under two names. /og-favicon.png was the
+    // original, kept byte-identical to /assets/social-preview.png purely so
+    // shares already cached against the old filename kept resolving. The file is
+    // gone now, so this 301 does that job instead: a scraper re-fetching an old
+    // og:image URL still lands on the current card.
+    //
+    // This is only reachable because the file was deleted — the assets binding
+    // answers before the Worker on any path it holds, so while og-favicon.png
+    // existed this branch could never run.
+    if (path === '/og-favicon.png') {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': '/assets/social-preview.png',
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Short alias: /weekly → /saptahik (301)
-    if (path === '/weekly' || path === '/weekly/') {
+    if (endpoint === '/weekly') {
       return new Response(null, {
         status: 301,
         headers: {
@@ -581,7 +628,7 @@ export default {
       return response;
     }
 
-    // SPA fallback: serve index.html with 200
+    // SPA fallback. Everything below is a path ASSETS does not hold.
     if (request.method !== 'GET' && request.method !== 'HEAD') return asset;
 
     // Case / update detail pages published after the last build aren't
@@ -589,25 +636,41 @@ export default {
     // Inject the record's real Open Graph / Twitter tags so link previews are
     // correct on every platform. Numeric / court-ref case URLs are already
     // redirected to their canonical slug above, so only slugs reach here.
-    const caseSlugMatch = path.match(/^\/case\/([^/]+)\/?$/);
-    if (caseSlugMatch) {
-      const metaResponse = await handleCaseMetaFallback(request, env, decodeURIComponent(caseSlugMatch[1]));
+    //
+    // Gating on the matched route rather than a regex keeps sibling literal
+    // routes out of it: /updates/preview is the Wagtail preview target, not an
+    // article, and asking the CMS for an article named "preview" 404'd it.
+    // Params come back percent-decoded.
+    if (matched?.path === '/case/:id' && matched.params.id) {
+      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
       if (metaResponse) return metaResponse;
     }
-    const updateSlugMatch = path.match(/^\/updates\/([^/]+)\/?$/);
-    if (updateSlugMatch) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, decodeURIComponent(updateSlugMatch[1]));
+    if (matched?.path === '/updates/:slug' && matched.params.slug) {
+      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
       if (metaResponse) return metaResponse;
     }
 
-    const indexRequest = new Request(new URL('/', request.url).toString(), request);
+    const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });
     const indexResponse = await env.ASSETS.fetch(indexRequest);
+
+    // A path the SPA has no route for is a real 404, not a page. Serving the
+    // shell at 200 made every typo and every dead link indexable, and told
+    // link checkers the site had no broken links at all. The body is still the
+    // shell so React Router renders the styled NotFound page — only the status
+    // line changes, which is the part crawlers read.
+    const status = matched ? 200 : 404;
     const spaResponse = new Response(indexResponse.body, {
-      status: 200,
+      status,
       headers: indexResponse.headers,
     });
     for (const [key, value] of Object.entries(secHeaders)) {
       spaResponse.headers.set(key, value);
+    }
+    if (status === 404) {
+      // Do not let a 404 sit in an edge or browser cache: the same path can
+      // become real the moment a case is published.
+      spaResponse.headers.set('Cache-Control', 'no-store');
+      spaResponse.headers.set('X-Robots-Tag', 'noindex');
     }
     return spaResponse;
   },

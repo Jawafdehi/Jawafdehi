@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,73 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ClientOnly } from "@/components/ClientOnly";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { SentryErrorFallback } from "@/components/SentryErrorFallback";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-// Eagerly imported pages.
-//
-// Split policy: this app has NO runtime SSR — HTML is produced at BUILD TIME by
-// scripts/pre-render.ts (the Cloudflare Worker only serves static assets + a SPA
-// fallback). React 18's renderToString does NOT await React.lazy/Suspense, so a
-// lazily-imported page would pre-render as the "Loading…" fallback, shipping
-// empty HTML + wrong Helmet meta for that route. Therefore every PRE-RENDERED
-// route (see PRE_RENDERED_STATIC_ROUTES in src/data/site-routes.ts, plus the
-// dynamic /case/:id, /entity/:id and /updates/:slug routes) MUST stay eager.
-// Routes NOT pre-rendered are client-rendered regardless, so they are lazy()
-// below to keep them out of the public entry chunk.
-import Index from "./pages/Index";
-import Cases from "./pages/Cases";
-import About from "./pages/About";
-import Commitment from "./pages/Commitment";
-import OurProcess from "./pages/OurProcess";
-import OurTeam from "./pages/OurTeam";
-import Volunteer from "./pages/Volunteer";
-import OurProducts from "./pages/OurProducts";
-import WeeklyMeetings from "./pages/WeeklyMeetings";
-import FaqPage from "./pages/FaqPage";
-import CaseDetail from "./pages/CaseDetail";
-import EntityProfile from "./pages/EntityProfile";
-import Feedback from "./pages/Feedback";
-import Updates from "./pages/Updates";
-import UpdateDetail from "./pages/UpdateDetail";
-import Privacy from "./pages/Privacy";
-import TermsOfService from "./pages/TermsOfService";
-import ArchiveSearch from "./pages/ArchiveSearch";
-import ResearchCorruption from "./pages/ResearchCorruption";
-import DocumentPreviewPage from "./pages/DocumentPreviewPage";
-import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AnalyticsRouteGate } from "@/components/AnalyticsRouteGate";
-
-// Lazily imported pages. These routes are not pre-rendered, so client-side code
-// splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
-const Donate = lazy(() => import("./pages/Donate"));
-// Post-donation return targets (/donate/success, /donate/cancel) — not
-// pre-rendered, so lazy() per the split policy above.
-const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
-const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
-const DataQuality = lazy(() => import("./pages/DataQuality"));
-const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
-const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
-const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
-const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
-const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
-const Materials = lazy(() => import("./pages/Materials"));
-const CourtCases = lazy(() => import("./pages/CourtCases"));
-const NewsletterUnsubscribe = lazy(() => import("./pages/NewsletterUnsubscribe"));
-const NewsletterConfirmed = lazy(() => import("./pages/NewsletterConfirmed"));
-
-// The entire /admin/* subtree — including the OIDC client, admin CRUD forms and
-// casework pages — lives behind this single lazy boundary. /admin is auth-gated
-// and never pre-rendered, so none of it belongs in the public entry chunk.
-const AdminApp = lazy(() => import("./AdminApp"));
-
-// Back-compat redirect: /portal/<rest> -> /admin/<rest> (preserving query).
-const PortalRedirect = () => {
-  const location = useLocation();
-  const dest =
-    location.pathname.replace(/^\/portal/, "/admin") + location.search;
-  return <Navigate to={dest} replace />;
-};
+import { routesWithChrome } from "./routes";
+import NotFound from "./pages/NotFound";
 
 const RouteLoadingFallback = () => (
   <div
@@ -95,83 +34,16 @@ const App = () => (
       <Suspense fallback={<RouteLoadingFallback />}>
         <ScrollToTop />
         <AnalyticsRouteGate />
+        {/* Routes come from SITE_ROUTES in src/data/site-routes.ts — add a route
+            there, then give it an element in ROUTE_ELEMENTS in src/routes.tsx.
+            Neither compiles without the other. */}
         <Routes>
-          {/* Embed route for oEmbed iframe */}
-          <Route path="/embed/case/:id" element={<EmbedCaseCard />} />
-          <Route path="/document-viewer" element={<DocumentPreviewPage />} />
-
-          {/* Unified admin panel — standalone full-screen, mounted at /admin.
-              Folds in the former /portal casework pages. Auth: OIDC + an
-              internal role (gated inside AdminApp). The whole subtree is
-              lazy-loaded and wrapped in <ClientOnly> so the OIDC UserManager
-              is only constructed on the client after hydration. */}
-          <Route
-            path="/admin/*"
-            element={
-              <ClientOnly>
-                <AdminApp />
-              </ClientOnly>
-            }
-          />
-
-          {/* Back-compat: the casework portal moved from /portal to /admin. */}
-          <Route path="/portal/*" element={<PortalRedirect />} />
+          {routesWithChrome("standalone")}
 
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/cases" element={<Cases />} />
-            <Route path="/case/:id" element={<CaseDetail />} />
-            {/* The standalone entities directory was dropped; entity browse now
-                lives in unified search. Redirect old/bookmarked links there. */}
-            <Route
-              path="/entities"
-              element={<Navigate to="/search?type=entity" replace />}
-            />
-            <Route path="/search" element={<ArchiveSearch />} />
-            {/* Data-lake single-type browse pages (unified-archive search, type-pinned). */}
-            <Route path="/materials" element={<Materials />} />
-            <Route path="/courtcases" element={<CourtCases />} />
-            {/* Legacy Jawafdehi case-entity profile (numeric id, single segment). */}
-            <Route path="/entity/:id" element={<EntityProfile />} />
-            {/* Entity record by IRI tail (multi-segment, e.g. organization/.../tu).
-                React Router prefers the more specific :id route for single-segment
-                numeric ids, so this splat only catches the hierarchical entity IRIs. */}
-            <Route path="/entity/*" element={<EntityRecordProfile />} />
-            {/* Data-lake material by IRI tail (/material/<source>/<ident>). */}
-            <Route path="/material/*" element={<MaterialProfile />} />
-            {/* Data-lake court case by IRI tail (/courtcase/<court>/<case_number>). */}
-            <Route path="/courtcase/*" element={<CourtCaseProfile />} />
-            {/* Moderation lives only under the auth-gated admin panel. Redirect
-                the old public /moderation path (and any stale bookmarks) there. */}
-            <Route path="/moderation" element={<Navigate to="/admin/moderation" replace />} />
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/updates" element={<Updates />} />
-            {/* Wagtail headless preview target — must precede the :slug route. */}
-            <Route path="/updates/preview" element={<UpdatePreview />} />
-            <Route path="/updates/:slug" element={<UpdateDetail />} />
-            {/* /information retired — its FAQ duplicated /faq; redirect there. */}
-            <Route path="/information" element={<Navigate to="/faq" replace />} />
-            <Route path="/faq" element={<FaqPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/commitment" element={<Commitment />} />
-            <Route path="/data-quality" element={<DataQuality />} />
-            <Route path="/research/corruption-accountability" element={<ResearchCorruption />} />
-            <Route path="/our-process" element={<OurProcess />} />
-            <Route path="/team" element={<OurTeam />} />
-            <Route path="/volunteer" element={<Volunteer />} />
-            <Route path="/donate" element={<Donate />} />
-            <Route path="/products" element={<OurProducts />} />
-            <Route path="/saptahik" element={<WeeklyMeetings />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/newsletter/confirmed" element={<NewsletterConfirmed />} />
-            <Route
-              path="/newsletter/unsubscribe/:token"
-              element={<NewsletterUnsubscribe />}
-            />
-            <Route path="/donate/cancel" element={<PaymentCancelled />} />
-            <Route path="/donate/success" element={<PaymentSuccess />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {routesWithChrome("app")}
+            {/* The catch-all is not in the table: it matches every path, which
+                would tell the Worker that every path is real. */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

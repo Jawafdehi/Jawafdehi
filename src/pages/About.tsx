@@ -1,29 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { CoreValues } from "@/components/about/core-values";
 import { AboutHero } from "@/components/about/hero";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
+import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const About = () => {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>About | Jawafdehi Nepal</title>
-        <meta name="description" content="Learn about Jawafdehi — Nepal's open corruption accountability platform. Meet the team behind Let's Build Nepal working to promote transparency." />
-        <link rel="canonical" href="https://jawafdehi.org/about" />
-        <meta property="og:site_name" content="Jawafdehi Nepal" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://jawafdehi.org/about" />
-        <meta property="og:title" content="About | Jawafdehi Nepal" />
-        <meta property="og:description" content="Learn about Jawafdehi — Nepal's open corruption accountability platform. Meet the team behind Let's Build Nepal and  working to promote transparency." />
-        <meta property="og:image" content="https://jawafdehi.org/assets/social-preview.png" />
-        <meta property="og:locale" content="en_US" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="About | Jawafdehi Nepal" />
-        <meta name="twitter:description" content="Learn about Jawafdehi — Nepal's open corruption accountability platform. Meet the team behind Let's Build Nepal and working to promote transparency." />
-        <meta name="twitter:image" content="https://jawafdehi.org/assets/social-preview.png" />
-      </Helmet>
+      <Seo
+        title={`About | ${SITE_NAME}`}
+        description="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases."
+        canonicalUrl={`${SITE_URL}/about/`}
+      />
 
       <div className="flex-1">
         <AboutHero />
