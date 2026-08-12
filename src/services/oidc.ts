@@ -59,6 +59,20 @@ export function onSigninCallback(): void {
 }
 
 export async function getAccessToken(): Promise<string | null> {
+  // No browser, no user session. This guard is load-bearing for SSR, not just
+  // tidiness: `http.ts`'s request interceptor awaits this on EVERY request, and
+  // createUserManager() above reads `window.location.origin` unguarded. Under
+  // `bun run scripts/pre-render.ts` that throws before the request is sent, so
+  // every prefetch in entry-server.tsx failed and the `Promise.allSettled` around
+  // them swallowed it — each page shipped `{"queries":[]}` and prerendered its
+  // data sections as empty skeletons.
+  //
+  // Returning null (rather than making a UserManager work server-side) is also
+  // the correct posture: pre-rendered HTML is served to everyone, so it must only
+  // ever contain data fetched anonymously. A bearer token here would bake one
+  // staff member's authorized view into a public static file.
+  if (typeof window === "undefined") return null;
+
   const um = getUserManager();
   const user = await um.getUser();
   return user && !user.expired ? user.access_token : null;
