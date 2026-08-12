@@ -9,7 +9,10 @@ import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { searchArchive } from './services/search-api';
+import { featuredCasesQuery } from './queries/home';
 import { http } from './services/http';
+import { reportPrefetch } from './lib/ssr-prefetch';
+import type { PrefetchReport } from './lib/ssr-prefetch';
 import type { JawafEntity } from './types/jds';
 
 // SSR/pre-render runs in Node, where the shared `http` client's same-origin
@@ -22,17 +25,24 @@ export interface RenderResult {
   html: string;
   helmetContext: { helmet?: HelmetServerState };
   dehydratedState: unknown;
+  prefetch: PrefetchReport;
 }
 
+// Nothing here reports whether it worked: prefetchQuery swallows its own errors,
+// so a route whose every fetch failed is indistinguishable from one that had
+// nothing to fetch. render() reads the outcome off the cache instead, and
+// scripts/pre-render.ts fails the build on it — which is how a prefetch that
+// silently returned nothing for months (see getAccessToken in services/oidc.ts)
+// stops being a thing that can ship.
 async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
-  // Home page: prefetch stats + the same recent-case search the client renders.
+  // Home page: prefetch stats + the same featured-case search the client renders.
+  // featuredCasesQuery() is the SHARED definition (queries/home.ts) — the key and
+  // params must match pages/Index.tsx exactly or this prefetch fills a cache entry
+  // the client never asks for, and the section flashes its skeleton anyway.
   if (url === '/') {
     await Promise.allSettled([
       queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
-      queryClient.prefetchQuery({
-        queryKey: ['home-recent-cases', { page_size: 6 }],
-        queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: 6 }),
-      }),
+      queryClient.prefetchQuery(featuredCasesQuery()),
     ]);
     return;
   }
@@ -156,6 +166,8 @@ export async function render(url: string): Promise<RenderResult> {
   });
 
   await prefetch(url, queryClient);
+  // Before the render, not after: see reportPrefetch.
+  const prefetchReport = reportPrefetch(queryClient);
 
   const html = renderToString(
     <ThemeProvider>
@@ -170,5 +182,5 @@ export async function render(url: string): Promise<RenderResult> {
   );
 
   const dehydratedState = dehydrate(queryClient);
-  return { html, helmetContext, dehydratedState };
+  return { html, helmetContext, dehydratedState, prefetch: prefetchReport };
 }

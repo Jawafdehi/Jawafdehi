@@ -148,9 +148,9 @@
       "coverageLink": "See what we cover"
     },
     "featuredCases": {
-      "title": "Featured Cases",
-      "description": "Recent high-impact corruption cases under public scrutiny",
-      "viewAll": "View All Cases →"
+      "heading": "Featured Cases",
+      "subtitle": "Recent high-impact corruption cases under public scrutiny",
+      "viewAll": "View all cases"
     },
     "mission": {
       "title": "Our Mission",
@@ -177,11 +177,6 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
-    },
-    "recentCases": {
-      "heading": "Recently Documented Cases",
-      "subtitle": "Latest cases added to the archive",
-      "viewAll": "View all cases"
     }
   },
   "ourProcess": {

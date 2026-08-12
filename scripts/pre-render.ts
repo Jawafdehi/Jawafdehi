@@ -13,9 +13,19 @@ import {
   type SearchIndexFile,
   type SearchIndexLine,
 } from '../src/data/site-routes.ts';
+import {
+  summarisePrefetchFailures,
+  type PrefetchReport,
+  type RoutePrefetchFailure,
+} from '../src/lib/ssr-prefetch.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
+
+// Break glass to build without the API: pre-rendered pages then ship an empty
+// React Query cache, which is fine for a local `bun run build` and never fine for
+// anything a visitor or a crawler will see. Not set in CI, deliberately.
+const ALLOW_EMPTY_PREFETCH = process.env.PRERENDER_ALLOW_EMPTY_PREFETCH === '1';
 
 interface RouteConfig {
   path: string;
@@ -36,6 +46,7 @@ interface RenderResult {
     }
   };
   dehydratedState: unknown;
+  prefetch: PrefetchReport;
 }
 
 interface PaginatedCaseList {
@@ -326,6 +337,15 @@ async function main() {
   }));
   const searchEntries: SearchIndexEntry[] = [];
 
+  // Collected rather than thrown on, so one build reports every broken route
+  // instead of dying on the first and hiding the rest. Enforced at the end.
+  const prefetchFailures: RoutePrefetchFailure[] = [];
+  const notePrefetch = (route: string, result: RenderResult): void => {
+    if (result.prefetch.failed.length > 0) {
+      prefetchFailures.push({ route, failed: result.prefetch.failed });
+    }
+  };
+
   // Fetch cases and entity IDs
   let cases: PaginatedCaseList['results'] = [];
   let apiReachable = true;
@@ -333,6 +353,14 @@ async function main() {
     cases = await fetchAllCases();
     console.log(`[pre-render] Fetched ${cases.length} cases`);
   } catch (err) {
+    // Rendering static routes only was the tolerant default. It is not tolerable
+    // for a deploy: every page that prefetches anything would be published empty,
+    // and no case or entity page would be published at all.
+    if (!ALLOW_EMPTY_PREFETCH) {
+      console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
+      console.error('[pre-render] Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.');
+      process.exit(1);
+    }
     console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
     apiReachable = false;
   }
@@ -351,6 +379,7 @@ async function main() {
       const result = await render(route.path);
       const html = injectIntoTemplate(template, result);
       await writeHtml(route.outFile, html);
+      notePrefetch(route.path, result);
       const routeConfig = PRE_RENDERED_STATIC_ROUTES.find((item) => item.path === route.path);
       if (routeConfig && shouldIncludeStaticRouteInSearch(routeConfig)) {
         searchEntries.push(withSearchLines(staticRouteToSearchEntry(routeConfig), result.html));
@@ -371,6 +400,7 @@ async function main() {
       const result = await render(path);
       const html = injectIntoTemplate(template, result);
       await writeHtml(outFile, html);
+      notePrefetch(path, result);
       searchEntries.push(withSearchLines(updateRouteToSearchEntry(update), result.html));
       console.log(`[pre-render] ✓ ${path}`);
     } catch (err) {
@@ -425,6 +455,7 @@ async function main() {
         const result = await render(path);
         const html = injectIntoTemplate(template, result);
         await writeHtml(outFile, html);
+        notePrefetch(path, result);
         searchEntries.push(entityToSearchEntry(entityId, entityNames.get(entityId), result.html));
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
@@ -437,6 +468,22 @@ async function main() {
   }
 
   await writeSearchIndex(searchEntries);
+
+  if (prefetchFailures.length > 0) {
+    const summary = summarisePrefetchFailures(prefetchFailures);
+    if (ALLOW_EMPTY_PREFETCH) {
+      console.warn(`[pre-render] WARNING (PRERENDER_ALLOW_EMPTY_PREFETCH=1): ${summary}`);
+    } else {
+      console.error(`[pre-render] ERROR: ${summary}`);
+      console.error(
+        '[pre-render] Those pages were written with an empty React Query cache, so they\n' +
+        '  serve a skeleton to crawlers and on first paint. Refusing to publish them.\n' +
+        '  Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.',
+      );
+      process.exit(1);
+    }
+  }
+
   console.log('[pre-render] Done.');
 }
 
