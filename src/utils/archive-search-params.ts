@@ -1,8 +1,19 @@
+// `sort` is deliberately NOT here. A value listed in defaultValues is stripped
+// from the URL, and the default sort is no longer a constant — ArchiveSearch
+// resolves an absent ?sort to `featured` while browsing and `relevance` once
+// there is query text. Stripping an explicit "relevance" pick would therefore
+// re-resolve it to `featured` on the next read, snapping the dropdown back and
+// making that option impossible to select while browsing.
 const defaultValues: Record<string, string> = {
   page: "1",
-  sort: "relevance",
 };
-const validSorts = new Set(["relevance", "newest", "oldest", "title"]);
+const validSorts = new Set([
+  "relevance",
+  "newest",
+  "oldest",
+  "title",
+  "featured",
+]);
 const validTypes = new Set([
   "all",
   "entity",

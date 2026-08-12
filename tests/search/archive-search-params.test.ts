@@ -7,13 +7,30 @@ import {
 } from "@/utils/archive-search-params";
 
 describe("archive search params", () => {
-  it("removes default pagination and sorting values", () => {
-    const params = new URLSearchParams(
-      "tags=CIAA&page=1&type=case&sort=relevance",
-    );
+  it("removes default pagination values", () => {
+    const params = new URLSearchParams("tags=CIAA&page=1&type=case");
 
     expect(normalizeArchiveSearchParams(params).toString()).toBe(
       "tags=CIAA&type=case",
+    );
+  });
+
+  // `sort` has no static default to strip: ArchiveSearch resolves an absent
+  // ?sort to `featured` while browsing, so dropping an explicit "relevance"
+  // would re-resolve it to `featured` and make that option unselectable.
+  it("preserves an explicit relevance sort", () => {
+    const params = new URLSearchParams("page=1&type=case&sort=relevance");
+
+    expect(normalizeArchiveSearchParams(params).toString()).toBe(
+      "type=case&sort=relevance",
+    );
+  });
+
+  it("preserves a featured sort", () => {
+    const params = new URLSearchParams("type=case&sort=featured");
+
+    expect(normalizeArchiveSearchParams(params).toString()).toBe(
+      "type=case&sort=featured",
     );
   });
 
