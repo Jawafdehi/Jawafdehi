@@ -9,6 +9,7 @@ import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { searchArchive } from './services/search-api';
+import { featuredCasesQuery } from './queries/home';
 import { http } from './services/http';
 import type { JawafEntity } from './types/jds';
 
@@ -25,14 +26,14 @@ export interface RenderResult {
 }
 
 async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
-  // Home page: prefetch stats + the same recent-case search the client renders.
+  // Home page: prefetch stats + the same featured-case search the client renders.
+  // featuredCasesQuery() is the SHARED definition (queries/home.ts) — the key and
+  // params must match pages/Index.tsx exactly or this prefetch fills a cache entry
+  // the client never asks for, and the section flashes its skeleton anyway.
   if (url === '/') {
     await Promise.allSettled([
       queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
-      queryClient.prefetchQuery({
-        queryKey: ['home-recent-cases', { page_size: 6 }],
-        queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: 6 }),
-      }),
+      queryClient.prefetchQuery(featuredCasesQuery()),
     ]);
     return;
   }

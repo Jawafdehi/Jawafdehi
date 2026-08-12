@@ -12,7 +12,10 @@ export type ArchiveSearchResultType =
 
 export type ArchiveSearchType = "all" | ArchiveSearchResultType;
 
-export type ArchiveSearchSort = "relevance" | "newest" | "oldest" | "title";
+// `featured` orders by the editorial `weight` on Case, then newest-by-case-date.
+// Deliberately absent from ArchiveSearch's `validSorts`: it is a homepage
+// curation mode, not a sort we offer in the public search UI.
+export type ArchiveSearchSort = "relevance" | "newest" | "oldest" | "title" | "featured";
 
 // Bilingual text: either side may be null (a record can carry only one script).
 export interface BilingualText {
