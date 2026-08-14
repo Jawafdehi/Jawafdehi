@@ -182,15 +182,28 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     // IRI, and ~162.8k of ~185k prod entities sit under `person/`, which sorts
     // past that window — so a person is unreachable there. Text search must go
     // to the OpenSearch-backed /api/search/.
-    responses.get = [{ data: { count: 0, results: [] } }];
-    await searchEntities("ram", 10);
+    responses.get = [
+      {
+        data: {
+          count: 30,
+          results: Array.from({ length: 50 }, (_, i) => ({
+            id: `https://jawafdehi.org/entity/person/p-${i}`,
+            title: { en: `P${i}`, ne: null },
+          })),
+        },
+      },
+    ];
+    const hits = await searchEntities("ram", 10);
     expect(calls[0].method).toBe("get");
     expect(calls[0].url).toContain("/api/search/");
     expect(calls[0].url).not.toContain("/api/entities");
     const params = new URLSearchParams(calls[0].url.split("?")[1]);
     expect(params.get("q")).toBe("ram");
     expect(params.get("type")).toBe("entity");
-    expect(params.get("page_size")).toBe("10");
+    // Pages are read at the endpoint's max size and sliced client-side, so the
+    // caller's limit governs the window returned, not the wire page_size.
+    expect(params.get("page_size")).toBe("50");
+    expect(hits).toHaveLength(10);
   });
 
   it("routes courts to /api/courts (create=POST list, update=PUT detail)", async () => {
@@ -234,6 +247,14 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
 // with that exact name.en. Cause: /api/entities?query= scores in Python over
 // only the first 5000 rows ordered by IRI, and `person/` sorts past that window.
 describe("admin-api entity search routing", () => {
+  // `count` results starting at absolute index `from`, as /api/search/ returns them.
+  const page = (from: number, count: number) =>
+    Array.from({ length: count }, (_, i) => ({
+      id: `https://jawafdehi.org/entity/person/p-${from + i}`,
+      title: { en: `P${from + i}`, ne: null },
+      extra: { type: "Person" },
+    }));
+
   it("browsing with no query stays on /api/entities", async () => {
     // No query means nothing to rank, and the list endpoint gives a true total
     // over a stable IRI order — which the search index does not.
@@ -307,6 +328,75 @@ describe("admin-api entity search routing", () => {
     const params = new URLSearchParams(calls[0].url.split("?")[1]);
     expect(params.get("page")).toBe("3");
     expect(params.get("page_size")).toBe("50");
+  });
+
+  it("returns the rows asked for when the offset is not page-aligned", async () => {
+    // No search page *starts* at offset 25, so flooring to page 1 would answer
+    // with rows 0-49 while reporting offset 25. Read page 1 and slice it.
+    responses.get = [{ data: { count: 300, results: page(0, 50) } }];
+    const res = await listEntities({ query: "p", limit: 2, offset: 25 });
+    const params = new URLSearchParams(calls[0].url.split("?")[1]);
+    expect(params.get("page")).toBe("1");
+    expect(params.get("page_size")).toBe("50");
+    expect(res.entities.map((e) => e["@id"])).toEqual([
+      "https://jawafdehi.org/entity/person/p-25",
+      "https://jawafdehi.org/entity/person/p-26",
+    ]);
+    expect(res.offset).toBe(25);
+    expect(res.total).toBe(300);
+  });
+
+  it("never asks for a page_size the endpoint rejects", async () => {
+    // /api/search/ 400s on page_size > 50 (verified against prod), so a wide
+    // window must be assembled from whole pages, not requested in one shot.
+    responses.get = [
+      { data: { count: 300, results: page(0, 50) } },
+      { data: { count: 300, results: page(50, 50) } },
+    ];
+    const res = await listEntities({ query: "p", limit: 100, offset: 0 });
+    expect(calls).toHaveLength(2);
+    for (const c of calls) {
+      const p = new URLSearchParams(c.url.split("?")[1]);
+      expect(Number(p.get("page_size"))).toBeLessThanOrEqual(50);
+    }
+    expect(
+      calls.map((c) => new URLSearchParams(c.url.split("?")[1]).get("page")),
+    ).toEqual(["1", "2"]);
+    expect(res.entities).toHaveLength(100);
+    expect(res.entities[99]["@id"]).toBe(
+      "https://jawafdehi.org/entity/person/p-99",
+    );
+  });
+
+  it("spans two pages when an unaligned window straddles a page boundary", async () => {
+    responses.get = [
+      { data: { count: 300, results: page(0, 50) } },
+      { data: { count: 300, results: page(50, 50) } },
+    ];
+    const res = await listEntities({ query: "p", limit: 10, offset: 45 });
+    expect(calls).toHaveLength(2);
+    expect(res.entities.map((e) => e["@id"])).toEqual(
+      Array.from(
+        { length: 10 },
+        (_, i) => `https://jawafdehi.org/entity/person/p-${45 + i}`,
+      ),
+    );
+  });
+
+  it("trims the query on the prefix-scoped /api/entities route too", async () => {
+    await listEntities({ query: "  dhami  ", entity_prefix: "person" });
+    expect(calls[0].url).toBe("/api/entities");
+    expect(calls[0].body).toMatchObject({
+      params: { query: "dhami", entity_prefix: "person" },
+    });
+  });
+
+  it("treats a whitespace-only query as unfiltered browsing", async () => {
+    // `query=""` would filter on the empty string rather than browse.
+    await listEntities({ query: "   ", limit: 10 });
+    expect(calls[0].url).toBe("/api/entities");
+    const sent = (calls[0].body as { params: Record<string, unknown> }).params;
+    expect(sent).not.toHaveProperty("query");
   });
 
   it("passes entity_type through as a search facet", async () => {

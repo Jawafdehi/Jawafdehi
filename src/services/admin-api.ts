@@ -86,29 +86,53 @@ function entityFromSearchHit(hit: ArchiveSearchResult): EntityRecord {
 // substring noise ("Rabi Lamichhane" -> Embassy of Saudi A-RABI-A), which broke
 // both browsing and linking a person to a case. The backend's own casework
 // client already routes around this the same way (casework/common/api.py).
+// The unified endpoint's hard ceiling: page_size above this is a 400, not a clamp.
+const SEARCH_MAX_PAGE_SIZE = 50;
+
 async function searchEntitiesUnified(
   params: ListEntitiesParams,
 ): Promise<EntityListResponse> {
   const limit = params.limit ?? 20;
   const offset = params.offset ?? 0;
-  const search = new URLSearchParams({
-    q: params.query ?? "",
-    type: "entity",
-    lang: "both",
-    page_size: String(limit),
-    // /api/search/ pages where the admin list offsets. The list always advances
-    // by a whole page, so this is exact there.
-    page: String(Math.floor(offset / limit) + 1),
-  });
-  if (params.entity_type) search.set("entity_type", params.entity_type);
-  const { data } = await client.get<ArchiveSearchResponse>(
-    `/api/search/?${search.toString()}`,
+  // /api/search/ addresses results by page and rejects page_size > 50 with a
+  // 400, so it cannot serve an arbitrary (offset, limit) window directly. Read
+  // the whole pages that cover the window and slice it out of them: flooring to
+  // the nearest page start would silently answer a different question, and
+  // asking for a page as wide as the window would just fail above 50.
+  const firstPage = Math.floor(offset / SEARCH_MAX_PAGE_SIZE) + 1;
+  const skip = offset % SEARCH_MAX_PAGE_SIZE;
+  const pageCount = Math.max(
+    1,
+    Math.ceil((skip + limit) / SEARCH_MAX_PAGE_SIZE),
   );
-  const results = data?.results ?? [];
+
+  const fetchPage = async (page: number) => {
+    const search = new URLSearchParams({
+      q: params.query ?? "",
+      type: "entity",
+      lang: "both",
+      page_size: String(SEARCH_MAX_PAGE_SIZE),
+      page: String(page),
+    });
+    if (params.entity_type) search.set("entity_type", params.entity_type);
+    const { data } = await client.get<ArchiveSearchResponse>(
+      `/api/search/?${search.toString()}`,
+    );
+    return data;
+  };
+
+  // Usually one request: the admin list pages by 50, and the picker asks for
+  // fewer than that from offset 0.
+  const pages = await Promise.all(
+    Array.from({ length: pageCount }, (_, i) => fetchPage(firstPage + i)),
+  );
+  const window = pages
+    .flatMap((page) => page?.results ?? [])
+    .slice(skip, skip + limit);
   return {
-    entities: results.map(entityFromSearchHit),
+    entities: window.map(entityFromSearchHit),
     // A real corpus-wide count. /api/entities?query= reports len(page) instead.
-    total: data?.count ?? results.length,
+    total: pages[0]?.count ?? window.length,
     limit,
     offset,
   };
@@ -117,16 +141,22 @@ async function searchEntitiesUnified(
 export async function listEntities(
   params: ListEntitiesParams = {},
 ): Promise<EntityListResponse> {
+  // Normalize once, so both routes see the same query: a padded query must not
+  // reach either endpoint untrimmed, and a whitespace-only one is no query at
+  // all (drop the key rather than send `query=`, which would filter on "").
   const query = params.query?.trim();
+  const normalized: ListEntitiesParams = { ...params };
+  if (query) normalized.query = query;
+  else delete normalized.query;
   // Unfiltered browsing stays on /api/entities: with no query there is nothing
   // to rank, and it gives a true total over a stable IRI order. `entity_prefix`
   // is not an /api/search/ facet, and /api/entities pushes it into SQL *before*
   // the 5000-row cap, so a prefix-scoped query is served correctly there too.
-  if (query && !params.entity_prefix) {
-    return searchEntitiesUnified({ ...params, query });
+  if (query && !normalized.entity_prefix) {
+    return searchEntitiesUnified(normalized);
   }
   const { data } = await client.get<EntityListResponse>("/api/entities", {
-    params,
+    params: normalized,
   });
   return data;
 }
