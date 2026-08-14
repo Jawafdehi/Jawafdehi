@@ -4,7 +4,6 @@ import { Check, Copy, ExternalLink } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/eyebrow";
 import { trackEvent } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.).
@@ -101,17 +100,59 @@ function NepalCard() {
 
   return (
     <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
-      <Eyebrow className="mb-3 text-[11px]">
-        {t("donate.ways.nepali.eyebrow")}
-      </Eyebrow>
       <h3 className="text-3xl font-bold leading-[1.05] text-primary">
         {t("donate.ways.nepali.title")}
       </h3>
-      <p className="mt-2 max-w-xs text-sm font-medium text-accent">
-        {t("donate.ways.nepali.whoFor")}
-      </p>
 
-      <dl className="mt-5 grid gap-2.5">
+      <div className="mt-6 border-t border-border/60 pt-5">
+        <p className="text-base font-semibold leading-6 text-primary">
+          {t("donate.ways.nepali.qrTitle")}
+        </p>
+        <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
+          {t("donate.ways.nepali.qrDescription")}
+        </p>
+
+        <div
+          role="group"
+          aria-label={t("donate.ways.nepali.walletSwitchAria")}
+          className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
+        >
+          {WALLETS.map(({ id }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={id === wallet}
+              onClick={() => setWallet(id)}
+              className={
+                id === wallet
+                  ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
+                  : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+              }
+            >
+              {t(`donate.ways.nepali.wallets.${id}.label`)}
+            </button>
+          ))}
+        </div>
+
+        {/* Both networks stay mounted so switching never re-fetches, and the two
+            images share one canvas size so the card cannot shift height. */}
+        <div className="mt-3 w-[200px] overflow-hidden rounded-md bg-white p-2">
+          {WALLETS.map(({ id, src }) => (
+            <img
+              key={id}
+              src={src}
+              alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
+              width={600}
+              height={736}
+              loading="lazy"
+              hidden={id !== wallet}
+              className="h-auto w-full"
+            />
+          ))}
+        </div>
+      </div>
+
+      <dl className="mt-6 grid gap-2.5 border-t border-border/60 pt-5">
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
             {t("donate.ways.nepali.nameLabel")}
@@ -183,54 +224,6 @@ function NepalCard() {
           ) : null}
         </div>
       </dl>
-
-      <div className="mt-6 border-t border-border/60 pt-5">
-        <p className="text-base font-semibold leading-6 text-primary">
-          {t("donate.ways.nepali.qrTitle")}
-        </p>
-        <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
-          {t("donate.ways.nepali.qrDescription")}
-        </p>
-
-        <div
-          role="group"
-          aria-label={t("donate.ways.nepali.walletSwitchAria")}
-          className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
-        >
-          {WALLETS.map(({ id }) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={id === wallet}
-              onClick={() => setWallet(id)}
-              className={
-                id === wallet
-                  ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
-                  : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-              }
-            >
-              {t(`donate.ways.nepali.wallets.${id}.label`)}
-            </button>
-          ))}
-        </div>
-
-        {/* Both networks stay mounted so switching never re-fetches, and the two
-            images share one canvas size so the card cannot shift height. */}
-        <div className="mt-3 w-[200px] overflow-hidden rounded-md bg-white p-2">
-          {WALLETS.map(({ id, src }) => (
-            <img
-              key={id}
-              src={src}
-              alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
-              width={600}
-              height={736}
-              loading="lazy"
-              hidden={id !== wallet}
-              className="h-auto w-full"
-            />
-          ))}
-        </div>
-      </div>
     </article>
   );
 }
@@ -241,9 +234,6 @@ function UsCard() {
 
   return (
     <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
-      <Eyebrow className="mb-3 text-[11px]">
-        {t("donate.ways.us.eyebrow")}
-      </Eyebrow>
       <h3 className="text-3xl font-bold leading-[1.05] text-primary">
         {t("donate.ways.us.title")}
       </h3>
@@ -251,7 +241,7 @@ function UsCard() {
         {t("donate.ways.us.whoFor")}
       </p>
       <p className="mt-2 text-xs font-medium leading-5 text-accent">
-        {t("donate.ways.us.deductibleNote")}
+        {t("donate.ways.us.proceedsNote")}
       </p>
 
       <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-5">
@@ -264,9 +254,6 @@ function UsCard() {
             <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
               {t("donate.ways.us.paypal.title")}
             </span>
-          </span>
-          <span className="shrink-0 text-[11px] font-medium text-foreground/50">
-            {t("donate.ways.us.paypal.fee")}
           </span>
         </div>
         <p className="text-sm leading-5 text-card-foreground/70">
@@ -305,16 +292,13 @@ export function DonationInfo() {
     >
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
-            <h2
-              id="donate-ways-title"
-              className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl"
-            >
-              {t("donate.ways.title")}
-            </h2>
-          </div>
+          {/* Kept for the section's accessible name and the document outline,
+              but no longer shown — the two cards carry their own headings. */}
+          <h2 id="donate-ways-title" className="sr-only">
+            {t("donate.ways.title")}
+          </h2>
 
-          <div className="mt-10 grid items-start gap-5 md:grid-cols-2 md:gap-6">
+          <div className="grid items-start gap-5 md:grid-cols-2 md:gap-6">
             <NepalCard />
             <UsCard />
           </div>

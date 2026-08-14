@@ -405,9 +405,7 @@
     "ways": {
       "title": "Two ways to give",
       "nepali": {
-        "eyebrow": "Give in Nepal",
-        "whoFor": "You have a Nepal bank account",
-        "title": "Bank transfer",
+        "title": "From inside Nepal",
         "nameLabel": "Name",
         "accountName": "Jawafdehi Initiative",
         "accountLabel": "A/c no.",
@@ -430,14 +428,12 @@
         }
       },
       "us": {
-        "eyebrow": "Outside Nepal",
-        "whoFor": "You are giving from outside Nepal",
-        "title": "Jawafdehi Initiative, Inc.",
-        "deductibleNote": "Tax-deductible for US taxpayers — 501(c)(3), EIN 42-3114954.",
+        "whoFor": "If you are giving from anywhere outside Nepal",
+        "proceedsNote": "Donations go to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA.",
+        "title": "From outside Nepal",
         "paypal": {
           "title": "PayPal",
           "detail": "Card, bank, or PayPal balance",
-          "fee": "≈2% + $0.49",
           "cta": "Donate via PayPal Giving Fund"
         }
       },
