@@ -20,7 +20,9 @@ type MixKey = "bribery" | "fake" | "embezzlement" | "benefit" | "loss" | "other"
 // Fake-credential is crimson so the eye tracks the family whose share collapses.
 const SERIES: readonly { key: MixKey; color: string }[] = [
   { key: "bribery", color: "#2a78d6" },
-  { key: "fake", color: "#B5242C" },
+  // The only brand colour in this set, so it reads the token rather than a
+  // literal — the other five belong to this palette alone and are not brand.
+  { key: "fake", color: "hsl(var(--accent))" },
   { key: "embezzlement", color: "#1baf7a" },
   { key: "benefit", color: "#4a3aa7" },
   { key: "loss", color: "#eda100" },
