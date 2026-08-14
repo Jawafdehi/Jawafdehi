@@ -76,7 +76,7 @@ export default function CourtCaseProfile() {
         {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
       </Helmet>
 
-      <div className="container mx-auto max-w-3xl px-4">
+      <div className="layout-container max-w-3xl">
         <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
           <Link to="/search?type=courtcase">
             <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />

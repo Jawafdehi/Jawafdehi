@@ -12,7 +12,7 @@ const Privacy = () => {
 
       <main id="main-content" className="flex-1">
         <section id="privacy-hero" className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="max-w-3xl">
               <h1 className="font-page-title font-page-title-inverse mb-4">
                 Jawafdehi Initiative Privacy Policy
@@ -25,7 +25,7 @@ const Privacy = () => {
         </section>
 
         <section className="py-12 md:py-16">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="font-paragraph content-prose max-w-3xl mx-auto">
               {/*
                 NOTE FOR COUNSEL REVIEW (remove before publish):

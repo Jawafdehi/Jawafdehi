@@ -4,7 +4,7 @@ export function SupportingPartner() {
       aria-labelledby="supporting-partners-title"
       className="bg-background py-10 md:py-12"
     >
-      <div className="container mx-auto flex flex-col items-center px-4">
+      <div className="layout-container flex flex-col items-center">
         <h2
           id="supporting-partners-title"
           className="font-eyebrow font-eyebrow-display text-center"

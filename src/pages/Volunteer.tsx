@@ -80,7 +80,7 @@ const Volunteer = () => {
 
       {/* Who we're looking for */}
       <section id="who-we-need" className="bg-muted/10 pt-12 pb-10 md:pt-14 md:pb-12 lg:pt-16">
-        <div className="container mx-auto px-4">
+        <div className="layout-container">
           <div className="mx-auto max-w-2xl text-center">
             <p className="font-eyebrow mb-3">
               {t("volunteer.whoCanJoin.eyebrow")}
@@ -121,7 +121,7 @@ const Volunteer = () => {
 
       {/* Teams */}
       <section id="volunteer-teams" className="bg-muted/20 pt-10 pb-12 md:pt-12 md:pb-14">
-        <div className="container mx-auto px-4">
+        <div className="layout-container">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <p className="font-eyebrow mb-3">
               {t("volunteer.teams.eyebrow")}

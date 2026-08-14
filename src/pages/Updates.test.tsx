@@ -4,6 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import type { ArticleListItem } from "@/types/cms";
+
 // Passthrough translations so assertions don't depend on i18n resources.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
@@ -76,5 +78,64 @@ describe("Updates loading state", () => {
     renderPage();
 
     expect(loadingStatus().className).toContain("md:grid-cols-2");
+  });
+});
+
+describe("Updates card grid sizing", () => {
+  const article = (id: number, excerpt: string): ArticleListItem => ({
+    id,
+    meta: { type: "content.ArticlePage", slug: `story-${id}`, first_published_at: null },
+    title: `Story ${id}`,
+    category: "UPDATE",
+    date: "2026-06-24",
+    excerpt,
+    thumbnail: null,
+  });
+
+  // Deliberately uneven copy: this is the input that used to produce short cards
+  // in one row and tall ones in the next.
+  const articles = [
+    article(1, "Short."),
+    article(2, "A considerably longer excerpt that wraps onto several lines in the card grid."),
+    article(3, "Medium length excerpt."),
+  ];
+
+  // The results grid, not the `grid place-items-center` icon box inside a
+  // thumbnail-less card (and not the loading <output>, which isn't a div).
+  const grid = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>("div.grid.gap-6, div.grid.gap-5");
+
+  it("equalises every row in card view, not just the cells within one row", async () => {
+    getArticles.mockResolvedValue(articles);
+
+    const { container } = renderPage();
+
+    await screen.findByText("Story 1");
+    // `auto-rows-fr` is what makes rows uniform; without it a grid only equalises
+    // cells inside a single row.
+    expect(grid(container)?.className).toContain("auto-rows-fr");
+  });
+
+  it("uses the canonical /cases breakpoints", async () => {
+    getArticles.mockResolvedValue(articles);
+
+    const { container } = renderPage();
+
+    await screen.findByText("Story 1");
+    const className = grid(container)?.className ?? "";
+    expect(className).toContain("md:grid-cols-2");
+    expect(className).toContain("lg:grid-cols-3");
+    expect(className).not.toContain("xl:grid-cols-3");
+  });
+
+  it("leaves list view alone — equal rows there would pad out short entries", async () => {
+    getArticles.mockResolvedValue(articles);
+
+    const { container } = renderPage();
+
+    await screen.findByText("Story 1");
+    fireEvent.click(screen.getByRole("button", { name: "List view" }));
+
+    expect(grid(container)?.className).not.toContain("auto-rows-fr");
   });
 });

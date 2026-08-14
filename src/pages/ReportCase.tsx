@@ -53,7 +53,7 @@ export default function ReportCase() {
     <div className="bg-background">
       <Seo title={title} description={description} canonicalUrl={PAGE_URL} />
 
-      <div className="container mx-auto max-w-3xl px-4 py-8 md:py-12">
+      <div className="layout-container max-w-3xl py-8 md:py-12">
         <header className="mb-8 space-y-3">
           <h1 className="text-3xl font-extrabold tracking-normal text-primary md:text-4xl">
             {t("report.title")}

@@ -237,7 +237,7 @@ export default function EntityRecordProfile() {
         />
       </Helmet>
 
-      <div className="container mx-auto max-w-3xl px-4">
+      <div className="layout-container max-w-3xl">
         <div className="mb-4 flex items-center justify-between gap-2">
           <Button asChild variant="ghost" size="sm" className="-ml-2">
             <Link to="/search?type=entity">

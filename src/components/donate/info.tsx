@@ -416,7 +416,7 @@ export function DonationInfo() {
       className="scroll-mt-[76px] bg-background py-16 md:py-20"
       aria-labelledby="donate-ways-title"
     >
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
             <Eyebrow className="mb-4 tracking-[0.22em]">

@@ -18,7 +18,7 @@ export function CoreValues() {
 
   return (
     <section id="values" className="bg-muted/20 pt-10 pb-12 md:pt-12 md:pb-14">
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <h2 className="text-3xl font-bold text-foreground md:text-4xl">
             {t("about.values.title")}

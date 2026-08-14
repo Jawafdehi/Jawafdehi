@@ -272,7 +272,7 @@ const ResearchCorruption = () => {
       <main id="main-content" className="flex-1">
         {/* Hero */}
         <section className="border-b bg-muted/20">
-          <div className="container mx-auto px-6 py-12 md:py-16">
+          <div className="layout-container py-12 md:py-16">
             <Eyebrow>{t("research.corruption.hero.eyebrow", "Research · Corruption Accountability")}</Eyebrow>
             <h1 className="max-w-3xl font-display text-[2rem] font-bold leading-tight tracking-tight text-foreground md:text-5xl">
               {t("research.corruption.hero.title", "Where Nepal's corruption accountability actually leaks")}
@@ -302,7 +302,7 @@ const ResearchCorruption = () => {
           </div>
         </section>
 
-        <div className="container mx-auto max-w-4xl space-y-16 px-6 py-14">
+        <div className="layout-container max-w-4xl space-y-16 py-14">
           {/* 1 · Funnel */}
           <section>
             <Eyebrow>{t("research.corruption.funnel.eyebrow", "The funnel")}</Eyebrow>

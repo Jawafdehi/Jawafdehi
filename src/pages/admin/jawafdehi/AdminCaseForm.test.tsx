@@ -9,12 +9,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 // Passthrough translations so assertions don't depend on i18n resources
 // (mirrors case-overview-section.test.tsx). t() returns the key verbatim.
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
+// `t` MUST keep a stable identity across renders, the way the real
+// react-i18next does. AdminCaseForm's `loadCase` is a useCallback keyed on
+// `[editing, slug, t]` and its effect calls it, so returning a fresh `t` (or a
+// fresh wrapper object) on every render re-fires the load on every render — the
+// component drops back into its loading spinner mid-test, and asserting on the
+// form becomes a race the CI runner loses.
+vi.mock("react-i18next", () => {
+  const translation = {
     t: (key: string, opts?: Record<string, unknown>) =>
       opts && "slug" in opts ? `${key}:${String(opts.slug)}` : key,
-  }),
-}));
+  };
+  return { useTranslation: () => translation };
+});
 
 // Router: the editor reads the slug from the URL and never navigates in this test.
 const navigate = vi.fn();
@@ -145,6 +152,11 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     expect(tip?.getAttribute("title")).toBe(
       "admin.caseForm.viewOnWebsiteNotPublic",
     );
+    // Regression guard for the re-entrant load described at the i18n mock above:
+    // an unstable `t` made this 2+ and left the form flickering back to its
+    // spinner, which is what made this test flaky in CI.
+    expect(vi.mocked(getCaseWithEtag)).toHaveBeenCalledTimes(1);
+
     // …and keyboard / screen-reader users via an sr-only hint wired through
     // aria-describedby (a disabled button can't be focused to reveal a title).
     const describedBy = btn.getAttribute("aria-describedby");

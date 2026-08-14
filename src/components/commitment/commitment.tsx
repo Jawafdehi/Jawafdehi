@@ -64,7 +64,7 @@ export function CommitmentList() {
   const { t } = useTranslation();
   return (
     <section id="commitments" className="py-12 md:py-16">
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <h2 className="mb-10 text-center text-3xl font-extrabold tracking-normal text-primary md:text-4xl">
           {t("commitment.title")}
         </h2>
