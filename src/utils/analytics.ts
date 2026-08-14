@@ -40,25 +40,14 @@ export type AnalyticsEvent =
   | {
       name: 'donate_click';
       params: {
-        method: 'nepal_bank' | 'crowded' | 'paypal' | 'check' | 'quiz' | 'nav';
+        method: 'nepal_bank' | 'paypal' | 'check' | 'nav';
         action:
           | 'copy_account'
           | 'copy_payee'
           | 'outbound'
-          | 'view_fees'
           | 'give_now'
-          | 'contact'
-          // Guided-workflow funnel: `answer` (a question was answered),
-          // `result` (a recommendation was shown), `restart`, `show_all`.
-          | 'answer'
-          | 'result'
-          | 'restart'
-          | 'show_all';
+          | 'contact';
         link_url?: string;
-        // Quiz-only: `step` is the question key, `choice` the answer picked
-        // (or the result destination for the `result` action).
-        step?: string;
-        choice?: string;
       };
     }
   | { name: 'allegation_submitted'; params?: Record<string, never> };

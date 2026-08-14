@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowLeft,
-  Check,
-  Copy,
-  ExternalLink,
-  RotateCcw,
-  Star,
-} from "lucide-react";
+import { Check, Copy, ExternalLink, Star } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
@@ -17,8 +10,12 @@ import { trackEvent } from "@/utils/analytics";
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.).
 const PAYPAL_DONATE_URL =
   "https://www.paypal.com/us/fundraiser/charity/6001485";
-// Public donation collection on Crowded (Jawafdehi Initiative, Inc.).
+// Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
 const NEPALI_BANK_ACCOUNT_NUMBER = "04601000000088900197";
+// FonePay merchant QR for the same account, issued by the bank. Static (EMVCo
+// tag 01 = "11"), so it is reusable and safe to publish; every FonePay member
+// mobile banking app and wallet in Nepal can scan it.
+const FONEPAY_QR_SRC = "/assets/fonepay-qr.png";
 
 // Best-effort clipboard write. Prefers the async Clipboard API but falls back to
 // a legacy execCommand("copy") for insecure (HTTP) contexts and older browsers
@@ -181,6 +178,28 @@ function NepalCard() {
         </div>
       </dl>
 
+      {/* The FonePay payload packs into a dense 54-module symbol, so it needs to
+          render large enough for a phone camera (~3px per module) to lock on.
+          Stacked until the card itself is wide enough to sit them side by side. */}
+      <div className="mt-6 flex flex-col items-start gap-4 border-t border-border/60 pt-5 lg:flex-row">
+        <img
+          src={FONEPAY_QR_SRC}
+          alt={t("donate.ways.nepali.qrAlt")}
+          width={168}
+          height={168}
+          loading="lazy"
+          className="h-40 w-40 shrink-0 rounded-md bg-white p-2 md:h-[168px] md:w-[168px]"
+        />
+        <div className="min-w-0">
+          <p className="text-base font-semibold leading-6 text-primary">
+            {t("donate.ways.nepali.qrTitle")}
+          </p>
+          <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
+            {t("donate.ways.nepali.qrDescription")}
+          </p>
+        </div>
+      </div>
+
       <div className="mt-6 space-y-1">
         <p className="flex items-center gap-1.5 text-sm font-semibold text-accent">
           <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -315,100 +334,8 @@ function UsCard() {
   );
 }
 
-// The guided workflow. `q_*` screens are questions; `result_*` are destinations.
-type Screen =
-  | "q_taxpayer"
-  | "q_receipt"
-  | "q_nepal"
-  | "result_nepal"
-  | "result_us";
-
-// One question, two choices. `qKey` maps to the `donate.ways.quiz.<qKey>` copy.
-function QuizQuestion({
-  qKey,
-  onYes,
-  onNo,
-}: {
-  qKey: "taxpayer" | "receipt" | "nepal";
-  onYes: () => void;
-  onNo: () => void;
-}) {
-  const { t } = useTranslation();
-  const base = `donate.ways.quiz.${qKey}`;
-
-  const optionClass =
-    "flex items-center justify-center rounded-lg border-2 border-border/70 px-4 py-4 text-sm font-semibold text-primary transition-colors hover:border-accent hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-
-  return (
-    <div className="text-center">
-      <h3 className="text-2xl font-bold leading-tight text-primary md:text-3xl">
-        {t(`${base}.q`)}
-      </h3>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-foreground/60">
-        {t(`${base}.help`)}
-      </p>
-      <div className="mx-auto mt-7 grid max-w-md gap-3 sm:grid-cols-2">
-        <button type="button" onClick={onYes} className={optionClass}>
-          {t(`${base}.yes`)}
-        </button>
-        <button type="button" onClick={onNo} className={optionClass}>
-          {t(`${base}.no`)}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function DonationInfo() {
   const { t } = useTranslation();
-  // History stack so "Back" can pop to the previous screen.
-  const [history, setHistory] = useState<Screen[]>(["q_taxpayer"]);
-  const [showAll, setShowAll] = useState(false);
-  const current = history[history.length - 1];
-
-  // Move focus to the step container on each screen change so keyboard and
-  // screen-reader users follow the flow (question -> result -> back). Skip the
-  // first render so focus isn't stolen on initial page load.
-  const stepRef = useRef<HTMLDivElement>(null);
-  const isFirstStep = useRef(true);
-  useEffect(() => {
-    if (isFirstStep.current) {
-      isFirstStep.current = false;
-      return;
-    }
-    stepRef.current?.focus();
-  }, [current]);
-
-  const advance = (
-    next: Screen,
-    step: "taxpayer" | "receipt" | "nepal",
-    choice: "yes" | "no",
-  ) => {
-    trackEvent("donate_click", { method: "quiz", action: "answer", step, choice });
-    if (next === "result_nepal" || next === "result_us") {
-      trackEvent("donate_click", {
-        method: "quiz",
-        action: "result",
-        choice: next === "result_nepal" ? "nepal" : "us",
-      });
-    }
-    setHistory((h) => [...h, next]);
-  };
-
-  const back = () =>
-    setHistory((h) => (h.length > 1 ? h.slice(0, -1) : h));
-
-  const restart = () => {
-    trackEvent("donate_click", { method: "quiz", action: "restart" });
-    setHistory(["q_taxpayer"]);
-  };
-
-  const openAll = () => {
-    trackEvent("donate_click", { method: "quiz", action: "show_all" });
-    setShowAll(true);
-  };
-
-  const isResult = current === "result_nepal" || current === "result_us";
 
   return (
     <section
@@ -433,124 +360,10 @@ export function DonationInfo() {
             </p>
           </div>
 
-          {showAll ? (
-            /* Escape hatch: every option at once. */
-            <div className="mt-10">
-              <div className="grid items-start gap-5 md:grid-cols-2 md:gap-6">
-                <NepalCard />
-                <UsCard />
-              </div>
-              <div className="mt-6 text-center">
-                <button
-                  type="button"
-                  onClick={() => setShowAll(false)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary underline underline-offset-2 hover:text-accent"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t("donate.ways.quiz.guided")}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-10">
-              <div
-                ref={stepRef}
-                tabIndex={-1}
-                className="mx-auto max-w-2xl rounded-xl border border-border/60 bg-muted/20 p-6 focus:outline-none md:p-9"
-              >
-                {!isResult ? (
-                  <>
-                    {current === "q_taxpayer" && (
-                      <QuizQuestion
-                        qKey="taxpayer"
-                        onYes={() => advance("q_receipt", "taxpayer", "yes")}
-                        onNo={() => advance("q_nepal", "taxpayer", "no")}
-                      />
-                    )}
-                    {current === "q_receipt" && (
-                      <QuizQuestion
-                        qKey="receipt"
-                        onYes={() => advance("result_us", "receipt", "yes")}
-                        onNo={() => advance("q_nepal", "receipt", "no")}
-                      />
-                    )}
-                    {current === "q_nepal" && (
-                      <QuizQuestion
-                        qKey="nepal"
-                        onYes={() => advance("result_nepal", "nepal", "yes")}
-                        onNo={() => advance("result_us", "nepal", "no")}
-                      />
-                    )}
-
-                    <div className="mt-7 flex items-center justify-center gap-5 text-xs">
-                      {history.length > 1 ? (
-                        <button
-                          type="button"
-                          onClick={back}
-                          className="inline-flex items-center gap-1 font-medium text-foreground/60 hover:text-primary"
-                        >
-                          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                          {t("donate.ways.quiz.back")}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={openAll}
-                        className="font-medium text-primary underline underline-offset-2 hover:text-accent"
-                      >
-                        {t("donate.ways.quiz.showAll")}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div>
-                    <div className="mx-auto mb-6 max-w-md text-center">
-                      <Eyebrow className="mb-2 text-[11px]">
-                        {current === "result_nepal"
-                          ? t("donate.ways.quiz.resultNepal.eyebrow")
-                          : t("donate.ways.quiz.resultUs.eyebrow")}
-                      </Eyebrow>
-                      <p className="text-sm leading-6 text-foreground/70">
-                        {current === "result_nepal"
-                          ? t("donate.ways.quiz.resultNepal.intro")
-                          : t("donate.ways.quiz.resultUs.intro")}
-                      </p>
-                    </div>
-
-                    <div className="mx-auto max-w-md">
-                      {current === "result_nepal" ? <NepalCard /> : <UsCard />}
-                    </div>
-
-                    <div className="mt-6 flex items-center justify-center gap-5 text-xs">
-                      <button
-                        type="button"
-                        onClick={back}
-                        className="inline-flex items-center gap-1 font-medium text-foreground/60 hover:text-primary"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                        {t("donate.ways.quiz.back")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={restart}
-                        className="inline-flex items-center gap-1 font-medium text-foreground/60 hover:text-primary"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                        {t("donate.ways.quiz.restart")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={openAll}
-                        className="font-medium text-primary underline underline-offset-2 hover:text-accent"
-                      >
-                        {t("donate.ways.quiz.showAll")}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <div className="mt-10 grid items-start gap-5 md:grid-cols-2 md:gap-6">
+            <NepalCard />
+            <UsCard />
+          </div>
         </div>
       </div>
     </section>

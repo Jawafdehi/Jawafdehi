@@ -405,40 +405,8 @@
     "ways": {
       "eyebrow": "Ways to give",
       "title": "Two ways to give",
-      "description": "Give directly through a Nepal bank account — no fees, and the way we prefer — or to our US 501(c)(3), Jawafdehi Initiative, Inc., by check, Crowded, or PayPal.",
+      "description": "Give directly through a Nepal bank account — no fees, and the way we prefer — or to our US 501(c)(3), Jawafdehi Initiative, Inc., by check or PayPal.",
       "preferredBadge": "Preferred",
-      "quiz": {
-        "back": "Back",
-        "restart": "Start over",
-        "showAll": "Or see all ways to give",
-        "guided": "Back to the guided steps",
-        "taxpayer": {
-          "q": "Are you a US taxpayer?",
-          "help": "Only US taxpayers can claim a deduction for gifts to our US 501(c)(3).",
-          "yes": "Yes, I file US taxes",
-          "no": "No"
-        },
-        "receipt": {
-          "q": "Would you like a US tax-deductible receipt?",
-          "help": "A receipt means giving to our US 501(c)(3), which carries processing fees.",
-          "yes": "Yes, I'd like a receipt",
-          "no": "No, not needed"
-        },
-        "nepal": {
-          "q": "Do you have a Nepal bank account?",
-          "help": "A local transfer in Nepal sends 100% of your gift, with no fees.",
-          "yes": "Yes",
-          "no": "No"
-        },
-        "resultNepal": {
-          "eyebrow": "Recommended for you",
-          "intro": "Give directly in Nepal — it sends 100% of your gift, with no fees. This is the way we prefer."
-        },
-        "resultUs": {
-          "eyebrow": "Recommended for you",
-          "intro": "Give to our US 501(c)(3), Jawafdehi Initiative, Inc. Choose the rail that suits you below."
-        }
-      },
       "nepali": {
         "eyebrow": "Give in Nepal",
         "whoFor": "You have a Nepal bank account",
@@ -450,6 +418,9 @@
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
         "copyAria": "Copy Nepali bank account number",
+        "qrTitle": "Or scan to pay",
+        "qrDescription": "Scan with any mobile banking app or digital wallet connected to FonePay.",
+        "qrAlt": "FonePay QR code for Jawafdehi Initiative",
         "feeNote": "No fees — 100% reaches Jawafdehi.",
         "deductibleNote": "Not tax-deductible under US law."
       },
@@ -465,13 +436,6 @@
           "payee": "Jawafdehi Initiative, Inc.",
           "copyAria": "Copy check payee name",
           "addressNote": "Email us for the mailing address."
-        },
-        "crowded": {
-          "title": "Crowded",
-          "detail": "Card & bank transfer (ACH)",
-          "fee": "Fees apply",
-          "feesLink": "See fee schedule",
-          "cta": "Donate via Crowded"
         },
         "paypal": {
           "title": "PayPal",
