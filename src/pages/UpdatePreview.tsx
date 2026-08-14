@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getArticlePreview } from "@/services/cms-api";
 import { ArticleView } from "@/components/ArticleView";
+import { ArticleViewSkeleton } from "@/components/ArticleViewSkeleton";
 import NotFound from "./NotFound";
 
 /**
@@ -35,11 +36,9 @@ const UpdatePreview = () => {
     }
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <p className="text-muted-foreground">Loading preview…</p>
-            </div>
-        );
+        // Same placeholder the public page uses — editors preview the real loading
+        // experience, not a bare string.
+        return <ArticleViewSkeleton />;
     }
 
     if (isError || !article) {
