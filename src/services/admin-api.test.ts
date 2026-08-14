@@ -177,9 +177,20 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     });
   });
 
-  it("routes the entity picker (searchEntities) to /api/entities (not /api/nes)", async () => {
+  it("routes the entity picker (searchEntities) to the unified index, not /api/entities", async () => {
+    // /api/entities?query= scores in Python over only the first 5000 rows by
+    // IRI, and ~162.8k of ~185k prod entities sit under `person/`, which sorts
+    // past that window — so a person is unreachable there. Text search must go
+    // to the OpenSearch-backed /api/search/.
+    responses.get = [{ data: { count: 0, results: [] } }];
     await searchEntities("ram", 10);
-    expect(calls[0]).toMatchObject({ method: "get", url: "/api/entities" });
+    expect(calls[0].method).toBe("get");
+    expect(calls[0].url).toContain("/api/search/");
+    expect(calls[0].url).not.toContain("/api/entities");
+    const params = new URLSearchParams(calls[0].url.split("?")[1]);
+    expect(params.get("q")).toBe("ram");
+    expect(params.get("type")).toBe("entity");
+    expect(params.get("page_size")).toBe("10");
   });
 
   it("routes courts to /api/courts (create=POST list, update=PUT detail)", async () => {
@@ -214,6 +225,102 @@ describe("admin-api unified paths (no /api/nes or /api/ngm)", () => {
     expect(fd.get("role")).toBe("RAW");
     expect(fd.get("material_type")).toBe("official_report");
     expect(fd.get("file")).toBeInstanceOf(File);
+  });
+});
+
+// Entity text search must resolve through the unified OpenSearch index. Rujit
+// reported (casework channel, 2026-08-13) that searching "Sunil Poudel" in
+// /admin/entities returned three unrelated rows and not the person — who exists
+// with that exact name.en. Cause: /api/entities?query= scores in Python over
+// only the first 5000 rows ordered by IRI, and `person/` sorts past that window.
+describe("admin-api entity search routing", () => {
+  it("browsing with no query stays on /api/entities", async () => {
+    // No query means nothing to rank, and the list endpoint gives a true total
+    // over a stable IRI order — which the search index does not.
+    await listEntities({ limit: 50, offset: 0 });
+    expect(calls[0].url).toBe("/api/entities");
+  });
+
+  it("a prefix-scoped query stays on /api/entities", async () => {
+    // entity_prefix is not an /api/search/ facet, and /api/entities pushes it
+    // into SQL *before* the 5000-row cap, so it is served correctly there.
+    await listEntities({ query: "dhami", entity_prefix: "person" });
+    expect(calls[0].url).toBe("/api/entities");
+  });
+
+  it("projects search hits onto the EntityRecord shape the admin views read", async () => {
+    responses.get = [
+      {
+        data: {
+          count: 1294,
+          results: [
+            {
+              type: "entity",
+              id: "https://jawafdehi.org/entity/person/sunila-paudela",
+              title: { en: "Sunil Poudel", ne: "सुनिल पौडेल" },
+              extra: { type: "Person" },
+            },
+          ],
+        },
+      },
+    ];
+    const res = await listEntities({ query: "Sunil Poudel", limit: 50 });
+    expect(res.entities).toEqual([
+      {
+        "@id": "https://jawafdehi.org/entity/person/sunila-paudela",
+        "@type": "Person",
+        name: { en: "Sunil Poudel", ne: "सुनिल पौडेल" },
+      },
+    ]);
+    // The corpus-wide count, not the page length: /api/entities?query= reports
+    // len(page) as `total`, which made the pager lie.
+    expect(res.total).toBe(1294);
+  });
+
+  it("splits a comma-joined multi-valued @type back into an array", async () => {
+    responses.get = [
+      {
+        data: {
+          count: 1,
+          results: [
+            {
+              id: "https://jawafdehi.org/entity/location/localunit/sunil-smriti-gaunpalika-50209",
+              title: { en: "Sunil Smriti Rural Municipality", ne: null },
+              extra: { type: "AdministrativeArea,jawafdehi:RuralMunicipality" },
+            },
+          ],
+        },
+      },
+    ];
+    const res = await listEntities({ query: "sunil" });
+    expect(res.entities[0]["@type"]).toEqual([
+      "AdministrativeArea",
+      "jawafdehi:RuralMunicipality",
+    ]);
+    // A null side of the bilingual title must not become a "null" string.
+    expect(res.entities[0].name).toEqual({ en: "Sunil Smriti Rural Municipality" });
+  });
+
+  it("translates the list's offset into a search page", async () => {
+    responses.get = [{ data: { count: 0, results: [] } }];
+    await listEntities({ query: "poudel", limit: 50, offset: 100 });
+    const params = new URLSearchParams(calls[0].url.split("?")[1]);
+    expect(params.get("page")).toBe("3");
+    expect(params.get("page_size")).toBe("50");
+  });
+
+  it("passes entity_type through as a search facet", async () => {
+    responses.get = [{ data: { count: 0, results: [] } }];
+    await listEntities({ query: "poudel", entity_type: "Person" });
+    const params = new URLSearchParams(calls[0].url.split("?")[1]);
+    expect(params.get("entity_type")).toBe("Person");
+  });
+
+  it("tolerates an empty search response", async () => {
+    responses.get = [{ data: {} }];
+    const res = await listEntities({ query: "zzzqqx" });
+    expect(res.entities).toEqual([]);
+    expect(res.total).toBe(0);
   });
 });
 
