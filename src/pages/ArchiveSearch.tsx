@@ -55,6 +55,7 @@ const validSorts = new Set<ArchiveSearchSort>([
   "newest",
   "oldest",
   "title",
+  "featured",
 ]);
 const archiveSearchPageSize = 12;
 const emptyFacets: ArchiveSearchFacets = {
@@ -95,7 +96,10 @@ export default function ArchiveSearch({
     [searchParams, selectedRecordType],
   );
   const [query, setQuery] = useState(params.q || "");
-  const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  // Card (grid) view is the default: results lead with the case artwork, status,
+  // entities and बिगो rather than a text row. The choice is intentionally NOT
+  // persisted across visits or mirrored into the URL — that's a separate change.
+  const [viewMode, setViewMode] = useState<"list" | "card">("card");
 
   useEffect(() => setQuery(params.q || ""), [params.q]);
   useEffect(() => {
@@ -353,17 +357,8 @@ export default function ArchiveSearch({
               className="flex items-center rounded-full border p-0.5"
               role="group"
             >
-              <Button
-                aria-label={t("archiveSearch.listView", "List view")}
-                aria-pressed={viewMode === "list"}
-                className="h-9 w-9 rounded-full"
-                onClick={() => setViewMode("list")}
-                size="icon"
-                type="button"
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+              {/* Card first, then list — the toggle reads in the same order as
+                  the defaults, with the default view in the leading position. */}
               <Button
                 aria-label={t("archiveSearch.cardView", "Card view")}
                 aria-pressed={viewMode === "card"}
@@ -375,15 +370,27 @@ export default function ArchiveSearch({
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
+              <Button
+                aria-label={t("archiveSearch.listView", "List view")}
+                aria-pressed={viewMode === "list"}
+                className="h-9 w-9 rounded-full"
+                onClick={() => setViewMode("list")}
+                size="icon"
+                type="button"
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+              >
+                <List className="h-4 w-4" />
+              </Button>
             </div>
             <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">
               {t("archiveSearch.sort", "Sort")}
             </label>
-            <Select onValueChange={(sort) => updateFilter("sort", sort)} value={params.sort || "relevance"}>
+            <Select onValueChange={(sort) => updateFilter("sort", sort)} value={params.sort}>
               <SelectTrigger className="h-11 min-w-0 flex-1 rounded-full px-4 sm:w-[160px] sm:flex-none" id="archive-sort">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="featured">Featured</SelectItem>
                 <SelectItem value="relevance">Relevance</SelectItem>
                 <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="oldest">Oldest</SelectItem>
@@ -506,8 +513,9 @@ function readParams(
 ): ArchiveSearchParams {
   const requestedSort = searchParams.get("sort") as ArchiveSearchSort | null;
   const page = Number.parseInt(searchParams.get("page") || "1", 10);
+  const q = searchParams.get("q") || undefined;
   return {
-    q: searchParams.get("q") || undefined,
+    q,
     type: selectedRecordType === "all" ? undefined : selectedRecordType,
     // Only honour entity_type while browsing Entities. A hand-edited or
     // bookmarked URL can still carry it into another record type, where the
@@ -518,7 +526,17 @@ function readParams(
         : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
-    sort: requestedSort && validSorts.has(requestedSort) ? requestedSort : "relevance",
+    // An explicit ?sort wins. Otherwise the default depends on whether there is
+    // query text: with none, EVERY document scores identically (a constant 2.0),
+    // so `relevance` degenerates to the `iri` tiebreaker and browse order comes
+    // out alphabetical by slug — which is why `bara-hulak-…` used to lead. Browse
+    // with no query is a curated shelf, so it sorts by editorial weight; a typed
+    // query has real scores, so it sorts by relevance.
+    sort: requestedSort && validSorts.has(requestedSort)
+      ? requestedSort
+      : q
+        ? "relevance"
+        : "featured",
     page: Number.isFinite(page) && page > 0 ? page : 1,
     page_size: archiveSearchPageSize,
   };

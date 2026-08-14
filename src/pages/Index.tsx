@@ -75,8 +75,6 @@ function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
     entityNames: names,
     location: locations.join(", ") || unknownLocation,
     status: mapCaseStatus(card?.status || result.extra.case_status),
-    description: stripTags(card?.short_description || pickText(result.snippet)).substring(0, 200),
-    allegations: card?.key_allegations || [],
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
     tags: card?.tags || [],
@@ -211,7 +209,7 @@ const Index = () => {
             {featuredCases.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {featuredCases.map((caseItem) => (
-                  <CaseCard key={caseItem.id} {...caseItem} hideDescription={true} />
+                  <CaseCard key={caseItem.id} {...caseItem} />
                 ))}
               </div>
             ) : (

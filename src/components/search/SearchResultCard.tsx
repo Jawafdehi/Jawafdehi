@@ -15,6 +15,7 @@ import type {
 } from "@/types/search";
 import type { CaseDetail } from "@/types/jds";
 import { getCaseById } from "@/services/jds-api";
+import { cn } from "@/lib/utils";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
 import { getSubjectEntities } from "@/utils/case-entities";
@@ -119,16 +120,6 @@ function CaseResultCard({
   return <GenericResultCard result={result} viewMode={viewMode} />;
 }
 
-// Non-case results (entity / material / court case): list uses the compact row
-// shell, card uses the vertical grid tile. Neither hydrates relational data —
-// the index carries none for these types.
-function GenericResultCard({
-  result,
-  viewMode,
-}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
-  return viewMode === "card" ? <GenericGridCard result={result} /> : <SimpleResultCard result={result} />;
-}
-
 // ---------------------------------------------------------------------------
 // Case → <CaseCard> prop mapping
 // ---------------------------------------------------------------------------
@@ -165,17 +156,11 @@ function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult
     location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
     status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
     tags: card.tags || [],
-    // Search cards show the case summary (not the first allegation, which is what
-    // the /cases grid leads with) so the result matches the query context. When
-    // there's no summary, fall back to the matched snippet explaining WHY the
-    // result matched.
-    description: (card.short_description || pickLang(result.snippet) || "")
-      .replace(/<[^>]*>/g, "")
-      .substring(0, 200),
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
     thumbnailUrl: card.thumbnail_url || undefined,
     bannerUrl: card.banner_url || undefined,
+    bigo: card.bigo,
   };
 }
 
@@ -204,125 +189,102 @@ function caseCardPropsFromDetail(
     location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
     status,
     tags: detail.tags || [],
-    description: (detail.short_description || pickLang(result.snippet) || "")
-      .replace(/<[^>]*>/g, "")
-      .substring(0, 200),
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
     thumbnailUrl: detail.thumbnail_url || undefined,
     bannerUrl: detail.banner_url || undefined,
+    // Kept in step with the indexed-card path above: the two mappings feed the
+    // same <CaseCard>, so a field added to one must be added to both or a case
+    // silently loses it on older docs that fall back to the detail fetch.
+    bigo: detail.bigo,
   };
 }
 
 // ---------------------------------------------------------------------------
-// Generic (non-case) cards — list row + grid tile
+// Generic (non-case) cards — one field set, two shells
 // ---------------------------------------------------------------------------
 
-// Lightweight list row for entity / material / courtcase: bilingual title +
-// snippet + type badge.
-function SimpleResultCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
-  const title = formatSimpleTitle(result);
+// Single source of truth for WHAT a non-case result shows. Both view modes read
+// this, so they cannot drift apart on fields again — only on the chrome around
+// them. (They previously did: the grid tile `truncate`d the metadata line to one
+// line while the list row wrapped it in full, hiding e.g. a court case's number
+// and status behind an ellipsis in card view only.)
+function genericResultFields(result: ArchiveSearchResult) {
   const metadata = simpleMetadata(result);
   const snippet = pickLang(result.snippet);
-  // When there's no snippet the description falls back to the metadata line; in
-  // that case don't ALSO render metadata separately, or the card shows the same
-  // text twice (e.g. "digitaldocument" / "digitaldocument").
-  const description = snippet || metadata;
-  return (
-    <ResultCardShell
-      badge={resultLabel(result)}
-      description={description}
-      metadata={snippet ? metadata : undefined}
-      title={title}
-      url={result.url}
-    />
-  );
+  return {
+    badge: resultLabel(result),
+    title: formatSimpleTitle(result),
+    // When there's no snippet the description falls back to the metadata line; in
+    // that case don't ALSO render metadata separately, or the card shows the same
+    // text twice (e.g. "digitaldocument" / "digitaldocument").
+    description: snippet || metadata,
+    metadata: snippet ? metadata : "",
+    url: result.url,
+  };
 }
 
-// Shared row chrome for the generic list card.
-function ResultCardShell({
-  badge,
-  title,
-  description,
-  metadata,
-  url,
-}: Readonly<{
-  badge: string;
-  title: string;
-  description: string;
-  metadata?: string;
-  url: string;
-}>) {
-  return (
-    <div className="group relative block overflow-hidden rounded-xl bg-card p-4 transition-colors hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-      <article className="relative z-10 flex min-h-20 items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex flex-wrap items-center gap-2">
-            <Badge className="capitalize" variant="outline">
-              {badge}
-            </Badge>
-          </div>
-          <h2 className="break-words text-base font-bold leading-6 text-foreground group-hover:text-primary">
-            <Link to={url} className="focus:outline-none">
-              <span className="absolute inset-0" aria-hidden="true" />
-              {title}
-            </Link>
-          </h2>
-          <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
-            {description}
-          </p>
-          {metadata ? (
-            <p className="mt-2 break-words text-xs leading-5 text-muted-foreground">
-              {metadata}
-            </p>
-          ) : null}
-        </div>
-        <ArrowRight
-          aria-hidden="true"
-          className="mt-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary"
-        />
-      </article>
-    </div>
-  );
-}
-
-// Generic grid tile for entity / material / courtcase results (no relational
-// hydration). Visual chrome is kept in step with <CaseCard>.
-function GenericGridCard({ result }: Readonly<{ result: ArchiveSearchResult }>) {
+// Entity / material / court case. `viewMode` picks the shell — a compact row for
+// list, a vertical tile for card — and nothing else: every field below renders in
+// both modes at the same clamp limits. Neither mode hydrates relational data; the
+// index carries none for these types.
+function GenericResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
   const { t } = useTranslation();
-  const title = formatSimpleTitle(result);
-  const metadata = simpleMetadata(result);
-  const snippet = pickLang(result.snippet);
-  const description = snippet || metadata;
+  const { badge, title, description, metadata, url } = genericResultFields(result);
+  const isCard = viewMode === "card";
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/70 bg-card p-5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)]">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Badge className="capitalize" variant="outline">
-          {resultLabel(result)}
-        </Badge>
-      </div>
-      <h3 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground group-hover:text-primary">
-        <Link to={result.url} className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-          <span aria-hidden="true" className="absolute inset-0" />
-          {title}
-        </Link>
-      </h3>
-      <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-muted-foreground">
-        {description}
-      </p>
-      {snippet && metadata ? (
-        <p className="mt-3 truncate text-xs leading-5 text-muted-foreground">
-          {metadata}
+    <div
+      className={cn(
+        "group relative flex flex-col overflow-hidden bg-card transition-all",
+        isCard
+          ? "h-full rounded-3xl border border-border/70 p-5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)]"
+          : "min-h-20 rounded-xl p-4 hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+      )}
+    >
+      <article className="flex min-w-0 flex-1 flex-col">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Badge className="capitalize" variant="outline">
+            {badge}
+          </Badge>
+        </div>
+        {/* h3 in both modes, matching <CaseCard>, so every result in the list sits
+            at the same heading level instead of h2-for-generic / h3-for-case. */}
+        <h3
+          className={cn(
+            "line-clamp-2 break-words font-semibold text-foreground group-hover:text-primary",
+            isCard ? "text-lg leading-8" : "text-base leading-6",
+          )}
+        >
+          <Link
+            to={url}
+            className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <span aria-hidden="true" className="absolute inset-0" />
+            {title}
+          </Link>
+        </h3>
+        <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-muted-foreground">
+          {description}
         </p>
-      ) : null}
-      <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary">
-        {t("common.view", "View")}
-        <ArrowRight
-          aria-hidden="true"
-          className="h-4 w-4 transition-transform group-hover:translate-x-1"
-        />
-      </div>
+        {/* Clamped, never truncated — see genericResultFields. */}
+        {metadata ? (
+          <p className="mt-3 line-clamp-2 break-words text-xs leading-5 text-muted-foreground">
+            {metadata}
+          </p>
+        ) : null}
+        {/* The list row used to carry a bare arrow with no accessible label. */}
+        <div className="mt-auto flex items-center gap-1 pt-4 text-sm font-medium text-primary">
+          {t("common.view", "View")}
+          <ArrowRight
+            aria-hidden="true"
+            className="h-4 w-4 transition-transform group-hover:translate-x-1"
+          />
+        </div>
+      </article>
     </div>
   );
 }

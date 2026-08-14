@@ -22,12 +22,11 @@ type CaseCardViewModel = {
   id: string;
   slug: string | null;
   title: string;
-  shortDescription: string;
   tags: string[];
-  allegations: string[];
   status: CaseLifecycleStatus;
   thumbnailUrl?: string;
   bannerUrl?: string;
+  bigo: number | null;
   subjectEntities: CaseSearchCardEntity[];
   locationEntities: CaseSearchCardEntity[];
 };
@@ -83,12 +82,14 @@ function toCaseCardViewModel(result: ArchiveSearchResult): CaseCardViewModel {
     id: result.id,
     slug: card?.slug || slugFromUrl(result.url),
     title: pickTitle(result, card),
-    shortDescription: stripTags(card?.short_description || result.snippet.en || result.snippet.ne || ""),
     tags: card?.tags || [],
-    allegations: card?.key_allegations || [],
     status: normalizeStatus(card?.status || result.extra.case_status),
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
+    // /cases reads the same indexed card payload as /search, so बिगो has to be
+    // carried here too — otherwise the shared <CaseCard> shows the amount on the
+    // search results and drops it on the browse page.
+    bigo: card?.bigo ?? null,
     subjectEntities: subjectEntities(card?.entities),
     locationEntities: locationEntities(card?.entities),
   };
@@ -311,10 +312,9 @@ function CaseResults({
               location={location}
               status={mapCaseStatusToBadge(caseItem.status)}
               tags={caseItem.tags}
-              description={caseItem.shortDescription.substring(0, 200)}
-              allegations={caseItem.allegations}
               entityIds={caseItem.subjectEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
               locationIds={caseItem.locationEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
+              bigo={caseItem.bigo}
               thumbnailUrl={caseItem.thumbnailUrl}
               bannerUrl={caseItem.bannerUrl}
               viewMode={viewMode}

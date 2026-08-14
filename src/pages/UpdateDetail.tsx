@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug } from "@/services/cms-api";
 import { ArticleView } from "@/components/ArticleView";
+import { ArticleViewSkeleton } from "@/components/ArticleViewSkeleton";
 import { Seo } from "@/components/Seo";
 import NotFound from "./NotFound";
 import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
@@ -16,11 +17,7 @@ const UpdateDetail = () => {
     });
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <p className="text-muted-foreground">Loading…</p>
-            </div>
-        );
+        return <ArticleViewSkeleton />;
     }
 
     if (isError || !article) {

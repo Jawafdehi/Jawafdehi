@@ -1017,6 +1017,7 @@
   },
   "caseCard": {
     "thumbnailAlt": "Thumbnail image for the case: {{title}}",
+    "bigo": "Embezzled amount",
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",
@@ -1158,7 +1159,9 @@
     "readMore": "Read More",
     "backToUpdates": "Back to Updates",
     "documentsAndResources": "Documents & Resources",
-    "view": "View"
+    "view": "View",
+    "loading": "Loading updates",
+    "loadingUpdate": "Loading update"
   },
   "share": {
     "share": "Share",
@@ -2028,8 +2031,10 @@
   "cookieConsent": {
     "ariaLabel": "Cookie consent",
     "message": "We use cookies that are necessary for the site to work, and—only with your consent—Google Analytics to understand how the platform is used. You can decline analytics without affecting your use of the site. See our <privacy>Privacy Policy</privacy>.",
+    "messageShort": "Analytics cookies are used only if you accept. See our <privacy>Privacy Policy</privacy>.",
     "decline": "Decline",
-    "accept": "Accept analytics"
+    "accept": "Accept analytics",
+    "acceptShort": "Accept"
   },
   "archiveSearch": {
     "heading": "Archive Search",

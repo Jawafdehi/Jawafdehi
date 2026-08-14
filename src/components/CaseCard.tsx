@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
-import { MapPin, User } from "lucide-react";
+import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
 import {
   CASE_PLACEHOLDER_DARK_CLASS,
@@ -14,6 +14,7 @@ import {
   caseImageCandidates,
 } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
+import { formatBigo } from "@/utils/number";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
 
@@ -26,14 +27,14 @@ interface CaseCardProps {
   location: string;
   status: "ongoing" | "resolved" | "under-investigation";
   tags?: string[];
-  description: string;
-  allegations?: string[]; // Key allegations array
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   thumbnailUrl?: string; //Thumbnail image
   bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
+  // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
+  // row is omitted rather than rendered as "Rs 0" (see BigoRow).
+  bigo?: number | null;
   viewMode?: "grid" | "list";
-  hideDescription?: boolean;
   // When set, tags render as buttons that invoke this instead of plain badges —
   // the archive search uses it to toggle a tag as a URL refinement.
   onTagClick?: (tag: string) => void;
@@ -73,7 +74,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], description, allegations, entityIds, locationIds, thumbnailUrl, bannerUrl, viewMode = "grid", hideDescription, onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -192,16 +193,16 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
           </CardHeader>
 
           <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4 sm:px-5">
-            {!hideDescription && (
-              <p className="line-clamp-3 text-sm leading-7 text-muted-foreground">
-                {allegations && allegations.length > 0 ? allegations[0] : description}
-              </p>
-            )}
-
-            <div className={hideDescription ? "mt-2 border-t border-border/70 pt-4" : "mt-5 border-t border-border/70 pt-4"}>
+            {/* No summary paragraph: the card leads with the title and the facts
+                below it. The full description lives on the case detail page. */}
+            <div className="mt-2 border-t border-border/70 pt-4">
+              {/* This meta block is deliberately NOT branched on `viewMode` —
+                  grid and list differ only in the outer layout, so every field
+                  added here shows up in both /search views and on /cases. */}
               <div className="space-y-2 text-sm leading-5 text-muted-foreground">
                 <EntityRow icon={User} label={entitySummary} title={entity} ids={entityIds} />
                 <EntityRow icon={MapPin} label={location} ids={locationIds} />
+                <BigoRow amount={bigo} />
               </div>
             </div>
           </CardContent>
@@ -252,6 +253,28 @@ function CaseCardTags({ tags, onTagClick }: Readonly<{ tags: string[]; onTagClic
           +{tags.length - 2}
         </CaseTagBadge>
       )}
+    </div>
+  );
+}
+
+// बिगो row. Guarded on `> 0`, not just non-null: the API sends 0 for cases where
+// no amount applies, and `formatBigo(0)` is the literal string "Rs 0" — showing
+// that would assert a finding the case does not make. Formatting matches the case
+// detail page (`caseDetail.embezzledAmount`) so the same figure reads identically
+// on the card and on the record it links to.
+function BigoRow({ amount }: Readonly<{ amount?: number | null }>) {
+  const { t } = useTranslation();
+  if (amount == null || amount <= 0) return null;
+  return (
+    <div className="flex min-w-0 items-center">
+      <Coins className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+      {/* The label truncates, the amount never does: `formatBigo` output is short
+          and bounded ("Rs 2.49 Kharab" at the widest), and it is the part worth
+          reading — clamping the whole row would eat the figure, not the label. */}
+      <span className="min-w-0 truncate">{t("caseCard.bigo")}:</span>
+      <span className="ml-1 shrink-0 font-semibold text-accent">
+        {formatBigo(amount)}
+      </span>
     </div>
   );
 }
