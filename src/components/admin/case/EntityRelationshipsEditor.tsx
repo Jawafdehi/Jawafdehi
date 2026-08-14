@@ -38,7 +38,9 @@ interface Props {
 
 // F3 — entity-relationship editor. Rows of {nes_id, relationship_type, notes}.
 // The parent diffs these into a replace op on /entities (§3). Includes an entity
-// entity picker hitting GET /api/entities?query=.
+// picker backed by searchEntities, which resolves through the unified
+// OpenSearch index (/api/search/) — persons are unreachable via
+// /api/entities?query=, so this picker could not find them.
 export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Record<string, unknown>[]>([]);

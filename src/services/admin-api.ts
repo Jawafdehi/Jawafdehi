@@ -10,9 +10,15 @@
 //     /api/courts, /api/firms, /api/materials   data-lake records
 //     /api/cases                 Jawafdehi cases (evidence references materials)
 //
+// Entity TEXT SEARCH is the one exception to "one resource, one path": it goes
+// to /api/search/ (OpenSearch), not /api/entities?query= — see
+// searchEntitiesUnified below for why.
+//
 // Auth is OIDC/Zitadel only (DRF token auth was dropped in the monolith): every
 // request carries `Authorization: Bearer <access>` from the shared oidc.ts.
 import { http as client, API_BASE_URL, extractErrorMessage } from "./http";
+
+import type { ArchiveSearchResponse, ArchiveSearchResult } from "@/types/search";
 
 // Note: axios lowercases response header keys, so `res.headers.etag` is the
 // ETag the backend sends as `ETag`. CORS must expose it — the dev proxy is
@@ -54,26 +60,115 @@ export interface ListEntitiesParams {
   offset?: number;
 }
 
+// A unified-search hit carries only id/title/type, not the stored JSON-LD doc.
+// Project it onto the EntityRecord shape the list and the picker read.
+function entityFromSearchHit(hit: ArchiveSearchResult): EntityRecord {
+  const type = hit.extra?.type;
+  const name: { ne?: string; en?: string } = {};
+  if (hit.title?.en) name.en = hit.title.en;
+  if (hit.title?.ne) name.ne = hit.title.ne;
+  return {
+    "@id": hit.id,
+    // The index joins a multi-valued @type with commas; split it back so a hit
+    // renders the same type badge as a direct /api/entities read.
+    ...(type ? { "@type": type.includes(",") ? type.split(",") : type } : {}),
+    name,
+  };
+}
+
+// Text search goes to the OpenSearch-backed unified endpoint, NOT to
+// /api/entities?query=. That endpoint has no search backend: it scores the
+// query in Python over only the first 5000 rows ordered by IRI
+// (MAX_SEARCH_CANDIDATES, entities/persistence.py). `person/` sorts after
+// `court/`, `document/`, `event/` and `organization/`, and prod NES holds
+// ~162.8k of ~185k entities under `person/` — so essentially no person is ever
+// inside that window. Searching a real name returned nothing, or unrelated
+// substring noise ("Rabi Lamichhane" -> Embassy of Saudi A-RABI-A), which broke
+// both browsing and linking a person to a case. The backend's own casework
+// client already routes around this the same way (casework/common/api.py).
+// The unified endpoint's hard ceiling: page_size above this is a 400, not a clamp.
+const SEARCH_MAX_PAGE_SIZE = 50;
+
+async function searchEntitiesUnified(
+  params: ListEntitiesParams,
+): Promise<EntityListResponse> {
+  const limit = params.limit ?? 20;
+  const offset = params.offset ?? 0;
+  // /api/search/ addresses results by page and rejects page_size > 50 with a
+  // 400, so it cannot serve an arbitrary (offset, limit) window directly. Read
+  // the whole pages that cover the window and slice it out of them: flooring to
+  // the nearest page start would silently answer a different question, and
+  // asking for a page as wide as the window would just fail above 50.
+  const firstPage = Math.floor(offset / SEARCH_MAX_PAGE_SIZE) + 1;
+  const skip = offset % SEARCH_MAX_PAGE_SIZE;
+  const pageCount = Math.max(
+    1,
+    Math.ceil((skip + limit) / SEARCH_MAX_PAGE_SIZE),
+  );
+
+  const fetchPage = async (page: number) => {
+    const search = new URLSearchParams({
+      q: params.query ?? "",
+      type: "entity",
+      lang: "both",
+      page_size: String(SEARCH_MAX_PAGE_SIZE),
+      page: String(page),
+    });
+    if (params.entity_type) search.set("entity_type", params.entity_type);
+    const { data } = await client.get<ArchiveSearchResponse>(
+      `/api/search/?${search.toString()}`,
+    );
+    return data;
+  };
+
+  // Usually one request: the admin list pages by 50, and the picker asks for
+  // fewer than that from offset 0.
+  const pages = await Promise.all(
+    Array.from({ length: pageCount }, (_, i) => fetchPage(firstPage + i)),
+  );
+  const window = pages
+    .flatMap((page) => page?.results ?? [])
+    .slice(skip, skip + limit);
+  return {
+    entities: window.map(entityFromSearchHit),
+    // A real corpus-wide count. /api/entities?query= reports len(page) instead.
+    total: pages[0]?.count ?? window.length,
+    limit,
+    offset,
+  };
+}
+
 export async function listEntities(
   params: ListEntitiesParams = {},
 ): Promise<EntityListResponse> {
+  // Normalize once, so both routes see the same query: a padded query must not
+  // reach either endpoint untrimmed, and a whitespace-only one is no query at
+  // all (drop the key rather than send `query=`, which would filter on "").
+  const query = params.query?.trim();
+  const normalized: ListEntitiesParams = { ...params };
+  if (query) normalized.query = query;
+  else delete normalized.query;
+  // Unfiltered browsing stays on /api/entities: with no query there is nothing
+  // to rank, and it gives a true total over a stable IRI order. `entity_prefix`
+  // is not an /api/search/ facet, and /api/entities pushes it into SQL *before*
+  // the 5000-row cap, so a prefix-scoped query is served correctly there too.
+  if (query && !normalized.entity_prefix) {
+    return searchEntitiesUnified(normalized);
+  }
   const { data } = await client.get<EntityListResponse>("/api/entities", {
-    params,
+    params: normalized,
   });
   return data;
 }
 
 // Entity picker for the case relationship editor (F3): searches entities
-// and returns the raw hits (each has an @id + name). Reuses the flat
-// /api/entities list endpoint (flat, unprefixed).
+// and returns the raw hits (each has an @id + name).
 export async function searchEntities(
   query: string,
   limit = 20,
 ): Promise<EntityRecord[]> {
-  const { data } = await client.get<EntityListResponse>("/api/entities", {
-    params: { query, limit },
-  });
-  return data.entities ?? [];
+  const { entities } = await listEntities({ query, limit });
+  return entities ?? [];
 }
 
 // Encode a `<prefix>/<slug>` ref for the detail routes. The backend's _REF
