@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink, Star } from "lucide-react";
+import { Check, Copy, ExternalLink } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,19 @@ const PAYPAL_DONATE_URL =
   "https://www.paypal.com/us/fundraiser/charity/6001485";
 // Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
 const NEPALI_BANK_ACCOUNT_NUMBER = "04601000000088900197";
-// FonePay merchant QR for the same account, issued by the bank. Static (EMVCo
-// tag 01 = "11"), so it is reusable and safe to publish; every FonePay member
-// mobile banking app and wallet in Nepal can scan it.
-const FONEPAY_QR_SRC = "/assets/fonepay-qr.png";
+
+// The bank issued two merchant QRs for this one account, on the two Nepali QR
+// networks: FonePay (EMVCo template 26, GUID `fonepay.com`) and NepalPay
+// (template 29, GUID `NCHL0000`). An app that only speaks one network cannot
+// read the other's code, so both are offered — but they settle to the same
+// account, so the choice only affects which app can scan. Both are static
+// (tag 01 = "11"), hence reusable and safe to publish.
+const WALLETS = [
+  { id: "fonepay", src: "/assets/fonepay-qr.png" },
+  { id: "nepalpay", src: "/assets/nepalpay-qr.png" },
+] as const;
+
+type WalletId = (typeof WALLETS)[number]["id"];
 
 // Best-effort clipboard write. Prefers the async Clipboard API but falls back to
 // a legacy execCommand("copy") for insecure (HTTP) contexts and older browsers
@@ -83,18 +92,15 @@ function useCopyFeedback(duration = 1800) {
   return { copied, failed, copy };
 }
 
-// Nepal — direct bank transfer (preferred, zero fees, not US-deductible).
+// Nepal — direct bank transfer, plus the two Nepali QR networks.
 function NepalCard() {
   const { t } = useTranslation();
   const { copied, failed, copy } = useCopyFeedback();
+  // FonePay first: it is the wider-reach network of the two.
+  const [wallet, setWallet] = useState<WalletId>("fonepay");
 
   return (
-    <article className="relative flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
-      <span className="absolute right-5 top-5 inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent">
-        <Star className="h-3 w-3" aria-hidden="true" />
-        {t("donate.ways.preferredBadge")}
-      </span>
-
+    <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
       <Eyebrow className="mb-3 text-[11px]">
         {t("donate.ways.nepali.eyebrow")}
       </Eyebrow>
@@ -105,30 +111,30 @@ function NepalCard() {
         {t("donate.ways.nepali.whoFor")}
       </p>
 
-      <dl className="mt-5 grid gap-3">
+      <dl className="mt-5 grid gap-2.5">
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-accent/70">
+          <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
             {t("donate.ways.nepali.nameLabel")}
           </dt>
-          <dd className="mt-1 text-base font-medium leading-5 text-card-foreground">
+          <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
             {t("donate.ways.nepali.accountName")}
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-accent/70">
+          <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
             {t("donate.ways.nepali.bankLabel")}
           </dt>
-          <dd className="mt-1 text-base font-medium leading-5 text-card-foreground">
+          <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
             {t("donate.ways.nepali.bankName")} (
             {t("donate.ways.nepali.branchName")})
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-accent/70">
+          <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
             {t("donate.ways.nepali.accountLabel")}
           </dt>
-          <dd className="mt-1 flex items-center gap-1">
-            <span className="min-w-0 select-all break-all font-mono text-xl font-medium tracking-wide text-primary">
+          <dd className="mt-0.5 flex items-center gap-1">
+            <span className="min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary">
               {NEPALI_BANK_ACCOUNT_NUMBER}
             </span>
             <button
@@ -154,7 +160,7 @@ function NepalCard() {
                     ? t("donate.ways.copyFailed")
                     : t("donate.ways.nepali.copyAria")
               }
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {copied ? (
                 <Check className="h-4 w-4" aria-hidden="true" />
@@ -178,46 +184,60 @@ function NepalCard() {
         </div>
       </dl>
 
-      {/* The FonePay payload packs into a dense 54-module symbol, so it needs to
-          render large enough for a phone camera (~3px per module) to lock on.
-          Stacked until the card itself is wide enough to sit them side by side. */}
-      <div className="mt-6 flex flex-col items-start gap-4 border-t border-border/60 pt-5 lg:flex-row">
-        <img
-          src={FONEPAY_QR_SRC}
-          alt={t("donate.ways.nepali.qrAlt")}
-          width={168}
-          height={168}
-          loading="lazy"
-          className="h-40 w-40 shrink-0 rounded-md bg-white p-2 md:h-[168px] md:w-[168px]"
-        />
-        <div className="min-w-0">
-          <p className="text-base font-semibold leading-6 text-primary">
-            {t("donate.ways.nepali.qrTitle")}
-          </p>
-          <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
-            {t("donate.ways.nepali.qrDescription")}
-          </p>
-        </div>
-      </div>
+      <div className="mt-6 border-t border-border/60 pt-5">
+        <p className="text-base font-semibold leading-6 text-primary">
+          {t("donate.ways.nepali.qrTitle")}
+        </p>
+        <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
+          {t("donate.ways.nepali.qrDescription")}
+        </p>
 
-      <div className="mt-6 space-y-1">
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-accent">
-          <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {t("donate.ways.nepali.feeNote")}
-        </p>
-        <p className="text-xs leading-5 text-foreground/55">
-          {t("donate.ways.nepali.deductibleNote")}
-        </p>
+        <div
+          role="group"
+          aria-label={t("donate.ways.nepali.walletSwitchAria")}
+          className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
+        >
+          {WALLETS.map(({ id }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={id === wallet}
+              onClick={() => setWallet(id)}
+              className={
+                id === wallet
+                  ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
+                  : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+              }
+            >
+              {t(`donate.ways.nepali.wallets.${id}.label`)}
+            </button>
+          ))}
+        </div>
+
+        {/* Both networks stay mounted so switching never re-fetches, and the two
+            images share one canvas size so the card cannot shift height. */}
+        <div className="mt-3 w-[200px] overflow-hidden rounded-md bg-white p-2">
+          {WALLETS.map(({ id, src }) => (
+            <img
+              key={id}
+              src={src}
+              alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
+              width={600}
+              height={736}
+              loading="lazy"
+              hidden={id !== wallet}
+              className="h-auto w-full"
+            />
+          ))}
+        </div>
       </div>
     </article>
   );
 }
 
-// US 501(c)(3) — tax-deductible rails, free-first (check, Crowded, PayPal).
+// Outside Nepal — the US 501(c)(3), via PayPal Giving Fund.
 function UsCard() {
   const { t } = useTranslation();
-  const { copied, failed, copy } = useCopyFeedback();
-  const payee = t("donate.ways.us.check.payee");
 
   return (
     <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
@@ -230,106 +250,46 @@ function UsCard() {
       <p className="mt-2 text-sm font-medium text-accent">
         {t("donate.ways.us.whoFor")}
       </p>
-      <p className="mt-2 text-xs leading-5 text-foreground/55">
+      <p className="mt-2 text-xs font-medium leading-5 text-accent">
         {t("donate.ways.us.deductibleNote")}
       </p>
 
-      <ul className="mt-5 flex flex-col divide-y divide-border/60">
-        {/* PayPal — card / balance */}
-        <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
-          <div className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-1.5">
-              <SiPaypal
-                className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
-                aria-hidden="true"
-              />
-              <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
-                {t("donate.ways.us.paypal.title")}
-              </span>
+      <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-1.5">
+            <SiPaypal
+              className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
+              aria-hidden="true"
+            />
+            <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
+              {t("donate.ways.us.paypal.title")}
             </span>
-            <span className="shrink-0 text-[11px] font-medium text-foreground/50">
-              {t("donate.ways.us.paypal.fee")}
-            </span>
-          </div>
-          <p className="text-sm leading-5 text-card-foreground/70">
-            {t("donate.ways.us.paypal.detail")}
-          </p>
-          <Button asChild variant="primary" size="sm" className="mt-1 w-fit gap-1.5">
-            <a
-              href={PAYPAL_DONATE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent("donate_click", {
-                  method: "paypal",
-                  action: "outbound",
-                  link_url: PAYPAL_DONATE_URL,
-                })
-              }
-            >
-              <span>{t("donate.ways.us.paypal.cta")}</span>
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            </a>
-          </Button>
-        </li>
-
-        {/* Check — free */}
-        <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-base font-semibold text-primary">
-              {t("donate.ways.us.check.title")}
-            </span>
-            <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent">
-              {t("donate.ways.us.check.fee")}
-            </span>
-          </div>
-          <p className="text-sm leading-5 text-card-foreground/70">
-            {t("donate.ways.us.check.detail")}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              copy(payee);
+          </span>
+          <span className="shrink-0 text-[11px] font-medium text-foreground/50">
+            {t("donate.ways.us.paypal.fee")}
+          </span>
+        </div>
+        <p className="text-sm leading-5 text-card-foreground/70">
+          {t("donate.ways.us.paypal.detail")}
+        </p>
+        <Button asChild variant="primary" size="sm" className="mt-1 w-fit gap-1.5">
+          <a
+            href={PAYPAL_DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
               trackEvent("donate_click", {
-                method: "check",
-                action: "copy_payee",
-              });
-            }}
-            aria-label={
-              copied
-                ? t("donate.ways.copied")
-                : failed
-                  ? t("donate.ways.copyFailed")
-                  : t("donate.ways.us.check.copyAria")
+                method: "paypal",
+                action: "outbound",
+                link_url: PAYPAL_DONATE_URL,
+              })
             }
-            title={
-              copied
-                ? t("donate.ways.copied")
-                : failed
-                  ? t("donate.ways.copyFailed")
-                  : t("donate.ways.us.check.copyAria")
-            }
-            className="inline-flex items-center gap-1.5 self-start rounded-md border border-border/70 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:border-primary/25 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            {copied ? (
-              <Check className="h-3.5 w-3.5" aria-hidden="true" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-            )}
-            <span className="font-mono">{payee}</span>
-            <span aria-live="polite" className="sr-only">
-              {copied
-                ? t("donate.ways.copied")
-                : failed
-                  ? t("donate.ways.copyFailed")
-                  : ""}
-            </span>
-          </button>
-          <p className="text-xs leading-5 text-foreground/55">
-            {t("donate.ways.us.check.addressNote")}
-          </p>
-        </li>
-      </ul>
+            <span>{t("donate.ways.us.paypal.cta")}</span>
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </a>
+        </Button>
+      </div>
     </article>
   );
 }
@@ -346,18 +306,12 @@ export function DonationInfo() {
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <Eyebrow className="mb-4 tracking-[0.22em]">
-              {t("donate.ways.eyebrow")}
-            </Eyebrow>
             <h2
               id="donate-ways-title"
               className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl"
             >
               {t("donate.ways.title")}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-foreground/65 md:text-lg">
-              {t("donate.ways.description")}
-            </p>
           </div>
 
           <div className="mt-10 grid items-start gap-5 md:grid-cols-2 md:gap-6">

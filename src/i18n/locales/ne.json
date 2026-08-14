@@ -403,10 +403,7 @@
       ]
     },
     "ways": {
-      "eyebrow": "दान गर्ने तरिकाहरू",
       "title": "दान गर्ने दुई तरिका",
-      "description": "नेपाली बैंक खातामार्फत सिधै दान गर्नुहोस् — कुनै शुल्क छैन, र यो हामीले प्राथमिकता दिने तरिका हो — वा हाम्रो अमेरिकी 501(c)(3), Jawafdehi Initiative, Inc. लाई चेक वा PayPal मार्फत।",
-      "preferredBadge": "प्राथमिकता",
       "nepali": {
         "eyebrow": "नेपालमा दान",
         "whoFor": "तपाईंसँग नेपाली बैंक खाता छ",
@@ -418,30 +415,30 @@
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
         "copyAria": "नेपाली बैंक खाता नम्बर कपी गर्नुहोस्",
-        "qrTitle": "वा स्क्यान गरेर पठाउनुहोस्",
-        "qrDescription": "फोनपे (FonePay) मा जोडिएको कुनै पनि मोबाइल बैंकिङ एप वा डिजिटल वालेटबाट स्क्यान गर्नुहोस्।",
-        "qrAlt": "Jawafdehi Initiative को फोनपे (FonePay) QR कोड",
-        "feeNote": "कुनै शुल्क छैन — पूरै रकम Jawafdehi मा पुग्छ।",
-        "deductibleNote": "अमेरिकी कानूनअन्तर्गत कर-कट्टीयोग्य होइन।"
+        "qrTitle": "स्क्यान गरेर पठाउनुहोस्",
+        "qrDescription": "दुवै नेपाली QR नेटवर्कमध्ये कुनै पनि मोबाइल बैंकिङ एप वा डिजिटल वालेटबाट स्क्यान गर्नुहोस्।",
+        "walletSwitchAria": "QR नेटवर्क छान्नुहोस्",
+        "wallets": {
+          "fonepay": {
+            "label": "FonePay",
+            "alt": "Jawafdehi Initiative को FonePay QR कोड"
+          },
+          "nepalpay": {
+            "label": "NepalPay",
+            "alt": "Jawafdehi Initiative को NepalPay QR कोड"
+          }
+        }
       },
       "us": {
-        "eyebrow": "अमेरिकामा दान",
-        "whoFor": "तपाईंलाई अमेरिकी कर रसिद चाहिन्छ, वा नेपाली खाता छैन",
+        "eyebrow": "नेपाल बाहिर",
+        "whoFor": "तपाईं नेपाल बाहिरबाट दान गर्दै हुनुहुन्छ",
         "title": "Jawafdehi Initiative, Inc.",
         "deductibleNote": "अमेरिकी करदाताका लागि कर-कट्टीयोग्य — 501(c)(3), EIN 42-3114954।",
-        "check": {
-          "title": "चेक",
-          "detail": "“Jawafdehi Initiative, Inc.” को नाममा",
-          "fee": "कुनै शुल्क छैन",
-          "payee": "Jawafdehi Initiative, Inc.",
-          "copyAria": "चेक भुक्तानी पाउनेको नाम कपी गर्नुहोस्",
-          "addressNote": "ठेगानाका लागि हामीलाई इमेल गर्नुहोस्।"
-        },
         "paypal": {
           "title": "PayPal",
-          "detail": "कार्ड वा PayPal ब्यालेन्स",
+          "detail": "कार्ड, बैंक वा PayPal ब्यालेन्स",
           "fee": "≈२% + $0.49",
-          "cta": "PayPal मार्फत दान गर्नुहोस्"
+          "cta": "PayPal Giving Fund मार्फत दान गर्नुहोस्"
         }
       },
       "copy": "कपी गर्नुहोस्",

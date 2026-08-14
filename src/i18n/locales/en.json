@@ -403,10 +403,7 @@
       ]
     },
     "ways": {
-      "eyebrow": "Ways to give",
       "title": "Two ways to give",
-      "description": "Give directly through a Nepal bank account — no fees, and the way we prefer — or to our US 501(c)(3), Jawafdehi Initiative, Inc., by check or PayPal.",
-      "preferredBadge": "Preferred",
       "nepali": {
         "eyebrow": "Give in Nepal",
         "whoFor": "You have a Nepal bank account",
@@ -418,30 +415,30 @@
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
         "copyAria": "Copy Nepali bank account number",
-        "qrTitle": "Or scan to pay",
-        "qrDescription": "Scan with any mobile banking app or digital wallet connected to FonePay.",
-        "qrAlt": "FonePay QR code for Jawafdehi Initiative",
-        "feeNote": "No fees — 100% reaches Jawafdehi.",
-        "deductibleNote": "Not tax-deductible under US law."
+        "qrTitle": "Scan to pay",
+        "qrDescription": "Scan with any mobile banking app or digital wallet on either Nepali QR network.",
+        "walletSwitchAria": "Choose a QR network",
+        "wallets": {
+          "fonepay": {
+            "label": "FonePay",
+            "alt": "FonePay QR code for Jawafdehi Initiative"
+          },
+          "nepalpay": {
+            "label": "NepalPay",
+            "alt": "NepalPay QR code for Jawafdehi Initiative"
+          }
+        }
       },
       "us": {
-        "eyebrow": "Give in the US",
-        "whoFor": "You want a US tax receipt, or don't have a Nepal account",
+        "eyebrow": "Outside Nepal",
+        "whoFor": "You are giving from outside Nepal",
         "title": "Jawafdehi Initiative, Inc.",
         "deductibleNote": "Tax-deductible for US taxpayers — 501(c)(3), EIN 42-3114954.",
-        "check": {
-          "title": "Check",
-          "detail": "Payable to “Jawafdehi Initiative, Inc.”",
-          "fee": "No fees",
-          "payee": "Jawafdehi Initiative, Inc.",
-          "copyAria": "Copy check payee name",
-          "addressNote": "Email us for the mailing address."
-        },
         "paypal": {
           "title": "PayPal",
-          "detail": "Card or PayPal balance",
+          "detail": "Card, bank, or PayPal balance",
           "fee": "≈2% + $0.49",
-          "cta": "Donate via PayPal"
+          "cta": "Donate via PayPal Giving Fund"
         }
       },
       "copy": "Copy",
