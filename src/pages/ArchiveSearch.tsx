@@ -96,7 +96,10 @@ export default function ArchiveSearch({
     [searchParams, selectedRecordType],
   );
   const [query, setQuery] = useState(params.q || "");
-  const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  // Card (grid) view is the default: results lead with the case artwork, status,
+  // entities and बिगो rather than a text row. The choice is intentionally NOT
+  // persisted across visits or mirrored into the URL — that's a separate change.
+  const [viewMode, setViewMode] = useState<"list" | "card">("card");
 
   useEffect(() => setQuery(params.q || ""), [params.q]);
   useEffect(() => {
@@ -354,17 +357,8 @@ export default function ArchiveSearch({
               className="flex items-center rounded-full border p-0.5"
               role="group"
             >
-              <Button
-                aria-label={t("archiveSearch.listView", "List view")}
-                aria-pressed={viewMode === "list"}
-                className="h-9 w-9 rounded-full"
-                onClick={() => setViewMode("list")}
-                size="icon"
-                type="button"
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+              {/* Card first, then list — the toggle reads in the same order as
+                  the defaults, with the default view in the leading position. */}
               <Button
                 aria-label={t("archiveSearch.cardView", "Card view")}
                 aria-pressed={viewMode === "card"}
@@ -375,6 +369,17 @@ export default function ArchiveSearch({
                 variant={viewMode === "card" ? "secondary" : "ghost"}
               >
                 <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                aria-label={t("archiveSearch.listView", "List view")}
+                aria-pressed={viewMode === "list"}
+                className="h-9 w-9 rounded-full"
+                onClick={() => setViewMode("list")}
+                size="icon"
+                type="button"
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+              >
+                <List className="h-4 w-4" />
               </Button>
             </div>
             <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">

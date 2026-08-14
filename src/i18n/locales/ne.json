@@ -1017,6 +1017,7 @@
   },
   "caseCard": {
     "thumbnailAlt": "मुद्दाको थम्बनेल तस्बिर: {{title}}",
+    "bigo": "बिगो",
     "status": {
       "ongoing": "चलिरहेको",
       "resolved": "समाधान भएको",

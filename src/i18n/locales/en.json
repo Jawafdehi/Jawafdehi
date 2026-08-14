@@ -1017,6 +1017,7 @@
   },
   "caseCard": {
     "thumbnailAlt": "Thumbnail image for the case: {{title}}",
+    "bigo": "Embezzled amount",
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",

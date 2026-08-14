@@ -60,6 +60,38 @@ const baseResponse: ArchiveSearchResponse = {
   ],
 };
 
+// A case hit carrying the denormalized index card payload (the common path on
+// new docs), so <CaseCard> renders without hydrating the detail endpoint.
+function caseResult(
+  slug: string,
+  title: string,
+  card: Partial<NonNullable<ArchiveSearchResult["card"]>> = {},
+): ArchiveSearchResult {
+  return {
+    ...baseResponse.results[0],
+    id: `https://jawafdehi.org/case/${slug}`,
+    title: { ne: null, en: title },
+    url: `/case/${slug}`,
+    card: {
+      slug,
+      title,
+      short_description: `${title} summary`,
+      key_allegations: [],
+      tags: [],
+      case_type: "CORRUPTION",
+      status: "ongoing",
+      case_start_date: "2024-01-01",
+      case_end_date: null,
+      bigo: null,
+      thumbnail_url: null,
+      banner_url: null,
+      timeline: [],
+      entities: [],
+      ...card,
+    },
+  };
+}
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -372,10 +404,125 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Indexed card title");
 
-    expect(screen.getByText("Indexed card summary")).toBeTruthy();
+    // The card leads with the title and the facts below it — the summary
+    // paragraph lives on the case detail page, not on the card.
+    expect(screen.queryByText("Indexed card summary")).toBeNull();
     expect(screen.getByText("Indexed Person")).toBeTruthy();
     expect(document.querySelector('img[src="https://example.com/indexed-card.jpg"]')).toBeTruthy();
     expect(getCaseByIdMock).not.toHaveBeenCalled();
+  });
+
+  it("opens in card view", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    expect(
+      screen.getByRole("button", { name: "Card view" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen.getByRole("button", { name: "List view" }).getAttribute("aria-pressed"),
+    ).toBe("false");
+
+    // Card sits first in the toggle, so the default view leads.
+    const toggles = Array.from(
+      screen
+        .getByRole("group", { name: "View mode" })
+        .querySelectorAll("button"),
+    ).map((button) => button.getAttribute("aria-label"));
+    expect(toggles).toEqual(["Card view", "List view"]);
+  });
+
+  it("shows बिगो on case cards in both views, and omits it when there is no amount", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        caseResult("with-amount", "Case with an amount", { bigo: 24_940_110 }),
+        caseResult("zero-amount", "Case with a zero amount", { bigo: 0 }),
+        caseResult("no-amount", "Case with no amount", { bigo: null }),
+      ],
+    });
+
+    renderSearch();
+    await screen.findByText("Case with an amount");
+
+    // Card view (the default).
+    expect(screen.getByText("Rs 2.49 Crore")).toBeTruthy();
+    // A 0/null amount means "no amount recorded", not "nothing was embezzled" —
+    // rendering formatBigo(0) as "Rs 0" would assert a finding the case doesn't make.
+    expect(screen.queryByText("Rs 0")).toBeNull();
+
+    // Same field in list view: <CaseCard>'s meta block is not mode-branched, so
+    // one mapping fix surfaces बिगो in both.
+    fireEvent.click(screen.getByRole("button", { name: "List view" }));
+
+    expect(screen.getByText("Rs 2.49 Crore")).toBeTruthy();
+    expect(screen.queryByText("Rs 0")).toBeNull();
+  });
+
+  it("shows the same fields for a non-case result in both views", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "courtcase",
+          id: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+          source_app: "jawafdehi",
+          title: { ne: null, en: "Special Court 081-CR-0060" },
+          snippet: { ne: null, en: "Charge sheet filed against the accused" },
+          url: "/courtcase/special/081-cr-0060",
+          api_url: null,
+          matched_fields: [],
+          score: 1,
+          extra: {
+            court: "SPECIAL_COURT",
+            case_number: "081-CR-0060",
+            case_status: "SUB_JUDICE",
+          },
+        },
+      ],
+    });
+
+    renderSearch();
+    await screen.findByText("Special Court 081-CR-0060");
+
+    // The metadata line used to be `truncate`d to one line in card view while the
+    // list row wrapped it in full, hiding the court and status. That regression is
+    // CSS-only, and jsdom has no layout — asserting the text is present would pass
+    // against the broken code too. So compare the classes that decide how much of
+    // each field is shown, not just that the field exists.
+    const renderedFields = () => ({
+      badge: screen.getByText("Court case").textContent,
+      title: screen.getByText("Special Court 081-CR-0060").textContent,
+      description: screen.getByText("Charge sheet filed against the accused")
+        .textContent,
+      metadata: screen.getByText("special court · 081-CR-0060 · sub judice")
+        .textContent,
+      cta: screen.getByText("View").textContent,
+      // Description and metadata are clamped identically in both modes; only the
+      // title scales with the shell, so its classes are compared separately below.
+      descriptionClamp: screen.getByText("Charge sheet filed against the accused")
+        .className,
+      metadataClamp: screen.getByText("special court · 081-CR-0060 · sub judice")
+        .className,
+    });
+
+    const cardView = renderedFields();
+    fireEvent.click(screen.getByRole("button", { name: "List view" }));
+    const listView = renderedFields();
+
+    expect(listView).toEqual(cardView);
+    // Neither mode may truncate a field to a single line.
+    expect(cardView.metadataClamp).not.toContain("truncate");
+    expect(cardView.descriptionClamp).not.toContain("truncate");
+    // The title clamps to the same number of lines in both, at different sizes,
+    // and sits at the same heading level as <CaseCard>'s title (h3) rather than
+    // the h2 the list row used to render.
+    const heading = () =>
+      screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" });
+    expect(heading().className).toContain("line-clamp-2");
+    fireEvent.click(screen.getByRole("button", { name: "Card view" }));
+    expect(heading().className).toContain("line-clamp-2");
   });
 
   it("does not show an empty state after an initial request failure", async () => {
