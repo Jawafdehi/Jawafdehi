@@ -103,13 +103,8 @@ All colors MUST be HSL.
     --popover-foreground: 215 28% 17%;
 
     /* Navy blue - trust and authority | #0E1F3B
-       The hex is canonical and the HSL is derived from it, never the reverse.
-       That direction matters: hex → HSL → hex is lossy, and #0E1F3B round-trips
-       back as #0E1F3A. Two files had picked up that lossy value and drifted
-       (index.html's theme-color, site.webmanifest's theme_color), while the
-       Figma original is the hex above — provably, since #0E1F3A would have
-       rounded to `217 61% 14%` rather than the 62% written here.
-       tests/brand/tokens.test.ts holds this relationship. */
+       The hex is canonical; derive the HSL from it, never the reverse.
+       Enforced by tests/brand/tokens.test.ts. */
     --primary: 217 62% 14%;
     --primary-foreground: 36 100% 99%;
 

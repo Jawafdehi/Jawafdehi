@@ -1,46 +1,59 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
-// The brand navy was live as two different hexes: src/index.css documented
-// #0E1F3B on --primary and every logo SVG used it, while index.html's
-// theme-color and site.webmanifest's theme_color said #0E1F3A. Nothing was
-// wrong-looking about either — the two differ by one step of blue, ΔE2000 0.42,
-// which no reviewer will ever catch by eye.
+// The rule: the hex is canonical and the HSL is derived from it, never the
+// reverse — because hex → HSL → hex is lossy (#0E1F3B comes back as #0E1F3A).
 //
-// The cause is that hex → HSL → hex is lossy, and #0E1F3B comes back as
-// #0E1F3A. Someone converted the token to a hex and pasted the result.
-//
-// So the rule is: THE HEX IS CANONICAL AND THE HSL IS DERIVED FROM IT, never the
-// reverse. This file holds that rule in both directions:
-//
-//   1. Every file that hardcodes a brand colour as a hex agrees with the hex
-//      documented in index.css. Plain string comparison, no colour maths — this
-//      is the assertion that fails on the drift that actually happened.
-//   2. The documented hex, converted to HSL and rounded the way CSS writes it,
-//      reproduces the token. That is the check that catches the opposite repair:
-//      "correcting" the comment to the lossy value.
-//
-// (2) is what settled which hex was original, without asking the designer. The
-// rounding is not symmetric: #0E1F3B → `217 62% 14%`, but #0E1F3A → `217 61%
-// 14%`. Only one of them can have produced the 62% that has been in the CSS all
-// along.
+// Held in both directions, and both are needed:
+//   1. Nothing hardcodes a brand hex that disagrees with the one documented in
+//      index.css. Catches the drift itself.
+//   2. The documented hex still reproduces the token. Catches the opposite
+//      repair — "correcting" the comment to the lossy value — which works
+//      because the rounding is asymmetric: #0E1F3B → 62%, #0E1F3A → 61%.
 
 const root = (p: string) => resolve(process.cwd(), p);
 const INDEX_CSS = readFileSync(root('src/index.css'), 'utf8');
 const INDEX_HTML = readFileSync(root('index.html'), 'utf8');
 const MANIFEST = JSON.parse(readFileSync(root('public/site.webmanifest'), 'utf8'));
 
+/** Every .ts/.tsx under a directory, recursively, as repo-relative paths. */
+function sourceFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(root(dir), { withFileTypes: true })) {
+    const rel = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...sourceFiles(rel));
+    else if (/\.tsx?$/.test(entry.name)) out.push(rel);
+  }
+  return out;
+}
+
+/**
+ * Remove comments, so prose that names a wrong hex in order to warn about it is
+ * not itself reported. The line-comment pattern refuses a `//` preceded by `:`
+ * so that a URL is not mistaken for the start of a comment.
+ */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '');
+}
+
 /** The hex documented in the comment attached to a CSS custom property. */
 function documentedHex(token: string): string {
-  // Either `--token: …; /* #RRGGBB */` on one line, or a block comment above it
-  // ending in `| #RRGGBB`.
+  // Either `--token: …; /* #RRGGBB */` on one line, or a block comment above it.
   const sameLine = new RegExp(`--${token}:[^;]+;\\s*/\\*[^*]*?(#[0-9A-Fa-f]{6})`).exec(INDEX_CSS);
   if (sameLine) return sameLine[1].toUpperCase();
-  const above = new RegExp(`(#[0-9A-Fa-f]{6})[\\s\\S]{0,600}?--${token}:`).exec(INDEX_CSS);
-  if (!above) throw new Error(`no documented hex found for --${token} in src/index.css`);
-  return above[1].toUpperCase();
+
+  // Otherwise take the LAST hex before the declaration — the one in the comment
+  // immediately above it. An earlier version searched forwards within a
+  // 600-character window, which silently returned a *neighbouring* token's hex
+  // as soon as the comment above this one got shorter than the window.
+  const declaration = new RegExp(`--${token}\\s*:`).exec(INDEX_CSS);
+  if (!declaration) throw new Error(`--${token} is not declared in src/index.css`);
+  const preceding = [...INDEX_CSS.slice(0, declaration.index).matchAll(/#[0-9A-Fa-f]{6}/g)];
+  const nearest = preceding.at(-1);
+  if (!nearest) throw new Error(`no documented hex found for --${token} in src/index.css`);
+  return nearest[0].toUpperCase();
 }
 
 /** The raw HSL triplet a token is set to, e.g. "217 62% 14%". */
@@ -109,23 +122,33 @@ describe('brand colour tokens', () => {
   });
 
   it('leaves no brand hex hardcoded outside the CSS and the logo files', () => {
-    // SVGs are excluded on purpose: a logo is a drawing, and its fills are part
-    // of the artwork rather than a theme value. Everything else should read a
-    // token, so this list is expected to stay empty.
+    // Scans application source too, not just the two files that happened to be
+    // wrong: a new #B5242C in a .tsx is the same defect and used to pass here.
+    //
+    // SVGs are excluded on purpose — a logo is a drawing, and its fills are part
+    // of the artwork rather than a theme value. src/index.css is excluded because
+    // it is where the canonical hex is documented.
     const offenders: string[] = [];
-    for (const [label, source] of [
-      // Comments are stripped: they explain the drift and name the wrong hex to
-      // do it, which is documentation rather than a value anything renders.
-      ['index.html', INDEX_HTML.replace(/<!--[\s\S]*?-->/g, '')],
-      ['public/site.webmanifest', JSON.stringify(MANIFEST)],
-    ] as const) {
+
+    const scan = (label: string, source: string, isAllowed: (hex: string) => boolean) => {
       for (const match of source.matchAll(/#(?:0E1F3[AB]|B[57]242C)/gi)) {
-        // index.html's is the theme-color, already asserted above.
-        if (label === 'index.html' && match[0].toUpperCase() === '#0E1F3B') continue;
-        if (label === 'public/site.webmanifest' && match[0].toUpperCase() === '#0E1F3B') continue;
-        offenders.push(`${label}: ${match[0]}`);
+        if (!isAllowed(match[0].toUpperCase())) offenders.push(`${label}: ${match[0]}`);
       }
+    };
+
+    // Browser chrome may state the navy once each; both are asserted above
+    // against the documented hex, so only a *different* brand hex is drift.
+    scan('index.html', INDEX_HTML.replace(/<!--[\s\S]*?-->/g, ''), (hex) => hex === '#0E1F3B');
+    scan('public/site.webmanifest', JSON.stringify(MANIFEST), (hex) => hex === '#0E1F3B');
+
+    // Application source gets no exemption at all — every one of these has a token.
+    for (const file of sourceFiles('src')) {
+      scan(file, stripComments(readFileSync(root(file), 'utf8')), () => false);
     }
-    expect(offenders).toEqual([]);
+
+    expect(
+      offenders,
+      'hardcoded brand hex — use the token instead: hsl(var(--primary)), hsl(var(--accent))',
+    ).toEqual([]);
   });
 });
