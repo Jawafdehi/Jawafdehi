@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
 
 import { http, API_BASE_URL } from "@/services/http";
@@ -37,7 +38,9 @@ interface EntityRecord {
   "@type"?: string | string[];
   additionalType?: string;
   name?: Bilingual | string;
-  alternateName?: Array<Bilingual | string>;
+  // A language map (`{en: [...], ne: [...]}`, what NES writes), an array, or a
+  // plain string — normalised by localizedList().
+  alternateName?: unknown;
   description?: Bilingual | string;
   address?: { description?: string; streetAddress?: string } | string;
   url?: string;
@@ -65,6 +68,35 @@ function bilingual(v: Bilingual | string | undefined): { en: string; ne: string 
   if (!v) return { en: "", ne: "" };
   if (typeof v === "string") return { en: v, ne: "" };
   return { en: v.en || "", ne: v.ne || "" };
+}
+
+// Flatten a schema.org value that may be a language map, an array, or a plain
+// string into display strings for the active language.
+//
+// NES stores `alternateName` as a language MAP (`{en: [...], ne: [...]}`) — its
+// `@context` declares `"@container": "@language"` — so an Array.isArray() check
+// misses every record the store actually writes.
+function localizedList(v: unknown, lang: "en" | "ne"): string[] {
+  const fromLangMap = (o: Record<string, unknown>): string[] => {
+    const ordered = [o[lang], o[lang === "ne" ? "en" : "ne"]];
+    return ordered.flatMap((val) =>
+      Array.isArray(val) ? val : val == null ? [] : [val],
+    ).filter((s): s is string => typeof s === "string" && s.length > 0);
+  };
+
+  if (v == null) return [];
+  if (typeof v === "string") return [v];
+  if (Array.isArray(v)) {
+    return v.flatMap((item) =>
+      typeof item === "string"
+        ? [item]
+        : item && typeof item === "object"
+          ? fromLangMap(item as Record<string, unknown>).slice(0, 1)
+          : [],
+    );
+  }
+  if (typeof v === "object") return fromLangMap(v as Record<string, unknown>);
+  return [];
 }
 
 function typeToken(t: EntityRecord["@type"], additional?: string): string | undefined {
@@ -185,6 +217,8 @@ function RelationLink({ label, refObj }: { label: string; refObj?: JsonLdRef }) 
 
 export default function EntityRecordProfile() {
   const params = useParams();
+  const { i18n } = useTranslation();
+  const currentLang = (i18n.language || "ne").startsWith("en") ? "en" : "ne";
   const tail = params["*"] || "";
   const [failedImgUrl, setFailedImgUrl] = useState<string | null>(null);
   const { data, isLoading, isError } = useQuery({
@@ -202,7 +236,12 @@ export default function EntityRecordProfile() {
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
   const typeLabel = humanizeEntityType(data ? typeToken(data["@type"], data.additionalType) : undefined);
   const description = data ? bilingual(data.description) : { en: "", ne: "" };
-  const descText = description.en || description.ne;
+  // Nepali-first: show the active language, falling back to the other only when
+  // that language is missing.
+  const descText =
+    currentLang === "ne"
+      ? description.ne || description.en
+      : description.en || description.ne;
   const address =
     typeof data?.address === "string"
       ? data.address
@@ -210,9 +249,7 @@ export default function EntityRecordProfile() {
   const identifiers = Array.isArray(data?.identifier) ? data!.identifier! : [];
   const blacklisted = data?.["jawafdehi:blacklisted"] === true;
   const imageUrl = imageUrlOf(data);
-  const aliases = Array.isArray(data?.alternateName)
-    ? data!.alternateName!.map((a) => bilingual(a)).map((b) => b.en || b.ne).filter(Boolean)
-    : [];
+  const aliases = localizedList(data?.alternateName, currentLang);
   const created = data?.dateCreated ? String(data.dateCreated).slice(0, 10) : "";
   const version = data?.["jawafdehi:version"];
 
