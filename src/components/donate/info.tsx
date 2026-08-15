@@ -104,7 +104,9 @@ function NepalCard() {
         {t("donate.ways.nepali.title")}
       </h3>
 
-      <div className="mt-6 border-t border-border/60 pt-5">
+      {/* No rule here: the title carries no subtitle, so a divider would sit
+          straight under it and push the QR down for nothing. */}
+      <div className="mt-4">
         <p className="text-base font-semibold leading-6 text-primary">
           {t("donate.ways.nepali.qrTitle")}
         </p>
