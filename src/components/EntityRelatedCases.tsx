@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
+import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
   outcomeBadgeClass,
@@ -36,6 +37,12 @@ const PAGE_SIZE = 20;
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
   return role === "accused" || role === "alleged";
+}
+
+// The date a card is ordered by — the same one it displays. Falls back to the
+// record's creation time only when the case has no start date of its own.
+function sortDateOf(caseItem: Case): string {
+  return caseItem.case_start_date || caseItem.created_at || "";
 }
 
 // This entity's role/verdict on a given case, read from the case's own entity
@@ -79,13 +86,18 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
   // Hide the whole section when there are no published citations (or on error).
   if (isError || !data || data.count === 0) return null;
 
-  // Defensive re-sort (the server already orders this way): accused/alleged
-  // first, reverse-chron within each tier.
+  // accused/alleged first, then newest case first within each tier.
+  //
+  // Sort on the SAME date the card shows (`case_start_date`, i.e. when the case
+  // began) rather than `created_at` (when we happened to author the record).
+  // Those orders are unrelated: this entity's five cases were authored in the
+  // reverse of their real chronology, so ordering by `created_at` rendered the
+  // dates on screen as an apparently random sequence.
   const cases = [...data.results].sort((a, b) => {
     const ra = isAccusedTier(roleFor(a, entityIri).role) ? 0 : 1;
     const rb = isAccusedTier(roleFor(b, entityIri).role) ? 0 : 1;
     if (ra !== rb) return ra - rb;
-    return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    return sortDateOf(b).localeCompare(sortDateOf(a));
   });
 
   const remaining = data.count - cases.length;
@@ -121,8 +133,13 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                 accused && "border-l-4 border-l-accent",
               )}
             >
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
+              {/* Title leads: it is what a reader scans for. The role/verdict
+                  badges and the type · date · amount meta sit under it. */}
+              <div className="min-w-0 flex-1 space-y-2">
+                <h3 className="line-clamp-2 text-base font-semibold leading-snug text-primary group-hover:underline">
+                  {c.title}
+                </h3>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
                   <Badge
                     variant={accused ? undefined : "secondary"}
                     className={cn(
@@ -137,14 +154,20 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                       {outcomeLabel(outcome, language)}
                     </Badge>
                   ) : null}
+                  <span className="text-xs text-muted-foreground">
+                    {[typeLabel, date].filter(Boolean).join(" · ")}
+                  </span>
                 </div>
-                <h3 className="line-clamp-2 text-base font-medium leading-snug text-primary group-hover:underline">
-                  {c.title}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  {typeLabel}
-                  {date ? ` · ${date}` : ""}
-                </p>
+                {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
+                    amount — a missing bigo is not a zero-rupee case. */}
+                {c.bigo ? (
+                  <p className="text-xs text-muted-foreground">
+                    <span>{t("caseCard.bigo")}: </span>
+                    <span className="font-medium tabular-nums text-foreground">
+                      {formatBigo(c.bigo)}
+                    </span>
+                  </p>
+                ) : null}
               </div>
               {href ? (
                 <ArrowRight
