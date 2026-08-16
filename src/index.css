@@ -1,8 +1,35 @@
 @import "./styles/typography.css";
 
+/* Web fonts are served as WOFF2, with the original TTF kept as a fallback source
+   and as the regeneration input. See scripts/fonts/README.md — the WOFF2 files are
+   generated, not hand-made, and the command that makes them is recorded there.
+
+   The TTFs are never fetched by a browser that supports WOFF2 (every browser
+   since 2016), so the second `src` costs nothing on the wire. */
+
+/* Noto Sans Devanagari is the app face: it is on the critical path of EVERY
+   route, and it is what the home page's LCP text waits for.
+
+   The upstream file is a two-axis variable font (`wght` 100-900, `wdth`
+   62.5-100). Nothing in this codebase varies width — no `font-stretch`, no
+   `font-variation-settings`, no `wdth` anywhere — so the width axis is pinned at
+   its default and dropped. That, plus WOFF2, takes the wire cost from 329,700
+   bytes (the TTF as Cloudflare brotli'd it) to 147,468: 55% less on every page.
+
+   Verified lossless at the default width before shipping: 551 codepoints in and
+   551 out, every GSUB feature retained (the Indic set — akhn, rphf, blwf, half,
+   nukt, pres, psts, rkrf — is what makes Devanagari shape at all), GPOS retained,
+   and 25 of 25 rendered samples pixel-identical to the original across weights
+   400/500/600/700/900, covering conjuncts, matras, repha, Devanagari digits and
+   the rupee sign. Subsetting further by unicode-range was measured too and
+   rejected: it saved another 8.3 KB (5.6%) in exchange for dropping codepoints
+   the original covered, and a too-aggressive subset shows tofu rather than
+   falling back gracefully. */
 @font-face {
   font-family: 'Noto Sans Devanagari';
-  src: url('/font/Noto_Sans_Devanagari/NotoSansDevanagari-VariableFont_wdth,wght.ttf') format('truetype');
+  src:
+    url('/font/Noto_Sans_Devanagari/NotoSansDevanagari-wght.woff2') format('woff2'),
+    url('/font/Noto_Sans_Devanagari/NotoSansDevanagari-VariableFont_wdth,wght.ttf') format('truetype');
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -10,31 +37,43 @@
 
 /* Vesper Libre — a bilingual (Latin + Devanagari) serif used for editorial
    headings across /insights and /data-quality. Self-hosted; covers both
-   scripts, so bilingual headlines stay in one typeface. */
+   scripts, so bilingual headlines stay in one typeface.
+
+   WOFF2 only here, no other change: all four faces keep every codepoint (456),
+   every glyph and every layout feature. 27-29% off each, and unlike the app face
+   this is not on the critical path — the home page loads no Vesper at all. */
 @font-face {
   font-family: 'Vesper Libre';
-  src: url('/font/Vesper_Libre/VesperLibre-Regular.ttf') format('truetype');
+  src:
+    url('/font/Vesper_Libre/VesperLibre-Regular.woff2') format('woff2'),
+    url('/font/Vesper_Libre/VesperLibre-Regular.ttf') format('truetype');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'Vesper Libre';
-  src: url('/font/Vesper_Libre/VesperLibre-Medium.ttf') format('truetype');
+  src:
+    url('/font/Vesper_Libre/VesperLibre-Medium.woff2') format('woff2'),
+    url('/font/Vesper_Libre/VesperLibre-Medium.ttf') format('truetype');
   font-style: normal;
   font-weight: 500;
   font-display: swap;
 }
 @font-face {
   font-family: 'Vesper Libre';
-  src: url('/font/Vesper_Libre/VesperLibre-Bold.ttf') format('truetype');
+  src:
+    url('/font/Vesper_Libre/VesperLibre-Bold.woff2') format('woff2'),
+    url('/font/Vesper_Libre/VesperLibre-Bold.ttf') format('truetype');
   font-style: normal;
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
   font-family: 'Vesper Libre';
-  src: url('/font/Vesper_Libre/VesperLibre-Black.ttf') format('truetype');
+  src:
+    url('/font/Vesper_Libre/VesperLibre-Black.woff2') format('woff2'),
+    url('/font/Vesper_Libre/VesperLibre-Black.ttf') format('truetype');
   font-style: normal;
   font-weight: 900;
   font-display: swap;

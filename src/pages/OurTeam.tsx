@@ -78,6 +78,15 @@ const OurTeam = () => {
                         <img
                           src={member.thumb}
                           alt={member.displayName.en}
+                          // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio
+                          // the phone gates run at — which is the 504x504 the
+                          // generated avatars are sized for. Stating the intrinsic
+                          // box also stops each card reflowing as its photo
+                          // arrives, and this page has 22 of them.
+                          width={504}
+                          height={504}
+                          loading="lazy"
+                          decoding="async"
                           className="h-28 w-28 rounded-full object-cover ring-4 ring-background shadow-md"
                         />
                       ) : (

@@ -8,11 +8,14 @@
 // usable is left. Keeping them here stops the case detail banner and the case
 // card from drifting apart.
 
-// The scales illustration in public/assets. 1920x1080, so it survives being
-// object-cover'd into a wide card slot.
-export const CASE_PLACEHOLDER_IMAGE = "/assets/placeholder.png";
+// The scales illustration in public/assets. 1476x936 — 328x208, the widest card
+// slot it lands in, at DPR 4.5 — so object-cover never has to upscale it. It used
+// to ship at 1920x1080 as an 87 KB PNG; regenerate with
+// scripts/images/build-optimized.py, which keeps the source at
+// scripts/images/sources/placeholder.png.
+export const CASE_PLACEHOLDER_IMAGE = "/assets/placeholder.webp";
 
-// placeholder.png is 98% #F5F5F5, so on a dark background it renders as a white
+// The placeholder is 98% #F5F5F5, so on a dark background it renders as a white
 // slab. invert flips its lightness and hue-rotate restores the hue, turning it
 // into a dark panel with the illustration intact. Apply this ONLY to the
 // placeholder — inverting a real case photograph would misrepresent it.

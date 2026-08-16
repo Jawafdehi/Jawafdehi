@@ -62,7 +62,7 @@ const DataQuality = () => {
           </div>
         </section>
 
-        <div className="layout-container space-y-12 py-12">
+        <div className="layout-container space-y-8 py-8 md:space-y-12 md:py-12">
           {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
           <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
