@@ -17,6 +17,7 @@ first — it has the device matrix, the budgets, and what emulation cannot catch
 | `page-weight.mjs` | Total transfer per route **after scrolling to the bottom**, so lazy images are counted. |
 | `hero-stats-scroll.mjs` | Drives the home page with real touch flicks and measures the hero stats band: what the **served** markup contains before hydration, whether the CountUp animation is ever on-screen, and the 2×2 grid's real cell geometry. |
 | `header-bleed.mjs` | At eight real scroll positions: is the sticky header actually opaque, and how much page text is showing through it? |
+| `ssr-countup.mjs` | `renderToString` on `<CountUp>` in five prop shapes, to settle what the server actually emits. Answers "is the blank stat an SSR gap?" — it is not. |
 | `find-minwidth-culprit.mjs` | Walks the tree measuring `min-content` per node to find what is actually setting an overflow floor. |
 | `prove-nav-unreachable.mjs` | Worked example of *proving* a reachability defect: tries wheel, a real `dispatchTouchEvent` drag, mouse drag, Tab-focus-scroll, `scrollIntoView()` and `.click()`, plus a tall-viewport control. |
 | `verify-nav-fix.mjs` | Worked example of *proving a fix is causal*: injects only the proposed declaration and re-runs the failing assertion. |

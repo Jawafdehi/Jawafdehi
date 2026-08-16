@@ -379,10 +379,37 @@ The served HTML for the hero band is:
 .font-stat-value textContent:  ""   "Rs 1.90 Kharab"   ""   ""
 ```
 
-`HeroStatValue` (`src/components/home/hero.tsx:176-185`) returns `<CountUp>`
-whenever the value parses as a number, and CountUp renders **nothing** during
-pre-render. Only `Rs 1.90 Kharab` survives, because `Number("Rs 1.90 Kharab")` is
-`NaN` and it falls through to the raw-string branch.
+**This is not an SSR gap.** SSR and pre-render both work, and the data is present
+at render time — proof: `Rs 1.90 Kharab` renders, and every figure is in the
+served `__REACT_QUERY_STATE__` payload. The cause is narrower.
+
+`react-countup` renders its value as the span's **children**, and those children
+are the *start* value (`node_modules/react-countup/build/index.js:434-438`):
+
+```js
+return React.createElement("span", { …, ref: containerRef, … },
+  typeof props.start !== 'undefined' ? getCountUp().formattingFn(props.start) : '');
+```
+
+`HeroStatValue` (`src/components/home/hero.tsx:176-185`) passes **no `start`**:
+
+```jsx
+return <CountUp end={numericValue} duration={0.9} separator="," />;
+```
+
+…so the server-rendered children are the empty string, and the real figure only
+appears when the client effect mutates the node. `Rs 1.90 Kharab` survives purely
+because `Number("Rs 1.90 Kharab")` is `NaN` and it takes the raw-string branch.
+
+Measured with `renderToString` (`tests/mobile/ssr-countup.mjs`):
+
+| form | SSR HTML |
+| --- | --- |
+| as shipped, no `start` | `<span></span>` ← the defect |
+| `start={0}` | `<span>0</span>` ← worse: a false claim, not a missing one |
+| `start={numericValue}` | `<span>82</span>` |
+| `start={numericValue}`, 7 digits | `<span>2,245,189</span>` — `separator` applied |
+| render-prop `children={({countUpRef}) => <span ref={countUpRef}>{value}</span>}` | `<span>82</span>` |
 
 So until the 535 KB bundle hydrates — **~6 s on Slow 4G** — a corruption archive
 shows three labels with no figures above them:
@@ -393,10 +420,36 @@ one populated cell, and all three pop in together when JS lands.
 
 Shot: `.audit/raw/hero-stats/360x640/00-00-served-markup.png`.
 
-Fix: render the real figure as the pre-rendered text and let CountUp animate
-*from* it on the client — i.e. give CountUp a `start`/children fallback, or skip
-CountUp during SSR and swap it in after mount. A figure that is correct without JS
-is also the accessible and crawlable one.
+### Fix
+
+Both viable forms are hydration-safe — the client's first render emits the same
+text the server did, and CountUp only mutates the node afterwards.
+
+**Recommended**, because it also fixes the never-seen animation above: the
+render-prop form, so the true figure is the server-rendered text and the animation
+fires when the band actually reaches the viewport.
+
+```diff
+-  return <CountUp end={numericValue} duration={0.9} separator="," />;
++  // `start` (or children) is what CountUp renders server-side; without one the
++  // pre-rendered figure is an empty string. The render-prop form ships the real
++  // number as text, and enableScrollSpy defers the animation to the point the
++  // band is actually on screen — on a phone it sits at y=592, so on-mount
++  // animation is spent before a thumb gets there.
++  return (
++    <CountUp end={numericValue} duration={0.9} separator="," enableScrollSpy scrollSpyOnce>
++      {({ countUpRef }) => <span ref={countUpRef}>{value}</span>}
++    </CountUp>
++  );
+```
+
+**Simpler**, if the count-up effect is expendable — one prop, correct text, no
+animation: `start={numericValue}`.
+
+**Do not use `start={0}`.** It renders `<span>0</span>`, which turns a missing
+figure into a false one: "0 documented cases" on a corruption archive.
+
+A figure that is correct without JS is also the accessible and crawlable one.
 
 ### `Rs 1.90 Kharab` is the only value that wraps, so the 2×2 grid is ragged
 
