@@ -583,11 +583,17 @@ const CaseDetail = () => {
                       </div>
                     )}
 
-                    {/* Public caseworker-authored attribution + edit-history byline
-                        (Case.public_notes). Understated, sits with the case
-                        metadata above. Empty for the public unless a caseworker set
-                        it; the internal NotesSection below is separate. */}
-                    <CaseByline markdown={caseData.public_notes} />
+                    {/* The public byline (authors + first-published date +
+                        curated edit history, falling back to the deprecated
+                        free-text public_notes). Understated, sits with the case
+                        metadata above; the internal NotesSection below is
+                        separate. */}
+                    <CaseByline
+                      authors={caseData.authors}
+                      publishDate={caseData.case_publish_date}
+                      editHistory={caseData.public_edit_history}
+                      markdown={caseData.public_notes}
+                    />
                   </div>
                 </div>
 

@@ -598,6 +598,26 @@ export async function deleteCase(slug: string): Promise<void> {
   await client.delete(`/api/cases/${encodeURIComponent(slug)}/`);
 }
 
+// One selectable account for the case byline picker.
+export interface CaseAuthorCandidate {
+  id: number;
+  username: string;
+  display_name: string;
+}
+
+// The accounts creditable as a case author. Casework-role only, and deliberately
+// UNPAGINATED server-side (a byline picker silently truncated at the default
+// page size of 20 would quietly make colleagues uncreditable), so this returns a
+// bare array rather than a {count, results} page.
+export async function listCaseAuthorCandidates(
+  search?: string,
+): Promise<CaseAuthorCandidate[]> {
+  const { data } = await client.get<CaseAuthorCandidate[]>("/api/case-authors/", {
+    params: search?.trim() ? { search: search.trim() } : undefined,
+  });
+  return Array.isArray(data) ? data : [];
+}
+
 // NOTE: Case "document sources" (the former /api/sources CRUD) were removed with
 // the "cases own no documents" ADR. Case evidence now references MATERIALS by
 // their @id IRI; manage evidence documents via the materials write surface

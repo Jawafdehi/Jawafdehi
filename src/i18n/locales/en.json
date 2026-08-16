@@ -558,6 +558,12 @@
     "filed": "Filed",
     "location": "Location",
     "period": "Case Date",
+    "byline": {
+      "firstPublished": "First published {{date}}.",
+      "editHistory_one": "{{count}} subsequent edit",
+      "editHistory_other": "{{count}} subsequent edits",
+      "documentedByLabel": "Documented by"
+    },
     "overview": "Case Overview",
     "allegations": "Key Allegations",
     "timeline": "Case Timeline",
@@ -1956,7 +1962,27 @@
       "updated": "Case updated",
       "created": "Case created (DRAFT)",
       "loadFailed": "Failed to load case",
-      "saveFailed": "Failed to save case"
+      "saveFailed": "Failed to save case",
+      "bylineHeading": "Public byline",
+      "bylineHelp": "Shown on the public case page: who documented the case, when it first went live, and the edits since. At least one author and a publish date are required before the case can leave draft.",
+      "labelAuthors": "Authors",
+      "authorsHelp": "Credited in this order. Only accounts on this platform can be credited — ask an administrator to create one for a new contributor.",
+      "authorAdd": "Add an author",
+      "authorRemove": "Remove author",
+      "authorMoveUp": "Move author up",
+      "authorMoveDown": "Move author down",
+      "authorCreditNoteLabel": "Credit note for {{name}}",
+      "authorCreditNotePlaceholder": "Optional, e.g. BALLB 4th Year Student",
+      "authorsLoadFailed": "Could not load the list of accounts. Reload the page to try again.",
+      "labelPublishDate": "First published",
+      "publishDateHelp": "The date this case first went live on jawafdehi.org — not the date of the incident. For a case entered here long after it was written, set the real publication date.",
+      "labelEditHistory": "Edit history",
+      "editHistoryHelp": "Public, in your own words: what changed and when. Rows missing a date or remarks are not saved.",
+      "editHistoryAdd": "Add an entry",
+      "editHistoryRemove": "Remove entry",
+      "editHistoryDateLabel": "Edit history date, row {{number}}",
+      "editHistoryRemarksLabel": "Edit history remarks, row {{number}}",
+      "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order"
     },
     "stateControl": {
       "state": "State",
@@ -2266,5 +2292,23 @@
   "reportCta": {
     "title": "Know of a corruption case?",
     "description": "Help us hold the powerful accountable. Submit information about a corruption case, officials and related entities."
+  },
+  "author": {
+    "notFound": "This author profile is not available.",
+    "aboutHeading": "About",
+    "metaDescription": "Corruption cases documented by {{name}} on Jawafdehi, Nepal's permanent corruption case archive.",
+    "emailLabel": "Email {{name}}",
+    "casesHeading_one": "{{count}} case",
+    "casesHeading_other": "{{count}} cases",
+    "noCases": "No published cases yet.",
+    "linkLabel": "{{name}} on {{platform}}",
+    "platform": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "their website",
+      "twitter": "X"
+    }
   }
 }

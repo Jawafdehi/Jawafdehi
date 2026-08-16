@@ -316,11 +316,17 @@ export function CaseDetailBanner({
                   </div>
                 )}
 
-                {/* Public caseworker-authored attribution + edit-history byline
-                    (Case.public_notes). On-screen counterpart to the print-only
-                    block in CaseDetail; the banner is no-print, so it renders on
-                    screen without duplicating in the PDF. Empty = nothing shown. */}
-                <CaseByline markdown={caseData.public_notes} />
+                {/* The public byline: authors, first-published date and the
+                    curated edit history (falling back to the deprecated free-text
+                    public_notes on un-backfilled cases). On-screen counterpart to
+                    the print-only block in CaseDetail; the banner is no-print, so
+                    it renders on screen without duplicating in the PDF. */}
+                <CaseByline
+                  authors={caseData.authors}
+                  publishDate={caseData.case_publish_date}
+                  editHistory={caseData.public_edit_history}
+                  markdown={caseData.public_notes}
+                />
               </div>
 
               {actions || shareAction ? (
