@@ -33,6 +33,7 @@
         "@radix-ui/react-toggle": "^1.1.9",
         "@radix-ui/react-toggle-group": "^1.1.10",
         "@radix-ui/react-tooltip": "^1.2.7",
+        "@remix-run/router": "^1.23.3",
         "@sbmdkl/nepali-datepicker-reactjs": "^1.2.5",
         "@sentry/react": "^8.55.0",
         "@tanstack/react-query": "^5.83.0",

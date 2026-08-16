@@ -1,0 +1,188 @@
+name: Nightly (Tier B)
+
+# The Tier B sweep from docs/testing/mobile-and-responsive-testing.md §3: the full
+# measurement set against a REAL origin, plus the engines CI cannot otherwise run.
+#
+# Why it is nightly and not per-PR:
+#   * it measures a deployed origin, so it says nothing about an unmerged branch;
+#   * perf numbers off a shared runner are noisy, and a per-PR perf gate that
+#     flickers gets ignored, then disabled;
+#   * WebKit needs a 1.5 GB container image.
+#
+# What it is FOR is trend and regression-in-production: bytes creeping up, a font
+# change moving LCP, an overlay becoming unreachable after a deploy.
+on:
+  schedule:
+    # 02:15 UTC ≈ 08:00 Kathmandu (UTC+5:45), so a failure is waiting at the start
+    # of the day rather than the middle of the night.
+    - cron: "15 2 * * *"
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Origin to measure"
+        required: false
+        default: "https://jawafdehi.org"
+      enforce_perf:
+        description: "Fail the run on a perf-budget breach (default: report only)"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: nightly-tier-b
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Chromium instruments: overflow, tap targets, overlays, images, page weight,
+  # sticky-header bleed, and the hero band. All are instruments — they exit 0 and
+  # write JSON — so this job is green unless something actually crashes. Read the
+  # artifacts; that is the point of it.
+  instruments:
+    name: Instruments (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASE: ${{ inputs.base || 'https://jawafdehi.org' }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+
+      # `--base` is passed explicitly even though BASE is exported: every
+      # instrument accepts `--base` and falls back to $BASE, and being explicit
+      # here is what stops a future edit from silently measuring production when
+      # someone dispatches this against staging. See tests/mobile/README.md.
+      # `lcp-and-images` and `page-weight` print to stdout rather than taking
+      # `--out`, so their steps `tee` into this directory. Create it up front
+      # instead of relying on an earlier step having made it as a side effect.
+      - name: Make the output directory
+        run: mkdir -p test-results/nightly
+
+      - name: Layout, tap targets and form fields
+        run: node tests/mobile/audit.mjs --base "$BASE" --out test-results/nightly/audit
+
+      - name: Overlay reachability
+        run: node tests/mobile/overlay-audit.mjs --base "$BASE" --out test-results/nightly/overlays
+
+      - name: LCP element and image sizing
+        run: node tests/mobile/lcp-and-images.mjs --base "$BASE" | tee test-results/nightly/lcp-and-images.txt
+
+      - name: Page weight after scrolling to the bottom
+        run: node tests/mobile/page-weight.mjs --base "$BASE" | tee test-results/nightly/page-weight.txt
+
+      - name: Sticky-header bleed
+        run: node tests/mobile/header-bleed.mjs --base "$BASE" --out test-results/nightly/header-bleed
+
+      - name: Hero stats band
+        run: node tests/mobile/hero-stats-scroll.mjs --base "$BASE" --out test-results/nightly/hero-stats
+
+      - name: Upload findings and screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nightly-instruments
+          path: test-results/nightly/
+          retention-days: 30
+
+  # Perf is its own job so a slow night cannot make the instruments look broken,
+  # and so the budget check has one obvious place to live.
+  perf:
+    name: Perf budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASE: ${{ inputs.base || 'https://jawafdehi.org' }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+
+      # Two runs per route per profile: CDP throttling is steady but the origin is
+      # not, and perf-budget.mjs scores the WORST run per route rather than a mean.
+      - name: Measure
+        run: node tests/mobile/perf-audit.mjs --base "$BASE" --out test-results/nightly/perf --runs 2
+
+      # Report-only by default, and that is deliberate rather than timid: as of
+      # 2026-08-16 production breaches 12 of 20 (home LCP 8.2 s on Slow 4G against
+      # a 2.5 s budget), so enforcing would paint every night red and teach
+      # everyone to ignore it. Flip `enforce_perf` — or delete `--warn-only` — the
+      # day the numbers are close. Do not raise a budget to make this pass.
+      - name: Check against the §1 budgets
+        run: |
+          node scripts/perf-budget.mjs \
+            --in test-results/nightly/perf/perf.json \
+            ${{ inputs.enforce_perf && ' ' || '--warn-only' }}
+
+      - name: Upload perf run
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nightly-perf
+          path: test-results/nightly/perf/
+          retention-days: 30
+
+  # WebKit and Firefox, which the PR jobs deliberately skip: the `mobile-*`
+  # Playwright projects pin `browserName: "chromium"` because `devices["iPhone 14"]`
+  # carries `defaultBrowserType: "webkit"` and pulling WebKit into a PR job means a
+  # much larger dependency set for every push.
+  #
+  # The official image is used rather than `playwright install --with-deps webkit`
+  # because that download targets Ubuntu 24.04 and needs ~20 libraries that a plain
+  # runner does not have. Keep the tag in step with the `playwright` version in
+  # package.json — currently 1.61.1. A mismatch fails at launch, loudly, which is
+  # the failure mode to prefer.
+  engines:
+    name: Cross-engine (WebKit + Firefox)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+      options: --user 1001
+    env:
+      BASE: ${{ inputs.base || 'https://jawafdehi.org' }}
+      HOME: /tmp
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Compare engines
+        run: node tests/mobile/engine-compare.mjs --base "$BASE" --out test-results/nightly/engines
+
+      - name: Upload engine comparison
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nightly-engines
+          path: test-results/nightly/engines/
+          retention-days: 30

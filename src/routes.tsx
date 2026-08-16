@@ -63,9 +63,21 @@ const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
 const NewsletterUnsubscribe = lazy(() => import("./pages/NewsletterUnsubscribe"));
 const NewsletterConfirmed = lazy(() => import("./pages/NewsletterConfirmed"));
 
-// The entire /admin/* subtree — including the OIDC client, admin CRUD forms and
-// casework pages — lives behind this single lazy boundary. /admin is auth-gated
-// and never pre-rendered, so none of it belongs in the public entry chunk.
+// The /admin/* subtree — admin CRUD forms and casework pages — lives behind this
+// single lazy boundary. /admin is auth-gated and never pre-rendered, so none of it
+// belongs in the public entry chunk. Measured: AdminApp is 1.17 MB raw / 379 KB
+// gzip and is correctly absent from the initial payload.
+//
+// ⚠️ ONE EXCEPTION, and it is not this boundary's fault: `oidc-client-ts`
+// (121 KB raw / 23 KB gzip) IS in the public entry chunk. It arrives via
+// `src/services/http.ts`, which statically imports `getAccessToken` from
+// `./oidc` so the shared axios interceptor can attach a bearer token to EVERY
+// request — including the anonymous ones on public pages. So the library is
+// pulled in by the data layer, not by /admin. This comment used to claim the
+// OIDC client was behind this boundary; it was not, and the bundle said so.
+// Deferring it means splitting `services/oidc.ts` into a thin token reader plus a
+// lazily-imported UserManager, and checking localStorage for a session before
+// loading the library at all — see docs/testing/bundle-and-code-splitting.md.
 const AdminApp = lazy(() => import("./AdminApp"));
 
 // What to render for each path in SITE_ROUTES.
