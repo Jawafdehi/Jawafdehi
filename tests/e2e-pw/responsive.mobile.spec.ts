@@ -6,24 +6,32 @@
 // descriptor already nets out browser chrome, and testing 844 would be testing a
 // viewport nobody has.)
 //
-// These are RATCHET gates, not aspirations: each one is green on the tree that
-// introduced it, with today's known defects listed explicitly in
-// `KNOWN_DEFECTS` below. A new regression fails immediately. An existing defect
-// is exempt while its entry is present — and the entry itself is checked, so
-// fixing the bug without deleting the entry fails too, which is what stops a
-// stale exemption from silently un-gating a route.
+// Every gate here is green on `main` and stays that way: the four defects they
+// were written for are all fixed, so `KNOWN_DEFECTS` below is empty and nothing
+// is suppressed. A regression fails immediately.
 //
-// Why each gate exists (all four were measured on production, 2026-08-16 — see
-// docs/testing/mobile-audit-2026-08-16.md):
+// Why each gate exists — all four were measured on production, 2026-08-16, and
+// each is now fixed (see docs/testing/mobile-audit-2026-08-16.md for the
+// measurements and docs/testing/mobile-and-responsive-testing.md for the method):
 //   * overflow      — /report overflowed by 65px on all 7 viewports tested and
 //                     /donate by 94px at 320px wide, and NOTHING caught it.
+//                     Fixed in #328.
 //   * shrink-to-fit — the reason nothing caught it: Chromium's mobile emulation
 //                     zooms the page out to swallow the overflow and reports the
 //                     INFLATED innerWidth, so `scrollWidth > innerWidth` is 0 on
-//                     a page rendering 29% smaller than designed.
+//                     a page rendering 29% smaller than designed. Fixed with the
+//                     overflow it was masking, in #328.
 //   * reachability  — the nav sheet's last 5 items, Donate among them, could not
-//                     be reached by any gesture at 360x640.
-//   * input zoom    — every field is 14px, so iOS Safari zooms on focus.
+//                     be reached by any gesture at 360x640. Fixed in #325.
+//   * input zoom    — every field was 14px, so iOS Safari zoomed on focus.
+//                     Fixed in #327.
+//
+// Because the gates now pass on `main`, "it is green" is no longer evidence that
+// they BITE. The positive control is to run them against the tree from before
+// the fixes — `2ac392b`, the commit these were measured on — where they must
+// fail. That is a real control, unlike a flag that only drops the allowlist: it
+// exercises the whole gate against known-bad markup. The recipe and the failure
+// counts it produces are in docs/testing/mobile-and-responsive-testing.md.
 import { test, expect, type Page } from "@playwright/test";
 
 // Routes that must survive a phone. Keep this list short and load-bearing:
@@ -45,56 +53,43 @@ const ROUTES = [
   "/faq",
 ];
 
-// Defects present when these gates were written. Delete an entry when the
-// underlying bug is fixed.
-//
-// Every allowance is an upper bound (`toBeLessThanOrEqual`), so a fix that lands
-// without its entry being trimmed would leave the run GREEN — silently un-gating
-// the route, permanently. The upper bound is deliberate (these fixes land in
-// separate PRs and merge order should not matter), so instead of relying on
-// somebody remembering, **every entry also asserts the defect still reproduces**.
-// Fix the bug and leave the entry, and the run goes RED telling you to delete it.
-//
-// That makes each entry a measured claim rather than a standing exemption, and it
-// keeps `main` safe: CI runs on `refs/pull/N/merge`, so the PR that would strand a
-// stale entry goes red on its own branch, before it can land.
-//
-// `presentAt` is the set of viewport widths where the defect was MEASURED on
-// `main` — it is not decoration. /donate does not overflow at 640px, so claiming
-// it there would fail the staleness check on a bug that was never present.
-//
-// `MOBILE_GATES_STRICT=1` drops every allowance. That is how you check these
-// gates still BITE: with it set, the run MUST fail on /report, /donate, the
-// mobile nav and the sub-16px fields. A strict run that passes means a gate has
-// gone vacuous — the allowlist is not the only thing that can silence it.
-const STRICT = process.env.MOBILE_GATES_STRICT === "1";
-
 type OverflowAllowance = {
   /** Upper bound in CSS px, across every viewport this spec drives. */
   maxPx: number;
-  /** Widths where the overflow was measured > 0 on `main`, 2026-08-16. */
+  /** Widths where the overflow was measured > 0. Not decoration — see below. */
   presentAt: number[];
 };
 
-const KNOWN_DEFECTS = STRICT
-  ? { overflow: {} as Record<string, OverflowAllowance>, unreachableOverlays: [] as string[], inputZoomIsKnown: false }
-  : {
-      overflow: {
-        // input#evidence: `sr-only` loses to the Input base's w-full/h-10, which
-        // Tailwind emits later in the stylesheet. 65px at 320/360/390, 73px at
-        // 640. The bound also covers the 102px this reproduces at on iPad
-        // portrait, which tests/mobile/audit.mjs drives and this spec does not.
-        "/report": { maxPx: 105, presentAt: [320, 360, 390, 640] },
-        // A whitespace-nowrap PayPal CTA sets a 350px min-content floor:
-        // 94px at 320w, 55px at 360w, 24px at 390w — and 0 at 640w, where the
-        // CTA finally fits, so 640 is deliberately absent.
-        "/donate": { maxPx: 95, presentAt: [320, 360, 390] },
-      } as Record<string, OverflowAllowance>,
-      // Overlays whose content cannot currently be scrolled to. See sheet.tsx:39,41.
-      unreachableOverlays: ["mobile-nav"],
-      // Every form field inherits .font-input -> text-sm (14px). One fix unblocks all.
-      inputZoomIsKnown: true,
-    };
+// Defects exempted from the gates above. **Empty, deliberately**: all four
+// defects this spec was written for are fixed on `main`, so every gate below now
+// asserts the clean state with nothing suppressed.
+//
+// The machinery stays because it is one line to re-arm, and because the next
+// person to find a phone defect they cannot fix in the same PR needs it. Two
+// rules if you add an entry:
+//
+//   * It is an upper bound (`toBeLessThanOrEqual`), so a later fix that lands
+//     without trimming the entry would leave the run GREEN — silently un-gating
+//     the route, permanently. So **every entry also asserts its defect still
+//     reproduces**: fix the bug and leave the entry, and the run goes RED asking
+//     for the deletion. That makes an entry a measured claim, not a standing
+//     exemption, and it keeps `main` safe even when fixes land out of order —
+//     CI runs on `refs/pull/N/merge`, so the PR that would strand a stale entry
+//     goes red on its own branch, before it can land.
+//   * `presentAt` is the set of viewport widths where you MEASURED it. /donate
+//     used to overflow at 320/360/390 but never at 640, where its CTA finally
+//     fit; claiming 640 would have failed the staleness check on a width the bug
+//     was never present at.
+//
+// That mechanism is not theory — it is what fired when these five PRs merged and
+// left the four entries behind, which is how this file came to be trimmed.
+const KNOWN_DEFECTS = {
+  overflow: {} as Record<string, OverflowAllowance>,
+  /** Overlays whose content cannot be scrolled to. Was `["mobile-nav"]` before #325. */
+  unreachableOverlays: [] as string[],
+  /** Was `true` while every field inherited `.font-input` -> 14px, before #327. */
+  inputZoomIsKnown: false,
+};
 
 /** Message for an allowance that outlived the bug it was written for. */
 const stale = (entry: string, what: string) =>
@@ -335,6 +330,20 @@ test.describe("phone input ergonomics", () => {
           })),
       );
       const small = fields.filter((f) => f.fontSize < 16);
+
+      // First, and unconditionally: a route that renders no visible field makes
+      // `small` empty and every assertion below it vacuous. The fields ARE this
+      // gate's subject, so "there were none" is a broken gate reporting a pass.
+      // This used to sit inside the known-defect branch, where it only guarded
+      // the staleness check — emptying KNOWN_DEFECTS is what exposed that the
+      // main assertion had the same hole.
+      expect(
+        fields.length,
+        `${route} rendered no visible form fields, so it cannot tell you anything ` +
+          `about focus zoom. Either the route stopped rendering its form or the ` +
+          `page failed to load — pick a route that has fields.`,
+      ).toBeGreaterThan(0);
+
       if (KNOWN_DEFECTS.inputZoomIsKnown) {
         if (small.length) {
           test.info().annotations.push({
@@ -343,14 +352,6 @@ test.describe("phone input ergonomics", () => {
           });
           return;
         }
-        // No sub-16px fields. Either the defect is fixed and this exemption should
-        // go, or the route rendered no fields at all — in which case it is no
-        // evidence either way, so say so rather than declaring the entry stale.
-        expect(
-          fields.length,
-          `${route} rendered no visible form fields, so it cannot tell you whether ` +
-            `the sub-16px defect is fixed. Pick a route that has fields.`,
-        ).toBeGreaterThan(0);
         expect(
           small.length,
           stale(

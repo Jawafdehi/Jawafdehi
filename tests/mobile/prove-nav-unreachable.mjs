@@ -14,7 +14,9 @@
 // fail.
 import { chromium, devices as pw } from "playwright";
 
-const BASE = process.env.BASE || "https://jawafdehi.org";
+const argv = process.argv.slice(2);
+const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
+const BASE = (arg("base", process.env.BASE || "https://jawafdehi.org") || "").replace(/\/$/, "");
 const TARGET = /आर्थिक सहयोग/;           // "Donate" — last-but-one control
 const AI = /AI सहायकलाई सोध्नुहोस्/;      // "Ask the AI assistant" — very last
 
@@ -95,6 +97,16 @@ const main = async () => {
 
   // 4. keyboard: Tab through until the last control has focus. A browser
   //    scrolls focused elements into view, so if anything CAN scroll, this does.
+  //
+  //    ⚠️ This attempt gives a FALSE NEGATIVE on a tree where the bug is fixed,
+  //    and it is the one output here not to trust. 24 presses OVERSHOOTS: the
+  //    sheet holds 16 focusables and Donate is the 14th, so by press 24 focus has
+  //    moved past it and the scrollport has carried it back off-screen — which
+  //    reports `donateVisible: false` for a reason that has nothing to do with
+  //    reachability. Measured against `2ac392b` and against the fixed tree, Donate
+  //    takes 14 presses on BOTH, landing at top 784 (outside a 640px viewport) on
+  //    the former and top 520 (visible) on the latter. Tab to the control you care
+  //    about and stop, rather than tabbing a round number of times.
   for (let i = 0; i < 24; i++) await page.keyboard.press("Tab");
   await page.waitForTimeout(700);
   record("4. Tab x24 (focus scroll)", await state(page));

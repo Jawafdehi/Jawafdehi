@@ -34,6 +34,29 @@ Everything below is ranked by user impact, with the source location and a fix.
 
 ---
 
+## What has since landed
+
+This document is a **measurement record** against `2ac392b` — the numbers below are
+what was measured that day and are deliberately left as measured, not rewritten to
+match the fixed tree. What changed afterwards:
+
+| Finding | Status |
+| --- | --- |
+| S1 — mobile menu strands its own bottom | **fixed**, `#325` |
+| S2 — `/report` + `/donate` overflow, concealed by shrink-to-fit | **fixed**, `#328` |
+| S3 — performance on Nepali networks | **open** |
+| S4 — `/team` is 5.67 MB of images | **open** |
+| S5 — touch ergonomics (sub-44 px targets) | **open** |
+| S5b — hero stats render as empty spans | **fixed**, `#326` |
+| S5c — content reads through the sticky header | **fixed**, `#329` |
+| S6 — reading and density (14 px fields, unscaled padding) | field size **fixed**, `#327`; padding **open** |
+
+`2ac392b` therefore stays useful rather than becoming obsolete: it is the known-bad
+tree the phone gates are proven against, because it still reproduces all four gated
+defects. See `mobile-and-responsive-testing.md` §3.
+
+---
+
 ## S1 — The mobile navigation menu strands its own bottom
 
 **`src/components/ui/sheet.tsx:39,41`**
@@ -450,6 +473,13 @@ than to width, which is what actually predicts the behaviour:
 /* zoom-on-focus is a touch-keyboard behaviour, not a narrow-screen one */
 @media (pointer: coarse) { .font-input { font-size: 1rem; } }
 ```
+
+> **Resolved.** `#327` shipped the modality form — `(min-width: 640px) and
+> (any-hover: hover)`, which keeps the desktop density it was there for while
+> leaving every touch device at 16 px in both orientations. So the entry *was*
+> safe to delete, and was: `KNOWN_DEFECTS` is empty as of the gates PR. Had the
+> `sm:`-only fix landed instead, this paragraph is the reason `mobile-short` would
+> have gone red rather than the entry being trimmed on a false green.
 
 ✅ **Closed.** #327 took the modality route, gating the 14px density itself rather
 than overriding it back:

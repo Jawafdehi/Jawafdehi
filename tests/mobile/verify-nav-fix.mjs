@@ -10,7 +10,9 @@
 // A fix that cannot be shown to change the outcome is a guess.
 import { chromium, devices as pw } from "playwright";
 
-const BASE = process.env.BASE || "https://jawafdehi.org";
+const argv = process.argv.slice(2);
+const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
+const BASE = (arg("base", process.env.BASE || "https://jawafdehi.org") || "").replace(/\/$/, "");
 
 const probe = (page) => page.evaluate(() => {
   const p = document.querySelector('[role="dialog"]');

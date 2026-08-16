@@ -159,18 +159,55 @@ E2E_NO_WEBSERVER=1 E2E_BASE_URL=https://jawafdehi.org \
 bunx playwright test --project=mobile-floor tests/e2e-pw/responsive.mobile.spec.ts
 ```
 
-**Checking the gates still bite** — do this whenever you touch them:
+**Checking the gates still bite** — do this whenever you touch them. Every gate
+passes on `main` now, so "it is green" is no evidence: point it at a tree that is
+known-bad and require it to go red.
+
+`2ac392b` is that tree — the commit all four defects were measured on, before
+`#325`/`#327`/`#328` fixed them. It is a permanent known-bad reference: as `main`
+moves on, that commit keeps reproducing exactly these four bugs.
 
 ```bash
-MOBILE_GATES_STRICT=1 E2E_NO_WEBSERVER=1 E2E_BASE_URL=https://jawafdehi.org \
-  bunx playwright test --project=mobile-android tests/e2e-pw/responsive.mobile.spec.ts
+# 1. build the known-bad tree somewhere of its own
+git worktree add /tmp/prefix-control --detach 2ac392b
+cd /tmp/prefix-control && bun install && bunx vite build
+bunx vite preview --port 4200 --strictPort &
+
+# 2. run TODAY's gates against it, from your own tree
+cd -   # back to your worktree: the spec and the config must be the current ones
+E2E_NO_WEBSERVER=1 E2E_BASE_URL=http://127.0.0.1:4200 \
+  bunx playwright test --project=mobile-android --project=mobile-ios \
+                      --project=mobile-floor  --project=mobile-short
 ```
 
-`MOBILE_GATES_STRICT=1` drops every known-defect allowance, so the run **must
-fail** on `/report`, `/donate`, the mobile nav and the sub-16 px fields. A strict
-run that *passes* means a gate went vacuous — the allowlist is not the only way
-to silence one. A green suite is not evidence; a green suite plus a red strict
-run is.
+Measured 2026-08-16: **30 failed, 62 passed**, and the 30 are exactly the map the
+audit found —
+
+| Gate | Fails at |
+| --- | --- |
+| `no horizontal overflow: /report` | 4 of 4 widths |
+| `page is not zoomed out to fit: /report` | 4 of 4 |
+| `no horizontal overflow: /donate` | **3** of 4 — not 640, where its CTA fits |
+| `page is not zoomed out to fit: /donate` | **3** of 4 |
+| `every item in the mobile nav can be reached` | 4 of 4 |
+| `form fields are >=16px` (`/`, `/report`, `/feedback`) | 12 of 12 |
+
+so `mobile-short` (640×360) shows 6 failures and the other three projects 8. If
+you change a gate and the control still reports 30/62 with that split, it bites.
+Fewer failures means something went vacuous.
+
+> Two traps, both hit while producing those numbers. **Run the gates from your own
+> worktree, not the control's** — `bunx playwright test` resolves the config next to
+> your cwd, and the control tree's config predates the `mobile-*` projects, so it
+> exits **1** with `Project(s) not found`. A non-zero exit is not evidence the gates
+> bit; read the failure list. And **verify the control is serving what you think**:
+> `curl -s $BASE/assets/index-*.css | grep -o '\.font-input{[^}]*}'` must show
+> `font-size:.875rem` and no `any-hover`, or you are measuring a fixed build.
+
+This replaced a `MOBILE_GATES_STRICT=1` flag that dropped the allowlist. The flag
+was strictly weaker — it proved a gate could fail when unexempted, not that it
+detects the real markup — and once the four defects were fixed and their entries
+trimmed, strict and normal became the same run. §6 has the full story.
 
 ### Tier B instruments
 
@@ -294,7 +331,15 @@ House conventions, and the traps that actually cost us something.
 ## 6. CI
 
 Tier A runs on every PR as the **`phone-gates`** job in `ci.yml`: 4 viewports ×
-23 gates = 92, in about 18 s of test time. It is wired deliberately:
+23 gates = 92.
+
+Budget it honestly: **2.7 m of test time, 3.7 m of job time** on a GitHub runner
+(measured, run `31973381238` — 165 s of gates plus 21 s of Chromium download and
+14 s of build). On this workstation the same 92 finish in **24 s**, so a local
+timing is a ~7× understatement and not the number to quote when someone asks what
+the job costs.
+
+It is wired deliberately:
 
 - **`bunx vite build`, not `bun run build`.** The full build also runs the
   pre-render and the sitemap, both of which fetch the API — so using it would make
@@ -306,11 +351,30 @@ Tier A runs on every PR as the **`phone-gates`** job in `ci.yml`: 4 viewports ×
 - **Chromium only.** The `mobile-*` projects pin `browserName: "chromium"` on
   purpose (see §3); real WebKit belongs in a slower job.
 
-### Do not put `MOBILE_GATES_STRICT=1` in CI as an inverted assertion
+### `tsc --noEmit` checks nothing in this repo
 
-It is tempting to add a step that asserts strict mode *fails*, on the grounds that
-a gate which stops failing on a known defect has gone vacuous. Don't wire that
-blind:
+There is no `typecheck` script and CI does not run one, so if you want types
+checked you will reach for `tsc` by hand. The obvious command is a no-op:
+
+```bash
+bunx tsc --noEmit                      # exits 0. Checked ZERO files.
+bunx tsc -p tsconfig.app.json --noEmit # 16 errors — the real baseline
+```
+
+`tsconfig.json` is solution-style — `"files": []` plus `references` to
+`tsconfig.app.json` and `tsconfig.node.json` — so pointing `tsc` at it type-checks
+an empty file list and exits clean. It is a green result that means "nothing was
+measured", and it is indistinguishable from success unless you know the layout.
+
+So **baseline it before you edit, with `-p`**: `main` carries **16** errors across
+12 `src/` files (measured 2026-08-16). A clean exit is the tell that you ran the
+wrong command, not that you fixed 16 things.
+
+### Never wire a "must fail" assertion to a defect you intend to fix
+
+The first draft of these gates carried a `MOBILE_GATES_STRICT=1` flag that dropped
+the allowlist, and this section warned against asserting in CI that strict mode
+*fails*:
 
 ```yaml
 # WRONG — this goes red the day the defects are fixed.
@@ -320,31 +384,30 @@ blind:
     fi
 ```
 
-The invariant is not "strict must fail" — it is "strict must fail *while
-`KNOWN_DEFECTS` is non-empty*". Once the listed defects are fixed and their
-entries removed, strict and normal are the same run and both pass, so the step
-above would break CI at exactly the moment the code got better.
+That prediction came true within the day. `#325`, `#327` and `#328` landed, the
+four `KNOWN_DEFECTS` entries were trimmed, and strict mode became bit-identical to
+a normal run — so the flag was deleted rather than left as a no-op that still
+*read* like a safety net. A dead control is worse than an absent one.
 
-So strict mode is a **manual** check, run when you add or change a gate:
-
-```bash
-MOBILE_GATES_STRICT=1 bunx playwright test --project=mobile-android
-```
-
-Expect it to fail on every entry currently in `KNOWN_DEFECTS`, and read the
-messages — that is the evidence the gate measures what it claims.
+The lesson generalises past this flag: **an inverted assertion is pinned to a bug's
+lifetime, so it must name the bug's tree, not the current one.** That is why the
+replacement control in §3 targets `2ac392b` by commit — a fixed reference that goes
+on reproducing those four defects however far `main` moves. Same invariant, no
+expiry.
 
 ### The other failure mode: an exemption that outlived its bug
 
-Strict mode proves a gate bites *today*. It says nothing about the slower, quieter
+A control proves a gate bites *today*. It says nothing about the slower, quieter
 failure: a fix lands, nobody trims its `KNOWN_DEFECTS` entry, and because every
 allowance is an upper bound the run stays **green** — on a route that now has no
 gate at all. Nothing goes red, so nothing tells you.
 
 So each entry asserts its own defect still reproduces. Fix the bug and leave the
-entry, and the run fails with `... is STALE: ... Delete the entry`. That turns
-each exemption from a standing waiver into a measured claim, and it is why the
-overflow entries carry `presentAt` — the widths where the bug was actually seen:
+entry, and the run fails with `... is STALE: ... Delete the entry`. That is not
+theory either: it is what fired when the five fixes merged, and it is why
+`KNOWN_DEFECTS` is empty today rather than still carrying four waivers over routes
+that no longer need them. It is also why the overflow entries carry `presentAt` —
+the widths where the bug was actually seen:
 
 ```ts
 "/donate": { maxPx: 95, presentAt: [320, 360, 390] },   // and NOT 640: it fits there

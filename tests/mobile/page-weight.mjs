@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 import { chromium, devices as pw } from "playwright";
-const BASE="https://jawafdehi.org";
+const argv = process.argv.slice(2);
+const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
+const BASE = (arg("base", process.env.BASE || "https://jawafdehi.org") || "").replace(/\/$/, "");
 const b=await chromium.launch();
 for (const [route,slug] of [["/team","team"],["/","home"],["/cases","cases"]]) {
   const ctx=await b.newContext({viewport:{width:360,height:640},userAgent:pw["Galaxy S9+"].userAgent,deviceScaleFactor:3,isMobile:true,hasTouch:true,locale:"ne-NP",

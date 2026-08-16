@@ -3,7 +3,9 @@
 // whose min-content width sets the floor. On a grid/flex item `min-width: auto`
 // means "at least min-content", so ONE unbreakable child widens the whole track.
 import { chromium, devices as pw } from "playwright";
-const BASE="https://jawafdehi.org";
+const argv = process.argv.slice(2);
+const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
+const BASE = (arg("base", process.env.BASE || "https://jawafdehi.org") || "").replace(/\/$/, "");
 const WALK = () => {
   const vw = 360; // the width we ASKED for, not innerWidth (which shrink-to-fit inflates)
   const res = [];

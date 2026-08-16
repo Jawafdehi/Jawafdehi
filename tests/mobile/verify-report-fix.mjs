@@ -3,7 +3,9 @@
 // utilities, so `w-full h-10` from the Input base override it; and (2) that
 // dropping those utilities removes the whole 65px overflow.
 import { chromium } from "playwright";
-const BASE = "https://jawafdehi.org";
+const argv = process.argv.slice(2);
+const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
+const BASE = (arg("base", process.env.BASE || "https://jawafdehi.org") || "").replace(/\/$/, "");
 const W = 360;
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: W, height: 640 }, isMobile: false, locale: "ne-NP",
