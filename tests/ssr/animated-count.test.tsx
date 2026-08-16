@@ -63,16 +63,23 @@ function stubObserver(intersecting: boolean) {
   };
 }
 
-const HAD_IO = 'IntersectionObserver' in globalThis;
+// jsdom does not implement IntersectionObserver today, so this is latent rather
+// than live — but `stubObserver` overwrites the global, and a "delete it only if it
+// was not there before" reset leaks the fake into every later test the day jsdom
+// gains one. Save and restore the original instead, so the reset is correct either
+// way.
+const ORIGINAL_IO = (globalThis as unknown as Record<string, unknown>).IntersectionObserver;
 
-function dropObserver() {
-  if (!HAD_IO) delete (globalThis as unknown as Record<string, unknown>).IntersectionObserver;
+function resetObserver() {
+  const g = globalThis as unknown as Record<string, unknown>;
+  if (ORIGINAL_IO === undefined) delete g.IntersectionObserver;
+  else g.IntersectionObserver = ORIGINAL_IO;
 }
 
-beforeEach(dropObserver);
+beforeEach(resetObserver);
 afterEach(() => {
   cleanup();
-  dropObserver();
+  resetObserver();
 });
 
 describe('AnimatedCount', () => {
@@ -100,7 +107,7 @@ describe('AnimatedCount', () => {
   });
 
   it('still shows the real figure when there is no IntersectionObserver at all', () => {
-    dropObserver();
+    delete (globalThis as unknown as Record<string, unknown>).IntersectionObserver;
     const { container } = render(<AnimatedCount end={82} display="82" />);
 
     expect(container.textContent).toBe('82');
