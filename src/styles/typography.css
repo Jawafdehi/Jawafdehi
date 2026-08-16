@@ -55,6 +55,14 @@
   :where(body, button, input, select, textarea) {
     font-family: var(--font-family-app);
   }
+
+  /* The header is `sticky top-0` and 76px tall (the `h-[76px]` grid row in
+     Navbar.tsx), so an in-page jump lands its target underneath it. That makes
+     the "skip to content" link — the one control whose whole job is to get a
+     keyboard user past the header — put the top of <main> 76px out of sight. */
+  #main-content {
+    scroll-margin-top: 76px;
+  }
 }
 
 @layer components {
@@ -176,10 +184,38 @@
     line-height: var(--font-label-leading);
   }
 
+  /* 16px on touch devices, 14px once there is a real pointer.
+     iOS Safari zooms the whole page when a focused field's font-size is under
+     16px, and index.html's viewport meta sets no `maximum-scale` — correctly,
+     since that would break pinch-zoom for everyone — so nothing suppresses it.
+     Tapping the archive search therefore jumps and rescales the page: the
+     signature "broken on mobile" feel, for the 22-26% of Nepali mobile users on
+     Safari/iOS. Measured 20 sub-16px fields before this, including all 9 on
+     /report.
+
+     The density override is gated on `any-hover: hover`, NOT on width alone.
+     iOS's focus zoom is a function of font-size, not orientation, and phones are
+     routinely wider than 640px: an iPhone SE in landscape is 667 CSS px, an
+     iPhone 14 is 844. A `min-width: 640px` rule on its own therefore put fields
+     back to 14px on exactly the phones it was meant to protect — the sibling
+     `mobile-short` Playwright project (640x360, "landscape phone") is the same
+     observation from the other side. `any-hover` is false on a touch-only device
+     in any orientation, and true on a desktop with a mouse, which is the
+     distinction actually being drawn.
+
+     Both rules re-state line-height because `text-sm`/`text-base` carry their own,
+     which would otherwise replace --font-control-leading. */
   .font-input {
-    @apply text-sm font-normal text-foreground;
+    @apply text-base font-normal text-foreground;
     font-family: var(--font-family-app);
     line-height: var(--font-control-leading);
+  }
+
+  @media (min-width: 640px) and (any-hover: hover) {
+    .font-input {
+      @apply text-sm;
+      line-height: var(--font-control-leading);
+    }
   }
 
   .font-caption {

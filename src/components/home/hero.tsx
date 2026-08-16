@@ -1,9 +1,9 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import CountUp from "react-countup";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
+import { AnimatedCount } from "@/components/ui/animated-count";
 import { SearchBar } from "@/components/ui/search-bar";
 import { cn } from "@/lib/utils";
 
@@ -181,7 +181,9 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
     return <>{value}</>;
   }
 
-  return <CountUp end={numericValue} duration={0.9} separator="," />;
+  // `display={value}` keeps the pre-animation text byte-identical to what the
+  // API gave us, rather than re-deriving the grouping from the number.
+  return <AnimatedCount end={numericValue} display={value} duration={0.9} />;
 }
 
 function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {

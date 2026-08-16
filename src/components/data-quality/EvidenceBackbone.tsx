@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import CountUp from "react-countup";
 import { Gavel, Landmark } from "lucide-react";
 
+import { AnimatedCount } from "@/components/ui/animated-count";
 import type { DataLakeMetrics } from "@/types/jds";
 import { bsYearRows } from "@/lib/data-quality";
 import { CourtYearMatrix } from "./CourtYearMatrix";
@@ -21,7 +21,7 @@ function ScaleTile({
     <div className="rounded-xl border border-border bg-muted/20 p-5">
       <div className="mb-3 text-accent">{icon}</div>
       <p className="font-mono text-2xl font-bold tabular-nums text-foreground md:text-3xl">
-        <CountUp end={value} duration={1.2} separator="," />
+        <AnimatedCount end={value} duration={1.2} />
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </div>

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import CountUp from "react-countup";
 
+import { AnimatedCount } from "@/components/ui/animated-count";
 import type { CaseStatistics } from "@/types/jds";
 import { StatusDonut, type DonutSegment } from "./StatusDonut";
 import { AccountabilityFunnel, type FunnelStage } from "./AccountabilityFunnel";
@@ -127,7 +127,7 @@ export function AccountabilityGap({
                   {t("dataQuality.gap.totalLabel", "Documented cases")}
                 </span>
                 <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
-                  <CountUp end={documented} duration={1.2} separator="," />
+                  <AnimatedCount end={documented} duration={1.2} />
                 </span>
               </div>
             )}
