@@ -53,7 +53,7 @@ const KNOWN_DEFECTS = STRICT
   : {
       // route -> max tolerated horizontal overflow in CSS px, per the 2026-08-16 audit
       overflow: {
-        "/report": 105, // input[type=file]#evidence ignores w-full: 65px on phones, 102px on iPad portrait
+        "/report": 105, // input#evidence: `sr-only` loses to the Input base's w-full/h-10 (later in the stylesheet). 65px on phones, 102px on iPad portrait
         "/donate": 95, // a whitespace-nowrap PayPal CTA sets a 350px min-content floor: 94px at 320w
       } as Record<string, number>,
       // Overlays whose content cannot currently be scrolled to. See sheet.tsx:39,41.

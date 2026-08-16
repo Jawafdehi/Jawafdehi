@@ -137,11 +137,39 @@ Measure against the width you **asked for**, never `innerWidth`:
 
 At 320 px wide, `/donate` body text specified at 16 px paints at ~**12.4 px**.
 
-### `/report` — `input[type=file]` ignores `w-full`
+### `/report` — a `sr-only` file input that is not actually `sr-only`
 
-**`src/components/CaseReportForm.tsx:367`** (`input#evidence`). A file input's
-intrinsic width (native "Choose file" button + Nepali label text) beats
-`width: 100%`; the computed width is 360 px inside a 280 px parent.
+**`src/components/CaseReportForm.tsx:363-371`** (`input#evidence`) is the **whole**
+65 px: with shrink-to-fit disabled (`isMobile: false`, so the layout viewport
+stays 360) it is the *only* unclipped element past the viewport edge —
+`scrollWidth` 425 against a requested 360.
+
+The call site already does the right thing:
+
+```jsx
+<Input id="evidence" type="file" … className="sr-only" />
+```
+
+**and `sr-only` still loses.** This is the interesting part, and it is not what a
+first reading suggests:
+
+1. `Input` (`src/components/ui/input.tsx:11`) hard-codes `flex h-10 w-full …` into
+   its base string.
+2. `cn()` is `twMerge(clsx(...))`. `sr-only` and `w-full`/`h-10` are in **different
+   tailwind-merge conflict groups**, so twMerge keeps all of them — the element
+   ships `… h-10 w-full … sr-only`.
+3. Both are single-class selectors, so **specificity ties and source order
+   decides** — and Tailwind emits the `accessibility` plugin before `width`/
+   `height`. Measured in the production stylesheet: `.sr-only` is rule **#169**,
+   `.h-10` **#324**, `.w-full` **#480**.
+
+So `sr-only`'s `width: 1px; height: 1px` is overridden and the input computes to
+`position: absolute; width: 360px; height: 40px; overflow: clip;
+clip: rect(0,0,0,0)`. It is *invisible* — the clip still applies — but it is
+**laid out at full size**, and an absolutely-positioned box still extends
+`scrollWidth`. That is why no one caught this by looking: the page appears
+correct, `sr-only` appears present, and the only symptom is 65 px of overflow
+that Chromium then hides by zooming out 18%.
 
 The element is oversized in **all three engines**, but the page-level consequence
 differs — worth knowing, because it changes which engine you can reproduce in:
@@ -155,16 +183,30 @@ differs — worth knowing, because it changes which engine you can reproduce in:
 `/donate` is simpler: WebKit and Firefox both overflow by 22 px, Chromium masks
 it the same way (`innerWidth` 414).
 
-The parent is already a styled `<label>` with a dashed border — it is the visible
-affordance — so the native input should not be laid out at all:
+**Fix:** a visually-hidden input needs no input styling, so don't route it
+through the styled component at all — that removes `w-full h-10` rather than
+trying to out-specify them. The `<label>` wrapping it is already the visible
+affordance (a 152 px-tall dashed drop zone), and `label[for]` keeps the plain
+input operable and focusable.
 
 ```diff
--  className="font-input flex h-10 w-full rounded-md border border-input …"
-+  className="sr-only"
+-                    <Input
++                    <input
+                         id="evidence"
+                         type="file"
+                         ref={fileInputRef}
+                         onChange={handleFileChange}
+                         className="sr-only"
 ```
 
-…keeping the `<label>` as the control. If it must stay visible, `min-w-0
-max-w-full` plus `file:` utilities is the narrower fix.
+Verified causal on production with `tests/mobile/verify-report-fix.mjs`: setting the
+element's class to `sr-only` alone takes its box from **360×40 → 1×1** and the
+document from **425 → 360**, i.e. overflow **65 px → 0**, with
+`label[for="evidence"]` intact and the input still focusable.
+
+> Anything else that hides an `Input`/`Button` with `sr-only` has the same
+> problem. `class:` order in the JSX is irrelevant — only the **stylesheet**
+> order is, and no amount of reordering the `className` string changes it.
 
 ### `/donate` — a `whitespace-nowrap` CTA with a long Nepali label
 
@@ -418,7 +460,9 @@ shows three labels with no figures above them:
 values have `height: 0`, so the labels also sit at the wrong baseline next to the
 one populated cell, and all three pop in together when JS lands.
 
-Shot: `.audit/raw/hero-stats/360x640/00-00-served-markup.png`.
+Reproduce, screenshots included:
+`node tests/mobile/hero-stats-scroll.mjs --width 360 --height 640`
+→ `test-results/mobile/hero-stats/360x640/00-00-served-markup.png`.
 
 ### Fix
 
@@ -508,8 +552,9 @@ Measured at eight real scroll positions on the home page:
 
 `header.backgroundColor` is `rgba(0, 0, 0, 0)` and `backdropFilter` is `none`
 throughout, and **no element in the header subtree paints a full-width backdrop**.
-Shot: `.audit/raw/header-bleed/360x640/hdr-00258.png` — the hero headline runs
-straight through the band between the pills.
+Reproduce: `node tests/mobile/header-bleed.mjs --width 360 --height 640` →
+`test-results/mobile/header-bleed/360x640/hdr-00258.png`, where the hero headline
+runs straight through the band between the pills.
 
 This is worse on a phone than on desktop: a desktop header carries a full nav row
 that incidentally covers most of the band, while a 360 px header has four small
@@ -625,7 +670,7 @@ shrink-to-fit, which is how the `/report` and `/donate` overflow surfaced at all
 | 2 | `.font-input` → `text-base sm:text-sm` | 1 line | kills iOS focus-zoom on all 20 fields |
 | 3 | Preload + WOFF2 + subset the Devanagari font | small | home LCP ~7.9 s → ~2 s on Slow 4G |
 | 4 | Resize `/team` avatars, `placeholder.png`, `favicon.png`; add `srcset` + `loading=lazy` | small | `/team` 5.67 MB → <1 MB |
-| 5 | `sr-only` the file input on `/report`; wrap the donate CTA | 2 lines | removes 11–29% page zoom-out on 2 routes |
+| 5 | Plain `<input>` for the hidden file field; wrap the donate CTA | 2 lines | removes 11–29% page zoom-out on 2 routes |
 | 6 | `icon` → `h-11 w-11`; footer links `min-h-11` | small | clears most sub-44 px targets |
 | 7 | Split the 535 KB app chunk; lazy-load the Markdown editor | medium | TBT 900 ms → target <300 ms |
 | 8 | `py-8 md:py-16` sweep across the 91 unscaled paddings | medium | roughly halves phone page length |

@@ -21,6 +21,7 @@ first — it has the device matrix, the budgets, and what emulation cannot catch
 | `find-minwidth-culprit.mjs` | Walks the tree measuring `min-content` per node to find what is actually setting an overflow floor. |
 | `prove-nav-unreachable.mjs` | Worked example of *proving* a reachability defect: tries wheel, a real `dispatchTouchEvent` drag, mouse drag, Tab-focus-scroll, `scrollIntoView()` and `.click()`, plus a tall-viewport control. |
 | `verify-nav-fix.mjs` | Worked example of *proving a fix is causal*: injects only the proposed declaration and re-runs the failing assertion. |
+| `verify-report-fix.mjs` | Why `/report` overflows even though its file input already says `sr-only`: prints the **stylesheet source order** of `.sr-only` / `.h-10` / `.w-full`, then drops the conflicting utilities and re-measures. |
 
 `probe.mjs` holds the shared in-page probe. Its comments record the
 false-positive rules that took two passes to get right — read them before
