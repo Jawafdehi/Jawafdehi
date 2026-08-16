@@ -130,10 +130,21 @@ At 320 px wide, `/donate` body text specified at 16 px paints at ~**12.4 px**.
 
 ### `/report` — `input[type=file]` ignores `w-full`
 
-**`src/components/CaseReportForm.tsx:367`** (`input#evidence`). A file input's intrinsic
-width (native "Choose file" button + Nepali label text) beats `width: 100%`; the
-computed width is 360 px inside a 280 px parent. Present in Chromium, WebKit
-*and* Firefox.
+**`src/components/CaseReportForm.tsx:367`** (`input#evidence`). A file input's
+intrinsic width (native "Choose file" button + Nepali label text) beats
+`width: 100%`; the computed width is 360 px inside a 280 px parent.
+
+The element is oversized in **all three engines**, but the page-level consequence
+differs — worth knowing, because it changes which engine you can reproduce in:
+
+| Engine @ 390 wide | oversized element? | document overflows? |
+| --- | --- | --- |
+| Chromium | yes | masked — `innerWidth` inflated to 455, `scrollWidth` 455 |
+| WebKit | yes | **yes** — `scrollWidth` 455 vs viewport 390 |
+| Firefox | yes | no — clipped, `scrollWidth` stays 390 |
+
+`/donate` is simpler: WebKit and Firefox both overflow by 22 px, Chromium masks
+it the same way (`innerWidth` 414).
 
 The parent is already a styled `<label>` with a dashed border — it is the visible
 affordance — so the native input should not be laid out at all:
