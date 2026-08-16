@@ -47,7 +47,7 @@ export const usBoard: TeamMember[] = [
 export const nepalBoard: TeamMember[] = [
   {
     displayName: { en: "Damodar Dahal", ne: "दामोदर दाहाल" },
-    thumb: "https://s3.jawafdehi.org/team/damodar.jpeg",
+    thumb: "/assets/teammembers/damodar.webp",
     description: "Software Engineer @ Amazon Web Services",
     tags: ["Founding Member", "Board Member"],
     contacts: [
@@ -58,7 +58,7 @@ export const nepalBoard: TeamMember[] = [
   },
   {
     displayName: { en: "Medha Sharma", ne: "मेधा शर्मा" },
-    thumb: "https://s3.jawafdehi.org/team/medha2.jpeg",
+    thumb: "/assets/teammembers/medha.webp",
     description: "President, Visible Impact",
     tags: ["Founding Member", "Board Member"],
     contacts: [
@@ -68,7 +68,7 @@ export const nepalBoard: TeamMember[] = [
   },
   {
     displayName: { en: "Rohan Raj Gautam", ne: "रोहन राज गौतम" },
-    thumb: "https://s3.jawafdehi.org/team/rohan2.jpg",
+    thumb: "/assets/teammembers/rohan.webp",
     description: "Software Engineer",
     tags: ["Founding Member", "Board Member"],
     contacts: [
@@ -86,7 +86,7 @@ export const nepalBoard: TeamMember[] = [
   },
   {
     displayName: { en: "Shikshita Bhandari", ne: "शिक्षिता भण्डारी" },
-    thumb: "https://s3.jawafdehi.org/team/shikshita.jpeg",
+    thumb: "/assets/teammembers/shikshita.webp",
     description: "PhD Student, Stanford University",
     tags: ["Board Member"],
     contacts: [
@@ -151,7 +151,7 @@ export const members: TeamMember[] = [
 export const pastMembers: TeamMember[] = [
   {
     displayName: { en: "Deep Chaulagain", ne: "दीप चौलागाईं" },
-    thumb: "https://avatars.githubusercontent.com/deepgeek101",
+    thumb: "/assets/teammembers/deep.webp",
     description: "Software Engineer Intern",
     contacts: [
       { type: "github", value: "https://github.com/deepgeek101" },
@@ -159,7 +159,7 @@ export const pastMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Aakash Poudel", ne: "आकाश पौडेल" },
-    thumb: "https://avatars.githubusercontent.com/aakash2060",
+    thumb: "/assets/teammembers/aakash.webp",
     description: "Software Engineer Intern",
     contacts: [
       { type: "github", value: "https://github.com/aakash2060" },
@@ -167,7 +167,7 @@ export const pastMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Kushal KC", ne: "कुशल केसी" },
-    thumb: "https://avatars.githubusercontent.com/kushal-kc15",
+    thumb: "/assets/teammembers/kushal.webp",
     description: "Software Engineer Intern",
     contacts: [
       { type: "github", value: "https://github.com/kushal-kc15" },
@@ -175,7 +175,7 @@ export const pastMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Samyam Jung Thapa", ne: "सम्याम जंग थापा" },
-    thumb: "https://avatars.githubusercontent.com/sjungthapa",
+    thumb: "/assets/teammembers/samyam.webp",
     description: "Software Engineer Intern",
     contacts: [
       { type: "github", value: "https://github.com/sjungthapa" },
@@ -207,7 +207,7 @@ export const pastMembers: TeamMember[] = [
   },
   {
     displayName: { en: "Shishir Bashyal", ne: "शिशिर बस्याल" },
-    thumb: "https://s3.jawafdehi.org/team/shishir.jpeg",
+    thumb: "/assets/teammembers/shishir.webp",
     description: "CEO, Proma.ai; Volunteer",
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/sbashyal/" },

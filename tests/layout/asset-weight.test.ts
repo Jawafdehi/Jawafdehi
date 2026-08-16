@@ -22,6 +22,38 @@ const ROOT = process.cwd();
 const SRC = resolve(ROOT, 'src');
 const PUBLIC = resolve(ROOT, 'public');
 
+/** Width of a WebP, read from its header rather than by decoding it. */
+function webpWidth(buf: Buffer): number {
+  const chunk = buf.subarray(12, 16).toString('ascii');
+  if (chunk === 'VP8X') return 1 + buf.readUIntLE(24, 3); // extended (alpha/anim)
+  if (chunk === 'VP8 ') return buf.readUInt16LE(26) & 0x3fff; // simple lossy
+  if (chunk === 'VP8L') return 1 + (buf.readUInt32LE(21) & 0x3fff); // lossless
+  return 0;
+}
+
+/**
+ * Shorter side of a PNG or JPEG, from its header. `object-cover` on a square box
+ * crops to this, so it is the most pixels a square avatar can honestly carry.
+ */
+function shortestSide(buf: Buffer): number {
+  if (buf.readUInt32BE(0) === 0x89504e47) {
+    return Math.min(buf.readUInt32BE(16), buf.readUInt32BE(20)); // PNG IHDR
+  }
+  // JPEG: walk the segment chain to the first SOF marker. Skip the standalone
+  // markers (SOI, TEM, RSTn), which carry no length field, and DHT/DAC/DNL, whose
+  // 0xC4/0xC8/0xCC codes sit inside the SOF range without being one.
+  for (let i = 2; i < buf.length - 9; ) {
+    if (buf[i] !== 0xff) { i++; continue; }
+    const marker = buf[i + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      return Math.min(buf.readUInt16BE(i + 5), buf.readUInt16BE(i + 7)); // height, width
+    }
+    i += 2 + buf.readUInt16BE(i + 2);
+  }
+  return 0;
+}
+
 describe('served font weight', () => {
   const css = readFileSync(resolve(SRC, 'index.css'), 'utf8');
 
@@ -69,21 +101,55 @@ describe('served image weight', () => {
     expect(heavy).toEqual([]);
   });
 
-  it('serves team avatars as WebP, and every local thumb resolves on disk', () => {
+  it('serves EVERY team avatar from this repo, as WebP, resolving on disk', () => {
     const team = readFileSync(resolve(SRC, 'data/team.ts'), 'utf8');
     const thumbs = [...team.matchAll(/thumb:\s*"([^"]+)"/g)].map((m) => m[1]);
-    expect(thumbs.length).toBeGreaterThan(10);
+    expect(thumbs.length).toBeGreaterThan(20);
 
-    const local = thumbs.filter((t) => t.startsWith('/'));
-    // Three thumbs used to be spelled `https://jawafdehi.org/assets/...` — an
-    // absolute URL to this site's own origin for a file sitting in public/. That
-    // fetched them from production even in local dev, and would have 404'd the
-    // moment the originals stopped being deployed. Note this must NOT match
-    // `https://s3.jawafdehi.org/team/...`, which is a real external CDN and the
-    // correct way to reference an asset this repo does not hold.
-    expect(thumbs.filter((t) => /^https?:\/\/(www\.)?jawafdehi\.org\//.test(t))).toEqual([]);
-    expect(local.filter((t) => !t.endsWith('.webp'))).toEqual([]);
-    expect(local.filter((t) => !existsSync(join(PUBLIC, t)))).toEqual([]);
+    // No external host, for any member. Nine thumbs used to be hotlinked — five
+    // from s3.jawafdehi.org and four from avatars.githubusercontent.com — which
+    // meant a third of the page depended on two services this project does not
+    // control, at whatever resolution they happened to serve, with no lazy loading
+    // and no way to size them. They are now downloaded, capped and committed; see
+    // scripts/images/build-optimized.py.
+    //
+    // Three others were spelled `https://jawafdehi.org/assets/...`: an absolute URL
+    // to this site's OWN origin for a file sitting in public/, so they were fetched
+    // from production even in local dev.
+    expect(thumbs.filter((t) => !t.startsWith('/assets/teammembers/'))).toEqual([]);
+    expect(thumbs.filter((t) => !t.endsWith('.webp'))).toEqual([]);
+    expect(thumbs.filter((t) => !existsSync(join(PUBLIC, t)))).toEqual([]);
+  });
+
+  it('sizes every avatar at min(504, its source) — never upscaling, never over', () => {
+    // `CSS box x DPR` is a CEILING, not a target. 9 of the 22 photographs are below
+    // 504 on their short side — the four GitHub avatars cap at 400-460 whatever
+    // `?s=` asks for, and one source is 200x188 — so forcing 504 makes the file
+    // bigger AND the picture worse. nischal was being upscaled 2.68x.
+    //
+    // The expected width is derived from each SOURCE rather than listed here,
+    // because a hard-coded 504 ceiling cannot catch an upscale: 504 IS the ceiling,
+    // so a 188px photo blown up to exactly 504 satisfies it. Asked the wrong way,
+    // this test passed on that exact sabotage.
+    const out = resolve(PUBLIC, 'assets/teammembers');
+    const src = resolve(ROOT, 'scripts/images/sources/teammembers');
+
+    const wrong = readdirSync(out)
+      .filter((n) => n.endsWith('.webp'))
+      .map((name) => {
+        const stem = name.replace(/\.webp$/, '');
+        const source = readdirSync(src).find((f) => f.replace(/\.[^.]+$/, '') === stem);
+        const shortSide = source ? shortestSide(readFileSync(join(src, source))) : 0;
+        return {
+          name,
+          got: webpWidth(readFileSync(join(out, name))),
+          want: Math.min(504, shortSide),
+          source: source ?? 'MISSING',
+        };
+      })
+      .filter((f) => f.got !== f.want);
+
+    expect(wrong).toEqual([]);
   });
 
   it('keeps the oversized originals out of public/, where they would be deployed', () => {

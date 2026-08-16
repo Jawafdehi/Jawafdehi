@@ -15,7 +15,9 @@ for by habit and it is too low: a 336px avatar measured a mean 1.95/255 differen
 against the original when the browser stretched it to 504 device px, i.e. the
 "optimisation" was quietly softening every face on /team.
 
-  team avatars   `h-28 w-28`  in src/pages/OurTeam.tsx      -> 112px -> 504
+  team avatars   `h-28 w-28`  in src/pages/OurTeam.tsx      -> 112px -> 504 (capped
+                 at the source's own short side: 9 of 22 photographs are smaller
+                 than that, so 504 is a ceiling and not a target)
   source logos   `h-14 w-auto` in src/components/data-sources.tsx -> 56px tall -> 252
   case thumbnail `h-full w-full` in a 328x208 card          -> 1476x936
   modal favicon  `h-8 w-8` in newsletter-signup-modal.tsx   -> 32px -> 180 (see below)
@@ -65,6 +67,17 @@ def square_cover(im: Image.Image, size: int) -> Image.Image:
     return im.crop((left, top, left + side, top + side)).resize((size, size), Image.LANCZOS)
 
 
+def square_cover_capped(im: Image.Image, cap: int) -> Image.Image:
+    """`square_cover`, but never larger than the source actually is.
+
+    `CSS box x DPR` is a ceiling, not a target: resizing a 188x188 avatar UP to 504
+    makes the file bigger AND the picture worse, which is the opposite of the job.
+    9 of the 22 team photographs are below 504 on their short side — the four GitHub
+    avatars cap at 400-460 whatever `?s=` asks for, and one source is 200x188 — so
+    this is the common case, not an edge case."""
+    return square_cover(im, min(cap, min(im.size)))
+
+
 def fit_height(im: Image.Image, height: int) -> Image.Image:
     """Scale to a target height, preserving aspect — for `h-N w-auto` logos."""
     w, h = im.size
@@ -86,7 +99,7 @@ for src in sorted((SRC / "teammembers").glob("*")):
         JOBS.append((
             f"teammembers/{src.name}",
             f"assets/teammembers/{src.stem}.webp",
-            ("square", 504),
+            ("square_cap", 504),
             {"format": "WEBP", "quality": 82, "method": 6},
             # anish.webp is 70 KB at 504px — a busy background, not a mistake. The
             # budget exists to catch a 1.7 MB original landing back here, so 80 KB
@@ -132,6 +145,8 @@ def transform(im: Image.Image, spec) -> Image.Image:
     kind, arg = spec
     if kind == "square":
         return square_cover(im, arg)
+    if kind == "square_cap":
+        return square_cover_capped(im, arg)
     if kind == "height":
         return fit_height(im, arg)
     return fit_box(im, *arg)
