@@ -261,7 +261,21 @@ function UsCard() {
         <p className="text-sm leading-5 text-card-foreground/70">
           {t("donate.ways.us.paypal.detail")}
         </p>
-        <Button asChild variant="primary" size="sm" className="mt-1 w-fit gap-1.5">
+        {/* `whitespace-normal` and `w-full` until `sm`, because this label is a
+            sentence in Nepali: "PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्".
+            `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then
+            sizes the button to that unbreakable line — 350px of min-content, which
+            floored the grid track and pushed the whole card to 398px. That was 94px
+            of horizontal overflow at 320px wide, and a 29% page zoom-out.
+            This is a localisation defect as much as a layout one: the English label
+            fits and the Nepali one does not, and Nepali is the default (lang="ne").
+            `h-auto` because a wrapped label no longer fits `size="sm"`'s 36px. */}
+        <Button
+          asChild
+          variant="primary"
+          size="sm"
+          className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
+        >
           <a
             href={PAYPAL_DONATE_URL}
             target="_blank"
