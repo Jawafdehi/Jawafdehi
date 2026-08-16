@@ -282,6 +282,8 @@ export const SITE_ROUTES = [
   // metadata injected at the edge instead (see handleCaseMetaFallback in
   // worker.ts); redirects and auth-gated pages have nothing to index.
   { path: "/case/:id", chrome: "app" },
+  // Public author profile. Client-rendered like the other detail pages.
+  { path: "/author/:slug", chrome: "app" },
   { path: "/entity/:id", chrome: "app" },
   // Entity record by IRI tail (multi-segment, e.g. organization/.../tu). React
   // Router prefers the more specific :id route for single-segment numeric ids,

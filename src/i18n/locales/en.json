@@ -559,11 +559,10 @@
     "location": "Location",
     "period": "Case Date",
     "byline": {
-      "documentedBy": "Documented by {{names}}.",
-      "and": "and",
       "firstPublished": "First published {{date}}.",
       "editHistory_one": "{{count}} subsequent edit",
-      "editHistory_other": "{{count}} subsequent edits"
+      "editHistory_other": "{{count}} subsequent edits",
+      "documentedByLabel": "Documented by"
     },
     "overview": "Case Overview",
     "allegations": "Key Allegations",
@@ -2293,5 +2292,13 @@
   "reportCta": {
     "title": "Know of a corruption case?",
     "description": "Help us hold the powerful accountable. Submit information about a corruption case, officials and related entities."
+  },
+  "author": {
+    "notFound": "This author profile is not available.",
+    "metaDescription": "Corruption cases documented by {{name}} on Jawafdehi, Nepal's permanent corruption case archive.",
+    "emailLabel": "Email {{name}}",
+    "casesHeading_one": "{{count}} case",
+    "casesHeading_other": "{{count}} cases",
+    "noCases": "No published cases yet."
   }
 }

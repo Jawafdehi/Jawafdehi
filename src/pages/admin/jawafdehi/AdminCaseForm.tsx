@@ -147,11 +147,7 @@ function asOutcome(v: unknown): OutcomeType {
 function parseAuthors(c: Record<string, unknown>): AuthorRow[] {
   const list = Array.isArray(c.authors) ? (c.authors as Record<string, unknown>[]) : [];
   return list
-    .map((a) => ({
-      user_id: Number(a.user_id),
-      display_name: str(a.display_name),
-      credit_note: str(a.credit_note),
-    }))
+    .map((a) => ({ user_id: Number(a.user_id), display_name: str(a.display_name) }))
     // A read without `user_id` is a PUBLIC read (the API withholds account ids
     // from non-casework callers). Such a row cannot be saved back, so drop it
     // rather than PATCHing a NaN id.
@@ -422,10 +418,10 @@ export default function AdminCaseForm() {
     if (form.public_notes !== original.public_notes)
       ops.push(replaceOp("/public_notes", form.public_notes));
     // Whole-list replace, like entities/timeline: the backend rewrites the
-    // CaseAuthor join to match. `display_name` is sent back verbatim but the API
-    // ignores it and re-snapshots the name from the account.
+    // CaseAuthor join to match. Only the ids travel — list order IS byline
+    // order, and every other author field is per-person on their profile.
     if (changed(form.authors, original.authors))
-      ops.push(replaceOp("/authors", form.authors));
+      ops.push(replaceOp("/authors", form.authors.map((a) => a.user_id)));
     if (form.case_publish_date !== original.case_publish_date)
       ops.push(replaceOp("/case_publish_date", form.case_publish_date || null));
     if (changed(cleanedEditHistory, original.public_edit_history))
@@ -521,7 +517,9 @@ export default function AdminCaseForm() {
           description: form.description || undefined,
           notes: form.notes || undefined,
           public_notes: form.public_notes || undefined,
-          authors: form.authors.length ? form.authors : undefined,
+          authors: form.authors.length
+            ? form.authors.map((a) => a.user_id)
+            : undefined,
           case_publish_date: form.case_publish_date || undefined,
           public_edit_history: cleanedEditHistory.length
             ? cleanedEditHistory

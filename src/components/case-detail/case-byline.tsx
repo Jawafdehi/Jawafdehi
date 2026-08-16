@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
 import type { CaseAuthorCredit, CaseEditHistoryEntry } from "@/types/jds";
 import { formatDateForLanguage } from "@/utils/date";
+import { AuthorCard } from "@/components/case-detail/author-card";
 
 interface CaseBylineProps {
   authors?: CaseAuthorCredit[] | null;
@@ -12,20 +13,13 @@ interface CaseBylineProps {
   markdown?: string | null;
 }
 
-/** "A", "A and B", "A, B and C" — an author list, not a comma-joined string. */
-function joinNames(names: string[], and: string): string {
-  if (names.length <= 1) return names[0] ?? "";
-  return `${names.slice(0, -1).join(", ")} ${and} ${names[names.length - 1]}`;
-}
-
-// The public byline: who documented the case, when it first went live, and the
-// caseworker-curated list of edits since. Renders as understated case metadata —
-// sitting with location/period/amount — not as a content section.
+// The public byline: who documented the case (as cards), when it first went
+// live, and the caseworker-curated list of edits since.
 //
 // A case with no structured authors falls back to the DEPRECATED free-text
-// `public_notes`, which is how the ~72 cases written before this existed keep
-// their byline until they are backfilled. That path stays markdown-only (no raw
-// HTML) so a hand-written byline can't inject markup.
+// `public_notes`, which is how the cases written before this existed keep their
+// byline until they are backfilled. That path stays markdown-only (no raw HTML)
+// so a hand-written byline can't inject markup.
 export function CaseByline({
   authors,
   publishDate,
@@ -51,25 +45,31 @@ export function CaseByline({
     );
   }
 
-  const names = credits.map((author) => {
-    const note = author.credit_note?.trim();
-    return note ? `${author.display_name} (${note})` : author.display_name;
-  });
-
   const published = publishDate
     ? formatDateForLanguage(publishDate, "PP", null, i18n.language)
     : null;
 
   return (
     <div className="case-byline text-sm text-muted-foreground" data-testid="case-byline">
-      <p className="m-0" data-testid="case-byline-authors">
-        {t("caseDetail.byline.documentedBy", {
-          names: joinNames(names, t("caseDetail.byline.and")),
-        })}
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary/60">
+        {t("caseDetail.byline.documentedByLabel")}
       </p>
 
+      <div
+        className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+        data-testid="case-byline-authors"
+      >
+        {credits.map((author) => (
+          <AuthorCard
+            key={author.slug || author.display_name}
+            author={author}
+            className="sm:min-w-[14rem] sm:flex-1"
+          />
+        ))}
+      </div>
+
       {published && (
-        <p className="m-0 mt-1" data-testid="case-byline-published">
+        <p className="m-0 mt-2" data-testid="case-byline-published">
           {t("caseDetail.byline.firstPublished", { date: published.primary })}
           {published.secondary ? ` (${published.secondary})` : ""}
         </p>

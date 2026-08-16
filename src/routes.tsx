@@ -27,6 +27,7 @@ import WeeklyMeetings from "./pages/WeeklyMeetings";
 import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
+import AuthorProfile from "./pages/AuthorProfile";
 import Feedback from "./pages/Feedback";
 import ReportCase from "./pages/ReportCase";
 import Updates from "./pages/Updates";
@@ -93,6 +94,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/search": <ArchiveSearch />,
   "/materials": <Materials />,
   "/courtcases": <CourtCases />,
+  "/author/:slug": <AuthorProfile />,
   "/entity/:id": <EntityProfile />,
   "/entity/*": <EntityRecordProfile />,
   "/material/*": <MaterialProfile />,

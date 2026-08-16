@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactElement } from "react";
 
 // Passthrough translations, plus interpolation, so assertions read the values
 // the component computed rather than depending on i18n resources. `t` keeps a
@@ -19,47 +21,106 @@ vi.mock("react-i18next", () => {
 });
 
 import { CaseByline } from "@/components/case-detail/case-byline";
+import type { CaseAuthorCredit } from "@/types/jds";
 
-const AUTHORS = [
-  { display_name: "Subodh Kandel", credit_note: "" },
-  { display_name: "Sambhav Koirala", credit_note: "BALLB 4th Year Student" },
+const author = (over: Partial<CaseAuthorCredit> = {}): CaseAuthorCredit => ({
+  slug: "subodh-kandel",
+  display_name: "Subodh Kandel",
+  description: "",
+  photo_url: "",
+  has_public_page: false,
+  ...over,
+});
+
+const AUTHORS: CaseAuthorCredit[] = [
+  author(),
+  author({
+    slug: "sambhav-koirala",
+    display_name: "Sambhav Koirala",
+    description: "BALLB 4th Year Student",
+  }),
 ];
 
-describe("CaseByline — structured byline", () => {
-  it("names the authors in order, folding the credit note into the name", () => {
-    const { container } = render(<CaseByline authors={AUTHORS} />);
+const renderByline = (ui: ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>);
 
-    // The conjunction comes from t("…byline.and"), which the passthrough mock
-    // returns as the raw key — assert order and credit-note folding, not the word.
-    const names = container.querySelector('[data-testid="case-byline-authors"]');
-    expect(names?.textContent).toContain(
-      "Subodh Kandel caseDetail.byline.and Sambhav Koirala (BALLB 4th Year Student)",
-    );
+describe("CaseByline — author cards", () => {
+  it("renders one card per author, in the order given", () => {
+    const { container } = renderByline(<CaseByline authors={AUTHORS} />);
+
+    const cards = container.querySelectorAll('[data-testid="author-card"]');
+    expect(cards).toHaveLength(2);
+    expect(cards[0].textContent).toContain("Subodh Kandel");
+    expect(cards[1].textContent).toContain("Sambhav Koirala");
   });
 
-  it("uses a plain name for a single author, with no list separator", () => {
-    const { container } = render(
-      <CaseByline authors={[{ display_name: "Rujit Kafle", credit_note: "" }]} />,
+  it("shows the author's per-person description on the card", () => {
+    const { container } = renderByline(<CaseByline authors={AUTHORS} />);
+
+    const cards = container.querySelectorAll('[data-testid="author-card"]');
+    expect(cards[1].textContent).toContain("BALLB 4th Year Student");
+  });
+
+  it("links a card to the profile only when that profile is published", () => {
+    const { container } = renderByline(
+      <CaseByline
+        authors={[
+          author({ has_public_page: true }),
+          author({ slug: "unpublished", display_name: "No Page", has_public_page: false }),
+        ]}
+      />,
+    );
+
+    const cards = container.querySelectorAll('[data-testid="author-card"]');
+    expect(cards[0].tagName).toBe("A");
+    expect(cards[0].getAttribute("href")).toBe("/author/subodh-kandel");
+    // An auto-created, unfilled profile is not a page worth sending readers to.
+    expect(cards[1].tagName).not.toBe("A");
+  });
+
+  it("does not link a published profile that somehow has no slug", () => {
+    const { container } = renderByline(
+      <CaseByline authors={[author({ slug: "", has_public_page: true })]} />,
     );
 
     expect(
-      container.querySelector('[data-testid="case-byline-authors"]')?.textContent,
-    ).toContain("names=Rujit Kafle");
+      container.querySelector('[data-testid="author-card"]')?.tagName,
+    ).not.toBe("A");
+  });
+
+  it("renders the photo when there is one, and a placeholder when there isn't", () => {
+    const { container } = renderByline(
+      <CaseByline
+        authors={[
+          author({ photo_url: "https://s3.jawafdehi.org/team/subodh.jpeg" }),
+          author({ slug: "no-photo", display_name: "No Photo" }),
+        ]}
+      />,
+    );
+
+    const images = container.querySelectorAll("img");
+    expect(images).toHaveLength(1);
+    expect(images[0].getAttribute("src")).toBe(
+      "https://s3.jawafdehi.org/team/subodh.jpeg",
+    );
+    // The photo is decorative — the name next to it is the accessible label.
+    expect(images[0].getAttribute("alt")).toBe("");
   });
 
   it("renders the first-published date", () => {
-    const { container } = render(
+    const { container } = renderByline(
       <CaseByline authors={AUTHORS} publishDate="2026-07-22" />,
     );
 
-    const published = container.querySelector(
-      '[data-testid="case-byline-published"]',
-    );
-    expect(published?.textContent).toContain("Jul 22, 2026");
+    expect(
+      container.querySelector('[data-testid="case-byline-published"]')?.textContent,
+    ).toContain("Jul 22, 2026");
   });
 
   it("omits the published line entirely when there is no publish date", () => {
-    const { container } = render(<CaseByline authors={AUTHORS} publishDate={null} />);
+    const { container } = renderByline(
+      <CaseByline authors={AUTHORS} publishDate={null} />,
+    );
 
     expect(
       container.querySelector('[data-testid="case-byline-published"]'),
@@ -67,7 +128,7 @@ describe("CaseByline — structured byline", () => {
   });
 
   it("lists the edit history behind a disclosure", () => {
-    const { container } = render(
+    const { container } = renderByline(
       <CaseByline
         authors={AUTHORS}
         editHistory={[
@@ -84,13 +145,15 @@ describe("CaseByline — structured byline", () => {
   });
 
   it("omits the history disclosure when there are no entries", () => {
-    const { container } = render(<CaseByline authors={AUTHORS} editHistory={[]} />);
+    const { container } = renderByline(
+      <CaseByline authors={AUTHORS} editHistory={[]} />,
+    );
 
     expect(container.querySelector('[data-testid="case-byline-history"]')).toBeNull();
   });
 
   it("drops history rows whose remarks are blank", () => {
-    const { container } = render(
+    const { container } = renderByline(
       <CaseByline
         authors={AUTHORS}
         editHistory={[
@@ -104,8 +167,8 @@ describe("CaseByline — structured byline", () => {
   });
 
   it("ignores an author row with a blank display name", () => {
-    const { container } = render(
-      <CaseByline authors={[{ display_name: "  ", credit_note: "" }]} />,
+    const { container } = renderByline(
+      <CaseByline authors={[author({ display_name: "  " })]} />,
     );
 
     // No usable author left, and no free-text fallback either.
@@ -116,7 +179,7 @@ describe("CaseByline — structured byline", () => {
 describe("CaseByline — legacy free-text fallback", () => {
   it("renders nothing when there is no byline at all", () => {
     for (const value of ["", "   ", null, undefined]) {
-      const { container } = render(<CaseByline markdown={value} />);
+      const { container } = renderByline(<CaseByline markdown={value} />);
       expect(container.querySelector('[data-testid="case-byline"]')).toBeNull();
       expect(container.textContent?.trim()).toBe("");
     }
@@ -125,10 +188,9 @@ describe("CaseByline — legacy free-text fallback", () => {
   it("renders the legacy byline as markdown (bold + link, no raw asterisks)", () => {
     const markdown =
       "Documented by **the Jawafdehi research team**. First published Shrawan 2082 — see [the report](https://example.org/r).";
-    const { container } = render(<CaseByline markdown={markdown} />);
+    const { container } = renderByline(<CaseByline markdown={markdown} />);
 
-    const byline = container.querySelector('[data-testid="case-byline"]');
-    expect(byline).toBeTruthy();
+    expect(container.querySelector('[data-testid="case-byline"]')).toBeTruthy();
 
     // Bold renders as <strong>, not literal asterisks.
     expect(container.querySelector("strong")?.textContent).toBe(
@@ -142,10 +204,10 @@ describe("CaseByline — legacy free-text fallback", () => {
     expect(link?.textContent).toBe("the report");
   });
 
-  it("prefers structured authors over the legacy text when a case has both", () => {
+  it("prefers author cards over the legacy text when a case has both", () => {
     // A backfilled case may still carry its old public_notes until the field is
     // dropped; it must not render the byline twice.
-    const { container } = render(
+    const { container } = renderByline(
       <CaseByline
         authors={AUTHORS}
         markdown="**Case Drafted by Rujit Kafle. First Published On 21 May 2026.**"

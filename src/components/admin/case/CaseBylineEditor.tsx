@@ -19,8 +19,8 @@ import ADDatePicker from "@/components/admin/ADDatePicker";
 
 export interface AuthorRow {
   user_id: number;
+  /** Display only — resolved from the author's profile, never written here. */
   display_name: string;
-  credit_note: string;
 }
 
 export interface EditHistoryRow {
@@ -82,7 +82,7 @@ export default function CaseBylineEditor({
     if (!picked || credited.has(picked.id)) return;
     onAuthorsChange([
       ...authors,
-      { user_id: picked.id, display_name: picked.display_name, credit_note: "" },
+      { user_id: picked.id, display_name: picked.display_name },
     ]);
   };
 
@@ -128,21 +128,6 @@ export default function CaseBylineEditor({
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">
                   {author.display_name}
                 </span>
-                <Input
-                  className="max-w-[16rem]"
-                  value={author.credit_note}
-                  onChange={(e) =>
-                    onAuthorsChange(
-                      authors.map((row, idx) =>
-                        idx === i ? { ...row, credit_note: e.target.value } : row,
-                      ),
-                    )
-                  }
-                  aria-label={t("admin.caseForm.authorCreditNoteLabel", {
-                    name: author.display_name,
-                  })}
-                  placeholder={t("admin.caseForm.authorCreditNotePlaceholder")}
-                />
                 <Button
                   type="button"
                   size="icon"

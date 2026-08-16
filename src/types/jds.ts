@@ -173,13 +173,55 @@ export interface CourtCase {
   entities?: CourtCaseEntity[];
 }
 
-/** One credited author on a case's public byline. */
+/** One credited author on a case's public byline, resolved from their profile.
+ *
+ * Every field except the list position is PER-PERSON: the byline's only per-case
+ * fact is the order these come back in. A rename therefore shows the new name on
+ * every case that person wrote, which is the intended behaviour.
+ */
 export interface CaseAuthorCredit {
+  /** Profile handle; the card links to /author/<slug> when has_public_page. */
+  slug: string;
   display_name: string;
-  /** Optional per-case qualifier, e.g. "BALLB 4th Year Student". */
-  credit_note?: string;
+  /** Nepali name; empty when unset (fall back to display_name). */
+  name_ne?: string;
+  photo_url?: string;
+  /** Short bio, e.g. "Caseworker" or "BALLB 4th Year Student". */
+  description?: string;
+  /** False for an auto-created profile nobody has filled in yet — do not link. */
+  has_public_page: boolean;
   /** Casework viewers only — omitted from public reads. */
   user_id?: number;
+}
+
+/** A public social link on an author profile. Mirrors team.ts ContactType. */
+export interface AuthorLink {
+  type: "facebook" | "instagram" | "linkedin" | "github" | "website" | "twitter";
+  value: string;
+}
+
+/** A case card on an author's profile page. */
+export interface AuthorCaseSummary {
+  slug: string;
+  title: string;
+  short_description?: string;
+  case_type: string;
+  thumbnail_url?: string;
+  case_publish_date: string | null;
+  bigo: number | null;
+}
+
+/** The public author profile at /author/<slug>. */
+export interface AuthorProfile {
+  slug: string;
+  display_name: string;
+  name_ne?: string;
+  photo_url?: string;
+  description?: string;
+  /** null when the author has not published an address. */
+  email: string | null;
+  links: AuthorLink[];
+  cases: AuthorCaseSummary[];
 }
 
 /** One entry in a case's public, caseworker-curated edit history. */
