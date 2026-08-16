@@ -84,11 +84,53 @@ describe('sr-only is not applied to a styled control', () => {
   // scrollWidth. On /report that was the entire 65px, with `sr-only` present and
   // apparently doing its job. Reordering the className string changes nothing.
   const STYLED = ['Input', 'Textarea', 'Button', 'SelectTrigger'];
-  const pattern = new RegExp(`<(${STYLED.join('|')})\\b[^>]*?className="[^"]*\\bsr-only\\b`, 's');
+
+  /**
+   * The attribute span of every styled-control open-tag in `source`.
+   *
+   * Deliberately not `<Name\b[^>]*?className=...`: `[^>]` stops at the first `>` in
+   * the tag, so any element with an arrow-function prop *before* its className is
+   * never scanned — and that is the common ordering in this codebase:
+   *
+   *     <Input
+   *       onChange={(e) => setX(e.target.value)}   // the `>` here ends the match
+   *       className="sr-only"
+   *     />
+   *
+   * Verified: the naive pattern returns false on exactly that input. So track brace
+   * depth and quoting instead, and read the whole tag.
+   */
+  function styledTags(source: string): string[] {
+    const spans: string[] = [];
+    const open = new RegExp(`<(${STYLED.join('|')})(?=[\\s/>])`, 'g');
+    let m: RegExpExecArray | null;
+
+    while ((m = open.exec(source))) {
+      let depth = 0;
+      let quote: string | null = null;
+      let i = m.index + m[0].length;
+      for (; i < source.length; i++) {
+        const c = source[i];
+        if (quote) {
+          if (c === quote) quote = null;
+          continue;
+        }
+        if (c === '"' || c === "'" || c === '`') quote = c;
+        else if (c === '{') depth++;
+        else if (c === '}') depth--;
+        else if (c === '>' && depth === 0) break;
+      }
+      spans.push(source.slice(m.index, i));
+    }
+    return spans;
+  }
+
+  const hidesAStyledControl = (source: string) =>
+    styledTags(source).some((tag) => /\bsr-only\b/.test(tag));
 
   it('has no <Input|Textarea|Button|SelectTrigger className="sr-only"> in src', () => {
     const offenders = tsxFiles(SRC)
-      .filter((file) => pattern.test(readFileSync(file, 'utf8')))
+      .filter((file) => hidesAStyledControl(readFileSync(file, 'utf8')))
       .map((file) => relative(process.cwd(), file));
 
     expect(
