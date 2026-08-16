@@ -20,6 +20,10 @@ interface ADDatePickerProps {
   disabled?: boolean;
   fromYear?: number;
   toYear?: number;
+  // Accessible name for the trigger. Needed where the picker sits in a repeating
+  // row (e.g. one per edit-history entry) and a single visible <Label> can't
+  // identify which row's date a control belongs to.
+  ariaLabel?: string;
 }
 
 // Default year range. Bounded to the Gregorian window the Bikram Sambat
@@ -44,6 +48,7 @@ export default function ADDatePicker({
   disabled,
   fromYear = DEFAULT_FROM_YEAR,
   toYear = DEFAULT_TO_YEAR,
+  ariaLabel,
 }: ADDatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => toDate(value), [value]);
@@ -56,6 +61,7 @@ export default function ADDatePicker({
           type="button"
           variant="outline"
           disabled={disabled}
+          aria-label={ariaLabel}
           className={cn(
             "w-full justify-start text-left font-normal",
             !selected && "text-muted-foreground",

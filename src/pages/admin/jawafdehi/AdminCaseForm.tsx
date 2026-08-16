@@ -42,6 +42,10 @@ import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshi
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
+import CaseBylineEditor, {
+  type AuthorRow,
+  type EditHistoryRow,
+} from "@/components/admin/case/CaseBylineEditor";
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
 import CaseReviewScoreBadge from "@/components/admin/case/CaseReviewScoreBadge";
 import CaseHistoryPanel from "@/components/admin/case/CaseHistoryPanel";
@@ -76,6 +80,12 @@ interface CaseFormState {
   notes: string;
   public_notes: string;
   missing_details: string;
+  // The structured public byline. `public_notes` above is the deprecated
+  // free-text predecessor, kept editable only so legacy cases can be corrected
+  // (and cleared) until they are backfilled.
+  authors: AuthorRow[];
+  case_publish_date: string; // AD; required before the case can leave DRAFT
+  public_edit_history: EditHistoryRow[];
   key_allegations: string[];
   entities: EntityRelationshipRow[];
   timeline: TimelineEventRow[];
@@ -102,6 +112,9 @@ const EMPTY: CaseFormState = {
   notes: "",
   public_notes: "",
   missing_details: "",
+  authors: [],
+  case_publish_date: "",
+  public_edit_history: [],
   key_allegations: [],
   entities: [],
   timeline: [],
@@ -129,6 +142,27 @@ function asOutcome(v: unknown): OutcomeType {
   return (OUTCOME_TYPES as readonly string[]).includes(s)
     ? (s as OutcomeType)
     : "CHARGED";
+}
+
+function parseAuthors(c: Record<string, unknown>): AuthorRow[] {
+  const list = Array.isArray(c.authors) ? (c.authors as Record<string, unknown>[]) : [];
+  return list
+    .map((a) => ({
+      user_id: Number(a.user_id),
+      display_name: str(a.display_name),
+      credit_note: str(a.credit_note),
+    }))
+    // A read without `user_id` is a PUBLIC read (the API withholds account ids
+    // from non-casework callers). Such a row cannot be saved back, so drop it
+    // rather than PATCHing a NaN id.
+    .filter((a) => Number.isFinite(a.user_id));
+}
+
+function parseEditHistory(c: Record<string, unknown>): EditHistoryRow[] {
+  const list = Array.isArray(c.public_edit_history)
+    ? (c.public_edit_history as Record<string, unknown>[])
+    : [];
+  return list.map((e) => ({ date: str(e.date), remarks: str(e.remarks) }));
 }
 
 // Parse a loaded case's entities array into editor rows. Tolerates the loose
@@ -206,6 +240,9 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     notes: str(c.notes),
     public_notes: str(c.public_notes),
     missing_details: str(c.missing_details),
+    authors: parseAuthors(c),
+    case_publish_date: str(c.case_publish_date),
+    public_edit_history: parseEditHistory(c),
     key_allegations: allegations,
     entities: parseEntities(c),
     timeline: parseTimeline(c),
@@ -299,6 +336,17 @@ export default function AdminCaseForm() {
     () => form.key_allegations.map((s) => s.trim()).filter((s) => s !== ""),
     [form.key_allegations],
   );
+  // Same trailing-blank-row contract as the allegations above: a half-typed
+  // edit-history row is kept in the editor but never persisted. Both halves must
+  // be filled — the backend 422s an entry with an unparseable date or empty
+  // remarks, and a partial row is simply not an entry yet.
+  const cleanedEditHistory = useMemo(
+    () =>
+      form.public_edit_history
+        .map((e) => ({ date: e.date.trim(), remarks: e.remarks.trim() }))
+        .filter((e) => e.date !== "" && e.remarks !== ""),
+    [form.public_edit_history],
+  );
   // Derive each update from the previous state (functional setForm), not from
   // the render-scope `form`, so a burst of edits that batches before a re-render
   // can't drop writes.
@@ -373,6 +421,15 @@ export default function AdminCaseForm() {
     if (form.notes !== original.notes) ops.push(replaceOp("/notes", form.notes));
     if (form.public_notes !== original.public_notes)
       ops.push(replaceOp("/public_notes", form.public_notes));
+    // Whole-list replace, like entities/timeline: the backend rewrites the
+    // CaseAuthor join to match. `display_name` is sent back verbatim but the API
+    // ignores it and re-snapshots the name from the account.
+    if (changed(form.authors, original.authors))
+      ops.push(replaceOp("/authors", form.authors));
+    if (form.case_publish_date !== original.case_publish_date)
+      ops.push(replaceOp("/case_publish_date", form.case_publish_date || null));
+    if (changed(cleanedEditHistory, original.public_edit_history))
+      ops.push(replaceOp("/public_edit_history", cleanedEditHistory));
     if (form.missing_details !== original.missing_details)
       ops.push(replaceOp("/missing_details", form.missing_details));
     if (changed(cleanedAllegations, original.key_allegations))
@@ -416,6 +473,9 @@ export default function AdminCaseForm() {
       form.description.trim() !== "" ||
       form.notes.trim() !== "" ||
       form.public_notes.trim() !== "" ||
+      form.authors.length > 0 ||
+      form.case_publish_date.trim() !== "" ||
+      cleanedEditHistory.length > 0 ||
       form.missing_details.trim() !== "" ||
       cleanedAllegations.length > 0 ||
       form.bigo.trim() !== "" ||
@@ -461,6 +521,11 @@ export default function AdminCaseForm() {
           description: form.description || undefined,
           notes: form.notes || undefined,
           public_notes: form.public_notes || undefined,
+          authors: form.authors.length ? form.authors : undefined,
+          case_publish_date: form.case_publish_date || undefined,
+          public_edit_history: cleanedEditHistory.length
+            ? cleanedEditHistory
+            : undefined,
           missing_details: form.missing_details || undefined,
           key_allegations: cleanedAllegations.length
             ? cleanedAllegations
@@ -728,18 +793,33 @@ export default function AdminCaseForm() {
           />
         </div>
 
-        <div className="space-y-1">
-          <Label>{t("admin.caseForm.labelPublicNotes")}</Label>
-          <p className="text-xs text-muted-foreground">
-            {t("admin.caseForm.publicNotesHelp")}
-          </p>
-          <MDEditor
-            value={form.public_notes}
-            onChange={(v) => set("public_notes", v ?? "")}
-            height={200}
-            preview="edit"
-          />
-        </div>
+        <CaseBylineEditor
+          authors={form.authors}
+          onAuthorsChange={(rows) => set("authors", rows)}
+          publishDate={form.case_publish_date}
+          onPublishDateChange={(v) => set("case_publish_date", v)}
+          editHistory={form.public_edit_history}
+          onEditHistoryChange={(rows) => set("public_edit_history", rows)}
+        />
+
+        {/* The DEPRECATED free-text byline. Shown only when a case still carries
+            one, so a caseworker can read what the legacy line said while filling
+            in the structured fields above, then clear it. Hidden on every other
+            case so nothing new gets written here. */}
+        {form.public_notes.trim() !== "" && (
+          <div className="space-y-1">
+            <Label>{t("admin.caseForm.labelPublicNotes")}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t("admin.caseForm.publicNotesHelp")}
+            </p>
+            <MDEditor
+              value={form.public_notes}
+              onChange={(v) => set("public_notes", v ?? "")}
+              height={160}
+              preview="edit"
+            />
+          </div>
+        )}
 
         <div className="space-y-1">
           <Label>{t("admin.caseForm.labelMissingDetails")}</Label>

@@ -173,6 +173,21 @@ export interface CourtCase {
   entities?: CourtCaseEntity[];
 }
 
+/** One credited author on a case's public byline. */
+export interface CaseAuthorCredit {
+  display_name: string;
+  /** Optional per-case qualifier, e.g. "BALLB 4th Year Student". */
+  credit_note?: string;
+  /** Casework viewers only — omitted from public reads. */
+  user_id?: number;
+}
+
+/** One entry in a case's public, caseworker-curated edit history. */
+export interface CaseEditHistoryEntry {
+  date: string; // ISO date (AD)
+  remarks: string;
+}
+
 export interface Case {
   id: number;
   slug: string | null; // URL-friendly slug; older cases may not have one yet
@@ -180,10 +195,16 @@ export interface Case {
   state: CaseState; // Current state in the workflow
   title: string;
   short_description?: string | null;
-  // Public, caseworker-authored attribution + edit-history byline (markdown).
-  // Public counterpart to the internal `notes`: returned to everyone, so it is a
-  // lightweight field present on both the list and detail shapes.
+  // DEPRECATED free-text byline, superseded by `authors` / `case_publish_date` /
+  // `public_edit_history` below. Still returned, and still rendered as a
+  // fallback on cases that have not been backfilled with structured authors.
   public_notes?: string | null;
+  // The structured public byline. `user_id` is present only for casework
+  // viewers (the editor needs it to round-trip the list through PATCH); public
+  // callers get the name and credit note only.
+  authors?: CaseAuthorCredit[];
+  case_publish_date?: string | null; // ISO date the case first went live
+  public_edit_history?: CaseEditHistoryEntry[];
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
   thumbnail_url?: string | null; // URL for case card thumbnail image
@@ -211,6 +232,9 @@ export interface CaseDetail extends Case {
   evidence: EvidenceEntry[];
   notes: string;
   public_notes: string;
+  authors: CaseAuthorCredit[];
+  case_publish_date: string | null;
+  public_edit_history: CaseEditHistoryEntry[];
   bigo: number | null; // Embezzled/irregular amount in NPR (null if not applicable)
   court_cases: string[] | null;
 }
