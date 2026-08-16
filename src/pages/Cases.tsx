@@ -186,7 +186,10 @@ const Cases = () => {
                 {t("cases.clearFilters")}
               </Button>
 
-              <div className="flex border rounded-md">
+              {/* gap-1: the two `size="icon"` buttons each carry a tap ring 2px past their
+                  painted box, so without 4px of clearance the left button's last 2px
+                  activate the right one. Measured before the gap was added. */}
+              <div className="flex gap-1 border rounded-md">
                 <Button
                   variant={viewMode === "grid" ? "secondary" : "ghost"}
                   size="icon"

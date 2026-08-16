@@ -336,7 +336,7 @@ const ResearchCorruption = () => {
           </div>
         </section>
 
-        <div className="layout-container max-w-4xl space-y-16 py-14">
+        <div className="layout-container max-w-4xl space-y-10 py-8 md:space-y-16 md:py-14">
           {/* 1 · Funnel */}
           <section>
             <Eyebrow>{t("research.corruption.funnel.eyebrow", "The funnel")}</Eyebrow>
@@ -424,7 +424,7 @@ const ResearchCorruption = () => {
               />
             </div>
 
-            <div className="mt-10">
+            <div className="mt-6 md:mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.mixByYearTitle", "How the charge mix shifted, by year")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixByYearSub", "Register cases by fiscal filing year — {{n}} of the {{corpus}}, money laundering excluded. “Other” folds together seven smaller charge families and the matters whose charge text could not be classified. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80, with a rebound in FY2080/81. The illegal-benefit charge was barely used before FY2078/79 (a single earlier case, in FY2069/70) and loss to government grew.", { n: mixTotal.toLocaleString(), corpus: REPORT.corpus.ciaaProsecutions.toLocaleString() })}</p>
               <ChargeMixByYear
@@ -488,7 +488,7 @@ const ResearchCorruption = () => {
               />
             </div>
 
-            <div className="mt-10">
+            <div className="mt-6 md:mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
                 {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft converts at much the same level now as it did then: {{coreEarly}}% across the first three years against {{coreRecent}}% across the last four. So the headline decline is mostly that change of mix — the easy wins leaving — not the court convicting serious graft any less. Read the dashed line as a level, not a trend: it swings from {{coreHigh}}% in FY{{coreHighYear}} to {{coreLow}}% in FY{{coreLowYear}} because in some years only a few dozen core-graft cases were decided.", { start: fakeShareStart, min: fakeShareMin, coreEarly: early.corePct, coreRecent: recent.corePct, coreHigh: Math.round(coreHigh.coreConvPct), coreHighYear: fyLabel(coreHigh.year), coreLow: Math.round(coreLow.coreConvPct), coreLowYear: fyLabel(coreLow.year) })}
@@ -525,7 +525,7 @@ const ResearchCorruption = () => {
               />
             </div>
 
-            <div className="mt-10">
+            <div className="mt-6 md:mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.monthTitle", "When cases are filed, by Nepali month")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.monthSub", "Mean cases filed per Nepali month across FY2069/70–2082/83; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.")}</p>
               <FiledByMonth

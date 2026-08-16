@@ -13,8 +13,8 @@ type ExternalSource = {
 // Icons/logos live in code; the labels and descriptions come from i18n
 // under ourProcess.sources.items.*
 const EXTERNAL_SOURCES: ExternalSource[] = [
-  { key: "ciaa", imageSrc: "/assets/ciaa.png" },
-  { key: "cib", imageSrc: "/assets/cib.png" },
+  { key: "ciaa", imageSrc: "/assets/ciaa.webp" },
+  { key: "cib", imageSrc: "/assets/cib.webp" },
   { key: "media", icon: BsCameraReelsFill },
   { key: "journalists", icon: Mic2 },
   { key: "watchdogs", icon: FaEye },
@@ -49,6 +49,12 @@ export function DataSources() {
                     src={imageSrc}
                     alt=""
                     aria-hidden="true"
+                    // 56 CSS px tall (h-14) at DPR 4.5 = the 336x252 the
+                    // generated logos are sized for; w-auto keeps the aspect.
+                    width={336}
+                    height={252}
+                    loading="lazy"
+                    decoding="async"
                     className="h-14 w-auto object-contain opacity-85 transition duration-300 group-hover:-translate-y-1 group-hover:opacity-100"
                   />
                 )}
