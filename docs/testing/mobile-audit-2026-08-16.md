@@ -443,15 +443,30 @@ return <CountUp end={numericValue} duration={0.9} separator="," />;
 appears when the client effect mutates the node. `Rs 1.90 Kharab` survives purely
 because `Number("Rs 1.90 Kharab")` is `NaN` and it takes the raw-string branch.
 
-Measured with `renderToString` (`tests/mobile/ssr-countup.mjs`):
+**There is a second, independent way to display the wrong number, and it kills
+the obvious fix.** `countup.js` writes `startVal` into the element from its
+**constructor** — `if (this.el) { this.printValue(this.startVal) }` — and
+react-countup calls `getCountUp()` on mount *regardless* of `startOnMount`. So a
+figure can server-render correctly and still flip to `0` the instant it hydrates.
 
-| form | SSR HTML |
-| --- | --- |
-| as shipped, no `start` | `<span></span>` ← the defect |
-| `start={0}` | `<span>0</span>` ← worse: a false claim, not a missing one |
-| `start={numericValue}` | `<span>82</span>` |
-| `start={numericValue}`, 7 digits | `<span>2,245,189</span>` — `separator` applied |
-| render-prop `children={({countUpRef}) => <span ref={countUpRef}>{value}</span>}` | `<span>82</span>` |
+Both axes measured — SSR with `renderToString`, first frame by mounting with the
+element off-screen (`tests/ssr/animated-count.test.tsx`):
+
+| form | SSR HTML | after mount, off screen |
+| --- | --- | --- |
+| as shipped, no `start` | `<span></span>` | `0` ← the defect |
+| `start={0}` | `<span>0</span>` | `0` ← a false claim, not a missing one |
+| render-prop `children={({countUpRef}) => …}` | `<span>82</span>` | **`0`** ← reads correct, is not |
+| render-prop + `enableScrollSpy scrollSpyOnce` | `<span>82</span>` | **`0`**, until scrolled into view |
+| `start={numericValue}` | `<span>82</span>` | `82` |
+| `start={numericValue}`, 7 digits | `<span>2,245,189</span>` | `2,245,189` — `separator` applied |
+| render-prop + `start={numericValue}` | `<span>82</span>` | `82` |
+
+⚠️ **The two render-prop rows are the trap, and an earlier revision of this
+document recommended one of them.** They fix the served HTML and then blank the
+figure on hydration; with `enableScrollSpy` that `0` *persists until the band is
+scrolled into view*, which on a phone is exactly the case that matters. Checking
+only the served HTML says the fix works.
 
 So until the 535 KB bundle hydrates — **~6 s on Slow 4G** — a corruption archive
 shows three labels with no figures above them:
@@ -466,32 +481,39 @@ Reproduce, screenshots included:
 
 ### Fix
 
-Both viable forms are hydration-safe — the client's first render emits the same
-text the server did, and CountUp only mutates the node afterwards.
+No prop combination gives both a correct static figure *and* an animation:
+animating up from zero means `startVal` is 0, and countup.js prints `startVal` the
+moment it is constructed. So either the number is momentarily wrong, or there is
+no animation.
 
-**Recommended**, because it also fixes the never-seen animation above: the
-render-prop form, so the true figure is the server-rendered text and the animation
-fires when the band actually reaches the viewport.
+`start={numericValue}` is the one-prop fix and is correct at every instant — it
+just also gives up the animation on desktop, where the band *is* above the fold
+and the animation *is* seen.
 
-```diff
--  return <CountUp end={numericValue} duration={0.9} separator="," />;
-+  // `start` (or children) is what CountUp renders server-side; without one the
-+  // pre-rendered figure is an empty string. The render-prop form ships the real
-+  // number as text, and enableScrollSpy defers the animation to the point the
-+  // band is actually on screen — on a phone it sits at y=592, so on-mount
-+  // animation is spent before a thumb gets there.
-+  return (
-+    <CountUp end={numericValue} duration={0.9} separator="," enableScrollSpy scrollSpyOnce>
-+      {({ countUpRef }) => <span ref={countUpRef}>{value}</span>}
-+    </CountUp>
-+  );
+To keep both, don't let CountUp own the element until it is on screen. That is
+what `AnimatedCount` (`src/components/ui/animated-count.tsx`) does:
+
+```jsx
+// true figure as text, until the figure is actually visible
+if (animate) return <CountUp end={end} duration={duration} separator={separator} />;
+return <span ref={hostRef}>{display ?? end.toLocaleString("en-US")}</span>;
 ```
 
-**Simpler**, if the count-up effect is expendable — one prop, correct text, no
-animation: `start={numericValue}`.
+- no JS, or JS still loading → the true figure, crawlable and accessible;
+- on screen → animates, exactly as before;
+- below the fold → the true figure until scrolled to, where a mount-time
+  animation would have been spent long before a thumb arrived.
 
-**Do not use `start={0}`.** It renders `<span>0</span>`, which turns a missing
-figure into a false one: "0 documented cases" on a corruption archive.
+**Do not use `start={0}`,** and do not use either render-prop form: all three
+render a literal `0`, which turns a missing figure into a false one — "0
+documented cases" on a corruption archive.
+
+**The same defect is at three call sites,** not one: the home hero,
+`data-quality/EvidenceBackbone.tsx` (scale tiles) and
+`data-quality/AccountabilityGap.tsx` (documented total). Note that
+`AccountabilityGap.test.tsx` already *mocks* `react-countup` "to render the final
+value immediately" — the suite had been working around this rather than failing on
+it.
 
 A figure that is correct without JS is also the accessible and crawlable one.
 
@@ -668,10 +690,11 @@ shrink-to-fit, which is how the `/report` and `/donate` overflow surfaced at all
 | --- | --- | --- | --- |
 | 1 | `overflow-y-auto overscroll-contain` on `sheetVariants` | 1 line | Donate + 4 nav destinations become reachable on every phone |
 | 2 | `.font-input` → `text-base sm:text-sm` | 1 line | kills iOS focus-zoom on all 20 fields |
-| 3 | Preload + WOFF2 + subset the Devanagari font | small | home LCP ~7.9 s → ~2 s on Slow 4G |
-| 4 | Resize `/team` avatars, `placeholder.png`, `favicon.png`; add `srcset` + `loading=lazy` | small | `/team` 5.67 MB → <1 MB |
-| 5 | Plain `<input>` for the hidden file field; wrap the donate CTA | 2 lines | removes 11–29% page zoom-out on 2 routes |
-| 6 | `icon` → `h-11 w-11`; footer links `min-h-11` | small | clears most sub-44 px targets |
-| 7 | Split the 535 KB app chunk; lazy-load the Markdown editor | medium | TBT 900 ms → target <300 ms |
-| 8 | `py-8 md:py-16` sweep across the 91 unscaled paddings | medium | roughly halves phone page length |
-| 9 | Run the `mobile-*` Playwright projects in CI | small | stops all of the above regressing |
+| 3 | `AnimatedCount` at the 3 `CountUp` sites | small | 3 hero figures stop shipping blank for ~6 s, and never show a false `0` |
+| 4 | Preload + WOFF2 + subset the Devanagari font | small | home LCP ~7.9 s → ~2 s on Slow 4G |
+| 5 | Resize `/team` avatars, `placeholder.png`, `favicon.png`; add `srcset` + `loading=lazy` | small | `/team` 5.67 MB → <1 MB |
+| 6 | Plain `<input>` for the hidden file field; wrap the donate CTA | 2 lines | removes 11–29% page zoom-out on 2 routes |
+| 7 | `icon` → `h-11 w-11`; footer links `min-h-11` | small | clears most sub-44 px targets |
+| 8 | Split the 535 KB app chunk; lazy-load the Markdown editor | medium | TBT 900 ms → target <300 ms |
+| 9 | `py-8 md:py-16` sweep across the 91 unscaled paddings | medium | roughly halves phone page length |
+| 10 | Run the `mobile-*` Playwright projects in CI | small | stops all of the above regressing |
