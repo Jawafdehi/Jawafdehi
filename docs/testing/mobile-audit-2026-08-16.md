@@ -725,10 +725,24 @@ shrink-to-fit, which is how the `/report` and `/donate` overflow surfaced at all
    **Still open:** `test.yml` runs lint + build and **no tests at all** — it is a
    redundant copy of `ci.yml` minus the test step. Deleting it is a maintainer
    call (branch protection may reference it), so this branch leaves it alone.
-3. **No performance budget**, no Lighthouse, no bundle-size gate — a 1.67 MB PNG
+3. **CI is hostage to a live external API, on a 10 s timeout.** Observed while
+   landing this work: six PRs opened together put twelve concurrent `bun run build`
+   jobs against `api.jawafdehi.org`, and three of them failed — not on anything in
+   the diff, but on `Request timed out after 10000ms fetching
+   https://api.jawafdehi.org/api/cases/?page=3`. `scripts/sitemap.ts` treats that
+   as `FATAL` ("refusing to write a sitemap missing every case") and `pre-render`
+   raises "the API is unreachable, so every pre-rendered page would ship empty".
+   Both refusals are individually right — a silently-empty sitemap or pre-render is
+   worse than a failed build — but together they mean **any PR can go red because a
+   third-party host was briefly slow**, which trains reviewers to ignore red.
+   Worth separating: pre-render/sitemap belong to *release*, not to *pull-request
+   validation*. This is also why the `phone-gates` job runs `bunx vite build`
+   rather than `bun run build` — it never touches the API, and it was the one job
+   that stayed green through the incident.
+4. **No performance budget**, no Lighthouse, no bundle-size gate — a 1.67 MB PNG
    reached production.
-4. **No image pipeline** — no `srcset` anywhere, originals served as authored.
-5. **The docs claim what nothing tests.** `.kiro/steering/product.md:13,125` and
+5. **No image pipeline** — no `srcset` anywhere, originals served as authored.
+6. **The docs claim what nothing tests.** `.kiro/steering/product.md:13,125` and
    `.github/copilot-instructions.md:15,127` both assert "Mobile-First:
    Responsive design for all screen sizes"; `README.md` claims "**Responsive
    Design** - Mobile, tablet, and desktop optimized".
