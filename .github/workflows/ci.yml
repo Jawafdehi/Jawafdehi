@@ -79,9 +79,23 @@ jobs:
       # The client build only: no pre-render, no sitemap, so this job never depends
       # on the API being reachable. `vite preview` then serves dist/client with SPA
       # fallback, so every route resolves.
-      # Trade-off worth knowing: without pre-render the list routes render their
-      # empty state rather than live data, so these gates cover layout and
-      # reachability rather than content-dependent overflow.
+      #
+      # Know what this does and does not measure. `proxy` is declared under
+      # `server:` in vite.config.ts — that is the DEV-server proxy, and `vite
+      # preview` ignores it (there is no `preview.proxy`). Measured: /api/cases/
+      # answers 500 here. So the seven data-driven routes in ROUTES (/cases,
+      # /search, /entities, /materials, /courtcases, /data-quality, /updates) are
+      # gated with their fetches FAILING — i.e. in their error state, which is a
+      # different layout from an empty one and a different layout again from a
+      # populated one.
+      #
+      # That is a deliberate trade, not an oversight: these gates are about layout,
+      # reachability and field sizes, and every route that matters most to them
+      # (/report, /donate, /about, /faq, /team, the nav) is static content. Adding
+      # `preview.proxy` would cover the populated case and hand this job the same
+      # third-party dependency that makes `bun run build` flaky — see the process
+      # gap in docs/testing/mobile-audit-2026-08-16.md. Content-dependent overflow
+      # belongs in the Tier B sweep, which runs against a real origin.
       - name: Build client
         run: bunx vite build
         env:
