@@ -79,10 +79,16 @@ const OurTeam = () => {
                           src={member.thumb}
                           alt={member.displayName.en}
                           // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio
-                          // the phone gates run at — which is the 504x504 the
-                          // generated avatars are sized for. Stating the intrinsic
-                          // box also stops each card reflowing as its photo
-                          // arrives, and this page has 22 of them.
+                          // the phone gates run at — so 504 is the ceiling the
+                          // generated avatars are sized to, capped at whatever the
+                          // source actually has (9 of the 22 are smaller).
+                          //
+                          // The attributes do NOT prevent a reflow here: `h-28 w-28`
+                          // already fixes the box at 112x112 before the image loads,
+                          // measured. They are the declared intrinsic size and the
+                          // aspect ratio, which is worth stating for its own sake —
+                          // but the reflow argument belongs to data-sources.tsx,
+                          // where `w-auto` leaves the width to the aspect ratio.
                           width={504}
                           height={504}
                           loading="lazy"

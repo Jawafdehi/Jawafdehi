@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Hippocratic-3.0
 #
-# Regenerate the served WOFF2 web fonts from the upstream TTFs in public/font/.
+# Regenerate the served WOFF2 web fonts from the upstream TTFs in
+# scripts/fonts/sources/ — deliberately not in public/, which is deployed: a TTF
+# sitting next to the WOFF2 that replaced it would be pushed to every CDN edge and
+# fetched by nobody, because the CSS lists no TTF fallback (see src/index.css).
 #
 # This is deliberately NOT wired into `bun run build`. The WOFF2 files are
 # committed assets, the TTFs are their source, and this script is how you get
@@ -15,11 +18,12 @@
 #   bash scripts/fonts/build-webfonts.sh
 #
 # Then verify before committing — a font change is invisible until it is wrong:
-#   bash scripts/fonts/verify-webfonts.sh
+#   python3 scripts/fonts/verify-webfonts.py
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-NOTO_DIR=public/font/Noto_Sans_Devanagari
+SRC_DIR=scripts/fonts/sources          # upstream TTFs, not deployed
+NOTO_DIR=public/font/Noto_Sans_Devanagari   # generated WOFF2, deployed
 VESPER_DIR=public/font/Vesper_Libre
 
 command -v pyftsubset >/dev/null || { echo "pyftsubset not found: pip install 'fonttools[woff]' brotli" >&2; exit 1; }
@@ -47,7 +51,7 @@ echo "==> Noto Sans Devanagari (pin wdth, keep all codepoints, WOFF2)"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 fonttools varLib.instancer \
-  "$NOTO_DIR/NotoSansDevanagari-VariableFont_wdth,wght.ttf" wdth=100 \
+  "$SRC_DIR/NotoSansDevanagari-VariableFont_wdth,wght.ttf" wdth=100 \
   -o "$TMP/noto-pinned.ttf" >/dev/null
 pyftsubset "$TMP/noto-pinned.ttf" \
   --unicodes='*' --layout-features='*' --flavor=woff2 \
@@ -57,7 +61,7 @@ pyftsubset "$TMP/noto-pinned.ttf" \
 # Container change only: no axis to drop, no codepoints removed.
 for w in Regular Medium Bold Black; do
   echo "==> Vesper Libre $w (WOFF2)"
-  pyftsubset "$VESPER_DIR/VesperLibre-$w.ttf" \
+  pyftsubset "$SRC_DIR/VesperLibre-$w.ttf" \
     --unicodes='*' --layout-features='*' --flavor=woff2 \
     --output-file="$VESPER_DIR/VesperLibre-$w.woff2"
 done

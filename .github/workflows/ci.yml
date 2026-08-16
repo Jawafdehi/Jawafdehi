@@ -10,8 +10,8 @@ on:
   #
   # Pushes stay scoped to main*/develop*: a branch with no PR open is not a merge
   # candidate, so the coverage that matters is the pull_request one. Keeping the
-  # push filter narrow also stops this workflow doubling in cost once the
-  # phone-gates job lands (~4 minutes, adds a browser download and a build).
+  # push filter narrow also matters now that the phone-gates job has landed — it
+  # adds ~4 minutes, a browser download and a second build to every run.
   pull_request:
 
 jobs:

@@ -31,6 +31,18 @@ function webpWidth(buf: Buffer): number {
   return 0;
 }
 
+/** Height of a WebP, same three chunk layouts. */
+function webpHeight(buf: Buffer): number {
+  const chunk = buf.subarray(12, 16).toString('ascii');
+  if (chunk === 'VP8X') return 1 + buf.readUIntLE(27, 3);
+  if (chunk === 'VP8 ') return buf.readUInt16LE(28) & 0x3fff;
+  if (chunk === 'VP8L') {
+    const bits = buf.readUInt32LE(21);
+    return 1 + (((bits >> 14) & 0x3fff) | 0);
+  }
+  return 0;
+}
+
 /**
  * Shorter side of a PNG or JPEG, from its header. `object-cover` on a square box
  * crops to this, so it is the most pixels a square avatar can honestly carry.
@@ -57,27 +69,39 @@ function shortestSide(buf: Buffer): number {
 describe('served font weight', () => {
   const css = readFileSync(resolve(SRC, 'index.css'), 'utf8');
 
-  it('serves every self-hosted face as WOFF2 before any TTF fallback', () => {
-    // Order matters: a browser takes the FIRST `src` format it supports, so a TTF
-    // listed first would be downloaded by everything and the WOFF2 never fetched.
-    const faces = css.split('@font-face').slice(1);
+  it('serves every self-hosted face as WOFF2', () => {
+    const faces = css.split('@font-face').slice(1).map((f) => f.slice(0, f.indexOf('}')));
     expect(faces.length).toBeGreaterThan(0);
-
-    const wrong = faces
-      .map((face) => face.slice(0, face.indexOf('}')))
-      .filter((face) => face.includes('.ttf'))
-      .filter((face) => face.indexOf('.woff2') === -1 || face.indexOf('.ttf') < face.indexOf('.woff2'))
-      .map((face) => /url\('([^']+)'\)/.exec(face)?.[1] ?? face.slice(0, 60));
-
-    expect(wrong).toEqual([]);
+    // Every face declares exactly one source, and it is a WOFF2.
+    expect(faces.filter((f) => !f.includes(".woff2') format('woff2')"))).toEqual([]);
   });
 
   it('keeps the app face under 200 KB — it is on every route and gates the home LCP', () => {
     const face = resolve(PUBLIC, 'font/Noto_Sans_Devanagari/NotoSansDevanagari-wght.woff2');
     expect(existsSync(face), `${face} missing — run scripts/fonts/build-webfonts.sh`).toBe(true);
-    // 147,468 as generated, from 329,700 on the wire as a brotli'd TTF. WOFF2 is
+    // ~147 KB as generated, from 329,700 on the wire as a brotli'd TTF. WOFF2 is
     // already brotli-compressed internally, so this IS the download size.
+    //
+    // A range, not an exact figure, and deliberately loose: the WOFF2 encoder is
+    // not byte-reproducible — five runs on the same input gave 146,744-147,424
+    // bytes with identical content. Asserting an exact size would be flaky, and
+    // asserting byte-equality against the committed file would be worse.
     expect(statSync(face).size).toBeLessThan(200_000);
+  });
+
+  it('ships no TTF in public/, and references none', () => {
+    // public/ is deployed. The TTFs were 1,307,048 bytes of it, reachable by
+    // nothing: the app ships one `type="module"` bundle with no `nomodule` twin and
+    // sets no `build.target`/`browserslist`, so Vite's default `'modules'` target
+    // floors it at ~Chrome 87 / Safari 14 — four years past universal WOFF2. They
+    // now live in scripts/fonts/sources/ as the regeneration input.
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)],
+      );
+    expect(walk(resolve(PUBLIC, 'font')).filter((f) => f.endsWith('.ttf'))).toEqual([]);
+    expect(css).not.toContain('.ttf');
+    expect(existsSync(resolve(ROOT, 'scripts/fonts/sources'))).toBe(true);
   });
 
   it('does not reintroduce the width axis the app never uses', () => {
@@ -152,6 +176,43 @@ describe('served image weight', () => {
     expect(wrong).toEqual([]);
   });
 
+  it('resolves every generated asset this PR repointed a reference at', () => {
+    // Nothing resolves a `public/` string reference at build time, so a typo here
+    // 404s in silence. The team thumbs are covered above; these are the other four.
+    const refs: Array<[string, string]> = [
+      ['src/components/data-sources.tsx', '/assets/ciaa.webp'],
+      ['src/components/data-sources.tsx', '/assets/cib.webp'],
+      ['src/lib/case-images.ts', '/assets/placeholder.webp'],
+      ['src/components/home/newsletter-signup-modal.tsx', '/favicon.png'],
+    ];
+    const broken = refs.filter(([file, ref]) => {
+      const referenced = readFileSync(resolve(ROOT, file), 'utf8').includes(ref);
+      return !referenced || !existsSync(join(PUBLIC, ref));
+    });
+    expect(broken).toEqual([]);
+  });
+
+  it('keeps the source logos at the 4:3 the JSX declares', () => {
+    // build-optimized.py sizes these by HEIGHT with auto width, and
+    // data-sources.tsx hardcodes width/height. A replacement source at a different
+    // aspect ratio would leave the JSX declaring a wrong aspect box, and --check
+    // would not notice: it re-derives dimensions from the source, not from the JSX.
+    const jsx = readFileSync(resolve(SRC, 'components/data-sources.tsx'), 'utf8');
+    const w = Number(/width=\{(\d+)\}/.exec(jsx)?.[1]);
+    const h = Number(/height=\{(\d+)\}/.exec(jsx)?.[1]);
+    const declared = w / h;
+    for (const name of ['ciaa.webp', 'cib.webp']) {
+      const buf = readFileSync(resolve(PUBLIC, 'assets', name));
+      const actualW = webpWidth(buf);
+      const actualH = webpHeight(buf);
+      expect(
+        Math.abs(actualW / actualH - declared),
+        `${name} is ${actualW}x${actualH} (${(actualW / actualH).toFixed(3)}) but ` +
+          `data-sources.tsx declares ${w}x${h} (${declared.toFixed(3)})`,
+      ).toBeLessThan(0.02);
+    }
+  });
+
   it('keeps the oversized originals out of public/, where they would be deployed', () => {
     // They stay in the repo as the regeneration input for
     // scripts/images/build-optimized.py — just not in the directory that ships.
@@ -163,7 +224,7 @@ describe('served image weight', () => {
 });
 
 describe('touch target sizes', () => {
-  it('gives `size="icon"` buttons a 44px tap region without moving the 40px box', () => {
+  it('gives `size="icon"` a 2px tap ring — 44px on the default box — without moving it', () => {
     const button = readFileSync(resolve(SRC, 'components/ui/button.tsx'), 'utf8');
     const icon = /icon:\s*"([^"]*)"/.exec(button)?.[1] ?? '';
     // The painted box must stay 40 while the region that accepts the tap reaches
@@ -172,13 +233,31 @@ describe('touch target sizes', () => {
     // can review one by one. (The audit's "201 occurrences of 40x40" is rendered
     // instances across 7 viewports x 23 routes, not call sites.)
     expect(icon).toContain('h-10 w-10');
-    expect(icon).toContain('after:h-11');
-    expect(icon).toContain('after:w-11');
     // Without `relative` the pseudo-element positions against some ancestor and
     // the expansion lands somewhere else entirely.
     expect(icon).toContain('relative');
     // Without content the pseudo-element does not generate a box at all.
     expect(icon).toMatch(/after:content-\['']/);
+    // A RELATIVE inset, not a fixed 44x44. A fixed size overflows by
+    // `(44 - box) / 2` per edge, which grows as a call site shrinks the box — 4px
+    // at h-9, 6px at h-8 — so the clearance a neighbour needs stops being a
+    // constant and starts having to be recomputed per call site.
+    expect(icon).toContain('after:-inset-[2px]');
+    expect(icon).not.toMatch(/after:h-11|after:w-11/);
+  });
+
+  it('gives the two zero-gap segmented controls the clearance the ring needs', () => {
+    // Both toggle groups put two `size="icon"` buttons flush against each other, so
+    // without 4px between them one button's ring covers the other's PAINTED pixels
+    // and a tap on a visible pixel activates the wrong control. Measured before the
+    // gap: the last 2px of "grid view" on /cases and the last 4px of "card view" on
+    // /search fired the list button.
+    for (const [file, marker] of [
+      ['pages/Cases.tsx', 'flex gap-1 border rounded-md'],
+      ['pages/ArchiveSearch.tsx', 'flex items-center gap-1 rounded-full border p-0.5'],
+    ]) {
+      expect(readFileSync(resolve(SRC, file), 'utf8'), `${file} lost the toggle gap`).toContain(marker);
+    }
   });
 
   it('keeps footer nav rows and social icons at 44px', () => {

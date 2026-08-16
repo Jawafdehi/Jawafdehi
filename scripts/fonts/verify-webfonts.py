@@ -9,9 +9,12 @@ the check is not "does it load" but "does it draw the same pixels".
 
 Two layers, because they fail differently:
 
-  * table-level  -- codepoints, glyph count, GSUB feature tags, GPOS presence.
-    Catches an over-narrow --unicodes and a dropped --layout-features, which is
-    the failure that keeps every codepoint but stops Devanagari shaping.
+  * table-level  -- codepoints, GSUB feature tags, GPOS presence. Catches an
+    over-narrow --unicodes and a dropped --layout-features, which is the failure
+    that keeps every codepoint but stops Devanagari shaping. Glyph COUNT is
+    deliberately not asserted: pinning the width axis legitimately drops
+    width-only glyphs (1117 -> 1089 for the app face), so an equality check there
+    would fail on a correct build.
   * pixel-level  -- render Nepali samples with both fonts at every weight the app
     uses and diff the bitmaps. Catches everything the tables cannot express.
 
@@ -30,20 +33,22 @@ from fontTools.ttLib import TTFont
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
-NOTO = ROOT / "public/font/Noto_Sans_Devanagari"
-VESPER = ROOT / "public/font/Vesper_Libre"
+# Generated WOFF2 (deployed) against the upstream TTFs (not deployed).
+GEN_NOTO = ROOT / "public/font/Noto_Sans_Devanagari"
+GEN_VESPER = ROOT / "public/font/Vesper_Libre"
+SRC = ROOT / "scripts/fonts/sources"
 
-# (generated woff2, upstream ttf, weights to render, axes to pin on the TTF)
+# (generated woff2, upstream ttf, weights to render)
 PAIRS = [
     (
-        NOTO / "NotoSansDevanagari-wght.woff2",
-        NOTO / "NotoSansDevanagari-VariableFont_wdth,wght.ttf",
+        GEN_NOTO / "NotoSansDevanagari-wght.woff2",
+        SRC / "NotoSansDevanagari-VariableFont_wdth,wght.ttf",
         (400, 500, 600, 700, 900),
     ),
-    (VESPER / "VesperLibre-Regular.woff2", VESPER / "VesperLibre-Regular.ttf", (400,)),
-    (VESPER / "VesperLibre-Medium.woff2", VESPER / "VesperLibre-Medium.ttf", (500,)),
-    (VESPER / "VesperLibre-Bold.woff2", VESPER / "VesperLibre-Bold.ttf", (700,)),
-    (VESPER / "VesperLibre-Black.woff2", VESPER / "VesperLibre-Black.ttf", (900,)),
+    (GEN_VESPER / "VesperLibre-Regular.woff2", SRC / "VesperLibre-Regular.ttf", (400,)),
+    (GEN_VESPER / "VesperLibre-Medium.woff2", SRC / "VesperLibre-Medium.ttf", (500,)),
+    (GEN_VESPER / "VesperLibre-Bold.woff2", SRC / "VesperLibre-Bold.ttf", (700,)),
+    (GEN_VESPER / "VesperLibre-Black.woff2", SRC / "VesperLibre-Black.ttf", (900,)),
 ]
 
 # Chosen to exercise what actually breaks: stacked conjuncts, every matra class,

@@ -34,18 +34,33 @@ const buttonVariants = cva(
         // but several of these sit beside `h-10` inputs and inside `h-10` rows, so
         // it would nudge layouts nobody can review one by one.
         //
-        // What the guidelines actually size is the region that accepts the tap,
-        // not the region that gets painted. So the box stays 40 and an empty
-        // pseudo-element, centred and 44x44, carries the extra 2px on each edge.
-        // Pointer events on a pseudo-element hit its originating element, so the
-        // button gets the tap and nothing moves.
+        // What the guidelines actually size is the region that accepts the tap, not
+        // the region that gets painted. So the box stays 40 and an empty
+        // pseudo-element reaches 2px past every edge. Pointer events on a
+        // pseudo-element hit its originating element, so the button gets the tap and
+        // nothing moves.
         //
-        // Two things to know before reusing this: the parent must not clip (an
-        // `overflow-hidden` ancestor cuts the overflowing 2px back off), and two
-        // of these need >=4px between them or the 44px regions overlap and the
-        // boundary between them stops being predictable. Everywhere this is used
-        // today has `gap-2` or more.
-        icon: "relative h-10 w-10 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']",
+        // `-inset-[2px]`, NOT a fixed 44x44. A fixed size overflows by
+        // `(44 - box) / 2` per edge, which GROWS as a call site shrinks the box: 2px
+        // at 40, 4px at the `h-9 w-9` in ArchiveSearch, 6px at the `h-8 w-8` in
+        // DocumentPreviewDialog. Relative inset makes the overflow a constant 2px at
+        // every size, so the clearance a neighbour needs is a constant 4px instead of
+        // something you have to recompute per call site. The trade is that a call
+        // site which shrinks the box gets box+4 rather than 44 — which is the honest
+        // outcome: it opted out of 44 when it overrode the size.
+        //
+        // Two things to know before reusing this:
+        //
+        //   * The parent must not clip — an `overflow-hidden` ancestor cuts the
+        //     overflowing 2px straight back off.
+        //   * Two of these need >=4px of clearance, or one ring covers the other's
+        //     PAINTED pixels and a tap on a visible pixel activates the wrong
+        //     control. That is not hypothetical: with a fixed 44x44 ring and the two
+        //     zero-gap segmented controls in Cases.tsx and ArchiveSearch.tsx, the
+        //     last 2px and 4px of the left button activated the right one. Both now
+        //     carry `gap-1`, and tests/layout/asset-weight.test.ts asserts the two
+        //     containers keep it.
+        icon: "relative h-10 w-10 after:absolute after:-inset-[2px] after:content-['']",
         navCta: "font-button h-11 px-4",
         navSheet: "h-11 px-4",
         navMenuIcon: "h-11 w-11",
