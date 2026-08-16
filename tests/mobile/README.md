@@ -23,6 +23,15 @@ first — it has the device matrix, the budgets, and what emulation cannot catch
 | `verify-nav-fix.mjs` | Worked example of *proving a fix is causal*: injects only the proposed declaration and re-runs the failing assertion. |
 | `verify-report-fix.mjs` | Why `/report` overflows even though its file input already says `sr-only`: prints the **stylesheet source order** of `.sr-only` / `.h-10` / `.w-full`, then drops the conflicting utilities and re-measures. |
 
+> **Three of these expire.** `prove-nav-unreachable.mjs`, `verify-nav-fix.mjs` and
+> `verify-report-fix.mjs` hardcode the two specific defects the 2026-08-16 audit
+> found, so once those fixes land they prove nothing about the tree — they are kept
+> as **worked examples** of the two techniques that were actually hard here:
+> establishing that a control is unreachable *by every gesture a user has*, and
+> establishing that a proposed one-line fix is *causal* rather than coincidental.
+> Read them for the method; delete or rewrite them the day the method needs a new
+> subject. The reusable instruments are everything above them in the table.
+
 `probe.mjs` holds the shared in-page probe. Its comments record the
 false-positive rules that took two passes to get right — read them before
 changing a threshold:

@@ -451,6 +451,28 @@ than to width, which is what actually predicts the behaviour:
 @media (pointer: coarse) { .font-input { font-size: 1rem; } }
 ```
 
+✅ **Closed.** #327 took the modality route, gating the 14px density itself rather
+than overriding it back:
+
+```css
+@media (min-width: 640px) and (any-hover: hover) { .font-input { @apply text-sm; … } }
+```
+
+Measured on a build of that branch — `any-hover` is the discriminator, and it holds
+in both orientations:
+
+| viewport | `any-hover` | sub-16px fields on `/`, `/report`, `/data-quality` |
+| --- | --- | --- |
+| 360×640 touch | false | 0, 0, 0 |
+| **844×390** touch | false | **0, 0, 0** — iPhone 14 landscape |
+| **667×375** touch | false | **0, 0, 0** — iPhone SE landscape |
+| 1280×800 pointer | true | 4, 10, 2 — desktop density preserved |
+
+So `inputZoomIsKnown` **can** be deleted once #327 lands, and the staleness
+assertion will say so. That PR also fixed five fields that never used `.font-input`
+at all — two of them public, which is why `/data-quality` still zoomed after the
+first attempt.
+
 ### Tap target sizes
 
 Measured with WCAG 2.2 SC 2.5.8 (AA, 24×24) **including** its spacing and
