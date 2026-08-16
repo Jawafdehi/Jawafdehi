@@ -39,3 +39,97 @@ jobs:
         run: bun run build
         env:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+  # Phone viewports, which nothing has ever checked: playwright.config.ts had only
+  # Desktop Chrome projects, and `bun run e2e` never ran in CI at all. The audit
+  # that produced these gates found an unreachable mobile menu, two routes
+  # overflowing their viewport, and every form field small enough to make iOS
+  # Safari zoom on focus — none of which a desktop viewport can see.
+  # See docs/testing/mobile-and-responsive-testing.md.
+  phone-gates:
+    name: Phone gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Load cached node_modules
+        id: cached-dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-dependencies.outputs.cache-hit != 'true'
+        run: bun install
+
+      # Chromium only. The `mobile-*` projects pin `browserName: "chromium"`
+      # deliberately — `devices["iPhone 14"]` carries `defaultBrowserType: "webkit"`,
+      # and a project that inherits it launches WebKit, which needs a much larger
+      # dependency set. Real WebKit belongs in a separate, slower job.
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+
+      # The client build only: no pre-render, no sitemap, so this job never depends
+      # on the API being reachable. `vite preview` then serves dist/client with SPA
+      # fallback, so every route resolves.
+      #
+      # Know what this does and does not measure. `proxy` is declared under
+      # `server:` in vite.config.ts — that is the DEV-server proxy, and `vite
+      # preview` ignores it (there is no `preview.proxy`). Measured: /api/cases/
+      # answers 500 here. So the seven data-driven routes in ROUTES (/cases,
+      # /search, /entities, /materials, /courtcases, /data-quality, /updates) are
+      # gated with their fetches FAILING — i.e. in their error state, which is a
+      # different layout from an empty one and a different layout again from a
+      # populated one.
+      #
+      # That is a deliberate trade, not an oversight: these gates are about layout,
+      # reachability and field sizes, and every route that matters most to them
+      # (/report, /donate, /about, /faq, /team, the nav) is static content. Adding
+      # `preview.proxy` would cover the populated case and hand this job the same
+      # third-party dependency that makes `bun run build` flaky — see the process
+      # gap in docs/testing/mobile-audit-2026-08-16.md. Content-dependent overflow
+      # belongs in the Tier B sweep, which runs against a real origin.
+      - name: Build client
+        run: bunx vite build
+        env:
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: Serve the build
+        run: |
+          bunx vite preview --port 4173 --strictPort &
+          for _ in $(seq 1 60); do
+            curl -sf http://127.0.0.1:4173/ >/dev/null && exit 0
+            sleep 1
+          done
+          echo "::error::vite preview did not come up on :4173"
+          exit 1
+
+      - name: Run phone gates
+        run: >
+          bunx playwright test
+          --project=mobile-android
+          --project=mobile-ios
+          --project=mobile-floor
+          --project=mobile-short
+        env:
+          E2E_NO_WEBSERVER: '1'
+          E2E_BASE_URL: http://127.0.0.1:4173
+
+      # Every gate names the file and the fix in its failure message, but the
+      # screenshot is usually what makes a layout failure obvious.
+      - name: Upload the report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: phone-gates-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
