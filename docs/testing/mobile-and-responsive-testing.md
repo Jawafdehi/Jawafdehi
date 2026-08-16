@@ -334,6 +334,29 @@ MOBILE_GATES_STRICT=1 bunx playwright test --project=mobile-android
 Expect it to fail on every entry currently in `KNOWN_DEFECTS`, and read the
 messages — that is the evidence the gate measures what it claims.
 
+### The other failure mode: an exemption that outlived its bug
+
+Strict mode proves a gate bites *today*. It says nothing about the slower, quieter
+failure: a fix lands, nobody trims its `KNOWN_DEFECTS` entry, and because every
+allowance is an upper bound the run stays **green** — on a route that now has no
+gate at all. Nothing goes red, so nothing tells you.
+
+So each entry asserts its own defect still reproduces. Fix the bug and leave the
+entry, and the run fails with `... is STALE: ... Delete the entry`. That turns
+each exemption from a standing waiver into a measured claim, and it is why the
+overflow entries carry `presentAt` — the widths where the bug was actually seen:
+
+```ts
+"/donate": { maxPx: 95, presentAt: [320, 360, 390] },   // and NOT 640: it fits there
+```
+
+Listing a width where the bug never happened would fail the staleness check on a
+route that was always fine, so `presentAt` has to be measured, not guessed.
+
+This is also what keeps `main` safe when fixes land as separate PRs: CI runs on
+`refs/pull/N/merge`, so the PR whose merge would strand an entry goes red on its
+own branch first.
+
 ### Still open
 
 1. **Delete `test.yml`.** It duplicates `ci.yml` minus the test step, so its name

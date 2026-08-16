@@ -147,14 +147,24 @@ const main = async () => {
   const bandTop = (await page.evaluate(STATS)).docTop;
   console.log(`\nstats band sits at document y=${bandTop} (viewport is ${H}px tall) -> ${bandTop > H ? "BELOW the fold" : "above the fold"}`);
 
+  // STATS returns `{ found: false }` — no `cells`, no `docTop` — when the band is
+  // absent, which is exactly what happens if the markup is renamed. Say so instead
+  // of dying on `undefined.map`, so a rename reads as "subject gone", not a crash.
+  if (bandTop === undefined) {
+    console.error(`\nFATAL: no .font-stat-value band on ${BASE}/ — the subject of this harness is gone.\n` +
+      `Either the home page no longer renders the hero stats, or the class names moved.`);
+    await browser.close();
+    process.exit(2);
+  }
+
   const frames = [];
   let y = 0;
   for (let i = 0; i < 14 && y < bandTop + 400; i++) {
     await touchFlick(cdp, W, H);
     await page.waitForTimeout(260);
     const s = await page.evaluate(STATS);
-    y = s.scrollY;
-    frames.push({ scrollY: s.scrollY, bandTop: s.band && s.band.top, values: s.cells.map((c) => c.value) });
+    y = s.scrollY ?? y;
+    frames.push({ scrollY: s.scrollY, bandTop: s.band && s.band.top, values: (s.cells || []).map((c) => c.value) });
     if (s.band && s.band.top < H && s.band.top + s.band.h > 0) {
       await snap(`band-visible-scroll${s.scrollY}`);
     }

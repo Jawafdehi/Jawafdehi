@@ -53,7 +53,17 @@ const run = async (browser, withFix) => {
 
   const before = await probe(page);
   const cdp = await ctx.newCDPSession(page);
-  await cdp.send("Input.synthesizeScrollGesture", { x: 180, y: 450, xDistance: 0, yDistance: -500, gestureSourceType: "touch", speed: 800 }).catch(() => {});
+  // ⚠️ `Input.synthesizeScrollGesture` with `gestureSourceType: "touch"` is a
+  // SILENT NO-OP in this headless build — measured at 0px, where the same call
+  // with the default source moves 400. It used to be here, which meant the
+  // `withFix` arm could look non-causal purely because nothing scrolled. Drive
+  // the touch points directly instead, exactly as prove-nav-unreachable.mjs does.
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 180, y: 500 }] }).catch(() => {});
+  for (let k = 1; k <= 8; k++) {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 180, y: 500 - k * 45 }] }).catch(() => {});
+    await page.waitForTimeout(16);
+  }
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }).catch(() => {});
   await page.waitForTimeout(700);
   const afterScroll = await probe(page);
 

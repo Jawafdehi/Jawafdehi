@@ -61,6 +61,9 @@ const main = async () => {
     await ctx.close();
   }
   await browser.close();
+  // Every other script in this directory creates its output dir first; this one
+  // did not, so a clean checkout lost the whole run to ENOENT on the last line.
+  await fs.mkdir("test-results/mobile", { recursive: true });
   await fs.writeFile("test-results/mobile/lcp-images.json", JSON.stringify(out, null, 2));
 };
 main();

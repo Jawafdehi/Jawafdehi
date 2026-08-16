@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 //
 // Phone gates. Runs under the four `mobile-*` projects in playwright.config.ts,
-// so every check below executes at 360x640, 390x844, 320x568 and 640x360.
+// so every check below executes at 360x640, 390x664, 320x568 and 640x360.
+// (390x664, not 390x844: the iPhone 14's 844 is a SCREEN height. Playwright's
+// descriptor already nets out browser chrome, and testing 844 would be testing a
+// viewport nobody has.)
 //
 // These are RATCHET gates, not aspirations: each one is green on the tree that
 // introduced it, with today's known defects listed explicitly in
-// `KNOWN_DEFECTS` below. A new regression fails immediately; an existing defect
-// fails only once someone deletes its entry — which is what fixing it should do.
+// `KNOWN_DEFECTS` below. A new regression fails immediately. An existing defect
+// is exempt while its entry is present — and the entry itself is checked, so
+// fixing the bug without deleting the entry fails too, which is what stops a
+// stale exemption from silently un-gating a route.
 //
 // Why each gate exists (all four were measured on production, 2026-08-16 — see
 // docs/testing/mobile-audit-2026-08-16.md):
@@ -41,31 +46,61 @@ const ROUTES = [
 ];
 
 // Defects present when these gates were written. Delete an entry when the
-// underlying bug is fixed — leaving a stale entry silently un-gates a route.
+// underlying bug is fixed.
 //
-// Every allowance is an upper bound (`toBeLessThanOrEqual`), so fixing a defect
-// without removing its entry leaves the run GREEN, not red. That is deliberate —
-// the fixes for these land in separate PRs and merge order should not matter — but
-// it does mean a stale entry is invisible. When a fix merges, trim its line.
+// Every allowance is an upper bound (`toBeLessThanOrEqual`), so a fix that lands
+// without its entry being trimmed would leave the run GREEN — silently un-gating
+// the route, permanently. The upper bound is deliberate (these fixes land in
+// separate PRs and merge order should not matter), so instead of relying on
+// somebody remembering, **every entry also asserts the defect still reproduces**.
+// Fix the bug and leave the entry, and the run goes RED telling you to delete it.
+//
+// That makes each entry a measured claim rather than a standing exemption, and it
+// keeps `main` safe: CI runs on `refs/pull/N/merge`, so the PR that would strand a
+// stale entry goes red on its own branch, before it can land.
+//
+// `presentAt` is the set of viewport widths where the defect was MEASURED on
+// `main` — it is not decoration. /donate does not overflow at 640px, so claiming
+// it there would fail the staleness check on a bug that was never present.
 //
 // `MOBILE_GATES_STRICT=1` drops every allowance. That is how you check these
 // gates still BITE: with it set, the run MUST fail on /report, /donate, the
 // mobile nav and the sub-16px fields. A strict run that passes means a gate has
 // gone vacuous — the allowlist is not the only thing that can silence it.
 const STRICT = process.env.MOBILE_GATES_STRICT === "1";
+
+type OverflowAllowance = {
+  /** Upper bound in CSS px, across every viewport this spec drives. */
+  maxPx: number;
+  /** Widths where the overflow was measured > 0 on `main`, 2026-08-16. */
+  presentAt: number[];
+};
+
 const KNOWN_DEFECTS = STRICT
-  ? { overflow: {} as Record<string, number>, unreachableOverlays: [] as string[], inputZoomIsKnown: false }
+  ? { overflow: {} as Record<string, OverflowAllowance>, unreachableOverlays: [] as string[], inputZoomIsKnown: false }
   : {
-      // route -> max tolerated horizontal overflow in CSS px, per the 2026-08-16 audit
       overflow: {
-        "/report": 105, // input#evidence: `sr-only` loses to the Input base's w-full/h-10 (later in the stylesheet). 65px on phones, 102px on iPad portrait
-        "/donate": 95, // a whitespace-nowrap PayPal CTA sets a 350px min-content floor: 94px at 320w
-      } as Record<string, number>,
+        // input#evidence: `sr-only` loses to the Input base's w-full/h-10, which
+        // Tailwind emits later in the stylesheet. 65px at 320/360/390, 73px at
+        // 640. The bound also covers the 102px this reproduces at on iPad
+        // portrait, which tests/mobile/audit.mjs drives and this spec does not.
+        "/report": { maxPx: 105, presentAt: [320, 360, 390, 640] },
+        // A whitespace-nowrap PayPal CTA sets a 350px min-content floor:
+        // 94px at 320w, 55px at 360w, 24px at 390w — and 0 at 640w, where the
+        // CTA finally fits, so 640 is deliberately absent.
+        "/donate": { maxPx: 95, presentAt: [320, 360, 390] },
+      } as Record<string, OverflowAllowance>,
       // Overlays whose content cannot currently be scrolled to. See sheet.tsx:39,41.
       unreachableOverlays: ["mobile-nav"],
       // Every form field inherits .font-input -> text-sm (14px). One fix unblocks all.
       inputZoomIsKnown: true,
     };
+
+/** Message for an allowance that outlived the bug it was written for. */
+const stale = (entry: string, what: string) =>
+  `${entry} is STALE: ${what}. The bug it exempts is fixed, so the entry now ` +
+  `exempts nothing and would keep this gate green forever. ` +
+  `Delete the entry from KNOWN_DEFECTS in this file.`;
 
 /** Deny analytics before first paint so no beacon fires and the banner never masks the fold. */
 async function denyAnalytics(page: Page) {
@@ -124,13 +159,20 @@ test.describe("phone layout", () => {
         return { inner, sw, requested, overflow: Math.max(0, sw - requested), offenders };
       }, want);
 
-      const tolerated = KNOWN_DEFECTS.overflow[route] ?? 0;
+      const allow = KNOWN_DEFECTS.overflow[route];
       expect(
         m.overflow,
         `${route} overflows its ${want}px viewport by ${m.overflow}px ` +
           `(innerWidth reported ${m.inner} — Chromium zoomed out to hide it). ` +
           `Offenders: ${JSON.stringify(m.offenders)}`,
-      ).toBeLessThanOrEqual(tolerated);
+      ).toBeLessThanOrEqual(allow?.maxPx ?? 0);
+
+      if (allow?.presentAt.includes(want)) {
+        expect(
+          m.overflow,
+          stale(`KNOWN_DEFECTS.overflow["${route}"]`, `${route} no longer overflows at ${want}px`),
+        ).toBeGreaterThan(0);
+      }
     });
   }
 
@@ -144,7 +186,9 @@ test.describe("phone layout", () => {
       await settle(page, route);
       const inner = await page.evaluate(() => window.innerWidth);
       const pct = Math.round(((inner - want) / want) * 100);
-      const tolerated = KNOWN_DEFECTS.overflow[route] ? 35 : 0;
+      // Only the widths where the overflow actually reproduces get the allowance:
+      // /donate fits at 640px, so it must not be zoomed out there either.
+      const tolerated = KNOWN_DEFECTS.overflow[route]?.presentAt.includes(want) ? 35 : 0;
       expect(
         pct,
         `${route} renders ${pct}% zoomed out at ${want}px (innerWidth ${inner}): ` +
@@ -165,35 +209,73 @@ test.describe("phone reachability", () => {
     const m = await page.evaluate(() => {
       const panel = document.querySelector('[role="dialog"]');
       if (!panel) return null;
-      const cs = getComputedStyle(panel);
-      const scrolls =
-        /(auto|scroll)/.test(cs.overflowY) && panel.scrollHeight > panel.clientHeight + 1;
-      const items = Array.from(panel.querySelectorAll("a[href],button")).filter(
-        (e) => e.getBoundingClientRect().height > 0,
-      );
-      const out = items
-        .map((e) => {
-          const r = e.getBoundingClientRect();
-          return {
-            label: (e.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40),
-            below: r.top > window.innerHeight,
-          };
-        })
-        .filter((i) => i.below);
-      return { scrolls, contentH: panel.scrollHeight, panelH: panel.clientHeight, unreachable: out };
+
+      // Reachability is per-control, not per-panel. Asking only whether the
+      // PANEL scrolls fails the correct fix: putting the scrollport on a wrapper
+      // INSIDE the panel is better design — it keeps the close button pinned
+      // instead of scrolling it away — and leaves the panel itself
+      // `overflow-y: visible`. So walk each control's ancestors up to and
+      // including the panel and ask whether anything can scroll it into view.
+      const scrollableTo = (el: Element) => {
+        for (let n: Element | null = el.parentElement; n; n = n.parentElement) {
+          const cs = getComputedStyle(n);
+          if (/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 1) return true;
+          if (n === panel) break;
+        }
+        return false;
+      };
+
+      const panelScrolls =
+        /(auto|scroll)/.test(getComputedStyle(panel).overflowY) &&
+        panel.scrollHeight > panel.clientHeight + 1;
+      const scrollports = [panel, ...Array.from(panel.querySelectorAll("*"))].filter((n) => {
+        const cs = getComputedStyle(n);
+        return /(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 1;
+      }).length;
+
+      const out = Array.from(panel.querySelectorAll("a[href],button"))
+        .filter((e) => e.getBoundingClientRect().height > 0)
+        .map((e) => ({
+          label: (e.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40),
+          below: e.getBoundingClientRect().top > window.innerHeight,
+          rescuable: scrollableTo(e),
+        }))
+        .filter((i) => i.below && !i.rescuable);
+
+      return {
+        panelScrolls,
+        scrollports,
+        contentH: panel.scrollHeight,
+        panelH: panel.clientHeight,
+        unreachable: out,
+      };
     });
 
     expect(m, "mobile nav did not open").not.toBeNull();
-    // Content taller than the panel is fine — as long as the panel scrolls.
-    const broken = !m!.scrolls && m!.unreachable.length > 0;
+    // Content taller than the viewport is fine — as long as SOMETHING can scroll
+    // each control into view.
+    const broken = m!.unreachable.length > 0;
     const known = KNOWN_DEFECTS.unreachableOverlays.includes("mobile-nav");
     expect(
       broken && !known,
-      `${m!.unreachable.length} nav items sit below the fold in a panel that does not ` +
-        `scroll (content ${m!.contentH}px in a ${m!.panelH}px panel, overflow-y not auto/scroll). ` +
+      `${m!.unreachable.length} nav items sit below the fold with no scrollable ancestor ` +
+        `inside the sheet (content ${m!.contentH}px in a ${m!.panelH}px panel, ` +
+        `${m!.scrollports} scrollports found, panel itself scrolls=${m!.panelScrolls}). ` +
         `Unreachable: ${m!.unreachable.map((i) => i.label).join(", ")}. ` +
-        `Fix: add \`overflow-y-auto overscroll-contain\` to sheetVariants in src/components/ui/sheet.tsx.`,
+        `Fix: give the sheet's content wrapper \`overflow-y-auto overscroll-contain\` ` +
+        `in src/components/ui/sheet.tsx.`,
     ).toBe(false);
+
+    if (known) {
+      expect(
+        broken,
+        stale(
+          `KNOWN_DEFECTS.unreachableOverlays "mobile-nav"`,
+          `every control is now reachable (${m!.scrollports} scrollport(s) inside the sheet, ` +
+            `content ${m!.contentH}px in a ${m!.panelH}px panel)`,
+        ),
+      ).toBe(true);
+    }
   });
 
   // Any dialog/sheet, not just the nav: content outside the viewport with no
@@ -241,7 +323,7 @@ test.describe("phone input ergonomics", () => {
   for (const route of ["/", "/report", "/feedback"]) {
     test(`form fields are >=16px so iOS does not zoom on focus: ${route}`, async ({ page }) => {
       await settle(page, route);
-      const small = await page.evaluate(() =>
+      const fields = await page.evaluate(() =>
         Array.from(document.querySelectorAll("input:not([type=hidden]), select, textarea"))
           .filter((el) => {
             const r = el.getBoundingClientRect();
@@ -250,15 +332,32 @@ test.describe("phone input ergonomics", () => {
           .map((el) => ({
             id: el.id || el.getAttribute("name") || el.tagName.toLowerCase(),
             fontSize: parseFloat(getComputedStyle(el).fontSize),
-          }))
-          .filter((f) => f.fontSize < 16),
+          })),
       );
-      if (KNOWN_DEFECTS.inputZoomIsKnown && small.length) {
-        test.info().annotations.push({
-          type: "known-defect",
-          description: `${small.length} sub-16px fields on ${route}: fix .font-input in src/styles/typography.css`,
-        });
-        return;
+      const small = fields.filter((f) => f.fontSize < 16);
+      if (KNOWN_DEFECTS.inputZoomIsKnown) {
+        if (small.length) {
+          test.info().annotations.push({
+            type: "known-defect",
+            description: `${small.length} sub-16px fields on ${route}: fix .font-input in src/styles/typography.css`,
+          });
+          return;
+        }
+        // No sub-16px fields. Either the defect is fixed and this exemption should
+        // go, or the route rendered no fields at all — in which case it is no
+        // evidence either way, so say so rather than declaring the entry stale.
+        expect(
+          fields.length,
+          `${route} rendered no visible form fields, so it cannot tell you whether ` +
+            `the sub-16px defect is fixed. Pick a route that has fields.`,
+        ).toBeGreaterThan(0);
+        expect(
+          small.length,
+          stale(
+            "KNOWN_DEFECTS.inputZoomIsKnown",
+            `all ${fields.length} fields on ${route} are >=16px`,
+          ),
+        ).toBeGreaterThan(0);
       }
       expect(
         small,

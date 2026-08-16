@@ -91,27 +91,38 @@ has never seen it.
 
 Injecting only `overflow-y: auto; overscroll-behavior: contain` onto the panel
 flips the outcome: `.click()` on Donate succeeds and navigates to `/donate`.
-
-```diff
---- a/src/components/ui/sheet.tsx
-+++ b/src/components/ui/sheet.tsx
-@@ -36,10 +36,10 @@ const sheetVariants = cva(
--        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top …",
--        bottom:
--          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom …",
--        left: "inset-y-0 left-0 h-full w-3/4 border-r … sm:max-w-sm",
--        right:
--          "inset-y-0 right-0 h-full w-3/4  border-l … sm:max-w-sm",
-+        top: "inset-x-0 top-0 max-h-full overflow-y-auto overscroll-contain border-b …",
-+        bottom:
-+          "inset-x-0 bottom-0 max-h-full overflow-y-auto overscroll-contain border-t …",
-+        left: "inset-y-0 left-0 h-full w-3/4 overflow-y-auto overscroll-contain border-r … sm:max-w-sm",
-+        right:
-+          "inset-y-0 right-0 h-full w-3/4 overflow-y-auto overscroll-contain border-l … sm:max-w-sm",
-```
-
 `overscroll-contain` stops the scroll chaining to the locked body. This is a
 shadcn/ui upstream default, so **any** other `Sheet` in the app has it too.
+
+**What shipped is not that, and the difference matters.** Making the *panel* the
+scrollport puts the `absolute` close button inside the scrollable overflow region,
+so it scrolls away with the content — measured at 248px above the viewport by the
+time Donate was reachable, i.e. exactly when a user most wants to close the menu.
+So PR #325 puts the scrollport on a wrapper **inside** the panel instead:
+
+```diff
+-        {children}
++        <div className="min-h-0 flex-auto overflow-y-auto overscroll-contain">{children}</div>
+```
+
+with `flex flex-col` on the panel (and `max-h-full` on the `top`/`bottom`
+variants, which have no height constraint of their own). `flex-auto` rather than
+`flex-1`, because `flex-1` sets `flex-basis: 0%` and collapses a content-sized
+panel to nothing; `min-h-0` is what allows it to shrink below its content and so
+actually scroll.
+
+Verified on a build of that change: one scrollport inside the sheet, 864px of
+content in a 528px port at 320×568, and Donate clicks through to `/donate` at both
+320×568 and 360×640.
+
+⚠️ **The gate had to change with it, and this is the reusable lesson.** The first
+version of the reachability gate asked *"does the panel scroll?"* — which is
+**false on the correct fix**, because the panel is deliberately left
+`overflow-y: visible`. A gate phrased as "is the fix I imagined present?" fails a
+better fix. The gate now asks the question the user cares about: for each control
+below the fold, is there **any** scrollable ancestor inside the sheet that can
+bring it into view. That passes the inner-wrapper design, still fails `main`, and
+would pass a panel-level fix too.
 
 ---
 
@@ -421,6 +432,23 @@ One line fixes all 20, keeping desktop density:
 +  /* 16px on phones: iOS Safari zooms the page when a focused field is <16px. */
 +  @apply text-base font-normal text-foreground sm:text-sm;
  }
+```
+
+⚠️ **That fix is incomplete at `sm:` and up, and the gate says so.** `sm` is
+640px, so a **landscape phone** — `mobile-short`, 640×360, a real iPhone
+orientation — gets `text-sm` back and still zooms on focus: iOS keys the zoom on
+font-size, not on orientation. Measured against a build carrying the fix, the
+input gate goes green on 3 of 4 projects and stays red-worthy on `mobile-short`,
+where all fields are still 14px.
+
+Consequence for merge order: `KNOWN_DEFECTS.inputZoomIsKnown` **cannot be deleted**
+on the strength of the `sm:` fix alone — deleting it would put `mobile-short` red.
+Either raise the breakpoint (`md:`, 768px) or key it to the input modality rather
+than to width, which is what actually predicts the behaviour:
+
+```css
+/* zoom-on-focus is a touch-keyboard behaviour, not a narrow-screen one */
+@media (pointer: coarse) { .font-input { font-size: 1rem; } }
 ```
 
 ### Tap target sizes
