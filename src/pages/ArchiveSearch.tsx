@@ -367,7 +367,7 @@ export default function ArchiveSearch({
             </div>
             <div
               aria-label={t("archiveSearch.viewMode", "View mode")}
-              className="flex items-center rounded-full border p-0.5"
+              className="flex items-center gap-1 rounded-full border p-0.5"
               role="group"
             >
               {/* Card first, then list — the toggle reads in the same order as

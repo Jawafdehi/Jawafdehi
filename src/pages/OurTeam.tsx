@@ -78,6 +78,21 @@ const OurTeam = () => {
                         <img
                           src={member.thumb}
                           alt={member.displayName.en}
+                          // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio
+                          // the phone gates run at — so 504 is the ceiling the
+                          // generated avatars are sized to, capped at whatever the
+                          // source actually has (9 of the 22 are smaller).
+                          //
+                          // The attributes do NOT prevent a reflow here: `h-28 w-28`
+                          // already fixes the box at 112x112 before the image loads,
+                          // measured. They are the declared intrinsic size and the
+                          // aspect ratio, which is worth stating for its own sake —
+                          // but the reflow argument belongs to data-sources.tsx,
+                          // where `w-auto` leaves the width to the aspect ratio.
+                          width={504}
+                          height={504}
+                          loading="lazy"
+                          decoding="async"
                           className="h-28 w-28 rounded-full object-cover ring-4 ring-background shadow-md"
                         />
                       ) : (

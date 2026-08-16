@@ -3,8 +3,16 @@ name: CI
 on:
   push:
     branches: ['main*', 'develop*']
+  # No branch filter, deliberately. test.yml used to run lint + build on every
+  # push and every pull_request regardless of base, and this workflow only
+  # covered main*/develop* — so deleting test.yml without widening this would
+  # have left a PR against any other base with no checks at all.
+  #
+  # Pushes stay scoped to main*/develop*: a branch with no PR open is not a merge
+  # candidate, so the coverage that matters is the pull_request one. Keeping the
+  # push filter narrow also matters now that the phone-gates job has landed — it
+  # adds ~4 minutes, a browser download and a second build to every run.
   pull_request:
-    branches: ['main*', 'develop*']
 
 jobs:
   test-and-lint:

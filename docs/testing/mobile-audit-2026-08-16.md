@@ -49,7 +49,7 @@ match the fixed tree. What changed afterwards:
 | S5 — touch ergonomics (sub-44 px targets) | **open** |
 | S5b — hero stats render as empty spans | **fixed**, `#326` |
 | S5c — content reads through the sticky header | **fixed**, `#329` |
-| S6 — reading and density (14 px fields, unscaled padding) | field size **fixed**, `#327`; padding **open** |
+| S6 — reading and density (14 px fields, unscaled padding) | field size **fixed**, `#327`; padding premise **corrected**, `#330` |
 
 `2ac392b` therefore stays useful rather than becoming obsolete: it is the known-bad
 tree the phone gates are proven against, because it still reproduces all four gated
@@ -390,10 +390,23 @@ used beats both. Three changes, in value order:
 | **total JS** | **746.4 KB** | **2 558.7 KB** | |
 
 Vendors are split but the app chunk is not — 535 KB reaches every route,
-including `/privacy`. `markdown-*.js` (102 KB) loads on the **home page**, which
-renders no Markdown. Route-level `lazy()` boundaries and moving the Markdown
-editor/preview behind one would cut the critical path materially.
-`bun run analyze` already produces the treemap.
+including `/privacy`. `bun run analyze` already produces the treemap.
+
+⚠️ **CORRECTED.** This paragraph originally said `markdown-*.js` "loads on the
+**home page**, which renders no Markdown", which contradicted the note at the end
+of the LCP section above and was the wrong half of the contradiction. **The home
+page does render Markdown:** `src/pages/Index.tsx:235` renders `<Faq />` →
+`src/components/home/faq.tsx` → `src/components/FaqSection.tsx:107`, which puts
+every FAQ answer through `<Markdown>`. The chunk is on the critical path because
+the route needs it.
+
+And `rehype-raw` — the heaviest thing in that stack — is genuinely used by
+`src/components/case-detail/case-overview-section.tsx` on the pre-rendered
+`/case/:id`, which `vite.config.ts:217` already documents must stay an eager
+import. `src/routes.tsx` states the split policy in full: every pre-rendered route
+eager, everything else already `lazy()`. So there is no safe chunk-splitting win
+here, and `#330` deliberately made no change. The remaining lever is the 535 KB
+app chunk itself, not the markdown split.
 
 ---
 
@@ -732,10 +745,35 @@ Measured from full-page screenshot heights ÷ DPR, at 360 px wide:
 | `/cases` | 8 300 | 13.0 |
 | *median of 23 routes* | | **7.0** |
 
-Driver: **91** occurrences of `py-10`…`py-24` (64–96 px) with **no** responsive
-prefix, against 48 that do scale (`md:py-*`). Ten sections at an unscaled `py-16`
-is 1 280 px — two full phone screens of padding. Pattern to apply, which the
-codebase already uses in places: `py-8 md:py-16`.
+⚠️ **CORRECTED.** This section originally said the driver was "**91** occurrences
+of `py-10`…`py-24` with **no** responsive prefix, against 48 that do scale". That
+is wrong, by about 8×, and the mechanism is worth knowing: **a `\bpy-12\b` grep
+also matches inside `md:py-12`, because `:` is a word boundary.** The 91 and the 48
+were the same set counted twice.
+
+Re-derived by resolving each hit to its enclosing string literal:
+
+| | count |
+| --- | --- |
+| bare `py-10`…`py-32` occurrences | **40** |
+| `(sm\|md\|lg\|xl):py-N` occurrences | **50** |
+| sum — what a `\bpy-N\b` grep reports | 90 |
+| of the 40 bare, sharing a className with a responsive `py-*` | **29** |
+| genuinely unscaled | **11** |
+| …of those, empty-state placeholders (4 admin-only) | 6 |
+| …inside a commented-out JSX block | 1 |
+| **rendered public sections** | **3** |
+
+Across *all* spacing properties (`py`, `space-y`, `gap`, `mb`, `mt` ≥ 10) the
+unscaled total is 45 sites, mostly one-off margins rather than repeated section
+padding.
+
+So **page length on this site is content, not padding.**
+`/research/corruption-accountability` is a long-form article and legitimately long.
+The three rendered public sections, plus a `space-y-16` and three `mt-10` on the
+research page, were scaled in `#330` — worth **−60 px each** on `/data-quality`
+and `/faq`, which is the honest size of this item. Pattern where it does apply:
+`py-8 md:py-16`.
 
 ### Devanagari below 12 px
 
@@ -837,9 +875,9 @@ shrink-to-fit, which is how the `/report` and `/donate` overflow surfaced at all
 | 2 | `.font-input` → `text-base sm:text-sm` | 1 line | kills iOS focus-zoom on all 20 fields |
 | 3 | `AnimatedCount` at the 3 `CountUp` sites | small | 3 hero figures stop shipping blank for ~6 s, and never show a false `0` |
 | 4 | **Subset + WOFF2** the Devanagari font, *then* preload | medium | the only lever measured to reduce the 912 KB that bounds home LCP — preload alone moved LCP 0.1% |
-| 5 | Resize `/team` avatars, `placeholder.png`, `favicon.png`; add `srcset` + `loading=lazy` | small | `/team` 5.67 MB → <1 MB |
+| 5 | ~~Resize `/team` avatars, `placeholder.png`, `favicon.png`; add `loading=lazy`~~ — **done in `#330`**; all 22 avatars now repo-hosted | small | `/team` images 4.39 MB → 303 KB |
 | 6 | Plain `<input>` for the hidden file field; wrap the donate CTA | 2 lines | removes 11–29% page zoom-out on 2 routes |
-| 7 | `icon` → `h-11 w-11`; footer links `min-h-11` | small | clears most sub-44 px targets |
-| 8 | Split the 535 KB app chunk (see the `vite.config.ts:217` pre-render constraint before touching the markdown chunk) | medium | TBT 900 ms → target <300 ms |
-| 9 | `py-8 md:py-16` sweep across the 91 unscaled paddings | medium | roughly halves phone page length |
+| 7 | ~~`icon` → `h-11 w-11`; footer links `min-h-11`~~ — **done in `#330`**, via a 2 px tap ring rather than a bigger box | small | clears most sub-44 px targets |
+| 8 | Split the 535 KB app chunk — **not the markdown chunk**, which `/` and the pre-rendered `/case/:id` both genuinely need (see the correction in S3) | medium | TBT 900 ms → target <300 ms |
+| 9 | ~~`py-8 md:py-16` sweep across the 91 unscaled paddings~~ — **premise corrected: 3 rendered public sections, not 91; done in `#330`** | small | −60 px on 2 routes, not "halves" |
 | 10 | ~~Run the `mobile-*` Playwright projects in CI~~ — **done, `ci.yml` `phone-gates`** | small | stops all of the above regressing |
