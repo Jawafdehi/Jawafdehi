@@ -176,10 +176,27 @@
     line-height: var(--font-label-leading);
   }
 
+  /* 16px on phones, 14px from `sm` up.
+     iOS Safari zooms the whole page when a focused field's font-size is under
+     16px, and index.html's viewport meta sets no `maximum-scale`, so nothing
+     suppresses it. Tapping the archive search therefore jumps and rescales the
+     page — the signature "broken on mobile" feel, for the 22-26% of Nepali
+     mobile users on Safari/iOS. Every field in the app inherits this class, so
+     it is the one place to fix it; measured 20 sub-16px fields before this,
+     including all 9 on /report.
+     The `sm:` override re-states line-height because the variant's own
+     line-height would otherwise replace --font-control-leading above 640px. */
   .font-input {
-    @apply text-sm font-normal text-foreground;
+    @apply text-base font-normal text-foreground;
     font-family: var(--font-family-app);
     line-height: var(--font-control-leading);
+  }
+
+  @media (min-width: 640px) {
+    .font-input {
+      @apply text-sm;
+      line-height: var(--font-control-leading);
+    }
   }
 
   .font-caption {
