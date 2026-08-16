@@ -43,6 +43,11 @@ const ROUTES = [
 // Defects present when these gates were written. Delete an entry when the
 // underlying bug is fixed — leaving a stale entry silently un-gates a route.
 //
+// Every allowance is an upper bound (`toBeLessThanOrEqual`), so fixing a defect
+// without removing its entry leaves the run GREEN, not red. That is deliberate —
+// the fixes for these land in separate PRs and merge order should not matter — but
+// it does mean a stale entry is invisible. When a fix merges, trim its line.
+//
 // `MOBILE_GATES_STRICT=1` drops every allowance. That is how you check these
 // gates still BITE: with it set, the run MUST fail on /report, /donate, the
 // mobile nav and the sub-16px fields. A strict run that passes means a gate has

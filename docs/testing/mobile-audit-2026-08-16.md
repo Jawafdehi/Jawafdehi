@@ -268,8 +268,46 @@ pre-rendered text paints early; LCP lands at 8.0 s because the **327 KB
 Devanagari font arrives at 4 487 ms and `font-display: swap` re-renders the
 text**, registering a new, later LCP candidate.
 
-So the font *is* the home LCP. Preloading and shrinking it is the single highest-
-value performance change available.
+So the font *is* the home LCP.
+
+### ⚠️ …but preloading it does **not** fix that. Measured, A/B.
+
+The obvious conclusion from the paragraph above is "preload the font". That was
+this document's recommendation, and it is wrong. Tested by building both trees and
+serving each from a local server that brotlis exactly what Cloudflare does (the
+font at **273 KB** on the wire), Slow 4G + 4× CPU, 3 runs, medians:
+
+| | FCP | **LCP** | font requested | font arrives | LCP candidates |
+| --- | --- | --- | --- | --- | --- |
+| no preload | 1 148 ms | **6 120 ms** | 1 002 ms (by CSS) | 4 773 ms | 2 |
+| `<link rel=preload>` | 1 404 ms | **6 112 ms** | **185 ms** (by link) | 4 558 ms | 2 |
+
+The preload does exactly what it says — the request moves from 1 002 ms to 185 ms,
+and `initiatorType` changes from `css` to `link`. **LCP does not move** (0.1%), and
+**FCP gets ~250 ms worse**.
+
+The reason is that LCP here is bound by *total bytes on a saturated link*, not by
+discovery order. Home ships **912 KB** of JS + CSS + font (brotli'd), and at
+1.6 Mbit/s that is ~4.6 s of pure transfer. Requesting the font earlier does not
+make it smaller — it just makes it compete with the CSS and JS that FCP needs,
+which is why FCP regressed. One run of three did land the ideal outcome (font in
+at 1 648 ms, a single LCP candidate, LCP == FCP), but that depends on winning a
+bandwidth race, not on the preload.
+
+⇒ **Shrink first, preload second.** A preload is worth adding *after* the face is
+subset, when it is small enough not to displace anything. Adding it now is not a
+performance improvement, and this document previously implied it was.
+
+Two follow-on corrections from the same measurement:
+
+- The home page does **not** load the four Vesper Libre faces — fonts are only
+  fetched when rendered text actually uses them. Their 348 KB is a cost on the
+  pages that use them, not on `/`.
+- `markdown-*.js` **is** on the home critical path (83.5 KB brotli'd, via
+  `modulepreload`), but making it lazy is not free: `vite.config.ts:217-223`
+  documents that the markdown stack must stay an **eager** import because
+  CaseDetail is pre-rendered, and a `lazy()` boundary would pre-render as the
+  Suspense fallback and ship empty HTML. Any fix has to respect that.
 
 ### Fonts: 660 KB of brotli'd TTF, unsubsetted, unpreloaded
 
@@ -289,15 +327,22 @@ Cloudflare does brotli the TTFs, so this is **not** the 1.3 MB the repo suggests
 beats brotli'd TTF by a further 10–30%, and subsetting to the codepoints actually
 used beats both. Three changes, in value order:
 
-1. **Preload the Devanagari face** — nothing else moves home LCP as much:
+1. **Convert all 5 TTFs to WOFF2 and subset them** (Devanagari + Latin + the
+   digits and punctuation used) — `fonttools`/`pyftsubset` in the build. This is
+   the only one of the three that reduces bytes, and bytes are what bound LCP
+   here. ⚠️ Verify glyph coverage across **both** locales before shipping: a
+   too-aggressive subset shows tofu in Nepali rather than falling back
+   gracefully.
+2. **Drop unused Vesper weights.** Four static faces ship; the `display` stack
+   uses far fewer. One variable WOFF2 would replace all four. This is a cost on
+   the pages that use Vesper — not on `/`, which does not load it at all.
+3. **Then** preload the subset Devanagari face:
    ```html
    <link rel="preload" href="/font/Noto_Sans_Devanagari/NotoSansDevanagari.woff2"
          as="font" type="font/woff2" crossorigin>
    ```
-2. **Convert all 5 TTFs to WOFF2** and subset (Devanagari + Latin + the digits
-   and punctuation used). `fonttools`/`pyftsubset` in the build.
-3. **Drop unused Vesper weights.** Four static faces ship; the `display` stack
-   uses far fewer. One variable WOFF2 would replace all four.
+   In that order. Preloading the 273 KB face on its own was measured above as no
+   LCP improvement and a small FCP regression.
 
 ### JS: one 535 KB chunk
 
@@ -671,9 +716,15 @@ shrink-to-fit, which is how the `/report` and `/donate` overflow surfaced at all
 
 1. **`playwright.config.ts` had only `Desktop Chrome` projects** — zero mobile
    viewport coverage. Fixed in this branch: four `mobile-*` projects.
-2. **Playwright never ran in CI.** `ci.yml` runs lint + vitest + build;
-   `test.yml` runs lint + build and **no tests at all** (it is a redundant copy
-   of `ci.yml` minus the test step). Nothing ever executed `bun run e2e`.
+2. **Playwright never ran in CI.** `ci.yml` ran lint + vitest + build and nothing
+   ever executed `bun run e2e`. Fixed in this branch: a `phone-gates` job builds
+   the client, serves it with `vite preview`, and runs all four `mobile-*`
+   projects — 92 gates, ~18 s. It deliberately skips `bun run build`'s pre-render
+   and sitemap steps so the job never depends on the API being reachable; the
+   trade-off is that list routes are gated in their empty state.
+   **Still open:** `test.yml` runs lint + build and **no tests at all** — it is a
+   redundant copy of `ci.yml` minus the test step. Deleting it is a maintainer
+   call (branch protection may reference it), so this branch leaves it alone.
 3. **No performance budget**, no Lighthouse, no bundle-size gate — a 1.67 MB PNG
    reached production.
 4. **No image pipeline** — no `srcset` anywhere, originals served as authored.
@@ -691,10 +742,10 @@ shrink-to-fit, which is how the `/report` and `/donate` overflow surfaced at all
 | 1 | `overflow-y-auto overscroll-contain` on `sheetVariants` | 1 line | Donate + 4 nav destinations become reachable on every phone |
 | 2 | `.font-input` → `text-base sm:text-sm` | 1 line | kills iOS focus-zoom on all 20 fields |
 | 3 | `AnimatedCount` at the 3 `CountUp` sites | small | 3 hero figures stop shipping blank for ~6 s, and never show a false `0` |
-| 4 | Preload + WOFF2 + subset the Devanagari font | small | home LCP ~7.9 s → ~2 s on Slow 4G |
+| 4 | **Subset + WOFF2** the Devanagari font, *then* preload | medium | the only lever measured to reduce the 912 KB that bounds home LCP — preload alone moved LCP 0.1% |
 | 5 | Resize `/team` avatars, `placeholder.png`, `favicon.png`; add `srcset` + `loading=lazy` | small | `/team` 5.67 MB → <1 MB |
 | 6 | Plain `<input>` for the hidden file field; wrap the donate CTA | 2 lines | removes 11–29% page zoom-out on 2 routes |
 | 7 | `icon` → `h-11 w-11`; footer links `min-h-11` | small | clears most sub-44 px targets |
-| 8 | Split the 535 KB app chunk; lazy-load the Markdown editor | medium | TBT 900 ms → target <300 ms |
+| 8 | Split the 535 KB app chunk (see the `vite.config.ts:217` pre-render constraint before touching the markdown chunk) | medium | TBT 900 ms → target <300 ms |
 | 9 | `py-8 md:py-16` sweep across the 91 unscaled paddings | medium | roughly halves phone page length |
-| 10 | Run the `mobile-*` Playwright projects in CI | small | stops all of the above regressing |
+| 10 | ~~Run the `mobile-*` Playwright projects in CI~~ — **done, `ci.yml` `phone-gates`** | small | stops all of the above regressing |

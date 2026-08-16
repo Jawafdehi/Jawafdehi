@@ -293,37 +293,58 @@ House conventions, and the traps that actually cost us something.
 
 ## 6. CI
 
-Today `ci.yml` runs lint + vitest + build. **Playwright has never run in CI**,
-and `test.yml` is a copy of `ci.yml` minus the test step — it runs no tests at
-all. Recommended:
+Tier A runs on every PR as the **`phone-gates`** job in `ci.yml`: 4 viewports ×
+23 gates = 92, in about 18 s of test time. It is wired deliberately:
 
-1. **Delete `test.yml`.** It duplicates `ci.yml` and its name implies coverage it
-   does not provide.
-2. **Add Tier A to `ci.yml`** — four viewports, one spec, about a minute:
+- **`bunx vite build`, not `bun run build`.** The full build also runs the
+  pre-render and the sitemap, both of which fetch the API — so using it would make
+  the job fail whenever the backend is unreachable. The trade-off is that list
+  routes are gated in their empty state; layout and reachability still hold.
+- **`vite preview` + `E2E_NO_WEBSERVER=1`**, rather than the config's default
+  `vite dev` webServer. `preview` serves `dist/client` with SPA fallback, so every
+  route resolves without a dev server or an API proxy.
+- **Chromium only.** The `mobile-*` projects pin `browserName: "chromium"` on
+  purpose (see §3); real WebKit belongs in a slower job.
 
-   ```yaml
-   - name: Install Playwright Chromium
-     run: bunx playwright install --with-deps chromium
+### Do not put `MOBILE_GATES_STRICT=1` in CI as an inverted assertion
 
-   - name: Mobile gates
-     run: bunx playwright test tests/e2e-pw/responsive.mobile.spec.ts
+It is tempting to add a step that asserts strict mode *fails*, on the grounds that
+a gate which stops failing on a known defect has gone vacuous. Don't wire that
+blind:
 
-   - name: Mobile gates still bite
-     run: |
-       if MOBILE_GATES_STRICT=1 bunx playwright test \
-            --project=mobile-android tests/e2e-pw/responsive.mobile.spec.ts; then
-         echo "::error::strict mode passed — a mobile gate has gone vacuous"; exit 1
-       fi
-   ```
+```yaml
+# WRONG — this goes red the day the defects are fixed.
+- run: |
+    if MOBILE_GATES_STRICT=1 bunx playwright test --project=mobile-android; then
+      echo "::error::strict mode passed"; exit 1
+    fi
+```
 
-   The second step is the important one: it fails if the gates *stop* failing on
-   known defects, which is how a gate silently dies.
+The invariant is not "strict must fail" — it is "strict must fail *while
+`KNOWN_DEFECTS` is non-empty*". Once the listed defects are fixed and their
+entries removed, strict and normal are the same run and both pass, so the step
+above would break CI at exactly the moment the code got better.
 
-3. **Nightly workflow** for Tier B: the full sweep, WebKit via
+So strict mode is a **manual** check, run when you add or change a gate:
+
+```bash
+MOBILE_GATES_STRICT=1 bunx playwright test --project=mobile-android
+```
+
+Expect it to fail on every entry currently in `KNOWN_DEFECTS`, and read the
+messages — that is the evidence the gate measures what it claims.
+
+### Still open
+
+1. **Delete `test.yml`.** It duplicates `ci.yml` minus the test step, so its name
+   implies coverage it does not provide. Left alone here because branch protection
+   may reference it by name.
+2. **Nightly workflow** for Tier B: the full sweep, WebKit via
    `mcr.microsoft.com/playwright:v1.61.1-noble`, and the perf budgets. Upload
    `findings.json` and the screenshots as artifacts.
-4. **A bundle-size gate.** `bun run analyze` already emits the treemap; fail the
-   build when any chunk crosses the §1 budget.
+3. **A bundle-size gate.** `bun run analyze` already emits the treemap; fail the
+   build when any chunk crosses the §1 budget. Worth doing before the font work:
+   §1's budget is about total bytes, and total bytes are what bound home LCP.
 
 ---
 
