@@ -28,17 +28,29 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
+// Every side variant must be able to scroll. A sheet is `fixed` and Radix
+// scroll-locks <body> while it is open, so content that lands outside the panel
+// is not merely awkward to reach — it is unreachable by any gesture: the panel
+// has nothing to scroll, and the page behind it will not move.
+//
+// The nav menu is 884px of content. That fits a 412x839 Pixel 7 and nothing
+// smaller, so on a 360x640 Android five items including "Donate" sat below the
+// fold with no way to get to them. `overscroll-contain` keeps a flick inside the
+// panel instead of chaining it to the locked body.
+//
+// `top`/`bottom` additionally need `max-h-full`: they have no height constraint,
+// so without one they grow past the viewport and never establish a scrollport.
 const sheetVariants = cva(
   "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        top: "inset-x-0 top-0 max-h-full overflow-y-auto overscroll-contain border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+          "inset-x-0 bottom-0 max-h-full overflow-y-auto overscroll-contain border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 overflow-y-auto overscroll-contain border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
-          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+          "inset-y-0 right-0 h-full w-3/4 overflow-y-auto overscroll-contain border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
       },
     },
     defaultVariants: {
