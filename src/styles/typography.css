@@ -55,6 +55,14 @@
   :where(body, button, input, select, textarea) {
     font-family: var(--font-family-app);
   }
+
+  /* The header is `sticky top-0` and 76px tall (the `h-[76px]` grid row in
+     Navbar.tsx), so an in-page jump lands its target underneath it. That makes
+     the "skip to content" link — the one control whose whole job is to get a
+     keyboard user past the header — put the top of <main> 76px out of sight. */
+  #main-content {
+    scroll-margin-top: 76px;
+  }
 }
 
 @layer components {

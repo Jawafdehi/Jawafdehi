@@ -194,7 +194,27 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-transparent transition-colors duration-200 ease-out">
+      {/* Once scrolled, the header itself has to be opaque. It used to stay
+          `bg-transparent` at every scroll position, with `isScrolled` only
+          turning on backgrounds for the individual controls inside it (logo
+          pill, search/menu buttons, language toggle) — so the page scrolled
+          directly behind the band and only those pills masked anything. Measured
+          at eight real scroll positions on the home page: 0 full-width masks and
+          page text under the header at every position but the top, worst case the
+          hero headline "स्थायी अभिलेख" overlapping by 46px.
+          This is worse on a phone than on desktop: a desktop header carries a
+          full nav row that incidentally covers the band, while a 360px header has
+          four small pills and mostly open space. Devanagari makes it worse again,
+          since tall matras and conjuncts collide with the pill shapes.
+          Still deliberately transparent at the top, for the hero. */}
+      <header
+        className={cn(
+          "sticky top-0 z-50 w-full transition-colors duration-200 ease-out",
+          isScrolled
+            ? "bg-background/85 backdrop-blur-md"
+            : "bg-transparent",
+        )}
+      >
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
