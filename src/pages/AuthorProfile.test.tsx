@@ -175,9 +175,7 @@ describe("AuthorProfile", () => {
     await waitFor(() => expect(screen.getByText("author.notFound")).toBeTruthy());
   });
 
-  it("prefers the Nepali name when one is set", async () => {
-    // The mock pins i18n.language to "en", so this asserts the fallback branch:
-    // an English reader sees the English name even when a Nepali one exists.
+  it("keeps the English name for an English reader even when a Nepali one exists", async () => {
     vi.mocked(getAuthorProfile).mockResolvedValue(
       profile({ name_ne: "सुबोध कँडेल" }),
     );
@@ -222,5 +220,85 @@ describe("AuthorProfile — biography", () => {
 
     await waitFor(() => expect(screen.getByText("Caseworker")).toBeTruthy());
     expect(screen.getByText("A longer biography.")).toBeTruthy();
+  });
+});
+
+// The suite above pins i18n.language to "en". The Nepali branch needs its own
+// module registry so the mock can report "ne" — vi.doMock plus a dynamic import.
+describe("AuthorProfile — Nepali locale", () => {
+  it("shows the Nepali name when one is set", async () => {
+    vi.resetModules();
+    vi.doMock("react-i18next", () => {
+      const translation = {
+        t: (key: string, opts?: Record<string, unknown>) =>
+          opts
+            ? `${key}:${Object.entries(opts)
+                .map(([k, v]) => `${k}=${String(v)}`)
+                .join(",")}`
+            : key,
+        i18n: { language: "ne" },
+      };
+      return { useTranslation: () => translation };
+    });
+
+    const { default: NepaliAuthorProfile } = await import("./AuthorProfile");
+    const { getAuthorProfile: nepaliGetAuthorProfile } = await import(
+      "@/services/jds-api"
+    );
+    vi.mocked(nepaliGetAuthorProfile).mockResolvedValue(
+      profile({ name_ne: "सुबोध कँडेल" }),
+    );
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <NepaliAuthorProfile />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "सुबोध कँडेल" })).toBeTruthy(),
+    );
+
+    vi.doUnmock("react-i18next");
+    vi.resetModules();
+  });
+});
+
+describe("AuthorProfile — link safety", () => {
+  it("neutralizes mail-header separators in the address but keeps @ readable", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ email: "kandel@example.org?subject=spoofed" }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(container.querySelector('a[href^="mailto:"]')).toBeTruthy(),
+    );
+    const href = container.querySelector('a[href^="mailto:"]')?.getAttribute("href");
+    expect(href).toBe("mailto:kandel@example.org%3Fsubject%3Dspoofed");
+  });
+
+  it("drops a link whose stored URL is not http(s)", async () => {
+    // The API rejects these on write; this is defence in depth for a row that
+    // predates that rule or was written by a raw ORM edit.
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({
+        links: [
+          { type: "website", value: "javascript:alert(1)" as string },
+          { type: "github", value: "https://github.com/subodh" },
+        ],
+      }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(container.querySelector('a[href^="https://github"]')).toBeTruthy(),
+    );
+    expect(container.querySelector('a[href^="javascript"]')).toBeNull();
   });
 });

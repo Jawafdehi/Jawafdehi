@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import {
-  listCaseAuthorCandidates,
-  type CaseAuthorCandidate,
-} from "@/services/admin-api";
+import { listCaseAuthorCandidates } from "@/services/admin-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,22 +50,14 @@ export default function CaseBylineEditor({
   onEditHistoryChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [candidates, setCandidates] = useState<CaseAuthorCandidate[]>([]);
-  const [loadError, setLoadError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    listCaseAuthorCandidates()
-      .then((rows) => {
-        if (!cancelled) setCandidates(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadError(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // The roster is server state, so it goes through React Query like every other
+  // read in the app (mutations here are still hand-rolled — see Moderation.tsx).
+  const { data: candidates = [], isError: loadError } = useQuery({
+    queryKey: ["case-author-candidates"],
+    queryFn: () => listCaseAuthorCandidates(),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
   // An account already credited on this case must not be offered again — the
   // backend enforces one credit per user per case.

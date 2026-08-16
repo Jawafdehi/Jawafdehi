@@ -2275,6 +2275,15 @@
     "emailLabel": "{{name}} लाई इमेल गर्नुहोस्",
     "casesHeading_one": "{{count}} मुद्दा",
     "casesHeading_other": "{{count}} मुद्दाहरू",
-    "noCases": "अहिलेसम्म कुनै प्रकाशित मुद्दा छैन।"
+    "noCases": "अहिलेसम्म कुनै प्रकाशित मुद्दा छैन।",
+    "linkLabel": "{{platform}} मा {{name}}",
+    "platform": {
+      "facebook": "फेसबुक",
+      "instagram": "इन्स्टाग्राम",
+      "linkedin": "लिङ्क्डइन",
+      "github": "गिटहब",
+      "website": "उनको वेबसाइट",
+      "twitter": "एक्स"
+    }
   }
 }

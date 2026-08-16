@@ -29,7 +29,11 @@ export function CaseByline({
   const { t, i18n } = useTranslation();
 
   const credits = (authors ?? []).filter((author) => author.display_name?.trim());
-  const history = (editHistory ?? []).filter((entry) => entry.remarks?.trim());
+  // Both halves are required: a row missing either is a half-typed entry, and
+  // formatting a blank date would render an "N/A — remarks" line to the public.
+  const history = (editHistory ?? []).filter(
+    (entry) => entry.remarks?.trim() && entry.date?.trim(),
+  );
 
   if (credits.length === 0) {
     const text = markdown?.trim();

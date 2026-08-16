@@ -2300,6 +2300,15 @@
     "emailLabel": "Email {{name}}",
     "casesHeading_one": "{{count}} case",
     "casesHeading_other": "{{count}} cases",
-    "noCases": "No published cases yet."
+    "noCases": "No published cases yet.",
+    "linkLabel": "{{name}} on {{platform}}",
+    "platform": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "their website",
+      "twitter": "X"
+    }
   }
 }

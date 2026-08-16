@@ -36,6 +36,32 @@ const LINK_ICONS: Record<AuthorLink["type"], typeof Globe> = {
   twitter: Twitter,
 };
 
+/** Whether a stored link is safe to put in an href.
+ *
+ * The API already rejects anything that is not https:// on write, so this is
+ * defence in depth for rows written before that rule (or by a raw ORM edit):
+ * a stored `javascript:` URL would otherwise execute on click.
+ */
+/** A mailto href that cannot be broken by the stored address.
+ *
+ * Encoding neutralizes newlines and the `?`/`&`/`#` header separators, which
+ * would otherwise let a stored value inject mail headers. `@` is then restored:
+ * it is legal unencoded in a mailto addr-spec, and leaving it as `%40` would
+ * show up in the browser status bar on every author page.
+ */
+function mailtoHref(email: string): string {
+  return `mailto:${encodeURIComponent(email).replace(/%40/g, "@")}`;
+}
+
+function isSafeHref(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export default function AuthorProfile() {
   const { t, i18n } = useTranslation();
   const { slug } = useParams();
@@ -129,7 +155,7 @@ export default function AuthorProfile() {
                       address comes back as null, not "". */}
                   {author.email && (
                     <a
-                      href={`mailto:${author.email}`}
+                      href={mailtoHref(author.email)}
                       className="text-muted-foreground transition-colors hover:text-primary"
                       aria-label={t("author.emailLabel", { name })}
                     >
@@ -138,7 +164,7 @@ export default function AuthorProfile() {
                   )}
                   {author.links.map((link) => {
                     const Icon = LINK_ICONS[link.type];
-                    if (!Icon) return null;
+                    if (!Icon || !isSafeHref(link.value)) return null;
                     return (
                       <a
                         key={`${link.type}-${link.value}`}
@@ -146,7 +172,12 @@ export default function AuthorProfile() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-muted-foreground transition-colors hover:text-primary"
-                        aria-label={link.type}
+                        // Localized: a bare `link.type` would read "website" to
+                        // a screen reader on the Nepali site.
+                        aria-label={t("author.linkLabel", {
+                          name,
+                          platform: t(`author.platform.${link.type}`),
+                        })}
                       >
                         <Icon className="h-5 w-5" />
                       </a>

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render as rtlRender, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // BB-37 — the admin case editor gains a "View on website" link to the public
 // case page (/case/<slug>). The link is enabled only for a PUBLISHED (public)
@@ -59,6 +60,17 @@ vi.mock("@/components/admin/case/CaseHistoryPanel", () => ({ default: () => <div
 vi.mock("@/components/admin/DatePairInput", () => ({ default: () => <div /> }));
 
 import AdminCaseForm from "./AdminCaseForm";
+
+// The byline editor reads its roster through React Query, so the component
+// needs a provider — the real app mounts one above this route.
+const render = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return rtlRender(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+};
 
 const loadCase = (state: string, extra: Record<string, unknown> = {}) =>
   vi.mocked(getCaseWithEtag).mockResolvedValue({
