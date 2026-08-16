@@ -12,6 +12,8 @@ import {
   Twitter,
   User,
 } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { getAuthorProfile } from "@/services/jds-api";
 import { Seo } from "@/components/Seo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -81,8 +83,10 @@ export default function AuthorProfile() {
   const pageTitle = isNepali
     ? `${name} — जवाफदेही`
     : `${name} — Jawafdehi`;
-  const pageDescription = author.description?.trim()
-    ? `${name} — ${author.description}`
+  const title = author.title?.trim();
+  const bio = author.bio?.trim();
+  const pageDescription = title
+    ? `${name} — ${title}`
     : t("author.metaDescription", { name });
 
   return (
@@ -115,10 +119,8 @@ export default function AuthorProfile() {
               <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">
                 {name}
               </h1>
-              {author.description?.trim() && (
-                <p className="mt-1 text-base text-muted-foreground">
-                  {author.description}
-                </p>
+              {title && (
+                <p className="mt-1 text-base text-muted-foreground">{title}</p>
               )}
 
               {(author.email || author.links.length > 0) && (
@@ -155,6 +157,19 @@ export default function AuthorProfile() {
             </div>
           </div>
         </section>
+
+        {bio && (
+          <section className="mx-auto w-full max-w-5xl px-4 pt-10 sm:px-6">
+            <h2 className="mb-3 text-xl font-semibold text-primary">
+              {t("author.aboutHeading")}
+            </h2>
+            {/* Markdown-only (no rehype-raw): a biography is prose, and there is
+                no reason for it to be able to inject markup. */}
+            <div className="font-paragraph content-prose max-w-3xl">
+              <Markdown remarkPlugins={[remarkGfm]}>{bio}</Markdown>
+            </div>
+          </section>
+        )}
 
         <section className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
           <h2 className="mb-4 text-xl font-semibold text-primary">

@@ -26,7 +26,7 @@ import type { CaseAuthorCredit } from "@/types/jds";
 const author = (over: Partial<CaseAuthorCredit> = {}): CaseAuthorCredit => ({
   slug: "subodh-kandel",
   display_name: "Subodh Kandel",
-  description: "",
+  title: "",
   photo_url: "",
   has_public_page: false,
   ...over,
@@ -37,7 +37,7 @@ const AUTHORS: CaseAuthorCredit[] = [
   author({
     slug: "sambhav-koirala",
     display_name: "Sambhav Koirala",
-    description: "BALLB 4th Year Student",
+    title: "BALLB 4th Year Student",
   }),
 ];
 
@@ -54,7 +54,7 @@ describe("CaseByline — author cards", () => {
     expect(cards[1].textContent).toContain("Sambhav Koirala");
   });
 
-  it("shows the author's per-person description on the card", () => {
+  it("shows the author's per-person title on the card", () => {
     const { container } = renderByline(<CaseByline authors={AUTHORS} />);
 
     const cards = container.querySelectorAll('[data-testid="author-card"]');

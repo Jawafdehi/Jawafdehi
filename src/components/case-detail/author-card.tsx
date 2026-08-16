@@ -21,7 +21,7 @@ function authorName(author: CaseAuthorCredit, language: string): string {
   return author.display_name;
 }
 
-// One credited author on a case page: photo, name and their short bio.
+// One credited author on a case page: photo, name and their one-line title.
 //
 // Links to /author/<slug> only when `has_public_page` is set. A profile row is
 // created automatically the first time someone is credited and starts empty, so
@@ -31,7 +31,7 @@ export function AuthorCard({ author, className }: Readonly<AuthorCardProps>) {
   const { i18n } = useTranslation();
   const name = authorName(author, i18n.language);
   const photo = author.photo_url?.trim();
-  const description = author.description?.trim();
+  const title = author.title?.trim();
   const linkable = author.has_public_page && Boolean(author.slug);
 
   const body = (
@@ -53,10 +53,8 @@ export function AuthorCard({ author, className }: Readonly<AuthorCardProps>) {
       )}
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-primary">{name}</span>
-        {description && (
-          <span className="block truncate text-xs text-muted-foreground">
-            {description}
-          </span>
+        {title && (
+          <span className="block truncate text-xs text-muted-foreground">{title}</span>
         )}
       </span>
     </>

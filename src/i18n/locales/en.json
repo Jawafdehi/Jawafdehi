@@ -2295,6 +2295,7 @@
   },
   "author": {
     "notFound": "This author profile is not available.",
+    "aboutHeading": "About",
     "metaDescription": "Corruption cases documented by {{name}} on Jawafdehi, Nepal's permanent corruption case archive.",
     "emailLabel": "Email {{name}}",
     "casesHeading_one": "{{count}} case",

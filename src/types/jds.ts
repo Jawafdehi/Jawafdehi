@@ -186,8 +186,8 @@ export interface CaseAuthorCredit {
   /** Nepali name; empty when unset (fall back to display_name). */
   name_ne?: string;
   photo_url?: string;
-  /** Short bio, e.g. "Caseworker" or "BALLB 4th Year Student". */
-  description?: string;
+  /** One-line role, e.g. "Caseworker" or "BALLB 4th Year Student". */
+  title?: string;
   /** False for an auto-created profile nobody has filled in yet — do not link. */
   has_public_page: boolean;
   /** Casework viewers only — omitted from public reads. */
@@ -217,7 +217,10 @@ export interface AuthorProfile {
   display_name: string;
   name_ne?: string;
   photo_url?: string;
-  description?: string;
+  /** One-line role shown under the name (and on author cards). */
+  title?: string;
+  /** Longer biography (markdown), profile page only. */
+  bio?: string;
   /** null when the author has not published an address. */
   email: string | null;
   links: AuthorLink[];

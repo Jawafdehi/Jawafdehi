@@ -36,7 +36,8 @@ const profile = (over: Partial<AuthorProfileType> = {}): AuthorProfileType => ({
   display_name: "Subodh Kandel",
   name_ne: "",
   photo_url: "",
-  description: "Caseworker",
+  title: "Caseworker",
+  bio: "",
   email: null,
   links: [],
   cases: [],
@@ -61,7 +62,7 @@ beforeEach(() => {
 });
 
 describe("AuthorProfile", () => {
-  it("renders the name and description", async () => {
+  it("renders the name and title", async () => {
     vi.mocked(getAuthorProfile).mockResolvedValue(profile());
     renderPage();
 
@@ -185,5 +186,41 @@ describe("AuthorProfile", () => {
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "Subodh Kandel" })).toBeTruthy(),
     );
+  });
+});
+
+describe("AuthorProfile — biography", () => {
+  it("renders the bio as markdown under an About heading", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({
+        bio: "Documents CIAA procurement cases. **Law student** at TU.",
+      }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() => expect(screen.getByText("author.aboutHeading")).toBeTruthy());
+    // Bold renders as <strong>, not literal asterisks.
+    expect(container.querySelector("strong")?.textContent).toBe("Law student");
+    expect(container.textContent).not.toContain("**");
+  });
+
+  it("omits the About section entirely when there is no bio", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(profile({ bio: "" }));
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Subodh Kandel" })).toBeTruthy(),
+    );
+    expect(screen.queryByText("author.aboutHeading")).toBeNull();
+  });
+
+  it("shows the one-line title separately from the bio", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ title: "Caseworker", bio: "A longer biography." }),
+    );
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText("Caseworker")).toBeTruthy());
+    expect(screen.getByText("A longer biography.")).toBeTruthy();
   });
 });
