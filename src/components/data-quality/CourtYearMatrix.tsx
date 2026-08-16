@@ -98,7 +98,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           <select
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
+            className="font-input rounded-md border border-border bg-background px-2 py-1"
           >
             <option value="all">{t("dataQuality.courtCases.filterAll", "All")}</option>
             {courtTypes.map((c) => (
@@ -113,7 +113,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
+            className="font-input rounded-md border border-border bg-background px-2 py-1"
           >
             <option value="all">{t("dataQuality.courtCases.filterAll", "All")}</option>
             {/* The dropdown has room the column headers don't, and it is where a
