@@ -71,14 +71,21 @@ const main = async () => {
   // 2. a REAL touch scroll gesture, synthesized by the browser itself via CDP —
   //    this is the closest available thing to a thumb swipe, and unlike
   //    hand-rolled TouchEvents it drives Chromium's actual scroll machinery.
+  // ⚠️ `Input.synthesizeScrollGesture` with `gestureSourceType: "touch"` scrolls
+  // NOTHING in this headless build — measured 0px where the same call with the
+  // default source moved 400px. An earlier version of this file used it and so
+  // recorded a no-op as a failed attempt. Drive the touch points directly.
   const cdp = await ctx.newCDPSession(page);
   for (let i = 0; i < 3; i++) {
-    await cdp.send("Input.synthesizeScrollGesture", {
-      x: 180, y: 450, xDistance: 0, yDistance: -400, gestureSourceType: "touch", speed: 800,
-    }).catch((e) => console.log("     (scroll gesture error: " + String(e).slice(0, 80) + ")"));
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 180, y: 500 }] }).catch(() => {});
+    for (let k = 1; k <= 8; k++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 180, y: 500 - k * 45 }] }).catch(() => {});
+      await page.waitForTimeout(16);
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }).catch(() => {});
     await page.waitForTimeout(400);
   }
-  record("2. touch scroll gesture x3", await state(page), "CDP synthesizeScrollGesture/touch");
+  record("2. real touch drag x3", await state(page), "Input.dispatchTouchEvent");
 
   // 3. mouse drag inside the panel (a drawer with a drag handle would move)
   await page.mouse.move(180, 560); await page.mouse.down();

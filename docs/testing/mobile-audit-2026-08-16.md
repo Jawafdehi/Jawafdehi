@@ -68,11 +68,20 @@ gesture a user has. All of them fail:
 | --- | --- | --- |
 | just opened | no (`top: 784` in a 640 px viewport) | 0 |
 | mouse wheel +600 | no | 0 |
-| CDP `synthesizeScrollGesture`, touch, ×3 | no | 0 |
+| real touch drag, `Input.dispatchTouchEvent` ×3 | no | 0 |
 | drag 560→200 | no | 0 |
 | `Tab` ×24 (focus auto-scroll) | no | 0 |
 | `donate.scrollIntoView()` | no | 0 |
 | Playwright `.click()` (auto-scrolls, waits) | **times out** | — |
+
+> **Instrument note.** The touch row originally used
+> `Input.synthesizeScrollGesture` with `gestureSourceType: "touch"`, which
+> scrolls **nothing** in this headless build — 0 px where the same call with the
+> default source moves 400 px. That row was therefore recording a no-op as a
+> failed attempt. Re-run with real `Input.dispatchTouchEvent` drags: the result
+> is unchanged (`panel.scrollTop` 0, click still times out), so the finding
+> stands — but if you write a touch-scroll assertion anywhere, assert that the
+> gesture actually moved something first.
 
 **Control:** at 360×**1000** the same menu shows every item. The defect is purely
 viewport-*height*-dependent, which is exactly why a `Desktop Chrome`-only suite
@@ -352,6 +361,113 @@ inline-in-sentence exceptions, and separately against the 44×44 of SC 2.5.5
 76 px tall on every route: **12%** of a 360×640 first screen and **21%** of a
 640×360 landscape one. Separately, `#main-content` has `scroll-margin-top: 0`,
 so the skip link lands its target 76 px *under* the header.
+
+---
+
+## S5b — The hero stats band (found by scrolling, not by probing)
+
+Driven with real touch flicks at 360×640 and 320×568 —
+`tests/mobile/hero-stats-scroll.mjs`, `tests/mobile/header-bleed.mjs`. None of
+these show up in the static sweep, because they are about *what the page looks
+like while it is loading and while a thumb is moving it*.
+
+### Three of the four figures ship blank
+
+The served HTML for the hero band is:
+
+```
+.font-stat-value textContent:  ""   "Rs 1.90 Kharab"   ""   ""
+```
+
+`HeroStatValue` (`src/components/home/hero.tsx:176-185`) returns `<CountUp>`
+whenever the value parses as a number, and CountUp renders **nothing** during
+pre-render. Only `Rs 1.90 Kharab` survives, because `Number("Rs 1.90 Kharab")` is
+`NaN` and it falls through to the raw-string branch.
+
+So until the 535 KB bundle hydrates — **~6 s on Slow 4G** — a corruption archive
+shows three labels with no figures above them:
+*दस्तावेजीकृत मुद्दाहरू* (documented cases), *कागजात तथा अन्य सामग्री*
+(materials), *अनुगमन गरिएका अदालती मुद्दा* (court cases tracked). The empty
+values have `height: 0`, so the labels also sit at the wrong baseline next to the
+one populated cell, and all three pop in together when JS lands.
+
+Shot: `.audit/raw/hero-stats/360x640/00-00-served-markup.png`.
+
+Fix: render the real figure as the pre-rendered text and let CountUp animate
+*from* it on the client — i.e. give CountUp a `start`/children fallback, or skip
+CountUp during SSR and swap it in after mount. A figure that is correct without JS
+is also the accessible and crawlable one.
+
+### `Rs 1.90 Kharab` is the only value that wraps, so the 2×2 grid is ragged
+
+| Width | Cell heights | Why |
+| --- | --- | --- |
+| 360 | `[103, 103, 78, 78]` | `Rs 1.90 Kharab` takes 2 lines (50 px) vs 25 px for every number |
+| 320 | `[103, 103, 96, 96]` | as above, plus the 4th label wraps to 2 lines |
+
+Each cell is a `<Link>` with its own card background, so the 25 px mismatch reads
+as dead space under **82**. `grid-cols-2` sizes rows independently, so the top row
+inherits the tallest cell. Either let the money value abbreviate/not wrap, or make
+the value box a fixed two-line box so all four agree.
+
+### The count-up animation is never seen on a phone
+
+The band sits at document **y = 592** in a 640 px viewport, so it is 48 px
+on-screen at rest. `CountUp` has no `enableScrollSpy`, so it runs its 0.9 s
+animation on mount, while the band is still essentially below the fold. Measured
+mid-flick frames caught `81 → 82` and `2,245,134 → 2,245,189`, i.e. the figure is
+still settling as the band scrolls into view and is static by the time it can be
+read. Either add `enableScrollSpy` or drop the animation on phones.
+
+### The figures are smallest on the platform that matters most
+
+`.font-stat-value` is `text-xl md:text-3xl` — **20 px on phones**, 30 px on
+desktop; `.font-stat-label` is `text-xs sm:text-sm` — **12 px on phones**
+(`src/styles/typography.css:197-208`). The hero headline beside them is 36 px. On
+61% of traffic the archive's headline numbers are barely larger than their labels.
+
+Minor, but worth a decision: the value's computed family resolves to
+**Noto Sans Devanagari**, not the IBM Plex Mono "register" face the design system
+reserves for *"figures, counts, dates and case references"*. The most prominent
+figures on the site are the ones not set in it.
+
+---
+
+## S5c — Content reads through the sticky header while scrolling
+
+**`src/components/Navbar.tsx:196`** — the `<header>` is `bg-transparent` with no
+`backdrop-filter`, at **every** scroll position. `isScrolled` only turns on
+backgrounds for the controls *inside* it (logo pill, search and menu buttons,
+language toggle), so the page scrolls directly behind the band and only those four
+pills mask anything.
+
+Measured at eight real scroll positions on the home page:
+
+| scrollY | full-width masks | text under the header | worst overlap |
+| --- | --- | --- | --- |
+| 0 | 0 | 0 | — |
+| 258 | 0 | 2 | `स्थायी अभिलेख` (hero headline) — **46 px** |
+| 503 | 0 | 1 | `जवाफदेही अभिलेखमा खोज्नुहोस्` — 21 px |
+| 1 336 | 0 | 1 | `Rabi Lamichhane Cooperative Fraud` — 23 px |
+| 3 045 | 0 | 1 | `समाधान भएको` — 16 px |
+| 5 873 | 0 | 1 | `जवाफदेहीलाई कसरी कोष जुटाइन्छ?` — 17 px |
+| 7 973 | 0 | 2 | `स्रोतहरू` — 19 px |
+
+`header.backgroundColor` is `rgba(0, 0, 0, 0)` and `backdropFilter` is `none`
+throughout, and **no element in the header subtree paints a full-width backdrop**.
+Shot: `.audit/raw/header-bleed/360x640/hdr-00258.png` — the hero headline runs
+straight through the band between the pills.
+
+This is worse on a phone than on desktop: a desktop header carries a full nav row
+that incidentally covers most of the band, while a 360 px header has four small
+pills and mostly open space. Devanagari makes it worse again — tall matras and
+conjuncts collide with the pill shapes.
+
+Fix: give the header itself a background once scrolled, matching what the pills
+already do — e.g. `isScrolled && "bg-background/85 backdrop-blur-md"` on the
+`<header>`, or a masked pseudo-element. Note it is `bg-transparent` deliberately
+at `scrollY: 0` for the hero, so gate the change on `isScrolled` rather than
+making it unconditional.
 
 ---
 
