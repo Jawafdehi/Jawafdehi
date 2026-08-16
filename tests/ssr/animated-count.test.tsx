@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import { render, cleanup } from '@testing-library/react';
+import { act, render, cleanup } from '@testing-library/react';
 
 import { AnimatedCount } from '@/components/ui/animated-count';
 
@@ -34,20 +34,33 @@ import { AnimatedCount } from '@/components/ui/animated-count';
 
 type IOEntryish = { isIntersecting: boolean };
 
-/** Install an IntersectionObserver that reports `intersecting` once, on observe. */
+/**
+ * Install an IntersectionObserver that reports `intersecting` on observe, and
+ * hand back a way to report a later intersection — which is how "the reader
+ * scrolled to it afterwards" is simulated.
+ */
 function stubObserver(intersecting: boolean) {
+  const live: ((entries: IOEntryish[]) => void)[] = [];
   class FakeIO {
     private readonly cb: (entries: IOEntryish[]) => void;
     constructor(cb: (entries: IOEntryish[]) => void) {
       this.cb = cb;
     }
     observe() {
+      live.push(this.cb);
       this.cb([{ isIntersecting: intersecting }]);
     }
     unobserve() {}
-    disconnect() {}
+    disconnect() {
+      const i = live.indexOf(this.cb);
+      if (i >= 0) live.splice(i, 1);
+    }
   }
   (globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver = FakeIO;
+  return {
+    /** Fire an intersection on every observer that has not disconnected. */
+    scrollIntoView: () => act(() => live.forEach((cb) => cb([{ isIntersecting: true }]))),
+  };
 }
 
 const HAD_IO = 'IntersectionObserver' in globalThis;
@@ -93,7 +106,7 @@ describe('AnimatedCount', () => {
     expect(container.textContent).toBe('82');
   });
 
-  it('hands the element to CountUp once the figure is on screen', () => {
+  it('hands the element to CountUp when it is already on screen at mount', () => {
     stubObserver(true);
     const { container } = render(<AnimatedCount end={82} display="82" />);
 
@@ -102,9 +115,40 @@ describe('AnimatedCount', () => {
     // Asserting the exact frame would be a race with requestAnimationFrame.
     expect(
       container.textContent,
-      'the counter never animates: it should hand the element to CountUp when it ' +
-        'scrolls into view.',
+      'the counter never animates, even with the figure on screen at mount.',
     ).not.toBe('82');
+  });
+
+  // The animation is checked ONCE, at mount. Triggering it on a later scroll would
+  // send a figure the reader has already read backwards to 0, because countup.js
+  // prints `startVal` from its constructor — a glitch, not an effect.
+  it('does not animate a figure that was off screen at mount, even once scrolled to', () => {
+    const io = stubObserver(false);
+    const { container } = render(<AnimatedCount end={82} display="82" />);
+    expect(container.textContent).toBe('82');
+
+    io.scrollIntoView();
+
+    expect(
+      container.textContent,
+      'scrolling to the figure started an animation from 0, so a number the reader ' +
+        'had already read jumped backwards.',
+    ).toBe('82');
+  });
+
+  // `separator` is a public prop, so the static text has to honour it or the two
+  // halves of this component disagree the moment anyone passes something else.
+  it('honours `separator` in the fallback text', () => {
+    expect(renderToString(<AnimatedCount end={2245189} separator="." />)).toContain('2.245.189');
+  });
+
+  // countup.js renders at `decimals: 0` by default, i.e. rounded — so the static
+  // text has to round too, or the figure changes as it hands over.
+  it('rounds like countup.js does, rather than showing decimals it would drop', () => {
+    const html = renderToString(<AnimatedCount end={1234.5} />);
+
+    expect(html).toContain('1,235');
+    expect(html, 'the static text showed a decimal CountUp would round away').not.toContain('.5');
   });
 });
 
