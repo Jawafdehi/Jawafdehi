@@ -28,17 +28,32 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
+// Every side variant must be able to scroll. A sheet is `fixed` and Radix
+// scroll-locks <body> while it is open, so content that lands outside the panel
+// is not merely awkward to reach — it is unreachable by any gesture: the panel
+// has nothing to scroll, and the page behind it will not move.
+//
+// The nav menu is 884px of content, which fits no common phone: on a 360x640
+// Android five items including "Donate" sat below the fold with no way to get to
+// them, and even a 412x839 Pixel 7 — the tallest in the top-six list — is 45px
+// short and loses one.
+//
+// The scrollport is the wrapper inside SheetContent rather than the panel itself,
+// so that the close button stays pinned to the panel. See the note there.
+//
+// `top`/`bottom` additionally need `max-h-full`: they have no height constraint,
+// so without one they grow past the viewport and never establish a scrollport.
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "fixed z-50 flex flex-col gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        top: "inset-x-0 top-0 max-h-full border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          "inset-x-0 bottom-0 max-h-full border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
-          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+          "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
       },
     },
     defaultVariants: {
@@ -56,7 +71,16 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-        {children}
+        {/* The content scrolls, not the panel. If the panel were the scroll
+            container, the `absolute` close button below would be part of its
+            scrollable overflow region and would scroll away with the content —
+            measured at 248px above the viewport by the time the nav's "Donate"
+            was reachable, i.e. exactly when a user most wants to close it.
+            `flex-auto` rather than `flex-1`: `flex-1` sets `flex-basis: 0%`, which
+            collapses a content-sized panel (`top`/`bottom` have no fixed height)
+            to nothing. `min-h-0` is what lets it shrink below its content and so
+            actually scroll. */}
+        <div className="min-h-0 flex-auto overflow-y-auto overscroll-contain">{children}</div>
         <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
