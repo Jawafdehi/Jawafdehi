@@ -210,8 +210,20 @@ export function Navbar() {
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-colors duration-200 ease-out",
+          // Fully opaque on phones; glass from `md` up.
+          //
+          // A full-width `backdrop-filter` repaints on every scroll frame, and that
+          // cost lands on the low-end-Android audience this whole change is for. It
+          // is also not measurable here — CPU throttling does not throttle the
+          // compositor — so the phone case takes the option that needs no GPU work
+          // at all rather than the one that merely looks cheap.
+          //
+          // It has to be *opaque*, not just more opaque: `/95` without blur still
+          // let the hero headline through as a sharp, legible ghost, because the
+          // blur was what diffused the residual. Screenshotted both. Translucency
+          // and no-blur do not combine.
           isScrolled
-            ? "bg-background/85 backdrop-blur-md"
+            ? "bg-background md:bg-background/85 md:backdrop-blur-md"
             : "bg-transparent",
         )}
       >

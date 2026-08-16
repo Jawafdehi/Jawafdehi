@@ -65,19 +65,33 @@ describe('the sticky header is opaque once scrolled', () => {
     ).toContain('bg-transparent');
   });
 
-  it('takes a background and a backdrop blur once scrolled', () => {
+  it('masks the page once scrolled', () => {
     const header = renderNavbar();
     scrollTo(240);
+    const classes = header.className.split(/\s+/).filter(Boolean);
 
     expect(
-      header.className,
+      classes,
       'the header is still transparent after scrolling, so page content reads ' +
         'straight through the band — only the control pills mask anything.',
     ).not.toContain('bg-transparent');
-    expect(header.className, 'the scrolled header has no background').toMatch(/\bbg-background\//);
-    expect(header.className, 'the scrolled header has no backdrop blur').toMatch(
-      /\bbackdrop-blur/,
-    );
+
+    // Unprefixed classes are what a phone gets; `md:`-prefixed ones are not.
+    const phoneBg = classes.find((c) => /^bg-background(\/\d+)?$/.test(c));
+    const phoneBlur = classes.some((c) => /^backdrop-blur/.test(c));
+
+    expect(phoneBg, 'the scrolled header has no background at phone widths').toBeDefined();
+
+    // The finding this encodes: a *translucent* band with no blur is not enough.
+    // `bg-background/95` on its own still let the hero headline through as a sharp,
+    // legible ghost — the blur had been diffusing the residual. So phones need one
+    // or the other: fully opaque, or blurred.
+    expect(
+      phoneBg === 'bg-background' || phoneBlur,
+      `the scrolled header is translucent (${phoneBg}) with no backdrop blur at ` +
+        `phone widths, so page text still reads through it — and reads sharply, ` +
+        `which is worse than the blurred version it replaced.`,
+    ).toBe(true);
   });
 
   it('goes back to transparent when scrolled to the top again', () => {
@@ -100,8 +114,34 @@ describe('the skip link clears the sticky header', () => {
     expect(
       css,
       '#main-content has no scroll-margin-top, so the skip link lands its own ' +
-        'target under the 76px sticky header.',
-    ).toMatch(/#main-content\s*\{[^}]*scroll-margin-top:\s*76px/);
+        'target under the sticky header.',
+    ).toMatch(/#main-content\s*\{[^}]*scroll-margin-top:\s*\d+px/);
+  });
+
+  // The scroll-margin is only correct while it equals the header's height, and the
+  // two live in different files. Compare the numbers rather than asserting a
+  // literal, so changing `h-[76px]` fails here instead of silently re-breaking the
+  // skip link — which is the whole point of this half of the change.
+  //
+  // NB: 76px is repeated in seven places already (page-hero, hero, both payment
+  // pages, donate/info's scroll-mt, Navbar, and this CSS rule). Hoisting it to a
+  // custom property would be the real fix; it is out of scope here, and this at
+  // least pins the pair that has to agree.
+  it('the scroll-margin still equals the header height', () => {
+    const navbar = readFileSync(resolve(process.cwd(), 'src/components/Navbar.tsx'), 'utf8');
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/typography.css'), 'utf8');
+
+    const header = /\bh-\[(\d+)px\]/.exec(navbar);
+    const margin = /#main-content\s*\{[^}]*scroll-margin-top:\s*(\d+)px/.exec(css);
+
+    expect(header, 'the header row no longer sets an explicit height').not.toBeNull();
+    expect(margin, '#main-content has no scroll-margin-top').not.toBeNull();
+    expect(
+      Number(margin![1]),
+      `the header is ${header![1]}px tall but #main-content reserves ` +
+        `${margin![1]}px, so the skip link lands its target ` +
+        `${Number(header![1]) - Number(margin![1])}px under the header.`,
+    ).toBe(Number(header![1]));
   });
 
   it('is still the target the skip link points at', () => {
