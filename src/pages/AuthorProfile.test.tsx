@@ -1,0 +1,304 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Passthrough translations so assertions don't depend on i18n resources; `t`
+// keeps a stable identity across renders like the real react-i18next.
+vi.mock("react-i18next", () => {
+  const translation = {
+    t: (key: string, opts?: Record<string, unknown>) =>
+      opts
+        ? `${key}:${Object.entries(opts)
+            .map(([k, v]) => `${k}=${String(v)}`)
+            .join(",")}`
+        : key,
+    i18n: { language: "en" },
+  };
+  return { useTranslation: () => translation };
+});
+
+vi.mock("react-router-dom", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-router-dom")>()),
+  useParams: () => ({ slug: "subodh-kandel" }),
+}));
+
+vi.mock("@/components/Seo", () => ({ Seo: () => null }));
+
+vi.mock("@/services/jds-api", () => ({ getAuthorProfile: vi.fn() }));
+import { getAuthorProfile } from "@/services/jds-api";
+
+import AuthorProfile from "./AuthorProfile";
+import type { AuthorProfile as AuthorProfileType } from "@/types/jds";
+
+const profile = (over: Partial<AuthorProfileType> = {}): AuthorProfileType => ({
+  slug: "subodh-kandel",
+  display_name: "Subodh Kandel",
+  name_ne: "",
+  photo_url: "",
+  title: "Caseworker",
+  bio: "",
+  email: null,
+  links: [],
+  cases: [],
+  ...over,
+});
+
+const renderPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <AuthorProfile />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+};
+
+beforeEach(() => {
+  vi.mocked(getAuthorProfile).mockReset();
+});
+
+describe("AuthorProfile", () => {
+  it("renders the name and title", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(profile());
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Subodh Kandel" })).toBeTruthy(),
+    );
+    expect(screen.getByText("Caseworker")).toBeTruthy();
+  });
+
+  it("renders the photo when set and a placeholder when not", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ photo_url: "https://s3.jawafdehi.org/team/subodh.jpeg" }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() => expect(container.querySelector("img")).toBeTruthy());
+    expect(container.querySelector("img")?.getAttribute("src")).toBe(
+      "https://s3.jawafdehi.org/team/subodh.jpeg",
+    );
+  });
+
+  it("renders social links as outbound anchors", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({
+        links: [
+          { type: "instagram", value: "https://instagram.com/subodh_kandel" },
+          { type: "github", value: "https://github.com/subodh" },
+        ],
+      }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(container.querySelector('a[href^="https://instagram"]')).toBeTruthy(),
+    );
+    const external = container.querySelector('a[href^="https://instagram"]');
+    expect(external?.getAttribute("target")).toBe("_blank");
+    expect(external?.getAttribute("rel")).toContain("noopener");
+    expect(container.querySelector('a[href^="https://github"]')).toBeTruthy();
+  });
+
+  it("omits the email link when the author published no address", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(profile({ email: null }));
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Subodh Kandel" })).toBeTruthy(),
+    );
+    expect(container.querySelector('a[href^="mailto:"]')).toBeNull();
+  });
+
+  it("renders the email link when the author published one", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ email: "kandel@example.org" }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(container.querySelector('a[href^="mailto:"]')).toBeTruthy(),
+    );
+    expect(container.querySelector('a[href^="mailto:"]')?.getAttribute("href")).toBe(
+      "mailto:kandel@example.org",
+    );
+  });
+
+  it("lists the author's cases in the order the API returned them", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({
+        cases: [
+          {
+            slug: "newest-case",
+            title: "Newest case",
+            case_type: "CORRUPTION",
+            case_publish_date: "2026-08-20",
+            bigo: 12_500_000,
+          },
+          {
+            slug: "older-case",
+            title: "Older case",
+            case_type: "BRIBERY",
+            case_publish_date: "2025-07-01",
+            bigo: null,
+          },
+        ],
+      }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() => expect(screen.getByText("Newest case")).toBeTruthy());
+    const links = Array.from(container.querySelectorAll('a[href^="/case/"]'));
+    // Ordering is the API's job (newest published first); the page must not
+    // re-sort and quietly disagree with it.
+    expect(links.map((a) => a.getAttribute("href"))).toEqual([
+      "/case/newest-case",
+      "/case/older-case",
+    ]);
+  });
+
+  it("shows an empty state when the author has no published cases", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(profile({ cases: [] }));
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText("author.noCases")).toBeTruthy());
+  });
+
+  it("shows a not-found message when the profile is unavailable", async () => {
+    vi.mocked(getAuthorProfile).mockRejectedValue(new Error("404"));
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText("author.notFound")).toBeTruthy());
+  });
+
+  it("keeps the English name for an English reader even when a Nepali one exists", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ name_ne: "सुबोध कँडेल" }),
+    );
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Subodh Kandel" })).toBeTruthy(),
+    );
+  });
+});
+
+describe("AuthorProfile — biography", () => {
+  it("renders the bio as markdown under an About heading", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({
+        bio: "Documents CIAA procurement cases. **Law student** at TU.",
+      }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() => expect(screen.getByText("author.aboutHeading")).toBeTruthy());
+    // Bold renders as <strong>, not literal asterisks.
+    expect(container.querySelector("strong")?.textContent).toBe("Law student");
+    expect(container.textContent).not.toContain("**");
+  });
+
+  it("omits the About section entirely when there is no bio", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(profile({ bio: "" }));
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Subodh Kandel" })).toBeTruthy(),
+    );
+    expect(screen.queryByText("author.aboutHeading")).toBeNull();
+  });
+
+  it("shows the one-line title separately from the bio", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ title: "Caseworker", bio: "A longer biography." }),
+    );
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText("Caseworker")).toBeTruthy());
+    expect(screen.getByText("A longer biography.")).toBeTruthy();
+  });
+});
+
+// The suite above pins i18n.language to "en". The Nepali branch needs its own
+// module registry so the mock can report "ne" — vi.doMock plus a dynamic import.
+describe("AuthorProfile — Nepali locale", () => {
+  it("shows the Nepali name when one is set", async () => {
+    vi.resetModules();
+    vi.doMock("react-i18next", () => {
+      const translation = {
+        t: (key: string, opts?: Record<string, unknown>) =>
+          opts
+            ? `${key}:${Object.entries(opts)
+                .map(([k, v]) => `${k}=${String(v)}`)
+                .join(",")}`
+            : key,
+        i18n: { language: "ne" },
+      };
+      return { useTranslation: () => translation };
+    });
+
+    const { default: NepaliAuthorProfile } = await import("./AuthorProfile");
+    const { getAuthorProfile: nepaliGetAuthorProfile } = await import(
+      "@/services/jds-api"
+    );
+    vi.mocked(nepaliGetAuthorProfile).mockResolvedValue(
+      profile({ name_ne: "सुबोध कँडेल" }),
+    );
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <NepaliAuthorProfile />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "सुबोध कँडेल" })).toBeTruthy(),
+    );
+
+    vi.doUnmock("react-i18next");
+    vi.resetModules();
+  });
+});
+
+describe("AuthorProfile — link safety", () => {
+  it("neutralizes mail-header separators in the address but keeps @ readable", async () => {
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({ email: "kandel@example.org?subject=spoofed" }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(container.querySelector('a[href^="mailto:"]')).toBeTruthy(),
+    );
+    const href = container.querySelector('a[href^="mailto:"]')?.getAttribute("href");
+    expect(href).toBe("mailto:kandel@example.org%3Fsubject%3Dspoofed");
+  });
+
+  it("drops a link whose stored URL is not http(s)", async () => {
+    // The API rejects these on write; this is defence in depth for a row that
+    // predates that rule or was written by a raw ORM edit.
+    vi.mocked(getAuthorProfile).mockResolvedValue(
+      profile({
+        links: [
+          { type: "website", value: "javascript:alert(1)" as string },
+          { type: "github", value: "https://github.com/subodh" },
+        ],
+      }),
+    );
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(container.querySelector('a[href^="https://github"]')).toBeTruthy(),
+    );
+    expect(container.querySelector('a[href^="javascript"]')).toBeNull();
+  });
+});

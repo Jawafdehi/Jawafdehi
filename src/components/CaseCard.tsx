@@ -287,7 +287,7 @@ function EntityRow({ icon: Icon, label, title, ids }: Readonly<{ icon: typeof Us
       {to ? (
         <Link
           to={to}
-          className="block min-w-0 truncate rounded-sm transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="block min-w-0 truncate rounded-sm py-1 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           title={title}
           onClick={(e) => e.stopPropagation()}
         >

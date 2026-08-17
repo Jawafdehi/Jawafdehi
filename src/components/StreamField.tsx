@@ -1,7 +1,12 @@
+import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, FileText, ArrowRight } from "lucide-react";
+import { Download, Eye, FileText, ArrowRight } from "lucide-react";
 import DOMPurify from "isomorphic-dompurify";
+import { useTranslation } from "react-i18next";
 
+// Type-only, so the viewer (react-markdown, the PDF renderer) stays out of the
+// article bundle; the component itself is pulled in on first preview below.
+import type { PreviewDocument } from "@/components/DocumentPreviewDialog";
 import type {
   StreamBlock,
   StreamCaseValue,
@@ -20,30 +25,107 @@ const headingId = (text: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
+// Most articles carry no document at all, and the viewer is heavy (markdown
+// renderer + PDF engine), so it is fetched on the first preview rather than
+// shipped with every article body.
+const DocumentPreviewDialog = lazy(() =>
+  import("@/components/DocumentPreviewDialog").then((module) => ({
+    default: module.DocumentPreviewDialog,
+  })),
+);
+
+const DOCUMENT_CARD_CLASS =
+  "not-prose my-4 flex w-full items-start gap-3 rounded-lg border border-border/70 bg-background p-3 text-left no-underline transition-colors hover:border-primary/20 hover:bg-primary-surface/[0.03]";
+
+// Only PDFs and markdown/text have a viewer — the shared <DocumentPreviewDialog>
+// renders exactly those two. Anything else (docx, xlsx, images…) has nothing to
+// preview, so it keeps the direct download rather than opening a dialog that
+// can only apologise. Mirrors `previewTypeOf` on MaterialProfile.
+const previewTypeOf = (
+  value: StreamDocumentValue,
+): PreviewDocument["type"] | undefined => {
+  const source = (value.filename || value.url || "").split("?")[0].toLowerCase();
+  const extension = source.includes(".") ? source.split(".").pop() : "";
+  if (extension === "pdf") return "pdf";
+  if (extension === "md" || extension === "markdown") return "markdown";
+  return undefined;
+};
+
+const DocumentCardBody = ({
+  action,
+  icon: Icon,
+  title,
+}: {
+  action: string;
+  icon: typeof Download;
+  title: string;
+}) => (
+  <>
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+      <FileText className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
+    </span>
+    <span className="min-w-0 flex-1">
+      <span className="block text-sm font-semibold leading-5 text-foreground">
+        {title}
+      </span>
+      <span className="mt-1 inline-flex items-center text-xs font-semibold text-primary">
+        <Icon className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+        {action}
+      </span>
+    </span>
+  </>
+);
+
 const DocumentBlock = ({ value }: { value: StreamDocumentValue }) => {
+  const { t } = useTranslation();
+  const [previewing, setPreviewing] = useState(false);
+
   if (!value) {
     return null;
   }
+
+  const title = value.title || value.filename;
+  const previewType = previewTypeOf(value);
+
+  // Nothing to preview: keep the original straight-to-download link.
+  if (!previewType) {
+    return (
+      <a
+        href={value.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={DOCUMENT_CARD_CLASS}
+      >
+        <DocumentCardBody
+          action={t("documentPreview.download", "Download")}
+          icon={Download}
+          title={title}
+        />
+      </a>
+    );
+  }
+
+  // Previewable: open the shared viewer, which offers download as a secondary
+  // action inside the dialog.
   return (
-    <a
-      href={value.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="not-prose my-4 flex items-start gap-3 rounded-lg border border-border/70 bg-background p-3 no-underline transition-colors hover:border-primary/20 hover:bg-primary-surface/[0.03]"
-    >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
-        <FileText className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold leading-5 text-foreground">
-          {value.title || value.filename}
-        </span>
-        <span className="mt-1 inline-flex items-center text-xs font-semibold text-primary">
-          <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-          Download
-        </span>
-      </span>
-    </a>
+    <>
+      <button type="button" onClick={() => setPreviewing(true)} className={DOCUMENT_CARD_CLASS}>
+        <DocumentCardBody
+          action={t("documentPreview.preview", "Preview")}
+          icon={Eye}
+          title={title}
+        />
+      </button>
+      {previewing ? (
+        <Suspense fallback={null}>
+          <DocumentPreviewDialog
+            document={{ title, type: previewType, url: value.url }}
+            open
+            onOpenChange={setPreviewing}
+          />
+        </Suspense>
+      ) : null}
+    </>
   );
 };
 

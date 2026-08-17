@@ -41,7 +41,7 @@ const DataQuality = () => {
 
       <main id="main-content" className="flex-1">
         <section className="border-b bg-muted/20">
-          <div className="container mx-auto px-6 py-12 md:py-16">
+          <div className="layout-container py-12 md:py-16">
             <h1 className="font-display text-[2rem] font-bold leading-tight tracking-tight text-foreground md:text-5xl">
               {t("dataQuality.title", "Data Quality & Coverage")}
             </h1>
@@ -62,7 +62,7 @@ const DataQuality = () => {
           </div>
         </section>
 
-        <div className="container mx-auto space-y-12 px-6 py-12">
+        <div className="layout-container space-y-8 py-8 md:space-y-12 md:py-12">
           {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
           <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 

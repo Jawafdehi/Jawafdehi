@@ -80,7 +80,7 @@ const OurProducts = () => {
 
       {/* Products */}
       <section id="stack" className="bg-muted/10 pt-12 pb-10 md:pt-14 md:pb-12 lg:pt-16">
-        <div className="container mx-auto px-4">
+        <div className="layout-container">
          
 
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2">

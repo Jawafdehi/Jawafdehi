@@ -318,7 +318,7 @@ const CaseDetail = () => {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
         <div className="flex-1 py-6 md:py-12">
-          <div className="container mx-auto max-w-5xl px-6">
+          <div className="layout-container max-w-5xl">
             <Skeleton className="mb-6 h-10 w-32" />
 
             <div className="space-y-8">
@@ -345,7 +345,7 @@ const CaseDetail = () => {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
         <div className="flex-1 py-6 md:py-12">
-          <div className="container mx-auto max-w-5xl px-6">
+          <div className="layout-container max-w-5xl">
             <Button variant="ghost" asChild className="mb-6">
               <Link to="/cases">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -442,7 +442,7 @@ const CaseDetail = () => {
       />
 
       <div className="flex-1 py-6 sm:py-8">
-        <div className="container mx-auto px-6">
+        <div className="layout-container">
           <div className="min-w-0">
             <div className="min-w-0">
               <FloatingShareSidebar
@@ -583,11 +583,17 @@ const CaseDetail = () => {
                       </div>
                     )}
 
-                    {/* Public caseworker-authored attribution + edit-history byline
-                        (Case.public_notes). Understated, sits with the case
-                        metadata above. Empty for the public unless a caseworker set
-                        it; the internal NotesSection below is separate. */}
-                    <CaseByline markdown={caseData.public_notes} />
+                    {/* The public byline (authors + first-published date +
+                        curated edit history, falling back to the deprecated
+                        free-text public_notes). Understated, sits with the case
+                        metadata above; the internal NotesSection below is
+                        separate. */}
+                    <CaseByline
+                      authors={caseData.authors}
+                      publishDate={caseData.case_publish_date}
+                      editHistory={caseData.public_edit_history}
+                      markdown={caseData.public_notes}
+                    />
                   </div>
                 </div>
 

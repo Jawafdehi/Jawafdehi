@@ -30,7 +30,7 @@ type FooterBadge = {
 };
 
 const linkClass =
-  "group -mx-3 inline-flex min-h-9 items-center justify-between gap-3 rounded-full px-3 text-sm text-[var(--footer-muted)] transition-all duration-200 hover:bg-[var(--footer-soft)] hover:text-[var(--footer-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "group -mx-3 inline-flex min-h-11 items-center justify-between gap-3 rounded-full px-3 text-sm text-[var(--footer-muted)] transition-all duration-200 hover:bg-[var(--footer-soft)] hover:text-[var(--footer-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 const footerBadges: FooterBadge[] = [
   {
@@ -98,7 +98,12 @@ function FooterLinkGroup({ title, links }: Readonly<{ title: string; links: Foot
       <h3 className="mb-3 text-sm font-bold text-[var(--footer-fg)]">
         {title}
       </h3>
-      <ul className="space-y-1">
+      {/* No gap between rows: min-h-11 already gives each link 44px of vertical
+          room, and the rounded hover background separates one from the next. The
+          old `space-y-1` on top of a 44px row would have cost 8px of page height
+          per link across ~18 links on all 23 routes, against the 4px the taller
+          row costs on its own. */}
+      <ul>
         {links.map((link) => (
           <li key={`${link.label}-${link.to}`}>
             <FooterNavLink {...link} />
@@ -250,7 +255,7 @@ export const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--footer-border)] bg-[var(--footer-soft)] text-[var(--footer-muted)] shadow-sm shadow-foreground/5 transition-all duration-200",
+                  "inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--footer-border)] bg-[var(--footer-soft)] text-[var(--footer-muted)] shadow-sm shadow-foreground/5 transition-all duration-200",
                   "hover:-translate-y-0.5 hover:border-[var(--footer-border-hover)] hover:bg-[var(--footer-soft-hover)] hover:text-[var(--footer-fg)] hover:shadow-md",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 )}

@@ -15,6 +15,7 @@
 import { http, extractErrorMessage } from './http';
 import { courtRefCandidates } from '@/utils/courtCaseRef';
 import type {
+  AuthorProfile,
   Case,
   CaseDetail,
   CaseSearchParams,
@@ -177,6 +178,25 @@ export async function getCaseById(id: string | number): Promise<CaseDetail> {
     return response.data;
   } catch (error) {
     handleApiError(error, `/cases/${id}/`);
+  }
+}
+
+/**
+ * Fetch a public author profile and the cases they wrote (newest first).
+ *
+ * 404s for a profile that has not been published — a profile row is created
+ * automatically the first time someone is credited on a case, so an unpublished
+ * one is an empty placeholder rather than a page.
+ */
+export async function getAuthorProfile(slug: string): Promise<AuthorProfile> {
+  try {
+    const response = await http.get<AuthorProfile>(
+      `/api/authors/${encodeURIComponent(slug)}/`,
+      { timeout: 10000 },
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, `/authors/${slug}/`);
   }
 }
 

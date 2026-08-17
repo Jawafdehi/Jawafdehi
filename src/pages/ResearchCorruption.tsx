@@ -5,18 +5,52 @@ import { Info } from "lucide-react";
 
 import { REPORT, CITATIONS, verdictYearRates, fyLabel } from "@/data/research-corruption";
 import { AccountabilityFunnel, type FunnelStage } from "@/components/data-quality/AccountabilityFunnel";
-import { StatusDonut, type DonutSegment } from "@/components/data-quality/StatusDonut";
-import { BreakdownBar } from "@/components/data-quality/BreakdownBar";
+import type { DonutSegment } from "@/components/data-quality/StatusDonut";
 import { ConvictionByCharge, type ChargeRow } from "@/components/research/ConvictionByCharge";
 import { JusticeSpread } from "@/components/research/JusticeSpread";
-import { FiledDecidedTrend } from "@/components/research/FiledDecidedTrend";
-import { RateTrend } from "@/components/research/RateTrend";
-import { PipelineHealth } from "@/components/research/PipelineHealth";
 import { ChargeMixByYear } from "@/components/research/ChargeMixByYear";
-import { FiledByMonth } from "@/components/research/FiledByMonth";
 import { AccountabilityStages, type AccountabilityStage } from "@/components/research/AccountabilityStages";
+import { lazyChart } from "@/components/charts/lazy";
 import { Seo } from "@/components/Seo";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
+
+// The recharts-backed charts on this page, each in its own async chunk.
+//
+// This page is pre-rendered, so it must be imported eagerly (src/routes.tsx),
+// and importing these directly was the ONLY thing keeping recharts + lodash +
+// decimal.js-light + react-smooth in the initial JS payload, which deferring them
+// cut from 745.7 KB gzip to 635.5 KB (-110 KB, -14.8%).
+// `/data-quality` was already lazy, so this page was the sole eager entry point.
+//
+// Each `placeholder` below is a verbatim copy of what that component renders
+// before its own `useMounted()` effect fires, which is what makes this free:
+// the pre-rendered HTML is unchanged. Keep them in step — see the contract in
+// src/components/charts/lazy.tsx.
+const StatusDonut = lazyChart(
+  () => import("@/components/data-quality/StatusDonut").then((m) => m.StatusDonut),
+  () => <div className="relative mx-auto h-[200px] w-full max-w-[240px]" />,
+);
+const BreakdownBar = lazyChart(
+  () => import("@/components/data-quality/BreakdownBar").then((m) => m.BreakdownBar),
+  // Height is data-driven in the component; mirror the same expression.
+  (p) => <div className="w-full" style={{ height: p.items.length * 44 + 24 }} />,
+);
+const FiledDecidedTrend = lazyChart(
+  () => import("@/components/research/FiledDecidedTrend").then((m) => m.FiledDecidedTrend),
+  () => <div className="w-full" style={{ height: 260 }} />,
+);
+const RateTrend = lazyChart(
+  () => import("@/components/research/RateTrend").then((m) => m.RateTrend),
+  (p) => <div className="w-full" style={{ height: p.height ?? 260 }} />,
+);
+const PipelineHealth = lazyChart(
+  () => import("@/components/research/PipelineHealth").then((m) => m.PipelineHealth),
+  (p) => <div className="w-full" style={{ height: p.height ?? 280 }} />,
+);
+const FiledByMonth = lazyChart(
+  () => import("@/components/research/FiledByMonth").then((m) => m.FiledByMonth),
+  () => <div className="w-full" style={{ height: 300 }} />,
+);
 
 const CANONICAL = `${SITE_URL}/research/corruption-accountability/`;
 
@@ -272,7 +306,7 @@ const ResearchCorruption = () => {
       <main id="main-content" className="flex-1">
         {/* Hero */}
         <section className="border-b bg-muted/20">
-          <div className="container mx-auto px-6 py-12 md:py-16">
+          <div className="layout-container py-12 md:py-16">
             <Eyebrow>{t("research.corruption.hero.eyebrow", "Research · Corruption Accountability")}</Eyebrow>
             <h1 className="max-w-3xl font-display text-[2rem] font-bold leading-tight tracking-tight text-foreground md:text-5xl">
               {t("research.corruption.hero.title", "Where Nepal's corruption accountability actually leaks")}
@@ -302,7 +336,7 @@ const ResearchCorruption = () => {
           </div>
         </section>
 
-        <div className="container mx-auto max-w-4xl space-y-16 px-6 py-14">
+        <div className="layout-container max-w-4xl space-y-10 py-8 md:space-y-16 md:py-14">
           {/* 1 · Funnel */}
           <section>
             <Eyebrow>{t("research.corruption.funnel.eyebrow", "The funnel")}</Eyebrow>
@@ -390,7 +424,7 @@ const ResearchCorruption = () => {
               />
             </div>
 
-            <div className="mt-10">
+            <div className="mt-6 md:mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.mixByYearTitle", "How the charge mix shifted, by year")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.mixByYearSub", "Register cases by fiscal filing year — {{n}} of the {{corpus}}, money laundering excluded. “Other” folds together seven smaller charge families and the matters whose charge text could not be classified. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80, with a rebound in FY2080/81. The illegal-benefit charge was barely used before FY2078/79 (a single earlier case, in FY2069/70) and loss to government grew.", { n: mixTotal.toLocaleString(), corpus: REPORT.corpus.ciaaProsecutions.toLocaleString() })}</p>
               <ChargeMixByYear
@@ -454,7 +488,7 @@ const ResearchCorruption = () => {
               />
             </div>
 
-            <div className="mt-10">
+            <div className="mt-6 md:mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
                 {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft converts at much the same level now as it did then: {{coreEarly}}% across the first three years against {{coreRecent}}% across the last four. So the headline decline is mostly that change of mix — the easy wins leaving — not the court convicting serious graft any less. Read the dashed line as a level, not a trend: it swings from {{coreHigh}}% in FY{{coreHighYear}} to {{coreLow}}% in FY{{coreLowYear}} because in some years only a few dozen core-graft cases were decided.", { start: fakeShareStart, min: fakeShareMin, coreEarly: early.corePct, coreRecent: recent.corePct, coreHigh: Math.round(coreHigh.coreConvPct), coreHighYear: fyLabel(coreHigh.year), coreLow: Math.round(coreLow.coreConvPct), coreLowYear: fyLabel(coreLow.year) })}
@@ -491,7 +525,7 @@ const ResearchCorruption = () => {
               />
             </div>
 
-            <div className="mt-10">
+            <div className="mt-6 md:mt-10">
               <h3 className="text-base font-semibold text-foreground">{t("research.corruption.volume.monthTitle", "When cases are filed, by Nepali month")}</h3>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("research.corruption.volume.monthSub", "Mean cases filed per Nepali month across FY2069/70–2082/83; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.")}</p>
               <FiledByMonth

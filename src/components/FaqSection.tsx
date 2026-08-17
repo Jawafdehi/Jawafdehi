@@ -54,7 +54,7 @@ export function FaqSection({
       className={cn("bg-background py-16 md:py-24", className)}
       aria-labelledby={titleId}
     >
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <div className={contentClassName}>
           <div className="max-w-3xl">
             {eyebrow ? (

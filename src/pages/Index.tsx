@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { Hero } from "@/components/home/hero";
+import { SeptemberEvent } from "@/components/home/september-event";
 import { Faq } from "@/components/home/faq";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { ShareOurVision } from "@/components/home/share-our-vision";
@@ -171,10 +172,12 @@ const Index = () => {
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
 
+        {/* ── 2 September public event ── */}
+        <SeptemberEvent />
 
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-base md:text-lg text-foreground/80 leading-relaxed">
                 Corruption records are scattered across dozens of government portals, court systems, and public databases — inaccessible to most citizens.{" "}
@@ -191,7 +194,7 @@ const Index = () => {
         {/* The `recent-cases` id is kept on purpose: nothing in src links to it,
             but external links to jawafdehi.org/#recent-cases would break. */}
         <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
-          <div className="container mx-auto px-4">
+          <div className="layout-container">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">

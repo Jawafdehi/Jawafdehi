@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render as rtlRender, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // BB-37 — the admin case editor gains a "View on website" link to the public
 // case page (/case/<slug>). The link is enabled only for a PUBLISHED (public)
@@ -9,12 +10,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 // Passthrough translations so assertions don't depend on i18n resources
 // (mirrors case-overview-section.test.tsx). t() returns the key verbatim.
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
+// `t` MUST keep a stable identity across renders, the way the real
+// react-i18next does. AdminCaseForm's `loadCase` is a useCallback keyed on
+// `[editing, slug, t]` and its effect calls it, so returning a fresh `t` (or a
+// fresh wrapper object) on every render re-fires the load on every render — the
+// component drops back into its loading spinner mid-test, and asserting on the
+// form becomes a race the CI runner loses.
+vi.mock("react-i18next", () => {
+  const translation = {
     t: (key: string, opts?: Record<string, unknown>) =>
       opts && "slug" in opts ? `${key}:${String(opts.slug)}` : key,
-  }),
-}));
+  };
+  return { useTranslation: () => translation };
+});
 
 // Router: the editor reads the slug from the URL and never navigates in this test.
 const navigate = vi.fn();
@@ -33,6 +41,9 @@ vi.mock("@/context/CaseworkAuthContext", () => ({
 vi.mock("@/services/admin-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/admin-api")>()),
   getCaseWithEtag: vi.fn(),
+  // The byline editor fetches the account roster on mount. Stubbed so the test
+  // exercises the form, not axios against a jsdom origin that has no server.
+  listCaseAuthorCandidates: vi.fn(async () => []),
 }));
 import { getCaseWithEtag } from "@/services/admin-api";
 
@@ -49,6 +60,17 @@ vi.mock("@/components/admin/case/CaseHistoryPanel", () => ({ default: () => <div
 vi.mock("@/components/admin/DatePairInput", () => ({ default: () => <div /> }));
 
 import AdminCaseForm from "./AdminCaseForm";
+
+// The byline editor reads its roster through React Query, so the component
+// needs a provider — the real app mounts one above this route.
+const render = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return rtlRender(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+};
 
 const loadCase = (state: string, extra: Record<string, unknown> = {}) =>
   vi.mocked(getCaseWithEtag).mockResolvedValue({
@@ -85,17 +107,44 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     expect(link.getAttribute("aria-disabled")).not.toBe("true");
   });
 
-  it("renders a public-notes / byline field distinct from the internal notes field (#4)", async () => {
+  it("renders the structured byline editor distinct from the internal notes field", async () => {
     loadCase("PUBLISHED");
     render(<AdminCaseForm />);
 
-    // Both the internal notes and the new public byline field are present and
-    // labelled distinctly (t() passthrough returns the i18n key verbatim).
+    // The byline (authors / first published / edit history) replaced the
+    // free-text public_notes field, and is distinct from the internal notes
+    // (t() passthrough returns the i18n key verbatim).
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.bylineHeading")).toBeTruthy(),
+    );
+    expect(screen.getByText("admin.caseForm.labelAuthors")).toBeTruthy();
+    expect(screen.getByText("admin.caseForm.labelPublishDate")).toBeTruthy();
+    expect(screen.getByText("admin.caseForm.labelEditHistory")).toBeTruthy();
+    expect(screen.getByText("admin.caseForm.labelNotes")).toBeTruthy();
+  });
+
+  it("hides the deprecated free-text byline on a case that doesn't carry one", async () => {
+    loadCase("PUBLISHED", { public_notes: "" });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.bylineHeading")).toBeTruthy(),
+    );
+    // Nothing new should be written to public_notes, so the field is not offered.
+    expect(screen.queryByText("admin.caseForm.labelPublicNotes")).toBeNull();
+  });
+
+  it("still shows the deprecated free-text byline on an un-backfilled case", async () => {
+    // The ~72 legacy cases keep their hand-written line until it is replaced, so
+    // a caseworker must be able to read and clear it.
+    loadCase("PUBLISHED", {
+      public_notes: "**Case Drafted by Rujit Kafle. First Published On 21 May 2026.**",
+    });
+    render(<AdminCaseForm />);
+
     await waitFor(() =>
       expect(screen.getByText("admin.caseForm.labelPublicNotes")).toBeTruthy(),
     );
-    expect(screen.getByText("admin.caseForm.labelNotes")).toBeTruthy();
-    // The help text spells out that the field is public and hand-written.
     expect(screen.getByText("admin.caseForm.publicNotesHelp")).toBeTruthy();
   });
 
@@ -145,6 +194,11 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     expect(tip?.getAttribute("title")).toBe(
       "admin.caseForm.viewOnWebsiteNotPublic",
     );
+    // Regression guard for the re-entrant load described at the i18n mock above:
+    // an unstable `t` made this 2+ and left the form flickering back to its
+    // spinner, which is what made this test flaky in CI.
+    expect(vi.mocked(getCaseWithEtag)).toHaveBeenCalledTimes(1);
+
     // …and keyboard / screen-reader users via an sr-only hint wired through
     // aria-describedby (a disabled button can't be focused to reveal a title).
     const describedBy = btn.getAttribute("aria-describedby");

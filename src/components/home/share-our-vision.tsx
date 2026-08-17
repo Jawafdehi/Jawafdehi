@@ -18,7 +18,7 @@ export function ShareOurVision() {
       className="border-b border-primary bg-primary-surface py-12 text-primary-foreground md:py-16"
       aria-labelledby="share-our-vision-title"
     >
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <h2
           id="share-our-vision-title"
           className="text-3xl font-bold leading-tight tracking-normal text-primary-foreground md:text-4xl"

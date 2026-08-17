@@ -16,7 +16,7 @@ export function Cta({ className }: Readonly<CtaProps>) {
     <section
       id="contribute"
       className={cn(
-        "container mx-auto border-b border-border bg-background py-14 md:py-18 lg:py-20",
+        "layout-container border-b border-border bg-background py-14 md:py-18 lg:py-20",
         className,
       )}
       aria-labelledby="contribute-title"

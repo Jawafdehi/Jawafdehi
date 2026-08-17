@@ -1,6 +1,15 @@
-import { FormEvent, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  MouseEvent,
+  ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, LayoutGrid, List, X } from "lucide-react";
+import { AlertCircle, ArrowRight, ChevronDown, LayoutGrid, List, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -100,6 +109,10 @@ export default function ArchiveSearch({
   // entities and बिगो rather than a text row. The choice is intentionally NOT
   // persisted across visits or mirrored into the URL — that's a separate change.
   const [viewMode, setViewMode] = useState<"list" | "card">("card");
+  // Mobile-only disclosure state for the filter panel. Above `lg` the panel is
+  // shown unconditionally by CSS, so this is ignored there (see the panel below).
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersPanelId = useId();
 
   useEffect(() => setQuery(params.q || ""), [params.q]);
   useEffect(() => {
@@ -286,7 +299,7 @@ export default function ArchiveSearch({
         robots={isFilteredResultSet ? "noindex, follow" : null}
       />
 
-      <div className="container mx-auto px-4">
+      <div className="layout-container">
         <header className="max-w-3xl">
 
           <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
@@ -354,7 +367,7 @@ export default function ArchiveSearch({
             </div>
             <div
               aria-label={t("archiveSearch.viewMode", "View mode")}
-              className="flex items-center rounded-full border p-0.5"
+              className="flex items-center gap-1 rounded-full border p-0.5"
               role="group"
             >
               {/* Card first, then list — the toggle reads in the same order as
@@ -419,25 +432,61 @@ export default function ArchiveSearch({
           </div>
         ) : null}
 
-        {showFilters ? (
-          <div className="mt-5 lg:hidden">
-            <details className="rounded-xl bg-card">
-              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-foreground">
-                Filters{activeRefinementCount ? ` (${activeRefinementCount})` : ""}
-              </summary>
-              <div className="border-t p-3">{searchFilters}</div>
-            </details>
-          </div>
-        ) : null}
-
+        {/*
+          One grid, one copy of the filter markup. The panel used to be rendered
+          twice — once in a mobile <details>, once in the desktop sidebar — so
+          both subtrees sat in the DOM at every viewport, doubling the pre-rendered
+          payload, the hydration cost, the reconciliation work on every refinement,
+          and the "Archive search filters" landmark. Now `display` alone decides
+          where the single copy lands: the disclosure button is a grid item only
+          below `lg`, so above it the panel takes column 1 and the results column 2.
+        */}
         <div
           className={cn(
-            "mt-7 grid items-start gap-7",
+            "mt-5 grid items-start gap-x-7 gap-y-4 lg:mt-7",
             showFilters && "lg:grid-cols-[250px_minmax(0,1fr)]",
           )}
         >
           {showFilters ? (
-            <div className="hidden self-start lg:block">{searchFilters}</div>
+            <>
+              {/*
+                Replaces a native <details>: a <details> cannot be forced open with
+                CSS across browsers, so the desktop sidebar could not reuse it.
+              */}
+              <button
+                aria-controls={filtersPanelId}
+                aria-expanded={filtersOpen}
+                className="flex min-h-11 w-full items-center justify-between rounded-xl bg-card px-4 py-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:hidden"
+                onClick={() => setFiltersOpen((open) => !open)}
+                type="button"
+              >
+                <span>
+                  Filters{activeRefinementCount ? ` (${activeRefinementCount})` : ""}
+                </span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none",
+                    filtersOpen && "rotate-180",
+                  )}
+                />
+              </button>
+              {/*
+                `lg:block` outranks `hidden` on source order at >=1024px, so the
+                desktop sidebar ignores `filtersOpen` entirely and no breakpoint
+                hook is needed — which keeps the pre-rendered markup and the first
+                client render identical.
+              */}
+              <div
+                className={cn(
+                  filtersOpen ? "block" : "hidden",
+                  "self-start lg:block",
+                )}
+                id={filtersPanelId}
+              >
+                {searchFilters}
+              </div>
+            </>
           ) : null}
 
           <section

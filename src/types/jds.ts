@@ -173,6 +173,66 @@ export interface CourtCase {
   entities?: CourtCaseEntity[];
 }
 
+/** One credited author on a case's public byline, resolved from their profile.
+ *
+ * Every field except the list position is PER-PERSON: the byline's only per-case
+ * fact is the order these come back in. A rename therefore shows the new name on
+ * every case that person wrote, which is the intended behaviour.
+ */
+export interface CaseAuthorCredit {
+  /** Profile handle; the card links to /author/<slug> when has_public_page. */
+  slug: string;
+  display_name: string;
+  /** Nepali name; empty when unset (fall back to display_name). */
+  name_ne?: string;
+  photo_url?: string;
+  /** One-line role, e.g. "Caseworker" or "BALLB 4th Year Student". */
+  title?: string;
+  /** False for an auto-created profile nobody has filled in yet — do not link. */
+  has_public_page: boolean;
+  /** Casework viewers only — omitted from public reads. */
+  user_id?: number;
+}
+
+/** A public social link on an author profile. Mirrors team.ts ContactType. */
+export interface AuthorLink {
+  type: "facebook" | "instagram" | "linkedin" | "github" | "website" | "twitter";
+  value: string;
+}
+
+/** A case card on an author's profile page. */
+export interface AuthorCaseSummary {
+  slug: string;
+  title: string;
+  short_description?: string;
+  case_type: string;
+  thumbnail_url?: string;
+  case_publish_date: string | null;
+  bigo: number | null;
+}
+
+/** The public author profile at /author/<slug>. */
+export interface AuthorProfile {
+  slug: string;
+  display_name: string;
+  name_ne?: string;
+  photo_url?: string;
+  /** One-line role shown under the name (and on author cards). */
+  title?: string;
+  /** Longer biography (markdown), profile page only. */
+  bio?: string;
+  /** null when the author has not published an address. */
+  email: string | null;
+  links: AuthorLink[];
+  cases: AuthorCaseSummary[];
+}
+
+/** One entry in a case's public, caseworker-curated edit history. */
+export interface CaseEditHistoryEntry {
+  date: string; // ISO date (AD)
+  remarks: string;
+}
+
 export interface Case {
   id: number;
   slug: string | null; // URL-friendly slug; older cases may not have one yet
@@ -180,10 +240,16 @@ export interface Case {
   state: CaseState; // Current state in the workflow
   title: string;
   short_description?: string | null;
-  // Public, caseworker-authored attribution + edit-history byline (markdown).
-  // Public counterpart to the internal `notes`: returned to everyone, so it is a
-  // lightweight field present on both the list and detail shapes.
+  // DEPRECATED free-text byline, superseded by `authors` / `case_publish_date` /
+  // `public_edit_history` below. Still returned, and still rendered as a
+  // fallback on cases that have not been backfilled with structured authors.
   public_notes?: string | null;
+  // The structured public byline. `user_id` is present only for casework
+  // viewers (the editor needs it to round-trip the list through PATCH); public
+  // callers get the name and credit note only.
+  authors?: CaseAuthorCredit[];
+  case_publish_date?: string | null; // ISO date the case first went live
+  public_edit_history?: CaseEditHistoryEntry[];
   case_start_date: string | null; // ISO date format
   case_end_date: string | null; // ISO date format
   thumbnail_url?: string | null; // URL for case card thumbnail image
@@ -211,6 +277,9 @@ export interface CaseDetail extends Case {
   evidence: EvidenceEntry[];
   notes: string;
   public_notes: string;
+  authors: CaseAuthorCredit[];
+  case_publish_date: string | null;
+  public_edit_history: CaseEditHistoryEntry[];
   bigo: number | null; // Embezzled/irregular amount in NPR (null if not applicable)
   court_cases: string[] | null;
 }

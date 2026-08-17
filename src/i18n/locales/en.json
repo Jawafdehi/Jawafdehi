@@ -179,6 +179,24 @@
       "submitFeedback": "Submit Feedback"
     }
   },
+  "septemberEvent": {
+    "eyebrow": "Public event · Free · Open to everyone",
+    "title": "Building Nepal's online corruption database",
+    "description": "We will go through the archive in the open: where the records come from, and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
+    "dateUs": "Wednesday 2 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
+    "dateNepal": "Thursday 3 September 2026 in Nepal, 6:45 AM (भदौ १८)",
+    "formatZoom": "Zoom",
+    "formatFacebook": "live on Facebook",
+    "cta": "Register free",
+    "viewFlyer": "View the full flyer",
+    "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
+    "barLabel": "Upcoming public event",
+    "barTitle": "Public event",
+    "barWhen": "2 September, 6 PM Pacific · 3 September, 6:45 AM in Nepal",
+    "barWhenShort": "2 September, 6 PM Pacific",
+    "barCta": "Register free",
+    "barDismiss": "Dismiss event announcement"
+  },
   "ourProcess": {
     "hero": {
       "heading": "How a <1>corruption</1> case goes from discovery to the <3>public archive</3>"
@@ -403,46 +421,9 @@
       ]
     },
     "ways": {
-      "eyebrow": "Ways to give",
       "title": "Two ways to give",
-      "description": "Give directly through a Nepal bank account — no fees, and the way we prefer — or to our US 501(c)(3), Jawafdehi Initiative, Inc., by check, Crowded, or PayPal.",
-      "preferredBadge": "Preferred",
-      "quiz": {
-        "back": "Back",
-        "restart": "Start over",
-        "showAll": "Or see all ways to give",
-        "guided": "Back to the guided steps",
-        "taxpayer": {
-          "q": "Are you a US taxpayer?",
-          "help": "Only US taxpayers can claim a deduction for gifts to our US 501(c)(3).",
-          "yes": "Yes, I file US taxes",
-          "no": "No"
-        },
-        "receipt": {
-          "q": "Would you like a US tax-deductible receipt?",
-          "help": "A receipt means giving to our US 501(c)(3), which carries processing fees.",
-          "yes": "Yes, I'd like a receipt",
-          "no": "No, not needed"
-        },
-        "nepal": {
-          "q": "Do you have a Nepal bank account?",
-          "help": "A local transfer in Nepal sends 100% of your gift, with no fees.",
-          "yes": "Yes",
-          "no": "No"
-        },
-        "resultNepal": {
-          "eyebrow": "Recommended for you",
-          "intro": "Give directly in Nepal — it sends 100% of your gift, with no fees. This is the way we prefer."
-        },
-        "resultUs": {
-          "eyebrow": "Recommended for you",
-          "intro": "Give to our US 501(c)(3), Jawafdehi Initiative, Inc. Choose the rail that suits you below."
-        }
-      },
       "nepali": {
-        "eyebrow": "Give in Nepal",
-        "whoFor": "You have a Nepal bank account",
-        "title": "Bank transfer",
+        "title": "From inside Nepal",
         "nameLabel": "Name",
         "accountName": "Jawafdehi Initiative",
         "accountLabel": "A/c no.",
@@ -450,34 +431,28 @@
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
         "copyAria": "Copy Nepali bank account number",
-        "feeNote": "No fees — 100% reaches Jawafdehi.",
-        "deductibleNote": "Not tax-deductible under US law."
+        "qrTitle": "Scan to pay",
+        "qrDescription": "Scan with any mobile banking app or digital wallet on either Nepali QR network.",
+        "walletSwitchAria": "Choose a QR network",
+        "wallets": {
+          "fonepay": {
+            "label": "FonePay",
+            "alt": "FonePay QR code for Jawafdehi Initiative"
+          },
+          "nepalpay": {
+            "label": "NepalPay",
+            "alt": "NepalPay QR code for Jawafdehi Initiative"
+          }
+        }
       },
       "us": {
-        "eyebrow": "Give in the US",
-        "whoFor": "You want a US tax receipt, or don't have a Nepal account",
-        "title": "Jawafdehi Initiative, Inc.",
-        "deductibleNote": "Tax-deductible for US taxpayers — 501(c)(3), EIN 42-3114954.",
-        "check": {
-          "title": "Check",
-          "detail": "Payable to “Jawafdehi Initiative, Inc.”",
-          "fee": "No fees",
-          "payee": "Jawafdehi Initiative, Inc.",
-          "copyAria": "Copy check payee name",
-          "addressNote": "Email us for the mailing address."
-        },
-        "crowded": {
-          "title": "Crowded",
-          "detail": "Card & bank transfer (ACH)",
-          "fee": "Fees apply",
-          "feesLink": "See fee schedule",
-          "cta": "Donate via Crowded"
-        },
+        "whoFor": "If you are giving from anywhere outside Nepal",
+        "proceedsNote": "PayPal Giving Fund processes your gift and grants it to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA.",
+        "title": "From outside Nepal",
         "paypal": {
           "title": "PayPal",
-          "detail": "Card or PayPal balance",
-          "fee": "≈2% + $0.49",
-          "cta": "Donate via PayPal"
+          "detail": "Card, bank, or PayPal balance",
+          "cta": "Donate via PayPal Giving Fund"
         }
       },
       "copy": "Copy",
@@ -601,6 +576,12 @@
     "filed": "Filed",
     "location": "Location",
     "period": "Case Date",
+    "byline": {
+      "firstPublished": "First published {{date}}.",
+      "editHistory_one": "{{count}} subsequent edit",
+      "editHistory_other": "{{count}} subsequent edits",
+      "documentedByLabel": "Documented by"
+    },
     "overview": "Case Overview",
     "allegations": "Key Allegations",
     "timeline": "Case Timeline",
@@ -721,6 +702,7 @@
     "markdownError": "We could not load this text preview. You can still open or download the file.",
     "nextPage": "Next page",
     "openInNewTab": "Open in new tab",
+    "preview": "Preview",
     "page": "Page",
     "pdfFile": "PDF file",
     "pdfDescription": "Previewing this PDF. Download is available below.",
@@ -1998,7 +1980,27 @@
       "updated": "Case updated",
       "created": "Case created (DRAFT)",
       "loadFailed": "Failed to load case",
-      "saveFailed": "Failed to save case"
+      "saveFailed": "Failed to save case",
+      "bylineHeading": "Public byline",
+      "bylineHelp": "Shown on the public case page: who documented the case, when it first went live, and the edits since. At least one author and a publish date are required before the case can leave draft.",
+      "labelAuthors": "Authors",
+      "authorsHelp": "Credited in this order. Only accounts on this platform can be credited — ask an administrator to create one for a new contributor.",
+      "authorAdd": "Add an author",
+      "authorRemove": "Remove author",
+      "authorMoveUp": "Move author up",
+      "authorMoveDown": "Move author down",
+      "authorCreditNoteLabel": "Credit note for {{name}}",
+      "authorCreditNotePlaceholder": "Optional, e.g. BALLB 4th Year Student",
+      "authorsLoadFailed": "Could not load the list of accounts. Reload the page to try again.",
+      "labelPublishDate": "First published",
+      "publishDateHelp": "The date this case first went live on jawafdehi.org — not the date of the incident. For a case entered here long after it was written, set the real publication date.",
+      "labelEditHistory": "Edit history",
+      "editHistoryHelp": "Public, in your own words: what changed and when. Rows missing a date or remarks are not saved.",
+      "editHistoryAdd": "Add an entry",
+      "editHistoryRemove": "Remove entry",
+      "editHistoryDateLabel": "Edit history date, row {{number}}",
+      "editHistoryRemarksLabel": "Edit history remarks, row {{number}}",
+      "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order"
     },
     "stateControl": {
       "state": "State",
@@ -2272,7 +2274,7 @@
           {
             "id": "financial-support",
             "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us via **PayPal**, **international bank wire (SWIFT)**, or a **Nepal bank account**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
           },
           {
             "id": "help-without-donating",
@@ -2308,5 +2310,23 @@
   "reportCta": {
     "title": "Know of a corruption case?",
     "description": "Help us hold the powerful accountable. Submit information about a corruption case, officials and related entities."
+  },
+  "author": {
+    "notFound": "This author profile is not available.",
+    "aboutHeading": "About",
+    "metaDescription": "Corruption cases documented by {{name}} on Jawafdehi, Nepal's permanent corruption case archive.",
+    "emailLabel": "Email {{name}}",
+    "casesHeading_one": "{{count}} case",
+    "casesHeading_other": "{{count}} cases",
+    "noCases": "No published cases yet.",
+    "linkLabel": "{{name}} on {{platform}}",
+    "platform": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "their website",
+      "twitter": "X"
+    }
   }
 }

@@ -17,7 +17,7 @@ export default function Feedback() {
       />
 
       <main id="main-content" className="flex-1">
-        <div className="container mx-auto px-4 py-8 md:py-12 max-w-2xl">
+        <div className="layout-container py-8 md:py-12 max-w-2xl">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">

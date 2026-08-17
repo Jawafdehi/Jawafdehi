@@ -367,7 +367,17 @@ export function CaseReportForm({ onSuccess }: Readonly<CaseReportFormProps>) {
                     <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" aria-hidden="true" />
                     <p className="mb-1 text-sm text-muted-foreground">{t("report.evidenceUpload")}</p>
                     <p className="text-xs text-muted-foreground">{t("report.evidenceFormat")}</p>
-                    <Input
+                    {/* A plain <input>, not <Input>: this field is visually
+                        hidden and the <label> above is the affordance, so it
+                        needs no input styling — and `Input`'s base string forces
+                        `flex h-10 w-full`, which tailwind-merge keeps alongside
+                        `sr-only` (different conflict groups) and Tailwind emits
+                        after it (.sr-only is rule 169, .h-10 is 324, .w-full is
+                        480). Equal specificity, so the later rules won: the field
+                        stayed absolutely positioned at 360x40, clipped but laid
+                        out, and an abspos box still extends scrollWidth. That was
+                        the whole 65px of horizontal overflow on /report. */}
+                    <input
                         id="evidence"
                         type="file"
                         ref={fileInputRef}

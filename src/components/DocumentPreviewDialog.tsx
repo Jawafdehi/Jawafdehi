@@ -271,7 +271,7 @@ export function DocumentPreviewViewer({
           <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-[#303134] px-3 py-2 text-sm text-white/85 shadow-sm">
             <span className="hidden text-white/70 sm:inline">{t("documentPreview.page")}</span>
             <input
-              className="h-7 w-11 rounded border border-white/20 bg-black/25 px-2 text-center text-sm text-white outline-none focus:border-white/60"
+              className="font-input h-7 w-14 rounded border border-white/20 bg-black/25 px-2 text-center text-white outline-none focus:border-white/60"
               aria-label={t("documentPreview.currentPage")}
               inputMode="numeric"
               value={pageInput}

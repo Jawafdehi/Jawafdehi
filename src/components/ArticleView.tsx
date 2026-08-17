@@ -18,7 +18,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
     return (
         <div className="min-h-screen flex flex-col bg-background">
             <main id="main-content" className="flex-1 py-8 md:py-12">
-                <div className="container mx-auto px-4 animate-fade-in">
+                <div className="layout-container animate-fade-in">
                     <div className="mb-8">
                         <Button
                             variant="ghost"

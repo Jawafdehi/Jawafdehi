@@ -1,34 +1,16 @@
-import { useId, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { lazy, Suspense, useId, useState } from "react";
 
 import { fyLabel, type ChargeMixYear } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
-import { MONO_STACK } from "@/lib/data-quality";
 import { Switch } from "@/components/ui/switch";
+import { SERIES, type MixKey } from "./charge-mix-series";
 
-type MixKey = "bribery" | "fake" | "embezzlement" | "benefit" | "loss" | "other";
-
-// Fixed categorical order + colours (validated CVD-safe set; `other` is neutral).
-// Fake-credential is crimson so the eye tracks the family whose share collapses.
-const SERIES: readonly { key: MixKey; color: string }[] = [
-  { key: "bribery", color: "hsl(var(--chart-1))" },
-  { key: "fake", color: "hsl(var(--chart-2))" },
-  { key: "embezzlement", color: "hsl(var(--chart-3))" },
-  { key: "benefit", color: "hsl(var(--chart-4))" },
-  { key: "loss", color: "hsl(var(--chart-5))" },
-  { key: "other", color: "hsl(var(--muted-foreground))" },
-];
-
-const rowTotal = (d: ChargeMixYear) =>
-  d.bribery + d.fake + d.embezzlement + d.benefit + d.loss + d.other;
+// Only the recharts subtree is deferred; everything this component renders
+// before mount — the toggle, the legend, and the data-bearing aria-label — stays
+// eager, so the pre-rendered HTML is unchanged. See ChargeMixByYearBars.tsx.
+const ChargeMixByYearBars = lazy(() =>
+  import("./ChargeMixByYearBars").then((m) => ({ default: m.ChargeMixByYearBars })),
+);
 
 /**
  * Charge mix by fiscal filing year — a stacked bar per year over the
@@ -68,54 +50,9 @@ export function ChargeMixByYear({
 
       <div role="img" aria-label={ariaLabel} style={{ height }}>
         {mounted ? (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data as ChargeMixYear[]}
-            stackOffset={percent ? "expand" : "none"}
-            margin={{ top: 8, right: 12, bottom: 4, left: 4 }}
-          >
-            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
-            <XAxis
-              dataKey="fy"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(y: number) => fyLabel(y).slice(2)}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-            />
-            <YAxis
-              width={36}
-              tickLine={false}
-              axisLine={false}
-              domain={percent ? [0, 1] : undefined}
-              tickFormatter={percent ? (v: number) => `${Math.round(v * 100)}%` : undefined}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-            />
-            <Tooltip
-              labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
-              contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 13 }}
-              itemStyle={{ fontFamily: MONO_STACK }}
-              formatter={(value: number, name: string, entry: { payload?: ChargeMixYear }) => {
-                if (!percent) return [value, name];
-                const total = entry?.payload ? rowTotal(entry.payload) : 0;
-                const pct = total ? Math.round((value / total) * 100) : 0;
-                return [`${value} (${pct}%)`, name];
-              }}
-            />
-            {SERIES.map((s, i) => (
-              <Bar
-                key={s.key}
-                dataKey={s.key}
-                name={labels[s.key]}
-                stackId="mix"
-                fill={s.color}
-                stroke="hsl(var(--background))"
-                strokeWidth={1}
-                radius={!percent && i === SERIES.length - 1 ? [3, 3, 0, 0] : 0}
-                isAnimationActive={false}
-              />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
+          <Suspense fallback={null}>
+            <ChargeMixByYearBars data={data} labels={labels} percent={percent} />
+          </Suspense>
         ) : null}
       </div>
 
