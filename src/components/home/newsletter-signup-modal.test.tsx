@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 
-import { NewsletterSignupModal } from "@/components/home/newsletter-signup-modal";
+import { NewsletterSignupModal, OPEN_DELAY_MS } from "@/components/home/newsletter-signup-modal";
 
 // Passthrough i18n so assertions don't depend on translation resources.
 vi.mock("react-i18next", () => ({
@@ -33,7 +33,10 @@ beforeEach(() => {
 });
 
 const STORAGE_KEY = "jawafdehi_newsletter_prompt";
-const DWELL_MS = 25000;
+// Imported, not restated: a second copy of the number here would let the spec
+// keep passing against a dwell the component no longer uses. The value itself is
+// gated separately, in "the dwell is a full minute" below.
+const DWELL_MS = OPEN_DELAY_MS;
 const CASE_PATH = "/case/case-081-cr-0107-patanjali";
 
 function renderAt(path: string) {
@@ -69,10 +72,21 @@ describe("NewsletterSignupModal trigger", () => {
     window.localStorage.clear();
   });
 
+  // The number is a product decision, not an implementation detail: at 25s the
+  // ask was arriving on a reader's first screen, before the page had earned it.
+  // Asserted explicitly so shortening it again is a deliberate act.
+  it("the dwell is a full minute", () => {
+    expect(OPEN_DELAY_MS).toBe(60_000);
+  });
+
   it("stays closed until the dwell elapses, then opens on an eligible route", () => {
     renderAt(CASE_PATH);
     expect(screen.queryByRole("dialog")).toBeNull();
-    act(() => vi.advanceTimersByTime(DWELL_MS));
+    // One second short of the dwell it must still be closed — without this the
+    // spec would pass against any delay at or under a minute.
+    act(() => vi.advanceTimersByTime(DWELL_MS - 1000));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    act(() => vi.advanceTimersByTime(1000));
     expect(screen.queryByRole("dialog")).not.toBeNull();
   });
 
