@@ -192,8 +192,7 @@
     "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
     "barLabel": "Upcoming public event",
     "barTitle": "Public event",
-    "barWhen": "2 September, 6 PM Pacific · 3 September, 6:45 AM in Nepal",
-    "barWhenShort": "2 September, 6 PM Pacific",
+    "barWhenParts": ["2 September, 6 PM Pacific", "3 September, 6:45 AM in Nepal"],
     "barCta": "Register free",
     "barDismiss": "Dismiss event announcement"
   },
