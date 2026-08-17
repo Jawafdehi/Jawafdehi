@@ -5,18 +5,52 @@ import { Info } from "lucide-react";
 
 import { REPORT, CITATIONS, verdictYearRates, fyLabel } from "@/data/research-corruption";
 import { AccountabilityFunnel, type FunnelStage } from "@/components/data-quality/AccountabilityFunnel";
-import { StatusDonut, type DonutSegment } from "@/components/data-quality/StatusDonut";
-import { BreakdownBar } from "@/components/data-quality/BreakdownBar";
+import type { DonutSegment } from "@/components/data-quality/StatusDonut";
 import { ConvictionByCharge, type ChargeRow } from "@/components/research/ConvictionByCharge";
 import { JusticeSpread } from "@/components/research/JusticeSpread";
-import { FiledDecidedTrend } from "@/components/research/FiledDecidedTrend";
-import { RateTrend } from "@/components/research/RateTrend";
-import { PipelineHealth } from "@/components/research/PipelineHealth";
 import { ChargeMixByYear } from "@/components/research/ChargeMixByYear";
-import { FiledByMonth } from "@/components/research/FiledByMonth";
 import { AccountabilityStages, type AccountabilityStage } from "@/components/research/AccountabilityStages";
+import { lazyChart } from "@/components/charts/lazy";
 import { Seo } from "@/components/Seo";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
+
+// The recharts-backed charts on this page, each in its own async chunk.
+//
+// This page is pre-rendered, so it must be imported eagerly (src/routes.tsx),
+// and importing these directly was the ONLY thing keeping recharts + lodash +
+// decimal.js-light + react-smooth in the initial JS payload, which deferring them
+// cut from 745.7 KB gzip to 635.5 KB (-110 KB, -14.8%).
+// `/data-quality` was already lazy, so this page was the sole eager entry point.
+//
+// Each `placeholder` below is a verbatim copy of what that component renders
+// before its own `useMounted()` effect fires, which is what makes this free:
+// the pre-rendered HTML is unchanged. Keep them in step — see the contract in
+// src/components/charts/lazy.tsx.
+const StatusDonut = lazyChart(
+  () => import("@/components/data-quality/StatusDonut").then((m) => m.StatusDonut),
+  () => <div className="relative mx-auto h-[200px] w-full max-w-[240px]" />,
+);
+const BreakdownBar = lazyChart(
+  () => import("@/components/data-quality/BreakdownBar").then((m) => m.BreakdownBar),
+  // Height is data-driven in the component; mirror the same expression.
+  (p) => <div className="w-full" style={{ height: p.items.length * 44 + 24 }} />,
+);
+const FiledDecidedTrend = lazyChart(
+  () => import("@/components/research/FiledDecidedTrend").then((m) => m.FiledDecidedTrend),
+  () => <div className="w-full" style={{ height: 260 }} />,
+);
+const RateTrend = lazyChart(
+  () => import("@/components/research/RateTrend").then((m) => m.RateTrend),
+  (p) => <div className="w-full" style={{ height: p.height ?? 260 }} />,
+);
+const PipelineHealth = lazyChart(
+  () => import("@/components/research/PipelineHealth").then((m) => m.PipelineHealth),
+  (p) => <div className="w-full" style={{ height: p.height ?? 280 }} />,
+);
+const FiledByMonth = lazyChart(
+  () => import("@/components/research/FiledByMonth").then((m) => m.FiledByMonth),
+  () => <div className="w-full" style={{ height: 300 }} />,
+);
 
 const CANONICAL = `${SITE_URL}/research/corruption-accountability/`;
 

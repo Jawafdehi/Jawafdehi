@@ -66,7 +66,7 @@ Our budgets, set from the 2026-08-16 measurements (current values in that doc):
 | TBT | **≤ 300 ms** | Google "good" is <200 ms; every route was 830–1000 ms |
 | CLS | **≤ 0.05** | already 0–0.006 — this one is a *protect*, not a fix |
 | Total transfer | **≤ 800 KB** per route | routes were 1.1–1.4 MB; `/team` 5.67 MB |
-| JS transfer | **≤ 350 KB** | 746 KB today, one 535 KB chunk |
+| JS transfer | **≤ 350 KB** | 635.5 KB now, down from 745.7 — see [bundle-and-code-splitting.md](./bundle-and-code-splitting.md) |
 | Any single image | **≤ 150 KB** | a 1.67 MB PNG avatar reached production |
 
 ---
@@ -420,17 +420,37 @@ This is also what keeps `main` safe when fixes land as separate PRs: CI runs on
 `refs/pull/N/merge`, so the PR whose merge would strand an entry goes red on its
 own branch first.
 
+### The nightly sweep
+
+Tier B runs on a schedule in **`nightly.yml`** — three jobs, artifacts kept 30 days:
+
+- **Instruments (Chromium)** — `audit`, `overlay-audit`, `lcp-and-images`,
+  `page-weight`, `header-bleed`, `hero-stats-scroll` against a real origin. These
+  are instruments, so the job is green unless one crashes: *read the artifacts*,
+  that is what it is for.
+- **Perf budgets** — `perf-audit` at 2 runs/route, scored by
+  `scripts/perf-budget.mjs` against §1. **Report-only** (`--warn-only`), because
+  production currently breaches 12 of 20 and a nightly that is always red gets
+  muted. Flip the `enforce_perf` dispatch input when the numbers are close.
+- **Cross-engine** — WebKit and Firefox via
+  `mcr.microsoft.com/playwright:v1.61.1-noble`, which the PR jobs deliberately skip
+  (see §3). Keep the tag in step with `playwright` in `package.json`.
+
+`workflow_dispatch` takes a `base` input, so you can point the whole sweep at
+staging or a preview deployment.
+
 ### Still open
 
 1. **Delete `test.yml`.** It duplicates `ci.yml` minus the test step, so its name
    implies coverage it does not provide. Left alone here because branch protection
    may reference it by name.
-2. **Nightly workflow** for Tier B: the full sweep, WebKit via
-   `mcr.microsoft.com/playwright:v1.61.1-noble`, and the perf budgets. Upload
-   `findings.json` and the screenshots as artifacts.
-3. **A bundle-size gate.** `bun run analyze` already emits the treemap; fail the
-   build when any chunk crosses the §1 budget. Worth doing before the font work:
-   §1's budget is about total bytes, and total bytes are what bound home LCP.
+2. **The initial JS payload is 1.8× its budget** — 635.5 KB gzip against 350 KB,
+   after the recharts split took 110 KB out. The remaining candidates are measured
+   and ranked in
+   [`bundle-and-code-splitting.md`](./bundle-and-code-splitting.md) §4; the two big
+   ones (Sentry, 771 KB rendered; `oidc-client-ts` reaching the public chunk via
+   the axios interceptor) are judgement calls with real trade-offs, not mechanical
+   fixes. The gate itself is done — the `bundle-budget` job in `ci.yml`.
 
 ---
 
