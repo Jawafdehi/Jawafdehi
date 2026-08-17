@@ -15,8 +15,17 @@ import { getNewsletterPromptState, setNewsletterPromptState } from "@/lib/newsle
 /**
  * Dwell before the prompt appears — long enough that it reads as a considered
  * ask to an engaged reader rather than an immediate interruption on first paint.
+ *
+ * One minute, up from 25 seconds. 25s was landing while people were still on
+ * their first screen of a case page: the ask arrived before the visitor had
+ * been given anything worth subscribing for, which is the version of this
+ * pattern everyone dismisses on reflex. A minute is past the point where a
+ * reader has committed to the page.
+ *
+ * Exported because the tests drive the timer with it — a second copy of the
+ * number in the spec would let the two drift apart silently.
  */
-const OPEN_DELAY_MS = 25000;
+export const OPEN_DELAY_MS = 60000;
 
 /**
  * Routes the prompt may appear on: the home page and the content pages an
