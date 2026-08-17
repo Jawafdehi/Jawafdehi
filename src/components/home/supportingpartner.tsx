@@ -41,6 +41,20 @@ export function SupportingPartner() {
               className="h-12 w-auto object-contain opacity-100 grayscale-0 transition-[filter,opacity] duration-200 md:h-14 md:opacity-70 md:grayscale md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0"
             />
           </a>
+
+          <a
+            href="https://oknp.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Open Knowledge Foundation Nepal"
+            className="group inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <img
+              src="/assets/oknp.svg"
+              alt="Open Knowledge Foundation Nepal"
+              className="h-12 w-auto object-contain opacity-100 grayscale-0 transition-[filter,opacity] duration-200 md:h-14 md:opacity-70 md:grayscale md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0"
+            />
+          </a>
         </div>
       </div>
     </section>
