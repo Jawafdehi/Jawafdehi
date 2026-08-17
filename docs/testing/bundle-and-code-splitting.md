@@ -183,19 +183,60 @@ handle Suspense.
 
 ## 4. What is still in there
 
-Measured shares of the entry chunk (rendered bytes; see the §1 caveat about
-summing per-module gzip). None of these is done — each is a decision, not an
-oversight.
+Ranked by the analyzer's **rendered** bytes. None of these is done — each is a
+decision, not an oversight.
+
+🛑 **Do not price a removal from that column.** Rendered bytes are pre-minify, and
+the analyzer's per-module `gzipLength` overstates the real share badly because gzip
+compresses far better across a whole chunk. Measured on Sentry: the analyzer implies
+**237 KB gzip**; removing it entirely saves **78.7 KB**. A **3× overstatement**, and
+it inverts priorities — it made Sentry look like a bigger prize than the recharts
+split, which actually saved 110 KB.
+
+**The only honest way to price a candidate is a build variant.** Remove it, build,
+and diff `scripts/bundle-budget.mjs`. Each takes ~15 s and answers the question the
+analyzer cannot.
 
 | What | rendered | The trade-off |
 | --- | --- | --- |
-| **Sentry** — `replay` 320 KB + `core` 271 KB + `browser-utils` 98 KB + `browser` 82 KB | **771 KB** | The biggest single item by far. Session Replay is deliberately configured error-only (`replaysSessionSampleRate: 0`, `replaysOnErrorSampleRate: 1.0`, `src/lib/sentry.ts`), and error-only replay works by buffering continuously *before* the error — so lazy-loading it after first paint loses the buffer that makes it useful. Deferring the whole SDK loses errors during initial load, which is when they matter most. **A judgement call for whoever owns error monitoring, not a mechanical fix.** |
+| **Sentry** — `replay` 320 KB + `core` 271 KB + `browser-utils` 98 KB + `browser` 82 KB | 771 KB<br>**real: 78.7 KB gzip** | **Measured by build variant, not inferred** — see the table below. The whole stack is 78.7 KB, so even removing error monitoring outright buys less than the recharts split did. Session Replay is deliberately error-only (`replaysSessionSampleRate: 0`, `replaysOnErrorSampleRate: 1.0`, `src/lib/sentry.ts`) and works by buffering continuously *before* the error, so lazy-loading it after first paint loses the buffer that makes it useful. **A judgement call for whoever owns error monitoring.** |
 | **`oidc-client-ts`** | 121 KB | In the public entry chunk via `src/services/http.ts:20`, which statically imports `getAccessToken` so the shared axios interceptor can attach a bearer token to **every** request, including anonymous ones. Not `/admin`'s fault: `AdminApp` is correctly lazy at 379 KB gzip. Deferring it means splitting `services/oidc.ts` into a thin token reader plus a lazily-imported `UserManager`, and checking `localStorage` for a session *before* loading the library at all — so anonymous readers, the overwhelming majority, never fetch it. That touches the auth path on every request and deserves its own PR and its own tests. |
 | **`dompurify`** | 108 KB | Reached from `src/components/StreamField.tsx`. Sanitisation on a corruption archive is not optional; the question is only whether the pages that need it are eager. |
 | **`date-fns` + `date-fns-tz`** | 152 KB | Three entry points: `src/utils/date.ts`, `ui/calendar.tsx`, `admin/ADDatePicker.tsx`. 824 modules in the graph suggests wide barrel imports; narrowing to per-function imports is low-risk and probably worth more than it looks. |
 | **`tailwind-merge`** | 72 KB | `cn()` is used by every component, so this is genuinely shared. Not a candidate. |
 | **`qrcode.react`** | 45 KB | Only the donate/share QR codes (`FloatingShareSidebar`, `case-detail/mobile-share-expander`). A share sheet is interaction-triggered, so this is a good `lazyChart`-shaped candidate. |
 | **`lucide-react`** | 41 KB | Already per-icon imports; the cost is the number of distinct icons, not the library. |
+
+### Sentry, priced properly
+
+Four builds, each measured with `scripts/bundle-budget.mjs`. Baseline is 635.6 KB
+gzip of initial JS; the last row stubs `@sentry/react` out via a `resolve.alias` to
+price the ceiling.
+
+| Build | Initial JS | Saving | What is lost |
+| --- | --- | --- | --- |
+| Baseline — tracing + error-only replay | 635.6 KB | — | — |
+| Drop `replayIntegration()` | 596.5 KB | **−39.1 KB** | error replays; errors still captured |
+| Also drop `browserTracingIntegration()` | 583.0 KB | **−52.6 KB** | + performance tracing (`tracesSampleRate: 0.1`) |
+| Sentry absent entirely | 556.9 KB | **−78.7 KB** | all error monitoring |
+
+Three things follow, and the first is the useful one:
+
+1. **Dropping replay needs no lazy loading at all.** Tree-shaking already works:
+   deleting the `replayIntegration()` call removes the code. It is a one-line config
+   change worth **39.1 KB gzip** — half of everything Sentry costs — with no
+   restructuring and no risk to error capture.
+2. **The remaining core is only 26.1 KB.** Deferring *that* is not worth the
+   complexity: it would mean losing errors during initial load, which is when they
+   matter most.
+3. **You cannot lazy-load the SDK as things stand**, whatever `initSentry()` does.
+   `src/App.tsx` and `src/components/ErrorBoundary.tsx` both render
+   `Sentry.ErrorBoundary`, so the SDK is in the eager App tree by construction. Any
+   deferral plan starts with replacing that with a local error boundary — which is a
+   behaviour change to the crash path, for 26 KB.
+
+So the decision is really just **"keep error replays or not"**, and it is a product
+question about how corruption reports get debugged, not a bundle question.
 
 `src/components/ui/chart.tsx` is **dead code** — nothing imports it — and it
 imports recharts. It contributes **0 bytes** today because rollup tree-shakes it
