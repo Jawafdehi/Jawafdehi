@@ -273,6 +273,12 @@ export const Footer = () => {
             </Link>
           </div>
         </div>
+
+        <div className="mt-6 border-t border-[var(--footer-border)] pt-6">
+          <p className="measure-prose text-xs text-[var(--footer-muted)]">
+            {t("footer.legalEntity")}
+          </p>
+        </div>
       </div>
     </footer>
   );

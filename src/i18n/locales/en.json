@@ -117,6 +117,7 @@
     "terms": "Terms",
     "disclaimer": "The information provided on this website is for informative purposes only. We are not a judiciary body and do not have legal authority to prosecute or adjudicate cases. Our platform serves to document and raise awareness about corruption allegations and public accountability.",
     "copyright": "© {{year}} Jawafdehi Initiative. All rights reserved.",
+    "legalEntity": "jawafdehi.org is operated by Jawafdehi Initiative, Inc., a Michigan nonprofit corporation and 501(c)(3) tax-exempt organization, EIN 42-3114954, together with Jawafdehi Initiative, a Profit Non-Distributing Company registered in Nepal (reg. no. 393949/82/83, SWC reg. no. 59304).",
     "social": {
       "facebook": "Facebook",
       "x": "X (Twitter)",
@@ -446,7 +447,7 @@
       },
       "us": {
         "whoFor": "If you are giving from anywhere outside Nepal",
-        "proceedsNote": "PayPal Giving Fund processes your gift and grants it to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA.",
+        "proceedsNote": "PayPal Giving Fund processes your gift and grants it to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
         "title": "From outside Nepal",
         "paypal": {
           "title": "PayPal",

@@ -162,6 +162,36 @@ const Index = () => {
             }
           ]
         })}</script>
+        {/* The registered identity behind the domain, in the form validators and
+            knowledge graphs read. Google for Nonprofits declined an activation in
+            August 2026 because nothing on jawafdehi.org tied it to the applicant,
+            "Jawafdehi Initiative Inc" — the site is Nepali-first and reads as the
+            Nepal entity. Both entities are named here for that reason. */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NGO",
+          "name": SITE_NAME,
+          "legalName": "Jawafdehi Initiative, Inc.",
+          "url": "https://jawafdehi.org",
+          "taxID": "42-3114954",
+          "nonprofitStatus": "Nonprofit501c3",
+          "address": {
+            "@type": "PostalAddress",
+            "addressRegion": "MI",
+            "addressCountry": "US"
+          },
+          "subOrganization": {
+            "@type": "NGO",
+            "legalName": "Jawafdehi Initiative",
+            "description": "Profit Non-Distributing Company registered in Nepal, reg. no. 393949/82/83, Social Welfare Council reg. no. 59304.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Biratnagar",
+              "addressRegion": "Morang",
+              "addressCountry": "NP"
+            }
+          }
+        })}</script>
       </Seo>
 
       <div className="flex-1">
