@@ -106,6 +106,12 @@ export const members: TeamMember[] = [
     ],
   },
   {
+    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
+    thumb: "/assets/teammembers/purna.webp",
+    description: "Member",
+    contacts: [],
+  },
+  {
     displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
     thumb: "/assets/teammembers/ashwini.webp",
     description: "Software Engineer",
@@ -145,12 +151,6 @@ export const members: TeamMember[] = [
       { type: "email", value: "kandelsubodh46@gmail.com" },
       { type: "instagram", value: "https://www.instagram.com/subodh_kandel" },
     ],
-  },
-  {
-    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
-    thumb: "/assets/teammembers/purna.webp",
-    description: "Member",
-    contacts: [],
   },
 ];
 
