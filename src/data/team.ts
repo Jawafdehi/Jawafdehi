@@ -93,6 +93,9 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
     ],
   },
+];
+
+export const members: TeamMember[] = [
   {
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.webp",
@@ -102,9 +105,12 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
   },
-];
-
-export const members: TeamMember[] = [
+  {
+    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
+    thumb: "/assets/teammembers/purna.webp",
+    description: "Member",
+    contacts: [],
+  },
   {
     displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
     thumb: "/assets/teammembers/ashwini.webp",
