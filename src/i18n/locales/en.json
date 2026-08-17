@@ -179,6 +179,24 @@
       "submitFeedback": "Submit Feedback"
     }
   },
+  "septemberEvent": {
+    "eyebrow": "Public event · Free · Open to everyone",
+    "title": "Building Nepal's online corruption database",
+    "description": "We will go through the archive in the open: where the records come from, and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
+    "dateUs": "Wednesday 2 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
+    "dateNepal": "Thursday 3 September 2026 in Nepal, 6:45 AM (भदौ १८)",
+    "formatZoom": "Zoom",
+    "formatFacebook": "live on Facebook",
+    "cta": "Register free",
+    "viewFlyer": "View the full flyer",
+    "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
+    "barLabel": "Upcoming public event",
+    "barTitle": "Public event",
+    "barWhen": "2 September, 6 PM Pacific · 3 September, 6:45 AM in Nepal",
+    "barWhenShort": "2 September, 6 PM Pacific",
+    "barCta": "Register free",
+    "barDismiss": "Dismiss event announcement"
+  },
   "ourProcess": {
     "hero": {
       "heading": "How a <1>corruption</1> case goes from discovery to the <3>public archive</3>"
