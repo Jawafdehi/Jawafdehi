@@ -18,10 +18,32 @@ import { useEffect, useState } from "react";
  * neither one can be recomputed into the other by accident.
  */
 
-/** Registration. A Cloudflare redirect out to the Zoom page — not an SPA route. */
-export const SEPTEMBER_EVENT_URL = "https://jawafdehi.org/september-2";
+/**
+ * Registration. A Cloudflare redirect out to the Zoom page, answered at the
+ * edge — not an SPA route, and not a page GA4 can ever see.
+ *
+ * Because the request never reaches our origin, attribution is done with one
+ * slug per source rather than a query parameter (`?source=` provably cannot
+ * work here: the Zoom target ends in a `#/registration` fragment and Cloudflare
+ * appends the query after it, so it lands inside the fragment and no server is
+ * ever told about it). The rule matches on `starts_with()`, so a new code needs
+ * no Terraform change and a mistyped one still redirects.
+ *
+ * Off-site channels use a single hyphen (`-fb`, `-ig`, `-qr`, …). These two use
+ * a double hyphen to mark them as placements on our own website, so the report
+ * separates "someone was already on jawafdehi.org" from "a channel sent them".
+ * The registry of codes is docs/september-2-link-tracking.md in the meta repo.
+ */
+export const SEPTEMBER_EVENT_URL_SECTION = "https://jawafdehi.org/september-2--main";
+export const SEPTEMBER_EVENT_URL_BAR = "https://jawafdehi.org/september-2--banner";
 
-/** Shown next to the button so the URL on the flyer and the QR code is legible on screen too. */
+/**
+ * Shown as text beside the button, never as a link.
+ *
+ * Deliberately the bare slug: this is the one printed on the flyer and encoded
+ * in its QR code, so it is what a reader might type or say out loud. A tracked
+ * suffix on a label nobody clicks would only be transcribed wrong.
+ */
 export const SEPTEMBER_EVENT_URL_LABEL = "jawafdehi.org/september-2";
 
 /**

@@ -4,7 +4,7 @@ import { ArrowRight, CalendarDays, X } from "lucide-react";
 
 import { useIsNarrow } from "@/hooks/useIsNarrow";
 import {
-  SEPTEMBER_EVENT_URL,
+  SEPTEMBER_EVENT_URL_BAR,
   useSeptemberEventPast,
 } from "@/lib/september-event";
 
@@ -57,7 +57,7 @@ export function SeptemberEventBar() {
         </p>
 
         <a
-          href={SEPTEMBER_EVENT_URL}
+          href={SEPTEMBER_EVENT_URL_BAR}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full text-sm font-semibold underline underline-offset-4 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"

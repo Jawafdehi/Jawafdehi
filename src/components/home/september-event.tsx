@@ -2,12 +2,13 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, CalendarDays, Clock, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import {
   SEPTEMBER_EVENT_FLYER,
   SEPTEMBER_EVENT_FLYER_CARD,
   SEPTEMBER_EVENT_FLYER_CARD_2X,
-  SEPTEMBER_EVENT_URL,
   SEPTEMBER_EVENT_URL_LABEL,
+  SEPTEMBER_EVENT_URL_SECTION,
   useSeptemberEventPast,
 } from "@/lib/september-event";
 
@@ -27,9 +28,28 @@ export function SeptemberEvent() {
   if (isPast) return null;
 
   const details = [
-    { icon: CalendarDays, text: t("septemberEvent.dateUs") },
-    { icon: Clock, text: t("septemberEvent.dateNepal") },
-    { icon: Video, text: t("septemberEvent.format") },
+    { key: "dateUs", icon: CalendarDays, content: t("septemberEvent.dateUs") },
+    { key: "dateNepal", icon: Clock, content: t("septemberEvent.dateNepal") },
+    {
+      key: "format",
+      icon: Video,
+      // Two keys rather than one string with markup in it: the stream host is a
+      // link, and a translator should never have to keep an anchor tag intact.
+      content: (
+        <>
+          {t("septemberEvent.formatZoom")}
+          {" · "}
+          <a
+            href={JAWAFDEHI_SOCIALS.facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+          >
+            {t("septemberEvent.formatFacebook")}
+          </a>
+        </>
+      ),
+    },
   ];
 
   return (
@@ -82,10 +102,10 @@ export function SeptemberEvent() {
             </p>
 
             <ul className="mt-7 flex flex-col gap-3 text-sm text-white/90 md:text-base">
-              {details.map(({ icon: Icon, text }) => (
-                <li key={text} className="flex items-start justify-center gap-3 md:justify-start">
+              {details.map(({ key, icon: Icon, content }) => (
+                <li key={key} className="flex items-start justify-center gap-3 md:justify-start">
                   <Icon className="mt-0.5 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
-                  <span className="text-left">{text}</span>
+                  <span className="text-left">{content}</span>
                 </li>
               ))}
             </ul>
@@ -96,7 +116,7 @@ export function SeptemberEvent() {
                 size="lg"
                 className="bg-white font-semibold text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
               >
-                <a href={SEPTEMBER_EVENT_URL} target="_blank" rel="noopener noreferrer">
+                <a href={SEPTEMBER_EVENT_URL_SECTION} target="_blank" rel="noopener noreferrer">
                   {t("septemberEvent.cta")}
                   <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </a>
