@@ -236,7 +236,7 @@ export const Footer = () => {
         </div>
 
         <div className="mt-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <p className="font-caption measure-prose text-[var(--footer-muted)]">
+          <p className="font-caption text-[var(--footer-muted)]">
             {t("footer.disclaimer")}
           </p>
 
