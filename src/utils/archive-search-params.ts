@@ -1,3 +1,5 @@
+import { parseBigoBound } from "@/lib/bigo-bands";
+
 // `sort` is deliberately NOT here. A value listed in defaultValues is stripped
 // from the URL, and the default sort is no longer a constant — ArchiveSearch
 // resolves an absent ?sort to `featured` while browsing and `relevance` once
@@ -49,7 +51,34 @@ export function normalizeArchiveSearchParams(current: URLSearchParams) {
     next.set("type", type);
   }
 
+  // बिगो bounds (?bigo_min / ?bigo_max, inclusive, whole NPR). Only a pair the
+  // API would actually accept survives: it answers a malformed bound, or a
+  // bigo_min above bigo_max, with a 400 — which this page renders as the red
+  // "could not be loaded" alert. A stale bookmark should degrade into a wider
+  // result set, not into what reads as a search outage.
+  //
+  // An inverted pair drops BOTH bounds rather than keeping the plausible half:
+  // there is no way to tell which one the reader meant, and silently honouring
+  // one of them applies a filter they did not ask for.
+  const bigoMin = parseBigoBound(next.get("bigo_min"));
+  const bigoMax = parseBigoBound(next.get("bigo_max"));
+  const inverted =
+    bigoMin !== undefined && bigoMax !== undefined && bigoMin > bigoMax;
+  setOrDelete(next, "bigo_min", inverted ? undefined : bigoMin);
+  setOrDelete(next, "bigo_max", inverted ? undefined : bigoMax);
+
   return next;
+}
+
+// `String(0)` is "0", so a legitimate zero lower bound survives — the test is
+// `undefined`, not falsiness, exactly as it is on the API side.
+function setOrDelete(
+  params: URLSearchParams,
+  name: string,
+  value: number | undefined,
+) {
+  if (value === undefined) params.delete(name);
+  else params.set(name, String(value));
 }
 
 export function setArchiveSearchParam(

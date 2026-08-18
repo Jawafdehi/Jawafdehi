@@ -35,6 +35,13 @@ export interface ArchiveSearchParams {
   tags?: string[];
   // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
   status?: string[];
+  // बिगो (alleged embezzled amount, whole NPR) range bounds — the one refine
+  // control that is not exact-match. Both inclusive. CASE-ONLY: no entity,
+  // material or court-case document carries an amount, so either bound also
+  // excludes every non-case result and must be paired with `type: "case"`.
+  // Cases with no recorded amount (~9% of the corpus) are excluded by any bound.
+  bigo_min?: number;
+  bigo_max?: number;
   sort?: ArchiveSearchSort;
   page?: number;
   page_size?: number;

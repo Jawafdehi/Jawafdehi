@@ -10,6 +10,7 @@ import type {
   ArchiveSearchType,
   SearchFacetItem,
 } from "@/types/search";
+import { BIGO_BAND_ANY, BIGO_BANDS } from "@/lib/bigo-bands";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
 export type SidebarFilterName = "entity_type" | "case_type" | "tags";
@@ -53,6 +54,11 @@ type SearchFiltersProps = {
   // Hide the record-type radios on single-type browse pages (Materials /
   // Court-cases) where the type is pinned by the route, not user-selectable.
   hideTypeSelector?: boolean;
+  // बिगो band currently in force, or undefined when the URL carries bounds that
+  // match no preset (a hand-edited range) — then no radio is checked and the
+  // range shows as a removable pill above the results instead.
+  selectedBigoBand?: string;
+  onBigoBandChange: (bandId: string) => void;
 };
 
 export function SearchFilters({
@@ -64,6 +70,8 @@ export function SearchFilters({
   onToggle,
   onClear,
   hideTypeSelector,
+  selectedBigoBand,
+  onBigoBandChange,
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
 
@@ -103,6 +111,21 @@ export function SearchFilters({
             title={t(titleKey, title)}
           />
         ))}
+      {/*
+        बिगो is CASE-ONLY: no entity, material or court-case document carries an
+        amount, so a bound applied anywhere else empties the result set with no
+        visible cause. Gating the CONTROL to case browsing is how the API PR
+        (JawafdehiAPI#450) scopes it — the endpoint applies a bound globally by
+        design, so that the same mechanism can carry date_from/date_to later,
+        where every type does have a date. Same gate, same reason, as the
+        "Entity type" group above.
+      */}
+      {selectedType === "case" ? (
+        <BigoBandFilter
+          onChange={onBigoBandChange}
+          selectedBand={selectedBigoBand}
+        />
+      ) : null}
     </aside>
   );
 }
@@ -187,6 +210,62 @@ function RecordTypeFilter({
           />
         ))}
       </RadioGroup>
+    </fieldset>
+  );
+}
+
+function BigoBandFilter({
+  onChange,
+  selectedBand,
+}: Readonly<{
+  onChange: (bandId: string) => void;
+  selectedBand?: string;
+}>) {
+  const { t } = useTranslation();
+
+  return (
+    <fieldset className="min-w-0">
+      <legend className="mb-1.5 text-sm font-semibold text-foreground">
+        {t("archiveSearch.filters.bigo", "बिगो (amount)")}
+      </legend>
+      {/*
+        No counts on these options. Every other group gets its numbers from a
+        facet aggregation the response already carries; there is no aggregation
+        over the amount, and inventing one would mean a request per band.
+      */}
+      <RadioGroup
+        className="gap-0.5"
+        onValueChange={onChange}
+        // A hand-edited range matching no preset leaves this empty on purpose,
+        // so no band claims to be the one in force. The pill above the results
+        // is what makes that range visible and removable.
+        value={selectedBand ?? ""}
+      >
+        <FilterOption
+          count={null}
+          label={t("archiveSearch.filters.bigoBands.any", "Any amount")}
+          value={BIGO_BAND_ANY}
+        />
+        {BIGO_BANDS.map((band) => (
+          <FilterOption
+            count={null}
+            key={band.id}
+            label={t(band.labelKey, band.label)}
+            value={band.id}
+          />
+        ))}
+      </RadioGroup>
+      {/*
+        ~9% of published cases record no amount at all. They are excluded by any
+        bound — an absent field cannot satisfy a range — so say so rather than
+        letting the drop read as "there are no such cases".
+      */}
+      <p className="mt-1.5 px-2 text-xs leading-5 text-muted-foreground">
+        {t(
+          "archiveSearch.filters.bigoNote",
+          "Includes only cases with a recorded amount.",
+        )}
+      </p>
     </fieldset>
   );
 }

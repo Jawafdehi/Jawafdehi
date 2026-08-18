@@ -47,6 +47,13 @@ import type {
 } from "@/types/search";
 import { cn } from "@/lib/utils";
 import {
+  BIGO_BAND_ANY,
+  BIGO_BANDS,
+  describeBigoRange,
+  findBigoBand,
+  parseBigoBound,
+} from "@/lib/bigo-bands";
+import {
   normalizeArchiveSearchParams,
   setArchiveSearchParam,
   toggleArchiveSearchParam,
@@ -57,7 +64,11 @@ import { sendSearchClick } from "@/utils/searchClick";
 import { Seo } from "@/components/Seo";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
+// "bigo" is a refinement for pill/clear purposes only — it is one removable
+// range, not a list of facet tokens, so it never joins the `selected` record the
+// checkbox groups are driven from.
 type RefinementName = SidebarFilterName | "type";
+type PillName = RefinementName | "bigo";
 
 const validSorts = new Set<ArchiveSearchSort>([
   "relevance",
@@ -230,12 +241,44 @@ export default function ArchiveSearch({
     // stale entity_type behind would silently filter the new record type through
     // a control the user can no longer see.
     if (type !== "entity") next.delete("entity_type");
+    // Same for the बिगो band, which only renders while browsing Cases. readParams
+    // already declines to send a stale bound, but dropping it from the URL keeps
+    // what is shared or bookmarked honest about what is actually applied.
+    if (type !== "case") {
+      next.delete("bigo_min");
+      next.delete("bigo_max");
+    }
     setSearchParams(next);
   };
 
-  const removeRefinement = (name: RefinementName, value: string) => {
+  // The बिगो bands are one-of-N, so this SETS rather than toggles: picking a band
+  // replaces whatever range was in force, and "Any amount" (or re-picking the
+  // active band from the pill's X) clears both bounds.
+  const updateBigoBand = (bandId: string) => {
+    const band =
+      bandId === BIGO_BAND_ANY
+        ? undefined
+        : BIGO_BANDS.find(({ id }) => id === bandId);
+    // Both bounds move as ONE edit. Setting them in sequence through
+    // setArchiveSearchParam would re-normalize in between, and a new lower bound
+    // momentarily above the OUTGOING upper bound looks inverted at that point —
+    // which drops both, losing the half already written.
+    const next = new URLSearchParams(searchParams);
+    next.delete("bigo_min");
+    next.delete("bigo_max");
+    if (band?.min !== undefined) next.set("bigo_min", String(band.min));
+    if (band?.max !== undefined) next.set("bigo_max", String(band.max));
+    next.delete("page");
+    setSearchParams(normalizeArchiveSearchParams(next));
+  };
+
+  const removeRefinement = (name: PillName, value: string) => {
     if (name === "type") {
       updateRecordType(undefined);
+      return;
+    }
+    if (name === "bigo") {
+      updateBigoBand(BIGO_BAND_ANY);
       return;
     }
     toggleRefinement(name, value);
@@ -244,7 +287,7 @@ export default function ArchiveSearch({
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "entity_type", "case_type", "tags"] as RefinementName[]
+      ["type", "entity_type", "case_type", "tags", "bigo_min", "bigo_max"] as const
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -266,12 +309,28 @@ export default function ArchiveSearch({
     type:
       lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
   };
-  const activeRefinementCount = Object.values(selectedRefinements).reduce(
-    (count, values) => count + values.length,
-    0,
-  );
+  // The active बिगो range as a single removable pill. A preset band shows its own
+  // label; a hand-edited range that matches no band shows the formatted bounds,
+  // so it is never applied invisibly (see src/lib/bigo-bands.ts).
+  const hasBigoRange =
+    params.bigo_min !== undefined || params.bigo_max !== undefined;
+  const bigoPill = hasBigoRange
+    ? {
+        name: "bigo" as const,
+        value: "bigo",
+        label: describeBigoRange(params.bigo_min, params.bigo_max, t),
+      }
+    : null;
+  const activeRefinementCount =
+    Object.values(selectedRefinements).reduce(
+      (count, values) => count + values.length,
+      0,
+    ) + (bigoPill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
-  const selectedItems = getSelectedItems(facets, selectedRefinements, t);
+  const selectedItems = [
+    ...getSelectedItems(facets, selectedRefinements, t),
+    ...(bigoPill ? [bigoPill] : []),
+  ];
   const searchFilters = showFilters ? (
     isInitialLoading ? (
       <SearchFiltersSkeleton />
@@ -281,9 +340,14 @@ export default function ArchiveSearch({
         facets={facets}
         hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
+        onBigoBandChange={updateBigoBand}
         onToggle={toggleRefinement}
         onTypeChange={updateRecordType}
         selected={selectedSidebarFilters}
+        selectedBigoBand={
+          findBigoBand(params.bigo_min, params.bigo_max)?.id ??
+          (hasBigoRange ? undefined : BIGO_BAND_ANY)
+        }
         selectedType={selectedRecordType}
       />
     )
@@ -575,6 +639,18 @@ function readParams(
         : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
+    // Only honour the बिगो bounds while browsing Cases. No other record type
+    // carries an amount, so a bound left over from a case view would empty the
+    // results of whatever the reader switched to — with the control that set it
+    // no longer on screen. Same gate, and the same reason, as entity_type above.
+    bigo_min:
+      selectedRecordType === "case"
+        ? parseBigoBound(searchParams.get("bigo_min"))
+        : undefined,
+    bigo_max:
+      selectedRecordType === "case"
+        ? parseBigoBound(searchParams.get("bigo_max"))
+        : undefined,
     // An explicit ?sort wins. Otherwise the default depends on whether there is
     // query text: with none, EVERY document scores identically (a constant 2.0),
     // so `relevance` degenerates to the `iri` tiebreaker and browse order comes
