@@ -2070,7 +2070,12 @@
       "bigoMinThumb": "Minimum amount",
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
-      "bigoNoMax": "No maximum"
+      "bigoNoMax": "No maximum",
+      "bigoMinField": "Min (Rs)",
+      "bigoMaxField": "Max (Rs)",
+      "bigoBarTitle": "{{cases}} cases",
+      "bigoMatchCount": "{{cases}} cases in this range.",
+      "bigoCommonPreset": "Over {{amount}}"
     }
   },
   "materialsPage": {

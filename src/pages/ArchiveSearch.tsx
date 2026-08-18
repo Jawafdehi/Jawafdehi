@@ -330,6 +330,7 @@ export default function ArchiveSearch({
         hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
         bigoExtent={displayData?.extents?.bigo}
+        bigoMatchCount={displayData?.counts?.case}
         bigoMax={params.bigo_max}
         bigoMin={params.bigo_min}
         onBigoCommit={updateBigoRange}

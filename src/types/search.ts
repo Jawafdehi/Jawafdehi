@@ -141,6 +141,14 @@ export interface SearchRangeExtent {
   min: number;
   max: number;
   count: number;
+  // Histogram bars. Aggregated over the query and the exact-match facets but NOT
+  // over the range itself — bars that narrowed with the active bound would
+  // collapse under the reader's own hand while dragging. Open-ended first/last
+  // bars carry a null bound rather than a fabricated one.
+  buckets: { from: number | null; to: number | null; count: number }[];
+  // Positions a slider thumb may take. Server-owned so the bar counts and the
+  // selectable stops cannot drift apart.
+  stops: number[];
 }
 
 export interface ArchiveSearchResponse {

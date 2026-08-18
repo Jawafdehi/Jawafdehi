@@ -2045,7 +2045,12 @@
       "bigoMinThumb": "न्यूनतम रकम",
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
-      "bigoNoMax": "अधिकतम छैन"
+      "bigoNoMax": "अधिकतम छैन",
+      "bigoMinField": "न्यूनतम (रु)",
+      "bigoMaxField": "अधिकतम (रु)",
+      "bigoBarTitle": "{{cases}} मुद्दा",
+      "bigoMatchCount": "यो दायरामा {{cases}} मुद्दा।",
+      "bigoCommonPreset": "{{amount}} भन्दा माथि"
     }
   },
   "materialsPage": {

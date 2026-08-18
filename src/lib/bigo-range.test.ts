@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   boundToIndex,
-  buildBigoLadder,
   describeBigoRange,
+  hasUsableRails,
   indexToBound,
   parseBigoBound,
   readBigoBounds,
+  type BigoExtent,
 } from "./bigo-range";
 
 // Stand-in for i18next's `t`: returns the interpolated English default, which is
@@ -15,8 +16,22 @@ const translate = (_key: string, options?: Record<string, unknown>) => {
   return template.replace(/{{(\w+)}}/g, (_m, name) => String(options?.[name]));
 };
 
-// The real published corpus, per JawafdehiAPI#450: रु ४५,२२० to रु ६६ अरब.
-const CORPUS = { min: 45_220, max: 66_000_000_000, count: 68 };
+// The real published corpus, per JawafdehiAPI#450: रु ४५,२२० to रु ६६ अरब. Stops
+// and buckets are server-supplied — this mirrors what the API emits.
+const STOPS = Array.from({ length: 13 }, (_, exponent) =>
+  [1, 2, 5].map((mantissa) => mantissa * 10 ** exponent),
+).flat();
+const CORPUS: BigoExtent = {
+  min: 45_220,
+  max: 66_000_000_000,
+  count: 68,
+  stops: STOPS,
+  buckets: Array.from({ length: 14 }, (_, i) => ({
+    from: i === 0 ? null : 10 ** (i - 1),
+    to: i === 13 ? null : 10 ** i,
+    count: i,
+  })),
+};
 
 describe("parseBigoBound", () => {
   it("accepts whole non-negative amounts, including zero", () => {
@@ -76,46 +91,22 @@ describe("readBigoBounds", () => {
   });
 });
 
-describe("buildBigoLadder", () => {
-  it("is made of round 1/2/5 amounts only", () => {
-    // The whole point of a ladder: you land on रु १ करोड, never रु १.०३ करोड.
-    for (const stop of buildBigoLadder(CORPUS)) {
-      const mantissa = stop / 10 ** Math.floor(Math.log10(stop));
-      expect([1, 2, 5]).toContain(Math.round(mantissa));
-    }
+describe("hasUsableRails", () => {
+  it("accepts an extent that can actually drive a control", () => {
+    expect(hasUsableRails(CORPUS)).toBe(true);
   });
 
-  it("brackets the corpus, so an end-parked thumb really is no bound", () => {
-    const ladder = buildBigoLadder(CORPUS);
-    expect(ladder[0]).toBeLessThanOrEqual(CORPUS.min);
-    expect(ladder[ladder.length - 1]).toBeGreaterThanOrEqual(CORPUS.max);
-  });
-
-  it("ascends, with no duplicates", () => {
-    const ladder = buildBigoLadder(CORPUS);
-    expect(ladder).toEqual([...ladder].sort((a, b) => a - b));
-    expect(new Set(ladder).size).toBe(ladder.length);
-  });
-
-  it("gives a usable number of stops across six orders of magnitude", () => {
-    // Log spacing is what makes this possible at all: linearly, the median
-    // (~रु ४.८८ करोड) sits ~0.2px from the left of a 250px track.
-    const ladder = buildBigoLadder(CORPUS);
-    expect(ladder.length).toBeGreaterThanOrEqual(12);
-    expect(ladder.length).toBeLessThanOrEqual(30);
-  });
-
-  it("still yields a draggable track for a degenerate corpus", () => {
-    // One case, or a range sitting between two stops, would otherwise collapse
-    // to a single position — a slider pinned shut.
-    const single = buildBigoLadder({ min: 5e7, max: 5e7, count: 1 });
-    expect(single.length).toBeGreaterThanOrEqual(2);
-    expect([...single].sort((a, b) => a - b)).toEqual(single);
+  it("rejects what would render as a slider pinned shut", () => {
+    // No extent at all (an older cached response), nothing recorded, or a
+    // ladder too short to drag along. Rendering nothing beats a dead control.
+    expect(hasUsableRails(undefined)).toBe(false);
+    expect(hasUsableRails({ ...CORPUS, count: 0 })).toBe(false);
+    expect(hasUsableRails({ ...CORPUS, stops: [10_000_000] })).toBe(false);
   });
 });
 
 describe("boundToIndex / indexToBound", () => {
-  const ladder = buildBigoLadder(CORPUS);
+  const ladder = CORPUS.stops;
   const last = ladder.length - 1;
 
   it("round-trips a stop that is on the ladder", () => {

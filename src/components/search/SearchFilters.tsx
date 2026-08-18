@@ -60,6 +60,8 @@ type SearchFiltersProps = {
   bigoExtent?: BigoExtent;
   bigoMin?: number;
   bigoMax?: number;
+  // Cases matching the current search, for the "what will this give me" count.
+  bigoMatchCount?: number;
   onBigoCommit: (bounds: { min?: number; max?: number }) => void;
 };
 
@@ -75,6 +77,7 @@ export function SearchFilters({
   bigoExtent,
   bigoMin,
   bigoMax,
+  bigoMatchCount,
   onBigoCommit,
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
@@ -127,6 +130,7 @@ export function SearchFilters({
       {selectedType === "case" ? (
         <BigoRangeFilter
           extent={bigoExtent}
+          matchCount={bigoMatchCount}
           max={bigoMax}
           min={bigoMin}
           onCommit={onBigoCommit}
