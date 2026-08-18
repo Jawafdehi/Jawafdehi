@@ -1,4 +1,4 @@
-import { parseBigoBound } from "@/lib/bigo-bands";
+import { readBigoBounds } from "@/lib/bigo-bands";
 
 // `sort` is deliberately NOT here. A value listed in defaultValues is stripped
 // from the URL, and the default sort is no longer a constant — ArchiveSearch
@@ -57,15 +57,12 @@ export function normalizeArchiveSearchParams(current: URLSearchParams) {
   // "could not be loaded" alert. A stale bookmark should degrade into a wider
   // result set, not into what reads as a search outage.
   //
-  // An inverted pair drops BOTH bounds rather than keeping the plausible half:
-  // there is no way to tell which one the reader meant, and silently honouring
-  // one of them applies a filter they did not ask for.
-  const bigoMin = parseBigoBound(next.get("bigo_min"));
-  const bigoMax = parseBigoBound(next.get("bigo_max"));
-  const inverted =
-    bigoMin !== undefined && bigoMax !== undefined && bigoMin > bigoMax;
-  setOrDelete(next, "bigo_min", inverted ? undefined : bigoMin);
-  setOrDelete(next, "bigo_max", inverted ? undefined : bigoMax);
+  // The rules themselves live in readBigoBounds, which ArchiveSearch's request
+  // builder also reads through — this rewrite lands an effect later than the
+  // first request, so the two cannot be allowed to disagree.
+  const bigo = readBigoBounds(next);
+  setOrDelete(next, "bigo_min", bigo.min);
+  setOrDelete(next, "bigo_max", bigo.max);
 
   return next;
 }

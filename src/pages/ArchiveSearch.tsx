@@ -51,7 +51,7 @@ import {
   BIGO_BANDS,
   describeBigoRange,
   findBigoBand,
-  parseBigoBound,
+  readBigoBounds,
 } from "@/lib/bigo-bands";
 import {
   normalizeArchiveSearchParams,
@@ -620,6 +620,12 @@ function readRecordType(searchParams: URLSearchParams): ArchiveSearchType {
     : "all";
 }
 
+// The URL's बिगो bounds under the API's own param names.
+function readBigoParams(searchParams: URLSearchParams) {
+  const { min, max } = readBigoBounds(searchParams);
+  return { bigo_min: min, bigo_max: max };
+}
+
 function readParams(
   searchParams: URLSearchParams,
   selectedRecordType: ArchiveSearchType,
@@ -643,14 +649,14 @@ function readParams(
     // carries an amount, so a bound left over from a case view would empty the
     // results of whatever the reader switched to — with the control that set it
     // no longer on screen. Same gate, and the same reason, as entity_type above.
-    bigo_min:
-      selectedRecordType === "case"
-        ? parseBigoBound(searchParams.get("bigo_min"))
-        : undefined,
-    bigo_max:
-      selectedRecordType === "case"
-        ? parseBigoBound(searchParams.get("bigo_max"))
-        : undefined,
+    //
+    // Read through readBigoBounds, NOT by parsing each bound here: an inverted
+    // pair parses fine bound-by-bound, and normalizeArchiveSearchParams only
+    // repairs the URL an effect later — by which point this render has already
+    // sent `bigo_min > bigo_max` and taken a 400.
+    ...(selectedRecordType === "case"
+      ? readBigoParams(searchParams)
+      : { bigo_min: undefined, bigo_max: undefined }),
     // An explicit ?sort wins. Otherwise the default depends on whether there is
     // query text: with none, EVERY document scores identically (a constant 2.0),
     // so `relevance` degenerates to the `iri` tiebreaker and browse order comes

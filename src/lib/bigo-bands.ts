@@ -88,6 +88,29 @@ export function parseBigoBound(raw: string | null): number | undefined {
   return Number(raw);
 }
 
+/**
+ * Both बिगो bounds off a query string, with every rule the API would enforce
+ * already applied.
+ *
+ * The single place that rule lives. URL normalization and the request builder
+ * BOTH read through here on purpose: they run independently, and normalization
+ * only rewrites the URL on an effect — a tick after the first render has already
+ * fired its request. An inverted pair parses perfectly well bound-by-bound, so a
+ * request builder doing its own parsing would send `bigo_min > bigo_max`, take a
+ * 400, and flash the "could not be loaded" alert before the URL healed itself.
+ */
+export function readBigoBounds(params: URLSearchParams): {
+  min?: number;
+  max?: number;
+} {
+  const min = parseBigoBound(params.get("bigo_min"));
+  const max = parseBigoBound(params.get("bigo_max"));
+  // Inverted → neither half survives. There is no way to tell which one was
+  // meant, and honouring either applies a filter nobody asked for.
+  if (min !== undefined && max !== undefined && min > max) return {};
+  return { min, max };
+}
+
 /** The band exactly matching these bounds, if any. */
 export function findBigoBand(
   min?: number,

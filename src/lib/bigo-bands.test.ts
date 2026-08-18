@@ -4,6 +4,7 @@ import {
   describeBigoRange,
   findBigoBand,
   parseBigoBound,
+  readBigoBounds,
 } from "./bigo-bands";
 
 // Stand-in for i18next's `t`: returns the interpolated English default, which is
@@ -37,6 +38,38 @@ describe("parseBigoBound", () => {
     // Number() round-trip would round it back under the limit and admit it.
     expect(parseBigoBound(String(2n ** 63n - 1n))).toBe(Number(2n ** 63n - 1n));
     expect(parseBigoBound(String(2n ** 63n))).toBeUndefined();
+  });
+});
+
+describe("readBigoBounds", () => {
+  const read = (query: string) => readBigoBounds(new URLSearchParams(query));
+
+  it("returns both bounds when the pair is usable", () => {
+    expect(read("bigo_min=10000000&bigo_max=99999999")).toEqual({
+      min: 10_000_000,
+      max: 99_999_999,
+    });
+    expect(read("bigo_min=0")).toEqual({ min: 0, max: undefined });
+  });
+
+  it("drops BOTH bounds when the pair is inverted", () => {
+    // Regression: each bound parses fine on its own, so a caller doing its own
+    // per-bound parsing would send bigo_min > bigo_max and take a 400. URL
+    // normalization repairs that only on an effect — a tick AFTER the first
+    // render has already fired its request — so the rule has to live here,
+    // where the request builder reads it too.
+    expect(read("bigo_min=100000000&bigo_max=10000000")).toEqual({});
+  });
+
+  it("keeps an equal pair — that is an exact-amount lookup", () => {
+    expect(read("bigo_min=500&bigo_max=500")).toEqual({ min: 500, max: 500 });
+  });
+
+  it("drops only the malformed half", () => {
+    expect(read("bigo_min=abc&bigo_max=99999999")).toEqual({
+      min: undefined,
+      max: 99_999_999,
+    });
   });
 });
 
