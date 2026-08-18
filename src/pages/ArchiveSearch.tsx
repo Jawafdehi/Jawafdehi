@@ -46,13 +46,7 @@ import type {
   ArchiveSearchType,
 } from "@/types/search";
 import { cn } from "@/lib/utils";
-import {
-  BIGO_BAND_ANY,
-  BIGO_BANDS,
-  describeBigoRange,
-  findBigoBand,
-  readBigoBounds,
-} from "@/lib/bigo-bands";
+import { describeBigoRange, readBigoBounds } from "@/lib/bigo-range";
 import {
   normalizeArchiveSearchParams,
   setArchiveSearchParam,
@@ -251,14 +245,9 @@ export default function ArchiveSearch({
     setSearchParams(next);
   };
 
-  // The बिगो bands are one-of-N, so this SETS rather than toggles: picking a band
-  // replaces whatever range was in force, and "Any amount" (or re-picking the
-  // active band from the pill's X) clears both bounds.
-  const updateBigoBand = (bandId: string) => {
-    const band =
-      bandId === BIGO_BAND_ANY
-        ? undefined
-        : BIGO_BANDS.find(({ id }) => id === bandId);
+  // Committed on pointer release / key up, never per drag step — the slider owns
+  // its position while dragging so a 20-stop track is not 20 requests.
+  const updateBigoRange = ({ min, max }: { min?: number; max?: number }) => {
     // Both bounds move as ONE edit. Setting them in sequence through
     // setArchiveSearchParam would re-normalize in between, and a new lower bound
     // momentarily above the OUTGOING upper bound looks inverted at that point —
@@ -266,8 +255,8 @@ export default function ArchiveSearch({
     const next = new URLSearchParams(searchParams);
     next.delete("bigo_min");
     next.delete("bigo_max");
-    if (band?.min !== undefined) next.set("bigo_min", String(band.min));
-    if (band?.max !== undefined) next.set("bigo_max", String(band.max));
+    if (min !== undefined) next.set("bigo_min", String(min));
+    if (max !== undefined) next.set("bigo_max", String(max));
     next.delete("page");
     setSearchParams(normalizeArchiveSearchParams(next));
   };
@@ -278,7 +267,7 @@ export default function ArchiveSearch({
       return;
     }
     if (name === "bigo") {
-      updateBigoBand(BIGO_BAND_ANY);
+      updateBigoRange({});
       return;
     }
     toggleRefinement(name, value);
@@ -340,14 +329,13 @@ export default function ArchiveSearch({
         facets={facets}
         hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
-        onBigoBandChange={updateBigoBand}
+        bigoExtent={displayData?.extents?.bigo}
+        bigoMax={params.bigo_max}
+        bigoMin={params.bigo_min}
+        onBigoCommit={updateBigoRange}
         onToggle={toggleRefinement}
         onTypeChange={updateRecordType}
         selected={selectedSidebarFilters}
-        selectedBigoBand={
-          findBigoBand(params.bigo_min, params.bigo_max)?.id ??
-          (hasBigoRange ? undefined : BIGO_BAND_ANY)
-        }
         selectedType={selectedRecordType}
       />
     )

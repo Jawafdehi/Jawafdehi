@@ -131,6 +131,18 @@ export interface ArchiveSearchCounts {
   case: number;
 }
 
+// Corpus extent of a range-filterable field — the RAILS a slider needs, as
+// opposed to the term buckets in `facets`. Keyed by request-param prefix, so
+// `bigo` covers `bigo_min`/`bigo_max`. Computed by a `global` aggregation, so it
+// does NOT narrow with the active filters: a track that tracked the selection
+// could never be widened again. Absent when no case index is in scope, or when
+// nothing in the corpus records an amount.
+export interface SearchRangeExtent {
+  min: number;
+  max: number;
+  count: number;
+}
+
 export interface ArchiveSearchResponse {
   query: string;
   lang: string;
@@ -140,6 +152,8 @@ export interface ArchiveSearchResponse {
   count: number;
   counts: Partial<ArchiveSearchCounts>;
   facets: ArchiveSearchFacets;
+  // Optional: older cached responses and test fixtures predate it.
+  extents?: Partial<Record<"bigo", SearchRangeExtent>>;
   results: ArchiveSearchResult[];
   next_cursor: string | null;
   // Ephemeral per-response id (not a user/session id). Echoed back on a result

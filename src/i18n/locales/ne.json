@@ -2035,19 +2035,17 @@
       "caseType": "मुद्दा प्रकार",
       "tags": "ट्यागहरू",
       "bigo": "बिगो (रकम)",
-      "bigoNote": "रकम उल्लेख भएका मुद्दाहरू मात्र समावेश हुन्छन्।",
-      "bigoBands": {
-        "any": "जुनसुकै रकम",
-        "under1Crore": "रु १ करोड भन्दा कम",
-        "oneToTenCrore": "रु १–१० करोड",
-        "tenCroreToOneArab": "रु १० करोड – १ अरब",
-        "overOneArab": "रु १ अरब भन्दा माथि"
-      },
+      "bigoNote": "रकमबाट छान्दा बिगो उल्लेख भएका {{cases}} मुद्दा मात्र समावेश हुन्छन्।",
       "bigoRange": {
+        "any": "जुनसुकै रकम",
         "between": "{{min}} – {{max}}",
         "from": "{{min}} वा माथि",
         "upTo": "{{max}} सम्म"
-      }
+      },
+      "bigoMinThumb": "न्यूनतम रकम",
+      "bigoMaxThumb": "अधिकतम रकम",
+      "bigoNoMin": "न्यूनतम छैन",
+      "bigoNoMax": "अधिकतम छैन"
     }
   },
   "materialsPage": {

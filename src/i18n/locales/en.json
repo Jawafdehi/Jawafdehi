@@ -2060,19 +2060,17 @@
       "caseType": "Case type",
       "tags": "Tags",
       "bigo": "बिगो (amount)",
-      "bigoNote": "Includes only cases with a recorded amount.",
-      "bigoBands": {
-        "any": "Any amount",
-        "under1Crore": "Under Rs 1 Crore",
-        "oneToTenCrore": "Rs 1–10 Crore",
-        "tenCroreToOneArab": "Rs 10 Crore – 1 Arab",
-        "overOneArab": "Over Rs 1 Arab"
-      },
+      "bigoNote": "Filtering by amount includes only the {{cases}} cases with a recorded बिगो.",
       "bigoRange": {
+        "any": "Any amount",
         "between": "{{min}} – {{max}}",
         "from": "{{min}} and above",
         "upTo": "Up to {{max}}"
-      }
+      },
+      "bigoMinThumb": "Minimum amount",
+      "bigoMaxThumb": "Maximum amount",
+      "bigoNoMin": "No minimum",
+      "bigoNoMax": "No maximum"
     }
   },
   "materialsPage": {

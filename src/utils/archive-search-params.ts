@@ -1,4 +1,4 @@
-import { readBigoBounds } from "@/lib/bigo-bands";
+import { readBigoBounds } from "@/lib/bigo-range";
 
 // `sort` is deliberately NOT here. A value listed in defaultValues is stripped
 // from the URL, and the default sort is no longer a constant — ArchiveSearch
