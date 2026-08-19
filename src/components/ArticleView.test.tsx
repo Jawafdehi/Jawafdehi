@@ -82,6 +82,60 @@ describe("ArticleView", () => {
     expect(screen.getByText("Summit stage").tagName).toBe("FIGCAPTION");
   });
 
+  it("prefers the large rendition for the hero, which renders at 896px wide", () => {
+    render(
+      <MemoryRouter>
+        <ArticleView
+          article={{
+            ...article,
+            thumbnail: {
+              url: "https://s3.example.org/thumb.800x450.webp",
+              width: 800,
+              height: 450,
+              alt: "Summit stage",
+            },
+            thumbnail_large: {
+              url: "https://s3.example.org/thumb.1600x900.webp",
+              width: 1600,
+              height: 900,
+              alt: "Summit stage",
+            },
+          }}
+        />
+      </MemoryRouter>,
+    );
+    const img = screen.getByRole("img", { name: "Summit stage" });
+    expect(img.getAttribute("src")).toBe(
+      "https://s3.example.org/thumb.1600x900.webp",
+    );
+    // Intrinsic size must track the rendition actually served, or the reserved
+    // box no longer matches and the layout shifts on load.
+    expect(img.getAttribute("width")).toBe("1600");
+    expect(img.getAttribute("height")).toBe("900");
+  });
+
+  it("falls back to the card rendition when the API has no large one", () => {
+    // The window where the frontend has deployed but the API field has not.
+    render(
+      <MemoryRouter>
+        <ArticleView
+          article={{
+            ...article,
+            thumbnail: {
+              url: "https://s3.example.org/thumb.800x450.webp",
+              width: 800,
+              height: 450,
+              alt: "Summit stage",
+            },
+          }}
+        />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole("img", { name: "Summit stage" }).getAttribute("src"),
+    ).toBe("https://s3.example.org/thumb.800x450.webp");
+  });
+
   it("renders no featured image when the thumbnail is null", () => {
     render(
       <MemoryRouter>

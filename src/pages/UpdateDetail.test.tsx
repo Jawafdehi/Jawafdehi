@@ -76,3 +76,58 @@ describe("UpdateDetail loading state", () => {
     expect(screen.queryByRole("status", { name: "Loading update" })).toBeNull();
   });
 });
+
+describe("UpdateDetail social preview", () => {
+  const headContent = (property: string) =>
+    document.head
+      .querySelector(`meta[property="${property}"]`)
+      ?.getAttribute("content");
+
+  it("unfurls with the 1200x630 JPEG rather than the WebP display rendition", async () => {
+    getArticleBySlug.mockResolvedValue({
+      ...article,
+      thumbnail: {
+        url: "https://s3.example.org/thumb.800x450.webp",
+        width: 800,
+        height: 450,
+        alt: "Summit stage",
+      },
+      og_image: {
+        url: "https://s3.example.org/thumb.1200x630.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Summit stage",
+      },
+    } satisfies Article);
+
+    renderPage();
+
+    await waitFor(() =>
+      expect(headContent("og:image")).toBe(
+        "https://s3.example.org/thumb.1200x630.jpg",
+      ),
+    );
+    expect(headContent("og:image:width")).toBe("1200");
+    expect(headContent("og:image:height")).toBe("630");
+  });
+
+  it("falls back to the card rendition when the API has no og_image", async () => {
+    getArticleBySlug.mockResolvedValue({
+      ...article,
+      thumbnail: {
+        url: "https://s3.example.org/thumb.800x450.webp",
+        width: 800,
+        height: 450,
+        alt: "Summit stage",
+      },
+    } satisfies Article);
+
+    renderPage();
+
+    await waitFor(() =>
+      expect(headContent("og:image")).toBe(
+        "https://s3.example.org/thumb.800x450.webp",
+      ),
+    );
+  });
+});
