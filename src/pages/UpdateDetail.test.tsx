@@ -90,13 +90,13 @@ describe("UpdateDetail social preview", () => {
         url: "https://s3.example.org/thumb.800x450.webp",
         width: 800,
         height: 450,
-        alt: "Summit stage",
+        alt: "पशुपतिनाथको जलहरी",
       },
       og_image: {
         url: "https://s3.example.org/thumb.1200x630.jpg",
         width: 1200,
         height: 630,
-        alt: "Summit stage",
+        alt: "पशुपतिनाथको जलहरी",
       },
     } satisfies Article);
 
@@ -118,7 +118,7 @@ describe("UpdateDetail social preview", () => {
         url: "https://s3.example.org/thumb.800x450.webp",
         width: 800,
         height: 450,
-        alt: "Summit stage",
+        alt: "पशुपतिनाथको जलहरी",
       },
     } satisfies Article);
 

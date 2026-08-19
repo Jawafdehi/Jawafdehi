@@ -70,16 +70,16 @@ describe("ArticleView", () => {
               url: "https://s3.example.org/thumb.png",
               width: 800,
               height: 450,
-              alt: "Summit stage",
+              alt: "पशुपतिनाथको जलहरी",
             },
           }}
         />
       </MemoryRouter>,
     );
-    const img = screen.getByRole("img", { name: "Summit stage" });
+    const img = screen.getByRole("img", { name: "पशुपतिनाथको जलहरी" });
     expect(img.getAttribute("src")).toBe("https://s3.example.org/thumb.png");
     // The image description doubles as the visible caption.
-    expect(screen.getByText("Summit stage").tagName).toBe("FIGCAPTION");
+    expect(screen.getByText("पशुपतिनाथको जलहरी").tagName).toBe("FIGCAPTION");
   });
 
   it("prefers the large rendition for the hero, which renders at 896px wide", () => {
@@ -92,19 +92,19 @@ describe("ArticleView", () => {
               url: "https://s3.example.org/thumb.800x450.webp",
               width: 800,
               height: 450,
-              alt: "Summit stage",
+              alt: "पशुपतिनाथको जलहरी",
             },
             thumbnail_large: {
               url: "https://s3.example.org/thumb.1600x900.webp",
               width: 1600,
               height: 900,
-              alt: "Summit stage",
+              alt: "पशुपतिनाथको जलहरी",
             },
           }}
         />
       </MemoryRouter>,
     );
-    const img = screen.getByRole("img", { name: "Summit stage" });
+    const img = screen.getByRole("img", { name: "पशुपतिनाथको जलहरी" });
     expect(img.getAttribute("src")).toBe(
       "https://s3.example.org/thumb.1600x900.webp",
     );
@@ -125,14 +125,14 @@ describe("ArticleView", () => {
               url: "https://s3.example.org/thumb.800x450.webp",
               width: 800,
               height: 450,
-              alt: "Summit stage",
+              alt: "पशुपतिनाथको जलहरी",
             },
           }}
         />
       </MemoryRouter>,
     );
     expect(
-      screen.getByRole("img", { name: "Summit stage" }).getAttribute("src"),
+      screen.getByRole("img", { name: "पशुपतिनाथको जलहरी" }).getAttribute("src"),
     ).toBe("https://s3.example.org/thumb.800x450.webp");
   });
 
