@@ -26,9 +26,9 @@ export const UpdateCardSkeleton = ({
     >
       <div
         data-view={viewMode}
-        className="h-52 overflow-hidden border-b border-border/70 md:data-[view=list]:h-auto md:data-[view=list]:min-h-52 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:border-b-0 md:data-[view=list]:border-r"
+        className="aspect-video overflow-hidden border-b border-border/70 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:self-start md:data-[view=list]:border-b-0 md:data-[view=list]:border-r"
       >
-        <Skeleton className="h-full min-h-52 w-full rounded-none" />
+        <Skeleton className="h-full w-full rounded-none" />
       </div>
 
       <div className="flex flex-1 flex-col justify-between gap-5 p-4 sm:p-5">
