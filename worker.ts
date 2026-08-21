@@ -306,6 +306,10 @@ function buildMetaTags(input: {
   canonicalUrl: string;
   imageUrl: string;
   imageAlt: string;
+  // Only for an image whose size is known — omitted otherwise, since claiming
+  // dimensions for the site-wide fallback card would be wrong.
+  imageWidth?: number;
+  imageHeight?: number;
   type?: 'article' | 'website';
   publishedTime?: string | null;
   modifiedTime?: string | null;
@@ -488,8 +492,18 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     `An update from ${SITE_NAME}.`,
   );
   const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
-  const thumbnail = article.thumbnail as { url?: string; alt?: string } | null | undefined;
-  const imageUrl = previewImageUrl(thumbnail?.url, MEDIA_BASE) || SOCIAL_IMAGE_URL;
+  // The social rendition has to be picked HERE, not only in <Seo>: an unfurler
+  // never runs the React app, so this worker-injected head is the only one it
+  // sees. `og_image` is a 1200x630 JPEG — the ratio unfurlers want, and not the
+  // WebP that LinkedIn/WhatsApp handle unreliably. `thumbnail` is the 16:9 WebP
+  // card rendition, kept only as the fallback for an article the API hasn't
+  // generated an og_image for.
+  const social = (article.og_image ?? article.thumbnail) as
+    | { url?: string; alt?: string; width?: number; height?: number }
+    | null
+    | undefined;
+  const imageUrl = previewImageUrl(social?.url, MEDIA_BASE) || SOCIAL_IMAGE_URL;
+  const usingArticleImage = imageUrl !== SOCIAL_IMAGE_URL;
   const meta = article.meta as { first_published_at?: string | null } | undefined;
   const date = typeof article.date === 'string' ? article.date : null;
 
@@ -501,7 +515,9 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     description,
     canonicalUrl,
     imageUrl,
-    imageAlt: thumbnail?.alt || titleRaw,
+    imageAlt: social?.alt || titleRaw,
+    imageWidth: usingArticleImage ? social?.width : undefined,
+    imageHeight: usingArticleImage ? social?.height : undefined,
     type: 'article',
     publishedTime: meta?.first_published_at || date,
     modifiedTime: date,

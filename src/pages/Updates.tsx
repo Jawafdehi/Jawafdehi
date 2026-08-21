@@ -55,7 +55,7 @@ const UpdateCard = ({ article, viewMode }: UpdateCardProps) => {
             data-view={viewMode}
         >
             {article.thumbnail?.url ? (
-                <div className="h-52 overflow-hidden border-b border-border/70 bg-muted md:data-[view=list]:h-auto md:data-[view=list]:min-h-52 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
+                <div className="aspect-video overflow-hidden border-b border-border/70 bg-muted md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:self-start md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
                     <img
                         src={article.thumbnail.url}
                         alt={article.thumbnail.alt || ""}
@@ -64,7 +64,7 @@ const UpdateCard = ({ article, viewMode }: UpdateCardProps) => {
                     />
                 </div>
             ) : (
-                <div className="flex h-52 items-center justify-center border-b border-border/70 bg-gradient-to-br from-slate-200 via-slate-100 to-white text-primary md:data-[view=list]:h-auto md:data-[view=list]:min-h-52 md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
+                <div className="flex aspect-video items-center justify-center border-b border-border/70 bg-gradient-to-br from-slate-200 via-slate-100 to-white text-primary md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:self-start md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
                     <div className="grid h-16 w-16 place-items-center rounded-2xl border border-primary/15 bg-background shadow-sm">
                         <FileText className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
                     </div>

@@ -25,12 +25,19 @@ const UpdateDetail = () => {
     }
 
     const canonicalUrl = `${SITE_URL}/updates/${article.meta.slug}`;
+    // Prefer the dedicated social rendition: 1200x630 JPEG, which is the shape
+    // unfurlers ask for. `thumbnail` is a 16:9 WebP, so it's only the fallback
+    // for the window where the API hasn't shipped `og_image` yet.
+    const social = article.og_image ?? article.thumbnail;
     const ogImage =
-        previewImageUrl(article.thumbnail?.url, "https://portal.jawafdehi.org") ||
+        previewImageUrl(social?.url, "https://portal.jawafdehi.org") ||
         SOCIAL_IMAGE_URL;
     const metaTitle = `${article.title} | Jawafdehi`;
     const description = truncateMeta(article.excerpt || "");
-    const imageAlt = article.thumbnail?.alt || article.title;
+    const imageAlt = social?.alt || article.title;
+    // Only meaningful when the tags describe the article's own image; the
+    // site-wide fallback card has different dimensions.
+    const usingArticleImage = ogImage !== SOCIAL_IMAGE_URL;
 
     return (
         <>
@@ -41,6 +48,8 @@ const UpdateDetail = () => {
                 type="article"
                 imageUrl={ogImage}
                 imageAlt={imageAlt}
+                imageWidth={usingArticleImage ? social?.width : undefined}
+                imageHeight={usingArticleImage ? social?.height : undefined}
                 publishedTime={article.meta.first_published_at}
                 modifiedTime={article.date}
             />
