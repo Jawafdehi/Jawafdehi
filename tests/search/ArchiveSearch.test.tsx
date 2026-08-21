@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ArchiveSearch from "@/pages/ArchiveSearch";
 import type { ArchiveSearchResponse } from "@/types/search";
 
-import "@/../tests/support/resize-observer";
+import "../support/resize-observer";
 
 const { getCaseByIdMock, searchArchiveMock } = vi.hoisted(() => ({
   getCaseByIdMock: vi.fn(),

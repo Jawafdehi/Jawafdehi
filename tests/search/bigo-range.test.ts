@@ -8,7 +8,7 @@ import {
   parseBigoBound,
   readBigoBounds,
   type BigoExtent,
-} from "./bigo-range";
+} from "@/lib/bigo-range";
 
 // Stand-in for i18next's `t`: returns the interpolated English default, which is
 // what renders when the Nepali bundle has no override.

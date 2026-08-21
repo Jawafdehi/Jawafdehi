@@ -8,7 +8,7 @@ import {
 import type { BigoExtent } from "@/lib/bigo-range";
 import type { ArchiveSearchType } from "@/types/search";
 
-import "@/../tests/support/resize-observer";
+import "../support/resize-observer";
 
 // Passthrough translations so assertions don't depend on i18n resources. Plural
 // resolution is mirrored rather than skipped: `_one` vs `_other` is the whole
