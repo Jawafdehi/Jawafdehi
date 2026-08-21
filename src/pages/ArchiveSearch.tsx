@@ -245,8 +245,10 @@ export default function ArchiveSearch({
     setSearchParams(next);
   };
 
-  // One request per committed range — a bar click, the preset, or a typed amount
-  // on blur/Enter. There is no intermediate gesture state to debounce.
+  // One request per COMMITTED range — a thumb release, an arrow key-up, or a
+  // typed amount on blur/Enter. The slider owns its position while dragging, so
+  // a 20-stop drag is one request rather than twenty and there is nothing here
+  // to debounce.
   const updateBigoRange = ({ min, max }: { min?: number; max?: number }) => {
     // Both bounds move as ONE edit. Setting them in sequence through
     // setArchiveSearchParam would re-normalize in between, and a new lower bound
@@ -299,8 +301,9 @@ export default function ArchiveSearch({
       lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
   };
   // The active बिगो range as a single removable pill, labelled with the formatted
-  // bounds however it was set — a bar click, the preset, or a typed amount — so a
-  // range is never applied invisibly.
+  // bounds however it was set — dragged or typed — so a range is never applied
+  // invisibly. ONE pill, not one per bound: it is a single refinement, and
+  // removing it clears both sides.
   const hasBigoRange =
     params.bigo_min !== undefined || params.bigo_max !== undefined;
   const bigoPill = hasBigoRange

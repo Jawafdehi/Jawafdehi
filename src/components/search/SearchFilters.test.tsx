@@ -8,15 +8,7 @@ import {
 import type { BigoExtent } from "@/lib/bigo-range";
 import type { ArchiveSearchType } from "@/types/search";
 
-// Radix's Slider measures its thumbs through ResizeObserver, which jsdom does
-// not implement. There is no global vitest setup file in this repo, so the shim
-// is local: a no-op is enough, since these assertions are about roles, labels
-// and text rather than geometry.
-globalThis.ResizeObserver ??= class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-} as unknown as typeof ResizeObserver;
+import "@/../tests/support/resize-observer";
 
 // Passthrough translations so assertions don't depend on i18n resources. Plural
 // resolution is mirrored rather than skipped: `_one` vs `_other` is the whole
@@ -68,7 +60,8 @@ function renderFilters(
   );
 }
 
-const bigoGroup = () => screen.getByRole("group", { name: /बिगो/ });
+const bigoGroup = () =>
+  screen.getByRole("group", { name: /Embezzled amount/ });
 
 describe("SearchFilters — बिगो range control", () => {
   it("renders a two-thumb range slider and both amount fields", () => {
@@ -165,7 +158,7 @@ describe("SearchFilters — बिगो range control", () => {
     );
     expect(legends).toEqual([
       "Record type",
-      "बिगो (amount)",
+      "Embezzled amount",
       "Case type",
       "Tags",
     ]);
@@ -176,7 +169,9 @@ describe("SearchFilters — बिगो range control", () => {
     // results with no visible cause — the same failure "Entity type" had.
     (["all", "entity", "material", "courtcase"] as const).forEach((type) => {
       const { unmount } = renderFilters(type);
-      expect(screen.queryByRole("group", { name: /बिगो/ })).toBeNull();
+      expect(
+        screen.queryByRole("group", { name: /Embezzled amount/ }),
+      ).toBeNull();
       unmount();
     });
   });
@@ -185,7 +180,9 @@ describe("SearchFilters — बिगो range control", () => {
     // An older cached response predating the extent agg, or a corpus where
     // nothing records an amount. An empty track above two fields is furniture.
     renderFilters("case", { extent: undefined });
-    expect(screen.queryByRole("group", { name: /बिगो/ })).toBeNull();
+    expect(
+        screen.queryByRole("group", { name: /Embezzled amount/ }),
+      ).toBeNull();
   });
 
   it("commits a typed minimum on blur", () => {
@@ -219,7 +216,7 @@ describe("SearchFilters — बिगो range control", () => {
 
   it("drops the coverage caveat once a bound is set", () => {
     renderFilters("case", { min: 10_000_000 });
-    expect(within(bigoGroup()).queryByText(/recorded बिगो/)).toBeNull();
+    expect(within(bigoGroup()).queryByText(/recorded amount/)).toBeNull();
   });
 
   it("says what the filter can reach at all when unfiltered", () => {
@@ -229,7 +226,7 @@ describe("SearchFilters — बिगो range control", () => {
     renderFilters("case");
     expect(
       within(bigoGroup()).getByText(
-        "Filtering by amount includes only the 75 cases with a recorded बिगो.",
+        "Filtering by amount includes only the 75 cases with a recorded amount.",
       ),
     ).toBeTruthy();
   });

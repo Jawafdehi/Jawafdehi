@@ -181,7 +181,7 @@ export function BigoRangeFilter({
   return (
     <fieldset aria-labelledby={labelId} className="min-w-0">
       <legend className="mb-2 text-sm font-semibold text-foreground" id={labelId}>
-        {t("archiveSearch.filters.bigo", "बिगो (amount)")}
+        {t("archiveSearch.filters.bigo", "Embezzled amount")}
       </legend>
 
       <Slider
@@ -270,9 +270,9 @@ export function BigoRangeFilter({
           {t("archiveSearch.filters.bigoNote", {
             count: extent.count,
             defaultValue:
-              "Filtering by amount includes only the {{count}} cases with a recorded बिगो.",
+              "Filtering by amount includes only the {{count}} cases with a recorded amount.",
             defaultValue_one:
-              "Filtering by amount includes only the {{count}} case with a recorded बिगो.",
+              "Filtering by amount includes only the {{count}} case with a recorded amount.",
           })}
         </p>
       )}

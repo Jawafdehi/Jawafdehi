@@ -12,6 +12,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ArchiveSearch from "@/pages/ArchiveSearch";
 import type { ArchiveSearchResponse } from "@/types/search";
 
+import "@/../tests/support/resize-observer";
+
 const { getCaseByIdMock, searchArchiveMock } = vi.hoisted(() => ({
   getCaseByIdMock: vi.fn(),
   searchArchiveMock: vi.fn(),
@@ -106,6 +108,14 @@ function LocationState() {
   const location = useLocation();
   return <output data-testid="location-search">{location.search}</output>;
 }
+
+// The corpus extent the बिगो control needs to render at all. Absent from
+// `baseResponse` on purpose, so every other test keeps exercising the
+// no-extent path (an older cached response, or a corpus before the reindex).
+const withBigoExtent: ArchiveSearchResponse = {
+  ...baseResponse,
+  extents: { bigo: { min: 45_220, max: 66_000_000_000, count: 75 } },
+};
 
 function renderSearch(initialEntry = "/search") {
   const queryClient = new QueryClient({
@@ -331,6 +341,92 @@ describe("ArchiveSearch", () => {
 
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ entity_type: [], type: "case" }),
+    );
+  });
+
+  // ── बिगो range ───────────────────────────────────────────────────────────────
+  //
+  // The same three gates as Entity type above, for the same reason: only cases
+  // carry an amount, so a bound left in place under another record type empties
+  // the results with the control that set it no longer on screen. These run at
+  // page level because that is where the gate lives — the unit tests around
+  // readBigoBounds cannot see `readParams`, `updateRecordType` or the pill.
+
+  it("drops the बिगो range when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: 10_000_000, type: "case" }),
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "Entities: 3 results" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ bigo_min: undefined, type: "entity" }),
+      );
+    });
+    // ...and it leaves the URL, so a shared or bookmarked link stays honest
+    // about what is actually applied.
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "bigo_min",
+    );
+  });
+
+  it("ignores a बिगो bound carried in by a non-case URL", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=material&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: undefined, type: "material" }),
+    );
+  });
+
+  it("never sends an inverted बिगो pair, even on the first render", async () => {
+    // URL normalization repairs an inverted pair, but only from an effect — a
+    // tick AFTER this first request would already have gone out. The API answers
+    // min > max with a 400, which this page renders as its red "could not be
+    // loaded" alert, so a stale bookmark would read as a search outage.
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=100000000&bigo_max=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenCalledWith(
+      expect.objectContaining({ bigo_min: undefined, bigo_max: undefined }),
+    );
+  });
+
+  it("shows the active बिगो range as one removable pill", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    // A range is never applied invisibly, and it is ONE pill rather than one per
+    // bound, because it is a single removable refinement.
+    //
+    // Asserted on the pill's identity and behaviour, not its wording: this suite
+    // does not initialise i18next, so `t` hands back the raw default with
+    // `{{min}}` uninterpolated. The formatted label is covered where a `t` that
+    // interpolates exists — describeBigoRange's unit tests and
+    // SearchFilters.test.tsx.
+    const pills = await screen.findByLabelText("Selected filters");
+    const bigoPill = Array.from(pills.querySelectorAll("button")).filter(
+      (button) => button.textContent?.includes("above"),
+    );
+    expect(bigoPill).toHaveLength(1);
+
+    fireEvent.click(bigoPill[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location-search").textContent).not.toContain(
+        "bigo_min",
+      );
+    });
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: undefined, bigo_max: undefined }),
     );
   });
 
