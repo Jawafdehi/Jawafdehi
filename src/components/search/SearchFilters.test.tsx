@@ -108,6 +108,36 @@ describe("SearchFilters — बिगो range control", () => {
     expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
   });
 
+  it("announces a bound that snaps to a ladder END, rather than 'No minimum'", () => {
+    // Regression. aria-valuetext was derived from the thumb's ladder POSITION,
+    // and `indexToBound` returns undefined at either end because an end-parked
+    // thumb means "no bound". But a literal bound can snap to an end and still
+    // be in force: the live ladder floor is रु 20,000, so ?bigo_min=25000 lands
+    // the thumb on index 0 while the filter, the URL and the pill all carry
+    // रु 25,000. A screen reader was told "No minimum" about an applied minimum.
+    //
+    // The position is a rendering detail; the announcement is a claim about the
+    // filter, so at rest it reports the COMMITTED bound.
+    renderFilters("case", { min: 25_000 });
+    const [low] = within(bigoGroup()).getAllByRole("slider");
+    expect(low.getAttribute("aria-valuetext")).toBe("Rs 25,000");
+  });
+
+  it("announces an upper bound snapped to the ladder ceiling", () => {
+    // The same failure on the other end: the ladder tops out at रु 1.00 Kharab,
+    // so anything from ~रु 75 अरब up parks the thumb on the last index.
+    renderFilters("case", { max: 80_000_000_000 });
+    const [, high] = within(bigoGroup()).getAllByRole("slider");
+    expect(high.getAttribute("aria-valuetext")).toBe("Rs 80.00 Arab");
+  });
+
+  it("still says 'No minimum'/'No maximum' when a side genuinely has no bound", () => {
+    renderFilters("case");
+    const [low, high] = within(bigoGroup()).getAllByRole("slider");
+    expect(low.getAttribute("aria-valuetext")).toBe("No minimum");
+    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+  });
+
   it("sits directly under Record type, above the term facets", () => {
     // It used to render last. The tags group runs to 50 checkboxes, so anything
     // after it is off-screen on every viewport.

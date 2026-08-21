@@ -98,9 +98,27 @@ export function BigoRangeFilter({
     boundToIndex(ladder, max, lastIndex),
   ];
   const position = dragging ?? committed;
-  const previewMin = indexToBound(ladder, position[0], "min");
-  const previewMax = indexToBound(ladder, position[1], "max");
   const isFiltered = min !== undefined || max !== undefined;
+
+  // What each thumb ANNOUNCES, which is not always what it sits on.
+  //
+  // While dragging, the ladder value under the thumb: that is what releasing
+  // will commit, and it is the only thing that can be reported before the URL
+  // moves. At rest, the COMMITTED bound — because `indexToBound` is undefined at
+  // either end of the ladder, and a real bound can snap there. The ladder floor
+  // is the round number below the smallest recorded amount, so ?bigo_min=25000
+  // parks the thumb on index 0 while the filter, the URL and the pill all carry
+  // रु 25,000; deriving the text from the position announced "No minimum" about
+  // a minimum that was very much applied.
+  //
+  // The snap is a rendering decision — the thumb has to go somewhere. The
+  // announcement is a claim about the filter, so it follows the filter.
+  const announcedMin = dragging
+    ? indexToBound(ladder, position[0], "min")
+    : min;
+  const announcedMax = dragging
+    ? indexToBound(ladder, position[1], "max")
+    : max;
 
   const commitDraft = (which: "min" | "max", raw: string) => {
     const digits = stripAmountFormatting(raw);
@@ -185,16 +203,16 @@ export function BigoRangeFilter({
             // The thumb's aria-valuenow is necessarily a ladder index; "7 of 20"
             // tells a listener nothing about money, so the amount is spelled out.
             "aria-valuetext":
-              previewMin === undefined
+              announcedMin === undefined
                 ? t("archiveSearch.filters.bigoNoMin", "No minimum")
-                : formatBigo(previewMin),
+                : formatBigo(announcedMin),
           },
           {
             "aria-label": t("archiveSearch.filters.bigoMaxThumb", "Maximum amount"),
             "aria-valuetext":
-              previewMax === undefined
+              announcedMax === undefined
                 ? t("archiveSearch.filters.bigoNoMax", "No maximum")
-                : formatBigo(previewMax),
+                : formatBigo(announcedMax),
           },
         ]}
         value={position}
