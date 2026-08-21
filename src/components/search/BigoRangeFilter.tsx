@@ -1,16 +1,15 @@
 import { useEffect, useId, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { BigoHistogram } from "@/components/search/BigoHistogram";
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
   boundToIndex,
+  buildBigoLadder,
   describeBigoRange,
   hasUsableRails,
   indexToBound,
   parseBigoBound,
+  type BigoBounds,
   type BigoExtent,
 } from "@/lib/bigo-range";
 import {
@@ -19,42 +18,53 @@ import {
   stripAmountFormatting,
 } from "@/utils/number";
 
-/** रु १ करोड — 59 of the 68 cases with a recorded amount clear it. */
-const COMMON_MINIMUM = 10_000_000;
-
-export type BigoBounds = { min?: number; max?: number };
+export type { BigoBounds };
 
 type BigoRangeFilterProps = {
-  /** Corpus rails + bar counts from the API. Absent → no control. */
+  /** Corpus extent from the API. Absent → no control. */
   extent?: BigoExtent;
   min?: number;
   max?: number;
-  /** Cases matching the current search, for the "what will this give me" count. */
-  matchCount?: number;
   onCommit: (bounds: BigoBounds) => void;
 };
 
 /**
- * The बिगो amount filter: distribution, then a range slider over it, then two
- * amount fields.
+ * The बिगो amount filter: a two-thumb range slider over a log ladder, with the
+ * exact amounts beneath it.
  *
- * The three layers are not decoration — each answers a documented failure of
- * numeric filters:
+ * The shape every price filter uses, and deliberately so — a reader already
+ * knows how to work it, which is worth more here than any novelty. Track, its
+ * endpoints, two fields, and (only while unfiltered) the coverage caveat.
  *
- * - the histogram supplies the inventory information UXmatters names as a core
- *   omission, and is what keeps a reader from narrowing into an empty page;
- * - the slider gives the fast approximate gesture, on a log scale because the
- *   amounts span six orders of magnitude;
- * - the amount fields are Baymard's requirement that a filtering slider "should
- *   always be accompanied by text input fields" — the precise path, and the one
- *   that works for anyone whom NN/g's motor-control objection rules out of
- *   dragging at all.
+ * ## Why a log scale is not optional
+ *
+ * The amounts span six orders of magnitude. On a linear track across this 250px
+ * sidebar the median case sits 0.19px from the left edge — half the corpus in one
+ * pixel. The ladder in `bigo-range.ts` puts it at 123px. See that module for the
+ * index-vs-amount reasoning behind `aria-valuetext`.
+ *
+ * ## What this replaced, and why the earlier objections do not apply
+ *
+ * A clickable histogram briefly stood here. It showed the distribution, but the
+ * bars were also the control, which needed explaining: three lines of help text,
+ * a shift-click gesture impossible on touch, and nine stacked blocks in a column
+ * shared with four other filter groups.
+ *
+ * The slider was itself removed once before, for reasons that were really about
+ * running it ALONGSIDE that histogram — two scales that never lined up, and a
+ * drag preview that reported the previous range's count. With no bars there is
+ * one scale. What is genuinely lost is the distribution's "information scent":
+ * nothing here now shows WHERE the cases sit, so a reader can narrow into an
+ * empty range and only find out from the results.
+ *
+ * WCAG 2.2 SC 2.5.7 (Dragging Movements) is satisfied by the amount fields:
+ * every range reachable by dragging is reachable by typing, and the thumbs are
+ * arrow-key operable besides.
  */
 export function BigoRangeFilter({
   extent,
   min,
   max,
-  matchCount,
   onCommit,
 }: Readonly<BigoRangeFilterProps>) {
   const { t } = useTranslation();
@@ -62,55 +72,35 @@ export function BigoRangeFilter({
   const minFieldId = useId();
   const maxFieldId = useId();
 
-  const usable = hasUsableRails(extent);
-  const stops = usable ? extent.stops : [];
-  const lastIndex = stops.length - 1;
-
-  const committed: [number, number] = [
-    boundToIndex(stops, min, 0),
-    boundToIndex(stops, max, lastIndex),
-  ];
-
   // Position while dragging. The URL only moves on commit (pointer release / key
-  // up), so a 20-stop track is one request rather than twenty — but the bars and
-  // the count preview follow the thumb live, which is the responsiveness
-  // Baymard's fifth requirement asks for without a request per step.
+  // up), so dragging a 20-stop track is one request rather than twenty.
   const [dragging, setDragging] = useState<[number, number] | null>(null);
-  const position = dragging ?? committed;
 
   // Text of the two amount fields. Held separately from the committed bounds so a
   // half-typed number is not parsed on every keystroke; committed on blur/Enter.
   const [draftMin, setDraftMin] = useState("");
   const [draftMax, setDraftMax] = useState("");
 
-  // Re-sync when the URL moves underneath us — a pill removal, "Clear", the back
-  // button, or the slider itself.
+  // Re-sync when the URL moves underneath us — the slider itself, a pill removal,
+  // "Clear", or the back button.
   useEffect(() => {
     setDragging(null);
     setDraftMin(min === undefined ? "" : formatAmountInput(String(min)));
     setDraftMax(max === undefined ? "" : formatAmountInput(String(max)));
   }, [min, max]);
 
-  if (!usable) return null;
+  if (!hasUsableRails(extent)) return null;
 
-  const previewMin = indexToBound(stops, position[0], "min");
-  const previewMax = indexToBound(stops, position[1], "max");
+  const ladder = buildBigoLadder(extent);
+  const lastIndex = ladder.length - 1;
+  const committed: [number, number] = [
+    boundToIndex(ladder, min, 0),
+    boundToIndex(ladder, max, lastIndex),
+  ];
+  const position = dragging ?? committed;
+  const previewMin = indexToBound(ladder, position[0], "min");
+  const previewMax = indexToBound(ladder, position[1], "max");
   const isFiltered = min !== undefined || max !== undefined;
-
-  // Which bars fall inside the current selection, so the rest can dim. Compared
-  // on the bar's own bounds rather than by index, since the bars sit on a coarser
-  // ladder than the thumbs.
-  const selection = {
-    first: extent.buckets.findIndex(
-      (bucket) => previewMin === undefined || bucket.to === null || bucket.to > previewMin,
-    ),
-    last: (() => {
-      const after = extent.buckets.findIndex(
-        (bucket) => previewMax !== undefined && bucket.from !== null && bucket.from >= previewMax,
-      );
-      return after === -1 ? extent.buckets.length - 1 : after - 1;
-    })(),
-  };
 
   const commitDraft = (which: "min" | "max", raw: string) => {
     const digits = stripAmountFormatting(raw);
@@ -119,7 +109,7 @@ export function BigoRangeFilter({
     // which reads as an outage instead of a typo.
     const parsed = digits === "" ? undefined : parseBigoBound(digits);
     const next: BigoBounds =
-      which === "min" ? { min: parsed, max } : { min, max: parsed };
+      which === "min" ? { max, min: parsed } : { max: parsed, min };
     // An inverted pair is the reader mid-thought, not an error worth shouting
     // about: keep the side they just typed and drop the other.
     if (next.min !== undefined && next.max !== undefined && next.min > next.max) {
@@ -135,6 +125,7 @@ export function BigoRangeFilter({
     value: string,
     setValue: (next: string) => void,
     label: string,
+    placeholder: number,
   ) => (
     <div className="min-w-0 flex-1">
       <label className="mb-1 block text-xs text-muted-foreground" htmlFor={id}>
@@ -163,7 +154,7 @@ export function BigoRangeFilter({
             commitDraft(which, (event.target as HTMLInputElement).value);
           }
         }}
-        placeholder={which === "min" ? formatAmountInput(String(extent.min)) : formatAmountInput(String(extent.max))}
+        placeholder={formatAmountInput(String(placeholder))}
         value={value}
       />
     </div>
@@ -171,23 +162,9 @@ export function BigoRangeFilter({
 
   return (
     <fieldset aria-labelledby={labelId} className="min-w-0">
-      <legend className="mb-1.5 text-sm font-semibold text-foreground" id={labelId}>
+      <legend className="mb-2 text-sm font-semibold text-foreground" id={labelId}>
         {t("archiveSearch.filters.bigo", "बिगो (amount)")}
       </legend>
-
-      {/*
-        Readout ABOVE the track, never below: on a touchscreen the reader's own
-        finger covers whatever sits under the thumb, which is the one moment the
-        value matters most (NN/g).
-      */}
-      <p
-        aria-live="polite"
-        className="mb-1.5 text-sm font-medium tabular-nums text-foreground"
-      >
-        {describeBigoRange(previewMin, previewMax, t)}
-      </p>
-
-      <BigoHistogram buckets={extent.buckets} selection={selection} />
 
       <Slider
         className="mt-1"
@@ -197,19 +174,13 @@ export function BigoRangeFilter({
         onValueChange={([low, high]) => setDragging([low, high])}
         onValueCommit={([low, high]) =>
           onCommit({
-            min: indexToBound(stops, low, "min"),
-            max: indexToBound(stops, high, "max"),
+            min: indexToBound(ladder, low, "min"),
+            max: indexToBound(ladder, high, "max"),
           })
         }
         step={1}
-        // Opposing arrows, because more than half of Baymard's test subjects read
-        // a dual-point slider as a single-value one. Two identical circles give a
-        // reader nothing to tell "this end" from "that end".
         thumbProps={[
           {
-            children: (
-              <ChevronLeft aria-hidden="true" className="h-3 w-3 text-primary" />
-            ),
             "aria-label": t("archiveSearch.filters.bigoMinThumb", "Minimum amount"),
             // The thumb's aria-valuenow is necessarily a ladder index; "7 of 20"
             // tells a listener nothing about money, so the amount is spelled out.
@@ -219,9 +190,6 @@ export function BigoRangeFilter({
                 : formatBigo(previewMin),
           },
           {
-            children: (
-              <ChevronRight aria-hidden="true" className="h-3 w-3 text-primary" />
-            ),
             "aria-label": t("archiveSearch.filters.bigoMaxThumb", "Maximum amount"),
             "aria-valuetext":
               previewMax === undefined
@@ -232,17 +200,15 @@ export function BigoRangeFilter({
         value={position}
       />
 
-      <div className="mt-1 flex justify-between text-xs tabular-nums text-muted-foreground">
-        <span>{formatBigo(stops[0])}</span>
-        <span>{formatBigo(stops[lastIndex])}</span>
+      {/*
+        The track's endpoints, so the scale is legible at a glance and a thumb
+        parked at either end visibly means "no bound".
+      */}
+      <div className="mt-2 flex justify-between text-xs tabular-nums text-muted-foreground">
+        <span>{formatBigo(ladder[0])}</span>
+        <span>{formatBigo(ladder[lastIndex])}</span>
       </div>
 
-      {/*
-        The precise path, and the accessible one. Baymard: a filtering slider
-        "should always be accompanied by text input fields acting as a fallback";
-        NN/g: offer something a reader can "tap or even type" instead of a
-        press-and-drag gesture.
-      */}
       {/*
         Stacked, not side by side: "१,००,००,००,०००" is 13 characters, and two
         fields sharing a 250px sidebar truncate the value the reader just typed —
@@ -255,6 +221,7 @@ export function BigoRangeFilter({
           draftMin,
           setDraftMin,
           t("archiveSearch.filters.bigoMinField", "Min (Rs)"),
+          extent.min,
         )}
         {amountField(
           "max",
@@ -262,51 +229,35 @@ export function BigoRangeFilter({
           draftMax,
           setDraftMax,
           t("archiveSearch.filters.bigoMaxField", "Max (Rs)"),
+          extent.max,
         )}
       </div>
 
       {/*
-        The overwhelmingly common query is one-sided — 59 of the 68 cases with a
-        recorded amount are over रु १ करोड — so it gets one tap rather than a drag.
-      */}
-      <Button
-        aria-pressed={min === COMMON_MINIMUM && max === undefined}
-        className="mt-2 h-11 px-3 text-xs"
-        onClick={() =>
-          onCommit(
-            min === COMMON_MINIMUM && max === undefined
-              ? {}
-              : { min: COMMON_MINIMUM },
-          )
-        }
-        type="button"
-        variant={min === COMMON_MINIMUM && max === undefined ? "secondary" : "outline"}
-      >
-        {t("archiveSearch.filters.bigoCommonPreset", {
-          defaultValue: "Over {{amount}}",
-          amount: formatBigo(COMMON_MINIMUM),
-        })}
-      </Button>
+        The caveat only, and only while unfiltered.
 
-      {/*
-        What the current selection will actually give them, and — when unfiltered
-        — how many cases the filter can reach at all. Cases with no recorded
-        amount are excluded by ANY bound, since a range clause cannot match an
-        absent field, so their disappearance needs saying rather than reading as
-        "there are no such cases".
+        A "<range> · N cases" readout used to sit here too. It was redundant three
+        times over — the removable pill above the results carries the range, the
+        two fields carry it as digits, and the result header carries the count —
+        so it was noise in a column already shared with four other filter groups.
+
+        This is NOT redundant. Cases with no recorded amount are excluded by ANY
+        bound, because a range clause cannot match an absent field, and nothing
+        else on the page says so. Without it their disappearance reads as "there
+        are no such cases" rather than "this filter cannot see them", which on an
+        accountability archive is the difference between a gap and a claim.
       */}
-      <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        {isFiltered && matchCount !== undefined
-          ? t("archiveSearch.filters.bigoMatchCount", {
-              defaultValue: "{{cases}} cases in this range.",
-              cases: matchCount,
-            })
-          : t("archiveSearch.filters.bigoNote", {
-              defaultValue:
-                "Filtering by amount includes only the {{cases}} cases with a recorded बिगो.",
-              cases: extent.count,
-            })}
-      </p>
+      {!isFiltered && (
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
+          {t("archiveSearch.filters.bigoNote", {
+            count: extent.count,
+            defaultValue:
+              "Filtering by amount includes only the {{count}} cases with a recorded बिगो.",
+            defaultValue_one:
+              "Filtering by amount includes only the {{count}} case with a recorded बिगो.",
+          })}
+        </p>
+      )}
     </fieldset>
   );
 }

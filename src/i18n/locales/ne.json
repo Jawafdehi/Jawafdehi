@@ -2035,22 +2035,20 @@
       "caseType": "मुद्दा प्रकार",
       "tags": "ट्यागहरू",
       "bigo": "बिगो (रकम)",
-      "bigoNote": "रकमबाट छान्दा बिगो उल्लेख भएका {{cases}} मुद्दा मात्र समावेश हुन्छन्।",
       "bigoRange": {
         "any": "जुनसुकै रकम",
         "between": "{{min}} – {{max}}",
         "from": "{{min}} वा माथि",
         "upTo": "{{max}} सम्म"
       },
+      "bigoMinField": "न्यूनतम (रु)",
+      "bigoMaxField": "अधिकतम (रु)",
+      "bigoNote_one": "रकमबाट छान्दा बिगो उल्लेख भएको {{count}} मुद्दा मात्र समावेश हुन्छ।",
+      "bigoNote_other": "रकमबाट छान्दा बिगो उल्लेख भएका {{count}} मुद्दा मात्र समावेश हुन्छन्।",
       "bigoMinThumb": "न्यूनतम रकम",
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
-      "bigoNoMax": "अधिकतम छैन",
-      "bigoMinField": "न्यूनतम (रु)",
-      "bigoMaxField": "अधिकतम (रु)",
-      "bigoBarTitle": "{{cases}} मुद्दा",
-      "bigoMatchCount": "यो दायरामा {{cases}} मुद्दा।",
-      "bigoCommonPreset": "{{amount}} भन्दा माथि"
+      "bigoNoMax": "अधिकतम छैन"
     }
   },
   "materialsPage": {

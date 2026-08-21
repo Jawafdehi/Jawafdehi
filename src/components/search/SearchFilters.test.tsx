@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
-import { SearchFilters } from "@/components/search/SearchFilters";
+import {
+  SearchFilters,
+  SearchFiltersSkeleton,
+} from "@/components/search/SearchFilters";
 import type { BigoExtent } from "@/lib/bigo-range";
 import type { ArchiveSearchType } from "@/types/search";
 
@@ -15,14 +18,19 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 } as unknown as typeof ResizeObserver;
 
-// Passthrough translations so assertions don't depend on i18n resources.
+// Passthrough translations so assertions don't depend on i18n resources. Plural
+// resolution is mirrored rather than skipped: `_one` vs `_other` is the whole
+// point of the count-bearing strings, so a mock that always took defaultValue
+// would let "1 cases" pass forever.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string | Record<string, unknown>) => {
       if (typeof fallback === "string") return fallback;
-      const template = String(fallback?.defaultValue ?? key);
+      const options = fallback as Record<string, unknown> | undefined;
+      const singular = options?.count === 1 ? options?.defaultValue_one : undefined;
+      const template = String(singular ?? options?.defaultValue ?? key);
       return template.replace(/{{(\w+)}}/g, (_m, name) =>
-        String((fallback as Record<string, unknown>)?.[name]),
+        String(options?.[name]),
       );
     },
     i18n: { language: "en" },
@@ -31,20 +39,8 @@ vi.mock("react-i18next", () => ({
 
 const emptyFacets = { entity_type: [], case_type: [], tags: [], status: [] };
 
-// Mirrors what the API emits: fine stops for the thumbs, coarse decade bars.
-const CORPUS: BigoExtent = {
-  min: 45_220,
-  max: 66_000_000_000,
-  count: 68,
-  stops: Array.from({ length: 13 }, (_, exponent) =>
-    [1, 2, 5].map((mantissa) => mantissa * 10 ** exponent),
-  ).flat(),
-  buckets: Array.from({ length: 14 }, (_, index) => ({
-    from: index === 0 ? null : 10 ** (index - 1),
-    to: index === 13 ? null : 10 ** index,
-    count: index,
-  })),
-};
+// The live corpus extent, as the API emits it.
+const CORPUS: BigoExtent = { min: 45_220, max: 66_000_000_000, count: 75 };
 
 function renderFilters(
   selectedType: ArchiveSearchType,
@@ -52,14 +48,12 @@ function renderFilters(
     extent?: BigoExtent;
     min?: number;
     max?: number;
-    matchCount?: number;
     onCommit?: (bounds: { min?: number; max?: number }) => void;
   } = {},
 ) {
   return render(
     <SearchFilters
       bigoExtent={"extent" in extra ? extra.extent : CORPUS}
-      bigoMatchCount={extra.matchCount}
       bigoMax={extra.max}
       bigoMin={extra.min}
       counts={{}}
@@ -77,25 +71,74 @@ function renderFilters(
 const bigoGroup = () => screen.getByRole("group", { name: /बिगो/ });
 
 describe("SearchFilters — बिगो range control", () => {
-  it("renders the histogram, both thumbs and both amount fields", () => {
-    // The three layers each answer a documented failure of numeric filters:
-    // no distribution shown, no precise entry, no accessible alternative to
-    // press-and-drag.
+  it("renders a two-thumb range slider and both amount fields", () => {
     renderFilters("case");
     const group = bigoGroup();
-    expect(within(group).getByTestId("bigo-histogram")).toBeTruthy();
     expect(within(group).getAllByRole("slider")).toHaveLength(2);
     expect(within(group).getByLabelText("Min (Rs)")).toBeTruthy();
     expect(within(group).getByLabelText("Max (Rs)")).toBeTruthy();
   });
 
-  it("draws one bar per server bucket, and keeps out-of-range bars visible", () => {
-    // Dimmed, not removed: the shape is what tells a reader where to drag next,
-    // so erasing it the moment they narrow removes the guidance when it is most
-    // needed. Bars are the server's buckets — the client invents no ladder.
+  it("stays under five blocks — this shares a column with four other groups", () => {
+    // The panel reached nine blocks once (readout, chart, axis, three lines of
+    // help text, two fields, a preset, a count) and read as the heaviest thing in
+    // the sidebar. Track, axis, fields and one status line is the budget.
+    renderFilters("case");
+    expect(bigoGroup().children.length).toBeLessThanOrEqual(5);
+  });
+
+  it("carries no instructional copy", () => {
+    // A control that needs explaining is the wrong control. A range slider with
+    // text inputs beneath it is the pattern every price filter uses.
+    renderFilters("case");
+    expect(within(bigoGroup()).queryByText(/Shift/i)).toBeNull();
+    expect(within(bigoGroup()).queryByText(/Select a bar/i)).toBeNull();
+    expect(within(bigoGroup()).queryByTestId("bigo-histogram")).toBeNull();
+  });
+
+  it("names each thumb, and spells the amount out for a screen reader", () => {
+    // aria-valuenow is necessarily a ladder INDEX; "7 of 20" tells a listener
+    // nothing about money, so each thumb carries the formatted amount instead.
     renderFilters("case", { min: 10_000_000 });
-    const bars = within(bigoGroup()).getByTestId("bigo-histogram").children;
-    expect(bars).toHaveLength(CORPUS.buckets.length);
+    const [low, high] = within(bigoGroup()).getAllByRole("slider");
+    expect(low.getAttribute("aria-label")).toBe("Minimum amount");
+    expect(low.getAttribute("aria-valuetext")).toBe("Rs 1.00 Crore");
+    expect(high.getAttribute("aria-label")).toBe("Maximum amount");
+    // No upper bound set, so that thumb sits on the bracketing edge.
+    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+  });
+
+  it("sits directly under Record type, above the term facets", () => {
+    // It used to render last. The tags group runs to 50 checkboxes, so anything
+    // after it is off-screen on every viewport.
+    render(
+      <SearchFilters
+        bigoExtent={CORPUS}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        counts={{}}
+        facets={{
+          ...emptyFacets,
+          case_type: [{ name: "CORRUPTION", count: 9 }],
+          tags: [{ name: "CIAA", count: 4 }],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        onTypeChange={vi.fn()}
+        selected={{ entity_type: [], case_type: [], tags: [] }}
+        selectedType="case"
+      />,
+    );
+    const legends = Array.from(document.querySelectorAll("legend")).map(
+      (legend) => legend.textContent,
+    );
+    expect(legends).toEqual([
+      "Record type",
+      "बिगो (amount)",
+      "Case type",
+      "Tags",
+    ]);
   });
 
   it("is hidden for every other record type, and for All records", () => {
@@ -108,95 +151,97 @@ describe("SearchFilters — बिगो range control", () => {
     });
   });
 
-  it("renders no control at all when the corpus has no usable rails", () => {
+  it("renders no control at all when the corpus has no usable extent", () => {
     // An older cached response predating the extent agg, or a corpus where
-    // nothing records an amount. A slider with no scale would be pinned shut.
+    // nothing records an amount. An empty track above two fields is furniture.
     renderFilters("case", { extent: undefined });
     expect(screen.queryByRole("group", { name: /बिगो/ })).toBeNull();
   });
 
-  it("reads out the active range, and 'Any amount' when unbounded", () => {
-    const { unmount } = renderFilters("case", {
-      min: 10_000_000,
-      max: 5_000_000_000,
-    });
-    expect(
-      within(bigoGroup()).getByText("Rs 1.00 Crore – Rs 5.00 Arab"),
-    ).toBeTruthy();
-    unmount();
-
-    renderFilters("case");
-    expect(within(bigoGroup()).getByText("Any amount")).toBeTruthy();
+  it("commits a typed minimum on blur", () => {
+    const onCommit = vi.fn();
+    renderFilters("case", { onCommit });
+    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
+    fireEvent.change(field, { target: { value: "10000000" } });
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledWith({ min: 10_000_000, max: undefined });
   });
 
-  it("announces amounts on the thumbs, not ladder indices", () => {
-    // aria-valuenow is necessarily the index; without valuetext a screen reader
-    // would read "7 of 20", which tells the listener nothing about money.
+  it("drops the other side rather than sending an inverted pair", () => {
+    // The API 400s on bigo_min > bigo_max, and this page renders a 400 as its
+    // red "could not be loaded" alert — an outage, for a typo.
+    const onCommit = vi.fn();
+    renderFilters("case", { max: 1_000_000, onCommit });
+    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
+    fireEvent.change(field, { target: { value: "90000000" } });
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledWith({ min: 90_000_000 });
+  });
+
+  it("shows no range readout — the pill and the fields already carry it", () => {
+    // A "<range> · N cases" line used to sit at the bottom. It restated what the
+    // removable pill, the two fields and the result header all already said, in
+    // a column shared with four other filter groups.
     renderFilters("case", { min: 10_000_000 });
-    const [low, high] = within(bigoGroup()).getAllByRole("slider");
-    expect(low.getAttribute("aria-label")).toBe("Minimum amount");
-    expect(low.getAttribute("aria-valuetext")).toBe("Rs 1.00 Crore");
-    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+    expect(within(bigoGroup()).queryByText(/cases$/)).toBeNull();
+    expect(within(bigoGroup()).queryByText(/Rs 1\.00 Crore and above/)).toBeNull();
   });
 
-  it("commits a typed amount on Enter", () => {
-    // Baymard's requirement that a filtering slider always carry text inputs —
-    // and the path that works for anyone who cannot drag accurately at all.
-    const onCommit = vi.fn();
-    renderFilters("case", { onCommit });
-    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
-    fireEvent.change(field, { target: { value: "25000000" } });
-    fireEvent.keyDown(field, { key: "Enter" });
-    expect(onCommit).toHaveBeenCalledWith({ min: 25_000_000, max: undefined });
+  it("drops the coverage caveat once a bound is set", () => {
+    renderFilters("case", { min: 10_000_000 });
+    expect(within(bigoGroup()).queryByText(/recorded बिगो/)).toBeNull();
   });
 
-  it("groups digits as you type, without mangling the committed value", () => {
-    renderFilters("case");
-    const field = within(bigoGroup()).getByLabelText("Min (Rs)") as HTMLInputElement;
-    fireEvent.change(field, { target: { value: "25000000" } });
-    expect(field.value).toBe("2,50,00,000");
-  });
-
-  it("clears a bound when its field is emptied", () => {
-    const onCommit = vi.fn();
-    renderFilters("case", { min: 10_000_000, onCommit });
-    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
-    fireEvent.change(field, { target: { value: "" } });
-    fireEvent.blur(field);
-    expect(onCommit).toHaveBeenCalledWith({ min: undefined, max: undefined });
-  });
-
-  it("drops the opposing bound rather than committing an inverted pair", () => {
-    // Mid-thought, not an error worth shouting about — and the API answers an
-    // inverted pair with a 400, which renders as "could not be loaded".
-    const onCommit = vi.fn();
-    renderFilters("case", { max: 10_000_000, onCommit });
-    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
-    fireEvent.change(field, { target: { value: "500000000" } });
-    fireEvent.blur(field);
-    expect(onCommit).toHaveBeenCalledWith({ min: 500_000_000 });
-  });
-
-  it("offers the one-tap preset for the query most readers actually make", () => {
-    // 59 of the 68 cases with a recorded amount clear रु १ करोड.
-    const onCommit = vi.fn();
-    renderFilters("case", { onCommit });
-    fireEvent.click(within(bigoGroup()).getByRole("button", { name: /Over/ }));
-    expect(onCommit).toHaveBeenCalledWith({ min: 10_000_000 });
-  });
-
-  it("says what the filter will give, and what it can reach when unfiltered", () => {
+  it("says what the filter can reach at all when unfiltered", () => {
     // ~9% of cases record no amount and are excluded by ANY bound, since a range
-    // clause cannot match an absent field.
-    const { unmount } = renderFilters("case");
+    // clause cannot match an absent field. With no distribution on screen, this
+    // line is the only warning before a reader narrows into an empty page.
+    renderFilters("case");
     expect(
       within(bigoGroup()).getByText(
-        "Filtering by amount includes only the 68 cases with a recorded बिगो.",
+        "Filtering by amount includes only the 75 cases with a recorded बिगो.",
       ),
     ).toBeTruthy();
-    unmount();
+  });
+});
 
-    renderFilters("case", { min: 10_000_000, matchCount: 59 });
-    expect(within(bigoGroup()).getByText("59 cases in this range.")).toBeTruthy();
+describe("SearchFiltersSkeleton", () => {
+  it("reserves the बिगो block in the slot the real control occupies", () => {
+    // Untested until now, and it renders on every cold load of /search. The
+    // बिगो control is second and tall (chart + two fields + a button), so a
+    // skeleton that omits it drops every facet below it down the page the
+    // moment the real sidebar lands — a jump that is now above the fold.
+    const { container } = render(<SearchFiltersSkeleton selectedType="case" />);
+    const aside = container.querySelector("aside");
+    expect(aside).toBeTruthy();
+
+    // header + record-type group + बिगो block + three facet groups.
+    const blocks = Array.from(aside!.children);
+    expect(blocks).toHaveLength(6);
+
+    // The बिगो placeholder is the one carrying the histogram-height bar.
+    expect(blocks[2].querySelector(".h-14")).toBeTruthy();
+    // ...and the facet groups around it do not.
+    expect(blocks[1].querySelector(".h-14")).toBeNull();
+    expect(blocks[3].querySelector(".h-14")).toBeNull();
+  });
+
+  it("omits the बिगो block for every record type that cannot show it", () => {
+    // Regression, and the mirror image of the test above. The real control is
+    // gated to `selectedType === "case"`, but the skeleton reserved its ~296px
+    // unconditionally — so the DEFAULT /search (type=all), /materials and
+    // /court-cases all painted a block that then vanished on first paint,
+    // dragging every facet below it upward. The old justification ("no way to
+    // know whether the case index is in scope") was wrong: the type is read
+    // synchronously off the URL, well before the first response.
+    for (const type of ["all", "entity", "material", "courtcase"] as const) {
+      const { container, unmount } = render(
+        <SearchFiltersSkeleton selectedType={type} />,
+      );
+      const blocks = Array.from(container.querySelector("aside")!.children);
+      expect(blocks).toHaveLength(5);
+      expect(container.querySelector(".h-14")).toBeNull();
+      unmount();
+    }
   });
 });

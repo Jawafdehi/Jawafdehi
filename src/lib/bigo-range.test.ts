@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   boundToIndex,
+  buildBigoLadder,
   describeBigoRange,
   hasUsableRails,
   indexToBound,
@@ -16,28 +17,104 @@ const translate = (_key: string, options?: Record<string, unknown>) => {
   return template.replace(/{{(\w+)}}/g, (_m, name) => String(options?.[name]));
 };
 
-// The real published corpus, per JawafdehiAPI#450: रु ४५,२२० to रु ६६ अरब. Stops
-// and buckets are server-supplied — this mirrors what the API emits.
-const STOPS = Array.from({ length: 13 }, (_, exponent) =>
-  [1, 2, 5].map((mantissa) => mantissa * 10 ** exponent),
-).flat();
-const CORPUS: BigoExtent = {
-  min: 45_220,
-  max: 66_000_000_000,
-  count: 68,
-  stops: STOPS,
-  buckets: Array.from({ length: 14 }, (_, i) => ({
-    from: i === 0 ? null : 10 ** (i - 1),
-    to: i === 13 ? null : 10 ** i,
-    count: i,
-  })),
-};
+// The live corpus: ~रु ४५ हजार to ~रु ६६ अरब.
+const CORPUS: BigoExtent = { min: 45_220, max: 66_000_000_000, count: 75 };
+
+describe("hasUsableRails", () => {
+  it("needs a recorded amount and finite bounds", () => {
+    expect(hasUsableRails(CORPUS)).toBe(true);
+    expect(hasUsableRails(undefined)).toBe(false);
+    // An older cached response, or a corpus recording no amount: render nothing
+    // rather than a slider pinned shut.
+    expect(hasUsableRails({ min: 0, max: 0, count: 0 })).toBe(false);
+  });
+});
+
+describe("the scale is logarithmic, not linear", () => {
+  it("puts the median mid-track instead of inside the first pixel", () => {
+    // The reason this control cannot use a linear scale, asserted rather than
+    // just asserted in prose. Across the 250px sidebar a linear track puts the
+    // median case 0.19px from the left edge — half the corpus, and every case
+    // worth separating, inside one pixel.
+    const ladder = buildBigoLadder(CORPUS);
+    const median = 50_000_000;
+    const onLadder = boundToIndex(ladder, median, 0) / (ladder.length - 1);
+    expect(onLadder).toBeGreaterThan(0.35);
+    expect(onLadder).toBeLessThan(0.65);
+
+    const onLinearTrack =
+      ((median - CORPUS.min) / (CORPUS.max - CORPUS.min)) * 250;
+    expect(onLinearTrack).toBeLessThan(1);
+  });
+});
+
+describe("buildBigoLadder", () => {
+  it("is made of round 1/2/5 amounts only", () => {
+    // The point of a ladder: you land on रु १ करोड, never रु १.०३ करोड.
+    for (const stop of buildBigoLadder(CORPUS)) {
+      const mantissa = stop / 10 ** Math.floor(Math.log10(stop));
+      expect([1, 2, 5]).toContain(Math.round(mantissa));
+    }
+  });
+
+  it("brackets the corpus, so the ends genuinely mean 'no bound'", () => {
+    const ladder = buildBigoLadder(CORPUS);
+    expect(ladder[0]).toBeLessThanOrEqual(CORPUS.min);
+    expect(ladder[ladder.length - 1]).toBeGreaterThanOrEqual(CORPUS.max);
+  });
+
+  it("ascends, and spans the corpus in a workable number of stops", () => {
+    const ladder = buildBigoLadder(CORPUS);
+    expect(ladder).toEqual([...ladder].sort((a, b) => a - b));
+    expect(ladder.length).toBeGreaterThan(10);
+    expect(ladder.length).toBeLessThan(30);
+  });
+
+  it("still yields a draggable track for a corpus of one case", () => {
+    // A single recorded amount would otherwise collapse the ladder to one
+    // position — a slider that cannot be moved.
+    const ladder = buildBigoLadder({ min: 5_000_000, max: 5_000_000, count: 1 });
+    expect(ladder.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("boundToIndex / indexToBound", () => {
+  const ladder = buildBigoLadder(CORPUS);
+  const lastIndex = ladder.length - 1;
+
+  it("round-trips a bound that sits on a stop", () => {
+    const index = boundToIndex(ladder, 10_000_000, 0);
+    expect(indexToBound(ladder, index, "min")).toBe(10_000_000);
+  });
+
+  it("snaps an off-ladder bound to the nearest stop without moving the filter", () => {
+    // A hand-edited ?bigo_min=52000000 need not sit on a stop, and the thumb has
+    // to go somewhere. The snap moves the THUMB; the URL keeps the literal, which
+    // is why the pill can read रु ५.२० करोड while the thumb sits at रु ५ करोड.
+    const index = boundToIndex(ladder, 52_000_000, 0);
+    expect(indexToBound(ladder, index, "min")).toBe(50_000_000);
+  });
+
+  it("reads a thumb parked at either end as no bound at all", () => {
+    // Full track == no filter. Otherwise "cleared" would be a range that merely
+    // happens to match everything, and the URL would carry a bound nobody set.
+    expect(indexToBound(ladder, 0, "min")).toBeUndefined();
+    expect(indexToBound(ladder, lastIndex, "max")).toBeUndefined();
+    // ...but the same positions are real bounds for the OPPOSITE thumb.
+    expect(indexToBound(ladder, lastIndex, "min")).toBe(ladder[lastIndex]);
+    expect(indexToBound(ladder, 0, "max")).toBe(ladder[0]);
+  });
+
+  it("parks a missing bound on the edge it was given", () => {
+    expect(boundToIndex(ladder, undefined, 0)).toBe(0);
+    expect(boundToIndex(ladder, undefined, lastIndex)).toBe(lastIndex);
+  });
+});
 
 describe("parseBigoBound", () => {
-  it("accepts whole non-negative amounts, including zero", () => {
-    expect(parseBigoBound("10000000")).toBe(10_000_000);
-    // 0 is a real lower bound, not "unset" — the API indexes an honest zero.
+  it("accepts a plain whole number, including zero", () => {
     expect(parseBigoBound("0")).toBe(0);
+    expect(parseBigoBound("10000000")).toBe(10_000_000);
   });
 
   it("rejects anything the API would answer with a 400", () => {
@@ -52,10 +129,40 @@ describe("parseBigoBound", () => {
   });
 
   it("rejects a bound past the signed-64-bit ceiling the API clamps to", () => {
-    // Compared as BigInt on purpose: 2**63 is past Number.MAX_SAFE_INTEGER, so a
-    // Number() round-trip would round it back under the limit and admit it.
-    expect(parseBigoBound(String(2n ** 63n - 1n))).toBe(Number(2n ** 63n - 1n));
     expect(parseBigoBound(String(2n ** 63n))).toBeUndefined();
+    expect(parseBigoBound(String(2n ** 64n))).toBeUndefined();
+  });
+
+  it("rejects a bound it cannot carry without silently changing its value", () => {
+    // Regression. The guard used to compare as BigInt against 2**63-1 and then
+    // `return Number(raw)` — so the API's own ceiling was ADMITTED and promptly
+    // rounded UP to 2**63 by the float conversion. normalizeArchiveSearchParams
+    // writes the parsed number straight back into the URL, so the repair step
+    // was itself minting the out-of-range bound that earns the 400 this function
+    // exists to prevent. Anything past MAX_SAFE_INTEGER is unrepresentable here,
+    // and a bound the SPA cannot state exactly is one it must not send.
+    expect(parseBigoBound(String(2n ** 63n - 1n))).toBeUndefined();
+    expect(
+      parseBigoBound(String(BigInt(Number.MAX_SAFE_INTEGER) + 1n)),
+    ).toBeUndefined();
+    expect(parseBigoBound(String(Number.MAX_SAFE_INTEGER))).toBe(
+      Number.MAX_SAFE_INTEGER,
+    );
+  });
+
+  it("only ever returns a bound that round-trips through String() unchanged", () => {
+    // The property that actually matters: whatever comes back is re-serialised
+    // into the URL and into the request, so a value that does not survive the
+    // round trip is a filter the reader never asked for.
+    for (const raw of [
+      "0",
+      "45220",
+      "10000000",
+      "66000000000",
+      String(Number.MAX_SAFE_INTEGER),
+    ]) {
+      expect(String(parseBigoBound(raw))).toBe(raw);
+    }
   });
 });
 
@@ -83,57 +190,11 @@ describe("readBigoBounds", () => {
     expect(read("bigo_min=500&bigo_max=500")).toEqual({ min: 500, max: 500 });
   });
 
-  it("drops only the malformed half", () => {
-    expect(read("bigo_min=abc&bigo_max=99999999")).toEqual({
+  it("drops only the unusable half", () => {
+    expect(read("bigo_min=abc&bigo_max=500")).toEqual({
       min: undefined,
-      max: 99_999_999,
+      max: 500,
     });
-  });
-});
-
-describe("hasUsableRails", () => {
-  it("accepts an extent that can actually drive a control", () => {
-    expect(hasUsableRails(CORPUS)).toBe(true);
-  });
-
-  it("rejects what would render as a slider pinned shut", () => {
-    // No extent at all (an older cached response), nothing recorded, or a
-    // ladder too short to drag along. Rendering nothing beats a dead control.
-    expect(hasUsableRails(undefined)).toBe(false);
-    expect(hasUsableRails({ ...CORPUS, count: 0 })).toBe(false);
-    expect(hasUsableRails({ ...CORPUS, stops: [10_000_000] })).toBe(false);
-  });
-});
-
-describe("boundToIndex / indexToBound", () => {
-  const ladder = CORPUS.stops;
-  const last = ladder.length - 1;
-
-  it("round-trips a stop that is on the ladder", () => {
-    const index = boundToIndex(ladder, 10_000_000, 0);
-    expect(ladder[index]).toBe(10_000_000);
-    expect(indexToBound(ladder, index, "min")).toBe(10_000_000);
-  });
-
-  it("parks a thumb at the given edge when there is no bound", () => {
-    expect(boundToIndex(ladder, undefined, 0)).toBe(0);
-    expect(boundToIndex(ladder, undefined, last)).toBe(last);
-  });
-
-  it("reads an edge thumb back as NO bound", () => {
-    // Full track == unfiltered. Emitting the floor/ceiling as real bounds would
-    // send a filter that merely happens to match everything.
-    expect(indexToBound(ladder, 0, "min")).toBeUndefined();
-    expect(indexToBound(ladder, last, "max")).toBeUndefined();
-    // ...but the same positions are real bounds from the other side.
-    expect(indexToBound(ladder, last, "min")).toBe(ladder[last]);
-    expect(indexToBound(ladder, 0, "max")).toBe(ladder[0]);
-  });
-
-  it("snaps a hand-edited amount to the nearest stop", () => {
-    // The URL keeps the literal value; only the thumb moves.
-    const index = boundToIndex(ladder, 52_000_000, 0);
-    expect(ladder[index]).toBe(50_000_000);
   });
 });
 

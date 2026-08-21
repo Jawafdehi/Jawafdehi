@@ -235,7 +235,7 @@ export default function ArchiveSearch({
     // stale entity_type behind would silently filter the new record type through
     // a control the user can no longer see.
     if (type !== "entity") next.delete("entity_type");
-    // Same for the बिगो band, which only renders while browsing Cases. readParams
+    // Same for the बिगो range, which only renders while browsing Cases. readParams
     // already declines to send a stale bound, but dropping it from the URL keeps
     // what is shared or bookmarked honest about what is actually applied.
     if (type !== "case") {
@@ -245,8 +245,8 @@ export default function ArchiveSearch({
     setSearchParams(next);
   };
 
-  // Committed on pointer release / key up, never per drag step — the slider owns
-  // its position while dragging so a 20-stop track is not 20 requests.
+  // One request per committed range — a bar click, the preset, or a typed amount
+  // on blur/Enter. There is no intermediate gesture state to debounce.
   const updateBigoRange = ({ min, max }: { min?: number; max?: number }) => {
     // Both bounds move as ONE edit. Setting them in sequence through
     // setArchiveSearchParam would re-normalize in between, and a new lower bound
@@ -298,9 +298,9 @@ export default function ArchiveSearch({
     type:
       lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
   };
-  // The active बिगो range as a single removable pill. A preset band shows its own
-  // label; a hand-edited range that matches no band shows the formatted bounds,
-  // so it is never applied invisibly (see src/lib/bigo-bands.ts).
+  // The active बिगो range as a single removable pill, labelled with the formatted
+  // bounds however it was set — a bar click, the preset, or a typed amount — so a
+  // range is never applied invisibly.
   const hasBigoRange =
     params.bigo_min !== undefined || params.bigo_max !== undefined;
   const bigoPill = hasBigoRange
@@ -322,7 +322,7 @@ export default function ArchiveSearch({
   ];
   const searchFilters = showFilters ? (
     isInitialLoading ? (
-      <SearchFiltersSkeleton />
+      <SearchFiltersSkeleton selectedType={selectedRecordType} />
     ) : (
       <SearchFilters
         counts={displayData?.counts || {}}
@@ -330,7 +330,6 @@ export default function ArchiveSearch({
         hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
         bigoExtent={displayData?.extents?.bigo}
-        bigoMatchCount={displayData?.counts?.case}
         bigoMax={params.bigo_max}
         bigoMin={params.bigo_min}
         onBigoCommit={updateBigoRange}

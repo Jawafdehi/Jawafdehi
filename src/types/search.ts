@@ -131,24 +131,16 @@ export interface ArchiveSearchCounts {
   case: number;
 }
 
-// Corpus extent of a range-filterable field — the RAILS a slider needs, as
-// opposed to the term buckets in `facets`. Keyed by request-param prefix, so
+// Corpus extent of a range-filterable field — the SCALE a range control needs,
+// as distinct from the term buckets in `facets`. Keyed by request-param prefix:
 // `bigo` covers `bigo_min`/`bigo_max`. Computed by a `global` aggregation, so it
-// does NOT narrow with the active filters: a track that tracked the selection
-// could never be widened again. Absent when no case index is in scope, or when
-// nothing in the corpus records an amount.
+// is a fixed property of the corpus and does NOT narrow with the active range —
+// otherwise dragging a thumb inward would pull the track in behind it.
 export interface SearchRangeExtent {
   min: number;
   max: number;
+  /** Documents carrying a recorded value at all — the rest any bound excludes. */
   count: number;
-  // Histogram bars. Aggregated over the query and the exact-match facets but NOT
-  // over the range itself — bars that narrowed with the active bound would
-  // collapse under the reader's own hand while dragging. Open-ended first/last
-  // bars carry a null bound rather than a fabricated one.
-  buckets: { from: number | null; to: number | null; count: number }[];
-  // Positions a slider thumb may take. Server-owned so the bar counts and the
-  // selectable stops cannot drift apart.
-  stops: number[];
 }
 
 export interface ArchiveSearchResponse {
