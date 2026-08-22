@@ -39,6 +39,13 @@ export type JusticeRow = {
 export type FunnelStageData = {
   key: string;
   count: number;
+  /**
+   * Optional upper bound, making this stage a RANGE rather than a point. Set on the
+   * conviction stage, where `count` applies the strict full-conviction rate and
+   * `countUpper` the including-partial rate — the two defensible readings of "convicted"
+   * (see `outcome`). A stage without it is a single measured number.
+   */
+  countUpper?: number;
   /** Citation key into `citations` for the material backing this stage. */
   source: keyof typeof CITATIONS;
 };
@@ -320,15 +327,20 @@ export const REPORT = {
   // (FY 2081/82): 28,554 newly registered complaints (Table 2.2, चालु आ.व. column) — the
   // 37,026 "दर्ता" headline also counts 8,472 prior-year backlog re-processed this year, so
   // it is total workload, not single-year intake. Of these, 947 completed a full
-  // investigation and 137 were prosecuted; the conviction stage applies our measured
-  // full-conviction rate (45%) to the filed count. The `investigated` stage keeps the
-  // funnel honest — the steep drop is at intake screening, not the courtroom, and the
-  // CIAA prosecutes ~1 in 7 of the complaints it actually investigates.
+  // investigation and 137 were prosecuted. The conviction stage is a RANGE, not a point:
+  // its floor applies our measured full-conviction rate (45.1%) to the filed count and its
+  // ceiling the including-partial rate (61.3%) — 62 to 84 cases, 0.2% to 0.3% of complaints.
+  // Both ends are defensible and neither is the whole truth, because the court publishes one
+  // verdict per case and no per-accused outcome, so a partial conviction cannot be resolved
+  // into how many of the accused were actually convicted. Publishing the band says that;
+  // publishing either endpoint alone hides it. The `investigated` stage keeps the funnel
+  // honest — the steep drop is at intake screening, not the courtroom, and the CIAA
+  // prosecutes ~1 in 7 of the complaints it actually investigates.
   funnel: [
     { key: "complaints", count: 28554, source: "ciaa35" },
     { key: "investigated", count: 947, source: "ciaa35" },
     { key: "filed", count: 137, source: "ciaa35" },
-    { key: "convicted", count: 62, source: "courtRecords" },
+    { key: "convicted", count: 62, countUpper: 84, source: "courtRecords" },
   ] satisfies FunnelStageData[],
 
   // Figures that originate in the CIAA annual reports (cite the report materials).
@@ -346,9 +358,10 @@ export const REPORT = {
     /**
      * The CIAA's own "success" rate for FY2081/82, verified in the 35th report (¶16): of 393
      * verdicts received, 87 full + 120 partial = 207 = 52.67%. So it counts partial
-     * convictions as successes. Applying that same full+partial definition to this archive
-     * gives 61.3%, i.e. HIGHER than the CIAA's own figure — the gap between 52.67% and our
-     * headline 45.1% is mostly definition, but aligning the definition reverses the sign.
+     * convictions as successes. So it is comparable to the TOP of our band (61.3%), not the
+     * bottom (45.1%) — and on that like-for-like footing this archive comes out HIGHER than
+     * the CIAA's own figure, i.e. matching the definition reverses the sign of the gap.
+     * Never set 52.67% against 45.1% alone; that compares two different definitions.
      * Single year and volatile besides (~33–88% across the reports).
      */
     successRatePct: 52.67,
