@@ -26,13 +26,13 @@ const OUTCOME_LABELS: Record<EntityOutcome, { en: string; ne: string }> = {
 // default/secondary/destructive/outline variants, so these are className overrides.
 const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
   convicted:
-    "border-transparent bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300",
+    "border-transparent bg-danger/10 text-danger dark:bg-danger/40 dark:text-danger",
   acquitted:
-    "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+    "border-transparent bg-success-strong/10 text-success-strong dark:bg-success-strong/40 dark:text-success-strong",
   charged:
-    "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+    "border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong",
   abated:
-    "border-transparent bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
+    "border-transparent bg-muted text-muted-foreground",
 };
 
 // Coerce any incoming value to a known outcome, defaulting to `charged`. Guards

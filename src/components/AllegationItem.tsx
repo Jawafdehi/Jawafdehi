@@ -10,16 +10,16 @@ interface AllegationItemProps {
 }
 
 const statusConfig = {
-  'Under Investigation': { label: 'Under Investigation', class: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
-  'Confirmed': { label: 'Confirmed', class: 'bg-red-500/10 text-red-700 dark:text-red-400' },
-  'Dismissed': { label: 'Dismissed', class: 'bg-gray-500/10 text-gray-700 dark:text-gray-400' },
-  'Pending': { label: 'Pending', class: 'bg-blue-500/10 text-blue-700 dark:text-blue-400' },
+  'Under Investigation': { label: 'Under Investigation', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
+  'Confirmed': { label: 'Confirmed', class: 'bg-danger/10 text-danger dark:text-danger' },
+  'Dismissed': { label: 'Dismissed', class: 'bg-muted-foreground/10 text-muted-foreground dark:text-muted-foreground' },
+  'Pending': { label: 'Pending', class: 'bg-info/10 text-info dark:text-info' },
 };
 
 const severityConfig = {
-  'High': { label: 'High', class: 'bg-red-500/10 text-red-700 dark:text-red-400' },
-  'Medium': { label: 'Medium', class: 'bg-orange-500/10 text-orange-700 dark:text-orange-400' },
-  'Low': { label: 'Low', class: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
+  'High': { label: 'High', class: 'bg-danger/10 text-danger dark:text-danger' },
+  'Medium': { label: 'Medium', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
+  'Low': { label: 'Low', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
 };
 
 const AllegationItem = ({ allegation }: AllegationItemProps) => {

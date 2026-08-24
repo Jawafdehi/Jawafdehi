@@ -86,7 +86,7 @@ export default function ChipListEditor({
               <button
                 type="button"
                 onClick={() => remove(item)}
-                className="ml-0.5 rounded-full hover:text-red-600"
+                className="ml-0.5 rounded-full hover:text-danger"
                 aria-label={`Remove ${item}`}
               >
                 <X className="h-3 w-3" />

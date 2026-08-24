@@ -96,7 +96,7 @@ const OurTeam = () => {
                           className="h-28 w-28 rounded-full object-cover ring-4 ring-background shadow-md"
                         />
                       ) : (
-                        <div className="h-28 w-28 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-background shadow-md">
+                        <div className="h-28 w-28 rounded-full bg-primary-surface/10 flex items-center justify-center ring-4 ring-background shadow-md">
                           <Users className="h-12 w-12 text-primary/40" />
                         </div>
                       )}
@@ -123,8 +123,8 @@ const OurTeam = () => {
                         {member.tags.map((tag) => {
                           const isFoundingMember = tag === "Founding Member";
                           const colorClasses = isFoundingMember
-                            ? "bg-emerald-500/10 text-emerald-600"
-                            : "bg-blue-500/10 text-blue-600";
+                            ? "bg-success-strong/10 text-success-strong"
+                            : "bg-info/10 text-info";
                           return (
                             <span
                               key={tag}

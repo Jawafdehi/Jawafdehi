@@ -120,7 +120,7 @@ const ResearchCorruption = () => {
   }));
 
   const outcomeSegments: DonutSegment[] = [
-    { key: "convicted", label: t("research.corruption.outcome.convicted", "Convicted"), value: o.convicted, color: "hsl(var(--primary))" },
+    { key: "convicted", label: t("research.corruption.outcome.convicted", "Convicted"), value: o.convicted, color: "hsl(var(--primary-surface))" },
     { key: "partial", label: t("research.corruption.outcome.partial", "Partial"), value: o.partial, color: "hsl(var(--alert))" },
     { key: "acquitted", label: t("research.corruption.outcome.acquitted", "Acquitted"), value: o.acquitted, color: "hsl(var(--accent))" },
   ];
@@ -482,7 +482,7 @@ const ResearchCorruption = () => {
               <RateTrend
                 data={outcomePoints}
                 series={[
-                  { key: "convPct", label: t("research.corruption.outcome.convicted", "Convicted"), color: "hsl(var(--primary))", width: 2.25 },
+                  { key: "convPct", label: t("research.corruption.outcome.convicted", "Convicted"), color: "hsl(var(--primary-surface))", width: 2.25 },
                   { key: "acqPct", label: t("research.corruption.outcome.acquitted", "Acquitted"), color: "hsl(var(--accent))", width: 2.25 },
                   { key: "partPct", label: t("research.corruption.outcome.partial", "Partial"), color: "hsl(var(--alert))", width: 1.75 },
                 ]}
@@ -497,7 +497,7 @@ const ResearchCorruption = () => {
               <RateTrend
                 data={decompPoints}
                 series={[
-                  { key: "allConvPct", label: t("research.corruption.overTime.seriesAll", "All charges"), color: "hsl(var(--primary))", width: 2.25 },
+                  { key: "allConvPct", label: t("research.corruption.overTime.seriesAll", "All charges"), color: "hsl(var(--primary-surface))", width: 2.25 },
                   { key: "coreConvPct", label: t("research.corruption.overTime.seriesCore", "Core graft (excl. fake credential)"), color: "hsl(var(--accent))", dashed: true },
                 ]}
                 refPct={courtAvgConv}

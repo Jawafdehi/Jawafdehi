@@ -5,10 +5,27 @@
   <meta charset="UTF-8" />
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- The app ships a single light design system. Declaring the scheme (and using
-       `only` to opt out of Chrome's Auto Dark Theme) stops browsers from
-       auto-inverting our colors into a dark theme we never designed. -->
-  <meta name="color-scheme" content="only light" />
+  <!-- Both light and dark are designed and token-backed (see :root and .dark in
+       src/index.css). #279 set `only light`, correct while the app shipped a
+       single light theme; with a real dark theme it must become `light dark`.
+       Declaring it keeps UA widgets in step and still stops browsers
+       auto-inverting a theme we own. -->
+  <meta name="color-scheme" content="light dark" />
+
+  <!-- Applies the theme class before first paint. ThemeProvider intentionally
+       mounts only after hydration, so next-themes' own blocking script never
+       runs; without this a dark-preference visitor gets a full light page and
+       then an abrupt flip. Reads the same localStorage key next-themes uses. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        var dark = t === "dark" || ((!t || t === "system") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+      } catch (e) {}
+    })();
+  </script>
   <!-- The in-app EN/NE language switcher is the single source of truth for language; suppress browser/Google page auto-translation so it can't compete with or re-translate curated content. -->
   <meta name="google" content="notranslate" />
   <!-- Icons. None of these were declared before, so /apple-touch-icon.png and

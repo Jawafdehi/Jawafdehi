@@ -18,6 +18,26 @@ const INDEX_CSS = readFileSync(root('src/index.css'), 'utf8');
 const INDEX_HTML = readFileSync(root('index.html'), 'utf8');
 const MANIFEST = JSON.parse(readFileSync(root('public/site.webmanifest'), 'utf8'));
 
+/**
+ * The raw declaration of a token, before any `var()` is followed — e.g.
+ * "217 62% 14%" for `--base-navy`, or "var(--base-navy)" for `--primary`.
+ *
+ * First match only, which is deliberately the light theme: the `.dark` block
+ * redeclares several of these (`--primary: var(--base-ink)`), and the brand
+ * invariant below is about the light palette the hexes were authored for.
+ */
+function rawValue(token: string): string {
+  const match = new RegExp(`--${token}:\\s*([^;]+);`).exec(INDEX_CSS);
+  if (!match) throw new Error(`no --${token} in src/index.css`);
+  return match[1].trim();
+}
+
+/** `--primary` → `base-navy` when it is a plain alias, else null. */
+function aliasTarget(token: string): string | null {
+  const m = /^var\(\s*--([\w-]+)\s*\)$/.exec(rawValue(token));
+  return m ? m[1] : null;
+}
+
 /** Every .ts/.tsx under a directory, recursively, as repo-relative paths. */
 function sourceFiles(dir: string): string[] {
   const out: string[] = [];
@@ -40,6 +60,11 @@ function stripComments(source: string): string {
 
 /** The hex documented in the comment attached to a CSS custom property. */
 function documentedHex(token: string): string {
+  // Semantic tokens are aliases onto the `--base-*` palette, and the hex is
+  // documented once, on the base token that actually holds the triplet. Follow
+  // the alias so the invariant is checked where hex and HSL sit together.
+  const target = aliasTarget(token);
+  if (target) return documentedHex(target);
   // Either `--token: …; /* #RRGGBB */` on one line, or a block comment above it.
   const sameLine = new RegExp(`--${token}:[^;]+;\\s*/\\*[^*]*?(#[0-9A-Fa-f]{6})`).exec(INDEX_CSS);
   if (sameLine) return sameLine[1].toUpperCase();
@@ -56,11 +81,10 @@ function documentedHex(token: string): string {
   return nearest[0].toUpperCase();
 }
 
-/** The raw HSL triplet a token is set to, e.g. "217 62% 14%". */
+/** The raw HSL triplet a token resolves to, e.g. "217 62% 14%". */
 function tokenValue(token: string): string {
-  const match = new RegExp(`--${token}:\\s*([^;]+);`).exec(INDEX_CSS);
-  if (!match) throw new Error(`no --${token} in src/index.css`);
-  return match[1].trim();
+  const target = aliasTarget(token);
+  return target ? tokenValue(target) : rawValue(token);
 }
 
 /** `#RRGGBB` → the `H S% L%` string CSS would carry, rounded to integers. */

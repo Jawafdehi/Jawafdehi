@@ -142,14 +142,14 @@ export default function CaseworkReviews() {
                 )}
                 Regrade all
               </Button>
-              {regradeErr && <p className="text-sm text-red-600 text-right">{regradeErr}</p>}
+              {regradeErr && <p className="text-sm text-danger text-right">{regradeErr}</p>}
             </div>
           )}
         </div>
 
         <div className="max-w-xl">
           <CaseSearchCombobox onPick={openCase} />
-          {err && <p className="text-sm text-red-600 mt-1">{err}</p>}
+          {err && <p className="text-sm text-danger mt-1">{err}</p>}
         </div>
 
         {loading ? (
@@ -178,7 +178,7 @@ export default function CaseworkReviews() {
                 </Button>
               </div>
             )}
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-muted-foreground">
               Showing {groups.length} of {count} case{count === 1 ? "" : "s"}
             </p>
           </div>
@@ -197,17 +197,17 @@ function CaseRow({ group: g, onOpen }: { group: GroupedCase; onOpen: () => void 
   const inProgress = latest?.status === "pending" || latest?.status === "running";
   return (
     <div
-      className="bg-white border rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-slate-50 cursor-pointer"
+      className="bg-white border rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-muted cursor-pointer"
       onClick={onOpen}
     >
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium truncate">{g.case_title || g.slug}</div>
-        <div className="font-mono text-xs text-slate-400 truncate">{g.slug}</div>
+        <div className="font-mono text-xs text-muted-foreground truncate">{g.slug}</div>
       </div>
 
       {latest && (
         <>
-          <span className="text-xs text-slate-400 whitespace-nowrap hidden md:inline">
+          <span className="text-xs text-muted-foreground whitespace-nowrap hidden md:inline">
             🕓 {fmtDate(latest.completed_at || latest.created_at)}
           </span>
           <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(latest.status)}`}>
@@ -231,10 +231,10 @@ function CaseRow({ group: g, onOpen }: { group: GroupedCase; onOpen: () => void 
         </>
       )}
 
-      <span className="text-xs text-slate-400 whitespace-nowrap hidden lg:inline w-14 text-right">
+      <span className="text-xs text-muted-foreground whitespace-nowrap hidden lg:inline w-14 text-right">
         {runs} run{runs === 1 ? "" : "s"}
       </span>
-      <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
     </div>
   );
 }

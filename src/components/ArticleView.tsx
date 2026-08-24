@@ -80,7 +80,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                         <Link
                                             key={relatedCase.id}
                                             to={`/case/${relatedCase.slug}`}
-                                            className="flex items-center justify-between gap-3 rounded-lg bg-card p-4 transition-colors hover:bg-primary/[0.03]"
+                                            className="flex items-center justify-between gap-3 rounded-lg bg-card p-4 transition-colors hover:bg-primary-surface/[0.03]"
                                         >
                                             <span className="font-card-title">{relatedCase.title}</span>
                                             <ArrowRight className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />

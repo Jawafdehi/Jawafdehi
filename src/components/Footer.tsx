@@ -41,12 +41,12 @@ const footerBadges: FooterBadge[] = [
   {
     labelKey: "footer.publicDomain",
     icon: Unlock,
-    iconClassName: "text-emerald-500 dark:text-emerald-300",
+    iconClassName: "text-success-strong dark:text-success-strong",
   },
   {
     labelKey: "footer.openSource",
     icon: OpenSourceFilledIcon,
-    iconClassName: "text-emerald-500 dark:text-emerald-300",
+    iconClassName: "text-success-strong dark:text-success-strong",
   },
 ];
 
@@ -167,7 +167,14 @@ export const Footer = () => {
     <footer
       className={cn(
         "relative isolate overflow-hidden border-t bg-[var(--footer-bg)] text-[var(--footer-fg)]",
-        "[--footer-bg:hsl(var(--primary))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
+        // --primary-surface, not --primary: a footer background is the *fill*
+        // role. They are the same navy in light, but --primary becomes light ink
+        // in dark, which would paint the footer cream. This is the divergence
+        // this branch exists to fix.
+        "[--footer-bg:hsl(var(--primary-surface))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
+        // Was #FF000E on this branch — pure red, and a hex literal this branch's
+        // own lint rule forbids. #285 replaced it with the token on main; taking
+        // main's side, which also matches the dark override below.
         "[--footer-title:hsl(var(--accent-on-dark))]",
         "[--footer-soft:hsl(var(--primary-foreground)/0.10)] [--footer-soft-hover:hsl(var(--primary-foreground)/0.16)]",
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",

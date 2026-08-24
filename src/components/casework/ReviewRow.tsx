@@ -36,7 +36,7 @@ export function ReviewRow({
       tabIndex={0}
       aria-selected={selected}
       className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer border-l-2 ${
-        selected ? "bg-slate-50 border-primary" : "border-transparent hover:bg-slate-50"
+        selected ? "bg-muted border-primary" : "border-transparent hover:bg-muted"
       }`}
       onClick={onClick}
       onKeyDown={(e) => {
@@ -46,8 +46,8 @@ export function ReviewRow({
         }
       }}
     >
-      <span className="text-xs font-mono text-slate-400 w-12">#{r.id}</span>
-      <span className="text-xs text-slate-500 w-40 hidden md:inline">
+      <span className="text-xs font-mono text-muted-foreground w-12">#{r.id}</span>
+      <span className="text-xs text-muted-foreground w-40 hidden md:inline">
         🕓 {fmtDate(r.completed_at || r.created_at)}
       </span>
       <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(r.status)}`}>
@@ -55,7 +55,7 @@ export function ReviewRow({
       </span>
       {reviewers.length > 0 && (
         <span
-          className="text-xs text-slate-400 font-mono hidden lg:inline truncate max-w-[14rem]"
+          className="text-xs text-muted-foreground font-mono hidden lg:inline truncate max-w-[14rem]"
           title={`Graded by ${reviewers.join(", ")}`}
         >
           {reviewers.join(", ")}
@@ -78,7 +78,7 @@ export function ReviewRow({
         </span>
       )}
       {r.duration_seconds != null && (
-        <span className="text-xs text-slate-400 w-14 text-right hidden lg:inline">
+        <span className="text-xs text-muted-foreground w-14 text-right hidden lg:inline">
           {fmtDur(r.duration_seconds)}
         </span>
       )}

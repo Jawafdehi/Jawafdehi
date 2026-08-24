@@ -31,7 +31,7 @@ export function CaseContactStrip({
   asChild
   variant="navIcon"
   size="icon"
-  className="h-11 w-11 border-red-500/20 bg-red-500/10 text-red-600 hover:border-red-500/35 hover:bg-red-500/15"
+  className="h-11 w-11 border-danger/20 bg-danger/10 text-danger hover:border-danger/35 hover:bg-danger/15"
 >
   <a href={`mailto:${email}`} aria-label={emailLabel} title={emailLabel}>
     <Mail className="h-4 w-4" aria-hidden="true" />
@@ -42,7 +42,7 @@ export function CaseContactStrip({
   asChild
   variant="navIcon"
   size="icon"
-  className="h-11 w-11 border-green-500/20 bg-green-500/10 text-green-600 hover:border-green-500/35 hover:bg-green-500/15"
+  className="h-11 w-11 border-success-strong/20 bg-success-strong/10 text-success-strong hover:border-success-strong/35 hover:bg-success-strong/15"
 >
   <a
     href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}

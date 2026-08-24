@@ -85,9 +85,9 @@ const OurProducts = () => {
 
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2">
             {PRODUCTS.map(({ icon: Icon, name, href, description, tags }) => (
-              <div key={name} className="rounded-lg border border-primary/10 bg-background/70 p-6 shadow-sm shadow-primary/5">
+              <div key={name} className="rounded-lg border border-primary/10 bg-background/70 p-6 shadow-sm shadow-primary-surface/5">
                 <div className="mb-5 flex items-start gap-4">
-                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/[0.07] text-primary">
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary-surface/[0.07] text-primary">
                     <Icon aria-hidden="true" className="h-7 w-7" strokeWidth={1.55} />
                   </div>
                   <div className="min-w-0">
@@ -102,7 +102,7 @@ const OurProducts = () => {
                     </a>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {tags.map((tag) => (
-                        <span key={tag} className="rounded-full border border-primary/10 bg-primary/[0.05] px-2.5 py-1 text-xs font-medium text-foreground/70">
+                        <span key={tag} className="rounded-full border border-primary/10 bg-primary-surface/[0.05] px-2.5 py-1 text-xs font-medium text-foreground/70">
                           {tag}
                         </span>
                       ))}

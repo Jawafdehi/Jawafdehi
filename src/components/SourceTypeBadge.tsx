@@ -10,27 +10,22 @@ interface SourceTypeBadgeProps {
   sourceType?: string | null;
 }
 
+// Categorical tones, not severity: a source being "allegation" is not an error
+// state. Hues come from --tone-* in src/index.css; fills and borders are
+// opacity steps off the same token so a tone is retheming in one place.
+// When dark mode lands, define lighter --tone-* values under `.dark` rather
+// than reintroducing per-badge dark: variants here.
 const SOURCE_TYPE_TONE_CLASSES: Record<SourceTypeTone, string> = {
-  allegation:
-    "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200",
-  financial:
-    "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-200",
-  government:
-    "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200",
-  investigative:
-    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200",
-  legal:
-    "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200",
-  media:
-    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200",
-  neutral:
-    "border-border bg-muted text-muted-foreground",
-  policy:
-    "border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-200",
-  public:
-    "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-200",
-  social:
-    "border-pink-200 bg-pink-50 text-pink-800 dark:border-pink-900/60 dark:bg-pink-950/40 dark:text-pink-200",
+  allegation: "border-tone-red/25 bg-tone-red/10 text-tone-red",
+  financial: "border-tone-cyan/25 bg-tone-cyan/10 text-tone-cyan",
+  government: "border-tone-blue/25 bg-tone-blue/10 text-tone-blue",
+  investigative: "border-tone-emerald/25 bg-tone-emerald/10 text-tone-emerald",
+  legal: "border-border bg-muted text-foreground",
+  media: "border-tone-amber/25 bg-tone-amber/10 text-tone-amber",
+  neutral: "border-border bg-muted text-muted-foreground",
+  policy: "border-tone-indigo/25 bg-tone-indigo/10 text-tone-indigo",
+  public: "border-tone-orange/25 bg-tone-orange/10 text-tone-orange",
+  social: "border-tone-pink/25 bg-tone-pink/10 text-tone-pink",
 };
 
 export function SourceTypeBadge({

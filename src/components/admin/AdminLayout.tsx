@@ -161,8 +161,8 @@ function Sidebar({
                   className={({ isActive }) =>
                     `flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
                       isActive
-                        ? "bg-primary/10 font-medium text-primary"
-                        : "text-muted-foreground hover:bg-slate-100"
+                        ? "bg-primary-surface/10 font-medium text-primary"
+                        : "text-muted-foreground hover:bg-muted"
                     }`
                   }
                 >
@@ -212,12 +212,12 @@ function AdminShell({ children }: { children: ReactNode }) {
   const roles = user.roles ?? [];
   if (!hasAdminAccess(roles, isAdmin)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+      <div className="flex min-h-screen items-center justify-center bg-muted px-4">
         <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-foreground">
             {t("admin.shell.noAccessTitle")}
           </h1>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-foreground">
             {t("admin.shell.noAccessBody", { username: user.username })}
           </p>
           <Button
@@ -235,7 +235,7 @@ function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-muted">
       <header className="sticky top-0 z-20 border-b bg-white">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2 font-semibold">
@@ -257,7 +257,7 @@ function AdminShell({ children }: { children: ReactNode }) {
             <span className="hidden text-sm text-muted-foreground sm:inline">
               {user.username}
               {roles.length ? (
-                <span className="ml-1 text-xs text-slate-400">
+                <span className="ml-1 text-xs text-muted-foreground">
                   ({roles.join(", ")})
                 </span>
               ) : null}
@@ -283,7 +283,7 @@ function AdminShell({ children }: { children: ReactNode }) {
           <SheetTitle className="px-4 pt-4 text-sm font-semibold text-muted-foreground">
             {user.username}
             {roles.length ? (
-              <span className="ml-1 text-xs font-normal text-slate-400">
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
                 ({roles.join(", ")})
               </span>
             ) : null}

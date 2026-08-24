@@ -8,14 +8,14 @@ export function ReportCaseCta() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-border bg-[linear-gradient(135deg,hsl(var(--primary))_0%,hsl(var(--primary))_34%,hsl(var(--accent))_100%)] py-16 dark:bg-[linear-gradient(135deg,hsl(215_70%_12%)_0%,hsl(220_38%_18%)_42%,hsl(354_66%_37%)_100%)] md:py-20">
+    <section className="relative isolate overflow-hidden border-b border-border bg-[linear-gradient(135deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface))_34%,hsl(var(--accent))_100%)] py-16 dark:bg-[linear-gradient(135deg,hsl(215_70%_12%)_0%,hsl(220_38%_18%)_42%,hsl(354_66%_37%)_100%)] md:py-20">
       <div
         aria-hidden="true"
         className="absolute -right-20 -top-28 -z-10 h-80 w-80 rounded-full bg-secondary/30 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_20%,hsl(var(--secondary)/0.24),transparent_34%),linear-gradient(135deg,hsl(var(--primary)/0.3)_0%,transparent_48%,hsl(var(--accent)/0.2)_100%)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_20%,hsl(var(--secondary)/0.24),transparent_34%),linear-gradient(135deg,hsl(var(--primary-surface)/0.3)_0%,transparent_48%,hsl(var(--accent)/0.2)_100%)]"
       />
 
       <div className="layout-container text-center">
@@ -29,7 +29,12 @@ export function ReportCaseCta() {
           <Button
             asChild
             size="lg"
-            className="mt-8 bg-white font-semibold text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+            // The button stays white in both themes because it sits on the navy
+            // CTA, so its label must stay dark in both — which --foreground does
+            // not, since it inverts to light ink. --primary is the navy in light
+            // and --primary-surface keeps the navy in dark. Same pairing this
+            // branch gave ReportAllegationDialog before main deleted that file.
+            className="mt-8 bg-white font-semibold text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary-surface dark:hover:bg-white/90"
           >
             <Link to="/report">
               <FilePlus2 className="h-5 w-5" aria-hidden="true" />

@@ -106,7 +106,7 @@ export default function FeedbackCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-xs text-slate-500">#{row.id}</span>
+            <span className="font-mono text-xs text-muted-foreground">#{row.id}</span>
             <span
               className={`rounded border px-1.5 py-0.5 text-xs ${typeColor(row.feedbackType)}`}
             >
@@ -164,11 +164,11 @@ export default function FeedbackCard({
 
       {expanded && (
         <div className="mt-3 space-y-3">
-          <div className="rounded-lg border bg-slate-50 p-3">
-            <div className="text-xs font-semibold uppercase text-slate-500">
+          <div className="rounded-lg border bg-muted p-3">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">
               {t("admin.feedback.description", "What was reported")}
             </div>
-            <p className="whitespace-pre-wrap text-sm text-slate-700">
+            <p className="whitespace-pre-wrap text-sm text-foreground">
               {row.description || "—"}
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function FeedbackCard({
           <div className="flex flex-wrap items-end gap-2">
             <div className="space-y-1">
               <label
-                className="block text-xs font-semibold uppercase text-slate-500"
+                className="block text-xs font-semibold uppercase text-muted-foreground"
                 htmlFor={`feedback-status-${row.id}`}
               >
                 {t("admin.feedback.statusLabel", "Status")}
@@ -200,7 +200,7 @@ export default function FeedbackCard({
             </div>
             <div className="space-y-1">
               <label
-                className="block text-xs font-semibold uppercase text-slate-500"
+                className="block text-xs font-semibold uppercase text-muted-foreground"
                 htmlFor={`feedback-type-${row.id}`}
               >
                 {t("admin.feedback.typeLabel", "Type")}
@@ -227,7 +227,7 @@ export default function FeedbackCard({
             </div>
             <div className="min-w-[240px] flex-1 space-y-1">
               <label
-                className="block text-xs font-semibold uppercase text-slate-500"
+                className="block text-xs font-semibold uppercase text-muted-foreground"
                 htmlFor={`feedback-notes-${row.id}`}
               >
                 {t("admin.feedback.notesLabel", "Internal notes")}
@@ -254,7 +254,7 @@ export default function FeedbackCard({
             </Button>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
 
           {/* `updatedAt !== submittedAt` would ALWAYS be true: auto_now_add and
               auto_now stamp from two separate now() calls, so they differ by

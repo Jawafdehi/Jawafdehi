@@ -114,7 +114,7 @@ export function SeptemberEvent() {
               <Button
                 asChild
                 size="lg"
-                className="bg-white font-semibold text-slate-950 shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+                className="bg-white font-semibold text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary-surface dark:hover:bg-white/90"
               >
                 <a href={SEPTEMBER_EVENT_URL_SECTION} target="_blank" rel="noopener noreferrer">
                   {t("septemberEvent.cta")}

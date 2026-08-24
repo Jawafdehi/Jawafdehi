@@ -83,39 +83,39 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap text-xs">
-              <span className="font-mono text-slate-400">run #{review.id}</span>
+              <span className="font-mono text-muted-foreground">run #{review.id}</span>
               <span className={`px-2 py-0.5 rounded-full border ${statusColor(review.status)}`}>
                 {inProgress ? review.stage || review.status : review.status}
               </span>
               {review.case_type && (
-                <span className="px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200">
+                <span className="px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
                   {result?.case_type?.label || review.case_type}
                 </span>
               )}
-              <span className="text-slate-400" title="Submitted for review">
+              <span className="text-muted-foreground" title="Submitted for review">
                 🕓 {fmtDate(review.created_at)}
               </span>
               {review.started_at && (
-                <span className="text-slate-400" title="Picked up by a worker">
+                <span className="text-muted-foreground" title="Picked up by a worker">
                   🚀 {fmtDate(review.started_at)}
                 </span>
               )}
               {review.completed_at && (
-                <span className="text-slate-400" title="Finished">
+                <span className="text-muted-foreground" title="Finished">
                   🏁 {fmtDate(review.completed_at)}
                 </span>
               )}
               {elapsedSeconds != null && (
-                <span className="text-slate-400" title="Elapsed (finished − picked up)">
+                <span className="text-muted-foreground" title="Elapsed (finished − picked up)">
                   ⏱ {fmtDur(elapsedSeconds)}
                 </span>
               )}
-              <span className="text-slate-400">
+              <span className="text-muted-foreground">
                 sources {review.sources_converted}/{review.source_count}
               </span>
               {review.reviewers && review.reviewers.length > 0 && (
                 <span
-                  className="text-slate-400 font-mono"
+                  className="text-muted-foreground font-mono"
                   title={review.reviewers
                     .map((rv) => `${rv.tier}: ${rv.provider}·${rv.model || "?"} (${rv.calls})`)
                     .join(", ")}
@@ -147,7 +147,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
         </div>
 
         {inProgress && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+          <div className="mt-4 flex items-center gap-2 text-sm text-info bg-info/10 border border-info/25 rounded px-3 py-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Review in progress — stage: {review.stage || review.status}. This page refreshes
             automatically.
@@ -155,7 +155,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
         )}
 
         {review.status === "failed" && review.error && (
-          <pre className="mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded p-3 whitespace-pre-wrap max-h-48 overflow-auto">
+          <pre className="mt-4 text-xs text-danger bg-danger/10 border border-danger/25 rounded p-3 whitespace-pre-wrap max-h-48 overflow-auto">
             {review.error}
           </pre>
         )}
@@ -168,7 +168,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
         )}
 
         {result?.narrative && (
-          <p className="mt-3 text-sm text-slate-700 italic border-l-2 border-slate-200 pl-3">
+          <p className="mt-3 text-sm text-foreground italic border-l-2 border-border pl-3">
             {result.narrative}
           </p>
         )}
@@ -187,8 +187,8 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                     <span
                       className={`font-meta rounded border px-1.5 py-0.5 ${
                         ok
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
+                          ? "bg-success-strong/10 text-success-strong border-success-strong/25"
+                          : "bg-alert-strong/10 text-alert-strong border-alert-strong/25"
                       }`}
                     >
                       {s.conversion_status}
@@ -196,7 +196,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                     <span className="flex-1 truncate" title={s.title}>
                       {s.title || "(untitled)"}
                     </span>
-                    <span className="text-xs text-slate-400">{s.markdown_chars} chars</span>
+                    <span className="text-xs text-muted-foreground">{s.markdown_chars} chars</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -211,7 +211,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                   {/* Surface the conversion failure cause instead of hiding it
                       behind an empty "0 chars" / empty View. */}
                   {!ok && s.conversion_note && (
-                    <p className="mt-0.5 ml-1 text-xs text-amber-700 break-words">
+                    <p className="mt-0.5 ml-1 text-xs text-alert-strong break-words">
                       ⚠ {s.conversion_note}
                     </p>
                   )}
@@ -233,8 +233,8 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
                 aria-pressed={filter === f}
                 className={`text-xs px-2.5 py-1 rounded-full border ${
                   filter === f
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    ? "bg-primary-surface text-primary-foreground border-primary"
+                    : "bg-background text-foreground border-border hover:bg-muted"
                 }`}
               >
                 {f === "all"
@@ -295,7 +295,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
             <div className="px-4 py-3 border-b flex items-center justify-between gap-3 pr-12">
               <div className="min-w-0">
                 <DialogTitle className="text-sm font-semibold truncate">{source.title}</DialogTitle>
-                <div className="text-xs text-slate-400">{source.source_type}</div>
+                <div className="text-xs text-muted-foreground">{source.source_type}</div>
               </div>
               <Button variant="outline" size="sm" onClick={() => setShowRaw((v) => !v)}>
                 {showRaw ? "Rendered" : "Raw"}
@@ -305,7 +305,7 @@ export function ReviewResultView({ review }: { review: ReviewDetail }) {
               {!(source.conversion_status === "converted" || source.conversion_status === "attached") &&
               source.conversion_note ? (
                 // No converted text — show WHY (e.g. "Conversion failed: ...").
-                <p className="text-amber-700 break-words">⚠ {source.conversion_note}</p>
+                <p className="text-alert-strong break-words">⚠ {source.conversion_note}</p>
               ) : showRaw ? (
                 <pre className="whitespace-pre-wrap text-xs">{source.markdown || "(no markdown)"}</pre>
               ) : (
@@ -332,21 +332,21 @@ function RuleCard({
   onToggle: () => void;
 }) {
   return (
-    <div className={`border rounded-lg p-3 ${rr.gate_failed ? "border-red-300 bg-red-50/40" : "bg-white"}`}>
+    <div className={`border rounded-lg p-3 ${rr.gate_failed ? "border-danger/25 bg-danger/10" : "bg-card"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium">{rr.title}</span>
-            <span className="font-meta rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-slate-500">
+            <span className="font-meta rounded border border-border bg-muted px-1.5 py-0.5 text-muted-foreground">
               {rr.kind}
             </span>
             {rr.is_gate && (
-              <span className="font-meta rounded border border-purple-200 bg-purple-100 px-1.5 py-0.5 text-purple-700">
+              <span className="font-meta rounded border border-tone-violet/25 bg-tone-violet/10 px-1.5 py-0.5 text-tone-violet">
                 gate ≥ {rr.gate_min}
               </span>
             )}
             {rr.gate_failed && (
-              <span className="font-meta rounded border border-red-200 bg-red-100 px-1.5 py-0.5 text-red-700">
+              <span className="font-meta rounded border border-danger/25 bg-danger/10 px-1.5 py-0.5 text-danger">
                 GATE FAILED
               </span>
             )}
@@ -357,7 +357,7 @@ function RuleCard({
             {rr.score}
           </div>
           {rr.kind === "llm" && (
-            <div className="font-meta text-slate-400">
+            <div className="font-meta text-muted-foreground">
               μ{rr.score} · σ{rr.std} · {rr.confidence}
             </div>
           )}
@@ -365,13 +365,13 @@ function RuleCard({
       </div>
 
       {rr.kind === "deterministic" && rr.rationale && (
-        <p className="text-xs text-slate-500 mt-1">{rr.rationale}</p>
+        <p className="text-xs text-muted-foreground mt-1">{rr.rationale}</p>
       )}
 
       {rr.issues.length > 0 && (
         <div className="mt-2">
-          <div className="text-xs font-medium text-red-700">Issues</div>
-          <ul className="list-disc pl-4 text-xs text-red-700 space-y-0.5">
+          <div className="text-xs font-medium text-danger">Issues</div>
+          <ul className="list-disc pl-4 text-xs text-danger space-y-0.5">
             {rr.issues.map((iss, i) => (
               <li key={i}>{iss}</li>
             ))}
@@ -381,8 +381,8 @@ function RuleCard({
 
       {rr.notes && rr.notes.length > 0 && (
         <div className="mt-2">
-          <div className="text-xs font-medium text-slate-500">Notes (informational, not scored)</div>
-          <ul className="list-disc pl-4 text-xs text-slate-500 space-y-0.5">
+          <div className="text-xs font-medium text-muted-foreground">Notes (informational, not scored)</div>
+          <ul className="list-disc pl-4 text-xs text-muted-foreground space-y-0.5">
             {rr.notes.map((n, i) => (
               <li key={i}>{n}</li>
             ))}
@@ -392,8 +392,8 @@ function RuleCard({
 
       {rr.suggestions.length > 0 && (
         <div className="mt-2">
-          <div className="text-xs font-medium text-green-700">Suggestions to address</div>
-          <ul className="list-disc pl-4 text-xs text-green-700 space-y-0.5">
+          <div className="text-xs font-medium text-success-strong">Suggestions to address</div>
+          <ul className="list-disc pl-4 text-xs text-success-strong space-y-0.5">
             {rr.suggestions.map((s, i) => (
               <li key={i}>{s}</li>
             ))}
@@ -404,17 +404,17 @@ function RuleCard({
       <button
         onClick={onToggle}
         aria-expanded={expanded}
-        className="font-meta mt-2 flex items-center gap-1 text-slate-400 hover:text-slate-600"
+        className="font-meta mt-2 flex items-center gap-1 text-muted-foreground hover:text-foreground"
       >
         <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
         {expanded ? "hide rule instruction" : "show rule instruction"}
       </button>
 
       {expanded && (
-        <div className="mt-2 border-t pt-3 text-sm text-slate-600 space-y-2.5">
+        <div className="mt-2 border-t pt-3 text-sm text-foreground space-y-2.5">
           {rr.condition_text && (
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-0.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
                 Condition
               </div>
               {rr.condition_text}
@@ -422,23 +422,23 @@ function RuleCard({
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <span>
-              <span className="text-slate-400">Active for: </span>
+              <span className="text-muted-foreground">Active for: </span>
               {(rr.applies_to || []).join(", ") || "ALL"}
             </span>
             <span>
-              <span className="text-slate-400">Weight: </span>
+              <span className="text-muted-foreground">Weight: </span>
               {rr.weight}
             </span>
             {rr.is_gate && (
-              <span className="text-purple-700">
-                <span className="text-slate-400">Gate: </span>
+              <span className="text-tone-violet">
+                <span className="text-muted-foreground">Gate: </span>
                 ≥ {rr.gate_min} (rejects case if score &lt; {rr.gate_min})
               </span>
             )}
           </div>
           {rr.description && (
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-0.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
                 Description
               </div>
               <div
@@ -448,15 +448,15 @@ function RuleCard({
             </div>
           )}
           {rr.good_examples && (
-            <div className="rounded-md bg-green-50 border border-green-200 px-3 py-2">
-              <div className="text-xs font-semibold text-green-700 mb-0.5">Good example</div>
-              <div className="text-sm text-green-800">{rr.good_examples}</div>
+            <div className="rounded-md bg-success-strong/10 border border-success-strong/25 px-3 py-2">
+              <div className="text-xs font-semibold text-success-strong mb-0.5">Good example</div>
+              <div className="text-sm text-success-strong">{rr.good_examples}</div>
             </div>
           )}
           {rr.bad_examples && (
-            <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2">
-              <div className="text-xs font-semibold text-red-700 mb-0.5">Bad example</div>
-              <div className="text-sm text-red-800">{rr.bad_examples}</div>
+            <div className="rounded-md bg-danger/10 border border-danger/25 px-3 py-2">
+              <div className="text-xs font-semibold text-danger mb-0.5">Bad example</div>
+              <div className="text-sm text-danger">{rr.bad_examples}</div>
             </div>
           )}
         </div>

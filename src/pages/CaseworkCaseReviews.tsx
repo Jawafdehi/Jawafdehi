@@ -197,7 +197,7 @@ export default function CaseworkCaseReviews() {
         <div className="bg-white border rounded-xl p-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
-              <div className="font-mono text-xs text-slate-500">{slug}</div>
+              <div className="font-mono text-xs text-muted-foreground">{slug}</div>
               <h1 className="text-lg font-bold">{title}</h1>
               <a
                 href={`/case/${slug}`}
@@ -207,7 +207,7 @@ export default function CaseworkCaseReviews() {
               >
                 <ExternalLink className="h-3.5 w-3.5" /> View case on jawafdehi.org
               </a>
-              <div className="text-xs text-slate-400 mt-2">
+              <div className="text-xs text-muted-foreground mt-2">
                 {runs.length} run{runs.length === 1 ? "" : "s"}
               </div>
             </div>
@@ -230,7 +230,7 @@ export default function CaseworkCaseReviews() {
               {runs.length ? "Re-run review" : "Run review"}
             </Button>
           </div>
-          {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
+          {err && <p className="mt-3 text-sm text-danger">{err}</p>}
         </div>
 
         {loadingRuns ? (
@@ -245,7 +245,7 @@ export default function CaseworkCaseReviews() {
           <>
             {/* Run switcher */}
             <div className="bg-white border rounded-xl overflow-hidden">
-              <div className="px-4 py-2.5 bg-slate-50 border-b text-sm font-semibold">
+              <div className="px-4 py-2.5 bg-muted border-b text-sm font-semibold">
                 Runs ({runs.length})
               </div>
               <ul className="divide-y" role="listbox" aria-label="Review runs">

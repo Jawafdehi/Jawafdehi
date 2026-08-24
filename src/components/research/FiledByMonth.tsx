@@ -82,7 +82,7 @@ export function FiledByMonth({
               {data.map((d) => (
                 // Lighter blue than navy so the dark error whiskers stay legible
                 // against the fill; the fiscal year-end peak is accented in crimson.
-                <Cell key={d.month} fill={peakMonth === d.month ? "hsl(var(--accent))" : "#2a78d6"} />
+                <Cell key={d.month} fill={peakMonth === d.month ? "hsl(var(--accent))" : "hsl(var(--chart-1))"} />
               ))}
               <ErrorBar
                 dataKey="sd"

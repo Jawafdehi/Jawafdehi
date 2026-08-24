@@ -75,8 +75,8 @@ export function CaseSectionJumpNav({
                   className={cn(
                     "h-[1.5px] transition-all duration-300",
                     isActive
-                      ? "w-6 bg-primary"
-                      : "w-3 bg-primary/20 group-hover:bg-primary/40"
+                      ? "w-6 bg-primary-surface"
+                      : "w-3 bg-primary-surface/20 group-hover:bg-primary-surface/40"
                   )}
                 />
               </span>

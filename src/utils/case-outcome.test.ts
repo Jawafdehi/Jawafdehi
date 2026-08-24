@@ -13,9 +13,9 @@ describe("case-outcome", () => {
   it("coerces an unexpected or uppercase value instead of crashing (default charged)", () => {
     expect(outcomeLabel("CONVICTED" as EntityOutcome, "en")).toBe("Convicted");
     expect(outcomeLabel("bogus" as EntityOutcome, "en")).toBe("Charged");
-    expect(outcomeBadgeClass("ACQUITTED" as EntityOutcome)).toContain("emerald");
-    // unknown -> charged -> amber
-    expect(outcomeBadgeClass("bogus" as EntityOutcome)).toContain("amber");
+    expect(outcomeBadgeClass("ACQUITTED" as EntityOutcome)).toContain("success");
+    // unknown -> charged -> warning tone
+    expect(outcomeBadgeClass("bogus" as EntityOutcome)).toContain("alert");
   });
 
   it("shouldShowOutcome surfaces only decided outcomes", () => {

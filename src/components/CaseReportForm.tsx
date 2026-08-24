@@ -155,9 +155,13 @@ export function CaseReportForm({ onSuccess }: Readonly<CaseReportFormProps>) {
 
     if (submitted) {
         return (
-            <div className="space-y-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] p-6">
+            <div className="space-y-4 rounded-2xl border border-success/25 bg-success/[0.07] p-6">
                 <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    {/* One token covers both themes here: --success-strong is the
+                        dark green needed on the light tint, and .dark aliases
+                        --success-strong to --success, which is the lighter green
+                        the dark:text-emerald-400 variant was reaching for. */}
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success-strong" aria-hidden="true" />
                     <div className="space-y-2">
                         <p className="font-bold text-foreground">{t("report.submitted.title")}</p>
                         <p className="text-sm leading-6 text-foreground/70">{t("report.submitted.description")}</p>

@@ -67,7 +67,7 @@ const EmbedCaseCard = () => {
   if (isError || !caseData) {
     return (
       <div className="flex h-full min-h-[360px] items-center justify-center bg-white p-4">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           {t("embedCase.unavailable", "Case information unavailable.")}
         </p>
       </div>
@@ -77,11 +77,11 @@ const EmbedCaseCard = () => {
   const stateMap: Record<string, { label: string; className: string }> = {
     DRAFT: {
       label: t("embedCase.status.underInvestigation", "Under Investigation"),
-      className: "bg-amber-100 text-amber-800",
+      className: "bg-alert-strong/10 text-alert-strong",
     },
     IN_REVIEW: {
       label: t("embedCase.status.underInvestigation", "Under Investigation"),
-      className: "bg-amber-100 text-amber-800",
+      className: "bg-alert-strong/10 text-alert-strong",
     },
     PUBLISHED: {
       label: t("embedCase.status.ongoing", "Ongoing"),
@@ -89,7 +89,7 @@ const EmbedCaseCard = () => {
     },
     CLOSED: {
       label: t("embedCase.status.resolved", "Resolved"),
-      className: "bg-green-100 text-green-800",
+      className: "bg-success-strong/10 text-success-strong",
     },
   };
 
@@ -109,15 +109,15 @@ const EmbedCaseCard = () => {
     "";
 
   return (
-    <div className="flex h-full min-h-[360px] flex-col bg-white font-sans text-gray-900">
+    <div className="flex h-full min-h-[360px] flex-col bg-paper font-sans text-paper-foreground">
       <Helmet>
         <title>{caseData.title} - Jawafdehi</title>
       </Helmet>
 
-      <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-border bg-white shadow-sm">
         {/* Thumbnail */}
         {thumbnailUrl ? (
-          <div className="relative h-36 overflow-hidden bg-gray-100">
+          <div className="relative h-36 overflow-hidden bg-muted">
             <img
               src={thumbnailUrl}
               alt={caseData.title}
@@ -153,7 +153,7 @@ const EmbedCaseCard = () => {
 
         {/* Content */}
         <div className="flex flex-1 flex-col px-4 py-3">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
             <Link
               to={`/case/${caseData.slug || id}`}
               target="_parent"
@@ -164,15 +164,15 @@ const EmbedCaseCard = () => {
           </h3>
 
           {description && (
-            <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-gray-500">
+            <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
               {description}
             </p>
           )}
 
-          <div className="mt-auto space-y-1 pt-3 text-xs text-gray-500">
+          <div className="mt-auto space-y-1 pt-3 text-xs text-muted-foreground">
             {primaryEntity && (
               <div className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                <User className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                 <span className="truncate">
                   {primaryEntity.display_name ||
                     primaryEntity.nes_id ||
@@ -183,7 +183,7 @@ const EmbedCaseCard = () => {
 
             {locationEntity && (
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                 <span className="truncate">
                   {locationEntity.display_name ||
                     locationEntity.nes_id ||
@@ -194,7 +194,7 @@ const EmbedCaseCard = () => {
 
             {dateRange && (
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                <Calendar className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                 <span>{dateRange}</span>
               </div>
             )}
@@ -202,7 +202,7 @@ const EmbedCaseCard = () => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
+        <div className="flex items-center justify-between border-t border-border px-4 py-2">
           <Link
             to={`/case/${caseData.slug || id}`}
             target="_parent"
@@ -212,7 +212,7 @@ const EmbedCaseCard = () => {
             <ExternalLink className="h-3 w-3" />
           </Link>
 
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             {t("embedCase.provider", "via Jawafdehi")}
           </span>
         </div>

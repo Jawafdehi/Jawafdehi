@@ -15,22 +15,24 @@ function escapeXml(s: string): string {
 }
 
 export function scoreBand(score: number | null | undefined): string {
-  if (score == null) return "#94a3b8"; // slate
-  if (score >= 80) return "#16a34a"; // green
-  if (score >= 60) return "#d97706"; // amber
-  return "#dc2626"; // red
+  // CSS custom properties, not hex: this value is interpolated into inline SVG
+  // and inline styles, both of which resolve var() against the document.
+  if (score == null) return "hsl(var(--muted-foreground))";
+  if (score >= 80) return "hsl(var(--success))";
+  if (score >= 60) return "hsl(var(--alert))";
+  return "hsl(var(--danger))";
 }
 
 export function dispositionColor(d: Disposition | null | undefined): string {
   switch (d) {
     case "PASS":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-success-strong/10 text-success-strong border-success-strong/25";
     case "REVISE":
-      return "bg-amber-100 text-amber-800 border-amber-200";
+      return "bg-alert-strong/10 text-alert-strong border-alert-strong/25";
     case "REJECT":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-danger/10 text-danger border-danger/25";
     default:
-      return "bg-slate-100 text-slate-600 border-slate-200";
+      return "bg-muted text-foreground border-border";
   }
 }
 
@@ -38,21 +40,21 @@ export function dispositionColor(d: Disposition | null | undefined): string {
 // across the Rules page and review breakdowns. Falls back to a hash for any
 // category not explicitly mapped.
 const CATEGORY_COLORS: Record<string, string> = {
-  Completeness: "bg-sky-100 text-sky-800 border-sky-200",
-  Description: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  Tone: "bg-violet-100 text-violet-800 border-violet-200",
-  Sourcing: "bg-teal-100 text-teal-800 border-teal-200",
-  Timeline: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  Entities: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  Ethics: "bg-rose-100 text-rose-800 border-rose-200",
-  Integrity: "bg-amber-100 text-amber-800 border-amber-200",
+  Completeness: "bg-tone-sky/10 text-tone-sky border-tone-sky/25",
+  Description: "bg-tone-indigo/10 text-tone-indigo border-tone-indigo/25",
+  Tone: "bg-tone-violet/10 text-tone-violet border-tone-violet/25",
+  Sourcing: "bg-tone-teal/10 text-tone-teal border-tone-teal/25",
+  Timeline: "bg-tone-cyan/10 text-tone-cyan border-tone-cyan/25",
+  Entities: "bg-tone-emerald/10 text-tone-emerald border-tone-emerald/25",
+  Ethics: "bg-tone-rose/10 text-tone-rose border-tone-rose/25",
+  Integrity: "bg-tone-amber/10 text-tone-amber border-tone-amber/25",
 };
 
 const CATEGORY_FALLBACKS = [
-  "bg-slate-100 text-slate-700 border-slate-200",
-  "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200",
-  "bg-lime-100 text-lime-800 border-lime-200",
-  "bg-orange-100 text-orange-800 border-orange-200",
+  "bg-muted text-foreground border-border",
+  "bg-tone-fuchsia/10 text-tone-fuchsia border-tone-fuchsia/25",
+  "bg-tone-lime/10 text-tone-lime border-tone-lime/25",
+  "bg-tone-orange/10 text-tone-orange border-tone-orange/25",
 ];
 
 export function categoryColor(category: string): string {
@@ -65,21 +67,21 @@ export function categoryColor(category: string): string {
 // Color for a rule's kind: deterministic (exact check) vs llm (judge).
 export function kindColor(kind: "deterministic" | "llm" | string): string {
   return kind === "llm"
-    ? "bg-blue-100 text-blue-800 border-blue-200"
-    : "bg-slate-100 text-slate-700 border-slate-200";
+    ? "bg-tone-blue/10 text-tone-blue border-tone-blue/25"
+    : "bg-muted text-foreground border-border";
 }
 
 export function statusColor(s: ReviewStatus): string {
   switch (s) {
     case "done":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-success-strong/10 text-success-strong border-success-strong/25";
     case "running":
     case "pending":
-      return "bg-blue-100 text-blue-800 border-blue-200";
+      return "bg-info/10 text-info border-info/25";
     case "failed":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-danger/10 text-danger border-danger/25";
     default:
-      return "bg-slate-100 text-slate-600 border-slate-200";
+      return "bg-muted text-foreground border-border";
   }
 }
 
@@ -144,7 +146,7 @@ export function mdToHtml(md: string): string {
 function inline(t: string): string {
   return t
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/`([^`]+)`/g, '<code class="px-1 bg-slate-100 rounded">$1</code>');
+    .replace(/`([^`]+)`/g, '<code class="px-1 bg-muted rounded">$1</code>');
 }
 
 // Pure inline-SVG radar/spider chart of per-category scores (no chart lib).
@@ -168,13 +170,13 @@ export function radarChartSvg(categories: CategoryScore[], size = 320): string {
       .map((_, i) => pt(i, r * f))
       .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
       .join(" ");
-    return `<polygon points="${pts}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
+    return `<polygon points="${pts}" fill="none" stroke="hsl(var(--border))" stroke-width="1"/>`;
   });
 
   const spokes = dims
     .map((_, i) => {
       const [x, y] = pt(i, r);
-      return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>`;
+      return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="hsl(var(--border))" stroke-width="1"/>`;
     })
     .join("");
 
@@ -192,14 +194,14 @@ export function radarChartSvg(categories: CategoryScore[], size = 320): string {
     .map((c, i) => {
       const [x, y] = pt(i, r + 22);
       const anchor = Math.abs(x - cx) < 8 ? "middle" : x > cx ? "start" : "end";
-      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="11" fill="#475569" text-anchor="${anchor}" dominant-baseline="middle">${escapeXml(c.category)} <tspan font-weight="700" fill="${scoreBand(c.score)}">${c.score}</tspan></text>`;
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="11" fill="hsl(var(--muted-foreground))" text-anchor="${anchor}" dominant-baseline="middle">${escapeXml(c.category)} <tspan font-weight="700" fill="${scoreBand(c.score)}">${c.score}</tspan></text>`;
     })
     .join("");
 
   return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="${size}" role="img" aria-label="Per-category scores radar chart">
     ${rings.join("")}
     ${spokes}
-    <polygon points="${dataPoly}" fill="rgba(37,99,235,0.18)" stroke="#2563eb" stroke-width="2"/>
+    <polygon points="${dataPoly}" fill="hsl(var(--chart-1) / 0.18)" stroke="hsl(var(--chart-1))" stroke-width="2"/>
     ${dots}
     ${labels}
   </svg>`;

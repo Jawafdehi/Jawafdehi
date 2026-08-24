@@ -420,7 +420,7 @@ const CaseDetail = () => {
               <Button
                 asChild
                 variant="outline"
-                className="gap-2 border-primary/20 bg-background text-primary hover:bg-primary/5 hover:text-primary"
+                className="gap-2 border-primary/20 bg-background text-primary hover:bg-primary-surface/5 hover:text-primary"
               >
                 <a
                   href={`${API_BASE_URL}/admin/cases/case/${id}/change/`}
@@ -456,9 +456,9 @@ const CaseDetail = () => {
               <CaseDisclaimerBanner>{t("footer.disclaimer")}</CaseDisclaimerBanner>
 
               {caseData.state === "IN_REVIEW" && (
-                <Alert className="no-print mb-5 items-start border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950 sm:mb-6">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-400" />
-                  <AlertDescription className="break-words text-sm text-yellow-800 dark:text-yellow-200">
+                <Alert className="no-print mb-5 items-start border-alert-strong/25 bg-alert-strong/10 dark:border-alert-strong/25 dark:bg-alert-strong/10 sm:mb-6">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-alert-strong dark:text-alert-strong" />
+                  <AlertDescription className="break-words text-sm text-alert-strong dark:text-alert-strong">
                     {t("caseDetail.inReviewBanner")}
                   </AlertDescription>
                 </Alert>

@@ -150,7 +150,7 @@ export default function CaseBylineEditor({
                   title={t("admin.caseForm.authorRemove")}
                   aria-label={t("admin.caseForm.authorRemove")}
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-danger" />
                 </Button>
               </div>
             ))}
@@ -158,7 +158,7 @@ export default function CaseBylineEditor({
         )}
 
         {loadError ? (
-          <p className="text-xs text-red-600">{t("admin.caseForm.authorsLoadFailed")}</p>
+          <p className="text-xs text-danger">{t("admin.caseForm.authorsLoadFailed")}</p>
         ) : (
           <Select value="" onValueChange={addAuthor}>
             <SelectTrigger
@@ -230,7 +230,7 @@ export default function CaseBylineEditor({
                   title={t("admin.caseForm.editHistoryRemove")}
                   aria-label={t("admin.caseForm.editHistoryRemove")}
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-danger" />
                 </Button>
               </div>
             ))}

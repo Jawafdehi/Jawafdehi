@@ -158,7 +158,11 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
               placeholder is a near-flat light panel and needs no scrim — and in
               dark mode the inverted placeholder would tint it the wrong way. */}
           {!isPlaceholder && (
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-slate-900/5 to-white/10" />
+            // Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
+            // semantic equivalent is --foreground, which is the same near-black
+            // in light and correctly inverts in dark. `white` is not a palette
+            // name, so to-white/10 stays.
+            <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">

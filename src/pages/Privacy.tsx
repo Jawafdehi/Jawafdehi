@@ -11,7 +11,7 @@ const Privacy = () => {
       />
 
       <main id="main-content" className="flex-1">
-        <section id="privacy-hero" className="bg-gradient-to-br from-primary via-navy-dark to-slate-800 py-16 md:py-20">
+        <section id="privacy-hero" className="bg-gradient-to-br from-primary-surface via-navy-dark to-foreground py-16 md:py-20">
           <div className="layout-container">
             <div className="max-w-3xl">
               <h1 className="font-page-title font-page-title-inverse mb-4">
