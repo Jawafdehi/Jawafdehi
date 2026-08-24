@@ -4,6 +4,14 @@ export interface FunnelStage {
   key: string;
   label: string;
   count: number;
+  /**
+   * Optional upper bound. When set, this stage is a RANGE: the readout becomes
+   * "count–countUpper", the share caption spans both ends, and the bar draws the
+   * band as a translucent extension beyond the solid `count` fill. Use it where
+   * two defensible definitions give two different numbers and picking one would
+   * hide the choice. Omitted → the stage renders as a single measured value.
+   */
+  countUpper?: number;
   /** CSS color for the bar fill (a theme token via `hsl(var(--…))`). */
   color: string;
   /**
@@ -13,6 +21,18 @@ export interface FunnelStage {
    * "% of total" denominator can't show. Omitted → no indicator rendered.
    */
   note?: string;
+}
+
+/**
+ * One end of a share readout. Under 10% keeps a decimal, because that is where the funnel
+ * lives and "0%" would be a lie; at or above it rounds. Never lets a rounded share read as a
+ * clean 100% unless it truly is 100% — the same honesty rule as DataHonesty's truncated
+ * completeness.
+ */
+function fmtShare(share: number): string {
+  if (share < 10) return share.toFixed(1);
+  const rounded = Math.round(share);
+  return (rounded >= 100 && share < 100 ? 99 : rounded).toString();
 }
 
 /**
@@ -42,6 +62,9 @@ export function AccountabilityFunnel({
   ofLabel: (pct: string) => string;
 }) {
   const base = (denominator ?? stages[0]?.count) || 1;
+  // A range readout ("62–84", "0.2–0.3% of complaints") needs a wider caption column than a
+  // single figure, but only widen when one is actually present so the other caller is untouched.
+  const hasRange = stages.some((s) => s.countUpper != null);
 
   if (isLoading) {
     return (
@@ -59,13 +82,18 @@ export function AccountabilityFunnel({
         const share = (stage.count / base) * 100;
         // Keep a hairline of fill even at ~0% so the row never looks empty.
         const width = stage.count === 0 ? 0 : Math.max(share, 0.8);
-        // Never let a rounded share read as a clean 100% unless it truly is
-        // 100% — same honesty rule as DataHonesty's truncated completeness.
-        const rounded = Math.round(share);
+        const upperShare = stage.countUpper != null ? (stage.countUpper / base) * 100 : null;
+        // Same hairline clamp, so the band can never draw NARROWER than the solid fill it
+        // extends. At the bottom of a steep funnel both ends clamp to the same sliver and the
+        // band is invisible — that is intended. The numeric readout carries the range there;
+        // widening the bar to make the spread legible would misstate the share.
+        const upperWidth = upperShare == null ? null : Math.max(upperShare, 0.8);
         const pctLabel =
-          share >= 10
-            ? (rounded >= 100 && share < 100 ? 99 : rounded).toString()
-            : share.toFixed(1);
+          upperShare == null ? fmtShare(share) : `${fmtShare(share)}–${fmtShare(upperShare)}`;
+        const countLabel =
+          stage.countUpper == null
+            ? stage.count.toLocaleString()
+            : `${stage.count.toLocaleString()}–${stage.countUpper.toLocaleString()}`;
 
         return (
           <li key={stage.key}>
@@ -80,17 +108,25 @@ export function AccountabilityFunnel({
             <div className="mb-1 flex items-baseline justify-between gap-3">
               <span className="text-sm font-medium text-foreground">{stage.label}</span>
               <span className="font-mono text-lg font-bold tabular-nums text-foreground">
-                {stage.count.toLocaleString()}
+                {countLabel}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+              <div className="relative h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                {upperWidth == null ? null : (
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full opacity-40 transition-[width] duration-700 ease-out"
+                    style={{ width: `${upperWidth}%`, backgroundColor: stage.color }}
+                  />
+                )}
                 <div
-                  className="h-full rounded-full transition-[width] duration-700 ease-out"
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
                   style={{ width: `${width}%`, backgroundColor: stage.color }}
                 />
               </div>
-              <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
+              <span
+                className={`${hasRange ? "w-40" : "w-28"} shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground`}
+              >
                 {ofLabel(pctLabel)}
               </span>
             </div>

@@ -70,16 +70,70 @@ describe("ArticleView", () => {
               url: "https://s3.example.org/thumb.png",
               width: 800,
               height: 450,
-              alt: "Summit stage",
+              alt: "पशुपतिनाथको जलहरी",
             },
           }}
         />
       </MemoryRouter>,
     );
-    const img = screen.getByRole("img", { name: "Summit stage" });
+    const img = screen.getByRole("img", { name: "पशुपतिनाथको जलहरी" });
     expect(img.getAttribute("src")).toBe("https://s3.example.org/thumb.png");
     // The image description doubles as the visible caption.
-    expect(screen.getByText("Summit stage").tagName).toBe("FIGCAPTION");
+    expect(screen.getByText("पशुपतिनाथको जलहरी").tagName).toBe("FIGCAPTION");
+  });
+
+  it("prefers the large rendition for the hero, which renders at 896px wide", () => {
+    render(
+      <MemoryRouter>
+        <ArticleView
+          article={{
+            ...article,
+            thumbnail: {
+              url: "https://s3.example.org/thumb.800x450.webp",
+              width: 800,
+              height: 450,
+              alt: "पशुपतिनाथको जलहरी",
+            },
+            thumbnail_large: {
+              url: "https://s3.example.org/thumb.1600x900.webp",
+              width: 1600,
+              height: 900,
+              alt: "पशुपतिनाथको जलहरी",
+            },
+          }}
+        />
+      </MemoryRouter>,
+    );
+    const img = screen.getByRole("img", { name: "पशुपतिनाथको जलहरी" });
+    expect(img.getAttribute("src")).toBe(
+      "https://s3.example.org/thumb.1600x900.webp",
+    );
+    // Intrinsic size must track the rendition actually served, or the reserved
+    // box no longer matches and the layout shifts on load.
+    expect(img.getAttribute("width")).toBe("1600");
+    expect(img.getAttribute("height")).toBe("900");
+  });
+
+  it("falls back to the card rendition when the API has no large one", () => {
+    // The window where the frontend has deployed but the API field has not.
+    render(
+      <MemoryRouter>
+        <ArticleView
+          article={{
+            ...article,
+            thumbnail: {
+              url: "https://s3.example.org/thumb.800x450.webp",
+              width: 800,
+              height: 450,
+              alt: "पशुपतिनाथको जलहरी",
+            },
+          }}
+        />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole("img", { name: "पशुपतिनाथको जलहरी" }).getAttribute("src"),
+    ).toBe("https://s3.example.org/thumb.800x450.webp");
   });
 
   it("renders no featured image when the thumbnail is null", () => {

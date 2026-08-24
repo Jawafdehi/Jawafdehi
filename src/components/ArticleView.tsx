@@ -15,6 +15,12 @@ import type { Article } from "@/types/cms";
 export const ArticleView = ({ article }: { article: Article }) => {
     const { t } = useTranslation();
 
+    // The hero renders `w-full` inside a max-w-4xl (896px) column, so the 800px
+    // card rendition was upscaled by the browser even at DPR 1. Prefer the
+    // 1600px one; fall back to `thumbnail` so this still renders if the
+    // frontend deploys ahead of the API field.
+    const hero = article.thumbnail_large ?? article.thumbnail;
+
     return (
         <div className="min-h-screen flex flex-col bg-background">
             <main id="main-content" className="flex-1 py-8 md:py-12">
@@ -42,18 +48,18 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                 </div>
                             </div>
 
-                            {article.thumbnail?.url && (
+                            {hero?.url && (
                                 <figure className="mb-8">
                                     <img
-                                        src={article.thumbnail.url}
-                                        alt={article.thumbnail.alt || article.title}
-                                        width={article.thumbnail.width}
-                                        height={article.thumbnail.height}
+                                        src={hero.url}
+                                        alt={hero.alt || article.title}
+                                        width={hero.width}
+                                        height={hero.height}
                                         className="w-full rounded-lg"
                                     />
-                                    {article.thumbnail.alt ? (
+                                    {hero.alt ? (
                                         <figcaption className="font-caption mt-2 text-muted-foreground">
-                                            {article.thumbnail.alt}
+                                            {hero.alt}
                                         </figcaption>
                                     ) : null}
                                 </figure>

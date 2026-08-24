@@ -3,9 +3,12 @@ import { matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
+  AUTHOR_CARD_HEIGHT,
+  AUTHOR_CARD_WIDTH,
   SITE_NAME,
   SITE_URL,
   SOCIAL_IMAGE_URL,
+  authorCardUrl,
   buildHeadTags,
   escapeHtml,
   previewImageUrl,
@@ -30,6 +33,13 @@ const MEDIA_BASE = 'https://portal.jawafdehi.org';
 // Bound upstream API calls made while injecting share metadata so a slow backend
 // can never hang the edge request; on timeout we fall through to the SPA shell.
 const META_FETCH_TIMEOUT_MS = 4000;
+// Composing a card costs the API a photo fetch plus a render, so it gets a
+// longer budget than a JSON read. Still bounded: on timeout the card route falls
+// back to the static banner rather than holding the crawler.
+const CARD_FETCH_TIMEOUT_MS = 10000;
+// A day, matching the API's `s-maxage`. This is the window in which a profile
+// edit (new photo, corrected role) reaches a shared link.
+const AUTHOR_CARD_TTL_SECONDS = 86400;
 
 const DOCUMENT_PREVIEW_ALLOWED_HOSTS = new Set([
   'ngm-store.jawafdehi.org',
@@ -300,13 +310,35 @@ async function fetchWithTimeout(url: string): Promise<Response | null> {
   }
 }
 
+// Like fetchWithTimeout, but asks for an image and allows a longer budget.
+// Resolves to null on timeout or network error so the caller can fall back.
+async function fetchImageWithTimeout(url: string): Promise<Response | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CARD_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      headers: { Accept: 'image/jpeg,image/*' },
+      signal: controller.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function buildMetaTags(input: {
   title: string;
   description: string;
   canonicalUrl: string;
   imageUrl: string;
   imageAlt: string;
-  type?: 'article' | 'website';
+  // Only for an image whose size is known — omitted otherwise, since claiming
+  // dimensions for the site-wide fallback card would be wrong.
+  imageWidth?: number;
+  imageHeight?: number;
+  // 'profile' is for an author page — a person, not a document.
+  type?: 'article' | 'website' | 'profile';
   publishedTime?: string | null;
   modifiedTime?: string | null;
   // When set (e.g. "noindex, nofollow"), emit a robots meta so crawlers keep
@@ -488,8 +520,18 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     `An update from ${SITE_NAME}.`,
   );
   const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
-  const thumbnail = article.thumbnail as { url?: string; alt?: string } | null | undefined;
-  const imageUrl = previewImageUrl(thumbnail?.url, MEDIA_BASE) || SOCIAL_IMAGE_URL;
+  // The social rendition has to be picked HERE, not only in <Seo>: an unfurler
+  // never runs the React app, so this worker-injected head is the only one it
+  // sees. `og_image` is a 1200x630 JPEG — the ratio unfurlers want, and not the
+  // WebP that LinkedIn/WhatsApp handle unreliably. `thumbnail` is the 16:9 WebP
+  // card rendition, kept only as the fallback for an article the API hasn't
+  // generated an og_image for.
+  const social = (article.og_image ?? article.thumbnail) as
+    | { url?: string; alt?: string; width?: number; height?: number }
+    | null
+    | undefined;
+  const imageUrl = previewImageUrl(social?.url, MEDIA_BASE) || SOCIAL_IMAGE_URL;
+  const usingArticleImage = imageUrl !== SOCIAL_IMAGE_URL;
   const meta = article.meta as { first_published_at?: string | null } | undefined;
   const date = typeof article.date === 'string' ? article.date : null;
 
@@ -501,10 +543,122 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     description,
     canonicalUrl,
     imageUrl,
-    imageAlt: thumbnail?.alt || titleRaw,
+    imageAlt: social?.alt || titleRaw,
+    imageWidth: usingArticleImage ? social?.width : undefined,
+    imageHeight: usingArticleImage ? social?.height : undefined,
     type: 'article',
     publishedTime: meta?.first_published_at || date,
     modifiedTime: date,
+  });
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
+}
+
+// The author's composed share card, proxied from the platform API.
+//
+// Served under THIS origin rather than linking crawlers straight at
+// api.jawafdehi.org for two reasons. The og:image URL stays on jawafdehi.org, so
+// it is covered by this site's robots.txt rather than a managed one that may
+// disallow the crawlers we want (the same problem that already blocks scrapers
+// on other hosts). And the URL shape is ours, so where the bytes come from can
+// change later without invalidating cards already cached by every chat app a
+// link was shared into.
+//
+// Cached for a day at the edge, which is the window a profile edit takes to show
+// up. If the API cannot answer, this redirects to the static site banner instead
+// of serving an error: an unfurler that gets a non-image for og:image shows NO
+// image, which is worse than a generic one.
+async function handleAuthorCard(request: Request, slug: string): Promise<Response> {
+  const cache = caches.default;
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  const upstream = await fetchImageWithTimeout(
+    `${JDS_API_BASE}/authors/${encodeURIComponent(slug)}/og-card.jpg`,
+  );
+
+  if (!upstream || !upstream.ok) {
+    // 404 (no such public author) and 503 (the API cannot shape the name) both
+    // land here. Not cached: a slug can become real, and a 503 is transient.
+    return new Response(null, {
+      status: 302,
+      headers: { Location: SOCIAL_IMAGE_URL, 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const response = new Response(upstream.body, {
+    status: 200,
+    headers: {
+      'Content-Type': upstream.headers.get('Content-Type') || 'image/jpeg',
+      'Cache-Control': `public, max-age=${AUTHOR_CARD_TTL_SECONDS}`,
+    },
+  });
+  // Only successful responses are cached. The clone is required: the body is a
+  // stream and can be read once.
+  await cache.put(request, response.clone());
+  return response;
+}
+
+// Inject share metadata for an author page.
+//
+// Author pages are not pre-rendered — and unlike cases and updates they had no
+// fallback either, so /author/<slug> served the bare shell and every author
+// unfurled as the site banner, with og:url pointing at the homepage.
+async function handleAuthorMetaFallback(
+  request: Request,
+  env: Env,
+  slug: string,
+): Promise<Response | null> {
+  const apiResponse = await fetchWithTimeout(
+    `${JDS_API_BASE}/authors/${encodeURIComponent(slug)}/`,
+  );
+  if (!apiResponse) return null;
+  // A profile that is not published 404s, same as an unknown slug. Both are a
+  // positive "no such page", unlike a timeout.
+  if (apiResponse.status === 404) return notFoundShellResponse(request, env);
+  if (!apiResponse.ok) return null;
+
+  let author: Record<string, unknown>;
+  try {
+    author = (await apiResponse.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  const name = String(author.display_name || slug).trim();
+  const role = typeof author.title === 'string' ? author.title.trim() : '';
+  const cases = Array.isArray(author.cases) ? author.cases.length : 0;
+  // The description says what the page holds, which the name alone does not.
+  // Unlike the card, this CAN carry the case count: it is rebuilt on every scrape
+  // rather than baked into an image cached for a day.
+  //
+  // A count of zero is omitted rather than written out. Every roster member has a
+  // profile — one is created on first credit and Gaurav Karki has one without
+  // having authored anything yet — and "0 documented cases" reads as a reproach
+  // in a share preview where the plain role does not.
+  const who = role ? `${name} — ${role} at ${SITE_NAME}.` : `${name} at ${SITE_NAME}.`;
+  const caseLine = cases === 1 ? ' 1 documented case.' : ` ${cases} documented cases.`;
+  const description = truncateMeta(cases > 0 ? `${who}${caseLine}` : who);
+  const canonicalSlug =
+    typeof author.slug === 'string' && author.slug.trim() ? author.slug : slug;
+  const canonicalUrl = `${SITE_URL}/author/${encodeURIComponent(canonicalSlug)}`;
+
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+
+  const metaTags = buildMetaTags({
+    title: `${name} | Jawafdehi`,
+    description,
+    canonicalUrl,
+    // Always the composed card, never the raw headshot: those are 504x504 WebP,
+    // which unfurls unreliably on WhatsApp and LinkedIn, and a square in a
+    // summary_large_image card is cropped to a band across the face.
+    imageUrl: authorCardUrl(canonicalSlug),
+    imageAlt: `${name} — ${SITE_NAME}`,
+    imageWidth: AUTHOR_CARD_WIDTH,
+    imageHeight: AUTHOR_CARD_HEIGHT,
+    // A person, not an article: no published/modified time, and og:type profile
+    // is what this is for.
+    type: 'profile',
   });
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
@@ -526,6 +680,17 @@ export default {
 
     if (endpoint === '/document-preview') {
       return handleDocumentPreview(request);
+    }
+
+    // Author share cards. Matched here, ahead of the assets binding, because the
+    // Worker owns this path outright — nothing is committed under it, so letting
+    // it fall through would spend a subrequest on a guaranteed 404 first.
+    const authorCardMatch = endpoint.match(/^\/assets\/og\/author\/([^/]+)\.jpg$/);
+    if (authorCardMatch) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
+      return handleAuthorCard(request, decodeURIComponent(authorCardMatch[1]));
     }
 
     // Latest YouTube uploads for the Weekly Series "Past presentations" section
@@ -579,6 +744,30 @@ export default {
         status: 301,
         headers: {
           'Location': '/saptahik' + url.search,
+          'Cache-Control': 'public, max-age=3600',
+          ...secHeaders,
+        },
+      });
+    }
+
+    // /research → the only research publication there is (302)
+    //
+    // The SPA has no /research route, so the bare path answered 404 even though
+    // it is the address people shorten to and type. It points at the single
+    // publication because that is currently the whole of the section.
+    //
+    // TEMPORARY, hence 302 rather than the permanent 301 /weekly uses above: once
+    // there is more than one research item this redirect goes away and /research
+    // becomes the section's own dashboard page. A 301 would by then be cached in
+    // browsers we cannot reach.
+    //
+    // Target carries the trailing slash the pre-rendered page is published at, so
+    // this is one hop rather than a 302 into the assets binding's own 307.
+    if (endpoint === '/research') {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/research/corruption-accountability/' + url.search,
           'Cache-Control': 'public, max-age=3600',
           ...secHeaders,
         },
@@ -647,6 +836,10 @@ export default {
     }
     if (matched?.path === '/updates/:slug' && matched.params.slug) {
       const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
+      if (metaResponse) return metaResponse;
+    }
+    if (matched?.path === '/author/:slug' && matched.params.slug) {
+      const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
       if (metaResponse) return metaResponse;
     }
 

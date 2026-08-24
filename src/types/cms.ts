@@ -70,6 +70,19 @@ export interface ArticleListItem {
 export interface Article extends ArticleListItem {
   body: StreamBlock[];
   related_cases: RelatedCase[];
+  /**
+   * 1600x900 rendition of the same image as `thumbnail`, for the full-width
+   * hero on the article page. Deliberately absent from `ArticleListItem`: the
+   * listing query in `cms-api.ts` doesn't request it, so cards can't reach for
+   * it by accident. Optional because the frontend may deploy ahead of the API.
+   */
+  thumbnail_large?: CmsImageRendition | null;
+  /**
+   * 1200x630 JPEG rendition for `og:image` / `twitter:image`. Separate from the
+   * display renditions on purpose: unfurlers want 1.91:1 rather than 16:9, and
+   * are unreliable with the WebP the display renditions now use.
+   */
+  og_image?: CmsImageRendition | null;
 }
 
 export interface WagtailListResponse<T> {
