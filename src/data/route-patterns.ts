@@ -30,6 +30,7 @@ const MATCHABLE_ROUTES = SITE_ROUTES.map((route) => ({ path: route.path }));
 // dispatch in worker.ts.
 export const WORKER_OWNED_PATHS: readonly string[] = [
   "/weekly",
+  "/research",
   "/oembed",
   "/document-preview",
   "/api/latest-videos",

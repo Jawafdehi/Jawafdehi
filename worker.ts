@@ -750,6 +750,30 @@ export default {
       });
     }
 
+    // /research → the only research publication there is (302)
+    //
+    // The SPA has no /research route, so the bare path answered 404 even though
+    // it is the address people shorten to and type. It points at the single
+    // publication because that is currently the whole of the section.
+    //
+    // TEMPORARY, hence 302 rather than the permanent 301 /weekly uses above: once
+    // there is more than one research item this redirect goes away and /research
+    // becomes the section's own dashboard page. A 301 would by then be cached in
+    // browsers we cannot reach.
+    //
+    // Target carries the trailing slash the pre-rendered page is published at, so
+    // this is one hop rather than a 302 into the assets binding's own 307.
+    if (endpoint === '/research') {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/research/corruption-accountability/' + url.search,
+          'Cache-Control': 'public, max-age=3600',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Handle legacy numeric case redirects (301)
     const caseMatch = path.match(/^\/case\/(\d+)\/?$/);
     if (caseMatch) {
