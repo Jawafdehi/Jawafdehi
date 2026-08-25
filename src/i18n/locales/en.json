@@ -1133,7 +1133,12 @@
     "member": "Member",
     "representative": "Representative",
     "federalParliament": "Federal Parliament",
-    "viewSource": "View Source"
+    "viewSource": "View Source",
+    "relatedCaseFiled": "Filed",
+    "relatedCaseDecided": "Decided",
+    "relatedCaseBigoUnknown": "Amount not recorded",
+    "outcomeConvictedSpecial": "Convicted by the Special Court",
+    "outcomeAcquittedSpecial": "Acquitted by the Special Court"
   },
   "updates": {
     "title": "Updates & News",

@@ -39,6 +39,20 @@ const ROLE_LABEL_KEY: Record<string, string> = {
 // First page only — the corpus is small and an entity rarely spans many cases.
 const PAGE_SIZE = 20;
 
+// Which court handed down the verdict, for the outcome chip.
+//
+// "Convicted" on its own does not say who convicted them, which matters most on
+// exactly the cases where it is contested — a Special Court conviction under
+// appeal is not the same claim as a settled one. Only qualify when the case
+// actually cites a Special Court proceeding; the archive also holds Revenue
+// Tribunal and writ matters, where "विशेष अदालतबाट" would be false.
+const SPECIAL_COURT_IRI = /\/courtcase\/special\//i;
+
+const SPECIAL_COURT_OUTCOME_KEY: Record<string, string> = {
+  convicted: "entityDetail.outcomeConvictedSpecial",
+  acquitted: "entityDetail.outcomeAcquittedSpecial",
+};
+
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
   return role === "accused" || role === "alleged";
@@ -126,11 +140,25 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.case_start_date || c.created_at);
+          // Label the dates rather than printing a bare one. `case_start_date`
+          // is when the case was filed and `case_end_date` when it was decided —
+          // an unlabelled date left the reader guessing which they were seeing,
+          // and on a decided case the filing date alone reads as stale.
+          //
+          // `created_at` is when WE authored the record, not a fact about the
+          // case, so it is no longer used as a fallback: an authoring timestamp
+          // presented as a case date is simply wrong. A case with no filing date
+          // shows no date at all.
+          const filedDate = c.case_start_date ? formatDate(c.case_start_date) : null;
+          const decidedDate = c.case_end_date ? formatDate(c.case_end_date) : null;
           const typeKey = getCaseTypeLabelKey(c.case_type);
           const typeLabel = typeKey ? t(typeKey) : c.case_type;
           const href = c.slug ? `/case/${c.slug}` : undefined;
           const status = judicialStatusOf(c, outcome);
+          const inSpecialCourt = (c.court_cases ?? []).some((iri) =>
+            SPECIAL_COURT_IRI.test(iri ?? ""),
+          );
+          const outcomeKey = String(outcome ?? "").toLowerCase();
 
           const row = (
             <div
@@ -157,7 +185,9 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   </Badge>
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
-                      {outcomeLabel(outcome, language)}
+                      {inSpecialCourt && SPECIAL_COURT_OUTCOME_KEY[outcomeKey]
+                        ? t(SPECIAL_COURT_OUTCOME_KEY[outcomeKey])
+                        : outcomeLabel(outcome, language)}
                     </Badge>
                   ) : null}
                   {/* Where the case itself has got to, as opposed to what
@@ -166,19 +196,47 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                     {judicialStatusLabel(status, language)}
                   </Badge>
                 </div>
-                <div className="text-sm text-foreground/70">
-                  {[typeLabel, date].filter(Boolean).join(" · ")}
-                </div>
-                {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
-                    amount — a missing bigo is not a zero-rupee case. */}
-                {c.bigo ? (
-                  <p className="text-sm text-foreground/70">
-                    <span>{t("caseCard.bigo")}: </span>
-                    <span className="font-semibold tabular-nums text-foreground">
+
+                <dl className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                  <div className="flex items-baseline gap-1.5">
+                    <dt className="text-muted-foreground">{typeLabel}</dt>
+                  </div>
+                  {filedDate ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <dt className="text-muted-foreground">
+                        {t("entityDetail.relatedCaseFiled")}:
+                      </dt>
+                      <dd className="font-medium text-foreground">{filedDate}</dd>
+                    </div>
+                  ) : null}
+                  {decidedDate ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <dt className="text-muted-foreground">
+                        {t("entityDetail.relatedCaseDecided")}:
+                      </dt>
+                      <dd className="font-medium text-foreground">{decidedDate}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+
+                {/* The bigo line renders on EVERY card so the figure is always
+                    in the same place and its absence is legible as a gap in the
+                    record rather than an oversight.
+                    `formatBigo(0)` is the literal "Rs 0", so a falsy bigo is
+                    reported as unrecorded — a missing amount is not a
+                    zero-rupee case. */}
+                <p className="text-sm">
+                  <span className="text-muted-foreground">{t("caseCard.bigo")}: </span>
+                  {c.bigo ? (
+                    <span className="font-semibold tabular-nums text-accent">
                       {formatBigo(c.bigo)}
                     </span>
-                  </p>
-                ) : null}
+                  ) : (
+                    <span className="italic text-muted-foreground">
+                      {t("entityDetail.relatedCaseBigoUnknown")}
+                    </span>
+                  )}
+                </p>
               </div>
               {href ? (
                 <ArrowRight

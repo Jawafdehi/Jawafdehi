@@ -33,16 +33,27 @@ const STATUS_LABELS: Record<JudicialStatus, { en: string; ne: string }> = {
   },
 };
 
-// An appeal is the live state, so it reads as brand/primary. A decided case is
-// settled and neutral. A pending hearing borrows the same amber the `charged`
-// outcome uses, because both mean "not resolved yet".
+// Drawn from the two Jawafdehi brand colours rather than generic UI greys:
+// --accent is the brand crimson, --primary the brand navy.
+//
+// An appeal is the live, contested state and the most newsworthy thing a card
+// can say, so it takes the crimson. A concluded case takes the navy: present and
+// authoritative, but not shouting. A pending hearing borrows the same amber the
+// `charged` outcome already uses, since both mean "not resolved yet".
+//
+// Each carries a visible border rather than `border-transparent` — on a card
+// that already sits on a muted surface, a tint alone was what made these read as
+// washed out.
 const STATUS_BADGE_CLASSES: Record<JudicialStatus, string> = {
+  // --accent-on-dark is the brand crimson lightened for dark surfaces; it has no
+  // Tailwind utility, so it is referenced as an arbitrary value the same way
+  // Footer.tsx does.
   supreme_appeal:
-    "border-transparent bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary-foreground",
+    "border-accent/30 bg-accent/10 font-semibold text-accent dark:border-[hsl(var(--accent-on-dark))]/40 dark:bg-[hsl(var(--accent-on-dark))]/15 dark:text-[hsl(var(--accent-on-dark))]",
   special_decided:
-    "border-transparent bg-secondary text-secondary-foreground",
+    "border-primary/25 bg-primary/10 font-semibold text-primary dark:border-primary/40 dark:bg-primary/25 dark:text-foreground",
   special_pending:
-    "border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong",
+    "border-alert-strong/30 bg-alert-strong/10 font-semibold text-alert-strong dark:border-alert-strong/40 dark:bg-alert-strong/25 dark:text-alert-strong",
 };
 
 // A Supreme Court reference only means an APPEAL when it carries a criminal
