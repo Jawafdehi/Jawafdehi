@@ -15,6 +15,11 @@ import {
   outcomeLabel,
   shouldShowOutcome,
 } from "@/utils/case-outcome";
+import {
+  judicialStatusBadgeClass,
+  judicialStatusLabel,
+  judicialStatusOf,
+} from "@/utils/case-judicial-status";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -125,11 +130,12 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           const typeKey = getCaseTypeLabelKey(c.case_type);
           const typeLabel = typeKey ? t(typeKey) : c.case_type;
           const href = c.slug ? `/case/${c.slug}` : undefined;
+          const status = judicialStatusOf(c, outcome);
 
           const row = (
             <div
               className={cn(
-                "group flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40",
+                "group flex items-start gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-border hover:bg-muted/50",
                 accused && "border-l-4 border-l-accent",
               )}
             >
@@ -154,16 +160,21 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                       {outcomeLabel(outcome, language)}
                     </Badge>
                   ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    {[typeLabel, date].filter(Boolean).join(" · ")}
-                  </span>
+                  {/* Where the case itself has got to, as opposed to what
+                      happened to this person in it. */}
+                  <Badge variant="outline" className={judicialStatusBadgeClass(status)}>
+                    {judicialStatusLabel(status, language)}
+                  </Badge>
+                </div>
+                <div className="text-sm text-foreground/70">
+                  {[typeLabel, date].filter(Boolean).join(" · ")}
                 </div>
                 {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
                     amount — a missing bigo is not a zero-rupee case. */}
                 {c.bigo ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-foreground/70">
                     <span>{t("caseCard.bigo")}: </span>
-                    <span className="font-medium tabular-nums text-foreground">
+                    <span className="font-semibold tabular-nums text-foreground">
                       {formatBigo(c.bigo)}
                     </span>
                   </p>
