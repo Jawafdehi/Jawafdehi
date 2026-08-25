@@ -7,7 +7,7 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { formatDateForLanguage } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
@@ -149,8 +149,20 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           // case, so it is no longer used as a fallback: an authoring timestamp
           // presented as a case date is simply wrong. A case with no filing date
           // shows no date at all.
-          const filedDate = c.case_start_date ? formatDate(c.case_start_date) : null;
-          const decidedDate = c.case_end_date ? formatDate(c.case_end_date) : null;
+          // Bikram Sambat leads in the Nepali UI, Gregorian in the English one —
+          // `formatDateForLanguage` is the shared helper the case surfaces
+          // already use for this. The other calendar comes back as `secondary`
+          // and is carried in `title`, so the Gregorian date stays available on
+          // hover without a second date cluttering every row.
+          //
+          // These cases carry no curated BS override (only timeline entries have
+          // `date_bs`), so the BS date is converted from the Gregorian one.
+          const filed = c.case_start_date
+            ? formatDateForLanguage(c.case_start_date, "PP", null, i18n.language)
+            : null;
+          const decided = c.case_end_date
+            ? formatDateForLanguage(c.case_end_date, "PP", null, i18n.language)
+            : null;
           const typeKey = getCaseTypeLabelKey(c.case_type);
           const typeLabel = typeKey ? t(typeKey) : c.case_type;
           const href = c.slug ? `/case/${c.slug}` : undefined;
@@ -201,20 +213,30 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   <div className="flex items-baseline gap-1.5">
                     <dt className="text-muted-foreground">{typeLabel}</dt>
                   </div>
-                  {filedDate ? (
+                  {filed ? (
                     <div className="flex items-baseline gap-1.5">
                       <dt className="text-muted-foreground">
                         {t("entityDetail.relatedCaseFiled")}:
                       </dt>
-                      <dd className="font-medium text-foreground">{filedDate}</dd>
+                      <dd
+                        className="font-medium text-foreground"
+                        title={filed.secondary ?? undefined}
+                      >
+                        {filed.primary}
+                      </dd>
                     </div>
                   ) : null}
-                  {decidedDate ? (
+                  {decided ? (
                     <div className="flex items-baseline gap-1.5">
                       <dt className="text-muted-foreground">
                         {t("entityDetail.relatedCaseDecided")}:
                       </dt>
-                      <dd className="font-medium text-foreground">{decidedDate}</dd>
+                      <dd
+                        className="font-medium text-foreground"
+                        title={decided.secondary ?? undefined}
+                      >
+                        {decided.primary}
+                      </dd>
                     </div>
                   ) : null}
                 </dl>
