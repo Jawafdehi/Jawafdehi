@@ -345,7 +345,7 @@ export default function EntityRecordProfile() {
               </Alert>
             ) : null}
 
-            {descText ? <p className="text-base leading-7 text-foreground">{descText}</p> : null}
+            {descText ? <p className="whitespace-pre-line text-base leading-7 text-foreground">{descText}</p> : null}
 
             {/* External links. */}
             {data.url || data.sameAs ? (
