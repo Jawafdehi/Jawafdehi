@@ -43,7 +43,7 @@ export default function PaymentSuccess() {
               <Button
                 asChild
                 size="lg"
-                className="font-button h-11 min-w-0 flex-1 rounded-full bg-primary px-2.5 text-primary-foreground shadow-md shadow-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 md:h-12 md:min-w-[14rem] md:px-7"
+                className="font-button h-11 min-w-0 flex-1 rounded-full bg-primary-surface px-2.5 text-primary-foreground shadow-md shadow-primary-surface/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-surface/90 md:h-12 md:min-w-[14rem] md:px-7"
               >
                 <Link to="/search?type=case">
                   <Archive className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
@@ -92,7 +92,7 @@ function PaymentSuccessBackground() {
       >
         <div className="absolute right-[4%] top-10 h-[66%] w-[54%] rounded-full bg-accent opacity-85" />
         <div className="absolute left-[32%] top-24 h-[52%] w-[42%] rounded-full bg-accent opacity-55" />
-        <div className="absolute -left-[14%] top-[46%] h-[34%] w-[26%] rounded-full bg-primary opacity-35" />
+        <div className="absolute -left-[14%] top-[46%] h-[34%] w-[26%] rounded-full bg-primary-surface opacity-35" />
       </div>
 
       <div

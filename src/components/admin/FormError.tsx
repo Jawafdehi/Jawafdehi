@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 //               when `message` is falsy, so call sites can drop the `&&` guard.
 //   FieldError — an inline, one-line validation hint under a field.
 //
-// Both use the brand red (text-red-600 / border-red-200). NOTE: we deliberately
+// Both use the brand red (text-danger / border-danger/25). NOTE: we deliberately
 // do NOT use the `destructive` token here — it maps to an orange in this theme
 // (--destructive: 25 95% 53%), reserved for the destructive *button* variant.
 // Errors are red; keeping that in one place is the whole point of this module.
@@ -24,7 +24,7 @@ export function FormError({
     <p
       role="alert"
       className={cn(
-        "rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600",
+        "rounded border border-danger/25 bg-danger/10 px-3 py-2 text-sm text-danger",
         className,
       )}
     >
@@ -47,7 +47,7 @@ export function FieldError({
   // role="alert" so assistive tech announces the validation error when it
   // appears, even if focus is still on the field.
   return (
-    <p id={id} role="alert" className={cn("text-xs text-red-600", className)}>
+    <p id={id} role="alert" className={cn("text-xs text-danger", className)}>
       {message}
     </p>
   );

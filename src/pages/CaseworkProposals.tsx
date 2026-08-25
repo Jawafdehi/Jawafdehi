@@ -94,7 +94,7 @@ export default function CaseworkProposals() {
           <Loader2 className="h-4 w-4 animate-spin" /> {t("admin.proposals.loading", "Loading proposals…")}
         </div>
       ) : err ? (
-        <p className="text-sm text-red-600">{err}</p>
+        <p className="text-sm text-danger">{err}</p>
       ) : (
         <ProposalQueue proposals={proposals} onDecision={onDecision} onEditIntent={onEditIntent} />
       )}

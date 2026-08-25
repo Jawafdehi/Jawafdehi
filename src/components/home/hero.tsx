@@ -104,7 +104,7 @@ export function Hero({
 
           <SearchBar
             id="hero-archive-search"
-            inputClassName="bg-background/95 shadow-lg shadow-primary/5"
+            inputClassName="bg-background/95 shadow-lg shadow-primary-surface/5"
             onChange={(event) => setArchiveQuery(event.target.value)}
             placeholder={t("home.hero.searchPlaceholder")}
             submitLabel={t("home.hero.searchSubmit")}
@@ -115,7 +115,7 @@ export function Hero({
         <HeroStats stats={heroStats} />
 
         <Link
-          className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+          className="group mt-6 inline-flex items-center gap-2 self-center text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
           to="/data-quality"
         >
           <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -159,7 +159,7 @@ function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
             {href ? (
               <Link
                 to={href}
-                className="group block h-full rounded-lg border border-transparent bg-background/45 px-3 py-3 shadow-sm shadow-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/85 hover:text-accent hover:shadow-lg hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="group block h-full rounded-lg border border-transparent bg-background/45 px-3 py-3 shadow-sm shadow-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/85 hover:text-accent hover:shadow-lg hover:shadow-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {content}
               </Link>
@@ -189,7 +189,7 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
 function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
   return (
     <>
-      {/* Mobile: subtle red wash, no Nepal map */}
+      {/* Mobile: subtle red wash */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 md:hidden"
@@ -206,19 +206,23 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
       {/* Desktop/tablet: warm glow behind map */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
+        className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary-surface)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
       />
 
-      {/* Desktop/tablet only: responsive Nepal map */}
+      {/* Full-bleed map backdrop, same treatment at every width: the wash below
+          veils it to a few percent wherever copy sits and lets it run at full
+          strength out in the margins. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[48%] z-0 hidden h-[500px] w-[min(1280px,112vw)] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:block lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
+        className="pointer-events-none absolute left-1/2 top-[48%] z-0 h-[250px] w-[112vw] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:h-[500px] md:w-[min(1280px,112vw)] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
       >
         {images.map(({ src, className }) => (
           <img
             key={src}
             src={src}
             alt=""
+            decoding="async"
+            fetchPriority="low"
             className={cn(
               className,
               "absolute inset-0 h-full w-full max-w-none object-contain saturate-[1.18] contrast-[1.03] mix-blend-multiply dark:mix-blend-screen",
@@ -227,10 +231,12 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
         ))}
       </div>
 
-      {/* Desktop/tablet readability wash */}
+      {/* Readability wash. This is what makes the backdrop safe: it sits between
+          map and copy and drops the map to a few percent wherever text is, then
+          falls to nothing at the edges. Applies at every width. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 hidden bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.86)_0%,hsl(var(--background)/0.70)_30%,hsl(var(--background)/0.38)_56%,transparent_84%)] md:block lg:bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.84)_0%,hsl(var(--background)/0.66)_30%,hsl(var(--background)/0.34)_56%,transparent_84%)]"
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
       />
     </>
   );

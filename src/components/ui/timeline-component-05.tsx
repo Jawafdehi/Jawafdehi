@@ -37,7 +37,7 @@ function groupReleases(releases: Release[]) {
 
 function TimelineDatePill({ date, version }: Pick<Release, "date" | "version">) {
   const primaryDate = (
-    <Badge className="flex min-h-7 w-auto justify-end rounded-full border border-primary/10 bg-primary/10 px-3.5 py-1 text-sm font-medium text-primary shadow-none hover:bg-primary/20">
+    <Badge className="flex min-h-7 w-auto justify-end rounded-full border border-primary/10 bg-primary-surface/10 px-3.5 py-1 text-sm font-medium text-primary shadow-none hover:bg-primary-surface/20">
       {version}
     </Badge>
   );

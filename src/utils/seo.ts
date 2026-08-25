@@ -29,6 +29,23 @@ export const SITE_DESCRIPTION =
   "Nepal's Permanent Corruption Case Archive. We arrange corruption-related evidence and facts into a structured format of who, what, and when.";
 export const SOCIAL_IMAGE_URL = `${SITE_URL}/assets/social-preview.png`;
 
+// The composed author share card: an author's photograph, their name in both
+// scripts and their role on the site's navy/crimson ground. Rendered by the
+// platform API (cases/og_cards.py) and proxied by the Worker under THIS origin,
+// so the og:image URL stays on jawafdehi.org and is covered by this site's
+// robots.txt rather than a managed one.
+//
+// Defined here rather than inline in each caller because both renderers need the
+// identical URL: <Seo> on the author page, and the Worker's head injection for
+// crawlers (which never run the app). A mismatch would mean a scraper and a
+// browser disagreeing about the page's own image.
+export const AUTHOR_CARD_WIDTH = 1200;
+export const AUTHOR_CARD_HEIGHT = 630;
+
+export function authorCardUrl(slug: string): string {
+  return `${SITE_URL}/assets/og/author/${encodeURIComponent(slug)}.jpg`;
+}
+
 // Language signals. This site is Nepali-first: index.html declares
 // <html lang="ne">, and the prerendered HTML that crawlers and social scrapers
 // fetch is the Nepali copy. Nine pages nonetheless declared og:locale as

@@ -90,7 +90,7 @@ export function MobileShareExpander({
           {platforms.map(({ icon: Icon, label, url: target }) => (
             <Button
               aria-label={label}
-              className="h-11 w-11 rounded-full border border-primary/15 bg-background p-0 text-primary shadow-sm hover:bg-primary/10"
+              className="h-11 w-11 rounded-full border border-primary/15 bg-background p-0 text-primary shadow-sm hover:bg-primary-surface/10"
               key={label}
               onClick={() => shareTo(target)}
               size="icon"
@@ -101,7 +101,7 @@ export function MobileShareExpander({
           ))}
           <Button
             aria-label={t("share.moreOptions")}
-            className="h-11 w-11 rounded-full border border-primary/15 bg-background p-0 text-primary shadow-sm hover:bg-primary/10"
+            className="h-11 w-11 rounded-full border border-primary/15 bg-background p-0 text-primary shadow-sm hover:bg-primary-surface/10"
             onClick={() => {
               setOpen(false);
               setActionsOpen(true);
@@ -118,7 +118,7 @@ export function MobileShareExpander({
       <Button
         aria-expanded={open}
         aria-label={t("share.share")}
-        className="h-12 w-12 rounded-full bg-primary p-0 text-primary-foreground shadow-lg hover:bg-primary/85 hover:shadow-xl"
+        className="h-12 w-12 rounded-full bg-primary-surface p-0 text-primary-foreground shadow-lg hover:bg-primary-surface/85 hover:shadow-xl"
         onClick={() => setOpen((value) => !value)}
         size="icon"
         variant="default"
@@ -145,7 +145,7 @@ export function MobileShareExpander({
             {platforms.map(({ icon: Icon, label, name, url: target }) => (
               <Button
                 aria-label={label}
-                className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+                className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary-surface/5"
                 key={label}
                 onClick={() => shareTo(target)}
                 variant="ghost"
@@ -156,7 +156,7 @@ export function MobileShareExpander({
             ))}
             <Button
               aria-label={t("share.copyLink")}
-              className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+              className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary-surface/5"
               onClick={copyLink}
               variant="ghost"
             >
@@ -166,7 +166,7 @@ export function MobileShareExpander({
             <Button
               aria-label={t("share.qrCode")}
               aria-pressed={showQr}
-              className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+              className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary-surface/5"
               onClick={() => setShowQr((value) => !value)}
               variant="ghost"
             >
@@ -175,7 +175,7 @@ export function MobileShareExpander({
             </Button>
             <Button
               aria-label={t("share.downloadPDF")}
-              className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+              className="h-auto min-h-16 flex-col gap-1 rounded-xl px-1 py-1 text-xs font-medium text-primary hover:bg-primary-surface/5"
               onClick={printCase}
               variant="ghost"
             >

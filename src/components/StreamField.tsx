@@ -35,7 +35,7 @@ const DocumentPreviewDialog = lazy(() =>
 );
 
 const DOCUMENT_CARD_CLASS =
-  "not-prose my-4 flex w-full items-start gap-3 rounded-lg border border-border/70 bg-background p-3 text-left no-underline transition-colors hover:border-primary/20 hover:bg-primary/[0.03]";
+  "not-prose my-4 flex w-full items-start gap-3 rounded-lg border border-border/70 bg-background p-3 text-left no-underline transition-colors hover:border-primary/20 hover:bg-primary-surface/[0.03]";
 
 // Only PDFs and markdown/text have a viewer — the shared <DocumentPreviewDialog>
 // renders exactly those two. Anything else (docx, xlsx, images…) has nothing to
@@ -136,7 +136,7 @@ const CaseBlock = ({ value }: { value: StreamCaseValue }) => {
   return (
     <Link
       to={`/case/${value.case.slug}`}
-      className="not-prose my-4 flex items-center justify-between gap-3 rounded-lg border border-primary/15 bg-primary/[0.03] p-4 no-underline transition-colors hover:border-primary/30"
+      className="not-prose my-4 flex items-center justify-between gap-3 rounded-lg border border-primary/15 bg-primary-surface/[0.03] p-4 no-underline transition-colors hover:border-primary/30"
     >
       <span className="min-w-0">
         <span className="block text-xs font-semibold uppercase tracking-wide text-primary">

@@ -6,7 +6,11 @@ import { Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
-import { CASE_PLACEHOLDER_IMAGE, isValidCaseImage } from "@/lib/case-images";
+import {
+  CASE_PLACEHOLDER_DARK_CLASS,
+  CASE_PLACEHOLDER_IMAGE,
+  isValidCaseImage,
+} from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
@@ -170,7 +174,7 @@ export function CaseDetailBanner({
     "font-semibold text-primary underline underline-offset-4 transition-colors hover:text-primary/80";
 
   return (
-    <section className="w-full text-slate-950 no-print">
+    <section className="w-full text-foreground no-print">
       <div className="mx-auto w-full max-w-8xl px-0 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2">
           <img
@@ -181,11 +185,22 @@ export function CaseDetailBanner({
                 setImageSrc(CASE_PLACEHOLDER_IMAGE);
               }
             }}
-            className="order-2 h-52 w-full object-cover object-top sm:h-[440px] lg:order-none lg:h-[520px] xl:h-[560px]"
+            className={cn(
+              "order-2 h-52 w-full object-cover object-top sm:h-[440px] lg:order-none lg:h-[520px] xl:h-[560px]",
+              // This branch hand-wrote the invert/hue-rotate treatment against a
+              // PLACEHOLDER_IMAGE constant that never existed here. Main landed
+              // the same idea in #299 as two shared exports, with the rationale
+              // recorded at the constant, so use those rather than a local copy.
+              imageSrc === CASE_PLACEHOLDER_IMAGE && CASE_PLACEHOLDER_DARK_CLASS,
+            )}
           />
 
-          <div className="order-1 flex flex-col justify-center py-0 lg:order-none lg:py-10">
-            <div className="bg-primary px-6 py-5 text-white lg:-ml-20 lg:px-10">
+          {/* relative z-10: the image above carries a CSS filter in dark mode,
+              which gives it its own stacking context. Without an explicit layer
+              here it would paint over this panel and clip the 80px that
+              lg:-ml-20 pulls across it. */}
+          <div className="relative z-10 order-1 flex flex-col justify-center py-0 lg:order-none lg:py-10">
+            <div className="bg-primary-surface px-6 py-5 text-white lg:-ml-20 lg:px-10">
               <nav
                 aria-label="breadcrumb"
                 className="mb-3 flex min-w-0 items-center gap-2 text-xs font-medium text-white/70"
@@ -336,7 +351,7 @@ export function CaseDetailBanner({
                     <Button
                       type="button"
                       variant="outline"
-                      className="hidden gap-2 border-primary/20 bg-background text-primary hover:bg-primary/5 hover:text-primary sm:inline-flex"
+                      className="hidden gap-2 border-primary/20 bg-background text-primary hover:bg-primary-surface/5 hover:text-primary sm:inline-flex"
                       onClick={shareAction.onClick}
                       aria-label={shareAction.label}
                     >

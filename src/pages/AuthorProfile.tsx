@@ -22,7 +22,13 @@ import { CaseTypeBadge } from "@/components/CaseBadge";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { formatDateForLanguage } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
-import { SITE_URL } from "@/utils/seo";
+import {
+  AUTHOR_CARD_HEIGHT,
+  AUTHOR_CARD_WIDTH,
+  SITE_NAME,
+  SITE_URL,
+  authorCardUrl,
+} from "@/utils/seo";
 import type { AuthorLink } from "@/types/jds";
 
 // Same icon vocabulary as the team page (src/data/team.ts ContactType), so the
@@ -121,6 +127,18 @@ export default function AuthorProfile() {
         title={pageTitle}
         description={pageDescription}
         canonicalUrl={`${SITE_URL}/author/${author.slug}`}
+        // The composed share card, not `photo` — the headshot is a 504x504 WebP,
+        // which unfurls unreliably on WhatsApp and LinkedIn and gets cropped to a
+        // band across the face in a summary_large_image card. The Worker injects
+        // the same URL for crawlers (which never run this component); setting it
+        // here keeps the head the app renders identical to the one served at the
+        // edge, so the two cannot drift.
+        imageUrl={authorCardUrl(author.slug)}
+        imageAlt={`${name} — ${SITE_NAME}`}
+        imageWidth={AUTHOR_CARD_WIDTH}
+        imageHeight={AUTHOR_CARD_HEIGHT}
+        type="profile"
+        language={i18n.language}
       />
 
       <main id="main-content" className="flex-1">

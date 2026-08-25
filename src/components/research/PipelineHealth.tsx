@@ -97,9 +97,9 @@ export function PipelineHealth({
             type="monotone"
             dataKey="monthsSolid"
             name={monthsLabel}
-            stroke="hsl(var(--primary))"
+            stroke="hsl(var(--primary-surface))"
             strokeWidth={2.25}
-            dot={{ r: 2.5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+            dot={{ r: 2.5, fill: "hsl(var(--primary-surface))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
             isAnimationActive={false}
             connectNulls={false}
@@ -109,11 +109,11 @@ export function PipelineHealth({
             type="monotone"
             dataKey="monthsProvisional"
             name={provisionalLabel}
-            stroke="hsl(var(--primary))"
+            stroke="hsl(var(--primary-surface))"
             strokeWidth={2}
             strokeDasharray="5 4"
             strokeOpacity={0.55}
-            dot={{ r: 2, fill: "hsl(var(--primary))", strokeWidth: 0, fillOpacity: 0.55 }}
+            dot={{ r: 2, fill: "hsl(var(--primary-surface))", strokeWidth: 0, fillOpacity: 0.55 }}
             activeDot={{ r: 4 }}
             isAnimationActive={false}
             connectNulls
@@ -122,13 +122,13 @@ export function PipelineHealth({
       </ResponsiveContainer>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary))" }} aria-hidden="true" />
+          <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary-surface))" }} aria-hidden="true" />
           {monthsLabel}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="h-2.5 w-4 rounded-sm border-t-2 border-dashed"
-            style={{ borderColor: "hsl(var(--primary))", opacity: 0.6 }}
+            style={{ borderColor: "hsl(var(--primary-surface))", opacity: 0.6 }}
             aria-hidden="true"
           />
           {provisionalLabel}

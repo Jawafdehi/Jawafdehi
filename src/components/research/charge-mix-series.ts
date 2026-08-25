@@ -10,14 +10,14 @@ export type MixKey = "bribery" | "fake" | "embezzlement" | "benefit" | "loss" | 
 
 // Fixed categorical order + colours (validated CVD-safe set; `other` is neutral).
 // Fake-credential is crimson so the eye tracks the family whose share collapses.
+// The five series values live in --chart-1..5 rather than as literals here, so
+// the dark theme can restate them; --chart-2 is the brand crimson.
 export const SERIES: readonly { key: MixKey; color: string }[] = [
-  { key: "bribery", color: "#2a78d6" },
-  // The only brand colour in this set, so it reads the token rather than a
-  // literal — the other five belong to this palette alone and are not brand.
-  { key: "fake", color: "hsl(var(--accent))" },
-  { key: "embezzlement", color: "#1baf7a" },
-  { key: "benefit", color: "#4a3aa7" },
-  { key: "loss", color: "#eda100" },
+  { key: "bribery", color: "hsl(var(--chart-1))" },
+  { key: "fake", color: "hsl(var(--chart-2))" },
+  { key: "embezzlement", color: "hsl(var(--chart-3))" },
+  { key: "benefit", color: "hsl(var(--chart-4))" },
+  { key: "loss", color: "hsl(var(--chart-5))" },
   { key: "other", color: "hsl(var(--muted-foreground))" },
 ];
 

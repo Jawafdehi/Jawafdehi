@@ -91,7 +91,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
       </p>
 
       {/* Entity picker */}
-      <div className="rounded-md bg-slate-50 p-3">
+      <div className="rounded-md bg-muted p-3">
         <div className="flex gap-2">
           <Input
             value={query}
@@ -186,7 +186,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                     className={cn(
                       "font-mono text-xs",
                       (iriMissing || iriBad) &&
-                        "border-red-400 focus-visible:ring-red-400",
+                        "border-danger/25 focus-visible:ring-danger",
                     )}
                     placeholder="https://jawafdehi.org/entity/person/…"
                   />
@@ -259,7 +259,7 @@ export default function EntityRelationshipsEditor({ rows, onChange }: Props) {
                   onClick={() => remove(i)}
                   title="Remove"
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-danger" />
                 </Button>
               </div>
             );

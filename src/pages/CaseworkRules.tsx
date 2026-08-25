@@ -102,7 +102,7 @@ export default function CaseworkRules() {
                 >
                   {category}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-muted-foreground">
                   {catRules.length} rule{catRules.length === 1 ? "" : "s"}
                 </span>
               </div>
@@ -116,11 +116,11 @@ export default function CaseworkRules() {
                     } ${!r.enabled ? "opacity-60" : ""}`}
                   >
                     <button
-                      className="w-full px-4 py-3 flex items-center gap-2.5 text-left hover:bg-slate-50"
+                      className="w-full px-4 py-3 flex items-center gap-2.5 text-left hover:bg-muted"
                       onClick={() => setOpen((o) => ({ ...o, [r.id]: !o[r.id] }))}
                     >
                       <ChevronDown
-                        className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${open[r.id] ? "rotate-180" : ""}`}
+                        className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${open[r.id] ? "rotate-180" : ""}`}
                       />
                       <span className="font-medium text-sm truncate">{r.title}</span>
                       <span
@@ -129,24 +129,24 @@ export default function CaseworkRules() {
                         {r.kind === "llm" ? "LLM judge" : "deterministic"}
                       </span>
                       {r.is_gate && (
-                        <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200">
+                        <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-tone-violet/10 text-tone-violet border border-tone-violet/25">
                           <ShieldAlert className="h-3 w-3" /> gate ≥ {r.gate_min}
                         </span>
                       )}
                       {!r.enabled && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-400 border border-slate-200">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
                           disabled
                         </span>
                       )}
                       <span className="flex-1" />
-                      <span className="text-xs text-slate-400 shrink-0">weight {r.weight}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">weight {r.weight}</span>
                     </button>
 
                     {open[r.id] && (
-                      <div className="px-4 pb-3 border-t pt-3 text-sm text-slate-600 space-y-2.5">
+                      <div className="px-4 pb-3 border-t pt-3 text-sm text-foreground space-y-2.5">
                         {r.condition_text && (
                           <div>
-                            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-0.5">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
                               Condition
                             </div>
                             {r.condition_text}
@@ -155,30 +155,30 @@ export default function CaseworkRules() {
 
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                           <span>
-                            <span className="text-slate-400">Active for: </span>
+                            <span className="text-muted-foreground">Active for: </span>
                             {(r.applies_to || []).join(", ") || "ALL"}
                           </span>
                           <span>
-                            <span className="text-slate-400">Weight: </span>
+                            <span className="text-muted-foreground">Weight: </span>
                             {r.weight}
                           </span>
                           {r.is_gate && (
-                            <span className="text-purple-700">
-                              <span className="text-slate-400">Gate: </span>
+                            <span className="text-tone-violet">
+                              <span className="text-muted-foreground">Gate: </span>
                               ≥ {r.gate_min} (rejects case if score &lt; {r.gate_min})
                             </span>
                           )}
                           {r.detector && (
                             <span>
-                              <span className="text-slate-400">Detector: </span>
-                              <code className="font-code rounded bg-slate-100 px-1">{r.detector}</code>
+                              <span className="text-muted-foreground">Detector: </span>
+                              <code className="font-code rounded bg-muted px-1">{r.detector}</code>
                             </span>
                           )}
                         </div>
 
                         {r.description && (
                           <div>
-                            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-0.5">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
                               Description
                             </div>
                             <div
@@ -189,15 +189,15 @@ export default function CaseworkRules() {
                         )}
 
                         {r.good_examples && (
-                          <div className="rounded-md bg-green-50 border border-green-200 px-3 py-2">
-                            <div className="text-xs font-semibold text-green-700 mb-0.5">Good example</div>
-                            <div className="text-sm text-green-800">{r.good_examples}</div>
+                          <div className="rounded-md bg-success-strong/10 border border-success-strong/25 px-3 py-2">
+                            <div className="text-xs font-semibold text-success-strong mb-0.5">Good example</div>
+                            <div className="text-sm text-success-strong">{r.good_examples}</div>
                           </div>
                         )}
                         {r.bad_examples && (
-                          <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2">
-                            <div className="text-xs font-semibold text-red-700 mb-0.5">Bad example</div>
-                            <div className="text-sm text-red-800">{r.bad_examples}</div>
+                          <div className="rounded-md bg-danger/10 border border-danger/25 px-3 py-2">
+                            <div className="text-xs font-semibold text-danger mb-0.5">Bad example</div>
+                            <div className="text-sm text-danger">{r.bad_examples}</div>
                           </div>
                         )}
                       </div>
@@ -238,7 +238,7 @@ function ConfigField({
   useEffect(() => setV(String(value)), [value]);
   return (
     <div>
-      <label className="text-xs text-slate-500">{label}</label>
+      <label className="text-xs text-muted-foreground">{label}</label>
       <Input
         type="number"
         value={v}

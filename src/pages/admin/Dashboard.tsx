@@ -224,7 +224,7 @@ export default function AdminDashboard() {
             <Link key={m.key} to={m.to} className="group">
               <Card
                 className={`h-full transition-colors group-hover:border-primary/50 ${
-                  m.headline ? "border-primary/40 bg-primary/5" : ""
+                  m.headline ? "border-primary/40 bg-primary-surface/5" : ""
                 }`}
               >
                 <CardHeader className="pb-2">

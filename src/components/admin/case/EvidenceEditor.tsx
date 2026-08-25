@@ -88,7 +88,7 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
         optional case-specific note per link.
       </p>
 
-      <div className="rounded-md bg-slate-50 p-3 space-y-2">
+      <div className="rounded-md bg-muted p-3 space-y-2">
         <div className="flex gap-2">
           <Input
             value={query}
@@ -210,7 +210,7 @@ export default function EvidenceEditor({ rows, onChange }: Props) {
                 onClick={() => remove(i)}
                 title="Unlink"
               >
-                <Trash2 className="h-4 w-4 text-red-600" />
+                <Trash2 className="h-4 w-4 text-danger" />
               </Button>
             </div>
           ))}

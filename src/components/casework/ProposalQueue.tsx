@@ -102,7 +102,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
             )}
           </p>
         </div>
-        <Pill className="bg-blue-50 text-blue-700 border-blue-200 text-sm">
+        <Pill className="bg-info/10 text-info border-info/25 text-sm">
           <Inbox className="h-3.5 w-3.5" />{" "}
           {t("admin.proposals.pendingCount", {
             defaultValue: "{{count}} pending",
@@ -120,7 +120,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
             aria-pressed={status === s}
             className={cn(
               "rounded-full border px-3 py-1 text-xs transition-colors",
-              status === s ? "bg-primary/10 border-primary/30 text-primary font-medium" : "bg-white text-muted-foreground hover:bg-slate-50",
+              status === s ? "bg-primary-surface/10 border-primary/30 text-primary font-medium" : "bg-background text-muted-foreground hover:bg-muted",
             )}
           >
             {s === "all"
@@ -128,12 +128,12 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
               : statusLabel(s, t)}
           </button>
         ))}
-        <div className="mx-1 h-5 w-px bg-slate-200" />
+        <div className="mx-1 h-5 w-px bg-secondary" />
         <select
           value={source}
           onChange={(e) => setSource(e.target.value as SignalSource | "all")}
           aria-label={t("admin.proposals.filterBySource", "Filter by source")}
-          className="rounded-md border bg-white px-2 py-1 text-xs text-slate-700"
+          className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
         >
           <option value="all">{t("admin.proposals.allSources", "All sources")}</option>
           {SOURCE_OPTIONS.map((k) => (
@@ -143,13 +143,13 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
           ))}
         </select>
         <div className="relative ml-auto">
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("admin.proposals.searchPlaceholder", "Search…")}
             aria-label={t("admin.proposals.searchLabel", "Search proposals")}
-            className="rounded-md border bg-white py-1 pl-7 pr-2 text-xs text-slate-700 placeholder:text-slate-400"
+            className="rounded-md border bg-background py-1 pl-7 pr-2 text-xs text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
       <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <div className="space-y-2">
           {filtered.length === 0 ? (
-            <p className="rounded-xl border border-dashed bg-white px-4 py-8 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-card px-4 py-8 text-center text-sm text-muted-foreground">
               {t("admin.proposals.noneMatch", "No proposals match.")}
             </p>
           ) : (
@@ -170,7 +170,7 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
 
         <div className="lg:sticky lg:top-20 lg:self-start">
           {selected ? <DetailPane key={selected.id} p={selected} onDecision={onDecision} onEditIntent={onEditIntent} /> : (
-            <p className="rounded-xl border border-dashed bg-white px-4 py-12 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-card px-4 py-12 text-center text-sm text-muted-foreground">
               {t("admin.proposals.selectPrompt", "Select a proposal to review.")}
             </p>
           )}
@@ -190,18 +190,18 @@ function ProposalRow({ p, active, onClick }: { p: CaseUpdateProposal; active: bo
       onClick={onClick}
       className={cn(
         "w-full rounded-xl border bg-white px-3 py-3 text-left transition-colors",
-        active ? "border-primary/40 ring-1 ring-primary/20" : "hover:bg-slate-50",
+        active ? "border-primary/40 ring-1 ring-primary/20" : "hover:bg-muted",
       )}
     >
       <div className="flex items-center gap-2">
         <Pill className={src.pill}>
           <SrcIcon className="h-3 w-3" /> {src.label}
         </Pill>
-        <span className="ml-auto text-[11px] text-slate-400">{fmtDate(p.created_at)}</span>
+        <span className="ml-auto text-[11px] text-muted-foreground">{fmtDate(p.created_at)}</span>
       </div>
-      <div className="mt-1.5 truncate text-sm font-medium text-slate-800">{p.case_title}</div>
-      <div className="truncate text-xs text-slate-500">
-        <span className="text-slate-400">{intentLabel(p.intent.type, t)}:</span> {intentSummary(p.intent, t)}
+      <div className="mt-1.5 truncate text-sm font-medium text-foreground">{p.case_title}</div>
+      <div className="truncate text-xs text-muted-foreground">
+        <span className="text-muted-foreground">{intentLabel(p.intent.type, t)}:</span> {intentSummary(p.intent, t)}
       </div>
       <div className="mt-2 flex items-center gap-1.5">
         <Pill className={band.pill}>{band.label} · {pct(p.confidence)}</Pill>
@@ -289,7 +289,7 @@ function DetailPane({
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{t("admin.proposals.caseLabel", "Case")}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("admin.proposals.caseLabel", "Case")}</div>
           <a
             href={`/admin/jawafdehi/cases/${p.case_slug}/edit`}
             target="_blank"
@@ -298,12 +298,12 @@ function DetailPane({
           >
             {p.case_title || p.case_slug} <ExternalLink className="h-3.5 w-3.5 shrink-0" />
           </a>
-          <div className="font-mono text-[11px] text-slate-400">{p.case_slug}</div>
+          <div className="font-mono text-[11px] text-muted-foreground">{p.case_slug}</div>
           <div className="mt-1.5 flex items-center gap-2">
             <Pill className={src.pill}>
               <SrcIcon className="h-3 w-3" /> {src.label}
             </Pill>
-            <span className="text-xs font-medium text-slate-500">{intentLabel(p.intent.type, t)}</span>
+            <span className="text-xs font-medium text-muted-foreground">{intentLabel(p.intent.type, t)}</span>
           </div>
         </div>
         <Pill className={statusPill(p.status)}>{statusLabel(p.status, t)}</Pill>
@@ -313,21 +313,21 @@ function DetailPane({
       <div>
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">{t("admin.proposals.confidence", "Confidence")}</span>
-          <span className="font-medium" style={{ color: band.hex }}>{band.label} · {pct(p.confidence)}</span>
+          <span className="font-medium" style={{ color: band.swatch }}>{band.label} · {pct(p.confidence)}</span>
         </div>
-        <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full rounded-full" style={{ width: pct(p.confidence), backgroundColor: band.hex }} />
+        <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full" style={{ width: pct(p.confidence), backgroundColor: band.swatch }} />
         </div>
       </div>
 
       {/* The proposed change — correctable while pending */}
-      <div className="rounded-xl border bg-slate-50/60 p-3">
+      <div className="rounded-xl border bg-muted/60 p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{t("admin.proposals.proposedChange", "Proposed change")}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("admin.proposals.proposedChange", "Proposed change")}</div>
           {isPending && onEditIntent && !editing && (
             <button
               onClick={startEditing}
-              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-primary hover:bg-primary/10"
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-primary hover:bg-primary-surface/10"
             >
               <Pencil className="h-3 w-3" /> {t("admin.proposals.edit", "Edit")}
             </button>
@@ -341,15 +341,15 @@ function DetailPane({
               onChange={(e) => setDraft(e.target.value)}
               spellCheck={false}
               aria-label={t("admin.proposals.editIntentLabel", "Proposed change as JSON")}
-              className="min-h-[180px] w-full rounded-lg border bg-white p-2 font-mono text-[11px] leading-relaxed text-slate-800"
+              className="min-h-[180px] w-full rounded-lg border bg-background p-2 font-mono text-[11px] leading-relaxed text-foreground"
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-muted-foreground">
               {t(
                 "admin.proposals.editHint",
                 "Only the proposed change is editable — provenance and confidence record where the fact came from and stay as filed.",
               )}
             </p>
-            {editError && <p className="text-[11px] font-medium text-red-600">{editError}</p>}
+            {editError && <p className="text-[11px] font-medium text-danger">{editError}</p>}
             <div className="flex items-center gap-2">
               <Button size="sm" disabled={saving} onClick={saveEdit}>
                 {saving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1 h-3.5 w-3.5" />}
@@ -363,7 +363,7 @@ function DetailPane({
         ) : (
           <>
             <IntentBody intent={p.intent} />
-            <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
               <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {applyEffect(p.intent, t)}
             </p>
           </>
@@ -383,18 +383,18 @@ function DetailPane({
           )}
         </Field>
         <Field label={t("admin.proposals.dedupKey", "Dedup key")} full>
-          <code className="break-all font-mono text-[11px] text-slate-600">{p.provenance.dedup_key}</code>
+          <code className="break-all font-mono text-[11px] text-foreground">{p.provenance.dedup_key}</code>
         </Field>
       </dl>
 
       {/* Linked records (subject_refs) */}
       <div>
-        <div className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        <div className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           <Hash className="h-3 w-3" /> {t("admin.proposals.linkedRecords", "Linked records")}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {p.origin_event.subject_refs.map((ref) => (
-            <code key={ref} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-600">
+            <code key={ref} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground">
               {shortIri(ref)}
             </code>
           ))}
@@ -413,16 +413,16 @@ function DetailPane({
           <div className="flex items-center gap-2">
             {/* Disabled while editing: approving with an unsaved draft would apply the
                 ORIGINAL intent and silently discard the correction. */}
-            <Button disabled={submitting || editing} className="bg-green-600 hover:bg-green-700" onClick={() => decide("approved")}>
+            <Button disabled={submitting || editing} className="bg-success-strong hover:bg-success-strong" onClick={() => decide("approved")}>
               {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
               {submitting
                 ? t("admin.proposals.deciding", "Working…")
                 : t("admin.proposals.approve", "Approve & apply")}
             </Button>
-            <Button disabled={submitting || editing} variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => decide("rejected")}>
+            <Button disabled={submitting || editing} variant="outline" className="text-danger hover:bg-danger/10" onClick={() => decide("rejected")}>
               <X className="mr-1 h-4 w-4" /> {t("admin.proposals.reject", "Reject")}
             </Button>
-            <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-slate-400">
+            <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <Clock className="h-3 w-3" />{" "}
               {t("admin.proposals.filed", {
                 defaultValue: "filed {{date}}",
@@ -432,7 +432,7 @@ function DetailPane({
           </div>
         </div>
       ) : (
-        <div className="border-t pt-3 text-xs text-slate-500">
+        <div className="border-t pt-3 text-xs text-muted-foreground">
           {p.review.reviewer ? (
             <p>
               {t("admin.proposals.decidedBy", {
@@ -441,7 +441,7 @@ function DetailPane({
                 who: detectedByLabel(p.review.reviewer, t),
               })}
               {p.review.reviewed_at ? ` · ${fmtDate(p.review.reviewed_at)}` : ""}
-              {p.review.notes ? <span className="mt-1 block text-slate-600">“{p.review.notes}”</span> : null}
+              {p.review.notes ? <span className="mt-1 block text-foreground">“{p.review.notes}”</span> : null}
             </p>
           ) : (
             <p>{statusLabel(p.status, t)}</p>
@@ -455,8 +455,8 @@ function DetailPane({
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <div className={full ? "sm:col-span-2" : undefined}>
-      <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className="mt-0.5 text-slate-700">{children}</dd>
+      <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 text-foreground">{children}</dd>
     </div>
   );
 }
@@ -468,18 +468,18 @@ function IntentBody({ intent }: { intent: Intent }) {
       const e = intent.entry;
       return (
         <div className="space-y-1">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" /> {dateBoth(e.date, e.date_bs, e.date_ad_uncertain)}
           </div>
-          <div className="text-sm font-medium text-slate-800">{e.title}</div>
-          {e.description && <p className="text-sm text-slate-600">{e.description}</p>}
+          <div className="text-sm font-medium text-foreground">{e.title}</div>
+          {e.description && <p className="text-sm text-foreground">{e.description}</p>}
         </div>
       );
     }
     case "link_material":
       return (
         <div className="space-y-1 text-sm">
-          <div className="text-slate-700">
+          <div className="text-foreground">
             {t("admin.proposals.relation", {
               defaultValue: "Relation: {{relation}}",
               relation: intent.relation,
@@ -493,10 +493,10 @@ function IntentBody({ intent }: { intent: Intent }) {
     case "raw_patch":
       return (
         <div>
-          <div className="mb-1 flex items-center gap-1 text-xs text-slate-500">
+          <div className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
             <FileJson className="h-3.5 w-3.5" /> {t("admin.proposals.rfcPatch", "RFC-6902 patch")}
           </div>
-          <pre className="overflow-x-auto rounded-lg bg-slate-900 p-2 font-mono text-[11px] leading-relaxed text-slate-100">
+          <pre className="overflow-x-auto rounded-lg bg-code-surface p-2 font-mono text-[11px] leading-relaxed text-code-surface-foreground">
             {JSON.stringify(intent.patch, null, 2)}
           </pre>
         </div>

@@ -20,7 +20,7 @@ export const StatCard = ({ title, value, icon: Icon, description, trend }: StatC
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
             {trend && <p className="text-xs font-medium text-success">{trend}</p>}
           </div>
-          <div className="rounded-lg bg-primary/10 p-3">
+          <div className="rounded-lg bg-primary-surface/10 p-3">
             <Icon className="h-6 w-6 text-primary" />
           </div>
         </div>

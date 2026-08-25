@@ -3,7 +3,7 @@ import CaseworkLayout from "@/components/CaseworkLayout";
 export default function CaseworkHow() {
   return (
     <CaseworkLayout>
-      <div className="max-w-2xl space-y-4 text-sm text-slate-700">
+      <div className="max-w-2xl space-y-4 text-sm text-foreground">
         <h1 className="text-xl font-bold text-foreground">How the review works</h1>
         <p>
           The Casework Review System scores the quality of a Jawafdehi case the way a careful

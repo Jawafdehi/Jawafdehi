@@ -26,26 +26,26 @@ import {
 export interface Band {
   label: string;
   pill: string; // tailwind pill classes
-  hex: string; // for the meter fill
+  swatch: string; // CSS colour for the meter fill — a token, never a hex literal
 }
 
 export function confidenceBand(c: number, t: TFunction): Band {
   if (c >= 0.9)
     return {
       label: t("admin.proposals.band.high", "High"),
-      pill: "bg-green-100 text-green-800 border-green-200",
-      hex: "#16a34a",
+      pill: "bg-success-strong/10 text-success-strong border-success-strong/25",
+      swatch: "hsl(var(--success))",
     };
   if (c >= 0.6)
     return {
       label: t("admin.proposals.band.medium", "Medium"),
-      pill: "bg-amber-100 text-amber-800 border-amber-200",
-      hex: "#d97706",
+      pill: "bg-alert-strong/10 text-alert-strong border-alert-strong/25",
+      swatch: "hsl(var(--alert))",
     };
   return {
     label: t("admin.proposals.band.low", "Low"),
-    pill: "bg-red-100 text-red-700 border-red-200",
-    hex: "#dc2626",
+    pill: "bg-danger/10 text-danger border-danger/25",
+    swatch: "hsl(var(--danger))",
   };
 }
 
@@ -58,11 +58,11 @@ export function pct(c: number): string {
 export function statusPill(s: ProposalStatus): string {
   switch (s) {
     case "approved":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-success-strong/10 text-success-strong border-success-strong/25";
     case "pending":
-      return "bg-blue-100 text-blue-800 border-blue-200";
+      return "bg-info/10 text-info border-info/25";
     case "rejected":
-      return "bg-red-100 text-red-700 border-red-200";
+      return "bg-danger/10 text-danger border-danger/25";
   }
 }
 
@@ -83,11 +83,11 @@ const SOURCE_ICON: Record<SignalSource, LucideIcon> = {
 };
 
 const SOURCE_PILL: Record<SignalSource, string> = {
-  ngm_docket: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  court_order: "bg-teal-100 text-teal-800 border-teal-200",
-  ciaa_press: "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200",
-  news: "bg-orange-100 text-orange-800 border-orange-200",
-  caseworker: "bg-slate-100 text-slate-700 border-slate-200",
+  ngm_docket: "bg-tone-indigo/10 text-tone-indigo border-tone-indigo/25",
+  court_order: "bg-tone-teal/10 text-tone-teal border-tone-teal/25",
+  ciaa_press: "bg-tone-fuchsia/10 text-tone-fuchsia border-tone-fuchsia/25",
+  news: "bg-tone-orange/10 text-tone-orange border-tone-orange/25",
+  caseworker: "bg-muted text-foreground border-border",
 };
 
 const SOURCE_FALLBACK: Record<SignalSource, string> = {

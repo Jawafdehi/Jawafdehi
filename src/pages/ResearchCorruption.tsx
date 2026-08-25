@@ -98,7 +98,7 @@ const ResearchCorruption = () => {
   const funnelStageNote: Record<string, string> = {
     investigated: t("research.corruption.funnel.stage.investigatedNote", "only 3.3% go to a full investigation"),
     filed: t("research.corruption.funnel.stage.filedNote", "≈1 in 7 investigated are prosecuted"),
-    convicted: t("research.corruption.funnel.stage.convictedNote", "≈45% of prosecuted cases convict"),
+    convicted: t("research.corruption.funnel.stage.convictedNote", "≈45% of prosecuted cases convict fully, ≈61% including partial"),
   };
   const funnelStages: FunnelStage[] = REPORT.funnel.map((s) => ({
     key: s.key,
@@ -109,17 +109,18 @@ const ResearchCorruption = () => {
           complaints: "Complaints to the CIAA",
           investigated: "Complaints fully investigated",
           filed: "Prosecutions filed",
-          convicted: "Full convictions (est.)",
+          convicted: "Convictions (est., full → incl. partial)",
         } as Record<string, string>
       )[s.key],
     ),
     count: s.count,
+    countUpper: s.countUpper,
     color: "hsl(var(--accent))",
     note: funnelStageNote[s.key],
   }));
 
   const outcomeSegments: DonutSegment[] = [
-    { key: "convicted", label: t("research.corruption.outcome.convicted", "Convicted"), value: o.convicted, color: "hsl(var(--primary))" },
+    { key: "convicted", label: t("research.corruption.outcome.convicted", "Convicted"), value: o.convicted, color: "hsl(var(--primary-surface))" },
     { key: "partial", label: t("research.corruption.outcome.partial", "Partial"), value: o.partial, color: "hsl(var(--alert))" },
     { key: "acquitted", label: t("research.corruption.outcome.acquitted", "Acquitted"), value: o.acquitted, color: "hsl(var(--accent))" },
   ];
@@ -340,9 +341,9 @@ const ResearchCorruption = () => {
           {/* 1 · Funnel */}
           <section>
             <Eyebrow>{t("research.corruption.funnel.eyebrow", "The funnel")}</Eyebrow>
-            <SectionHeading>{t("research.corruption.funnel.heading", "About 0.2% of complaints end in a full conviction")}</SectionHeading>
+            <SectionHeading>{t("research.corruption.funnel.heading", "Between 0.2% and 0.3% of complaints end in a conviction")}</SectionHeading>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-              {t("research.corruption.funnel.lead", "In FY2081/82 the CIAA registered 28,554 new complaints. Most were screened out at intake — only 947 (3.3%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply the measured full-conviction rate and only a few dozen end in a full conviction.")}
+              {t("research.corruption.funnel.lead", "In FY2081/82 the CIAA registered 28,554 new complaints. Most were screened out at intake — only 947 (3.3%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply this archive's measured conviction rates and somewhere between 62 and 84 of them end in a conviction: the low end counts only cases where the charge was upheld outright, the high end also counts the partial verdicts. Both are defensible readings, so we publish the range rather than pick one.")}
             </p>
             <div className="mt-8">
               <AccountabilityFunnel
@@ -364,7 +365,7 @@ const ResearchCorruption = () => {
             </div>
 
             <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              {t("research.corruption.funnel.caption", "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage applies this archive's measured 45% full-conviction rate to the filed count.")}{" "}
+              {t("research.corruption.funnel.caption", "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage is a projection and a range, not a count: it applies this archive's measured 45% full-conviction rate across all 14 years to the filed count for the floor, and its 61% including-partial rate for the ceiling. It is what cases like these have historically done — not a tally of how those particular 137 were decided.")}{" "}
               <a href={CITATIONS.ciaa35} className="text-accent hover:underline">{t("research.corruption.cite.ciaa35", "CIAA 35th annual report")}</a>
             </p>
           </section>
@@ -385,7 +386,7 @@ const ResearchCorruption = () => {
                   {t("research.corruption.outcomes.lead", "Of {{n}} decided cases with a clear verdict, {{conv}}% end in a full conviction, {{acq}}% in outright acquittal, and {{part}}% in partial conviction — so {{less}}% end in something less than a clean conviction.", { n: decidedClean.toLocaleString(), conv: convPct, acq: acqPct, part: partPct, less: lessThanFull })}
                 </p>
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                  {t("research.corruption.outcomes.note", "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. On that same definition this archive gives {{incl}}% — so matching the CIAA's definition does not close the gap with our {{full}}%, it reverses it. We keep full and partial separate and lead with the stricter number.", { ciaa: REPORT.ciaa.successRatePct, incl: convPct + partPct, full: convPct })}{" "}
+                  {t("research.corruption.outcomes.note", "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. That figure is comparable to the top of our range, not the bottom: on the CIAA's own definition this archive gives {{incl}}%, higher than the Commission's number rather than lower. Set {{ciaa}}% against our {{full}}% and you are comparing two different definitions of the word.", { ciaa: REPORT.ciaa.successRatePct, incl: convPct + partPct, full: convPct })}{" "}
                   <Link to="/courtcases" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
                 </p>
               </div>
@@ -403,7 +404,7 @@ const ResearchCorruption = () => {
                 {t("research.corruption.outcomes.grainPartial", "That is also why the middle category does two jobs at once. A partial verdict (आंशिक ठहर) covers a case where one accused was convicted on some charges and cleared of others, AND a case with several accused where some were convicted and others acquitted. The court's record does not distinguish the two, so neither can we. A partial verdict tells you the prosecution did not fail outright; it does not tell you how many people were convicted, or of what.")}
               </p>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                {t("research.corruption.outcomes.grainFull", "“Full conviction” (ठहर) is the strict reading: the charge was upheld against the case as the court framed it. We lead with it because it is the one category that cannot be read two ways — and we publish the including-partial rate ({{incl}}%) alongside it everywhere, so both readings are always available.", { incl: convPct + partPct })}
+                {t("research.corruption.outcomes.grainFull", "“Full conviction” (ठहर) is the strict reading: the charge was upheld against the case as the court framed it. It is the one category that cannot be read two ways, which is why it anchors the low end of every range on this page — {{full}}% here, {{incl}}% once partial verdicts are counted as convictions too. Neither endpoint is the whole truth. Reporting only {{full}}% treats every mixed verdict as a failure; reporting only {{incl}}% treats a case where one junior official was convicted and everyone senior walked as a win. The court's record cannot tell those apart, so we give you both numbers and never a single one on its own.", { full: convPct, incl: convPct + partPct })}
               </p>
             </div>
           </section>
@@ -481,7 +482,7 @@ const ResearchCorruption = () => {
               <RateTrend
                 data={outcomePoints}
                 series={[
-                  { key: "convPct", label: t("research.corruption.outcome.convicted", "Convicted"), color: "hsl(var(--primary))", width: 2.25 },
+                  { key: "convPct", label: t("research.corruption.outcome.convicted", "Convicted"), color: "hsl(var(--primary-surface))", width: 2.25 },
                   { key: "acqPct", label: t("research.corruption.outcome.acquitted", "Acquitted"), color: "hsl(var(--accent))", width: 2.25 },
                   { key: "partPct", label: t("research.corruption.outcome.partial", "Partial"), color: "hsl(var(--alert))", width: 1.75 },
                 ]}
@@ -496,7 +497,7 @@ const ResearchCorruption = () => {
               <RateTrend
                 data={decompPoints}
                 series={[
-                  { key: "allConvPct", label: t("research.corruption.overTime.seriesAll", "All charges"), color: "hsl(var(--primary))", width: 2.25 },
+                  { key: "allConvPct", label: t("research.corruption.overTime.seriesAll", "All charges"), color: "hsl(var(--primary-surface))", width: 2.25 },
                   { key: "coreConvPct", label: t("research.corruption.overTime.seriesCore", "Core graft (excl. fake credential)"), color: "hsl(var(--accent))", dashed: true },
                 ]}
                 refPct={courtAvgConv}
@@ -622,7 +623,7 @@ const ResearchCorruption = () => {
                 <p>{t("research.corruption.appendix.dates", "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat dates throughout; by-year charts bin by fiscal year (Shrawan–Ashadh).")}</p>
                 <p>{t("research.corruption.appendix.overTime", "Over time. Yearly rates are grouped by verdict fiscal year; the sharp rise in acquittals from FY2078/79 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through FY2079/80 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.")}</p>
                 <p>{t("research.corruption.appendix.justice", "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. It is descriptive, and small differences are noise.")}</p>
-                <p>{t("research.corruption.appendix.discrepancy", "Discrepancy with CIAA figures. The CIAA's {{ciaa}}% “success” rate for FY2081/82 counts full and partial convictions together — its 35th report states it as 87 full plus 120 partial of 393 verdicts. Our headline {{full}}% is full convictions only. Applying the CIAA's own definition to this archive gives {{incl}}%, which is above its figure, not below it — so the two differ by period at least as much as by definition: the CIAA's is one volatile year (its published rates range from 33% to 88%), ours is cumulative across 14. Never compare them without aligning both.", { ciaa: REPORT.ciaa.successRatePct, full: convPct, incl: convPct + partPct })}</p>
+                <p>{t("research.corruption.appendix.discrepancy", "Discrepancy with CIAA figures. The CIAA's {{ciaa}}% “success” rate for FY2081/82 counts full and partial convictions together — its 35th report states it as 87 full plus 120 partial of 393 verdicts. That is the same definition as the top of our range ({{incl}}%), not the bottom ({{full}}%, full convictions only) — and on that aligned footing this archive comes out above the CIAA's figure, not below it. So the two differ by period at least as much as by definition: the CIAA's is one volatile year (its published rates range from 33% to 88%), ours is cumulative across 14. Never compare them without aligning both.", { ciaa: REPORT.ciaa.successRatePct, full: convPct, incl: convPct + partPct })}</p>
                 <p>{t("research.corruption.appendix.crossCheck", "The cross-check, in detail. Matching the reports' per-case filing tables to the register is name matching, not a key lookup: the early high-divergence years print no case number at all, and a case number alone does not identify a court in any event — the same NNN-CR-NNNN format is used by the Special Court, the Supreme Court and the district courts, so a number lifted out of its column resolves to the wrong case. Names were matched after folding Devanagari spelling variants, and the residue was resolved by hand on the date: every pair we accepted matches the printed filing date to the register's registration date to the day. Three pairs were accepted this way and are flagged as such in the published data, so a reader who rejects them can re-derive the totals without them.")}</p>
                 <p>{t("research.corruption.appendix.entity", "Identity. Only ~7% of distinct defendants (607 of 8,321) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.")}</p>
                 <p>

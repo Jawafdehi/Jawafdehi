@@ -655,7 +655,7 @@ export default function AdminCaseForm() {
           pulls the latest + a fresh token). Distinct from a generic save error
           so the user knows retrying as-is won't help. */}
       {conflict && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-alert-strong/25 bg-alert-strong/10 px-3 py-2 text-sm text-alert-strong">
           <span>{t("admin.caseForm.conflictBanner")}</span>
           <Button
             type="button"
@@ -870,7 +870,7 @@ export default function AdminCaseForm() {
                     title={t("admin.caseForm.allegationRemove")}
                     aria-label={t("admin.caseForm.allegationRemove")}
                   >
-                    <Trash2 className="h-4 w-4 text-red-600" />
+                    <Trash2 className="h-4 w-4 text-danger" />
                   </Button>
                 </div>
               ))}
@@ -984,7 +984,7 @@ export default function AdminCaseForm() {
             />
           </div>
         ) : (
-          <p className="rounded-md border border-dashed bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+          <p className="rounded-md border border-dashed bg-muted px-3 py-2 text-sm text-muted-foreground">
             {t("admin.caseForm.subResourcesHint")}
           </p>
         )}

@@ -123,68 +123,282 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Light-only design system. Mirrors the <meta name="color-scheme"> in
-       index.html so UA widgets (form controls, scrollbars) stay light and
-       browser auto-dark features leave our palette alone. */
-    color-scheme: only light;
+    /* Both schemes are designed and token-backed, so declare both. #279 set
+       `only light`, which was correct while the app shipped a single light
+       theme; with a real .dark block below it must become `light dark` or the
+       dark theme cannot take effect. Mirrors <meta name="color-scheme"> in
+       index.html so UA widgets (form controls, scrollbars) follow too. */
+    color-scheme: light dark;
 
-    --background: 60 23.1% 97.5%; /* #FAFAF7 */
-    --foreground: 215 28% 17%;
+    /* ---------------------------------------------------------------------
+       LAYER 1 — PRIMITIVES
+       Raw values only. Never reference these from a component; they exist so a
+       value shared by several semantic tokens is defined exactly once. To
+       retheme the product, edit this block.
+       --------------------------------------------------------------------- */
+    --base-white: 0 0% 100%;
+    --base-cream: 36 100% 99%;
+    --base-paper: 60 23.1% 97.5%;      /* #FAFAF7 */
+    --base-paper-sunk: 60 10.3% 94.3%; /* #F2F2EF */
+    --base-ink: 215 28% 17%;
+    /* The hex is canonical; derive the HSL from it, never the reverse.
+       Enforced by tests/brand/tokens.test.ts, which follows the alias from
+       --primary/--accent down to the primitive that holds the triplet. */
+    --base-navy: 217 62% 14%;          /* #0E1F3B — trust and authority */
+    --base-crimson: 357 67% 43%;       /* #B5242C — brand red */
+    --base-line: 215 20% 88%;
+    --base-amber: 25 95% 53%;
 
-    --card: 60 10.3% 94.3%; /* #F2F2EF */
-    --card-foreground: 215 28% 17%;
+    /* ---------------------------------------------------------------------
+       LAYER 2 — SEMANTIC TOKENS
+       What a colour MEANS. These are what components use. Several are aliases
+       of the same primitive: that is deliberate — they agree today but are
+       independently changeable tomorrow (e.g. restyling --input must not
+       restyle every --border).
+       --------------------------------------------------------------------- */
+    --background: var(--base-paper);
+    --foreground: var(--base-ink);
 
-    --popover: 60 23.1% 97.5%; /* #FAFAF7 */
-    --popover-foreground: 215 28% 17%;
+    --card: var(--base-paper-sunk);
+    --card-foreground: var(--base-ink);
 
-    /* Navy blue - trust and authority | #0E1F3B
-       The hex is canonical; derive the HSL from it, never the reverse.
-       Enforced by tests/brand/tokens.test.ts. */
-    --primary: 217 62% 14%;
-    --primary-foreground: 36 100% 99%;
+    --popover: var(--base-paper);
+    --popover-foreground: var(--base-ink);
+
+    /* --primary is the *text* role (headings, stat values, ledes — 325 uses).
+       --primary-surface is the *fill* role (buttons, hero gradients, glows).
+       They are the same navy in light, and deliberately diverge in dark: the
+       approved design renders every primary-coloured text element at
+       --foreground while keeping the navy for button fills. One token cannot
+       do both — navy text on the dark page measures 1.49:1. */
+    --primary: var(--base-navy);
+    --primary-surface: var(--base-navy);
+    --primary-foreground: var(--base-cream);
 
     /* Light slate - secondary surfaces */
     --secondary: 215 28% 83%;
-    --secondary-foreground: 215 28% 17%;
+    --secondary-foreground: var(--base-ink);
 
     --muted: 215 20% 96%;
-    --muted-foreground: 215 15% 45%;
+    /* 44%, not 45%: at 45% this measures 4.49:1 against --card, just under the
+       4.5:1 AA floor for body text. One point darker clears it on both
+       --background and --card, and is visually indistinguishable. */
+    --muted-foreground: 215 15% 44%;
 
-    --accent: 357 67% 43%; /* #B5242C */
-    --accent-foreground: 36 100% 99%;
+    --accent: var(--base-crimson);
+    --accent-foreground: var(--base-cream);
 
     /* The accent at brand hue, lightened for dark surfaces. The accent itself
-       is only 2.6:1 on --primary, so it cannot carry text on the navy footer. */
+       is only 2.6:1 on --primary, so it cannot carry text on the navy footer.
+       (From #285, which fixed the footer tagline; kept as a literal rather than
+       aliased to --base-crimson because it is a distinct lightness, and it is
+       deliberately NOT restated in .dark — the footer sits on --primary-surface,
+       which stays navy in both themes, so the contrast it was measured against
+       does not change.) */
     --accent-on-dark: 357 85% 62%; /* #F04C54 — 4.6:1 on --primary */
 
-    /* Amber - urgent/corruption indicator */
-    --destructive: 25 95% 53%;
-    --destructive-foreground: 0 0% 100%;
+    /* shadcn contract name. Shares --base-amber with --alert; decoupling them
+       is a one-line change here rather than a find-and-replace. */
+    --destructive: var(--base-amber);
+    --destructive-foreground: var(--base-ink);
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 217 62% 14%;
+    --border: var(--base-line);
+    --input: var(--base-line);
+    --ring: var(--base-navy);
 
     --radius: 0.5rem;
 
-    /* Custom PAP colors */
-    --alert: 25 95% 53%;
-    --alert-foreground: 0 0% 100%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    
+    --alert: var(--base-amber);
+    /* Dark ink, not white: white on this amber measures 2.78:1, well under AA.
+       These fills carry dark labels — the same rule the dark theme uses. */
+    --alert-foreground: var(--base-ink);
+
+    /* 38%, not 36%: the fill carries a dark label, and at 36% base-ink
+       measured 4.36:1 — two points lighter clears AA. */
+    --success: 142 76% 37%;
+    --success-foreground: var(--base-ink);
+
     --navy-dark: 215 85% 20%;
     --navy-light: 215 85% 30%;
-    
-    --slate-50: 215 20% 98%;
-    --slate-100: 215 20% 95%;
-    --slate-200: 215 20% 90%;
-    --slate-700: 215 25% 27%;
-    --slate-800: 215 30% 20%;
+
+    /* Dark "terminal" surface for raw JSON, payload dumps and <pre> blocks.
+       Deliberately not themed with the rest of the palette: these read as
+       machine output, not page content. */
+    --code-surface: 222 47% 11%;
+    --code-surface-foreground: 215 20% 95%;
+
+    /* "Paper" — rendered documents, PDF page chrome and the external embed
+       card. A rendered page is a picture of a physical document and an embed
+       lives on someone else's site, so neither follows our theme. These are
+       deliberately NOT overridden in .dark; keeping them as tokens means the
+       lint rule still applies and the intent is written down. */
+    --paper: 0 0% 100%;
+    --paper-foreground: 215 28% 17%;
+    --paper-muted: 215 15% 44%;
+    --paper-line: 215 20% 88%;
+
+    /* Error / informational states. --danger is deliberately NOT --accent:
+       accent is the brand red (eyebrows, CTAs) and must not double as an
+       error colour, or every error reads as branding. --alert stays the
+       warning amber. */
+    --danger: 0 70% 35%;
+    --danger-foreground: var(--base-white);
+
+    --info: 200 90% 27%;
+    --info-foreground: var(--base-white);
+
+    /* --success and --alert are FILL colours, carrying a dark label
+       (bg-success text-success-foreground). As *text* on a light surface they
+       measure 3.19:1 and 2.66:1 — both below the 4.5:1 AA floor — so coloured
+       text and thin borders use these darkened variants instead.
+       --danger and --info are already dark enough (8.0:1, 7.2:1) and need no
+       equivalent. In dark mode the fills invert light enough to serve as text
+       themselves, so the .dark block aliases -strong back onto the base. */
+    --success-strong: 142 72% 23%;
+    --alert-strong: 23 83% 31%;
+
+    /* Chart series — the research and data-quality visualisations.
+       This is a validated CVD-safe set; the exact values matter, so do not
+       re-pick them casually. `other`/neutral series use --muted-foreground.
+       Charts pass these to recharts as hsl(var(--chart-N)). */
+    --chart-1: 213 68% 50%;            /* #2a78d6 */
+    --chart-2: var(--base-crimson);    /* #B5242C */
+    --chart-3: 159 73% 40%;            /* #1baf7a */
+    --chart-4: 249 48% 44%;            /* #4a3aa7 */
+    --chart-5: 41 100% 46%;            /* #eda100 */
+
+    /* Categorical tones.
+       These encode *category*, not severity — source types, rule categories,
+       signal provenance. Each is dark enough to pass AA as text on light
+       surfaces; use opacity for fills and borders:
+         text-tone-blue   bg-tone-blue/10   border-tone-blue/25
+       Spaced for perceptual separation: minimum pairwise deltaE across the set
+       is 25.2 (was 4.0 — amber/orange, blue/indigo and rose/pink were close to
+       indistinguishable). Lightness is held in a 27-38% band so no category
+       reads heavier than another. If you add a tone, re-check separation. */
+    --tone-red: 359 82% 38%;
+    --tone-orange: 15 79% 27%;
+    --tone-amber: 36 71% 29%;
+    --tone-lime: 86 69% 27%;
+    --tone-emerald: 163 93% 25%;
+    --tone-teal: 183 73% 29%;
+    --tone-cyan: 202 50% 27%;
+    --tone-sky: 203 92% 35%;
+    --tone-blue: 215 91% 38%;
+    --tone-indigo: 241 67% 27%;
+    --tone-violet: 266 73% 38%;
+    --tone-fuchsia: 299 66% 35%;
+    --tone-pink: 328 66% 38%;
+    --tone-rose: 345 75% 37%;
   }
 
 }
+
+
+  /* =====================================================================
+     DARK MODE
+     Surfaces, brand and status values are sampled from the approved dark
+     design; the rest (categorical tones, chart series, danger/info) are
+     derived from their light-mode hues — hue is preserved exactly, only
+     lightness and saturation move, so a tone reads as the same colour in
+     both themes.
+
+     Every value here is verified against BOTH dark surfaces
+     (--background #090E16 and --card #131A24): text-capable tokens clear
+     WCAG AA 4.5:1, chart fills clear 3:1 for graphical objects.
+     ===================================================================== */
+  /* `color-scheme: light dark` on :root advertises support for both, but the UA
+     picks by OS preference -- so a user who chooses light on a dark-preference
+     OS would still get dark scrollbars, form controls and caret over a light
+     page. Pin each case explicitly. */
+  html:not(.dark) {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    /* Values below are taken from the authored dark reference
+       (claude.ai/design — Jawafdehi Dark App, tokens/colors.css). Tokens the
+       reference does not cover — categorical tones, chart series, danger/info
+       and the code surface — are derived from their light-mode hues here:
+       hue is preserved exactly, only lightness and saturation move. */
+
+    /* Primitives. Overriding these carries the aliases that are not restated. */
+    --base-paper: 217 42% 6%;
+    --base-paper-sunk: 217 32% 11%;
+    --base-ink: 60 18% 93%;
+    --base-navy: 217 55% 22%;   /* the fill navy — reaches --primary-surface */
+    --base-crimson: 357 72% 56%;
+    --base-line: 215 20% 20%;
+    --base-amber: 25 92% 58%;
+
+    /* Surfaces + text. --card-foreground and --popover are distinct values in
+       dark (they collapse onto shared primitives only in light), so they are
+       restated rather than aliased. */
+    /* Text role goes light, per the design: hero title, "Archive", stat values
+       and "See what we cover" all sample #F0F0EA there. The fill role keeps the
+       navy so the "Ask AI Assistant" button is unchanged. */
+    --primary: var(--base-ink);
+    --primary-surface: var(--base-navy);
+
+    --card-foreground: 60 14% 92%;
+    --popover: 217 34% 9%;
+    --popover-foreground: 60 14% 92%;
+    --secondary: 215 22% 20%;
+    --secondary-foreground: 60 14% 92%;
+    --muted: 215 22% 15%;
+    --muted-foreground: 215 16% 66%;
+    --input: 215 20% 20%;
+    --ring: 217 70% 62%;
+
+    /* Bright fills carry DARK labels in dark mode — the inverse of light.
+       --accent-foreground stays white per the reference; see the note at the
+       end of this block for the contrast consequence. */
+    --accent-foreground: 0 0% 100%;
+    --alert-foreground: 217 42% 8%;
+    --destructive-foreground: 217 42% 8%;
+    --success: 142 58% 45%;
+    --success-foreground: 217 42% 8%;
+
+    --navy-dark: 215 60% 16%;
+    --navy-light: 215 55% 30%;
+
+    /* --- not covered by the reference; derived here --- */
+    --danger: 4 95% 55%;              /* pushed off the crimson brand red: dE 34 from --accent */
+    --danger-foreground: 217 42% 8%;
+    --info: 200 90% 55%;
+    --info-foreground: 217 42% 8%;
+
+    /* In dark the fills are already light enough to serve as text
+       (--success 7.3:1, --alert 7.6:1), so -strong collapses onto its base. */
+    --success-strong: var(--success);
+    --alert-strong: var(--alert);
+
+    --code-surface: 222 47% 7%;       /* sits below --card so <pre> still reads as recessed */
+    --code-surface-foreground: 215 20% 92%;
+
+    --chart-1: 213 68% 45%;
+    --chart-2: 357 67% 46%;
+    --chart-3: 159 73% 45%;
+    --chart-4: 249 55% 57%;
+    --chart-5: 41 95% 45%;
+
+    --tone-red: 346 70% 65%;
+    --tone-orange: 15 79% 55%;
+    --tone-amber: 36 71% 55%;
+    --tone-lime: 86 69% 55%;
+    --tone-emerald: 163 93% 55%;
+    --tone-teal: 183 73% 55%;
+    --tone-cyan: 202 55% 55%;
+    --tone-sky: 203 92% 55%;
+    --tone-blue: 215 91% 57%;
+    --tone-indigo: 241 67% 68%;
+    --tone-violet: 266 73% 66%;
+    --tone-fuchsia: 299 66% 55%;
+    --tone-pink: 328 66% 58%;
+    --tone-rose: 345 75% 59%;
+  }
 
 @layer base {
   * {

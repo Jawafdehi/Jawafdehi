@@ -203,7 +203,7 @@ function NepalCard() {
                     ? t("donate.ways.copyFailed")
                     : t("donate.ways.nepali.copyAria")
               }
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {copied ? (
                 <Check className="h-4 w-4" aria-hidden="true" />

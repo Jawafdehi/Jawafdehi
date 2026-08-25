@@ -475,7 +475,7 @@ export default function ArchiveSearch({
           >
             {selectedItems.map((item) => (
               <button
-                className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-full border border-primary/20 bg-primary-surface/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary-surface/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 key={`${item.name}-${item.value}`}
                 onClick={() => removeRefinement(item.name, item.value)}
                 type="button"

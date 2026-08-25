@@ -35,7 +35,7 @@ export function JusticeSpread({
 
   const x = (pct: number) => labelW + (trackW * pct) / 100;
   const bandColor = (pct: number) =>
-    pct >= 55 ? "hsl(var(--primary))" : pct <= 37 ? "hsl(var(--accent))" : "hsl(var(--alert))";
+    pct >= 55 ? "hsl(var(--primary-surface))" : pct <= 37 ? "hsl(var(--accent))" : "hsl(var(--alert))";
   const radius = (dec: number) => Math.max(4, Math.min(11, Math.sqrt(dec) / 2.6));
 
   const ariaLabel = justices
@@ -138,7 +138,7 @@ export function JusticeSpread({
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }} aria-hidden="true" />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "hsl(var(--primary-surface))" }} aria-hidden="true" />
           {bandLabels.high}
         </span>
         <span className="inline-flex items-center gap-1.5">

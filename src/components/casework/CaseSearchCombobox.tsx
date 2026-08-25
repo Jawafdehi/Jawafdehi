@@ -117,7 +117,7 @@ export function CaseSearchCombobox({
                 className="flex flex-col items-start gap-0.5"
               >
                 <span className="text-sm font-medium truncate w-full">{c.title || c.slug}</span>
-                <span className="font-mono text-xs text-slate-400 truncate w-full">
+                <span className="font-mono text-xs text-muted-foreground truncate w-full">
                   {c.slug}
                   {c.state ? ` · ${c.state}` : ""}
                 </span>

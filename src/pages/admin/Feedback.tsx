@@ -156,7 +156,7 @@ export default function Feedback() {
 
       <FormError message={error} />
 
-      <p className="rounded-md border border-dashed bg-slate-50 px-3 py-2 text-xs text-muted-foreground">
+      <p className="rounded-md border border-dashed bg-muted px-3 py-2 text-xs text-muted-foreground">
         {t(
           "admin.feedback.privacyNotice",
           "Reporters' contact details, IP addresses and attachments are not shown here. An administrator can retrieve them if a report needs following up.",
@@ -245,7 +245,7 @@ export default function Feedback() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : rows.length === 0 ? (
-        <p className="rounded-md border border-dashed bg-slate-50 px-3 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed bg-muted px-3 py-6 text-center text-sm text-muted-foreground">
           {t("admin.feedback.empty", "Nothing to show.")}
         </p>
       ) : (

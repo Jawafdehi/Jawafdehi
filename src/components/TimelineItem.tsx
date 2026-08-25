@@ -12,17 +12,17 @@ interface TimelineItemProps {
 }
 
 const statusConfig = {
-  'Under Investigation': { label: 'Under Investigation', class: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
-  'Confirmed': { label: 'Confirmed', class: 'bg-red-500/10 text-red-700 dark:text-red-400' },
-  'Dismissed': { label: 'Dismissed', class: 'bg-gray-500/10 text-gray-700 dark:text-gray-400' },
-  'Pending': { label: 'Pending', class: 'bg-blue-500/10 text-blue-700 dark:text-blue-400' },
-  'Resolved': { label: 'Resolved', class: 'bg-green-500/10 text-green-700 dark:text-green-400' },
+  'Under Investigation': { label: 'Under Investigation', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
+  'Confirmed': { label: 'Confirmed', class: 'bg-danger/10 text-danger dark:text-danger' },
+  'Dismissed': { label: 'Dismissed', class: 'bg-muted-foreground/10 text-muted-foreground dark:text-muted-foreground' },
+  'Pending': { label: 'Pending', class: 'bg-info/10 text-info dark:text-info' },
+  'Resolved': { label: 'Resolved', class: 'bg-success-strong/10 text-success-strong dark:text-success-strong' },
 };
 
 const severityConfig = {
-  'High': { label: 'High', class: 'bg-red-500/10 text-red-700 dark:text-red-400' },
-  'Medium': { label: 'Medium', class: 'bg-orange-500/10 text-orange-700 dark:text-orange-400' },
-  'Low': { label: 'Low', class: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
+  'High': { label: 'High', class: 'bg-danger/10 text-danger dark:text-danger' },
+  'Medium': { label: 'Medium', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
+  'Low': { label: 'Low', class: 'bg-alert-strong/10 text-alert-strong dark:text-alert-strong' },
 };
 
 const TimelineItem = ({ date, title, description, status, severity }: TimelineItemProps) => {
@@ -31,7 +31,7 @@ const TimelineItem = ({ date, title, description, status, severity }: TimelineIt
 
   return (
     <div className="relative pl-8 pb-8 border-l-2 border-muted last:border-l-0 last:pb-0">
-      <div className="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary -translate-x-[9px]" />
+      <div className="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary-surface -translate-x-[9px]" />
       
       <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-4">

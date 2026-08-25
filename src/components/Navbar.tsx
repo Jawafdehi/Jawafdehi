@@ -241,14 +241,23 @@ export function Navbar() {
             className={cn(
               "flex h-11 min-w-0 items-center justify-self-start rounded-full border px-3 transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isScrolled
-                ? "border-slate-200/70 bg-white/75 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/70"
+                ? "border-border/70 bg-white/75 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/70"
                 : "border-transparent bg-transparent shadow-none backdrop-blur-0",
             )}
           >
+            {/* The wordmark in logo.svg is navy and disappears on the dark
+                page. logo-dark.svg is the light-on-dark cut the Footer already
+                uses over its navy panel. */}
             <img
               src="/assets/logo.svg"
               alt="Jawafdehi"
-              className="h-8 w-auto object-contain"
+              className="block h-8 w-auto object-contain dark:hidden"
+            />
+            <img
+              src="/assets/logo-dark.svg"
+              alt=""
+              aria-hidden="true"
+              className="hidden h-8 w-auto object-contain dark:block"
             />
           </Link>
 
@@ -258,14 +267,14 @@ export function Navbar() {
             className={cn(
               "relative hidden items-center justify-self-center rounded-full border p-1 transition-all duration-200 ease-out xl:flex",
               isScrolled
-                ? "border-slate-200/70 bg-white/85 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/80"
+                ? "border-border/70 bg-white/85 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/80"
                 : "border-transparent bg-transparent shadow-none backdrop-blur-0",
             )}
           >
             <span
               aria-hidden="true"
               className={cn(
-                "absolute left-0 top-1 h-10 rounded-full bg-slate-100 shadow-sm transition-[transform,width,opacity] duration-200 ease-out motion-reduce:transition-none dark:bg-secondary/55",
+                "absolute left-0 top-1 h-10 rounded-full bg-muted shadow-sm transition-[transform,width,opacity] duration-200 ease-out motion-reduce:transition-none dark:bg-secondary/55",
                 !isScrolled && "shadow-none",
               )}
               style={pillStyle}
@@ -389,7 +398,7 @@ export function Navbar() {
                 title={t("searchCommand.open")}
                 className={cn(
                   isScrolled
-                    ? "border-slate-200/70 bg-white/70 dark:border-border/70 dark:bg-background/70"
+                    ? "border-border/70 bg-white/70 dark:border-border/70 dark:bg-background/70"
                     : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
                 )}
               >
@@ -417,7 +426,7 @@ export function Navbar() {
               size="navCta"
               className={cn(
                 "min-w-[12rem] whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-0.5",
-                isScrolled ? "shadow-md shadow-primary/15" : "shadow-none",
+                isScrolled ? "shadow-md shadow-primary-surface/15" : "shadow-none",
               )}
             >
               <a href="https://chat.jawafdehi.org" target="_blank" rel="noreferrer">
@@ -438,7 +447,7 @@ export function Navbar() {
               title={t("searchCommand.open")}
               className={cn(
                 isScrolled
-                  ? "border-slate-200/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
+                  ? "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
                   : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
               )}
             >
@@ -451,7 +460,7 @@ export function Navbar() {
                   size="navMenuIcon"
                   className={cn(
                     isScrolled
-                      ? "border-slate-200/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
+                      ? "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
                       : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
                   )}
                 >
@@ -465,8 +474,19 @@ export function Navbar() {
                     <img
                       src="/assets/logo.svg"
                       alt="Jawafdehi"
-                      className="h-8 w-auto object-contain"
+                      className="block h-8 w-auto object-contain dark:hidden"
                     />
+                    <img
+                      src="/assets/logo-dark.svg"
+                      alt=""
+                      aria-hidden="true"
+                      className="hidden h-8 w-auto object-contain dark:block"
+                    />
+                    {/* SheetTitle supplies the dialog's accessible name. In dark
+                        the light logo is display:none (so its alt leaves the a11y
+                        tree) and the dark one is aria-hidden, which would leave
+                        the dialog unnamed. This carries the name in both themes. */}
+                    <span className="sr-only">Jawafdehi</span>
                   </SheetTitle>
                 </SheetHeader>
 
