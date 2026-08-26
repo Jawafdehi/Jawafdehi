@@ -1,30 +1,27 @@
-import type { ArchiveSearchResponse, ArchiveSearchType } from "@/types/search";
+import type { ArchiveSearchType } from "@/types/search";
 import { cn } from "@/lib/utils";
 
 type SearchTabsProps = {
-  counts: ArchiveSearchResponse["counts"];
   activeType: ArchiveSearchType;
-  onChange: (type: ArchiveSearchType) => void;
+  onChange: (type?: ArchiveSearchType) => void;
 };
 
 const tabs: Array<{
   type: ArchiveSearchType;
   label: string;
-  // "all" has no per-type count; the others map to a counts key.
-  countKey?: keyof ArchiveSearchResponse["counts"];
 }> = [
-  { type: "all", label: "All results" },
-  { type: "case", label: "Cases", countKey: "case" },
-  { type: "entity", label: "Entities", countKey: "entity" },
-  { type: "material", label: "Materials", countKey: "material" },
-  { type: "courtcase", label: "Court cases", countKey: "courtcase" },
+  { type: "all", label: "All records" },
+  { type: "case", label: "Cases" },
+  { type: "entity", label: "Entities" },
+  { type: "material", label: "Materials" },
+  { type: "courtcase", label: "Court cases" },
 ];
 
-export function SearchTabs({ counts, activeType, onChange }: Readonly<SearchTabsProps>) {
+export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) {
   return (
     <div
-      aria-label="Search result type"
-      className="flex gap-2 overflow-x-auto pb-1"
+      aria-label="Record type"
+      className="flex gap-6 overflow-x-auto border-b border-border sm:gap-8"
       role="tablist"
     >
       {tabs.map((tab) => {
@@ -33,22 +30,17 @@ export function SearchTabs({ counts, activeType, onChange }: Readonly<SearchTabs
           <button
             aria-selected={isActive}
             className={cn(
-              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "relative inline-flex min-h-11 shrink-0 items-center px-0.5 text-sm transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-center after:bg-accent after:transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isActive
-                ? "border-primary bg-primary-surface text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                ? "font-semibold text-primary after:scale-x-100"
+                : "font-medium text-muted-foreground after:scale-x-0 hover:text-primary",
             )}
             key={tab.type}
-            onClick={() => onChange(tab.type)}
+            onClick={() => onChange(tab.type === "all" ? undefined : tab.type)}
             role="tab"
             type="button"
           >
             {tab.label}
-            {tab.countKey ? (
-              <span className="tabular-nums opacity-75">
-                {counts[tab.countKey] ?? 0}
-              </span>
-            ) : null}
           </button>
         );
       })}
