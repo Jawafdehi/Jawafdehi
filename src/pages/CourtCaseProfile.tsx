@@ -4,15 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { CourtCaseDetails } from "@/components/CourtCaseCard";
+import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileView";
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { getCourtCaseFull } from "@/services/datalake-api";
 
 // The /courtcase/* splat tail is the courtcase IRI path component
 // `<court>/<case_number>` (e.g. `special/081-CR-0079`); we rebuild the canonical
-// @id IRI from it (see `courtCaseIri`) and pass that to CourtCaseDetails, whose
-// parser accepts only the IRI form.
+// @id IRI from it for data fetching, related records, and structured metadata.
 function parseTail(tail: string): { court: string; caseNumber: string } | null {
   const i = tail.indexOf("/");
   if (i === -1) return null;
@@ -76,13 +74,14 @@ export default function CourtCaseProfile() {
         {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
       </Helmet>
 
-      <div className="layout-container max-w-3xl">
-        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-          <Link to="/search?type=courtcase">
-            <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-            Back to search
-          </Link>
-        </Button>
+      <div className="layout-container max-w-4xl">
+        <Link
+          to="/search?type=courtcase"
+          className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" />
+          <span>Back to search</span>
+        </Link>
 
         {!parsed || isError ? (
           <Alert variant="destructive">
@@ -92,22 +91,18 @@ export default function CourtCaseProfile() {
             </AlertDescription>
           </Alert>
         ) : (
-          <article className="space-y-6">
-            <CourtCaseDetails courtCaseId={courtCaseIri} courtCase={data} isLoading={isLoading} />
+          <div className="space-y-12">
+            <CourtCaseProfileView
+              courtCase={data}
+              caseNumber={caseNumber.toUpperCase()}
+              courtIdentifier={parsed.court}
+              isLoading={isLoading}
+            />
 
             {/* The reverse of the case -> court-case link: published Jawafdehi
                 cases citing this court case. Self-hiding when there are none. */}
             <CourtCaseRelatedCases courtCaseIri={courtCaseIri} />
-
-            {/* Provenance. */}
-            <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
-              <p>
-                <strong>Source:</strong> Jawafdehi governance archive — court
-                listings, hearings, and orders harvested from Nepal&apos;s public court
-                records.
-              </p>
-            </div>
-          </article>
+          </div>
         )}
       </div>
     </main>

@@ -14,23 +14,15 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
+import {
+  courtStatusBadgeValue,
+  formatCourtName,
+  type CourtStatusBadgeValue,
+} from "@/utils/court-case-format";
 import { formatDateWithBS } from "@/utils/date";
 import { cn } from "@/lib/utils";
 
 // ── Court identifier parsing ──────────────────────────────────────────────
-
-const COURT_NAMES_EN: Record<string, string> = {
-  special: "Special Court",
-  supreme: "Supreme Court",
-  high: "High Court",
-  district: "District Court",
-  appellate: "Appellate Court",
-};
-
-const COURT_NAMES_NE: Record<string, string> = {
-  special: "विशेष अदालत",
-  supreme: "सर्वोच्च अदालत",
-};
 
 function parseCourtIdentifier(
   courtIdentifier: string,
@@ -39,19 +31,13 @@ function parseCourtIdentifier(
   // Refs arrive as the canonical @id IRI or the legacy `<court>:<number>` form.
   const parts = parseCourtCaseRef(courtIdentifier);
   if (!parts) {
-    return { courtName: courtIdentifier, caseNumber: "" };
+    return { courtName: formatCourtName(courtIdentifier, lang), caseNumber: "" };
   }
 
   const prefix = parts.court.toLowerCase();
   // IRIs carry the number lowercased; display it in its natural uppercase.
   const caseNumber = parts.caseNumber.toUpperCase();
-
-  let courtName: string;
-  if (lang === "ne" && COURT_NAMES_NE[prefix]) {
-    courtName = COURT_NAMES_NE[prefix];
-  } else {
-    courtName = COURT_NAMES_EN[prefix] ?? parts.court;
-  }
+  const courtName = formatCourtName(prefix, lang);
 
   return { courtName, caseNumber };
 }
@@ -160,27 +146,6 @@ export interface CourtCaseCardProps {
   viewMode?: "card" | "list";
 }
 
-function displayCourtName(court: string | null | undefined, lang: string) {
-  const value = court?.trim();
-  if (!value) return "";
-
-  const normalized = value.toLowerCase().replace(/[\s_-]+/g, "");
-  const courtKey = Object.keys(COURT_NAMES_EN).find((key) =>
-    normalized.includes(key),
-  );
-  if (courtKey) {
-    return lang.startsWith("ne") && COURT_NAMES_NE[courtKey]
-      ? COURT_NAMES_NE[courtKey]
-      : COURT_NAMES_EN[courtKey];
-  }
-
-  const spaced = value.replace(/[_-]+/g, " ");
-  if (spaced !== spaced.toUpperCase()) return spaced;
-  return spaced
-    .toLowerCase()
-    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
-}
-
 function displayCourtStatus(status: string) {
   const spaced = status.replace(/[_-]+/g, " ").trim();
   if (spaced !== spaced.toUpperCase()) return spaced;
@@ -189,34 +154,7 @@ function displayCourtStatus(status: string) {
     .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 }
 
-function courtStatusBadgeValue(status: string) {
-  const normalized = status.toLowerCase();
-  if (
-    normalized.includes("फैसला") ||
-    normalized.includes("decision") ||
-    normalized.includes("decided") ||
-    normalized.includes("verdict") ||
-    normalized.includes("closed") ||
-    normalized.includes("resolved") ||
-    normalized.includes("concluded")
-  ) {
-    return "resolved";
-  }
-  if (
-    normalized.includes("pending") ||
-    normalized.includes("progress") ||
-    normalized.includes("sub judice") ||
-    normalized.includes("sub_judice") ||
-    normalized.includes("विचाराधीन") ||
-    normalized.includes("चालु") ||
-    normalized.includes("ongoing")
-  ) {
-    return "ongoing";
-  }
-  return "under-investigation";
-}
-
-function courtStatusGradientClass(status: string | null) {
+function courtStatusGradientClass(status: CourtStatusBadgeValue | null) {
   if (status === "resolved") {
     return "[background-image:linear-gradient(to_bottom,hsl(var(--success-strong)/0.09)_0%,transparent_44%)]";
   }
@@ -243,7 +181,7 @@ export function CourtCaseCard({
   const isCard = viewMode === "card";
   const language =
     typeof i18n.language === "string" ? i18n.language : "en";
-  const courtName = displayCourtName(court, language);
+  const courtName = formatCourtName(court, language);
   const registered =
     language.startsWith("ne") && registrationDateBs
       ? registrationDateBs
