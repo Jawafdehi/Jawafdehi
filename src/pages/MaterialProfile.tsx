@@ -376,7 +376,7 @@ export default function MaterialProfile() {
 
                   <div className="mt-4 inline-grid gap-3">
                     {links.map((link) =>
-                      link.previewType ? (
+                    link.previewType ? (
                         <Button
                           key={link.href}
                           type="button"
@@ -396,7 +396,22 @@ export default function MaterialProfile() {
                           />
                           {link.label}
                         </Button>
-                      ) : (
+                    ) : link.isExternal ? (
+                      <Button
+                        asChild
+                        key={link.href}
+                        variant="outline"
+                        className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                      >
+                        <a href={link.href} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                          />
+                          {link.label}
+                        </a>
+                      </Button>
+                    ) : (
                         <Button
                           asChild
                           key={link.href}

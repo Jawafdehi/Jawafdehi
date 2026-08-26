@@ -25,7 +25,7 @@ function previewTypeOf(
   role: string,
 ): PreviewDocument["type"] | undefined {
   const format = (media.encodingFormat || "").toLowerCase();
-  const extension = (href.split("?")[0].split(".").pop() || "").toLowerCase();
+  const extension = extensionOf(href);
   if (format.includes("pdf") || extension === "pdf") return "pdf";
   if (
     role === "MARKDOWN" ||
@@ -38,10 +38,23 @@ function previewTypeOf(
   return undefined;
 }
 
+function extensionOf(href: string): string {
+  let filename = href.split("?")[0].split("/").pop() || "";
+  try {
+    filename = new URL(href).pathname.split("/").filter(Boolean).pop() || "";
+  } catch {
+    // Relative and malformed URLs still use the path fallback above.
+  }
+  if (!filename.includes(".")) return "";
+  const extension = filename.split(".").pop()?.toLowerCase() || "";
+  return /^[a-z0-9]{1,6}$/.test(extension) ? extension : "";
+}
+
 export interface MaterialSourceLink {
   href: string;
   label: string;
   extension: string | null;
+  isExternal: boolean;
   previewType?: PreviewDocument["type"];
 }
 
@@ -64,7 +77,11 @@ export function getMaterialSourceLinks(data: Material | undefined): MaterialSour
       ""
     ).toUpperCase();
     const previewType = previewTypeOf(entry, href, role);
-    const extension = (href.split("?")[0].split(".").pop() || "").toLowerCase();
+    const extension = extensionOf(href);
+    const isExternal =
+      role === "SOURCE_PAGE" ||
+      role === "PERMALINK" ||
+      (entry.encodingFormat || "").toLowerCase().includes("html");
     const label =
       previewType === "pdf"
         ? "PDF"
@@ -73,6 +90,6 @@ export function getMaterialSourceLinks(data: Material | undefined): MaterialSour
           : extension && extension.length <= 6
             ? `.${extension.toUpperCase()}`
             : ROLE_LABELS[role] || entry.name || ROLE_LABELS.RAW;
-    return [{ href, label, extension: extension || null, previewType }];
+    return [{ href, label, extension: extension || null, isExternal, previewType }];
   });
 }
