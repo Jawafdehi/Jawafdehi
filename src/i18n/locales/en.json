@@ -2051,6 +2051,8 @@
     "cardView": "Card view",
     "results_one": "{{count}} result",
     "results_other": "{{count}} results",
+    "didYouMean": "Did you mean",
+    "didYouMeanPunctuation": "?",
     "sort": "Sort",
     "filters": {
       "entityType": "Entity type",

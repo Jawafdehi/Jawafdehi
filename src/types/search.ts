@@ -135,6 +135,21 @@ export interface ArchiveSearchResponse {
   facets: ArchiveSearchFacets;
   results: ArchiveSearchResult[];
   next_cursor: string | null;
+  // A single suggested spelling for the query, or null when there is nothing to
+  // suggest. The backend offers one on either of two conditions: the search
+  // returned nothing, OR it returned only fuzzy matches — meaning every
+  // spell-checkable token was itself a misspelling, so the hits have no
+  // exactly-matching anchor. A correctly spelled query that found real records
+  // never carries one.
+  //
+  // So it is NOT only an empty-state affordance: `?q=coruption` returns 199 real
+  // records AND a suggestion of "corruption". Render it in both cases.
+  //
+  // Never apply it automatically. Silently rewriting a search for a person's name
+  // in an accountability archive would show the reader records about someone they
+  // did not ask about, with no indication it happened. It is an offer the reader
+  // accepts. Optional in the type because older cached responses / mocks omit it.
+  did_you_mean?: string | null;
   // Ephemeral per-response id (not a user/session id). Echoed back on a result
   // click (POST /api/search/click) to join query → clicked result server-side.
   // Optional: older cached responses / mocks may omit it.
