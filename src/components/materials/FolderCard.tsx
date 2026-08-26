@@ -106,17 +106,15 @@ export function FolderCard({
             quiet behind the one labelled folder. */}
         <div className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col justify-between rounded-b-2xl rounded-t-md border border-surface/60 bg-surface/55 p-4 backdrop-blur-[12px]">
           {!decorative && (
-            <>
-              <div>
-                <h3 className="text-xl font-medium leading-tight text-primary">{name}</h3>
-                <p className="mt-4 text-xl font-semibold tabular-nums text-primary">
-                  {count === null ? "—" : formatArchiveCount(count, language)}
-                  <span className="ml-1.5 align-baseline text-xs font-medium text-foreground/70">
-                    {t("materialsLanding.grid.documents", "documents")}
-                  </span>
-                </p>
-              </div>
-            </>
+            <div>
+              <h3 className="text-xl font-medium leading-tight text-primary">{name}</h3>
+              <p className="mt-4 text-xl font-semibold tabular-nums text-primary">
+                {count === null ? "—" : formatArchiveCount(count, language)}
+                <span className="ml-1.5 align-baseline text-xs font-medium text-foreground/70">
+                  {t("materialsLanding.grid.documents", "documents")}
+                </span>
+              </p>
+            </div>
           )}
         </div>
       </div>

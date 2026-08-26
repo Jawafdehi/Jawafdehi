@@ -23,7 +23,6 @@ import { getMaterial, materialTail } from "@/services/datalake-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const CHAT_URL = "https://chat.jawafdehi.org";
-const GITHUB_URL = "https://github.com/Jawafdehi";
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
 /** The three folders on the hero shelf — flagship series, front one linked. */
@@ -74,7 +73,6 @@ export default function MaterialsLanding() {
   const gridRef = useRevealOnScroll<HTMLElement>();
   const capabilitiesRef = useRevealOnScroll<HTMLElement>();
   const recentRef = useRevealOnScroll<HTMLElement>();
-  const trustRef = useRevealOnScroll<HTMLElement>();
 
   const shelfFront = seriesBySlug(SHELF_FRONT_SLUG);
   const shelfBack = SHELF_BACK_SLUGS.map((slug) => seriesBySlug(slug));

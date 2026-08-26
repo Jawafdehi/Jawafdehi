@@ -82,7 +82,9 @@ export function MaterialListCard({
                 aria-label={
                   link.isExternal
                     ? t("materialsLanding.series.openSource", "Open original source")
-                    : `Download ${extensionLabel(link.extension)}`
+                    : t("materialsLanding.series.download", "Download {{format}}", {
+                        format: extensionLabel(link.extension),
+                      })
                 }
               >
                 {link.isExternal ? (

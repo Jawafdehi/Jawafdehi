@@ -119,43 +119,46 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
   const invalidDateRange = Boolean(
     filters.startDate && filters.endDate && filters.startDate > filters.endDate,
   );
+  // Each document's AD date is resolved ONCE per page load, not per comparison:
+  // resolveMaterialDate runs a bikram-sambat conversion, and a comparator that
+  // called it would run two of them per compare — O(n log n) conversions over a
+  // list that grows with every "load more".
+  const datedDocuments = useMemo(
+    () =>
+      documents.map((material) => ({
+        material,
+        ad: resolveMaterialDate({ date: material.datePublished || material.dateCreated }).ad,
+      })),
+    [documents],
+  );
   const filteredDocuments = useMemo(() => {
     if (invalidDateRange) return [];
     const startDate = filters.startDate || presetStartDate(filters.preset);
     const endDate = filters.endDate;
 
-    return documents
-      .filter((material) => {
+    return datedDocuments
+      .filter(({ material, ad }) => {
         if (deferredQuery && !searchableMaterialText(material).includes(deferredQuery)) {
           return false;
         }
         if (!startDate && !endDate) return true;
-
-        const date = resolveMaterialDate({
-          date: material.datePublished || material.dateCreated,
-        }).ad;
-        if (!date) return false;
-        if (startDate && date < startDate) return false;
-        if (endDate && date > endDate) return false;
+        if (!ad) return false;
+        if (startDate && ad < startDate) return false;
+        if (endDate && ad > endDate) return false;
         return true;
       })
       .sort((a, b) => {
-        const aDate = resolveMaterialDate({
-          date: a.datePublished || a.dateCreated,
-        }).ad;
-        const bDate = resolveMaterialDate({
-          date: b.datePublished || b.dateCreated,
-        }).ad;
-        if (!aDate && !bDate) return 0;
-        if (!aDate) return 1;
-        if (!bDate) return -1;
+        if (!a.ad && !b.ad) return 0;
+        if (!a.ad) return 1;
+        if (!b.ad) return -1;
         return sortOrder === "latest"
-          ? bDate.localeCompare(aDate)
-          : aDate.localeCompare(bDate);
-      });
+          ? b.ad.localeCompare(a.ad)
+          : a.ad.localeCompare(b.ad);
+      })
+      .map(({ material }) => material);
   }, [
+    datedDocuments,
     deferredQuery,
-    documents,
     filters.endDate,
     filters.preset,
     filters.startDate,

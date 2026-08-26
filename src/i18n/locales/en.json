@@ -193,7 +193,10 @@
     "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
     "barLabel": "Upcoming public event",
     "barTitle": "Public event",
-    "barWhenParts": ["2 September, 6 PM Pacific", "3 September, 6:45 AM in Nepal"],
+    "barWhenParts": [
+      "2 September, 6 PM Pacific",
+      "3 September, 6:45 AM in Nepal"
+    ],
     "barCta": "Register free",
     "barDismiss": "Dismiss event announcement"
   },
@@ -2087,12 +2090,6 @@
     },
     "recent": {
       "title": "Recently added",
-      "document": "Document",
-      "series": "Series",
-      "date": "Date",
-      "view": "View",
-      "open": "Open",
-      "openDocument": "Open: {{title}}",
       "untitled": "Untitled document",
       "previous": "Previous documents",
       "next": "Next documents"
@@ -2112,29 +2109,21 @@
       "socialMedia": "Public social-media posts archived as evidence.",
       "other": "A document from the Jawafdehi archive."
     },
-    "trust": {
-      "builtBy": "Built by Nepalis",
-      "openData": "Open data (CC BY-NC)",
-      "openSource": "Open source",
-      "coverage": "What we cover"
-    },
     "series": {
-      "count": "{{total}} documents in this series",
-      "searchAll": "Search all materials",
       "searchPlaceholder": "Search inside this series…",
       "searchSubmit": "Search this series",
       "sortLabel": "Sort",
       "sortLatest": "Latest first",
       "sortOldest": "Oldest first",
-      "details": "Details",
       "showingLoaded": "Showing {{shown}} of {{loaded}} loaded",
-      "openDocument": "Open document",
       "loadMore": "Load more",
       "loading": "Loading…",
       "empty": "No documents are visible in this series right now.",
       "unknown": "This series does not exist. Browse the archive instead:",
       "backToArchive": "Back to the archive",
-      "undated": "Undated"
+      "undated": "Undated",
+      "openSource": "Open original source",
+      "download": "Download {{format}}"
     },
     "filters": {
       "title": "Filter",
@@ -2147,9 +2136,6 @@
       "startDate": "From date (AD)",
       "endDate": "To date (AD)",
       "invalidRange": "The from date must be before the to date.",
-      "searchTitle": "Search loaded documents",
-      "searchPlaceholder": "Title or keyword…",
-      "loadedNotice": "Filters apply to the documents loaded below. Load more to extend the results.",
       "noMatches": "No loaded documents match these filters.",
       "loadMoreHint": "Load more documents to extend the filtered results.",
       "presets": {
