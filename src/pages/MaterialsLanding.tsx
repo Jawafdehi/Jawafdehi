@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -18,6 +18,7 @@ import {
   archiveStatisticsQuery,
   recentMaterialsQuery,
 } from "@/queries/materials-landing";
+import { getMaterial, materialTail } from "@/services/datalake-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const CHAT_URL = "https://chat.jawafdehi.org";
@@ -45,6 +46,29 @@ export default function MaterialsLanding() {
   const recents = recentResponse
     ? pickRecentMaterials(recentResponse.results, RECENT_MATERIALS_COUNT)
     : null;
+
+  // Each recent card shows ITS OWN document's description — search hits carry
+  // none when browsing. Four ~1KB fetches, on the same query key the document
+  // page uses, so clicking through hits a warm cache.
+  const recentDetails = useQueries({
+    queries: (recents ?? []).map(({ result }) => {
+      const tail = materialTail(result.id);
+      return {
+        queryKey: ["datalake-material", tail] as const,
+        queryFn: () => getMaterial(tail),
+        staleTime: 5 * 60 * 1000,
+      };
+    }),
+  });
+  const descriptions: Record<string, { ne?: string | null; en?: string | null }> = {};
+  (recents ?? []).forEach(({ result }, index) => {
+    const detail = recentDetails[index]?.data;
+    if (!detail?.description) return;
+    descriptions[result.id] =
+      typeof detail.description === "string"
+        ? { ne: detail.description, en: detail.description }
+        : detail.description;
+  });
 
   const gridRef = useRevealOnScroll<HTMLElement>();
   const capabilitiesRef = useRevealOnScroll<HTMLElement>();
@@ -278,6 +302,7 @@ export default function MaterialsLanding() {
           {recents ? (
             <RecentMaterialsCarousel
               materials={recents}
+              descriptions={descriptions}
               heading={
                 <h2 id="recent-heading" className="font-archive-section-title">
                   {t("materialsLanding.recent.title", "Recently added")}
@@ -299,35 +324,6 @@ export default function MaterialsLanding() {
         </div>
       </section>
 
-      {/* Trust strip: the page's one centered element. */}
-      <section ref={trustRef} className="border-t border-border">
-        <div className="layout-container py-14 text-center md:py-20">
-          <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm font-medium text-foreground">
-            <span>{t("materialsLanding.trust.builtBy", "Built by Nepalis")}</span>
-            <span aria-hidden="true" className="text-muted-foreground">·</span>
-            <span>{t("materialsLanding.trust.openData", "Open data (CC BY-NC)")}</span>
-            <span aria-hidden="true" className="text-muted-foreground">·</span>
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-sm underline decoration-primary/35 underline-offset-4 outline-none hover:decoration-primary focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {t("materialsLanding.trust.openSource", "Open source")}
-            </a>
-            <span aria-hidden="true" className="text-muted-foreground">·</span>
-            <Link
-              to="/data-quality"
-              className="rounded-sm underline decoration-primary/35 underline-offset-4 outline-none hover:decoration-primary focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {t("materialsLanding.trust.coverage", "What we cover")} →
-            </Link>
-          </p>
-          <p className="mx-auto mt-6 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-            {t("footer.disclaimer")}
-          </p>
-        </div>
-      </section>
     </div>
   );
 }

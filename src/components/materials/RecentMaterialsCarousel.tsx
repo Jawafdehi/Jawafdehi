@@ -66,7 +66,13 @@ const SOURCE_ICONS: Record<string, LucideIcon> = {
 export function RecentMaterialsCarousel({
   materials,
   heading,
-}: Readonly<{ materials: readonly RecentMaterial[]; heading: ReactNode }>) {
+  descriptions = {},
+}: Readonly<{
+  materials: readonly RecentMaterial[];
+  heading: ReactNode;
+  /** Each document's OWN description (from its data-lake record), by hit id. */
+  descriptions?: Record<string, { ne?: string | null; en?: string | null }>;
+}>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const reduceMotion =
@@ -104,10 +110,11 @@ export function RecentMaterialsCarousel({
           const title =
             pickLocalized(result.title, language) ||
             t("materialsLanding.recent.untitled", "Untitled document");
-          // Search hits often carry no snippet outside a text query; fall
-          // back to the series' authored description, then to a one-line
-          // institution description — every card gets real context.
+          // The document's OWN description first; search snippets are empty
+          // outside a text query, and the series/institution lines only catch
+          // the ~⅓ of documents whose records carry no description.
           const snippet =
+            pickLocalized(descriptions[result.id], language) ||
             pickLocalized(result.snippet, language) ||
             (series
               ? pickLocalized(series.description, language)
