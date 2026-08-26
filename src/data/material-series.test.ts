@@ -37,11 +37,14 @@ describe("MATERIAL_SERIES registry", () => {
     }
   });
 
-  it("covers the flagship series the archive is known for", () => {
-    expect(seriesBySource("ciaa_annual_report")).toBeDefined();
-    expect(seriesBySource("ag")).toBeDefined();
-    expect(seriesBySource("nkp")).toBeDefined();
-    expect(seriesBySource("kanun_patrika")).toBeDefined();
+  it("covers exactly the flagship publications the landing page curates", () => {
+    expect(MATERIAL_SERIES.map((series) => series.source).sort()).toEqual([
+      "ag",
+      "ciaa_annual_report",
+      "ciaa_press_release",
+      "kanun_patrika",
+      "official_report",
+    ]);
   });
 
   it("looks up by slug and by source", () => {

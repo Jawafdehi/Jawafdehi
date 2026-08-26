@@ -2063,6 +2063,54 @@
     "description": "Browse public government records and documents in the Jawafdehi archive — development projects, agency publications, and official materials.",
     "placeholder": "Search documents & other materials"
   },
+  "materialsLanding": {
+    "title": "Documents & other materials — Nepal's public records",
+    "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
+    "heroTitle": "Nepal's public records. One archive. Forever free.",
+    "heroLede": "Documents collected from government bodies — searchable, citable, always open.",
+    "ctaBrowse": "Browse the archive",
+    "ctaAsk": "Ask the AI assistant",
+    "grid": {
+      "title": "Browse by series",
+      "documents": "documents"
+    },
+    "capabilities": {
+      "title": "The archive works for you",
+      "lede": "Read it, question it, or take all of it — the records stay public either way.",
+      "downloadTitle": "Download everything",
+      "downloadLine": "Open any series and follow every document to its source file.",
+      "askTitle": "Ask the AI assistant",
+      "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
+      "analyzeTitle": "Analyze in bulk",
+      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub."
+    },
+    "recent": {
+      "title": "Recently added",
+      "document": "Document",
+      "series": "Series",
+      "date": "Date",
+      "view": "View",
+      "open": "Open",
+      "openDocument": "Open: {{title}}",
+      "untitled": "Untitled document"
+    },
+    "trust": {
+      "builtBy": "Built by Nepalis",
+      "openData": "Open data (CC BY-NC)",
+      "openSource": "Open source",
+      "coverage": "What we cover"
+    },
+    "series": {
+      "count": "{{total}} documents in this series",
+      "searchAll": "Search all materials",
+      "loadMore": "Load more",
+      "loading": "Loading…",
+      "empty": "No documents are visible in this series right now.",
+      "unknown": "This series does not exist. Browse the archive instead:",
+      "backToArchive": "Back to the archive",
+      "undated": "Undated"
+    }
+  },
   "courtCasesPage": {
     "heading": "Court cases",
     "description": "Browse court cases from Nepal's judiciary in the Jawafdehi governance archive — listings, hearings, and orders harvested from public court records.",

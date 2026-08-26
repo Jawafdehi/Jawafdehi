@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 
 import {
-  archiveYearRange,
   formatArchiveCount,
   pickRecentMaterials,
   resolveMaterialDate,
@@ -114,20 +113,5 @@ describe("formatArchiveCount", () => {
   it("uses Devanagari digits in Nepali", () => {
     expect(formatArchiveCount(345886, "ne")).toBe("३,४५,८८६");
     expect(formatArchiveCount(41, "ne-NP")).toBe("४१");
-  });
-});
-
-describe("archiveYearRange", () => {
-  it("spans from the oldest document to the archive's last update, in both calendars", () => {
-    const range = archiveYearRange(
-      { date: "1952-03-27", date_bs: "2008-12-15" },
-      "2026-08-26T04:03:06.944895+00:00",
-      NOW,
-    );
-    expect(range).toEqual({ adFrom: 1952, adTo: 2026, bsFrom: 2008, bsTo: 2083 });
-  });
-
-  it("returns null without an oldest date", () => {
-    expect(archiveYearRange(undefined, "2026-08-26T00:00:00Z", NOW)).toBeNull();
   });
 });

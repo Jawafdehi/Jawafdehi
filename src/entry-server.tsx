@@ -10,6 +10,10 @@ import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { searchArchive } from './services/search-api';
 import { featuredCasesQuery } from './queries/home';
+import {
+  archiveStatisticsQuery,
+  recentMaterialsQuery,
+} from './queries/materials-landing';
 import { http } from './services/http';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
@@ -52,6 +56,18 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
   // instead of flashing empty until the client fetch resolves.
   if (/^\/data-quality\/?(?:[?#]|$)/.test(url)) {
     await queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics });
+    return;
+  }
+
+  // Materials landing page (BARE /materials only — ?series= and ?q= views are
+  // client-rendered). The query factories are the SHARED definitions
+  // (queries/materials-landing.ts), so keys and params match the page exactly
+  // and the pre-rendered HTML carries the real archive figures.
+  if (/^\/materials\/?(?:#|$)/.test(url)) {
+    await Promise.allSettled([
+      queryClient.prefetchQuery(archiveStatisticsQuery()),
+      queryClient.prefetchQuery(recentMaterialsQuery()),
+    ]);
     return;
   }
 

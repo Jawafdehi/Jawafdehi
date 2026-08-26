@@ -127,32 +127,50 @@ export function formatArchiveCount(value: number, language: string): string {
   return grouped.replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
 }
 
-/** The archive's coverage span in both calendars, from real endpoint data. */
-export interface ArchiveYearRange {
-  adFrom: number;
-  adTo: number;
-  bsFrom: number;
-  bsTo: number;
+/**
+ * Folder tint utilities by index. Tailwind must see every class literally,
+ * so the tint number resolves through this table, never interpolation.
+ */
+const FOLDER_TINT_CLASSES: Record<number, string> = {
+  1: "bg-folder-1",
+  2: "bg-folder-2",
+  3: "bg-folder-3",
+  4: "bg-folder-4",
+  5: "bg-folder-5",
+  6: "bg-folder-6",
+  7: "bg-folder-7",
+  8: "bg-folder-8",
+};
+
+export function folderTintClass(tint: number): string {
+  return FOLDER_TINT_CLASSES[tint] ?? FOLDER_TINT_CLASSES[1];
 }
 
-export function archiveYearRange(
-  oldest: SearchResultExtra | undefined,
-  lastUpdatedIso: string | null | undefined,
-  currentAdYear: number = new Date().getFullYear(),
-): ArchiveYearRange | null {
-  const oldestDate = resolveMaterialDate(oldest, currentAdYear);
-  if (!oldestDate.ad) return null;
-  const adFrom = Number(oldestDate.ad.slice(0, 4));
-  const bsFrom = oldestDate.bs ? Number(oldestDate.bs.slice(0, 4)) : adFrom + 57;
-  const adTo = lastUpdatedIso ? Number(lastUpdatedIso.slice(0, 4)) : currentAdYear;
-  let bsTo: number;
-  try {
-    // Mid-year anchor: only the BS YEAR is displayed, so July is a safe pick
-    // for deriving it from an AD year.
-    bsTo = adToBS(adTo, 7, 1).year;
-  } catch {
-    bsTo = adTo + 57;
-  }
-  if (!Number.isFinite(adFrom) || !Number.isFinite(adTo)) return null;
-  return { adFrom, adTo, bsFrom, bsTo };
+/** Language-aware pick from a bilingual pair, falling back across languages. */
+export function pickLocalized(
+  text: { ne?: string | null; en?: string | null } | undefined,
+  language: string,
+): string {
+  if (!text) return "";
+  const nepali = language.startsWith("ne");
+  const primary = nepali ? text.ne : text.en;
+  const fallback = nepali ? text.en : text.ne;
+  return (primary || fallback || "").replace(/<[^>]*>/g, "");
 }
+
+/**
+ * A resolved date as one ledger line: the reader's calendar first, the other
+ * only when the preferred one is missing. Numeric Y-M-D on purpose — these
+ * sit in the mono "register" face.
+ */
+export function formatLedgerDate(date: ResolvedMaterialDate, language: string): string {
+  const devanagari = (value: string) =>
+    value.replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
+  if (language.startsWith("ne")) {
+    if (date.bs) return devanagari(date.bs);
+    return date.ad ?? "";
+  }
+  if (date.ad) return date.ad;
+  return date.bs ? `${date.bs} BS` : "";
+}
+

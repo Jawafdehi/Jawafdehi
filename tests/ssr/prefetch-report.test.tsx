@@ -58,11 +58,13 @@ describe("what render() reports about its own prefetch", () => {
 });
 
 describe("why the report is taken before the render, not after", () => {
-  // /materials is pre-rendered and has no prefetch branch at all: its search query
-  // is mounted by the page itself. Nothing on the server fetches it, so it sits in
-  // the cache pending — which is indistinguishable from a prefetch that failed.
+  // /courtcases is pre-rendered and has no prefetch branch at all: its search
+  // query is mounted by the page itself. Nothing on the server fetches it, so it
+  // sits in the cache pending — indistinguishable from a prefetch that failed.
+  // (/materials was the original example here, until its landing page gained a
+  // prefetch branch of its own.)
   it("does not blame a route for the queries its own page mounts", async () => {
-    const { prefetch } = await render("/materials");
+    const { prefetch } = await render("/courtcases");
 
     expect(prefetch.fulfilled).toEqual([]);
     expect(prefetch.failed).toEqual([]);
@@ -71,8 +73,8 @@ describe("why the report is taken before the render, not after", () => {
   it("would blame it if the report came after the render", () => {
     // The same route through the same provider stack, with a client this test can
     // read. One pending query, so moving the report below renderToString fails the
-    // build on /materials, /courtcases and /search — three pages behaving as
-    // designed. This is the hazard the ordering above avoids, not a hypothetical.
+    // build on /courtcases and /search — pages behaving as designed. This is the
+    // hazard the ordering above avoids, not a hypothetical.
     const queryClient = new QueryClient({
       defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 0 } },
     });
@@ -80,7 +82,7 @@ describe("why the report is taken before the render, not after", () => {
       <ThemeProvider>
         <HelmetProvider context={{}}>
           <QueryClientProvider client={queryClient}>
-            <StaticRouter location="/materials">
+            <StaticRouter location="/courtcases">
               <App />
             </StaticRouter>
           </QueryClientProvider>

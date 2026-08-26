@@ -36,10 +36,11 @@ import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
 import ResearchCorruption from "./pages/ResearchCorruption";
-// /materials and /courtcases carry page metadata as of 2026-08-11, so they are
-// pre-rendered and the policy above makes them eager. It costs almost nothing:
-// both are twenty-line wrappers whose only dependency is ArchiveSearch, already
-// eager above, so their lazy chunks held next to no code of their own.
+// /materials and /courtcases are pre-rendered, so the policy above makes them
+// eager. /courtcases is a twenty-line wrapper over ArchiveSearch (already
+// eager). /materials is the archive landing page plus a per-series browse and
+// the same materials-locked search, routed by query string inside Materials —
+// the landing is what gets pre-rendered, so all three stay in this chunk.
 import Materials from "./pages/Materials";
 import CourtCases from "./pages/CourtCases";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,

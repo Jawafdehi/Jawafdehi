@@ -7,7 +7,7 @@ import type { ArchiveSearchResponse } from "@/types/search";
  * The /materials landing page's queries, shared verbatim by the client render
  * (pages/MaterialsLanding.tsx) and the SSR prefetch (entry-server.tsx) — the
  * same single-definition contract as queries/home.ts. Every figure the page
- * shows comes from one of these three.
+ * shows comes from one of these.
  */
 
 /** How many rows the "recently added" register shows. */
@@ -26,14 +26,6 @@ export function archiveStatisticsQuery() {
   return {
     queryKey: ["statistics"] as const,
     queryFn: getStatistics,
-  };
-}
-
-export function oldestMaterialQuery() {
-  return {
-    queryKey: ["materials-oldest"] as const,
-    queryFn: (): Promise<ArchiveSearchResponse> =>
-      searchArchive({ type: "material", sort: "oldest", page_size: 1 }),
   };
 }
 
