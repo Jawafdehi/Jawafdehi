@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
-import { pickRecentMaterials } from "@/lib/materials-landing";
+import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
 import {
   RECENT_MATERIALS_COUNT,
   archiveStatisticsQuery,
@@ -123,59 +123,62 @@ export default function MaterialsLanding() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Seo>
 
-      {/* Hero: the split ledger. */}
-      <header className="layout-container pb-16 pt-12 md:pb-24 md:pt-20">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-7">
-            <h1 className="font-archive-hero-title max-w-2xl">
-              {t("materialsLanding.heroTitle", "Nepal's public records. One archive. Forever free.")}
-            </h1>
-            <p className="font-page-lede mt-5 max-w-xl">
-              {t(
-                "materialsLanding.heroLede",
-                "Documents collected from government bodies — searchable, citable, always open.",
-              )}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Button asChild size="lg" className="active:scale-[0.98]">
-                <a href="#series">{t("materialsLanding.ctaBrowse", "Browse the archive")}</a>
-              </Button>
-              <Button asChild variant="link" size="lg" className="px-0">
-                <a href={CHAT_URL} target="_blank" rel="noopener noreferrer">
-                  {t("materialsLanding.ctaAsk", "Ask the AI assistant")} →
-                </a>
-              </Button>
-            </div>
-          </div>
+      {/* Hero: a centered stack — stat line, title, lede, CTA pair — with the
+          folder shelf as the big visual beneath. */}
+      <header className="layout-container pb-16 pt-14 text-center md:pb-24 md:pt-20">
+        {materials && (
+          <p className="font-mono text-sm tabular-nums text-muted-foreground">
+            {formatArchiveCount(materials.total, language)}{" "}
+            {t("materialsLanding.grid.documents", "documents")}
+          </p>
+        )}
+        <h1 className="font-archive-hero-title mx-auto mt-4 max-w-3xl">
+          {t("materialsLanding.heroTitle", "Nepal's public records. One archive. Forever free.")}
+        </h1>
+        <p className="font-page-lede mx-auto mt-5 max-w-xl">
+          {t(
+            "materialsLanding.heroLede",
+            "Documents collected from government bodies — searchable, citable, always open.",
+          )}
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild size="lg" className="active:scale-[0.98]">
+            <a href="#series">{t("materialsLanding.ctaBrowse", "Browse the archive")}</a>
+          </Button>
+          <Button asChild variant="secondary" size="lg" className="active:scale-[0.98]">
+            <a href={CHAT_URL} target="_blank" rel="noopener noreferrer">
+              {t("materialsLanding.ctaAsk", "Ask the AI assistant")} →
+            </a>
+          </Button>
+        </div>
 
-          {/* The shelf: two decorative folders behind, one real link in front. */}
-          <div className="relative mx-auto hidden w-full max-w-sm pt-8 lg:col-span-5 lg:block">
-            {shelfBack[0] && (
-              <FolderCard
-                decorative
-                series={shelfBack[0]}
-                count={null}
-                className="absolute -left-4 top-0 w-[68%] -rotate-[5deg] opacity-80"
-              />
-            )}
-            {shelfBack[1] && (
-              <FolderCard
-                decorative
-                series={shelfBack[1]}
-                count={null}
-                className="absolute -right-4 top-8 w-[68%] rotate-[4deg] opacity-90"
-              />
-            )}
-            {shelfFront && (
-              <FolderCard
-                series={shelfFront}
-                count={seriesCount(shelfFront.source)}
-                elevation="lg"
-                heroSheets
-                className="relative mx-auto mt-28 w-[80%]"
-              />
-            )}
-          </div>
+        {/* The shelf: two decorative folders behind, one real link in front. */}
+        <div className="relative mx-auto mt-16 hidden w-full max-w-xl sm:block md:mt-20">
+          {shelfBack[0] && (
+            <FolderCard
+              decorative
+              series={shelfBack[0]}
+              count={null}
+              className="absolute -left-2 top-2 w-[46%] -rotate-[6deg] opacity-80"
+            />
+          )}
+          {shelfBack[1] && (
+            <FolderCard
+              decorative
+              series={shelfBack[1]}
+              count={null}
+              className="absolute -right-2 top-2 w-[46%] rotate-[6deg] opacity-80"
+            />
+          )}
+          {shelfFront && (
+            <FolderCard
+              series={shelfFront}
+              count={seriesCount(shelfFront.source)}
+              elevation="lg"
+              heroSheets
+              className="relative mx-auto mt-10 w-[54%] text-left"
+            />
+          )}
         </div>
       </header>
 
