@@ -154,16 +154,16 @@ export default function MaterialsLanding() {
               <FolderCard
                 decorative
                 series={shelfBack[0]}
-                count={seriesCount(shelfBack[0].source)}
-                className="absolute left-0 top-6 w-[78%] -rotate-[4deg] opacity-80"
+                count={null}
+                className="absolute -left-4 top-0 w-[68%] -rotate-[5deg] opacity-80"
               />
             )}
             {shelfBack[1] && (
               <FolderCard
                 decorative
                 series={shelfBack[1]}
-                count={seriesCount(shelfBack[1].source)}
-                className="absolute right-0 top-10 w-[78%] rotate-[3deg] opacity-90"
+                count={null}
+                className="absolute -right-4 top-8 w-[68%] rotate-[4deg] opacity-90"
               />
             )}
             {shelfFront && (
@@ -172,7 +172,7 @@ export default function MaterialsLanding() {
                 count={seriesCount(shelfFront.source)}
                 elevation="lg"
                 heroSheets
-                className="relative mx-auto mt-24 w-[84%]"
+                className="relative mx-auto mt-28 w-[80%]"
               />
             )}
           </div>

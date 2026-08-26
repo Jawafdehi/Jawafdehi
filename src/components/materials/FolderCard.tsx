@@ -10,13 +10,17 @@ import { cn } from "@/lib/utils";
 
 import type { MaterialSeries } from "@/data/material-series";
 
-/** The fanned white sheets peeking out of the folder. Rest pose is authored
- *  here; hover lifts each sheet 6px with a 40ms stagger. */
+/**
+ * The fanned white sheets peeking out of the folder. Rest pose is authored
+ * here; hover lifts each sheet 6px with a 40ms stagger. Sheets start well
+ * below the folder's top edge (the tint must frame them) and run far behind
+ * the frosted panel, so their lower halves read as paper through the blur.
+ */
 const SHEETS = [
-  { className: "left-[9%] right-[13%] top-[10%] -rotate-2", delay: "delay-0" },
-  { className: "left-[12%] right-[9%] top-[8%] rotate-1", delay: "delay-[40ms]" },
-  { className: "left-[7%] right-[11%] top-[6%] -rotate-1", delay: "delay-[80ms]" },
-  { className: "left-[11%] right-[7%] top-[4%] rotate-2", delay: "delay-[120ms]" },
+  { className: "left-[16%] right-[20%] top-[16%] -rotate-2", delay: "delay-0" },
+  { className: "left-[20%] right-[14%] top-[13%] rotate-1", delay: "delay-[40ms]" },
+  { className: "left-[13%] right-[17%] top-[11%] -rotate-1", delay: "delay-[80ms]" },
+  { className: "left-[18%] right-[12%] top-[9%] rotate-2", delay: "delay-[120ms]" },
 ];
 
 interface FolderCardProps {
@@ -89,8 +93,8 @@ export function FolderCard({
             key={sheet.className}
             aria-hidden="true"
             className={cn(
-              "absolute bottom-[30%] rounded-[3px] border border-border/70 bg-surface shadow-elev-xs",
-              "h-[58%] transition-transform duration-200 ease-out-strong",
+              "absolute rounded-[3px] border border-border/60 bg-surface shadow-elev-xs",
+              "h-[40%] transition-transform duration-200 ease-out-strong",
               sheet.className,
               sheet.delay,
               "group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0",
@@ -98,18 +102,24 @@ export function FolderCard({
             )}
           />
         ))}
-        {/* Frosted front panel over the lower two-thirds. */}
-        <div className="absolute inset-x-0 bottom-0 flex h-[62%] flex-col justify-between rounded-b-2xl rounded-t-md border border-surface/60 bg-surface/55 p-4 backdrop-blur-[12px]">
-          <div>
-            <h3 className="font-semibold leading-snug text-foreground">{name}</h3>
-            <p className="mt-1.5 font-mono text-xl font-semibold tabular-nums text-primary">
-              {count === null ? "—" : formatArchiveCount(count, language)}
-              <span className="ml-1.5 align-baseline font-sans text-xs font-medium text-foreground/70">
-                {t("materialsLanding.grid.documents", "documents")}
-              </span>
-            </p>
-          </div>
-          <p className="text-xs font-medium text-foreground/70">{typeLabel}</p>
+        {/* Frosted front panel over the lower part of the folder. Decorative
+            shelf folders keep the glass but carry no text — scenery stays
+            quiet behind the one labelled folder. */}
+        <div className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col justify-between rounded-b-2xl rounded-t-md border border-surface/60 bg-surface/55 p-4 backdrop-blur-[12px]">
+          {!decorative && (
+            <>
+              <div>
+                <h3 className="font-semibold leading-snug text-foreground">{name}</h3>
+                <p className="mt-1.5 font-mono text-xl font-semibold tabular-nums text-primary">
+                  {count === null ? "—" : formatArchiveCount(count, language)}
+                  <span className="ml-1.5 align-baseline font-sans text-xs font-medium text-foreground/70">
+                    {t("materialsLanding.grid.documents", "documents")}
+                  </span>
+                </p>
+              </div>
+              <p className="text-xs font-medium text-foreground/70">{typeLabel}</p>
+            </>
+          )}
         </div>
       </div>
     </>
