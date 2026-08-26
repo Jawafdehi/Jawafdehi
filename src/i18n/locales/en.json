@@ -2121,12 +2121,43 @@
     "series": {
       "count": "{{total}} documents in this series",
       "searchAll": "Search all materials",
+      "searchPlaceholder": "Search inside this series…",
+      "searchSubmit": "Search this series",
+      "sortLabel": "Sort",
+      "sortLatest": "Latest first",
+      "sortOldest": "Oldest first",
+      "details": "Details",
+      "showingLoaded": "Showing {{shown}} of {{loaded}} loaded",
+      "openDocument": "Open document",
       "loadMore": "Load more",
       "loading": "Loading…",
       "empty": "No documents are visible in this series right now.",
       "unknown": "This series does not exist. Browse the archive instead:",
       "backToArchive": "Back to the archive",
       "undated": "Undated"
+    },
+    "filters": {
+      "title": "Filter",
+      "description": "Filter the loaded documents",
+      "active": "{{count}} active",
+      "none": "No filters applied",
+      "clear": "Clear filters",
+      "dateRange": "Filter by date range",
+      "customRange": "Custom date range",
+      "startDate": "From date (AD)",
+      "endDate": "To date (AD)",
+      "invalidRange": "The from date must be before the to date.",
+      "searchTitle": "Search loaded documents",
+      "searchPlaceholder": "Title or keyword…",
+      "loadedNotice": "Filters apply to the documents loaded below. Load more to extend the results.",
+      "noMatches": "No loaded documents match these filters.",
+      "loadMoreHint": "Load more documents to extend the filtered results.",
+      "presets": {
+        "all": "All time",
+        "30-days": "Last 30 days",
+        "6-months": "Last 6 months",
+        "1-year": "Last year"
+      }
     }
   },
   "courtCasesPage": {

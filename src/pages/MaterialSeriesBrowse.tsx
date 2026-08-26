@@ -1,52 +1,103 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Filter } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
+import { MaterialListCard } from "@/components/materials/MaterialListCard";
+import {
+  MaterialFilterPanel,
+  type MaterialDatePreset,
+  type MaterialFilters,
+} from "@/components/materials/MaterialFilterPanel";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { SearchBar } from "@/components/ui/search-bar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySlug } from "@/data/material-series";
 import {
-  folderTintClass,
   formatArchiveCount,
-  formatLedgerDate,
   pickLocalized,
   resolveMaterialDate,
 } from "@/lib/materials-landing";
-import { archiveStatisticsQuery } from "@/queries/materials-landing";
 import {
   cursorFromNextUrl,
   listMaterialsBySource,
-  materialTail,
 } from "@/services/datalake-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 import type { Material } from "@/services/datalake-api";
 
-function materialName(material: Material, language: string): string {
-  const name = material.name;
-  if (typeof name === "string") return name;
-  return pickLocalized(name ?? undefined, language);
+type MaterialSortOrder = "latest" | "oldest";
+
+const EMPTY_FILTERS: MaterialFilters = {
+  preset: "all",
+  startDate: "",
+  endDate: "",
+  query: "",
+};
+
+function localIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function presetStartDate(preset: MaterialDatePreset): string {
+  if (preset === "all" || preset === "custom") return "";
+  const start = new Date();
+  if (preset === "30-days") start.setDate(start.getDate() - 30);
+  if (preset === "6-months") start.setMonth(start.getMonth() - 6);
+  if (preset === "1-year") start.setFullYear(start.getFullYear() - 1);
+  return localIsoDate(start);
+}
+
+function searchableMaterialText(material: Material): string {
+  const bilingual = (value: Material["name"] | Material["description"]): string => {
+    if (typeof value === "string") return value;
+    return `${value?.ne ?? ""} ${value?.en ?? ""}`;
+  };
+  return [
+    bilingual(material.name),
+    bilingual(material.description),
+    material.identifier,
+    typeof material.additionalType === "string" ? material.additionalType : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLocaleLowerCase();
 }
 
 /**
- * One series of the archive: real count from /api/statistics/, documents from
- * the public per-source list (`/api/materials/?source=…`), newest-ingested
- * first, cursor-paginated behind a "load more".
+ * One series of the archive: documents from the public per-source list
+ * (`/api/materials/?source=…`), newest-ingested first and cursor-paginated
+ * behind a "load more".
  *
- * The backend offers no text search, year, type or language filter on this
- * list yet (and the search API cannot filter by source) — until it does, the
- * page links to the archive-wide materials search instead of faking controls.
+ * The backend offers no date or text filters on this source list yet. The
+ * sidebar therefore filters the cursor pages already loaded in the browser,
+ * labels that scope plainly, and keeps "load more" available to expand it.
  */
 export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const series = seriesBySlug(slug);
-
-  const { data: statistics } = useQuery({
-    ...archiveStatisticsQuery(),
-    staleTime: 5 * 60 * 1000,
-  });
 
   const documentsQuery = useInfiniteQuery({
     queryKey: ["materials-by-source", series?.source ?? slug],
@@ -57,6 +108,79 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
     enabled: Boolean(series),
     staleTime: 5 * 60 * 1000,
   });
+
+  const [filters, setFilters] = useState<MaterialFilters>(EMPTY_FILTERS);
+  const [sortOrder, setSortOrder] = useState<MaterialSortOrder>("latest");
+  const deferredQuery = useDeferredValue(filters.query.trim().toLocaleLowerCase());
+  const documents = useMemo(
+    () => documentsQuery.data?.pages.flatMap((page) => page.results) ?? [],
+    [documentsQuery.data],
+  );
+  const invalidDateRange = Boolean(
+    filters.startDate && filters.endDate && filters.startDate > filters.endDate,
+  );
+  const filteredDocuments = useMemo(() => {
+    if (invalidDateRange) return [];
+    const startDate = filters.startDate || presetStartDate(filters.preset);
+    const endDate = filters.endDate;
+
+    return documents
+      .filter((material) => {
+        if (deferredQuery && !searchableMaterialText(material).includes(deferredQuery)) {
+          return false;
+        }
+        if (!startDate && !endDate) return true;
+
+        const date = resolveMaterialDate({
+          date: material.datePublished || material.dateCreated,
+        }).ad;
+        if (!date) return false;
+        if (startDate && date < startDate) return false;
+        if (endDate && date > endDate) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const aDate = resolveMaterialDate({
+          date: a.datePublished || a.dateCreated,
+        }).ad;
+        const bDate = resolveMaterialDate({
+          date: b.datePublished || b.dateCreated,
+        }).ad;
+        if (!aDate && !bDate) return 0;
+        if (!aDate) return 1;
+        if (!bDate) return -1;
+        return sortOrder === "latest"
+          ? bDate.localeCompare(aDate)
+          : aDate.localeCompare(bDate);
+      });
+  }, [
+    deferredQuery,
+    documents,
+    filters.endDate,
+    filters.preset,
+    filters.startDate,
+    invalidDateRange,
+    sortOrder,
+  ]);
+  const activeDateFilterCount =
+    filters.preset !== "all" || filters.startDate || filters.endDate ? 1 : 0;
+
+  const changePreset = (preset: MaterialDatePreset) => {
+    setFilters((current) => ({ ...current, preset, startDate: "", endDate: "" }));
+  };
+  const changeStartDate = (startDate: string) => {
+    setFilters((current) => ({ ...current, preset: "custom", startDate }));
+  };
+  const changeEndDate = (endDate: string) => {
+    setFilters((current) => ({ ...current, preset: "custom", endDate }));
+  };
+  const changeQuery = (query: string) => {
+    setFilters((current) => ({ ...current, query }));
+  };
+  const clearDateFilters = () => {
+    setFilters((current) => ({ ...current, preset: "all", startDate: "", endDate: "" }));
+  };
+  const clearAllFilters = () => setFilters(EMPTY_FILTERS);
 
   if (!series) {
     return (
@@ -81,11 +205,6 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
   }
 
   const name = pickLocalized(series.name, language);
-  const count =
-    statistics?.materials?.by_source?.find((row) => row.source === series.source)
-      ?.count ?? null;
-  const documents = documentsQuery.data?.pages.flatMap((page) => page.results) ?? [];
-
   return (
     <div className="layout-container py-12 md:py-16">
       <Seo
@@ -105,94 +224,180 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
         </Link>
       </nav>
 
-      <header className="mt-8 border-b border-border pb-8">
-        <div className="flex items-start gap-4">
-          <span
-            aria-hidden="true"
-            className={`mt-2 h-4 w-4 shrink-0 rounded-full border border-primary/20 ${folderTintClass(series.tint)}`}
-          />
-          <div>
-            <h1 className="font-archive-hero-title">{name}</h1>
-            <p className="font-page-lede mt-4 max-w-2xl">
-              {pickLocalized(series.description, language)}
-            </p>
-            <p className="mt-4 font-mono text-sm tabular-nums text-muted-foreground">
-              {count === null
-                ? "—"
-                : t("materialsLanding.series.count", "{{total}} documents in this series", {
-                    total: formatArchiveCount(count, language),
-                  })}
-            </p>
-          </div>
-        </div>
-        <div className="mt-6">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/search?type=material">
-              {t("materialsLanding.series.searchAll", "Search all materials")} →
-            </Link>
-          </Button>
-        </div>
+      <header className="mt-8">
+        <h1 className="font-archive-hero-title">{name}</h1>
+        <p className="font-page-lede mt-4 max-w-2xl">
+          {pickLocalized(series.description, language)}
+        </p>
       </header>
 
-      <section aria-label={name} className="mt-10">
-        {documentsQuery.isLoading && (
-          <div className="space-y-3">
-            {Array.from({ length: 8 }, (_, index) => (
-              <Skeleton key={index} className="h-14 w-full rounded-xl" />
-            ))}
-          </div>
-        )}
-
-        {!documentsQuery.isLoading && documents.length === 0 && (
-          <p className="font-page-lede py-8">
-            {t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
-          </p>
-        )}
-
-        {documents.length > 0 && (
-          <ul className="list-none divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface shadow-elev-sm">
-            {documents.map((material) => {
-              const tail = materialTail(material["@id"]);
-              const date = resolveMaterialDate({ date: material.datePublished });
-              const dateLabel =
-                formatLedgerDate(date, language) ||
-                t("materialsLanding.series.undated", "Undated");
-              return (
-                <li key={material["@id"]}>
-                  <Link
-                    to={`/material/${tail}`}
-                    className="grid grid-cols-[1fr_auto] items-baseline gap-4 px-4 py-4 outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent md:px-6"
-                  >
-                    <span className="min-w-0">
-                      <span className="line-clamp-2 font-medium text-foreground">
-                        {materialName(material, language) ||
-                          t("materialsLanding.recent.untitled", "Untitled document")}
-                      </span>
-                    </span>
-                    <span className="whitespace-nowrap font-mono text-sm tabular-nums text-muted-foreground">
-                      {dateLabel}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {documentsQuery.hasNextPage && (
-          <div className="mt-8 flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => documentsQuery.fetchNextPage()}
-              disabled={documentsQuery.isFetchingNextPage}
+      <div className="mt-8 grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <form role="search" onSubmit={(event) => event.preventDefault()}>
+          <SearchBar
+            type="search"
+            value={filters.query}
+            onChange={(event) => changeQuery(event.target.value)}
+            placeholder={t(
+              "materialsLanding.series.searchPlaceholder",
+              "Search inside this series…",
+            )}
+            submitLabel={t("materialsLanding.series.searchSubmit", "Search this series")}
+            inputClassName="bg-surface shadow-elev-xs"
+          />
+        </form>
+        <p className="whitespace-nowrap text-sm text-muted-foreground">
+          {t("materialsLanding.series.showingLoaded", "Showing {{shown}} of {{loaded}} loaded", {
+            shown: formatArchiveCount(filteredDocuments.length, language),
+            loaded: formatArchiveCount(documents.length, language),
+          })}
+        </p>
+        <div className="flex items-center gap-3 md:justify-end">
+          <span className="text-sm font-medium text-muted-foreground">
+            {t("materialsLanding.series.sortLabel", "Sort")}
+          </span>
+          <Select
+            value={sortOrder}
+            onValueChange={(value) => setSortOrder(value as MaterialSortOrder)}
+          >
+            <SelectTrigger
+              aria-label={t("materialsLanding.series.sortLabel", "Sort")}
+              className="h-12 min-w-40 rounded-full bg-surface px-4 shadow-elev-xs"
             >
-              {documentsQuery.isFetchingNextPage
-                ? t("materialsLanding.series.loading", "Loading…")
-                : t("materialsLanding.series.loadMore", "Load more")}
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest">
+                {t("materialsLanding.series.sortLatest", "Latest first")}
+              </SelectItem>
+              <SelectItem value="oldest">
+                {t("materialsLanding.series.sortOldest", "Oldest first")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mt-5 flex justify-end lg:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Filter aria-hidden="true" className="h-4 w-4" />
+              {t("materialsLanding.filters.title", "Filter")}
+              {activeDateFilterCount ? (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] text-primary-foreground">
+                  {activeDateFilterCount}
+                </span>
+              ) : null}
             </Button>
-          </div>
-        )}
-      </section>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[92vw] max-w-sm p-0 sm:max-w-sm">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{t("materialsLanding.filters.title", "Filter")}</SheetTitle>
+              <SheetDescription>
+                {t("materialsLanding.filters.description", "Filter the loaded documents")}
+              </SheetDescription>
+            </SheetHeader>
+            <MaterialFilterPanel
+              filters={filters}
+              invalidDateRange={invalidDateRange}
+              activeFilterCount={activeDateFilterCount}
+              onPresetChange={changePreset}
+              onStartDateChange={changeStartDate}
+              onEndDateChange={changeEndDate}
+              onClear={clearDateFilters}
+              idPrefix="materials-filter-mobile"
+              className="rounded-none border-0 shadow-none [&>div:first-child]:pr-14"
+            />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <div className="mt-8 grid items-start gap-8 lg:mt-10 lg:grid-cols-[minmax(250px,300px)_minmax(0,1fr)] xl:gap-10">
+        <aside
+          className="sticky top-24 hidden lg:block"
+          aria-label={t("materialsLanding.filters.title", "Filter")}
+        >
+          <MaterialFilterPanel
+            filters={filters}
+            invalidDateRange={invalidDateRange}
+            activeFilterCount={activeDateFilterCount}
+            onPresetChange={changePreset}
+            onStartDateChange={changeStartDate}
+            onEndDateChange={changeEndDate}
+            onClear={clearDateFilters}
+            idPrefix="materials-filter-desktop"
+          />
+        </aside>
+
+        <section aria-label={name} className="min-w-0">
+          {documentsQuery.isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }, (_, index) => (
+                <Card
+                  key={index}
+                  className="flex items-center justify-between gap-6 rounded-xl border-0 bg-surface p-5 shadow-elev-md"
+                >
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-4/5" />
+                    <Skeleton className="h-4 w-2/5" />
+                  </div>
+                  <Skeleton className="hidden h-9 w-48 md:block" />
+                </Card>
+              ))}
+            </div>
+          ) : null}
+
+          {!documentsQuery.isLoading && documents.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-surface-2/50 px-6 py-12 text-center">
+              <p className="font-page-lede">
+                {t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
+              </p>
+            </div>
+          ) : null}
+
+          {!documentsQuery.isLoading && documents.length > 0 && filteredDocuments.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-surface-2/50 px-6 py-12 text-center">
+              <p className="font-page-lede">
+                {t("materialsLanding.filters.noMatches", "No loaded documents match these filters.")}
+              </p>
+              <Button variant="outline" className="mt-5" onClick={clearAllFilters}>
+                {t("materialsLanding.filters.clear", "Clear filters")}
+              </Button>
+            </div>
+          ) : null}
+
+          {filteredDocuments.length > 0 ? (
+            <ul className="list-none space-y-3">
+              {filteredDocuments.map((material) => (
+                <MaterialListCard
+                  key={material["@id"]}
+                  material={material}
+                  series={series}
+                />
+              ))}
+            </ul>
+          ) : null}
+
+          {documentsQuery.hasNextPage ? (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => documentsQuery.fetchNextPage()}
+                disabled={documentsQuery.isFetchingNextPage}
+              >
+                {documentsQuery.isFetchingNextPage
+                  ? t("materialsLanding.series.loading", "Loading…")
+                  : t("materialsLanding.series.loadMore", "Load more")}
+              </Button>
+              {activeDateFilterCount || filters.query.trim() ? (
+                <p className="text-center text-xs text-muted-foreground">
+                  {t("materialsLanding.filters.loadMoreHint", "Load more documents to extend the filtered results.")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      </div>
     </div>
   );
 }
