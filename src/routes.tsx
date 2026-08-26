@@ -38,9 +38,9 @@ import ArchiveSearch from "./pages/ArchiveSearch";
 import ResearchCorruption from "./pages/ResearchCorruption";
 // /materials and /courtcases are pre-rendered, so the policy above makes them
 // eager. /courtcases is a twenty-line wrapper over ArchiveSearch (already
-// eager). /materials is the archive landing page plus a per-series browse and
-// the same materials-locked search, routed by query string inside Materials —
-// the landing is what gets pre-rendered, so all three stay in this chunk.
+// eager). /materials routes three views by query string inside Materials; only
+// the landing one is pre-rendered, so only it has to be eager — the ?series=
+// browse is lazy() in Materials.tsx, and the ?q= view is ArchiveSearch above.
 import Materials from "./pages/Materials";
 import CourtCases from "./pages/CourtCases";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,

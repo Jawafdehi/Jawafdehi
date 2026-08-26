@@ -1,9 +1,16 @@
+import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import ArchiveSearch from "./ArchiveSearch";
-import MaterialSeriesBrowse from "./MaterialSeriesBrowse";
 import MaterialsLanding from "./MaterialsLanding";
+
+// The landing view is what /materials pre-renders; ?series= is client-rendered
+// only, and it is the one variant with code of its own (filter panel, sheet,
+// select). Behind a dynamic import that is ~4 KB gzip off the entry chunk.
+// ArchiveSearch stays a static import: routes.tsx already imports it eagerly
+// for /search, so a dynamic one here would defer nothing and only cost a frame.
+const MaterialSeriesBrowse = lazy(() => import("./MaterialSeriesBrowse"));
 
 /**
  * /materials is three views behind one URL, decided by the query string:
@@ -45,7 +52,11 @@ export default function Materials() {
   }
 
   if (series) {
-    return <MaterialSeriesBrowse slug={series} />;
+    return (
+      <Suspense fallback={null}>
+        <MaterialSeriesBrowse slug={series} />
+      </Suspense>
+    );
   }
 
   return <MaterialsLanding />;

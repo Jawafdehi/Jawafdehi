@@ -1,5 +1,7 @@
 import {
   Archive,
+  ArrowLeft,
+  ArrowRight,
   BookOpen,
   Calendar,
   ClipboardList,
@@ -13,18 +15,13 @@ import {
   Scale,
   ScrollText,
 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import type { ReactNode } from "react";
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
 import { seriesBySource } from "@/data/material-series";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import {
@@ -56,12 +53,27 @@ const SOURCE_ICONS: Record<string, LucideIcon> = {
   other: File,
 };
 
+/** Matches the `gap-5` between slides, in px — the step the buttons scroll by. */
+const SLIDE_GAP = 20;
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 /**
- * The "recently added" register as a carousel of tall document cards —
+ * The "recently added" register as a scrollable row of tall document cards —
  * title, snippet, then icon-led source and date metadata anchored to the
- * card foot. shadcn/embla carries the interaction contract: arrow-key
- * scrolling on the region, swipe with button alternatives, slides announced
- * as such. Scroll snaps instantly under prefers-reduced-motion.
+ * card foot.
+ *
+ * A native CSS scroll-snap scroller, NOT a carousel library: four cards fit
+ * the row outright at `lg`, so all a library would add over `overflow-x-auto`
+ * is swipe physics the browser already has — and 10.8 KB gzip on the initial
+ * payload of a pre-rendered page (scripts/bundle-budget.mjs). The scroller is
+ * focusable so the region is keyboard-scrollable (WCAG 2.1.1), and the
+ * arrow buttons move it one card at a time, disabling at each end.
  */
 export function RecentMaterialsCarousel({
   materials,
@@ -75,30 +87,90 @@ export function RecentMaterialsCarousel({
 }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const reduceMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const scrollerRef = useRef<HTMLUListElement>(null);
+  // Both true is the "everything fits" case (desktop): neither button applies.
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(true);
+
+  const syncEdges = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    // 1px of slack: fractional layout widths never land on an exact equality.
+    setAtStart(el.scrollLeft <= 1);
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    syncEdges();
+    if (typeof ResizeObserver === "undefined") return;
+    // Card widths are percentage-based, so a viewport change moves both edges.
+    const observer = new ResizeObserver(syncEdges);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [syncEdges, materials]);
+
+  const scrollByCard = (direction: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.firstElementChild;
+    const step = card ? card.getBoundingClientRect().width + SLIDE_GAP : el.clientWidth;
+    el.scrollBy({
+      left: direction * step,
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+    });
+  };
 
   return (
-    <Carousel
-      opts={{ align: "start", duration: reduceMotion ? 0 : 20 }}
-      aria-label={t("materialsLanding.recent.title", "Recently added")}
-    >
-      {/* Section title and the carousel controls share one line. */}
+    <div>
+      {/* Section title and the scroll controls share one line. */}
       <div className="flex items-end justify-between gap-6 pb-10">
         {heading}
         <div className="flex shrink-0 gap-2">
-          <CarouselPrevious
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 rounded-full active:scale-[0.97]"
             aria-label={t("materialsLanding.recent.previous", "Previous documents")}
-            className="static h-10 w-10 translate-y-0 active:scale-[0.97]"
-          />
-          <CarouselNext
+            disabled={atStart}
+            onClick={() => scrollByCard(-1)}
+          >
+            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 rounded-full active:scale-[0.97]"
             aria-label={t("materialsLanding.recent.next", "Next documents")}
-            className="static h-10 w-10 translate-y-0 active:scale-[0.97]"
-          />
+            disabled={atEnd}
+            onClick={() => scrollByCard(1)}
+          >
+            <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-      <CarouselContent className="-ml-5">
+      <ul
+        ref={scrollerRef}
+        onScroll={syncEdges}
+        // Focusable so the row can be scrolled with the arrow keys; labelled
+        // because a focusable region needs an accessible name.
+        tabIndex={0}
+        aria-label={t("materialsLanding.recent.title", "Recently added")}
+        className={[
+          // snap-proximity, NOT mandatory: the last card's snap point sits past
+          // the scroller's maximum scrollLeft, and mandatory snapping bounces
+          // any scroll that reaches the end back to the previous card — which
+          // makes the last document unreachable on a phone.
+          //
+          // -mx-1/p-1 give the cards' focus ring and shadow room to render
+          // inside the scrollport; scroll-px-1 matches that inset so a
+          // snap-start slide still comes to rest at scrollLeft 0.
+          "scrollbar-none -mx-1 flex list-none snap-x snap-proximity scroll-px-1 gap-5 overflow-x-auto p-1",
+          "outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        ].join(" ")}
+      >
         {materials.map(({ result, date }) => {
           const source = sourceFromMaterialUrl(result.url);
           const sourceKey = sourceKeyFor(source ?? "");
@@ -120,9 +192,9 @@ export function RecentMaterialsCarousel({
               ? pickLocalized(series.description, language)
               : t(`materialsLanding.sourceDescriptions.${sourceKey}`, ""));
           return (
-            <CarouselItem
+            <li
               key={result.id}
-              className="basis-[85%] pl-5 sm:basis-1/2 lg:basis-1/4"
+              className="min-w-0 shrink-0 basis-[85%] snap-start sm:basis-[calc(50%-0.625rem)] lg:basis-[calc(25%-0.9375rem)]"
             >
               <Link
                 to={result.url}
@@ -153,10 +225,10 @@ export function RecentMaterialsCarousel({
                   </p>
                 </div>
               </Link>
-            </CarouselItem>
+            </li>
           );
         })}
-      </CarouselContent>
-    </Carousel>
+      </ul>
+    </div>
   );
 }

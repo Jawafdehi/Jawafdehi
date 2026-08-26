@@ -546,3 +546,17 @@ All colors MUST be HSL.
     }
   }
 }
+
+@layer utilities {
+  /* Hide the scrollbar on a horizontal snap row. The row's own arrow buttons
+     and the snap points are the affordance; a scrollbar under the cards adds
+     a second, redundant one — and on desktop the row does not overflow at
+     all, so there is nothing for it to show. */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
