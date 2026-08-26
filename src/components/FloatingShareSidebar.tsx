@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Link2, Check, Share2, QrCode, Printer, Download } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+import { ShareQrCode } from "@/components/ShareQrCode";
 import { buildShareLinks } from "@/utils/share";
 import {
   FacebookIcon,
@@ -313,13 +313,7 @@ export const FloatingShareSidebar = ({
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <QRCodeSVG
-                id="floating-qr-code-svg"
-                value={url}
-                size={200}
-                level="H"
-                includeMargin={true}
-              />
+              <ShareQrCode id="floating-qr-code-svg" url={url} />
             </div>
             <p className="text-sm text-muted-foreground text-center">
               {t("share.scanQRCode")}
