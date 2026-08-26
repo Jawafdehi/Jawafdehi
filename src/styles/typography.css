@@ -477,4 +477,11 @@
       @apply whitespace-nowrap text-xs;
     }
   }
+
+  .font-filter-panel,
+  .font-filter-panel :where(*),
+  .font-material-folder,
+  .font-material-folder :where(*) {
+    font-family: "Inter", "Noto Sans Devanagari", sans-serif;
+  }
 }
