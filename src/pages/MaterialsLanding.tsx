@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Seo from "@/components/Seo";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
-import { RecentMaterialsTable } from "@/components/materials/RecentMaterialsTable";
+import { RecentMaterialsCards } from "@/components/materials/RecentMaterialsCards";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -241,7 +241,6 @@ export default function MaterialsLanding() {
                 "materialsLanding.capabilities.downloadLine",
                 "Open any series and follow every document to its source file.",
               )}
-              href="#series"
             />
             <CapabilityRow
               index={2}
@@ -250,8 +249,6 @@ export default function MaterialsLanding() {
                 "materialsLanding.capabilities.askLine",
                 "Put a question to the archive in Nepali or English and get cited answers.",
               )}
-              href={CHAT_URL}
-              external
             />
             <CapabilityRow
               index={3}
@@ -260,8 +257,6 @@ export default function MaterialsLanding() {
                 "materialsLanding.capabilities.analyzeLine",
                 "The structured data is open (CC BY-NC) — build on it from our GitHub.",
               )}
-              href={GITHUB_URL}
-              external
             />
           </div>
         </div>
@@ -279,11 +274,11 @@ export default function MaterialsLanding() {
           </h2>
           <div className="mt-10">
             {recents ? (
-              <RecentMaterialsTable materials={recents} />
+              <RecentMaterialsCards materials={recents} />
             ) : (
-              <div className="space-y-3 rounded-2xl border border-border bg-surface p-6 shadow-elev-sm">
-                {Array.from({ length: 5 }, (_, index) => (
-                  <Skeleton key={index} className="h-6 w-full" />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 8 }, (_, index) => (
+                  <Skeleton key={index} className="h-40 w-full rounded-xl" />
                 ))}
               </div>
             )}
