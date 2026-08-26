@@ -8,6 +8,7 @@ import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCards } from "@/components/materials/RecentMaterialsCards";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
@@ -125,8 +126,12 @@ export default function MaterialsLanding() {
       </Seo>
 
       {/* Hero: a centered stack — stat eyebrow, title, lede, CTA pair — with
-          the folder shelf as the big visual beneath. */}
-      <header className="layout-container pb-16 pt-14 text-center md:pb-24 md:pt-20">
+          the folder shelf as the big visual beneath, over the site's shared
+          hero backdrop (the same accent blobs as /about and /team). The
+          -mt/pt pair slides the glow behind the transparent navbar. */}
+      <header className="relative isolate -mt-[76px] overflow-hidden bg-background pt-[76px]">
+        <PageHeroBackdrop />
+        <div className="layout-container relative z-10 pb-16 pt-14 text-center md:pb-24 md:pt-20">
         {materials && (
           <Eyebrow className="tabular-nums">
             {formatArchiveCount(materials.total, language)}{" "}
@@ -184,6 +189,7 @@ export default function MaterialsLanding() {
               className="relative mx-auto mt-10 w-[54%]"
             />
           )}
+        </div>
         </div>
       </header>
 
