@@ -290,6 +290,42 @@ All colors MUST be HSL.
     --tone-fuchsia: 299 66% 35%;
     --tone-pink: 328 66% 38%;
     --tone-rose: 345 75% 37%;
+
+    /* Raised surfaces — the archive elevation model (/materials). The page
+       layers paper (--background) → --surface-2 grouping panels → --surface
+       cards; a raised element combines the surface, a 1px --border hairline
+       and one --shadow-elev-* step. Like --tone-*, these encode a ROLE, not a
+       place: reuse them anywhere a card floats above the page. */
+    --surface: var(--base-white);
+    --surface-2: var(--base-cream);
+
+    /* Elevation scale. All four are the brand navy at low alpha — a shadow is
+       the ink of the thing casting it, not grey soot. Deliberately shadows
+       only: no glows, no coloured shadows. Restated in .dark (black-based;
+       navy-tinted shadows vanish on a near-black page). */
+    --shadow-elev-xs: 0 1px 2px hsl(var(--base-navy) / 0.05);
+    --shadow-elev-sm: 0 2px 8px -2px hsl(var(--base-navy) / 0.08);
+    --shadow-elev-md: 0 8px 24px -8px hsl(var(--base-navy) / 0.14);
+    --shadow-elev-lg: 0 20px 48px -16px hsl(var(--base-navy) / 0.22);
+
+    /* The darkest navy: the far edge of the capabilities section's radial
+       ink wash (--primary-surface → this, off-centre). Text never sits on it
+       alone — it is always blended under --primary-surface content. */
+    --navy-deep: 217 62% 9%;
+
+    /* Series folder tints — the /materials archive's shelf palette. These
+       encode SERIES IDENTITY (folder card fills, series dots in tables), not
+       category or severity — for those use --tone-*. Pastel band (L 72–83%)
+       so --foreground ink passes AA on every one; assigned to series by
+       cycling in registry order (src/data/material-series.ts). */
+    --folder-1: 251 36% 83%;  /* #C9C3E3 lavender */
+    --folder-2: 126 17% 76%;  /* #B9CDBB sage */
+    --folder-3: 27 37% 76%;   /* #D9C1AD tan */
+    --folder-4: 205 27% 78%;  /* #B7C9D6 mist */
+    --folder-5: 45 35% 75%;   /* #D6CBA9 sand */
+    --folder-6: 0 28% 79%;    /* #D8B9B9 blush */
+    --folder-7: 169 19% 72%;  /* #A9C4BF sea */
+    --folder-8: 272 22% 81%;  /* #CFC4D9 lilac */
   }
 
 }
@@ -383,6 +419,26 @@ All colors MUST be HSL.
     --chart-3: 159 73% 45%;
     --chart-4: 249 55% 57%;
     --chart-5: 41 95% 45%;
+
+    /* Raised surfaces + elevation, dark. Surfaces step LIGHTER as they rise
+       (the dark inverse of white-on-paper); shadows go black — the navy-alpha
+       light values are invisible on a near-black page. Folder tints drop to
+       the 30% lightness band, hues intact, so a series keeps its colour. */
+    --surface: 217 32% 11%;
+    --surface-2: 217 34% 9%;
+    --shadow-elev-xs: 0 1px 2px hsl(0 0% 0% / 0.5);
+    --shadow-elev-sm: 0 2px 8px -2px hsl(0 0% 0% / 0.55);
+    --shadow-elev-md: 0 8px 24px -8px hsl(0 0% 0% / 0.6);
+    --shadow-elev-lg: 0 20px 48px -16px hsl(0 0% 0% / 0.65);
+    --navy-deep: 217 55% 5%;
+    --folder-1: 251 26% 32%;
+    --folder-2: 126 14% 28%;
+    --folder-3: 27 27% 30%;
+    --folder-4: 205 22% 30%;
+    --folder-5: 45 26% 29%;
+    --folder-6: 0 21% 31%;
+    --folder-7: 169 16% 28%;
+    --folder-8: 272 17% 32%;
 
     --tone-red: 346 70% 65%;
     --tone-orange: 15 79% 55%;
