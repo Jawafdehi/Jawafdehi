@@ -2072,7 +2072,8 @@
     "ctaAsk": "Ask the AI assistant",
     "grid": {
       "title": "Browse by series",
-      "documents": "documents"
+      "documents": "documents",
+      "browseAll": "Browse all series"
     },
     "capabilities": {
       "title": "The archive works for you",

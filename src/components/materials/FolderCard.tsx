@@ -51,7 +51,6 @@ export function FolderCard({
   const language = i18n.language;
   const tintClass = folderTintClass(series.tint);
   const name = pickLocalized(series.name, language);
-  const typeLabel = pickLocalized(series.typeLabel, language);
 
   const shellClassName = cn(
     "relative block rounded-2xl outline-none",
@@ -78,7 +77,7 @@ export function FolderCard({
       {/* Folder body. isolate keeps the sheet/glass stack local. */}
       <div
         className={cn(
-          "relative isolate aspect-[4/3] overflow-hidden rounded-2xl rounded-tl-none",
+          "relative isolate aspect-[11/10] overflow-hidden rounded-2xl rounded-tl-none",
           tintClass,
         )}
       >
@@ -109,15 +108,14 @@ export function FolderCard({
           {!decorative && (
             <>
               <div>
-                <h3 className="font-semibold leading-snug text-foreground">{name}</h3>
-                <p className="mt-1.5 font-mono text-xl font-semibold tabular-nums text-primary">
+                <h3 className="text-xl font-medium leading-tight text-primary">{name}</h3>
+                <p className="mt-4 text-xl font-semibold tabular-nums text-primary">
                   {count === null ? "—" : formatArchiveCount(count, language)}
-                  <span className="ml-1.5 align-baseline font-sans text-xs font-medium text-foreground/70">
+                  <span className="ml-1.5 align-baseline text-xs font-medium text-foreground/70">
                     {t("materialsLanding.grid.documents", "documents")}
                   </span>
                 </p>
               </div>
-              <p className="text-xs font-medium text-foreground/70">{typeLabel}</p>
             </>
           )}
         </div>
@@ -126,7 +124,10 @@ export function FolderCard({
   );
 
   return (
-    <div className={cn("group relative", className)} aria-hidden={decorative || undefined}>
+    <div
+      className={cn("font-material-folder group relative", className)}
+      aria-hidden={decorative || undefined}
+    >
       {decorative ? (
         <div className={shellClassName}>{folder}</div>
       ) : (

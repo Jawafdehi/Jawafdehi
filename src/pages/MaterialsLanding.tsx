@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
+import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
@@ -228,12 +229,15 @@ export default function MaterialsLanding() {
           <h2 id="series-heading" className="font-archive-section-title">
             {t("materialsLanding.grid.title", "Browse by series")}
           </h2>
-          <ul className="mt-12 grid list-none grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-12 grid list-none grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {MATERIAL_SERIES.map((series) => (
               <li key={series.slug} className="pt-4">
                 <FolderCard series={series} count={seriesCount(series.source)} />
               </li>
             ))}
+            <li className="pt-4">
+              <BrowseAllFolderCard />
+            </li>
           </ul>
         </div>
       </section>
