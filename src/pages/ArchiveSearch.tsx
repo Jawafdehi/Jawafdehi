@@ -263,9 +263,9 @@ export default function ArchiveSearch({
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
-    // On a locked single-type page the type isn't a removable refinement.
-    type:
-      lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
+    // Record type is represented by the tabs, so duplicating it as a removable
+    // filter chip (or in the mobile filter count) would be redundant.
+    type: [],
   };
   const activeRefinementCount = Object.values(selectedRefinements).reduce(
     (count, values) => count + values.length,
