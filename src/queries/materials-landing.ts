@@ -10,8 +10,8 @@ import type { ArchiveSearchResponse } from "@/types/search";
  * shows comes from one of these.
  */
 
-/** How many rows the "recently added" register shows. */
-export const RECENT_MATERIALS_COUNT = 8;
+/** How many documents the "recently added" carousel shows. */
+export const RECENT_MATERIALS_COUNT = 4;
 
 /**
  * Fetch a window well past the display count: `sort=newest` compares the raw

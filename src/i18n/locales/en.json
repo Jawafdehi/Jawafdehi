@@ -2092,7 +2092,9 @@
       "view": "View",
       "open": "Open",
       "openDocument": "Open: {{title}}",
-      "untitled": "Untitled document"
+      "untitled": "Untitled document",
+      "previous": "Previous documents",
+      "next": "Next documents"
     },
     "trust": {
       "builtBy": "Built by Nepalis",

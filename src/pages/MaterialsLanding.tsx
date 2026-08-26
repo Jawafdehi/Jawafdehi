@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Seo from "@/components/Seo";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
-import { RecentMaterialsCards } from "@/components/materials/RecentMaterialsCards";
+import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHeroBackdrop } from "@/components/ui/page-hero";
@@ -278,13 +278,13 @@ export default function MaterialsLanding() {
           <h2 id="recent-heading" className="font-archive-section-title">
             {t("materialsLanding.recent.title", "Recently added")}
           </h2>
-          <div className="mt-10">
+          <div className="mt-6">
             {recents ? (
-              <RecentMaterialsCards materials={recents} />
+              <RecentMaterialsCarousel materials={recents} />
             ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 8 }, (_, index) => (
-                  <Skeleton key={index} className="h-40 w-full rounded-xl" />
+              <div className="grid grid-cols-1 gap-5 pt-16 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <Skeleton key={index} className="min-h-[320px] w-full rounded-xl" />
                 ))}
               </div>
             )}
