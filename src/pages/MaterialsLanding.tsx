@@ -7,6 +7,7 @@ import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsTable } from "@/components/materials/RecentMaterialsTable";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
@@ -123,17 +124,17 @@ export default function MaterialsLanding() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Seo>
 
-      {/* Hero: a centered stack — stat line, title, lede, CTA pair — with the
-          folder shelf as the big visual beneath. */}
+      {/* Hero: a centered stack — stat eyebrow, title, lede, CTA pair — with
+          the folder shelf as the big visual beneath. */}
       <header className="layout-container pb-16 pt-14 text-center md:pb-24 md:pt-20">
         {materials && (
-          <p className="font-mono text-sm tabular-nums text-muted-foreground">
+          <Eyebrow className="tabular-nums">
             {formatArchiveCount(materials.total, language)}{" "}
             {t("materialsLanding.grid.documents", "documents")}
-          </p>
+          </Eyebrow>
         )}
         <h1 className="font-archive-hero-title mx-auto mt-4 max-w-3xl">
-          {t("materialsLanding.heroTitle", "Nepal's public records. One archive. Forever free.")}
+          {t("materialsLanding.heroTitle", "Nepal's public records. One archive.")}
         </h1>
         <p className="font-page-lede mx-auto mt-5 max-w-xl">
           {t(
@@ -152,14 +153,17 @@ export default function MaterialsLanding() {
           </Button>
         </div>
 
-        {/* The shelf: two decorative folders behind, one real link in front. */}
+        {/* The shelf, pure scenery: three textless folders that load stacked
+            behind the front one and fan out. Base classes are the FINAL pose
+            (what no-JS and reduced-motion get); the fan-out keyframes must
+            end on the same pose. */}
         <div className="relative mx-auto mt-16 hidden w-full max-w-xl sm:block md:mt-20">
           {shelfBack[0] && (
             <FolderCard
               decorative
               series={shelfBack[0]}
               count={null}
-              className="absolute -left-2 top-2 w-[46%] -rotate-[6deg] opacity-80"
+              className="absolute -left-2 top-2 w-[46%] -rotate-[6deg] animate-fan-out-left motion-reduce:animate-none"
             />
           )}
           {shelfBack[1] && (
@@ -167,16 +171,17 @@ export default function MaterialsLanding() {
               decorative
               series={shelfBack[1]}
               count={null}
-              className="absolute -right-2 top-2 w-[46%] rotate-[6deg] opacity-80"
+              className="absolute -right-2 top-2 w-[46%] rotate-[6deg] animate-fan-out-right motion-reduce:animate-none"
             />
           )}
           {shelfFront && (
             <FolderCard
+              decorative
               series={shelfFront}
-              count={seriesCount(shelfFront.source)}
+              count={null}
               elevation="lg"
               heroSheets
-              className="relative mx-auto mt-10 w-[54%] text-left"
+              className="relative mx-auto mt-10 w-[54%]"
             />
           )}
         </div>

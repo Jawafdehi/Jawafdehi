@@ -186,11 +186,27 @@ export default {
           from: { transform: "translateY(0)" },
           to: { transform: "translateY(-8px)" },
         },
+        // The /materials hero shelf opens on load: the back folders start
+        // stacked behind the front one (translated to centre, unrotated) and
+        // fan out to their resting pose. `both` fill keeps them stacked
+        // through the start delay. The from/to poses must stay in step with
+        // the folders' base utilities in MaterialsLanding.
+        "fan-out-left": {
+          from: { transform: "translate(58%, 10%) rotate(0deg)" },
+          to: { transform: "translate(0, 0) rotate(-6deg)" },
+        },
+        "fan-out-right": {
+          from: { transform: "translate(-58%, 10%) rotate(0deg)" },
+          to: { transform: "translate(0, 0) rotate(6deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "sheet-rise": "sheet-rise 600ms cubic-bezier(0.23, 1, 0.32, 1) 300ms forwards",
+        // Sequenced after fan-out: the pile opens, then the papers settle.
+        "sheet-rise": "sheet-rise 600ms cubic-bezier(0.23, 1, 0.32, 1) 950ms forwards",
+        "fan-out-left": "fan-out-left 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
+        "fan-out-right": "fan-out-right 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
       },
     },
   },
