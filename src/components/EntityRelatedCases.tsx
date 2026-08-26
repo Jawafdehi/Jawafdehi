@@ -7,7 +7,7 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { formatDateWithBS } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
@@ -121,10 +121,17 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.case_start_date || c.created_at);
+          // Both dates carry AD and BS, the way court-sourced dates are shown
+          // everywhere else on the site.
+          const filedDate = formatDateWithBS(c.case_start_date || c.created_at);
+          const verdictDate = c.case_end_date ? formatDateWithBS(c.case_end_date) : null;
           const typeKey = getCaseTypeLabelKey(c.case_type);
           const typeLabel = typeKey ? t(typeKey) : c.case_type;
           const href = c.slug ? `/case/${c.slug}` : undefined;
+          // A conviction supersedes the accusation: showing "अभियुक्त" next to
+          // "दोषी ठहर" states the weaker fact twice. An acquittal keeps its role
+          // chip, where "accused, then cleared" is the point.
+          const showRole = outcome !== "convicted";
 
           const row = (
             <div
@@ -140,24 +147,37 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   {c.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                  <Badge
-                    variant={accused ? undefined : "secondary"}
-                    className={cn(
-                      "shrink-0",
-                      accused && "border-transparent bg-accent text-accent-foreground",
-                    )}
-                  >
-                    {roleLabel}
-                  </Badge>
+                  {showRole ? (
+                    <Badge
+                      variant={accused ? undefined : "secondary"}
+                      className={cn(
+                        "shrink-0",
+                        accused && "border-transparent bg-accent text-accent-foreground",
+                      )}
+                    >
+                      {roleLabel}
+                    </Badge>
+                  ) : null}
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
                       {outcomeLabel(outcome, language)}
                     </Badge>
                   ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    {[typeLabel, date].filter(Boolean).join(" · ")}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{typeLabel}</span>
                 </div>
+
+                <dl className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-baseline gap-x-1.5">
+                    <dt>{t("caseDetail.courtRegistered")}:</dt>
+                    <dd className="font-medium text-foreground">{filedDate}</dd>
+                  </div>
+                  {verdictDate ? (
+                    <div className="flex flex-wrap items-baseline gap-x-1.5">
+                      <dt>{t("caseDetail.courtVerdictDate")}:</dt>
+                      <dd className="font-medium text-foreground">{verdictDate}</dd>
+                    </div>
+                  ) : null}
+                </dl>
                 {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
                     amount — a missing bigo is not a zero-rupee case. */}
                 {c.bigo ? (
