@@ -242,15 +242,15 @@ describe("ArchiveSearch", () => {
     // Default selection is "All records" (the full unified corpus).
     expect(
       screen
-        .getByRole("radio", { name: "All records" })
-        .getAttribute("data-state"),
-    ).toBe("checked");
+        .getByRole("tab", { name: "All records" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
     // "all" sends no type filter to the API.
     expect(searchArchiveMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: undefined }),
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(screen.getByTestId("location-search").textContent).toContain(
@@ -259,9 +259,9 @@ describe("ArchiveSearch", () => {
     });
     expect(
       screen
-        .getByRole("radio", { name: "Cases: 8 results" })
-        .getAttribute("data-state"),
-    ).toBe("checked");
+        .getByRole("tab", { name: "Cases" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ type: "case" }),
     );
@@ -278,7 +278,7 @@ describe("ArchiveSearch", () => {
     expect(screen.queryByText("Entity type")).toBeNull();
 
     fireEvent.click(
-      screen.getByRole("radio", { name: "Entities: 3 results" }),
+      screen.getByRole("tab", { name: "Entities" }),
     );
 
     await waitFor(() => {
@@ -288,7 +288,7 @@ describe("ArchiveSearch", () => {
       screen.getByRole("checkbox", { name: "Person: 4 results" }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(screen.queryByText("Entity type")).toBeNull();
@@ -312,7 +312,7 @@ describe("ArchiveSearch", () => {
 
     // Switching record type must not leave the (now hidden) Entity type facet
     // filtering the results behind the user's back.
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -617,7 +617,7 @@ describe("ArchiveSearch", () => {
           .length,
       ).toBe(1);
       expect(screen.getAllByRole("checkbox").length).toBe(2);
-      expect(screen.getAllByRole("radio").length).toBe(5);
+      expect(screen.getAllByRole("tab").length).toBe(5);
       expect(document.querySelectorAll("details").length).toBe(0);
     });
 
