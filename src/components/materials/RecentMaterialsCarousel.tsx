@@ -2,6 +2,7 @@ import {
   Archive,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Calendar,
   ClipboardList,
@@ -199,16 +200,24 @@ export function RecentMaterialsCarousel({
               <Link
                 to={result.url}
                 className={[
-                  "flex min-h-[320px] w-full flex-col rounded-xl border border-border bg-surface p-6 shadow-elev-sm",
+                  "group/card flex min-h-[320px] w-full flex-col rounded-xl bg-surface p-6 shadow-elev-md",
                   "touch-manipulation transition-[transform,box-shadow] duration-200 ease-out-strong",
-                  "hover:-translate-y-0.5 hover:shadow-elev-md active:scale-[0.99]",
+                  "hover:-translate-y-0.5 hover:shadow-elev-lg active:scale-[0.99]",
                   "outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
                 ].join(" ")}
               >
-                <h3 className="line-clamp-3 min-w-0 text-lg font-medium leading-snug text-foreground">
-                  {title}
-                </h3>
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="line-clamp-3 min-w-0 text-xl font-medium leading-snug text-foreground">
+                    {title}
+                  </h3>
+                  {/* Decorative: the whole card is the link, so the arrow is an
+                      affordance, not a second target or a second announcement. */}
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out-strong group-hover/card:-translate-y-0.5 group-hover/card:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover/card:translate-x-0 motion-reduce:group-hover/card:translate-y-0"
+                  />
+                </div>
                 {snippet && (
                   <p className="mt-3 line-clamp-4 min-w-0 text-sm leading-relaxed text-muted-foreground">
                     {snippet}
