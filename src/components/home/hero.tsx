@@ -49,7 +49,7 @@ export function Hero({
   const heroStats: HeroStat[] = [
     { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
     { value: totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search?type=case" },
-    { value: materials, label: t("home.hero.stats.materials"), href: "/search?type=material" },
+    { value: materials, label: t("home.hero.stats.materials"), href: "/materials" },
     {
       value: courtCasesTracked,
       label: t("home.hero.stats.courtCasesTracked"),
