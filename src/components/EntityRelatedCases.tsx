@@ -55,6 +55,16 @@ function roleFor(caseItem: Case, entityIri: string) {
   return { role: bind?.type ?? "related", outcome: bind?.outcome ?? null };
 }
 
+// Whether a Supreme Court criminal appeal is on record for this case. Driven by
+// a linked `courtcase/supreme/...-cr-...` reference, which is the only positive
+// evidence we hold: the Supreme registry publishes no party names for criminal
+// appeals, so an unlinked case means "not recorded", never "not appealed".
+function hasSupremeAppeal(caseItem: Case): boolean {
+  return (caseItem.court_cases ?? []).some(
+    (iri) => iri.includes("/courtcase/supreme/") && /-cr-/i.test(iri),
+  );
+}
+
 /**
  * "Related cases" section for an entity record page: the published cases that
  * cite this entity, accused/alleged floated to the top and visually emphasized,
@@ -132,6 +142,7 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           // "दोषी ठहर" states the weaker fact twice. An acquittal keeps its role
           // chip, where "accused, then cleared" is the point.
           const showRole = outcome !== "convicted";
+          const appealed = hasSupremeAppeal(c);
 
           const row = (
             <div
@@ -161,6 +172,14 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
                       {outcomeLabel(outcome, language)}
+                    </Badge>
+                  ) : null}
+                  {appealed ? (
+                    <Badge
+                      variant="outline"
+                      className="border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong"
+                    >
+                      {t("entityDetail.supremeAppealRegistered")}
                     </Badge>
                   ) : null}
                   <span className="text-xs text-muted-foreground">{typeLabel}</span>
