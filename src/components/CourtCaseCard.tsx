@@ -1,6 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  ChevronDown,
+  FileText,
+  Landmark,
+} from "lucide-react";
+import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -142,7 +149,227 @@ function getLatestCourtUpdate(courtCase: CourtCase) {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-interface CourtCaseCardProps {
+export interface CourtCaseCardProps {
+  caseNumber?: string | null;
+  court?: string | null;
+  registrationDate?: string | null;
+  registrationDateBs?: string | null;
+  status?: string | null;
+  title: string;
+  url: string;
+  viewMode?: "card" | "list";
+}
+
+function displayCourtName(court: string | null | undefined, lang: string) {
+  const value = court?.trim();
+  if (!value) return "";
+
+  const normalized = value.toLowerCase().replace(/[\s_-]+/g, "");
+  const courtKey = Object.keys(COURT_NAMES_EN).find((key) =>
+    normalized.includes(key),
+  );
+  if (courtKey) {
+    return lang.startsWith("ne") && COURT_NAMES_NE[courtKey]
+      ? COURT_NAMES_NE[courtKey]
+      : COURT_NAMES_EN[courtKey];
+  }
+
+  const spaced = value.replace(/[_-]+/g, " ");
+  if (spaced !== spaced.toUpperCase()) return spaced;
+  return spaced
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+}
+
+function displayCourtStatus(status: string) {
+  const spaced = status.replace(/[_-]+/g, " ").trim();
+  if (spaced !== spaced.toUpperCase()) return spaced;
+  return spaced
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+}
+
+function courtStatusBadgeValue(status: string) {
+  const normalized = status.toLowerCase();
+  if (
+    normalized.includes("फैसला") ||
+    normalized.includes("decision") ||
+    normalized.includes("decided") ||
+    normalized.includes("verdict") ||
+    normalized.includes("closed") ||
+    normalized.includes("resolved") ||
+    normalized.includes("concluded")
+  ) {
+    return "resolved";
+  }
+  if (
+    normalized.includes("pending") ||
+    normalized.includes("progress") ||
+    normalized.includes("sub judice") ||
+    normalized.includes("sub_judice") ||
+    normalized.includes("विचाराधीन") ||
+    normalized.includes("चालु") ||
+    normalized.includes("ongoing")
+  ) {
+    return "ongoing";
+  }
+  return "under-investigation";
+}
+
+function courtStatusGradientClass(status: string | null) {
+  if (status === "resolved") {
+    return "[background-image:linear-gradient(to_bottom,hsl(var(--success-strong)/0.09)_0%,transparent_44%)]";
+  }
+  if (status === "ongoing") {
+    return "[background-image:linear-gradient(to_bottom,hsl(var(--alert-strong)/0.09)_0%,transparent_44%)]";
+  }
+  if (status === "under-investigation") {
+    return "[background-image:linear-gradient(to_bottom,hsl(var(--muted)/0.7)_0%,transparent_44%)]";
+  }
+  return "";
+}
+
+export function CourtCaseCard({
+  caseNumber,
+  court,
+  registrationDate,
+  registrationDateBs,
+  status,
+  title,
+  url,
+  viewMode = "card",
+}: Readonly<CourtCaseCardProps>) {
+  const { t, i18n } = useTranslation();
+  const isCard = viewMode === "card";
+  const language =
+    typeof i18n.language === "string" ? i18n.language : "en";
+  const courtName = displayCourtName(court, language);
+  const registered =
+    language.startsWith("ne") && registrationDateBs
+      ? registrationDateBs
+      : registrationDate || registrationDateBs || "";
+  const viewCaseLabel = t("courtCaseDetail.viewCase", "View case");
+  const statusBadgeValue = status ? courtStatusBadgeValue(status) : null;
+
+  return (
+    <Link
+      aria-label={`${viewCaseLabel}: ${title}`}
+      className={cn(
+        "group block h-full bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] ring-1 ring-border/40 transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none",
+        courtStatusGradientClass(statusBadgeValue),
+        isCard
+          ? "min-h-[17rem] rounded-2xl p-4 motion-safe:hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] sm:min-h-[19rem] sm:rounded-3xl sm:p-5 xl:p-6"
+          : "min-h-48 rounded-2xl p-4 hover:bg-muted/20 sm:p-5",
+      )}
+      to={url}
+    >
+      <article className="flex h-full min-w-0 flex-col">
+        {status ? (
+          <div>
+            <CaseStatusBadge
+              className="max-w-full"
+              status={statusBadgeValue}
+            >
+              <span className="truncate">{displayCourtStatus(status)}</span>
+            </CaseStatusBadge>
+          </div>
+        ) : null}
+
+        <h3
+          className={cn(
+            "break-words text-pretty font-semibold text-primary",
+            status ? "mt-4 sm:mt-5" : "mt-1",
+            isCard
+              ? "line-clamp-3 text-lg leading-6 sm:text-xl sm:leading-7"
+              : "line-clamp-2 text-base leading-5",
+          )}
+        >
+          {title}
+        </h3>
+
+        <div
+          className={cn(
+            "space-y-3 text-sm leading-5 text-muted-foreground",
+            isCard ? "mt-5 sm:mt-6" : "mt-5 lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0",
+          )}
+        >
+          {caseNumber ? (
+            <div className="flex min-w-0 items-center gap-2.5 text-foreground sm:gap-3">
+              <FileText aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
+              <span className="min-w-0 break-words font-medium [overflow-wrap:anywhere]" translate="no">
+                {caseNumber}
+              </span>
+            </div>
+          ) : null}
+          {courtName ? (
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <Landmark aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
+              <span className="min-w-0 break-words [overflow-wrap:anywhere]">{courtName}</span>
+            </div>
+          ) : null}
+          {registered ? (
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <CalendarDays aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
+              <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+                {t("caseDetail.courtRegistered", "Registered")}: {registered}
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-auto flex items-center justify-end gap-2 pt-5 text-sm font-semibold text-success-strong sm:pt-6">
+          {viewCaseLabel}
+          <ArrowRight
+            aria-hidden="true"
+            className="h-5 w-5 transition-transform group-hover:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none"
+          />
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+export function CourtCaseCardSkeleton({
+  viewMode = "card",
+}: Readonly<{ viewMode?: "card" | "list" }>) {
+  const isCard = viewMode === "card";
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "flex h-full flex-col bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] ring-1 ring-border/40",
+        isCard
+          ? "min-h-[17rem] rounded-2xl p-4 sm:min-h-[19rem] sm:rounded-3xl sm:p-5 xl:p-6"
+          : "min-h-48 rounded-2xl p-4 sm:p-5",
+      )}
+      data-court-case-card-skeleton=""
+    >
+      <Skeleton className="h-7 w-28 rounded-full" />
+      <div className="mt-4 space-y-2 sm:mt-5">
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-4/5" />
+      </div>
+      <div
+        className={cn(
+          "mt-5 space-y-3 sm:mt-6",
+          !isCard && "lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0",
+        )}
+      >
+        {["w-28", "w-36", "w-40"].map((width) => (
+          <div className="flex items-center gap-2.5 sm:gap-3" key={width}>
+            <Skeleton className="h-5 w-5 shrink-0 rounded-md" />
+            <Skeleton className={cn("h-4", width)} />
+          </div>
+        ))}
+      </div>
+      <div className="mt-auto flex justify-end pt-5 sm:pt-6">
+        <Skeleton className="h-5 w-24" />
+      </div>
+    </div>
+  );
+}
+
+interface CourtCaseDetailsProps {
   courtCaseId: string;
   courtCase?: CourtCase;
   isLoading: boolean;
@@ -159,7 +386,7 @@ function courtCaseDetailPath(courtCaseId: string): string | null {
   return `/courtcase/${parts.court}/${encodeURIComponent(parts.caseNumber)}`;
 }
 
-export function CourtCaseCard({ courtCaseId, courtCase, isLoading, linkToDetail }: CourtCaseCardProps) {
+export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDetail }: CourtCaseDetailsProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 

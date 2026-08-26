@@ -24,6 +24,7 @@ import {
 } from "@/components/search/SearchResultCard";
 import { SearchTabs } from "@/components/search/SearchTabs";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
+import { CourtCaseCardSkeleton } from "@/components/CourtCaseCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/ui/pagination";
@@ -531,6 +532,7 @@ export default function ArchiveSearch({
               data={displayData}
               isError={showError}
               isLoading={isInitialLoading || isRefreshing}
+              resultType={selectedRecordType}
               searchTerm={params.q}
               viewMode={viewMode}
             />
@@ -604,12 +606,14 @@ function ArchiveSearchResults({
   data,
   isError,
   isLoading,
+  resultType,
   searchTerm,
   viewMode,
 }: Readonly<{
   data: ArchiveSearchResponse | undefined;
   isError: boolean;
   isLoading: boolean;
+  resultType: ArchiveSearchType;
   searchTerm?: string;
   viewMode: "list" | "card";
 }>) {
@@ -620,9 +624,22 @@ function ArchiveSearchResults({
       return (
         <output aria-label={searchingLabel} className={cardGridClass}>
           {Array.from({ length: archiveSearchPageSize }, (_, index) => (
-            <CaseCardSkeleton key={index} />
+            resultType === "courtcase" ? (
+              <CourtCaseCardSkeleton key={index} />
+            ) : (
+              <CaseCardSkeleton key={index} />
+            )
           ))}
         </output>
+      );
+    }
+    if (resultType === "courtcase") {
+      return (
+        <div aria-label={searchingLabel} className="space-y-3" role="status">
+          {Array.from({ length: archiveSearchPageSize }, (_, index) => (
+            <CourtCaseCardSkeleton key={index} viewMode="list" />
+          ))}
+        </div>
       );
     }
     return (

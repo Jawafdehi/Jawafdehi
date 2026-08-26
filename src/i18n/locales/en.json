@@ -1182,7 +1182,8 @@
   },
   "courtCaseDetail": {
     "relatedCases": "Related Jawafdehi Cases",
-    "moreCases": "+{{count}} more"
+    "moreCases": "+{{count}} more",
+    "viewCase": "View case"
   },
   "research": {
     "corruption": {

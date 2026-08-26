@@ -1,4 +1,4 @@
-import { CourtCaseCard } from "@/components/CourtCaseCard";
+import { CourtCaseDetails } from "@/components/CourtCaseCard";
 import type { CourtCase } from "@/types/jds";
 
 export type CourtCaseSectionItem = {
@@ -26,7 +26,7 @@ export function CourtCasesSection({
 
       <div className="space-y-4 text-primary/75">
         {courtCases.map(({ courtCase, id, isLoading }) => (
-          <CourtCaseCard
+          <CourtCaseDetails
             key={id}
             courtCaseId={id}
             courtCase={courtCase}

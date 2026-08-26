@@ -1182,7 +1182,8 @@
   },
   "courtCaseDetail": {
     "relatedCases": "सम्बन्धित जवाफदेहि मुद्दाहरू",
-    "moreCases": "+{{count}} थप"
+    "moreCases": "+{{count}} थप",
+    "viewCase": "मुद्दा हेर्नुहोस्"
   },
   "research": {
     "corruption": {
