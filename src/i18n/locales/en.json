@@ -2096,6 +2096,21 @@
       "previous": "Previous documents",
       "next": "Next documents"
     },
+    "sourceDescriptions": {
+      "ag": "Charge sheets filed by the Office of the Attorney General.",
+      "nkp": "Precedents published in the Nepal Kanun Patrika.",
+      "courts": "Orders and verdicts from Nepal's courts.",
+      "ciaa": "Publications of the Commission for the Investigation of Abuse of Authority.",
+      "dfmis": "Development-finance records from DFMIS.",
+      "jawafdehi": "Original documents collected by Jawafdehi.",
+      "koshi": "Official records from Koshi Province.",
+      "ppmo": "Blacklist and debarment records from the PPMO.",
+      "auditorGeneral": "Audit reports from the Office of the Auditor General.",
+      "lawsOfNepal": "Nepali statutes, regulations and bills.",
+      "news": "News coverage archived as evidence.",
+      "socialMedia": "Public social-media posts archived as evidence.",
+      "other": "A document from the Jawafdehi archive."
+    },
     "trust": {
       "builtBy": "Built by Nepalis",
       "openData": "Open data (CC BY-NC)",

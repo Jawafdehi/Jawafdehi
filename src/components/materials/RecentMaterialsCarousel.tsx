@@ -16,6 +16,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+import type { ReactNode } from "react";
+
 import {
   Carousel,
   CarouselContent,
@@ -63,7 +65,8 @@ const SOURCE_ICONS: Record<string, LucideIcon> = {
  */
 export function RecentMaterialsCarousel({
   materials,
-}: Readonly<{ materials: readonly RecentMaterial[] }>) {
+  heading,
+}: Readonly<{ materials: readonly RecentMaterial[]; heading: ReactNode }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const reduceMotion =
@@ -75,15 +78,19 @@ export function RecentMaterialsCarousel({
       opts={{ align: "start", duration: reduceMotion ? 0 : 20 }}
       aria-label={t("materialsLanding.recent.title", "Recently added")}
     >
-      <div className="flex justify-end gap-2 pb-6">
-        <CarouselPrevious
-          aria-label={t("materialsLanding.recent.previous", "Previous documents")}
-          className="static h-10 w-10 translate-y-0 active:scale-[0.97]"
-        />
-        <CarouselNext
-          aria-label={t("materialsLanding.recent.next", "Next documents")}
-          className="static h-10 w-10 translate-y-0 active:scale-[0.97]"
-        />
+      {/* Section title and the carousel controls share one line. */}
+      <div className="flex items-end justify-between gap-6 pb-10">
+        {heading}
+        <div className="flex shrink-0 gap-2">
+          <CarouselPrevious
+            aria-label={t("materialsLanding.recent.previous", "Previous documents")}
+            className="static h-10 w-10 translate-y-0 active:scale-[0.97]"
+          />
+          <CarouselNext
+            aria-label={t("materialsLanding.recent.next", "Next documents")}
+            className="static h-10 w-10 translate-y-0 active:scale-[0.97]"
+          />
+        </div>
       </div>
       <CarouselContent className="-ml-5">
         {materials.map(({ result, date }) => {
@@ -97,16 +104,18 @@ export function RecentMaterialsCarousel({
           const title =
             pickLocalized(result.title, language) ||
             t("materialsLanding.recent.untitled", "Untitled document");
-          // Search hits often carry no snippet outside a text query; the
-          // curated series description is real authored context, so a card
-          // never runs empty in the middle.
+          // Search hits often carry no snippet outside a text query; fall
+          // back to the series' authored description, then to a one-line
+          // institution description — every card gets real context.
           const snippet =
             pickLocalized(result.snippet, language) ||
-            (series ? pickLocalized(series.description, language) : "");
+            (series
+              ? pickLocalized(series.description, language)
+              : t(`materialsLanding.sourceDescriptions.${sourceKey}`, ""));
           return (
             <CarouselItem
               key={result.id}
-              className="basis-[85%] pl-5 sm:basis-1/2 lg:basis-1/3"
+              className="basis-[85%] pl-5 sm:basis-1/2 lg:basis-1/4"
             >
               <Link
                 to={result.url}

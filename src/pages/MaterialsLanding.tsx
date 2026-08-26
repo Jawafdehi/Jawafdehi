@@ -275,20 +275,27 @@ export default function MaterialsLanding() {
         className="border-t border-border"
       >
         <div className="layout-container py-16 md:py-24">
-          <h2 id="recent-heading" className="font-archive-section-title">
-            {t("materialsLanding.recent.title", "Recently added")}
-          </h2>
-          <div className="mt-6">
-            {recents ? (
-              <RecentMaterialsCarousel materials={recents} />
-            ) : (
-              <div className="grid grid-cols-1 gap-5 pt-16 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }, (_, index) => (
+          {recents ? (
+            <RecentMaterialsCarousel
+              materials={recents}
+              heading={
+                <h2 id="recent-heading" className="font-archive-section-title">
+                  {t("materialsLanding.recent.title", "Recently added")}
+                </h2>
+              }
+            />
+          ) : (
+            <>
+              <h2 id="recent-heading" className="font-archive-section-title pb-10">
+                {t("materialsLanding.recent.title", "Recently added")}
+              </h2>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 4 }, (_, index) => (
                   <Skeleton key={index} className="min-h-[320px] w-full rounded-xl" />
                 ))}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </section>
 
