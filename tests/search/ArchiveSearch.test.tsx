@@ -277,6 +277,45 @@ describe("ArchiveSearch", () => {
     );
   });
 
+  it("puts the tabs in the results column, not in a row above the whole grid", async () => {
+    // The tabs scope the CARDS, so they belong over the cards. As a full-width
+    // row above the grid their underline also ran across the filter sidebar,
+    // implying it scoped the facets too, and it pushed the sidebar a whole tab
+    // row down the page.
+    //
+    // jsdom has no layout engine, so this asserts the two things that PRODUCE
+    // the layout: the tablist is a sibling of the results section inside the
+    // grid (not an earlier element outside it), and it is placed in column 2 /
+    // row 1 with the sidebar spanning both rows so it starts level with them.
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    const tablist = screen.getByRole("tablist");
+    const results = screen.getByRole("region", {
+      name: "Archive search results",
+    });
+    const grid = tablist.parentElement!.parentElement!;
+
+    expect(results.parentElement).toBe(grid);
+    expect(grid.className).toContain("lg:grid-cols-[250px_minmax(0,1fr)]");
+    expect(tablist.parentElement!.className).toContain("lg:col-start-2");
+    expect(tablist.parentElement!.className).toContain("lg:row-start-1");
+    expect(results.className).toContain("lg:row-start-2");
+    // The sidebar spans both rows, which is what lifts it to the tab row.
+    const sidebarCell = screen.getByRole("complementary", {
+      name: "Archive search filters",
+    }).parentElement!;
+    expect(sidebarCell.className).toContain("lg:row-span-2");
+    // Still ahead of the mobile Filters disclosure in DOM order, so the
+    // single-column layout below `lg` keeps the tabs above it.
+    const filtersToggle = screen.getByRole("button", { name: /^Filters/ });
+    expect(
+      tablist.compareDocumentPosition(filtersToggle) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("shows the Entity type filter only while browsing Entities", async () => {
     searchArchiveMock.mockResolvedValue(baseResponse);
     renderSearch();
