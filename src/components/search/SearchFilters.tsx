@@ -1,12 +1,9 @@
-import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
-  ArchiveSearchCounts,
   ArchiveSearchFacets,
   ArchiveSearchType,
   SearchFacetItem,
@@ -16,14 +13,6 @@ import type { BigoExtent } from "@/lib/bigo-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
 export type SidebarFilterName = "entity_type" | "case_type" | "tags";
-
-// The four indexed result domains, in display order, with their record-type label.
-const RECORD_TYPES: { value: ArchiveSearchType; label: string }[] = [
-  { value: "case", label: "Cases" },
-  { value: "entity", label: "Entities" },
-  { value: "material", label: "Materials" },
-  { value: "courtcase", label: "Court cases" },
-];
 
 // `title` is the English fallback; `titleKey` resolves the Nepali label from the
 // bilingual bundle (see src/i18n/locales/*.json → archiveSearch.filters).
@@ -47,15 +36,10 @@ const FILTER_GROUPS: {
 
 type SearchFiltersProps = {
   facets: ArchiveSearchFacets;
-  counts: Partial<ArchiveSearchCounts>;
   selected: Record<SidebarFilterName, string[]>;
   selectedType?: ArchiveSearchType;
-  onTypeChange: (type?: ArchiveSearchType) => void;
   onToggle: (name: SidebarFilterName, value: string) => void;
   onClear: () => void;
-  // Hide the record-type radios on single-type browse pages (Materials /
-  // Court-cases) where the type is pinned by the route, not user-selectable.
-  hideTypeSelector?: boolean;
   // बिगो corpus extent from the API, plus the range in force. Absent extent → the
   // control does not render (there is no scale to build a ladder from).
   bigoExtent?: BigoExtent;
@@ -67,13 +51,10 @@ type SearchFiltersProps = {
 
 export function SearchFilters({
   facets,
-  counts,
   selected,
   selectedType,
-  onTypeChange,
   onToggle,
   onClear,
-  hideTypeSelector,
   bigoExtent,
   bigoMin,
   bigoMax,
@@ -95,20 +76,14 @@ export function SearchFilters({
         </Button>
       </div>
 
-      {hideTypeSelector ? null : (
-        <RecordTypeFilter
-          counts={counts}
-          onChange={onTypeChange}
-          selectedType={selectedType}
-        />
-      )}
       {/*
-        Directly under the record type, ABOVE the term facets. The tags group
-        below runs to 50 checkboxes, and anything after it is off-screen on every
-        viewport — a control nobody scrolls to is a control nobody has. Amount is
-        also the coarsest cut of the case corpus (six orders of magnitude), so it
-        belongs with the other structural choice rather than after the long tail
-        of keywords.
+        FIRST in the sidebar, ABOVE the term facets. It used to sit under the
+        record-type radios; those are now the tabs above the results, so this is
+        what the column opens with. The tags group below runs to 50 checkboxes,
+        and anything after it is off-screen on every viewport — a control nobody
+        scrolls to is a control nobody has. Amount is also the coarsest cut of
+        the case corpus (six orders of magnitude), so it belongs at the top
+        rather than after the long tail of keywords.
 
         बिगो is CASE-ONLY: no entity, material or court-case document carries an
         amount, so a bound applied anywhere else empties the result set with no
@@ -148,12 +123,7 @@ export function SearchFilters({
 export function SearchFiltersSkeleton({
   selectedType,
 }: Readonly<{ selectedType?: ArchiveSearchType }> = {}) {
-  const groups = [
-    { control: "radio", rowCount: 4 },
-    { control: "checkbox", rowCount: 4 },
-    { control: "checkbox", rowCount: 3 },
-    { control: "checkbox", rowCount: 3 },
-  ] as const;
+  const groupRowCounts = [4, 3, 3] as const;
 
   return (
     <aside
@@ -165,117 +135,53 @@ export function SearchFiltersSkeleton({
         <Skeleton className="h-8 w-12 rounded-md" />
       </div>
 
-      {groups.map(({ control, rowCount }, groupIndex) => (
-        <Fragment key={groupIndex}>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <div className="space-y-1">
-              {Array.from({ length: rowCount }).map((_, rowIndex) => (
-                <div
-                  className="flex min-h-8 items-center gap-2 px-1"
-                  key={rowIndex}
-                >
-                  <Skeleton
-                    className={
-                      control === "radio"
-                        ? "h-4 w-4 shrink-0 rounded-full"
-                        : "h-4 w-4 shrink-0 rounded-sm"
-                    }
-                  />
-                  <Skeleton
-                    className={
-                      rowIndex % 2 === 0 ? "h-3.5 w-28" : "h-3.5 w-20"
-                    }
-                  />
-                  <Skeleton className="ml-auto h-3 w-5" />
-                </div>
-              ))}
-            </div>
-          </div>
-          {/*
-            The बिगो block sits second, mirroring the live order. It is tall (a
-            track, two fields, a note) and now ABOVE the fold, so reserving it
-            keeps every facet below from jumping when the real sidebar lands.
+      {/*
+        The बिगो block sits FIRST, mirroring the live order now that the record
+        type is a row of tabs rather than this column's opening group. It is tall
+        (a track, two fields, a note) and above the fold, so reserving it keeps
+        every facet below from jumping when the real sidebar lands.
 
-            Gated on the SAME condition as the live control, because reserving it
-            unconditionally has the opposite failure: /search defaults to
-            type=all and /materials and /court-cases pin a non-case type, so on
-            most cold loads the block was reserved and then never filled —
-            ~296px collapsing on first paint. `selectedType` is read synchronously
-            off the URL, so it is known long before the first response.
-          */}
-          {groupIndex === 0 && selectedType === "case" ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-14 w-full rounded-sm" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-11 w-full rounded-md" />
-              <Skeleton className="h-11 w-full rounded-md" />
-              <Skeleton className="h-11 w-32 rounded-md" />
-            </div>
-          ) : null}
-        </Fragment>
+        Gated on the SAME condition as the live control, because reserving it
+        unconditionally has the opposite failure: /search defaults to
+        type=all and /materials and /court-cases pin a non-case type, so on
+        most cold loads the block was reserved and then never filled —
+        ~296px collapsing on first paint. `selectedType` is read synchronously
+        off the URL, so it is known long before the first response.
+      */}
+      {selectedType === "case" ? (
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-14 w-full rounded-sm" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-11 w-32 rounded-md" />
+        </div>
+      ) : null}
+
+      {groupRowCounts.map((rowCount, groupIndex) => (
+        <div className="space-y-2" key={groupIndex}>
+          <Skeleton className="h-4 w-24" />
+          <div className="space-y-1">
+            {Array.from({ length: rowCount }).map((_, rowIndex) => (
+              <div
+                className="flex min-h-8 items-center gap-2 px-1"
+                key={rowIndex}
+              >
+                <Skeleton className="h-4 w-4 shrink-0 rounded-sm" />
+                <Skeleton
+                  className={
+                    rowIndex % 2 === 0 ? "h-3.5 w-28" : "h-3.5 w-20"
+                  }
+                />
+                <Skeleton className="ml-auto h-3 w-5" />
+              </div>
+            ))}
+          </div>
+        </div>
       ))}
     </aside>
-  );
-}
-
-function RecordTypeFilter({
-  counts,
-  onChange,
-  selectedType,
-}: Readonly<{
-  counts: Partial<ArchiveSearchCounts>;
-  onChange: (type?: ArchiveSearchType) => void;
-  selectedType?: ArchiveSearchType;
-}>) {
-  return (
-    <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-sm font-semibold text-foreground">
-        Record type
-      </legend>
-      <RadioGroup
-        className="gap-0.5"
-        onValueChange={(value) =>
-          onChange(value === "all" ? undefined : value as ArchiveSearchType)
-        }
-        value={selectedType || "all"}
-      >
-        <FilterOption count={null} label="All records" value="all" />
-        {RECORD_TYPES.map(({ value, label }) => (
-          <FilterOption
-            count={counts[value as keyof ArchiveSearchCounts] ?? null}
-            key={value}
-            label={label}
-            value={value}
-          />
-        ))}
-      </RadioGroup>
-    </fieldset>
-  );
-}
-
-function FilterOption({
-  count,
-  label,
-  value,
-}: Readonly<{
-  count: number | null;
-  label: string;
-  value: string;
-}>) {
-  return (
-    <label className="flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-      <RadioGroupItem
-        aria-label={count === null ? label : `${label}: ${count} results`}
-        value={value}
-      />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
-      {count !== null ? (
-        <span className="shrink-0 text-xs tabular-nums">{count}</span>
-      ) : null}
-    </label>
   );
 }
 

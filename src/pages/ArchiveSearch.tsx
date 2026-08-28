@@ -22,6 +22,7 @@ import {
   SearchResultCard,
   SearchResultCardSkeleton,
 } from "@/components/search/SearchResultCard";
+import { SearchTabs } from "@/components/search/SearchTabs";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ const emptyFacets: ArchiveSearchFacets = {
 
 // When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
 // Materials / Court-cases landing pages reuse this component): the record-type is
-// pinned, the type selector is hidden, and the heading/SEO are overridden.
+// pinned, the type tabs are hidden, and the heading/SEO are overridden.
 export interface ArchiveSearchProps {
   lockedType?: ArchiveSearchResultType;
   heading?: string;
@@ -296,9 +297,9 @@ export default function ArchiveSearch({
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
-    // On a locked single-type page the type isn't a removable refinement.
-    type:
-      lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
+    // Record type is represented by the tabs, so duplicating it as a removable
+    // filter chip (or in the mobile filter count) would be redundant.
+    type: [],
   };
   // The active बिगो range as a single removable pill, labelled with the formatted
   // bounds however it was set — dragged or typed — so a range is never applied
@@ -328,16 +329,13 @@ export default function ArchiveSearch({
       <SearchFiltersSkeleton selectedType={selectedRecordType} />
     ) : (
       <SearchFilters
-        counts={displayData?.counts || {}}
         facets={facets}
-        hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
         bigoExtent={displayData?.extents?.bigo}
         bigoMax={params.bigo_max}
         bigoMin={params.bigo_min}
         onBigoCommit={updateBigoRange}
         onToggle={toggleRefinement}
-        onTypeChange={updateRecordType}
         selected={selectedSidebarFilters}
         selectedType={selectedRecordType}
       />
@@ -467,6 +465,15 @@ export default function ArchiveSearch({
             </Select>
           </div>
         </form>
+
+        {lockedType ? null : (
+          <div className="mt-3 lg:max-w-[min(64rem,calc(100%-16rem))]">
+            <SearchTabs
+              activeType={selectedRecordType}
+              onChange={updateRecordType}
+            />
+          </div>
+        )}
 
         {selectedItems.length ? (
           <div

@@ -48,12 +48,10 @@ function renderFilters(
       bigoExtent={"extent" in extra ? extra.extent : CORPUS}
       bigoMax={extra.max}
       bigoMin={extra.min}
-      counts={{}}
       facets={emptyFacets}
       onBigoCommit={extra.onCommit ?? vi.fn()}
       onClear={vi.fn()}
       onToggle={vi.fn()}
-      onTypeChange={vi.fn()}
       selected={{ entity_type: [], case_type: [], tags: [] }}
       selectedType={selectedType}
     />,
@@ -131,15 +129,16 @@ describe("SearchFilters — बिगो range control", () => {
     expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
   });
 
-  it("sits directly under Record type, above the term facets", () => {
+  it("opens the sidebar, above the term facets", () => {
     // It used to render last. The tags group runs to 50 checkboxes, so anything
-    // after it is off-screen on every viewport.
+    // after it is off-screen on every viewport. It used to sit second, under the
+    // record-type radios — those are now the tabs above the results, so nothing
+    // precedes it in this column.
     render(
       <SearchFilters
         bigoExtent={CORPUS}
         bigoMax={undefined}
         bigoMin={undefined}
-        counts={{}}
         facets={{
           ...emptyFacets,
           case_type: [{ name: "CORRUPTION", count: 9 }],
@@ -148,7 +147,6 @@ describe("SearchFilters — बिगो range control", () => {
         onBigoCommit={vi.fn()}
         onClear={vi.fn()}
         onToggle={vi.fn()}
-        onTypeChange={vi.fn()}
         selected={{ entity_type: [], case_type: [], tags: [] }}
         selectedType="case"
       />,
@@ -156,12 +154,7 @@ describe("SearchFilters — बिगो range control", () => {
     const legends = Array.from(document.querySelectorAll("legend")).map(
       (legend) => legend.textContent,
     );
-    expect(legends).toEqual([
-      "Record type",
-      "Embezzled amount",
-      "Case type",
-      "Tags",
-    ]);
+    expect(legends).toEqual(["Embezzled amount", "Case type", "Tags"]);
   });
 
   it("is hidden for every other record type, and for All records", () => {
@@ -235,21 +228,22 @@ describe("SearchFilters — बिगो range control", () => {
 describe("SearchFiltersSkeleton", () => {
   it("reserves the बिगो block in the slot the real control occupies", () => {
     // Untested until now, and it renders on every cold load of /search. The
-    // बिगो control is second and tall (chart + two fields + a button), so a
+    // बिगो control is first and tall (chart + two fields + a button), so a
     // skeleton that omits it drops every facet below it down the page the
     // moment the real sidebar lands — a jump that is now above the fold.
     const { container } = render(<SearchFiltersSkeleton selectedType="case" />);
     const aside = container.querySelector("aside");
     expect(aside).toBeTruthy();
 
-    // header + record-type group + बिगो block + three facet groups.
+    // header + बिगो block + three facet groups. The record-type group is gone
+    // from this column — it is a row of tabs above the results now.
     const blocks = Array.from(aside!.children);
-    expect(blocks).toHaveLength(6);
+    expect(blocks).toHaveLength(5);
 
     // The बिगो placeholder is the one carrying the histogram-height bar.
-    expect(blocks[2].querySelector(".h-14")).toBeTruthy();
-    // ...and the facet groups around it do not.
-    expect(blocks[1].querySelector(".h-14")).toBeNull();
+    expect(blocks[1].querySelector(".h-14")).toBeTruthy();
+    // ...and the facet groups after it do not.
+    expect(blocks[2].querySelector(".h-14")).toBeNull();
     expect(blocks[3].querySelector(".h-14")).toBeNull();
   });
 
@@ -266,7 +260,7 @@ describe("SearchFiltersSkeleton", () => {
         <SearchFiltersSkeleton selectedType={type} />,
       );
       const blocks = Array.from(container.querySelector("aside")!.children);
-      expect(blocks).toHaveLength(5);
+      expect(blocks).toHaveLength(4);
       expect(container.querySelector(".h-14")).toBeNull();
       unmount();
     }
