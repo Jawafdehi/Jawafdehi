@@ -171,6 +171,12 @@ export default function ArchiveSearch({
   const isRefreshing = isFetching && !isInitialLoading;
   const showError = isError && !isFetching;
   const showFilters = isInitialLoading || Boolean(displayData);
+  // The locked single-type pages (/materials, /court-cases) pin the record type
+  // by route, so there is nothing for the tabs to switch between.
+  const showTypeTabs = !lockedType;
+  // Only when BOTH are on screen is there a two-column grid to place the tabs,
+  // the sidebar and the results into by hand.
+  const tabsAndFilters = showTypeTabs && showFilters;
 
   // Share metadata. This component backs three routes — /search, /materials and
   // /courtcases (see Materials.tsx and CourtCases.tsx, which pass heading,
@@ -353,20 +359,29 @@ export default function ArchiveSearch({
       />
 
       <div className="layout-container">
-        <header className="max-w-3xl">
-
-          <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
-            {heading || t("archiveSearch.heading", "Archive Search")}
-          </h1>
-          <p className="mt-3 text-base leading-7 text-muted-foreground">
-            {description ||
-              t(
-                "archiveSearch.description",
-                "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
-              )}
-          </p>
+        {/*
+          The coverage link sits to the RIGHT of the title, not under the
+          subtitle. It is a secondary way OUT of this page, and below the subtitle
+          it pushed the search bar — the one control everybody comes here for —
+          a further ~44px down the fold. `items-start` levels it with the top of
+          the heading block; `flex-wrap` drops it under the subtitle, where it
+          used to live, once the row no longer fits.
+        */}
+        <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
+          <div className="max-w-3xl">
+            <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
+              {heading || t("archiveSearch.heading", "Archive Search")}
+            </h1>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">
+              {description ||
+                t(
+                  "archiveSearch.description",
+                  "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
+                )}
+            </p>
+          </div>
           <Link
-            className="group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            className="group mt-3 inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
             to="/data-quality"
           >
             <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -380,7 +395,7 @@ export default function ArchiveSearch({
         </header>
 
         <form
-          className="mt-7 flex w-full flex-col gap-3 lg:flex-row lg:items-center"
+          className="mt-5 flex w-full flex-col gap-3 lg:flex-row lg:items-center"
           onSubmit={submitSearch}
         >
           <label className="sr-only" htmlFor="archive-search">
@@ -466,15 +481,6 @@ export default function ArchiveSearch({
           </div>
         </form>
 
-        {lockedType ? null : (
-          <div className="mt-3 lg:max-w-[min(64rem,calc(100%-16rem))]">
-            <SearchTabs
-              activeType={selectedRecordType}
-              onChange={updateRecordType}
-            />
-          </div>
-        )}
-
         {selectedItems.length ? (
           <div
             aria-label="Selected filters"
@@ -509,6 +515,38 @@ export default function ArchiveSearch({
             showFilters && "lg:grid-cols-[250px_minmax(0,1fr)]",
           )}
         >
+          {/*
+            The type tabs are a grid item in the RESULTS column, not a full-width
+            row above the grid. They scope the cards, so they belong over the
+            cards rather than stretching across the filter sidebar too — and the
+            underline now measures the column it applies to.
+
+            Putting them in row 1 is also what lifts the sidebar: it spans both
+            rows, so it starts level with the tabs instead of below them.
+
+            Both placements are gated on `tabsAndFilters` because an explicitly
+            placed row 1 with nothing in it still contributes `gap-y`, which would
+            drop the sidebar 16px out of line with the results on the locked
+            single-type pages (/materials, /court-cases) that render no tabs.
+
+            `order-first` is for the single-column layout below `lg`, where the
+            explicit placement does not apply and the tabs would otherwise sort
+            after the Filters disclosure button rather than above it.
+          */}
+          {showTypeTabs ? (
+            <div
+              className={cn(
+                "order-first min-w-0",
+                tabsAndFilters && "lg:col-start-2 lg:row-start-1",
+              )}
+            >
+              <SearchTabs
+                activeType={selectedRecordType}
+                onChange={updateRecordType}
+              />
+            </div>
+          ) : null}
+
           {showFilters ? (
             <>
               {/*
@@ -543,6 +581,7 @@ export default function ArchiveSearch({
                 className={cn(
                   filtersOpen ? "block" : "hidden",
                   "self-start lg:block",
+                  tabsAndFilters && "lg:col-start-1 lg:row-span-2 lg:row-start-1",
                 )}
                 id={filtersPanelId}
               >
@@ -554,7 +593,10 @@ export default function ArchiveSearch({
           <section
             aria-busy={isInitialLoading || isRefreshing}
             aria-label="Archive search results"
-            className="min-w-0 self-start"
+            className={cn(
+              "min-w-0 self-start",
+              tabsAndFilters && "lg:col-start-2 lg:row-start-2",
+            )}
           >
             {showError ? (
               <Alert className="mb-5" variant="destructive">
