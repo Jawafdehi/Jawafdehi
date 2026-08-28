@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,8 @@ import type {
   ArchiveSearchType,
   SearchFacetItem,
 } from "@/types/search";
+import { BigoRangeFilter } from "@/components/search/BigoRangeFilter";
+import type { BigoExtent } from "@/lib/bigo-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
 export type SidebarFilterName = "entity_type" | "case_type" | "tags";
@@ -53,6 +56,13 @@ type SearchFiltersProps = {
   // Hide the record-type radios on single-type browse pages (Materials /
   // Court-cases) where the type is pinned by the route, not user-selectable.
   hideTypeSelector?: boolean;
+  // बिगो corpus extent from the API, plus the range in force. Absent extent → the
+  // control does not render (there is no scale to build a ladder from).
+  bigoExtent?: BigoExtent;
+  bigoMin?: number;
+  bigoMax?: number;
+  // Cases matching the current search, for the "what will this give me" count.
+  onBigoCommit: (bounds: { min?: number; max?: number }) => void;
 };
 
 export function SearchFilters({
@@ -64,6 +74,10 @@ export function SearchFilters({
   onToggle,
   onClear,
   hideTypeSelector,
+  bigoExtent,
+  bigoMin,
+  bigoMax,
+  onBigoCommit,
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
 
@@ -88,6 +102,30 @@ export function SearchFilters({
           selectedType={selectedType}
         />
       )}
+      {/*
+        Directly under the record type, ABOVE the term facets. The tags group
+        below runs to 50 checkboxes, and anything after it is off-screen on every
+        viewport — a control nobody scrolls to is a control nobody has. Amount is
+        also the coarsest cut of the case corpus (six orders of magnitude), so it
+        belongs with the other structural choice rather than after the long tail
+        of keywords.
+
+        बिगो is CASE-ONLY: no entity, material or court-case document carries an
+        amount, so a bound applied anywhere else empties the result set with no
+        visible cause. Gating the CONTROL to case browsing is how the API PR
+        (JawafdehiAPI#450) scopes it — the endpoint applies a bound globally by
+        design, so that the same mechanism can carry date_from/date_to later,
+        where every type does have a date. Same gate, same reason, as the
+        "Entity type" group below.
+      */}
+      {selectedType === "case" ? (
+        <BigoRangeFilter
+          extent={bigoExtent}
+          max={bigoMax}
+          min={bigoMin}
+          onCommit={onBigoCommit}
+        />
+      ) : null}
       {FILTER_GROUPS
         // "Entity type" only makes sense while browsing Entities — for every
         // other record type (or "all") its buckets are either irrelevant or,
@@ -107,7 +145,9 @@ export function SearchFilters({
   );
 }
 
-export function SearchFiltersSkeleton() {
+export function SearchFiltersSkeleton({
+  selectedType,
+}: Readonly<{ selectedType?: ArchiveSearchType }> = {}) {
   const groups = [
     { control: "radio", rowCount: 4 },
     { control: "checkbox", rowCount: 4 },
@@ -126,31 +166,56 @@ export function SearchFiltersSkeleton() {
       </div>
 
       {groups.map(({ control, rowCount }, groupIndex) => (
-        <div className="space-y-2" key={groupIndex}>
-          <Skeleton className="h-4 w-24" />
-          <div className="space-y-1">
-            {Array.from({ length: rowCount }).map((_, rowIndex) => (
-              <div
-                className="flex min-h-8 items-center gap-2 px-1"
-                key={rowIndex}
-              >
-                <Skeleton
-                  className={
-                    control === "radio"
-                      ? "h-4 w-4 shrink-0 rounded-full"
-                      : "h-4 w-4 shrink-0 rounded-sm"
-                  }
-                />
-                <Skeleton
-                  className={
-                    rowIndex % 2 === 0 ? "h-3.5 w-28" : "h-3.5 w-20"
-                  }
-                />
-                <Skeleton className="ml-auto h-3 w-5" />
-              </div>
-            ))}
+        <Fragment key={groupIndex}>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <div className="space-y-1">
+              {Array.from({ length: rowCount }).map((_, rowIndex) => (
+                <div
+                  className="flex min-h-8 items-center gap-2 px-1"
+                  key={rowIndex}
+                >
+                  <Skeleton
+                    className={
+                      control === "radio"
+                        ? "h-4 w-4 shrink-0 rounded-full"
+                        : "h-4 w-4 shrink-0 rounded-sm"
+                    }
+                  />
+                  <Skeleton
+                    className={
+                      rowIndex % 2 === 0 ? "h-3.5 w-28" : "h-3.5 w-20"
+                    }
+                  />
+                  <Skeleton className="ml-auto h-3 w-5" />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+          {/*
+            The बिगो block sits second, mirroring the live order. It is tall (a
+            track, two fields, a note) and now ABOVE the fold, so reserving it
+            keeps every facet below from jumping when the real sidebar lands.
+
+            Gated on the SAME condition as the live control, because reserving it
+            unconditionally has the opposite failure: /search defaults to
+            type=all and /materials and /court-cases pin a non-case type, so on
+            most cold loads the block was reserved and then never filled —
+            ~296px collapsing on first paint. `selectedType` is read synchronously
+            off the URL, so it is known long before the first response.
+          */}
+          {groupIndex === 0 && selectedType === "case" ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-14 w-full rounded-sm" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-11 w-full rounded-md" />
+              <Skeleton className="h-11 w-full rounded-md" />
+              <Skeleton className="h-11 w-32 rounded-md" />
+            </div>
+          ) : null}
+        </Fragment>
       ))}
     </aside>
   );
