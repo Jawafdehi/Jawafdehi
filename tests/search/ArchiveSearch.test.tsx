@@ -307,6 +307,13 @@ describe("ArchiveSearch", () => {
       name: "Archive search filters",
     }).parentElement!;
     expect(sidebarCell.className).toContain("lg:row-span-2");
+    // ...and the row template is what stops that span from inflating row 1.
+    // Two implicit `auto` rows let the sidebar push half its surplus height
+    // into the tab row: on /search (All records) that was 745px of row for a
+    // 45px tab bar, i.e. ~700px of blank space before the first card. Row 2
+    // must stay FLEXIBLE — that is what makes the sizing algorithm skip row 1
+    // when distributing the spanning sidebar. `auto auto` would not fix it.
+    expect(grid.className).toContain("lg:grid-rows-[auto_minmax(0,1fr)]");
     // Still ahead of the mobile Filters disclosure in DOM order, so the
     // single-column layout below `lg` keeps the tabs above it.
     const filtersToggle = screen.getByRole("button", { name: /^Filters/ });

@@ -509,10 +509,24 @@ export default function ArchiveSearch({
           where the single copy lands: the disclosure button is a grid item only
           below `lg`, so above it the panel takes column 1 and the results column 2.
         */}
+        {/*
+          The row template is load-bearing. The sidebar below spans BOTH rows,
+          and CSS Grid sizes a spanning item by distributing its excess
+          contribution EQUALLY over the auto tracks it spans — so with two
+          implicit `auto` rows, a facet panel taller than the cards pushed half
+          its surplus into row 1, whose only content is a 45px tab bar. That
+          inflated row 1 to 745px on "All records" and 1773px on Court cases:
+          ~700px and ~1730px of blank space between the tabs and the first card
+          (and as much again below the last card, the section being
+          `self-start`). Naming the tracks fixes it, and row 2 must stay
+          FLEXIBLE: the algorithm skips distributing a span into intrinsic
+          tracks once a flexible one is in range, so `auto auto` would not.
+        */}
         <div
           className={cn(
             "mt-5 grid items-start gap-x-7 gap-y-4 lg:mt-7",
             showFilters && "lg:grid-cols-[250px_minmax(0,1fr)]",
+            tabsAndFilters && "lg:grid-rows-[auto_minmax(0,1fr)]",
           )}
         >
           {/*
