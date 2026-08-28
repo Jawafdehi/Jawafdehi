@@ -1,3 +1,5 @@
+import { readBigoBounds } from "@/lib/bigo-range";
+
 // `sort` is deliberately NOT here. A value listed in defaultValues is stripped
 // from the URL, and the default sort is no longer a constant — ArchiveSearch
 // resolves an absent ?sort to `featured` while browsing and `relevance` once
@@ -49,7 +51,31 @@ export function normalizeArchiveSearchParams(current: URLSearchParams) {
     next.set("type", type);
   }
 
+  // बिगो bounds (?bigo_min / ?bigo_max, inclusive, whole NPR). Only a pair the
+  // API would actually accept survives: it answers a malformed bound, or a
+  // bigo_min above bigo_max, with a 400 — which this page renders as the red
+  // "could not be loaded" alert. A stale bookmark should degrade into a wider
+  // result set, not into what reads as a search outage.
+  //
+  // The rules themselves live in readBigoBounds, which ArchiveSearch's request
+  // builder also reads through — this rewrite lands an effect later than the
+  // first request, so the two cannot be allowed to disagree.
+  const bigo = readBigoBounds(next);
+  setOrDelete(next, "bigo_min", bigo.min);
+  setOrDelete(next, "bigo_max", bigo.max);
+
   return next;
+}
+
+// `String(0)` is "0", so a legitimate zero lower bound survives — the test is
+// `undefined`, not falsiness, exactly as it is on the API side.
+function setOrDelete(
+  params: URLSearchParams,
+  name: string,
+  value: number | undefined,
+) {
+  if (value === undefined) params.delete(name);
+  else params.set(name, String(value));
 }
 
 export function setArchiveSearchParam(

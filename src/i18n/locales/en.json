@@ -193,7 +193,10 @@
     "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
     "barLabel": "Upcoming public event",
     "barTitle": "Public event",
-    "barWhenParts": ["2 September, 6 PM Pacific", "3 September, 6:45 AM in Nepal"],
+    "barWhenParts": [
+      "2 September, 6 PM Pacific",
+      "3 September, 6:45 AM in Nepal"
+    ],
     "barCta": "Register free",
     "barDismiss": "Dismiss event announcement"
   },
@@ -2055,7 +2058,22 @@
     "filters": {
       "entityType": "Entity type",
       "caseType": "Case type",
-      "tags": "Tags"
+      "tags": "Tags",
+      "bigo": "Embezzled amount",
+      "bigoRange": {
+        "any": "Any amount",
+        "between": "{{min}} – {{max}}",
+        "from": "{{min}} and above",
+        "upTo": "Up to {{max}}"
+      },
+      "bigoMinField": "Min (Rs)",
+      "bigoMaxField": "Max (Rs)",
+      "bigoNote_one": "Filtering by amount includes only the {{count}} case with a recorded amount.",
+      "bigoNote_other": "Filtering by amount includes only the {{count}} cases with a recorded amount.",
+      "bigoMinThumb": "Minimum amount",
+      "bigoMaxThumb": "Maximum amount",
+      "bigoNoMin": "No minimum",
+      "bigoNoMax": "No maximum"
     }
   },
   "materialsPage": {

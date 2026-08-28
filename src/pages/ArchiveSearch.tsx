@@ -47,6 +47,7 @@ import type {
   ArchiveSearchType,
 } from "@/types/search";
 import { cn } from "@/lib/utils";
+import { describeBigoRange, readBigoBounds } from "@/lib/bigo-range";
 import {
   normalizeArchiveSearchParams,
   setArchiveSearchParam,
@@ -58,7 +59,11 @@ import { sendSearchClick } from "@/utils/searchClick";
 import { Seo } from "@/components/Seo";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
+// "bigo" is a refinement for pill/clear purposes only — it is one removable
+// range, not a list of facet tokens, so it never joins the `selected` record the
+// checkbox groups are driven from.
 type RefinementName = SidebarFilterName | "type";
+type PillName = RefinementName | "bigo";
 
 const validSorts = new Set<ArchiveSearchSort>([
   "relevance",
@@ -231,12 +236,41 @@ export default function ArchiveSearch({
     // stale entity_type behind would silently filter the new record type through
     // a control the user can no longer see.
     if (type !== "entity") next.delete("entity_type");
+    // Same for the बिगो range, which only renders while browsing Cases. readParams
+    // already declines to send a stale bound, but dropping it from the URL keeps
+    // what is shared or bookmarked honest about what is actually applied.
+    if (type !== "case") {
+      next.delete("bigo_min");
+      next.delete("bigo_max");
+    }
     setSearchParams(next);
   };
 
-  const removeRefinement = (name: RefinementName, value: string) => {
+  // One request per COMMITTED range — a thumb release, an arrow key-up, or a
+  // typed amount on blur/Enter. The slider owns its position while dragging, so
+  // a 20-stop drag is one request rather than twenty and there is nothing here
+  // to debounce.
+  const updateBigoRange = ({ min, max }: { min?: number; max?: number }) => {
+    // Both bounds move as ONE edit. Setting them in sequence through
+    // setArchiveSearchParam would re-normalize in between, and a new lower bound
+    // momentarily above the OUTGOING upper bound looks inverted at that point —
+    // which drops both, losing the half already written.
+    const next = new URLSearchParams(searchParams);
+    next.delete("bigo_min");
+    next.delete("bigo_max");
+    if (min !== undefined) next.set("bigo_min", String(min));
+    if (max !== undefined) next.set("bigo_max", String(max));
+    next.delete("page");
+    setSearchParams(normalizeArchiveSearchParams(next));
+  };
+
+  const removeRefinement = (name: PillName, value: string) => {
     if (name === "type") {
       updateRecordType(undefined);
+      return;
+    }
+    if (name === "bigo") {
+      updateBigoRange({});
       return;
     }
     toggleRefinement(name, value);
@@ -245,7 +279,7 @@ export default function ArchiveSearch({
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "entity_type", "case_type", "tags"] as RefinementName[]
+      ["type", "entity_type", "case_type", "tags", "bigo_min", "bigo_max"] as const
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -267,19 +301,40 @@ export default function ArchiveSearch({
     // filter chip (or in the mobile filter count) would be redundant.
     type: [],
   };
-  const activeRefinementCount = Object.values(selectedRefinements).reduce(
-    (count, values) => count + values.length,
-    0,
-  );
+  // The active बिगो range as a single removable pill, labelled with the formatted
+  // bounds however it was set — dragged or typed — so a range is never applied
+  // invisibly. ONE pill, not one per bound: it is a single refinement, and
+  // removing it clears both sides.
+  const hasBigoRange =
+    params.bigo_min !== undefined || params.bigo_max !== undefined;
+  const bigoPill = hasBigoRange
+    ? {
+        name: "bigo" as const,
+        value: "bigo",
+        label: describeBigoRange(params.bigo_min, params.bigo_max, t),
+      }
+    : null;
+  const activeRefinementCount =
+    Object.values(selectedRefinements).reduce(
+      (count, values) => count + values.length,
+      0,
+    ) + (bigoPill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
-  const selectedItems = getSelectedItems(facets, selectedRefinements, t);
+  const selectedItems = [
+    ...getSelectedItems(facets, selectedRefinements, t),
+    ...(bigoPill ? [bigoPill] : []),
+  ];
   const searchFilters = showFilters ? (
     isInitialLoading ? (
-      <SearchFiltersSkeleton />
+      <SearchFiltersSkeleton selectedType={selectedRecordType} />
     ) : (
       <SearchFilters
         facets={facets}
         onClear={clearRefinements}
+        bigoExtent={displayData?.extents?.bigo}
+        bigoMax={params.bigo_max}
+        bigoMin={params.bigo_min}
+        onBigoCommit={updateBigoRange}
         onToggle={toggleRefinement}
         selected={selectedSidebarFilters}
         selectedType={selectedRecordType}
@@ -563,6 +618,12 @@ function readRecordType(searchParams: URLSearchParams): ArchiveSearchType {
     : "all";
 }
 
+// The URL's बिगो bounds under the API's own param names.
+function readBigoParams(searchParams: URLSearchParams) {
+  const { min, max } = readBigoBounds(searchParams);
+  return { bigo_min: min, bigo_max: max };
+}
+
 function readParams(
   searchParams: URLSearchParams,
   selectedRecordType: ArchiveSearchType,
@@ -582,6 +643,18 @@ function readParams(
         : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
+    // Only honour the बिगो bounds while browsing Cases. No other record type
+    // carries an amount, so a bound left over from a case view would empty the
+    // results of whatever the reader switched to — with the control that set it
+    // no longer on screen. Same gate, and the same reason, as entity_type above.
+    //
+    // Read through readBigoBounds, NOT by parsing each bound here: an inverted
+    // pair parses fine bound-by-bound, and normalizeArchiveSearchParams only
+    // repairs the URL an effect later — by which point this render has already
+    // sent `bigo_min > bigo_max` and taken a 400.
+    ...(selectedRecordType === "case"
+      ? readBigoParams(searchParams)
+      : { bigo_min: undefined, bigo_max: undefined }),
     // An explicit ?sort wins. Otherwise the default depends on whether there is
     // query text: with none, EVERY document scores identically (a constant 2.0),
     // so `relevance` degenerates to the `iri` tiebreaker and browse order comes

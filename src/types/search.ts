@@ -35,6 +35,13 @@ export interface ArchiveSearchParams {
   tags?: string[];
   // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
   status?: string[];
+  // बिगो (alleged embezzled amount, whole NPR) range bounds — the one refine
+  // control that is not exact-match. Both inclusive. CASE-ONLY: no entity,
+  // material or court-case document carries an amount, so either bound also
+  // excludes every non-case result and must be paired with `type: "case"`.
+  // Cases with no recorded amount (~9% of the corpus) are excluded by any bound.
+  bigo_min?: number;
+  bigo_max?: number;
   sort?: ArchiveSearchSort;
   page?: number;
   page_size?: number;
@@ -124,6 +131,18 @@ export interface ArchiveSearchCounts {
   case: number;
 }
 
+// Corpus extent of a range-filterable field — the SCALE a range control needs,
+// as distinct from the term buckets in `facets`. Keyed by request-param prefix:
+// `bigo` covers `bigo_min`/`bigo_max`. Computed by a `global` aggregation, so it
+// is a fixed property of the corpus and does NOT narrow with the active range —
+// otherwise dragging a thumb inward would pull the track in behind it.
+export interface SearchRangeExtent {
+  min: number;
+  max: number;
+  /** Documents carrying a recorded value at all — the rest any bound excludes. */
+  count: number;
+}
+
 export interface ArchiveSearchResponse {
   query: string;
   lang: string;
@@ -133,6 +152,8 @@ export interface ArchiveSearchResponse {
   count: number;
   counts: Partial<ArchiveSearchCounts>;
   facets: ArchiveSearchFacets;
+  // Optional: older cached responses and test fixtures predate it.
+  extents?: Partial<Record<"bigo", SearchRangeExtent>>;
   results: ArchiveSearchResult[];
   next_cursor: string | null;
   // Ephemeral per-response id (not a user/session id). Echoed back on a result
