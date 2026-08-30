@@ -197,13 +197,20 @@ const Index = () => {
             but external links to jawafdehi.org/#recent-cases would break. */}
         <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
           <div className="layout-container">
-            <Reveal>
+            <Reveal className="group">
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">
                     {t("home.featuredCases.heading", "Featured Cases")}
                   </h2>
-                  <p className="text-muted-foreground mt-1">
+                  {/* Crimson rule that draws itself in as the section arrives.
+                      Hidden state is the exception: idle (SSR / no-JS /
+                      reduced motion) renders it fully drawn. */}
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 block h-1 w-14 origin-left rounded-full bg-accent transition-transform delay-200 duration-700 ease-out group-data-[reveal=hidden]:scale-x-0"
+                  />
+                  <p className="text-muted-foreground mt-2">
                     {t(
                       "home.featuredCases.subtitle",
                       "Recent high-impact corruption cases under public scrutiny",
@@ -243,10 +250,10 @@ const Index = () => {
 
             <Reveal>
               <div className="text-center mt-10 mb-4 flex justify-center">
-                <Button variant="primary" size="xl" asChild>
+                <Button variant="primary" size="xl" asChild className="group">
                   <Link to="/search?type=case">
                     {t("home.featuredCases.viewAll", "View all cases")}{" "}
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                   </Link>
                 </Button>
               </div>

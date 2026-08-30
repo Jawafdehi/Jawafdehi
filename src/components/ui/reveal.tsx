@@ -48,10 +48,19 @@ export function Reveal({ children, className, delayMs = 0 }: Readonly<RevealProp
   return (
     <div
       ref={ref}
+      // data-reveal lets children choreograph off the same trigger (e.g. a
+      // heading rule drawn in with group-data-[reveal=hidden]:scale-x-0).
+      // Children must style the HIDDEN state as the exception: in the idle
+      // state (SSR, no-JS, reduced motion, already-visible) everything renders
+      // fully visible with no transform.
+      data-reveal={state}
       className={cn(
-        state !== "idle" && "transition-all duration-700 ease-out will-change-transform",
-        state === "hidden" && "translate-y-6 opacity-0",
-        state === "shown" && "translate-y-0 opacity-100",
+        // Rises further and unblurs as it lands — an easeOutQuint-style curve
+        // makes the deceleration read as camera settle rather than a fade.
+        state !== "idle" &&
+          "transition-all duration-[850ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+        state === "hidden" && "translate-y-10 scale-[0.99] opacity-0 [filter:blur(6px)]",
+        state === "shown" && "translate-y-0 scale-100 opacity-100 [filter:blur(0px)]",
         className,
       )}
       style={delayMs ? { transitionDelay: `${delayMs}ms` } : undefined}

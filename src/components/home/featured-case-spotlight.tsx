@@ -2,7 +2,7 @@
 // (mockup C). One case gets the full-width, full-brand treatment: serif title
 // on navy, crimson chip, the case photograph bleeding in from the right. The
 // supporting cases below it stay on the standard CaseCard.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, MapPin, User } from "lucide-react";
@@ -65,8 +65,22 @@ export function FeaturedCaseSpotlight({
     }
   };
 
+  // Cursor-following crimson glow: mousemove writes CSS vars straight onto the
+  // element (no React state, no re-renders); the overlay below reads them.
+  // Touch devices never fire mousemove, so the glow simply stays off there.
+  const glowRef = useRef<HTMLElement | null>(null);
+  const handleGlowMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = glowRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--spot-x", `${e.clientX - rect.left}px`);
+    el.style.setProperty("--spot-y", `${e.clientY - rect.top}px`);
+  };
+
   return (
     <article
+      ref={glowRef}
+      onMouseMove={handleGlowMove}
       className={cn(
         "group relative grid overflow-hidden rounded-3xl bg-primary text-primary-foreground",
         "shadow-[0_24px_60px_-28px_hsl(var(--primary)/0.55)] transition-all duration-300",
@@ -75,6 +89,15 @@ export function FeaturedCaseSpotlight({
       )}
       onClick={handleCardClick}
     >
+      {/* The glow itself — soft accent light pooled under the cursor. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:hidden"
+        style={{
+          background:
+            "radial-gradient(340px circle at var(--spot-x, 50%) var(--spot-y, 50%), hsl(var(--accent) / 0.18), transparent 70%)",
+        }}
+      />
       <div className="flex flex-col p-6 sm:p-8 lg:p-10">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-accent-foreground">
@@ -135,7 +158,10 @@ export function FeaturedCaseSpotlight({
             {caseSlug ? (
               <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>
                 {t("common.viewDetails")}
-                <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                <ArrowRight
+                  className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
               </Link>
             ) : (
               <span>{t("common.viewDetails")}</span>
