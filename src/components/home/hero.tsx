@@ -1,10 +1,11 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FilePlus2, FolderSearch } from "lucide-react";
 
 import { HeroSceneGate } from "@/components/home/hero-scene-gate";
 import { AnimatedCount } from "@/components/ui/animated-count";
+import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/ui/search-bar";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +113,30 @@ export function Hero({
             value={archiveQuery}
           />
         </form>
+
+        {/* The two primary actions. Report carries the crimson accent — the one
+            reserved color, spent here so a first-time visitor's eye lands on the
+            action that grows the archive. Browse stays a quiet outline: the
+            search bar above already serves the exploring visitor. */}
+        <div className="mt-6 flex w-full max-w-[min(100%,42rem)] flex-col gap-3 self-start sm:w-auto sm:flex-row sm:self-center">
+          <Button
+            asChild
+            size="lg"
+            className="bg-accent font-bold text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90"
+          >
+            <Link to="/report">
+              <FilePlus2 className="h-5 w-5" aria-hidden="true" />
+              {t("header.reportCase")}
+            </Link>
+          </Button>
+
+          <Button asChild variant="outline" size="lg">
+            <Link to="/search?type=case">
+              <FolderSearch className="h-5 w-5" aria-hidden="true" />
+              {t("header.browseCases")}
+            </Link>
+          </Button>
+        </div>
 
         <HeroStats stats={heroStats} />
 

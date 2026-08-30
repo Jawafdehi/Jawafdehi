@@ -10,13 +10,15 @@
 - [x] Brand-token test satisfied — no hardcoded brand hex; tokens resolved at runtime
 - [x] Verified: `bun run lint` ✓, `bun run build` ✓ (SSR + prerender + sitemap), `node scripts/bundle-budget.mjs` ✓ — initial 643.1 KB gzip vs 644.5 KB limit; all three.js in deferred chunks
 - [x] Playwright screenshots at 1440×900 and 390×844 — composition holds, readability wash keeps copy dominant
+- [x] Full `bun run test` suite green — 683/683 after the token fix
+- [x] Social sharing audited: repo already ships complete OG + Twitter Card meta via `src/utils/seo.ts` + `<Seo>` + prerender placeholder substitution + edge worker rewrite, with og:locale ne_NP / alternate en_US and `summary_large_image`. Verified present in BUILT `dist/index.html`
+- [x] og-image audited: existing `public/assets/social-preview.png` is already on-brand — navy #0E1F3B field, crimson accents, bilingual जवाफदेही/JAWAFDEHI wordmark, 1200×630. No replacement needed
+- [x] Hero primary CTAs — crimson "मुद्दा रिपोर्ट गर्नुहोस्" (→ /report) + outline "मुद्दाहरू ब्राउज गर्नुहोस्" (→ /search?type=case), bilingual via existing `header.*` keys; verified desktop + phone, console clean
+- [x] Re-verified after CTAs: lint ✓, 683/683 ✓, build ✓, bundle 643.2 KB vs 644.5 KB limit ✓
 
 ## Next
-- [ ] Re-run full `bun run test` suite after token fix (was 682/683 with only the brand test failing pre-fix)
-- [ ] Social sharing: OG + Twitter Card meta (bilingual-aware), verify tags in BUILT html
-- [ ] Branded 1200×630 og-image (navy #0E1F3B / crimson #B5242C), wired through SSR/prerender
 - [ ] Consider a layout test asserting the 3D chunk stays out of initial payload
-- [ ] Open PR when checks are green
+- [ ] Push branch and open PR when checks are green
 
 ## Notes
 - THREE.Clock deprecation warning comes from @react-three/fiber v8 internals — harmless, not ours to fix
