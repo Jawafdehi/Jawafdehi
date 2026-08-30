@@ -19,6 +19,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   Color,
+  type Group,
   NormalBlending,
   PerspectiveCamera,
   ShaderMaterial,
@@ -49,6 +50,13 @@ type HeroSceneProps = {
   mapSrc: string;
   /** Dark theme active — swaps the base point color. */
   dark: boolean;
+  /** Full-bleed "stage" pose (homepage Option A): the field is tilted back
+   * like a floor beneath the centered content, and scroll scrubs extra tilt,
+   * sink, and fade so leaving the hero feels like a camera move. */
+  stage?: boolean;
+  /** Scroll progress 0..1 written by the hero's scroll listener. A mutable
+   * ref, not state, read once per frame — scrolling never re-renders R3F. */
+  scrollRef?: { current: number };
   /** Fired once particle positions are sampled and the field is visible. */
   onReady?: () => void;
 };
@@ -122,6 +130,7 @@ function sampleMap(img: HTMLImageElement, maxPoints: number): SampledField | nul
 const VERTEX = /* glsl */ `
   uniform float uTime;
   uniform float uProgress;
+  uniform float uFade;
   uniform vec2 uParallax;
   uniform float uPixelRatio;
   attribute vec3 aScatter;
@@ -148,7 +157,7 @@ const VERTEX = /* glsl */ `
 
     float twinkle = 0.7 + 0.3 * sin(uTime * (0.5 + aSeed * 1.3) + aSeed * 40.0);
     vAccent = aAccent;
-    vAlpha = mix(0.12, twinkle, eased);
+    vAlpha = mix(0.12, twinkle, eased) * uFade;
   }
 `;
 
@@ -173,7 +182,7 @@ const FRAGMENT = /* glsl */ `
  * backdrop wider than the map; inside the hero's navy panel the container can
  * be any aspect, so a fixed camera distance would crop the map (the exact
  * complaint the redesign fixes). Re-runs on resize. */
-function CameraFit({ worldHeight }: Readonly<{ worldHeight: number }>) {
+function CameraFit({ worldHeight, margin = 1.14 }: Readonly<{ worldHeight: number; margin?: number }>) {
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
 
@@ -181,18 +190,21 @@ function CameraFit({ worldHeight }: Readonly<{ worldHeight: number }>) {
     if (!(camera instanceof PerspectiveCamera)) return;
     const aspect = size.width / Math.max(1, size.height);
     const halfTan = Math.tan((camera.fov * Math.PI) / 360);
-    const MARGIN = 1.14; // headroom for drift (±0.34) and parallax (±1.5)
-    const zForWidth = (WORLD_WIDTH * MARGIN) / 2 / (halfTan * aspect);
-    const zForHeight = (worldHeight * MARGIN) / 2 / halfTan;
+    // Default 1.14: headroom for drift (±0.34) and parallax (±1.5). The
+    // full-bleed stage passes a tighter margin — the tilt already pulls the
+    // silhouette's projected height in, and a slight overfill is the point.
+    const zForWidth = (WORLD_WIDTH * margin) / 2 / (halfTan * aspect);
+    const zForHeight = (worldHeight * margin) / 2 / halfTan;
     camera.position.z = Math.max(zForWidth, zForHeight);
     camera.updateProjectionMatrix();
-  }, [camera, size, worldHeight]);
+  }, [camera, size, worldHeight, margin]);
 
   return null;
 }
 
-function ParticleField({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {
+function ParticleField({ mapSrc, dark, stage = false, scrollRef, onReady }: Readonly<HeroSceneProps>) {
   const [field, setField] = useState<SampledField | null>(null);
+  const groupRef = useRef<Group>(null);
   const readyFired = useRef(false);
   const progress = useRef(0);
   const pointer = useRef({ x: 0, y: 0 });
@@ -235,6 +247,7 @@ function ParticleField({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {
         uniforms: {
           uTime: { value: 0 },
           uProgress: { value: 0 },
+          uFade: { value: 1 },
           uParallax: { value: [0, 0] },
           uPixelRatio: { value: 1 },
           uColor: { value: navyColor() },
@@ -282,18 +295,33 @@ function ParticleField({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {
     p.x += (pointer.current.x * 0.9 - p.x) * Math.min(1, clamped * 3);
     p.y += (-pointer.current.y * 0.6 - p.y) * Math.min(1, clamped * 3);
     material.uniforms.uParallax.value = [p.x, p.y];
+
+    // The stage pose: a resting tilt reads as a floor beneath the centered
+    // content; scroll (0..1 over roughly one viewport) scrubs extra tilt,
+    // sink, and fade, so leaving the hero plays as one continuous camera
+    // move. Reduced-motion never gets here — the gate blocks the scene.
+    if (stage && groupRef.current && field) {
+      const s = Math.min(1, Math.max(0, scrollRef?.current ?? 0));
+      const g = groupRef.current;
+      g.rotation.x = -(0.46 + s * 0.42);
+      g.position.y = -field.worldHeight * (0.12 + s * 0.38);
+      g.position.z = -s * 7;
+      material.uniforms.uFade.value = 1 - s * 0.85;
+    }
   });
 
   if (!geometry || !field) return null;
   return (
     <>
-      <CameraFit worldHeight={field.worldHeight} />
-      <points geometry={geometry} material={material} />
+      <CameraFit worldHeight={field.worldHeight} margin={stage ? 1.02 : 1.14} />
+      <group ref={groupRef}>
+        <points geometry={geometry} material={material} />
+      </group>
     </>
   );
 }
 
-export default function HeroScene({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {
+export default function HeroScene({ mapSrc, dark, stage, scrollRef, onReady }: Readonly<HeroSceneProps>) {
   return (
     <Canvas
       aria-hidden="true"
@@ -303,7 +331,7 @@ export default function HeroScene({ mapSrc, dark, onReady }: Readonly<HeroSceneP
       camera={{ position: [0, 0, 40], fov: 42 }}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
     >
-      <ParticleField mapSrc={mapSrc} dark={dark} onReady={onReady} />
+      <ParticleField mapSrc={mapSrc} dark={dark} stage={stage} scrollRef={scrollRef} onReady={onReady} />
     </Canvas>
   );
 }

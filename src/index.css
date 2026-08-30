@@ -118,6 +118,23 @@
   40%            { transform: translateY(-6px); opacity: 1; }
 }
 
+/* Finish flourish for the hero stat counters: a brief settle-pop as a
+   count-up lands. Only ever attached from JS after react-countup's onEnd,
+   which itself never fires under reduced motion or static rendering — the
+   media query is belt-and-braces. */
+@keyframes stat-pop {
+  0%   { transform: scale(1);    filter: brightness(1); }
+  35%  { transform: scale(1.07); filter: brightness(1.25); }
+  100% { transform: scale(1);    filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-stat-pop {
+    display: inline-block;
+    animation: stat-pop 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

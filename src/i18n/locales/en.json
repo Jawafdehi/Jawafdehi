@@ -146,7 +146,8 @@
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover"
+      "coverageLink": "See what we cover",
+      "scrollCue": "Scroll"
     },
     "featuredCases": {
       "heading": "Featured Cases",

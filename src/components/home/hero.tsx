@@ -1,15 +1,24 @@
-// Homepage hero — "The Ledger" layout.
+// Homepage hero — "The Stage" (Option A).
 //
-// Split hero: editorial serif headline on the left, the Nepal particle map on
-// an always-navy panel on the right (mockup B), with the animated stat band
-// riding the hero's bottom edge on the same navy (mockup C). The navy panel is
-// what makes the map legible: light points on dark navy read as Nepal at a
-// glance, where the old full-bleed light-on-light backdrop was guessable at
-// best and clipped by the viewport at worst.
-import { type FormEvent, useState } from "react";
+// The Nepal particle map is no longer a side panel: it is the full-bleed
+// backdrop of a dark, viewport-filling stage. The field assembles from deep
+// scatter on load (hero-scene.tsx), rests tilted back like a floor beneath
+// the content, and scroll scrubs extra tilt/sink/fade so leaving the hero
+// plays as one continuous camera move. The content — headline, one large
+// search pill, two actions — sits dead-center: the primary job of this page
+// is a citizen arriving to search the archive.
+//
+// Non-negotiables carried over from the split design:
+//   * static fallback — the inverted map-light.svg IS the no-JS / no-WebGL /
+//     reduced-motion rendering; the WebGL field fades in over it
+//   * reduced motion — the scene gate blocks WebGL, and the scroll-scrub
+//     listener below never attaches
+//   * the navy stat band rides the hero's bottom edge, --accent-on-dark
+//     carrying the money figure (raw --accent is 2.6:1 on navy)
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, FilePlus2, FolderSearch } from "lucide-react";
+import { ArrowRight, ChevronDown, FilePlus2, FolderSearch } from "lucide-react";
 
 import { HeroSceneGate } from "@/components/home/hero-scene-gate";
 import { AnimatedCount } from "@/components/ui/animated-count";
@@ -41,6 +50,40 @@ export function Hero({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [archiveQuery, setArchiveQuery] = useState("");
+
+  // Scroll progress over roughly the first viewport, shared with the WebGL
+  // scene as a mutable ref (read per frame, never re-renders React) and
+  // applied to the content as a parallax lift + fade. One passive listener,
+  // one rAF — and none of it under prefers-reduced-motion.
+  const scrollProgress = useRef(0);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const span = Math.max(1, window.innerHeight * 0.9);
+      const s = Math.min(1, window.scrollY / span);
+      scrollProgress.current = s;
+      const node = contentRef.current;
+      if (node) {
+        node.style.transform = `translate3d(0, ${(-56 * s).toFixed(1)}px, 0)`;
+        node.style.opacity = (1 - 0.9 * s).toFixed(3);
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   const heroStats: HeroStat[] = [
     { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
@@ -77,36 +120,43 @@ export function Hero({
   return (
     <section
       id="hero"
-      className="relative isolate -mt-[76px] overflow-hidden border-b bg-background pt-[76px]"
+      className="relative isolate -mt-[76px] overflow-hidden bg-primary pt-[76px]"
     >
-      <div className="layout-container grid gap-8 py-10 sm:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:py-16 xl:gap-16">
-        {/* ── Left: the editorial column ── */}
-        <div className="flex max-w-2xl flex-col items-start text-left">
-          {/* Crimson rule — the editorial mark that opens the page. */}
-          <div aria-hidden="true" className="h-1 w-14 rounded-full bg-accent" />
+      {/* ── The stage: backdrop + centered content, one viewport tall ── */}
+      <div className="relative">
+        <HeroStage scrollRef={scrollProgress} />
 
-          <p className="font-eyebrow font-eyebrow-display mt-6 max-w-full">
+        <div
+          ref={contentRef}
+          className="layout-container relative flex min-h-[calc(100svh-76px)] flex-col items-center justify-center pb-24 pt-8 text-center will-change-transform"
+        >
+          <p className="font-eyebrow font-eyebrow-display max-w-full text-[hsl(var(--accent-on-dark))]">
             <em>{t("home.hero.eyebrow")}</em>
           </p>
 
-          <h1 className="font-home-hero-title mt-4">
+          <h1 className="font-home-hero-title mx-auto mt-5 text-primary-foreground">
             {t("home.hero.titlePrefix")}{" "}
-            <span className="italic text-accent">{t("home.hero.titleHighlight")}</span>{" "}
+            <span className="italic text-[hsl(var(--accent-on-dark))]">
+              {t("home.hero.titleHighlight")}
+            </span>{" "}
             {t("home.hero.titleSuffix")}
           </h1>
 
-          <p className="font-home-hero-lede measure-intro mt-5">
+          <p className="font-home-hero-lede measure-intro mx-auto mt-5 text-primary-foreground/75">
             {t("home.hero.description")}
           </p>
 
-          <form className="mt-7 w-full max-w-[min(100%,42rem)]" onSubmit={submitArchiveSearch}>
+          {/* The central action: one large search pill. Light on the navy
+              stage so it is unmistakably *the* control on the page. */}
+          <form className="mt-8 w-full max-w-2xl" onSubmit={submitArchiveSearch}>
             <label className="sr-only" htmlFor="hero-archive-search">
               {t("home.hero.searchLabel")}
             </label>
 
             <SearchBar
               id="hero-archive-search"
-              inputClassName="bg-background/95 shadow-lg shadow-primary-surface/5"
+              inputClassName="h-14 rounded-full border-transparent bg-background text-base shadow-[0_24px_60px_-20px_hsl(var(--primary-foreground)/0.25)]"
+              buttonClassName="h-11 w-11 bg-accent text-accent-foreground hover:bg-accent/90"
               onChange={(event) => setArchiveQuery(event.target.value)}
               placeholder={t("home.hero.searchPlaceholder")}
               submitLabel={t("home.hero.searchSubmit")}
@@ -114,11 +164,9 @@ export function Hero({
             />
           </form>
 
-          {/* The two primary actions. Report carries the crimson accent — the one
-              reserved color, spent here so a first-time visitor's eye lands on the
-              action that grows the archive. Browse stays a quiet outline: the
-              search bar above already serves the exploring visitor. */}
-          <div className="mt-5 flex w-full max-w-[min(100%,42rem)] flex-col gap-3 sm:w-auto sm:flex-row">
+          {/* Secondary actions. Report keeps the crimson accent; Browse is a
+              glass pill — the search bar above already serves the explorer. */}
+          <div className="mt-6 flex w-full max-w-2xl flex-col justify-center gap-3 sm:w-auto sm:flex-row">
             <Button
               asChild
               size="lg"
@@ -130,7 +178,12 @@ export function Hero({
               </Link>
             </Button>
 
-            <Button asChild variant="outline" size="lg">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-primary-foreground/30 bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            >
               <Link to="/search?type=case">
                 <FolderSearch className="h-5 w-5" aria-hidden="true" />
                 {t("header.browseCases")}
@@ -139,7 +192,7 @@ export function Hero({
           </div>
 
           <Link
-            className="group mt-7 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            className="group mt-7 inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary"
             to="/data-quality"
           >
             <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -152,8 +205,16 @@ export function Hero({
           </Link>
         </div>
 
-        {/* ── Right: the navy map panel ── */}
-        <HeroMapPanel />
+        {/* Scroll cue — decorative; the stat band below the fold is the payoff. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-6 flex flex-col items-center gap-1.5 text-primary-foreground/50"
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em]">
+            {t("home.hero.scrollCue", "Scroll")}
+          </span>
+          <ChevronDown className="h-4 w-4 motion-safe:animate-bounce" />
+        </div>
       </div>
 
       {/* ── Stat band: the archive in numbers, on the hero's bottom edge ── */}
@@ -162,29 +223,26 @@ export function Hero({
   );
 }
 
-/** The Nepal map on an always-navy panel: static (inverted) map as the no-JS /
- * no-WebGL / reduced-motion fallback, with the particle field fading in over
- * it when the lazy scene is ready. The whole silhouette stays inside the
- * panel — nothing bleeds off screen. Decorative throughout. */
-function HeroMapPanel() {
+/** The full-bleed backdrop: crimson glow, the static (inverted, CSS-tilted)
+ * map as the no-JS / no-WebGL / reduced-motion fallback, the WebGL particle
+ * field over it, and a radial navy scrim that keeps the centered content
+ * readable over both. Decorative throughout. */
+function HeroStage({ scrollRef }: Readonly<{ scrollRef: { current: number } }>) {
   const [sceneReady, setSceneReady] = useState(false);
 
   return (
-    <div
-      aria-hidden="true"
-      className="relative min-h-[280px] overflow-hidden rounded-3xl bg-primary shadow-[0_24px_60px_-28px_hsl(var(--primary)/0.6)] sm:min-h-[360px] lg:min-h-[520px] lg:self-stretch"
-    >
-      {/* Crimson glow — the one warm note on the navy field. */}
-      <div className="absolute left-1/2 top-1/2 h-3/5 w-3/5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/20 blur-3xl" />
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+      {/* Crimson glow low on the stage — the one warm note on the navy field. */}
+      <div className="absolute left-1/2 top-[64%] h-[55%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/15 blur-3xl" />
 
-      {/* Static fallback map. map-light.svg draws in dark ink, so it is
-          inverted to read light-on-navy; when the particle field is live it
-          settles back and the particles carry the silhouette. It never
-          unmounts — it IS the reduced-motion / no-WebGL rendering. */}
+      {/* Static fallback map, perspective-tilted to match the stage pose.
+          map-light.svg draws in dark ink, so it is inverted to read light on
+          navy. It never unmounts — when the particle field is live it settles
+          to a faint ghost that adds density under the points. */}
       <div
         className={cn(
-          "absolute inset-5 transition-opacity duration-1000 sm:inset-8 lg:inset-10",
-          sceneReady ? "opacity-[0.14]" : "opacity-90",
+          "absolute inset-x-[-6%] bottom-[-4%] top-[30%] [perspective:1100px] transition-opacity duration-1000",
+          sceneReady ? "opacity-10" : "opacity-60",
         )}
       >
         <img
@@ -192,13 +250,12 @@ function HeroMapPanel() {
           alt=""
           decoding="async"
           {...{ fetchpriority: "low" }}
-          className="h-full w-full object-contain [filter:invert(1)_brightness(1.6)]"
+          className="h-full w-full object-contain [filter:invert(1)_brightness(1.7)] [transform:rotateX(38deg)]"
         />
       </div>
 
-      {/* WebGL particle field — camera auto-fits the full silhouette to the
-          panel (CameraFit in hero-scene.tsx), and forceDark keeps the points
-          light on the always-navy surface regardless of theme. */}
+      {/* WebGL particle field — full-bleed, stage pose, scroll-scrubbed.
+          forceDark keeps the points light on the always-navy stage. */}
       <div
         className={cn(
           "absolute inset-0 transition-opacity duration-1000",
@@ -208,16 +265,21 @@ function HeroMapPanel() {
         <HeroSceneGate
           mapSrc="/assets/map-light.svg"
           forceDark
+          stage
+          scrollRef={scrollRef}
           onReady={() => setSceneReady(true)}
         />
       </div>
+
+      {/* Readability scrim — navy pooled behind the centered content. */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_52%_at_50%_42%,hsl(var(--primary)/0.9),hsl(var(--primary)/0.45)_55%,transparent_80%)]" />
     </div>
   );
 }
 
 function HeroStatBand({ stats }: Readonly<{ stats: HeroStat[] }>) {
   return (
-    <div className="bg-primary">
+    <div className="relative border-t border-primary-foreground/10 bg-primary">
       <div className="layout-container grid grid-cols-2 gap-x-4 gap-y-7 py-8 md:grid-cols-4 md:py-10">
         {stats.map(({ value, label, href, highlight }) => {
           const content = (
@@ -261,6 +323,11 @@ function HeroStatBand({ stats }: Readonly<{ stats: HeroStat[] }>) {
 }
 
 function HeroStatValue({ value }: Readonly<{ value: string }>) {
+  // Finish pop: when the count-up lands, the figure does a brief settle-pop
+  // (scale + brightness, .animate-stat-pop in index.css). onEnd only ever
+  // fires when the animation actually ran, so static renders never pop.
+  const [popped, setPopped] = useState(false);
+
   const normalizedValue = value.replace(/,/g, "");
   const numericValue = Number(normalizedValue);
 
@@ -270,5 +337,14 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
 
   // `display={value}` keeps the pre-animation text byte-identical to what the
   // API gave us, rather than re-deriving the grouping from the number.
-  return <AnimatedCount end={numericValue} display={value} duration={0.9} />;
+  return (
+    <span className={cn(popped && "animate-stat-pop")}>
+      <AnimatedCount
+        end={numericValue}
+        display={value}
+        duration={0.9}
+        onEnd={() => setPopped(true)}
+      />
+    </span>
+  );
 }

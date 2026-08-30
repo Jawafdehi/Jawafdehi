@@ -22,6 +22,10 @@ type HeroSceneGateProps = {
   /** Render light-on-dark points regardless of theme — the hero mounts the
    * scene inside an always-navy panel, where near-black points would vanish. */
   forceDark?: boolean;
+  /** Full-bleed stage pose + scroll scrub — see hero-scene.tsx. */
+  stage?: boolean;
+  /** Scroll progress 0..1, shared as a mutable ref (never re-renders). */
+  scrollRef?: { current: number };
   onReady?: () => void;
 };
 
@@ -34,7 +38,13 @@ function webglSupported(): boolean {
   }
 }
 
-export function HeroSceneGate({ mapSrc, forceDark = false, onReady }: Readonly<HeroSceneGateProps>) {
+export function HeroSceneGate({
+  mapSrc,
+  forceDark = false,
+  stage = false,
+  scrollRef,
+  onReady,
+}: Readonly<HeroSceneGateProps>) {
   const [eligible, setEligible] = useState(false);
   const [dark, setDark] = useState(false);
 
@@ -68,7 +78,7 @@ export function HeroSceneGate({ mapSrc, forceDark = false, onReady }: Readonly<H
 
   return (
     <Suspense fallback={null}>
-      <HeroScene mapSrc={mapSrc} dark={forceDark || dark} onReady={onReady} />
+      <HeroScene mapSrc={mapSrc} dark={forceDark || dark} stage={stage} scrollRef={scrollRef} onReady={onReady} />
     </Suspense>
   );
 }

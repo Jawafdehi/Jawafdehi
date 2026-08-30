@@ -48,6 +48,7 @@ export function AnimatedCount({
   display,
   duration = 0.9,
   separator = ",",
+  onEnd,
 }: Readonly<{
   /** The number to count up to. */
   end: number;
@@ -60,6 +61,12 @@ export function AnimatedCount({
   display?: string;
   duration?: number;
   separator?: string;
+  /**
+   * Fires when the count-up animation completes. Never fires when the figure
+   * renders statically (SSR, below the fold at mount) — callers using it for
+   * finish flourishes get exactly that: no animation, no flourish.
+   */
+  onEnd?: () => void;
 }>) {
   const hostRef = React.useRef<HTMLSpanElement>(null);
   const [animate, setAnimate] = React.useState(false);
@@ -93,7 +100,7 @@ export function AnimatedCount({
   }, []);
 
   if (animate) {
-    return <CountUp end={end} duration={duration} separator={separator} />;
+    return <CountUp end={end} duration={duration} separator={separator} onEnd={onEnd} />;
   }
 
   return (
