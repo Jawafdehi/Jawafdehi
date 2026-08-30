@@ -15,10 +15,10 @@
 - [x] og-image audited: existing `public/assets/social-preview.png` is already on-brand — navy #0E1F3B field, crimson accents, bilingual जवाफदेही/JAWAFDEHI wordmark, 1200×630. No replacement needed
 - [x] Hero primary CTAs — crimson "मुद्दा रिपोर्ट गर्नुहोस्" (→ /report) + outline "मुद्दाहरू ब्राउज गर्नुहोस्" (→ /search?type=case), bilingual via existing `header.*` keys; verified desktop + phone, console clean
 - [x] Re-verified after CTAs: lint ✓, 683/683 ✓, build ✓, bundle 643.2 KB vs 644.5 KB limit ✓
+- [x] CI regression guard: `THREE.WebGLRenderer` added to `MUST_BE_DEFERRED` in scripts/bundle-budget.mjs — a static import of the 3D stack now fails the bundle gate outright
 
 ## Next
-- [ ] Consider a layout test asserting the 3D chunk stays out of initial payload
-- [ ] Push branch and open PR when checks are green
+- [ ] Push branch and open PR when checks are green (blocked: awaiting GitHub SSH key / PAT from user)
 
 ## Notes
 - THREE.Clock deprecation warning comes from @react-three/fiber v8 internals — harmless, not ours to fix

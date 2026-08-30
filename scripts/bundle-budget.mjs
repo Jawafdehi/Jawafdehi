@@ -63,6 +63,15 @@ const MUST_BE_DEFERRED = [
       "eagerly imported) imported the charts directly. Load them through " +
       "lazyChart() in src/components/charts/lazy.tsx.",
   },
+  {
+    marker: "THREE.WebGLRenderer",
+    why:
+      "three.js + @react-three/fiber are ~250 KB gzip and the homepage hero " +
+      "scene is the only consumer. The initial payload sits ~1 KB under the " +
+      "limit, so a single static import of the 3D stack blows the budget. " +
+      "Load it only through the React.lazy() dynamic import in " +
+      "src/components/home/hero-scene-gate.tsx.",
+  },
 ];
 
 const gz = (buf) => zlib.gzipSync(buf, { level: 9 }).length;
