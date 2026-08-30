@@ -328,10 +328,19 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
   // fires when the animation actually ran, so static renders never pop.
   const [popped, setPopped] = useState(false);
 
-  const normalizedValue = value.replace(/,/g, "");
-  const numericValue = Number(normalizedValue);
+  // Split the formatted figure into constant-prefix / number / constant-suffix
+  // so currency figures spin too: "Rs 1.91 Kharab" animates 0.00 -> 1.91 with
+  // the "Rs " and " Kharab" held steady. Placeholders with no digits ("—")
+  // fall through and render as-is.
+  const match = /^(\D*?)(\d[\d,]*(?:\.\d+)?)(\D*)$/.exec(value);
+  if (!match) {
+    return <>{value}</>;
+  }
+  const [, prefix, figure, suffix] = match;
+  const numericValue = Number(figure.replace(/,/g, ""));
+  const decimals = figure.includes(".") ? figure.split(".")[1].length : 0;
 
-  if (!Number.isFinite(numericValue) || normalizedValue.trim() === "") {
+  if (!Number.isFinite(numericValue)) {
     return <>{value}</>;
   }
 
@@ -343,6 +352,9 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
         end={numericValue}
         display={value}
         duration={0.9}
+        decimals={decimals}
+        prefix={prefix || undefined}
+        suffix={suffix || undefined}
         onEnd={() => setPopped(true)}
       />
     </span>

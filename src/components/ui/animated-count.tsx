@@ -26,20 +26,23 @@ import CountUp from "react-countup";
  * arrive before anything fills them in.
  *
  * So render the real figure as text, and only hand the element to CountUp when
- * animating from zero would not contradict something the reader can already see:
+ * a count-up would read as an effect rather than a glitch:
  *
  *  * no JS, or JS still loading  -> the true figure, crawlable and accessible;
- *  * on screen at mount          -> animates 0 -> N, exactly as it always did
- *                                   (the desktop case: the hero band is above the
- *                                   fold there);
- *  * below the fold at mount     -> stays the true figure, and never animates.
+ *  * prefers-reduced-motion     -> the true figure, never animated;
+ *  * on screen at mount          -> animates 0 -> N immediately (the figure was
+ *                                   never seen static, so nothing "resets");
+ *  * below the fold at mount     -> the true figure holds until the element
+ *                                   ENTERS the viewport, then counts 0 -> N.
  *
- * That last case is a deliberate trade, not an oversight. Triggering the animation
- * on scroll instead would mean a figure the reader has already read jumping
- * BACKWARDS to 0 — countup.js prints `startVal` from its constructor — which reads
- * as a glitch rather than an effect. And there is little to give up: the phone hero
- * band sits at document y=592 in a 640px viewport, so a 0.9s animation was already
- * over before a thumb could reach it.
+ * The scroll trigger fires via `rootMargin: 0px 0px -8% 0px` — i.e. as the
+ * figure crosses into the bottom of the viewport, before a reader has dwelt on
+ * it. (An earlier revision refused to animate anything below the fold at mount,
+ * reasoning that a scroll-triggered reset to 0 reads as a glitch; that was
+ * written when the hero stat band sat above the fold on desktop. The full-bleed
+ * stage hero now puts the band below the fold everywhere, which turned "don't
+ * re-animate" into "never animate". Triggering on entry keeps the original
+ * concern honest — the reset happens before the figure has been read.)
  *
  * See docs/testing/mobile-audit-2026-08-16.md (S5b).
  */
@@ -48,6 +51,9 @@ export function AnimatedCount({
   display,
   duration = 0.9,
   separator = ",",
+  decimals = 0,
+  prefix,
+  suffix,
   onEnd,
 }: Readonly<{
   /** The number to count up to. */
@@ -61,10 +67,16 @@ export function AnimatedCount({
   display?: string;
   duration?: number;
   separator?: string;
+  /** Decimal places the animated figure keeps (countup.js `decimals`). */
+  decimals?: number;
+  /** Constant text before the animated figure, e.g. "Rs ". */
+  prefix?: string;
+  /** Constant text after the animated figure, e.g. " Kharab". */
+  suffix?: string;
   /**
    * Fires when the count-up animation completes. Never fires when the figure
-   * renders statically (SSR, below the fold at mount) — callers using it for
-   * finish flourishes get exactly that: no animation, no flourish.
+   * renders statically (SSR, reduced motion, never scrolled to) — callers using
+   * it for finish flourishes get exactly that: no animation, no flourish.
    */
   onEnd?: () => void;
 }>) {
@@ -77,21 +89,26 @@ export function AnimatedCount({
     // here: without one we simply keep showing the correct figure.
     if (!host || typeof IntersectionObserver === "undefined") return;
 
-    // Deliberately a ONE-SHOT check of where the figure is at mount, not a
-    // scroll-triggered trigger. countup.js prints `startVal` (0) from its
-    // constructor, so handing it a figure that is already on screen and already
-    // reading correctly makes the number jump BACKWARDS to 0 before counting up —
-    // which reads as a glitch, not an animation.
-    //
-    // So: visible at mount (the desktop case, where the hero band is above the
-    // fold) animates 0 -> N exactly as it always did. Below the fold, the figure
-    // simply stays correct and never animates — and it was never watched anyway,
-    // since the band sits at document y=592 in a 640px viewport and a 0.9s
-    // animation is long spent before a thumb arrives.
+    // A count-up is pure motion; under prefers-reduced-motion the true figure
+    // simply stays put. (matchMedia is feature-tested because jsdom lacks it.)
+    if (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    // Fires the moment the figure ENTERS the viewport (or immediately, if it is
+    // already on screen at mount). The -8% bottom margin means it triggers as
+    // the reader scrolls it in — before the static figure has been read — so
+    // countup.js printing its startVal (0) reads as the animation starting, not
+    // as a number the reader knew jumping backwards.
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) setAnimate(true);
-        observer.disconnect();
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setAnimate(true);
+          observer.disconnect();
+        }
       },
       { rootMargin: "0px 0px -8% 0px" },
     );
@@ -100,7 +117,17 @@ export function AnimatedCount({
   }, []);
 
   if (animate) {
-    return <CountUp end={end} duration={duration} separator={separator} onEnd={onEnd} />;
+    return (
+      <CountUp
+        end={end}
+        duration={duration}
+        separator={separator}
+        decimals={decimals}
+        prefix={prefix}
+        suffix={suffix}
+        onEnd={onEnd}
+      />
+    );
   }
 
   return (
