@@ -43,7 +43,11 @@ const DIR = arg("dir", "dist/client");
 // and the way there is more dynamic imports, not a bigger number here. When you
 // take bytes out, ratchet this DOWN in the same commit — a limit left slack after
 // a win silently re-permits the regression you just fixed.
-const MAX_INITIAL_JS_GZIP = 660_000;
+//
+// 2026-08: raised 660 → 750 deliberately (owner sign-off) to make room for the
+// homepage redesign's scroll/motion work. The lazy-loading rules above still
+// apply unchanged — three.js stays fully deferred.
+const MAX_INITIAL_JS_GZIP = 750_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

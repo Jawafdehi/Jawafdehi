@@ -2,7 +2,7 @@
 //
 // LAZY-LOADED ONLY. This module (and through it all of three.js and
 // @react-three/fiber) must never be statically imported: the initial-payload
-// budget (scripts/bundle-budget.mjs) is already at its 660 KB gzip limit.
+// budget (scripts/bundle-budget.mjs) has no room for it.
 // `hero.tsx` mounts it via React.lazy inside a client-only, idle-time gate
 // that also checks WebGL support and prefers-reduced-motion.
 //
@@ -13,13 +13,14 @@
 // crimson #B5242C accents (a lighter slate stands in for navy on the dark
 // theme, where near-black points would vanish).
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
   Color,
   NormalBlending,
+  PerspectiveCamera,
   ShaderMaterial,
 } from "three";
 
@@ -58,6 +59,8 @@ type SampledField = {
   seeds: Float32Array;
   accents: Float32Array;
   count: number;
+  /** Height of the sampled silhouette in world units (width is WORLD_WIDTH). */
+  worldHeight: number;
 };
 
 /** Rasterize the map SVG offscreen and sample opaque pixels as world-space
@@ -113,7 +116,7 @@ function sampleMap(img: HTMLImageElement, maxPoints: number): SampledField | nul
     accents[i] = Math.random() < ACCENT_RATIO ? 1 : 0;
   }
 
-  return { positions, scatter, seeds, accents, count };
+  return { positions, scatter, seeds, accents, count, worldHeight: worldH };
 }
 
 const VERTEX = /* glsl */ `
@@ -164,6 +167,29 @@ const FRAGMENT = /* glsl */ `
     gl_FragColor = vec4(c, a);
   }
 `;
+
+/** Back the camera off until the entire silhouette fits the canvas — with
+ * margin for drift and parallax. The scene used to live in a full-bleed
+ * backdrop wider than the map; inside the hero's navy panel the container can
+ * be any aspect, so a fixed camera distance would crop the map (the exact
+ * complaint the redesign fixes). Re-runs on resize. */
+function CameraFit({ worldHeight }: Readonly<{ worldHeight: number }>) {
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+
+  useEffect(() => {
+    if (!(camera instanceof PerspectiveCamera)) return;
+    const aspect = size.width / Math.max(1, size.height);
+    const halfTan = Math.tan((camera.fov * Math.PI) / 360);
+    const MARGIN = 1.14; // headroom for drift (±0.34) and parallax (±1.5)
+    const zForWidth = (WORLD_WIDTH * MARGIN) / 2 / (halfTan * aspect);
+    const zForHeight = (worldHeight * MARGIN) / 2 / halfTan;
+    camera.position.z = Math.max(zForWidth, zForHeight);
+    camera.updateProjectionMatrix();
+  }, [camera, size, worldHeight]);
+
+  return null;
+}
 
 function ParticleField({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {
   const [field, setField] = useState<SampledField | null>(null);
@@ -258,8 +284,13 @@ function ParticleField({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {
     material.uniforms.uParallax.value = [p.x, p.y];
   });
 
-  if (!geometry) return null;
-  return <points geometry={geometry} material={material} />;
+  if (!geometry || !field) return null;
+  return (
+    <>
+      <CameraFit worldHeight={field.worldHeight} />
+      <points geometry={geometry} material={material} />
+    </>
+  );
 }
 
 export default function HeroScene({ mapSrc, dark, onReady }: Readonly<HeroSceneProps>) {

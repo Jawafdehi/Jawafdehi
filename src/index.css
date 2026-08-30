@@ -40,12 +40,13 @@
 }
 
 /* Vesper Libre — a bilingual (Latin + Devanagari) serif used for editorial
-   headings across /insights and /data-quality. Self-hosted; covers both
-   scripts, so bilingual headlines stay in one typeface.
+   headings: the home hero headline, /insights and /data-quality. Self-hosted;
+   covers both scripts, so bilingual headlines stay in one typeface.
 
    WOFF2 only here, no other change: all four faces keep every codepoint (456),
-   every glyph and every layout feature. 27-29% off each, and unlike the app face
-   this is not on the critical path — the home page loads no Vesper at all. */
+   every glyph and every layout feature. 27-29% off each. font-display: swap
+   keeps it off the critical path — the headline paints in the fallback serif
+   and swaps in. */
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Regular.woff2') format('woff2');

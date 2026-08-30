@@ -151,6 +151,7 @@
     "featuredCases": {
       "heading": "Featured Cases",
       "subtitle": "Recent high-impact corruption cases under public scrutiny",
+      "spotlightLabel": "Featured case",
       "viewAll": "View all cases"
     },
     "mission": {

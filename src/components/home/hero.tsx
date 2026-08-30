@@ -1,3 +1,11 @@
+// Homepage hero — "The Ledger" layout.
+//
+// Split hero: editorial serif headline on the left, the Nepal particle map on
+// an always-navy panel on the right (mockup B), with the animated stat band
+// riding the hero's bottom edge on the same navy (mockup C). The navy panel is
+// what makes the map legible: light points on dark navy read as Nepal at a
+// glance, where the old full-bleed light-on-light backdrop was guessable at
+// best and clipped by the viewport at worst.
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -20,23 +28,9 @@ type HeroStat = {
   label: string;
   value: string;
   href?: string;
+  /** The one figure that carries the accent — public money implicated. */
+  highlight?: boolean;
 };
-
-type HeroMapImage = {
-  src: string;
-  className: string;
-};
-
-const heroMapImages: HeroMapImage[] = [
-  {
-    src: "/assets/map-light.svg",
-    className: "block dark:hidden",
-  },
-  {
-    src: "/assets/map.svg",
-    className: "hidden dark:block",
-  },
-];
 
 export function Hero({
   casesDocumented,
@@ -50,7 +44,12 @@ export function Hero({
 
   const heroStats: HeroStat[] = [
     { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
-    { value: totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search?type=case" },
+    {
+      value: totalBigo,
+      label: t("home.hero.stats.totalBigo"),
+      href: "/search?type=case",
+      highlight: true,
+    },
     { value: materials, label: t("home.hero.stats.materials"), href: "/search?type=material" },
     {
       value: courtCasesTracked,
@@ -80,121 +79,183 @@ export function Hero({
       id="hero"
       className="relative isolate -mt-[76px] overflow-hidden border-b bg-background pt-[76px]"
     >
-      <HeroBackdrop images={heroMapImages} />
+      <div className="layout-container grid gap-8 py-10 sm:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:py-16 xl:gap-16">
+        {/* ── Left: the editorial column ── */}
+        <div className="flex max-w-2xl flex-col items-start text-left">
+          {/* Crimson rule — the editorial mark that opens the page. */}
+          <div aria-hidden="true" className="h-1 w-14 rounded-full bg-accent" />
 
-      <div className="layout-container relative z-10 flex min-h-[72svh] flex-col items-start justify-center py-14 text-left sm:items-center sm:py-16 sm:text-center md:min-h-[74svh] md:py-20 lg:min-h-[76svh] lg:py-24">
-        <p className="font-eyebrow font-eyebrow-display max-w-full">
-          <em>{t("home.hero.eyebrow")}</em>
-        </p>
+          <p className="font-eyebrow font-eyebrow-display mt-6 max-w-full">
+            <em>{t("home.hero.eyebrow")}</em>
+          </p>
 
-        <h1 className="font-home-hero-title mt-5">
-          {t("home.hero.titlePrefix")} <span className="text-accent">{t("home.hero.titleHighlight")}</span>{" "}
-          {t("home.hero.titleSuffix")}
-        </h1>
+          <h1 className="font-home-hero-title mt-4">
+            {t("home.hero.titlePrefix")}{" "}
+            <span className="italic text-accent">{t("home.hero.titleHighlight")}</span>{" "}
+            {t("home.hero.titleSuffix")}
+          </h1>
 
-        <p className="font-home-hero-lede measure-intro mt-6">
-          {t("home.hero.description")}
-        </p>
+          <p className="font-home-hero-lede measure-intro mt-5">
+            {t("home.hero.description")}
+          </p>
 
-        <form
-          className="mt-8 w-full max-w-[min(100%,42rem)] md:max-w-4xl"
-          onSubmit={submitArchiveSearch}
-        >
-          <label className="sr-only" htmlFor="hero-archive-search">
-            {t("home.hero.searchLabel")}
-          </label>
+          <form className="mt-7 w-full max-w-[min(100%,42rem)]" onSubmit={submitArchiveSearch}>
+            <label className="sr-only" htmlFor="hero-archive-search">
+              {t("home.hero.searchLabel")}
+            </label>
 
-          <SearchBar
-            id="hero-archive-search"
-            inputClassName="bg-background/95 shadow-lg shadow-primary-surface/5"
-            onChange={(event) => setArchiveQuery(event.target.value)}
-            placeholder={t("home.hero.searchPlaceholder")}
-            submitLabel={t("home.hero.searchSubmit")}
-            value={archiveQuery}
-          />
-        </form>
+            <SearchBar
+              id="hero-archive-search"
+              inputClassName="bg-background/95 shadow-lg shadow-primary-surface/5"
+              onChange={(event) => setArchiveQuery(event.target.value)}
+              placeholder={t("home.hero.searchPlaceholder")}
+              submitLabel={t("home.hero.searchSubmit")}
+              value={archiveQuery}
+            />
+          </form>
 
-        {/* The two primary actions. Report carries the crimson accent — the one
-            reserved color, spent here so a first-time visitor's eye lands on the
-            action that grows the archive. Browse stays a quiet outline: the
-            search bar above already serves the exploring visitor. */}
-        <div className="mt-6 flex w-full max-w-[min(100%,42rem)] flex-col gap-3 self-start sm:w-auto sm:flex-row sm:self-center">
-          <Button
-            asChild
-            size="lg"
-            className="bg-accent font-bold text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90"
+          {/* The two primary actions. Report carries the crimson accent — the one
+              reserved color, spent here so a first-time visitor's eye lands on the
+              action that grows the archive. Browse stays a quiet outline: the
+              search bar above already serves the exploring visitor. */}
+          <div className="mt-5 flex w-full max-w-[min(100%,42rem)] flex-col gap-3 sm:w-auto sm:flex-row">
+            <Button
+              asChild
+              size="lg"
+              className="bg-accent font-bold text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90"
+            >
+              <Link to="/report">
+                <FilePlus2 className="h-5 w-5" aria-hidden="true" />
+                {t("header.reportCase")}
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" size="lg">
+              <Link to="/search?type=case">
+                <FolderSearch className="h-5 w-5" aria-hidden="true" />
+                {t("header.browseCases")}
+              </Link>
+            </Button>
+          </div>
+
+          <Link
+            className="group mt-7 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            to="/data-quality"
           >
-            <Link to="/report">
-              <FilePlus2 className="h-5 w-5" aria-hidden="true" />
-              {t("header.reportCase")}
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" size="lg">
-            <Link to="/search?type=case">
-              <FolderSearch className="h-5 w-5" aria-hidden="true" />
-              {t("header.browseCases")}
-            </Link>
-          </Button>
+            <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
+              {t("home.hero.coverageLink", "See what we cover")}
+            </span>
+            <ArrowRight
+              aria-hidden="true"
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+            />
+          </Link>
         </div>
 
-        <HeroStats stats={heroStats} />
-
-        <Link
-          className="group mt-6 inline-flex items-center gap-2 self-center text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
-          to="/data-quality"
-        >
-          <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
-            {t("home.hero.coverageLink", "See what we cover")}
-          </span>
-          <ArrowRight
-            aria-hidden="true"
-            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
-          />
-        </Link>
+        {/* ── Right: the navy map panel ── */}
+        <HeroMapPanel />
       </div>
+
+      {/* ── Stat band: the archive in numbers, on the hero's bottom edge ── */}
+      <HeroStatBand stats={heroStats} />
     </section>
   );
 }
 
-function HeroStats({ stats }: Readonly<{ stats: HeroStat[] }>) {
+/** The Nepal map on an always-navy panel: static (inverted) map as the no-JS /
+ * no-WebGL / reduced-motion fallback, with the particle field fading in over
+ * it when the lazy scene is ready. The whole silhouette stays inside the
+ * panel — nothing bleeds off screen. Decorative throughout. */
+function HeroMapPanel() {
+  const [sceneReady, setSceneReady] = useState(false);
+
   return (
-    <div className="mt-10 grid w-full max-w-[min(100%,42rem)] grid-cols-2 gap-3 sm:gap-4 md:max-w-3xl md:grid-cols-4">
-      {stats.map(({ value, label, href }, index) => {
-        const content = (
-          <>
-            <p className="font-stat-value tabular-nums transition-colors group-hover:text-primary">
-              <HeroStatValue value={value} />
-            </p>
+    <div
+      aria-hidden="true"
+      className="relative min-h-[280px] overflow-hidden rounded-3xl bg-primary shadow-[0_24px_60px_-28px_hsl(var(--primary)/0.6)] sm:min-h-[360px] lg:min-h-[520px] lg:self-stretch"
+    >
+      {/* Crimson glow — the one warm note on the navy field. */}
+      <div className="absolute left-1/2 top-1/2 h-3/5 w-3/5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/20 blur-3xl" />
 
-            <p className="font-stat-label mt-2 transition-colors group-hover:text-foreground">
-              {label}
-            </p>
-          </>
-        );
+      {/* Static fallback map. map-light.svg draws in dark ink, so it is
+          inverted to read light-on-navy; when the particle field is live it
+          settles back and the particles carry the silhouette. It never
+          unmounts — it IS the reduced-motion / no-WebGL rendering. */}
+      <div
+        className={cn(
+          "absolute inset-5 transition-opacity duration-1000 sm:inset-8 lg:inset-10",
+          sceneReady ? "opacity-[0.14]" : "opacity-90",
+        )}
+      >
+        <img
+          src="/assets/map-light.svg"
+          alt=""
+          decoding="async"
+          {...{ fetchpriority: "low" }}
+          className="h-full w-full object-contain [filter:invert(1)_brightness(1.6)]"
+        />
+      </div>
 
-        return (
-          <div
-            key={label}
-            className={cn(
-              "min-w-0 text-left",
-              "sm:text-center",
-              index > 0 && "md:border-l md:border-border/70 md:pl-3",
-            )}
-          >
-            {href ? (
-              <Link
-                to={href}
-                className="group block h-full rounded-lg border border-transparent bg-background/45 px-3 py-3 shadow-sm shadow-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/85 hover:text-accent hover:shadow-lg hover:shadow-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      {/* WebGL particle field — camera auto-fits the full silhouette to the
+          panel (CameraFit in hero-scene.tsx), and forceDark keeps the points
+          light on the always-navy surface regardless of theme. */}
+      <div
+        className={cn(
+          "absolute inset-0 transition-opacity duration-1000",
+          sceneReady ? "opacity-100" : "opacity-0",
+        )}
+      >
+        <HeroSceneGate
+          mapSrc="/assets/map-light.svg"
+          forceDark
+          onReady={() => setSceneReady(true)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function HeroStatBand({ stats }: Readonly<{ stats: HeroStat[] }>) {
+  return (
+    <div className="bg-primary">
+      <div className="layout-container grid grid-cols-2 gap-x-4 gap-y-7 py-8 md:grid-cols-4 md:py-10">
+        {stats.map(({ value, label, href, highlight }) => {
+          const content = (
+            <>
+              <p
+                className={cn(
+                  "text-3xl font-bold tabular-nums md:text-4xl",
+                  highlight
+                    ? // Accent lightened for navy (--accent-on-dark, 4.6:1 on
+                      // --primary) — raw --accent is only 2.6:1 here.
+                      "text-[hsl(var(--accent-on-dark))]"
+                    : "text-primary-foreground",
+                )}
               >
-                {content}
-              </Link>
-            ) : (
-              <div className="px-3 py-3">{content}</div>
-            )}
-          </div>
-        );
-      })}
+                <HeroStatValue value={value} />
+              </p>
+
+              <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-primary-foreground/60 transition-colors group-hover:text-primary-foreground/85">
+                {label}
+              </p>
+            </>
+          );
+
+          return href ? (
+            <Link
+              key={label}
+              to={href}
+              className="group block rounded-lg px-1 py-1 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+            >
+              {content}
+            </Link>
+          ) : (
+            <div key={label} className="px-1 py-1">
+              {content}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -210,97 +271,4 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
   // `display={value}` keeps the pre-animation text byte-identical to what the
   // API gave us, rather than re-deriving the grouping from the number.
   return <AnimatedCount end={numericValue} display={value} duration={0.9} />;
-}
-
-function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
-  // When the WebGL particle field is live, the flat map settles back so the
-  // particles carry the silhouette; it never unmounts — it is the no-JS,
-  // no-WebGL, and reduced-motion rendering of the same backdrop.
-  const [sceneReady, setSceneReady] = useState(false);
-
-  // Shared geometry for the map layer and the particle canvas layer: keeping
-  // both in one constant is what guarantees the particle map lands exactly
-  // where the flat map sits at every breakpoint.
-  const backdropGeometry =
-    "pointer-events-none absolute left-1/2 top-[48%] z-0 h-[250px] w-[112vw] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] md:h-[500px] md:w-[min(1280px,112vw)] lg:h-[620px] lg:w-[min(1680px,118vw)] xl:h-[660px] xl:w-[min(1780px,120vw)]";
-
-  return (
-    <>
-      {/* Mobile: subtle red wash */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 md:hidden"
-      >
-        <div className="absolute inset-0 bg-background" />
-
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,hsl(var(--background))_0%,hsl(var(--background))_46%,hsl(var(--accent)/0.105)_100%)]" />
-
-        <div className="absolute right-[-20%] top-[-14%] h-[470px] w-[370px] rounded-full bg-accent/10 blur-[112px]" />
-
-        <div className="absolute right-[-34%] top-[18%] h-[380px] w-[320px] rounded-full bg-accent/8 blur-[100px]" />
-      </div>
-
-      {/* Desktop/tablet: warm glow behind map */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[18%] z-0 hidden h-[440px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_64%_46%,hsl(var(--accent)/0.28),hsl(var(--accent)/0.15)_30%,hsl(var(--primary-surface)/0.08)_52%,transparent_76%)] opacity-70 blur-3xl md:block lg:h-[540px] lg:w-[1120px] lg:opacity-75 dark:opacity-40"
-      />
-
-      {/* Full-bleed map backdrop, same treatment at every width: the wash below
-          veils it to a few percent wherever copy sits and lets it run at full
-          strength out in the margins. */}
-      <div
-        aria-hidden="true"
-        className={cn(
-          backdropGeometry,
-          "transition-opacity duration-1000",
-          sceneReady
-            ? "opacity-[0.10] dark:opacity-[0.07]"
-            : "opacity-[0.30] lg:opacity-[0.34] dark:opacity-[0.20]",
-        )}
-      >
-        {images.map(({ src, className }) => (
-          <img
-            key={src}
-            src={src}
-            alt=""
-            decoding="async"
-            // React 18's DOM renderer only knows the lowercase attribute; the
-            // camelCase prop it warns about is a React 19 rename.
-            {...{ fetchpriority: "low" }}
-            className={cn(
-              className,
-              "absolute inset-0 h-full w-full max-w-none object-contain saturate-[1.18] contrast-[1.03] mix-blend-multiply dark:mix-blend-screen",
-            )}
-          />
-        ))}
-      </div>
-
-      {/* WebGL particle field — same geometry as the map layer, so the
-          particles assemble into the exact silhouette the flat map occupies.
-          Renders nothing during SSR, without WebGL, or under
-          prefers-reduced-motion (the map layer above is the fallback). */}
-      <div
-        aria-hidden="true"
-        className={cn(
-          backdropGeometry,
-          "transition-opacity duration-1000",
-          sceneReady ? "opacity-[0.62] lg:opacity-[0.68] dark:opacity-[0.55]" : "opacity-0",
-        )}
-      >
-        <HeroSceneGate
-          mapSrc="/assets/map-light.svg"
-          onReady={() => setSceneReady(true)}
-        />
-      </div>
-
-      {/* Readability wash. This is what makes the backdrop safe: it sits between
-          map and copy and drops the map to a few percent wherever text is, then
-          falls to nothing at the edges. Applies at every width. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_46%,hsl(var(--background)/0.90)_0%,hsl(var(--background)/0.86)_45%,hsl(var(--background)/0.82)_78%,hsl(var(--background)/0.30)_90%,transparent_98%)]"
-      />
-    </>
-  );
 }

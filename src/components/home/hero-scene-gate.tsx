@@ -19,6 +19,9 @@ const HeroScene = lazy(() => import("./hero-scene"));
 
 type HeroSceneGateProps = {
   mapSrc: string;
+  /** Render light-on-dark points regardless of theme — the hero mounts the
+   * scene inside an always-navy panel, where near-black points would vanish. */
+  forceDark?: boolean;
   onReady?: () => void;
 };
 
@@ -31,7 +34,7 @@ function webglSupported(): boolean {
   }
 }
 
-export function HeroSceneGate({ mapSrc, onReady }: Readonly<HeroSceneGateProps>) {
+export function HeroSceneGate({ mapSrc, forceDark = false, onReady }: Readonly<HeroSceneGateProps>) {
   const [eligible, setEligible] = useState(false);
   const [dark, setDark] = useState(false);
 
@@ -65,7 +68,7 @@ export function HeroSceneGate({ mapSrc, onReady }: Readonly<HeroSceneGateProps>)
 
   return (
     <Suspense fallback={null}>
-      <HeroScene mapSrc={mapSrc} dark={dark} onReady={onReady} />
+      <HeroScene mapSrc={mapSrc} dark={forceDark || dark} onReady={onReady} />
     </Suspense>
   );
 }
