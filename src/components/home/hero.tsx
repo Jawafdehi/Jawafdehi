@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
+import { HeroSceneGate } from "@/components/home/hero-scene-gate";
 import { AnimatedCount } from "@/components/ui/animated-count";
 import { SearchBar } from "@/components/ui/search-bar";
 import { cn } from "@/lib/utils";
@@ -187,6 +188,17 @@ function HeroStatValue({ value }: Readonly<{ value: string }>) {
 }
 
 function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
+  // When the WebGL particle field is live, the flat map settles back so the
+  // particles carry the silhouette; it never unmounts — it is the no-JS,
+  // no-WebGL, and reduced-motion rendering of the same backdrop.
+  const [sceneReady, setSceneReady] = useState(false);
+
+  // Shared geometry for the map layer and the particle canvas layer: keeping
+  // both in one constant is what guarantees the particle map lands exactly
+  // where the flat map sits at every breakpoint.
+  const backdropGeometry =
+    "pointer-events-none absolute left-1/2 top-[48%] z-0 h-[250px] w-[112vw] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] md:h-[500px] md:w-[min(1280px,112vw)] lg:h-[620px] lg:w-[min(1680px,118vw)] xl:h-[660px] xl:w-[min(1780px,120vw)]";
+
   return (
     <>
       {/* Mobile: subtle red wash */}
@@ -214,7 +226,13 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
           strength out in the margins. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[48%] z-0 h-[250px] w-[112vw] -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-[0.30] md:h-[500px] md:w-[min(1280px,112vw)] lg:h-[620px] lg:w-[min(1680px,118vw)] lg:opacity-[0.34] xl:h-[660px] xl:w-[min(1780px,120vw)] dark:opacity-[0.20]"
+        className={cn(
+          backdropGeometry,
+          "transition-opacity duration-1000",
+          sceneReady
+            ? "opacity-[0.10] dark:opacity-[0.07]"
+            : "opacity-[0.30] lg:opacity-[0.34] dark:opacity-[0.20]",
+        )}
       >
         {images.map(({ src, className }) => (
           <img
@@ -222,13 +240,33 @@ function HeroBackdrop({ images }: Readonly<{ images: HeroMapImage[] }>) {
             src={src}
             alt=""
             decoding="async"
-            fetchPriority="low"
+            // React 18's DOM renderer only knows the lowercase attribute; the
+            // camelCase prop it warns about is a React 19 rename.
+            {...{ fetchpriority: "low" }}
             className={cn(
               className,
               "absolute inset-0 h-full w-full max-w-none object-contain saturate-[1.18] contrast-[1.03] mix-blend-multiply dark:mix-blend-screen",
             )}
           />
         ))}
+      </div>
+
+      {/* WebGL particle field — same geometry as the map layer, so the
+          particles assemble into the exact silhouette the flat map occupies.
+          Renders nothing during SSR, without WebGL, or under
+          prefers-reduced-motion (the map layer above is the fallback). */}
+      <div
+        aria-hidden="true"
+        className={cn(
+          backdropGeometry,
+          "transition-opacity duration-1000",
+          sceneReady ? "opacity-[0.62] lg:opacity-[0.68] dark:opacity-[0.55]" : "opacity-0",
+        )}
+      >
+        <HeroSceneGate
+          mapSrc="/assets/map-light.svg"
+          onReady={() => setSceneReady(true)}
+        />
       </div>
 
       {/* Readability wash. This is what makes the backdrop safe: it sits between
