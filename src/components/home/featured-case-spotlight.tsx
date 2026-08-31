@@ -159,7 +159,7 @@ export function FeaturedCaseSpotlight({
               <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>
                 {t("common.viewDetails")}
                 <ArrowRight
-                  className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                  className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-focus-within:translate-x-1"
                   aria-hidden="true"
                 />
               </Link>

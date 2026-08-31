@@ -192,15 +192,15 @@ export function Hero({
           </div>
 
           <Link
-            className="group mt-7 inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary"
+            className="group mt-7 inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary"
             to="/data-quality"
           >
-            <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
+            <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100">
               {t("home.hero.coverageLink", "See what we cover")}
             </span>
             <ArrowRight
               aria-hidden="true"
-              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1"
             />
           </Link>
         </div>
