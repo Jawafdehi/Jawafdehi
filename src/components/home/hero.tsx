@@ -15,15 +15,15 @@
 //     listener below never attaches
 //   * the navy stat band rides the hero's bottom edge, --accent-on-dark
 //     carrying the money figure (raw --accent is 2.6:1 on navy)
-import { type FormEvent, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, ChevronDown, FilePlus2, FolderSearch } from "lucide-react";
 
 import { HeroSceneGate } from "@/components/home/hero-scene-gate";
 import { AnimatedCount } from "@/components/ui/animated-count";
 import { Button } from "@/components/ui/button";
-import { SearchBar } from "@/components/ui/search-bar";
+import { HeroSearchTypeahead } from "@/components/home/hero-search-typeahead";
 import { cn } from "@/lib/utils";
 
 type HeroProps = {
@@ -48,8 +48,6 @@ export function Hero({
   courtCasesTracked,
 }: Readonly<HeroProps>) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [archiveQuery, setArchiveQuery] = useState("");
 
   // Scroll progress over roughly the first viewport, shared with the WebGL
   // scene as a mutable ref (read per frame, never re-renders React) and
@@ -101,22 +99,6 @@ export function Hero({
     },
   ];
 
-  const goToSearch = (query: string) => {
-    const trimmedQuery = query.trim();
-    const params = new URLSearchParams({ type: "case" });
-
-    if (trimmedQuery) {
-      params.set("q", trimmedQuery);
-    }
-
-    navigate(`/search?${params.toString()}`);
-  };
-
-  const submitArchiveSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    goToSearch(archiveQuery);
-  };
-
   return (
     <section
       id="hero"
@@ -147,22 +129,10 @@ export function Hero({
           </p>
 
           {/* The central action: one large search pill. Light on the navy
-              stage so it is unmistakably *the* control on the page. */}
-          <form className="mt-8 w-full max-w-2xl" onSubmit={submitArchiveSearch}>
-            <label className="sr-only" htmlFor="hero-archive-search">
-              {t("home.hero.searchLabel")}
-            </label>
-
-            <SearchBar
-              id="hero-archive-search"
-              inputClassName="h-14 rounded-full border-transparent bg-background text-base shadow-[0_24px_60px_-20px_hsl(var(--primary-foreground)/0.25)]"
-              buttonClassName="h-11 w-11 bg-accent text-accent-foreground hover:bg-accent/90"
-              onChange={(event) => setArchiveQuery(event.target.value)}
-              placeholder={t("home.hero.searchPlaceholder")}
-              submitLabel={t("home.hero.searchSubmit")}
-              value={archiveQuery}
-            />
-          </form>
+              stage so it is unmistakably *the* control on the page. Typing
+              surfaces inline case suggestions (ARIA combobox); Enter with no
+              suggestion selected still goes to /search?type=case&q=…. */}
+          <HeroSearchTypeahead />
 
           {/* Secondary actions. Report keeps the crimson accent; Browse is a
               glass pill — the search bar above already serves the explorer. */}
