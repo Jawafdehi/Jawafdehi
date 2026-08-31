@@ -14,6 +14,7 @@
 // theme, where near-black points would vanish).
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { heroParticleBudget } from "@/components/home/hero-particle-budget";
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -289,7 +290,11 @@ function ParticleField({
     img.decoding = "async";
     img.onload = () => {
       if (!alive) return;
-      const maxPoints = window.innerWidth < 768 ? 1400 : 2600;
+      const maxPoints = heroParticleBudget(
+        window.innerWidth,
+        (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+        navigator.hardwareConcurrency,
+      );
       setField(sampleMap(img, maxPoints));
     };
     img.src = mapSrc;
