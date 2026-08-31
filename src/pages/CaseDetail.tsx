@@ -5,6 +5,7 @@ import { Seo } from "@/components/Seo";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Reveal } from "@/components/ui/reveal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -609,75 +610,98 @@ const CaseDetail = () => {
                   </aside>
 
                   <div className="min-w-0 w-full max-w-6xl lg:col-start-2 lg:pl-8 xl:pl-24">
-                    <KeyAllegationsSection
-                      allegations={caseData.key_allegations || []}
-                      emptyLabel={t("common.notAvailable")}
-                      title={t("caseDetail.allegations")}
-                    />
+                    {/* Reveal entrances, one per section: fades + lifts as each
+                        enters the viewport. Inert during pre-render/no-JS/
+                        prefers-reduced-motion (content simply renders visible),
+                        and the group class lets each CaseSectionHeading's
+                        crimson rule draw in off the same trigger. */}
+                    <Reveal className="group">
+                      <KeyAllegationsSection
+                        allegations={caseData.key_allegations || []}
+                        emptyLabel={t("common.notAvailable")}
+                        title={t("caseDetail.allegations")}
+                      />
+                    </Reveal>
 
                     {hasInvolvedParties && (
-                      <InvolvedPartiesSection
-                        groupedEntities={groupedEntities}
-                        language={currentLang}
-                        resolvedEntities={resolvedEntities}
-                        title={t("caseDetail.partiesInvolved")}
-                        translateRelation={(relationType) =>
-                          t(`caseDetail.relationTypes.${relationType}`, {
-                            defaultValue: t("caseDetail.relationTypes.unknown"),
-                          })
-                        }
-                      />
+                      <Reveal className="group">
+                        <InvolvedPartiesSection
+                          groupedEntities={groupedEntities}
+                          language={currentLang}
+                          resolvedEntities={resolvedEntities}
+                          title={t("caseDetail.partiesInvolved")}
+                          translateRelation={(relationType) =>
+                            t(`caseDetail.relationTypes.${relationType}`, {
+                              defaultValue: t("caseDetail.relationTypes.unknown"),
+                            })
+                          }
+                        />
+                      </Reveal>
                     )}
 
                     {hasTimeline && (
-                      <CaseTimelineSection
-                        className="mb-12 print:static print:mb-8"
-                        language={currentLang}
-                        timeline={caseData.timeline || []}
-                        title={t("caseDetail.timeline")}
-                      />
+                      <Reveal className="group">
+                        <CaseTimelineSection
+                          className="mb-12 print:static print:mb-8"
+                          language={currentLang}
+                          timeline={caseData.timeline || []}
+                          title={t("caseDetail.timeline")}
+                        />
+                      </Reveal>
                     )}
 
-                    <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />
+                    <Reveal className="group">
+                      <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />
+                    </Reveal>
 
-                    <CourtCasesSection
-                      courtCases={(caseData.court_cases ?? []).map((courtCaseId, index) => {
-                        const query = courtCaseQueries[index];
+                    <Reveal className="group">
+                      <CourtCasesSection
+                        courtCases={(caseData.court_cases ?? []).map((courtCaseId, index) => {
+                          const query = courtCaseQueries[index];
 
-                        return {
-                          courtCase: query?.data as CourtCase | undefined,
-                          id: courtCaseId,
-                          isLoading: query?.isLoading ?? false,
-                        };
-                      })}
-                      title={t("caseDetail.courtUpdates", "Court updates")}
-                    />
+                          return {
+                            courtCase: query?.data as CourtCase | undefined,
+                            id: courtCaseId,
+                            isLoading: query?.isLoading ?? false,
+                          };
+                        })}
+                        title={t("caseDetail.courtUpdates", "Court updates")}
+                      />
+                    </Reveal>
 
-                    <EvidenceSection
-                      evidence={caseData.evidence}
-                      title={t("caseDetail.evidence")}
-                    />
+                    <Reveal className="group">
+                      <EvidenceSection
+                        evidence={caseData.evidence}
+                        title={t("caseDetail.evidence")}
+                      />
+                    </Reveal>
 
-                    <MissingDetailsSection
-                      html={caseData.missing_details}
-                      title={t("caseDetail.missingDetails")}
-                    />
+                    <Reveal>
+                      <MissingDetailsSection
+                        html={caseData.missing_details}
+                        title={t("caseDetail.missingDetails")}
+                      />
+                    </Reveal>
 
-                    <NotesSection
-                      html={caseData.notes}
-                      title={t("caseDetail.notes")}
-                    />
+                    <Reveal>
+                      <NotesSection
+                        html={caseData.notes}
+                        title={t("caseDetail.notes")}
+                      />
+                    </Reveal>
                   </div>
                 </div>
               </div>
 
-              <CaseContactStrip
-                email={JAWAFDEHI_EMAIL}
-                whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
-                emailLabel={t("caseDetail.emailLabel")}
-                whatsappLabel={t("caseDetail.whatsappLabel")}
-                title={t("caseDetail.contact")}
-              />
+              <Reveal>
+                <CaseContactStrip
+                  email={JAWAFDEHI_EMAIL}
+                  whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
+                  emailLabel={t("caseDetail.emailLabel")}
+                  whatsappLabel={t("caseDetail.whatsappLabel")}
+                  title={t("caseDetail.contact")}
+                />
+              </Reveal>
 
               <DisqusComments caseId={id || ""} caseTitle={caseData.title} caseUrl={canonicalUrl} />
             </div>

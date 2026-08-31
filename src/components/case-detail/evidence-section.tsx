@@ -1,3 +1,4 @@
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 import { DocumentSourceCard } from "@/components/DocumentSourceCard";
 import type { EvidenceEntry } from "@/types/jds";
 
@@ -14,9 +15,7 @@ export function EvidenceSection({
 
   return (
     <section id="evidence" className="mb-12 scroll-mt-28 max-w-4xl">
-      <h2 className="mb-6 flex items-center text-xl md:text-2xl font-semibold tracking-tight text-primary">
-        {title}
-      </h2>
+      <CaseSectionHeading>{title}</CaseSectionHeading>
 
       <div className="text-primary/75">
         {evidence.map((evidenceItem, index) => (

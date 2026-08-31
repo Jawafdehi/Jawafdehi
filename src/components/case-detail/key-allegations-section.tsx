@@ -1,3 +1,4 @@
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 interface KeyAllegationsSectionProps {
   allegations: string[];
   emptyLabel: string;
@@ -11,9 +12,7 @@ export function KeyAllegationsSection({
 }: Readonly<KeyAllegationsSectionProps>) {
   return (
     <section id="allegations" className="mb-12 scroll-mt-28 max-w-4xl">
-      <h2 className="mb-6 flex items-center text-xl md:text-2xl font-semibold tracking-tight text-primary">
-        {title}
-      </h2>
+      <CaseSectionHeading>{title}</CaseSectionHeading>
 
       <div className="text-primary/75">
         <ul className="space-y-6">

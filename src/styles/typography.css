@@ -311,6 +311,17 @@
     line-height: var(--font-heading-leading);
   }
 
+  /* Case-detail section headings: the same editorial serif as the home hero
+     (Vesper Libre covers Latin + Devanagari, so bilingual titles stay in one
+     face). Sized like .font-subsection-title but bolded — the serif reads
+     lighter than the sans at equal weight. */
+  .font-case-section-title {
+    @apply text-xl font-bold text-primary md:text-2xl;
+    font-family: "Vesper Libre", Georgia, "Noto Sans Devanagari", serif;
+    letter-spacing: var(--font-heading-tracking);
+    line-height: var(--font-heading-leading);
+  }
+
   .content-prose h2 {
     @apply mt-5 mb-3;
   }
