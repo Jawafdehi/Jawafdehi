@@ -31,7 +31,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+import { LazyQRCodeSVG as QRCodeSVG } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";
 
 interface ShareButtonProps {

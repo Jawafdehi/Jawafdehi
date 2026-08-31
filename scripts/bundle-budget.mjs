@@ -64,11 +64,12 @@ const DIR = arg("dir", "dist/client");
 // exactly 1 byte: gzip had already collapsed the repeated copy, so there was
 // nothing there to win.
 //
-// The real headroom is elsewhere and is NOT this PR's to spend: `markdown` is
-// 100 KB gzip of the initial payload, 15% of the budget, eager only because the
-// routes that render it are pre-rendered. Deferring it would pay for this
-// change forty times over.
-const MAX_INITIAL_JS_GZIP = 661_000;
+// 2026-09 (landing follow-ups): ratcheted down to 635_000 after deferring
+// oidc-client-ts (session-gated dynamic import via services/oidc-session.ts),
+// disqus-react, qrcode.react, and lazy-loading /author/:slug — re-measured on
+// top of the PR #361 baseline. The `markdown` chunk (~100 KB gzip, eager
+// because its routes are pre-rendered) remains the next big win.
+const MAX_INITIAL_JS_GZIP = 635_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
@@ -96,6 +97,17 @@ const MUST_BE_DEFERRED = [
       "limit, so a single static import of the 3D stack blows the budget. " +
       "Load it only through the React.lazy() dynamic import in " +
       "src/components/home/hero-scene-gate.tsx.",
+  },
+  {
+    // An OIDC discovery-metadata field name: it survives minification and only
+    // oidc-client-ts contains it.
+    marker: "end_session_endpoint",
+    why:
+      "oidc-client-ts (~23 KB gzip) was in the public entry chunk because " +
+      "services/http.ts and hooks/use-is-logged-in.ts statically imported " +
+      "services/oidc.ts. Anonymous readers — nearly all traffic — never need " +
+      "it. Import it only through src/services/oidc-session.ts, whose " +
+      "localStorage probe gates the dynamic import on a persisted session.",
   },
 ];
 
