@@ -17,8 +17,13 @@
 - [x] Re-verified after CTAs: lint ✓, 683/683 ✓, build ✓, bundle 643.2 KB vs 644.5 KB limit ✓
 - [x] CI regression guard: `THREE.WebGLRenderer` added to `MUST_BE_DEFERRED` in scripts/bundle-budget.mjs — a static import of the 3D stack now fails the bundle gate outright
 
+## Done (release)
+- [x] Branch pushed to fork (koshikopani/Jawafdehi) and cross-repo PR opened: https://github.com/Jawafdehi/Jawafdehi/pull/359
+- [x] CodeRabbit check green; PR agent auto-approved
+- [x] PR agent code suggestions addressed (matchMedia guard in Reveal, clamped image fallback index) — lint ✓, 686/686 ✓, build ✓, bundle 643.2 KB within budget
+
 ## Next
-- [ ] Push branch and open PR when checks are green (blocked: awaiting GitHub SSH key / PAT from user)
+- [ ] Awaiting human maintainer review/merge on PR #359
 
 ## Notes
 - THREE.Clock deprecation warning comes from @react-three/fiber v8 internals — harmless, not ours to fix
