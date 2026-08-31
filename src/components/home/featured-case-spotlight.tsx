@@ -176,7 +176,7 @@ export function FeaturedCaseSpotlight({
           alt={isPlaceholder ? "" : t("caseCard.thumbnailAlt", { title })}
           loading="lazy"
           decoding="async"
-          onError={() => setImageIndex((i) => i + 1)}
+          onError={() => setImageIndex((i) => Math.min(i + 1, imageCandidates.length - 1))}
           className={cn(
             "absolute inset-0 h-full w-full object-cover",
             !isPlaceholder && "transition-transform duration-500 group-hover:scale-105",

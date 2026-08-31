@@ -26,7 +26,12 @@ export function Reveal({ children, className, delayMs = 0 }: Readonly<RevealProp
     const el = ref.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
     // Already on screen (or above it): leave it visible rather than blink it
     // out and back in. Only content still below the fold gets the entrance.
     if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return;
