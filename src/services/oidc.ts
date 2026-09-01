@@ -42,20 +42,35 @@ function createUserManager(): UserManager {
     // into user.profile so the SPA can gate the UI without a Django round-trip.
     loadUserInfo: true,
     userStore: new WebStorageStateStore({ store: window.localStorage }),
-    // Renew ahead of expiry rather than letting the session lapse. This was off
-    // because silent renew used a hidden iframe and Zitadel blocks framing with
-    // frame-ancestors 'none' — but that is only the FALLBACK path.
-    // `signinSilent()` uses the refresh-token grant (a plain POST to the token
-    // endpoint, no iframe) whenever the stored user has a `refresh_token`, which
-    // the `offline_access` scope above now guarantees. The iframe path is never
-    // reached; `getAccessToken` below also refuses to take it.
+    // Deliberately OFF, and NOT because of the iframe. `signinSilent()` uses the
+    // refresh-token grant (a plain POST, no iframe) whenever the stored user has
+    // a `refresh_token`, which `offline_access` above now guarantees — so the
+    // frame-ancestors block that originally disabled this no longer applies.
     //
-    // What this fixes: with no renewal, the access token simply expired mid-visit
-    // and `getAccessToken` started returning null, so every API call silently
-    // dropped to anonymous. Reads still returned 200 — just without the
-    // casework-gated fields — so a caseworker saw page content change with no
-    // sign they had been logged out.
-    automaticSilentRenew: true,
+    // It stays off because the library's SilentRenewService calls
+    // `signinSilent()` DIRECTLY, which would bypass `renewOnce` below and let a
+    // timer-driven grant run concurrently with an on-demand one. Two grants on a
+    // rotating refresh token is the exact failure `renewOnce` exists to prevent.
+    // The expiry timer is wired to `renewOnce` instead (just below), so every
+    // renewal in this tab — timer or on-demand — goes through the one latch.
+    automaticSilentRenew: false,
+  });
+
+  // Renew ahead of expiry rather than letting the session lapse. Without this,
+  // the access token simply expired mid-visit and `getAccessToken` began
+  // returning null, so every API call silently dropped to anonymous: reads still
+  // returned 200, just without the role-gated fields, so page content changed
+  // with no sign the session had ended.
+  //
+  // `accessTokenExpiring` fires ahead of expiry (default 60s), so this normally
+  // renews while the current token is still usable. `getAccessToken`'s on-demand
+  // path covers what a timer cannot: a suspended machine or throttled background
+  // tab wakes with the token already dead and this event never delivered.
+  userManager.events.addAccessTokenExpiring(() => {
+    void renewOnce(userManager!).catch(() => {
+      // Nothing to do here — the next getAccessToken() retries, and reports
+      // anonymous if the refresh token is genuinely gone.
+    });
   });
 
   return userManager;
@@ -65,20 +80,51 @@ export function getUserManager(): UserManager {
   return createUserManager();
 }
 
-// In-flight refresh, shared by every concurrent caller. `http.ts`'s request
-// interceptor awaits getAccessToken() on EVERY request and a page load fires a
-// burst of them (the case, then one per entity and per court case), so an expired
-// token would otherwise start N refresh-token grants at once. Zitadel rotates
-// refresh tokens: the first grant invalidates the token the other N-1 are still
-// holding, so they fail and — worse — a rotation-reuse detection can revoke the
-// whole chain and log the user out. One grant, N awaiters.
+// Refresh tokens are ROTATED: a grant invalidates the token any other caller is
+// still holding, so a second concurrent grant fails — and reuse detection can
+// revoke the whole chain and log the user out. Every renewal therefore has to be
+// serialised, and there are two ways to end up with concurrent grants.
+//
+// WITHIN a tab: `http.ts`'s request interceptor awaits getAccessToken() on EVERY
+// request and a page load fires a burst of them (the case, then one per entity
+// and per court case), so an expired token would start N grants at once. The
+// in-flight promise below collapses those into one grant with N awaiters.
 let inFlightRenewal: Promise<User | null> | null = null;
 
+// ACROSS tabs: the user lives in localStorage, shared by every tab, and each tab
+// arms its own expiry timer off the same `expires_at` — so they wake together and
+// rotate each other's token. Not hypothetical here: the normal workflow is the
+// admin panel open alongside a case page. Web Locks serialises them.
+const RENEWAL_LOCK = "jds:oidc-renewal";
+
 function renewOnce(um: UserManager): Promise<User | null> {
-  inFlightRenewal ??= um.signinSilent().finally(() => {
+  inFlightRenewal ??= renewUnderLock(um).finally(() => {
     inFlightRenewal = null;
   });
   return inFlightRenewal;
+}
+
+async function renewUnderLock(um: UserManager): Promise<User | null> {
+  const grant = async (): Promise<User | null> => {
+    // Re-read the store now that we hold the lock: another tab may have renewed
+    // while we waited, in which case its token is already here and granting
+    // again would rotate the one it just stored out from under it. This
+    // re-check is what makes the lock useful rather than merely a queue.
+    const current = await um.getUser();
+    if (current && !current.expired) return current;
+    // Same guard as getAccessToken: without a refresh token, signinSilent()
+    // falls back to a hidden-iframe request that the IdP's frame-ancestors
+    // policy can only leave hanging until it times out.
+    if (!current?.refresh_token) return null;
+    return await um.signinSilent();
+  };
+
+  // Web Locks is unavailable in older Safari and in non-secure contexts. The
+  // in-flight promise above still serialises this tab; cross-tab races fall back
+  // to the pre-existing behaviour rather than blocking renewal entirely.
+  const locks = globalThis.navigator?.locks;
+  if (!locks) return grant();
+  return (await locks.request(RENEWAL_LOCK, grant)) ?? null;
 }
 
 export function onSigninCallback(): void {
