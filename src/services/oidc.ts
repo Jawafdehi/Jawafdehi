@@ -1,4 +1,4 @@
-import { UserManager, WebStorageStateStore } from "oidc-client-ts";
+import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 
 let userManager: UserManager | null = null;
 
@@ -20,7 +20,10 @@ function createUserManager(): UserManager {
     import.meta.env.VITE_OIDC_AUDIENCE || "377760393168159088";
   const origin = window.location.origin;
 
-  const scope = ["openid", "profile", "email"];
+  // `offline_access` is what makes Zitadel issue a REFRESH TOKEN, which is the
+  // only renewal path available to this SPA (see automaticSilentRenew below).
+  // Without it the session silently dies at access-token expiry.
+  const scope = ["openid", "profile", "email", "offline_access"];
   if (audience) {
     scope.push(`urn:zitadel:iam:org:project:id:${audience}:aud`);
   }
@@ -39,9 +42,20 @@ function createUserManager(): UserManager {
     // into user.profile so the SPA can gate the UI without a Django round-trip.
     loadUserInfo: true,
     userStore: new WebStorageStateStore({ store: window.localStorage }),
-    // Silent renew uses a hidden iframe, which Zitadel blocks via
-    // frame-ancestors 'none'. Disabled; tokens are long-lived enough for now.
-    automaticSilentRenew: false,
+    // Renew ahead of expiry rather than letting the session lapse. This was off
+    // because silent renew used a hidden iframe and Zitadel blocks framing with
+    // frame-ancestors 'none' — but that is only the FALLBACK path.
+    // `signinSilent()` uses the refresh-token grant (a plain POST to the token
+    // endpoint, no iframe) whenever the stored user has a `refresh_token`, which
+    // the `offline_access` scope above now guarantees. The iframe path is never
+    // reached; `getAccessToken` below also refuses to take it.
+    //
+    // What this fixes: with no renewal, the access token simply expired mid-visit
+    // and `getAccessToken` started returning null, so every API call silently
+    // dropped to anonymous. Reads still returned 200 — just without the
+    // casework-gated fields — so a caseworker saw page content change with no
+    // sign they had been logged out.
+    automaticSilentRenew: true,
   });
 
   return userManager;
@@ -49,6 +63,22 @@ function createUserManager(): UserManager {
 
 export function getUserManager(): UserManager {
   return createUserManager();
+}
+
+// In-flight refresh, shared by every concurrent caller. `http.ts`'s request
+// interceptor awaits getAccessToken() on EVERY request and a page load fires a
+// burst of them (the case, then one per entity and per court case), so an expired
+// token would otherwise start N refresh-token grants at once. Zitadel rotates
+// refresh tokens: the first grant invalidates the token the other N-1 are still
+// holding, so they fail and — worse — a rotation-reuse detection can revoke the
+// whole chain and log the user out. One grant, N awaiters.
+let inFlightRenewal: Promise<User | null> | null = null;
+
+function renewOnce(um: UserManager): Promise<User | null> {
+  inFlightRenewal ??= um.signinSilent().finally(() => {
+    inFlightRenewal = null;
+  });
+  return inFlightRenewal;
 }
 
 export function onSigninCallback(): void {
@@ -75,5 +105,27 @@ export async function getAccessToken(): Promise<string | null> {
 
   const um = getUserManager();
   const user = await um.getUser();
-  return user && !user.expired ? user.access_token : null;
+  if (user && !user.expired) return user.access_token;
+
+  // Expired (or expiring-and-the-timer-never-fired: a suspended laptop or a
+  // backgrounded tab throttles `automaticSilentRenew`'s timer, and the tab wakes
+  // up holding a dead token). Renew on demand rather than returning null, which
+  // is what silently downgraded the caller to an anonymous request.
+  //
+  // Only via the refresh token: `signinSilent()` falls back to a hidden-iframe
+  // authorization request when the user has none, and Zitadel blocks framing
+  // with frame-ancestors 'none', so that path can only hang until it times out.
+  // No refresh token (no session, or one issued before `offline_access` was
+  // requested) means the user must log in again — return null and let the admin
+  // route guard handle it.
+  if (!user?.refresh_token) return null;
+
+  try {
+    const renewed = await renewOnce(um);
+    return renewed && !renewed.expired ? renewed.access_token : null;
+  } catch {
+    // Refresh token expired or revoked. Anonymous is the honest answer; the
+    // stored user is left in place for the route guard to act on.
+    return null;
+  }
 }
