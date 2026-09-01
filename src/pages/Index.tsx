@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { Hero } from "@/components/home/hero";
-import { SeptemberEvent } from "@/components/home/september-event";
 import { Faq } from "@/components/home/faq";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { ShareOurVision } from "@/components/home/share-our-vision";
@@ -171,9 +170,6 @@ const Index = () => {
           materials={getStatValue(stats?.materials?.total)}
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
-
-        {/* ── 2 September public event ── */}
-        <SeptemberEvent />
 
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">
