@@ -307,11 +307,17 @@ All colors MUST be HSL.
        These necessarily sit near three existing tokens (nearest distances:
        --accent 9.3, --danger 7.9, --alert 7.5). An earlier fire-red for
        `special` measured 1.5 from --danger — the Special Court would have worn
-       the error colour — which is why it is a carmine, not a scarlet. */
-    --court-district: 32 51% 48%;   /* caramel brown #BA7F3C */
-    --court-high: 18 65% 39%;       /* sienna        #A64A23 */
-    --court-special: 348 72% 34%;   /* carmine red   #931831 */
-    --court-supreme: 352 66% 19%;   /* oxblood       #4F1018 */
+       the error colour — which is why it is a carmine, not a scarlet.
+
+       District and High were originally a caramel/sienna pair 14deg apart in
+       hue. Diluted into the card wash they landed 6.2 deltaE00 from each other
+       and simply read as "two tans". District is now a yellow-leaning OCHRE and
+       High a red-leaning RUST, which pulls them 26deg apart and their washes to
+       13.5 — the pair the eye was actually failing on. */
+    --court-district: 40 62% 52%;   /* ochre       #D09E39 */
+    --court-high: 14 72% 36%;       /* rust        #9E391A */
+    --court-special: 348 72% 34%;   /* carmine red #951831 */
+    --court-supreme: 352 66% 19%;   /* oxblood     #501019 */
   }
 
 }
@@ -430,8 +436,8 @@ All colors MUST be HSL.
        against both dark surfaces, and the L* ladder is re-solved for this
        background rather than reused — at the light-theme lightnesses,
        district and supreme collided at 0.1 L* apart. */
-    --court-district: 32 51% 41%;   /* #9F6D33  L* 50 */
-    --court-high: 18 65% 58%;       /* #DA7950  L* 61 */
+    --court-district: 40 62% 37%;   /* #977123  L* 50 */
+    --court-high: 14 72% 60%;       /* #E37351  L* 61 */
     --court-special: 348 72% 76%;   /* #EE94A6  L* 71 */
     --court-supreme: 352 66% 85%;   /* #F2BFC6  L* 82 */
   }

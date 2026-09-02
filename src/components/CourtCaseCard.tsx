@@ -170,24 +170,28 @@ function displayCourtStatus(status: string) {
 //
 // THE ALPHA RISES WITH TIER, and that is doing real work rather than decorating.
 // A tint is alpha-diluted against a near-white card, so at one flat alpha the
-// four collapse: at today's 0.09 the closest pair measures deltaE00 2.4 in
+// four collapse: at the old flat 0.09 the closest pair measured deltaE00 2.4 in
 // normal vision and 0.5 under red-green colour blindness — invisible. Raising
-// alpha as the colour darkens restores the lightness ladder that the diluting
-// destroys: the closest pair becomes 6.2 normal, 3.8 colour-blind, 5.8 in
-// greyscale, while the card title holds 4.77:1 (AA needs 4.5).
+// alpha as the colour darkens restores the lightness ladder that dilution
+// destroys.
 //
-// This is the honest ceiling for a tint. If the tier ever needs to be readable
-// at a glance for colour-blind users, the colour has to appear somewhere
-// undiluted — a rule, border or badge — where these same four separate by 13.8
-// and 8.9 instead. Re-measure before retuning any of these numbers.
+// These values were searched, not guessed, against two hard constraints: the
+// card title must hold AA on the deepest wash (4.56:1 here, floor 4.5, which is
+// what caps supreme at 0.36), and District/High must be unmistakable — that
+// pair was the reported failure. Result: District/High 13.5 deltaE00 (up from
+// 6.2), worst pair overall 7.4, worst under red-green colour blindness 5.3.
+//
+// This is still the honest ceiling for a tint; undiluted these four separate by
+// 13.8 and 8.9. Re-measure before retuning any of these numbers — raising a
+// single alpha trades directly against the title contrast above it.
 const COURT_TYPE_GRADIENTS: Record<CourtTypeValue, string> = {
   district:
-    "[background-image:linear-gradient(to_bottom,hsl(var(--court-district)/0.10)_0%,transparent_44%)]",
-  high: "[background-image:linear-gradient(to_bottom,hsl(var(--court-high)/0.18)_0%,transparent_44%)]",
+    "[background-image:linear-gradient(to_bottom,hsl(var(--court-district)/0.18)_0%,transparent_44%)]",
+  high: "[background-image:linear-gradient(to_bottom,hsl(var(--court-high)/0.28)_0%,transparent_44%)]",
   special:
-    "[background-image:linear-gradient(to_bottom,hsl(var(--court-special)/0.26)_0%,transparent_44%)]",
+    "[background-image:linear-gradient(to_bottom,hsl(var(--court-special)/0.30)_0%,transparent_44%)]",
   supreme:
-    "[background-image:linear-gradient(to_bottom,hsl(var(--court-supreme)/0.34)_0%,transparent_44%)]",
+    "[background-image:linear-gradient(to_bottom,hsl(var(--court-supreme)/0.36)_0%,transparent_44%)]",
 };
 
 function courtTypeGradientClass(courtType: CourtTypeValue | null) {

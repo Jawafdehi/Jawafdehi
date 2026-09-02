@@ -162,7 +162,7 @@ describe("CourtCaseCard", () => {
     // wash, where it used to take a green one derived from that same status.
     expect(
       container.querySelector(
-        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--court-supreme)/0.34)']",
+        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--court-supreme)/0.36)']",
       ),
     ).toBeTruthy();
     expect(
@@ -177,10 +177,10 @@ describe("CourtCaseCard", () => {
   // constant across all four, so a regression that reinstated status-driven
   // colouring would collapse them onto one class and fail here.
   it.each([
-    ["district", "kathmandudc", "--court-district)/0.10"],
-    ["high", "patanhc", "--court-high)/0.18"],
-    ["special", "special", "--court-special)/0.26"],
-    ["supreme", "supreme", "--court-supreme)/0.34"],
+    ["district", "kathmandudc", "--court-district)/0.18"],
+    ["high", "patanhc", "--court-high)/0.28"],
+    ["special", "special", "--court-special)/0.30"],
+    ["supreme", "supreme", "--court-supreme)/0.36"],
   ])("washes a %s court case with its own tier colour", (courtType, court, token) => {
     const { container } = render(
       <MemoryRouter>
@@ -230,7 +230,7 @@ describe("CourtCaseCard", () => {
 
     expect(
       container.querySelector(
-        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--court-high)/0.18)']",
+        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--court-high)/0.28)']",
       ),
     ).toBeTruthy();
   });
