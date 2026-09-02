@@ -95,7 +95,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   // illustration the case detail banner also falls back to. Cases sometimes
   // carry a non-image thumbnail URL (an article/page link), so a load error must
   // fall through the rest before landing on the placeholder.
-  const { candidates: imageCandidates, srcsetFor, intrinsic } = caseImageSources(
+  const { candidates: imageCandidates, srcsetFor } = caseImageSources(
     image,
     thumbnailUrl,
     bannerUrl,
@@ -154,8 +154,6 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
             // The card box is a third of the row in list view and a grid column
             // otherwise; ~400px covers both, and the browser picks up from there.
             sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
-            width={intrinsic?.width}
-            height={intrinsic?.height}
             // The placeholder illustration carries no information about this
             // case, so it stays out of the accessibility tree entirely rather
             // than announcing a thumbnail that does not exist.

@@ -67,6 +67,14 @@ export default function CaseImageField({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // The two instances of this control sit side by side, so on their own the
+  // buttons are two identical "Upload"s and two identical "Clear"s — a screen
+  // reader user has nothing to tell the card slot from the hero slot. Naming
+  // each button after its field disambiguates them. The visible text stays a
+  // prefix of the accessible name, which is what WCAG 2.5.3 asks for.
+  const actionLabel = (action: string) => `${action}: ${label}`;
+  const labelId = `case-image-${variant}-label`;
+
   const pick = async (file: File | undefined) => {
     if (!file) return;
     if (file.size > MAX_FILE_BYTES) {
@@ -91,8 +99,16 @@ export default function CaseImageField({
   };
 
   return (
-    <div className="space-y-2" data-testid={testId}>
-      <Label>{label}</Label>
+    // A group rather than a labelled field: the real control is a pair of
+    // buttons over a hidden file input, so there is no single element for the
+    // Label to point `htmlFor` at.
+    <div
+      className="space-y-2"
+      data-testid={testId}
+      role="group"
+      aria-labelledby={labelId}
+    >
+      <Label id={labelId}>{label}</Label>
       <p className="text-xs text-muted-foreground">{help}</p>
 
       <div
@@ -129,6 +145,11 @@ export default function CaseImageField({
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
           className="gap-2"
+          aria-label={actionLabel(
+            preview
+              ? t("admin.caseForm.imageReplace")
+              : t("admin.caseForm.imageUpload"),
+          )}
         >
           {uploading ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -148,6 +169,7 @@ export default function CaseImageField({
             disabled={uploading}
             onClick={() => onChange(null, null)}
             className="gap-2 text-muted-foreground"
+            aria-label={actionLabel(t("admin.caseForm.imageClear"))}
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
             {t("admin.caseForm.imageClear")}

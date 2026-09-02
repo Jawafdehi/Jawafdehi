@@ -81,15 +81,15 @@ export interface CaseImageSources {
    * failed on and never reach the fallback.
    */
   srcsetFor: (url: string) => string | undefined;
-  /**
-   * Intrinsic dimensions of the preferred image, when known.
-   *
-   * Set `width`/`height` on the `<img>` from this so the browser reserves the
-   * box before the bytes land. A case list without them reflows as each card's
-   * image arrives, which is most of what a CLS score measures.
-   */
-  intrinsic: { width: number; height: number } | null;
 }
+// Deliberately no intrinsic width/height here. Both surfaces render the image
+// into a box CSS has already sized in BOTH dimensions (`h-full w-full` inside a
+// fixed-height container on the card; `absolute inset-0` on the hero), and the
+// `width`/`height` attributes only feed the UA's aspect-ratio hint, which does
+// nothing once neither dimension is `auto`. There is no CLS to prevent — the
+// container reserves the box — so carrying the numbers would just be a claim
+// the markup does not honour. `CaseImage` still exposes them for callers that
+// size an image intrinsically (the admin upload widget shows them as text).
 
 /**
  * Resolve an uploaded rendition ladder plus any legacy URLs into render inputs.
@@ -111,7 +111,5 @@ export function caseImageSources(
     candidates,
     srcsetFor: (url: string) =>
       ladderSrc && url === ladderSrc ? image!.srcset : undefined,
-    intrinsic:
-      ladderSrc && image ? { width: image.width, height: image.height } : null,
   };
 }

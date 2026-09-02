@@ -177,16 +177,19 @@ describe("CaseCard uploaded image", () => {
     alt: "",
   };
 
-  it("renders the rendition ladder with a sizes hint and intrinsic dimensions", () => {
+  it("renders the rendition ladder with a sizes hint", () => {
     const { image } = renderCard({ image: uploaded });
 
     expect(image.getAttribute("src")).toBe(uploaded.src);
     expect(image.getAttribute("srcset")).toBe(uploaded.srcset);
+    // Without `sizes` the browser assumes 100vw and picks the widest tier on
+    // every card, which is most of what the ladder exists to avoid.
     expect(image.getAttribute("sizes")).toBeTruthy();
-    // Reserves the box before the bytes land; without these a case list
-    // reflows as each card's image arrives.
-    expect(image.getAttribute("width")).toBe("1200");
-    expect(image.getAttribute("height")).toBe("800");
+    // No width/height: CSS sizes this image in both dimensions, so the
+    // attributes' only effect (the UA aspect-ratio hint) would not apply, and
+    // the fixed-height container already reserves the box.
+    expect(image.getAttribute("width")).toBeNull();
+    expect(image.getAttribute("height")).toBeNull();
   });
 
   it("prefers the uploaded image over a legacy URL on the same case", () => {

@@ -85,8 +85,12 @@ export interface CaseSearchCard {
   case_start_date: string | null;
   case_end_date: string | null;
   bigo: number | null;
-  /** Card ladder, denormalized into the index doc at reindex time. */
-  thumbnail: CaseImage | null;
+  /** Card ladder, denormalized into the index doc at reindex time.
+   *
+   * Optional, not just nullable: docs indexed before this field existed carry
+   * no `thumbnail` key at all, and they stay that way until their next reindex.
+   */
+  thumbnail?: CaseImage | null;
   /** DEPRECATED bare URLs; the fallback for cases with no uploaded image. */
   thumbnail_url: string | null;
   banner_url: string | null;

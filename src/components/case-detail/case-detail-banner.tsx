@@ -102,7 +102,7 @@ export function CaseDetailBanner({
   // Walk the candidate list on load error rather than jumping straight to the
   // placeholder: a case whose banner_url points at an article page should still
   // get to try its thumbnail before giving up.
-  const { candidates, srcsetFor, intrinsic } = getHeroSources(caseData);
+  const { candidates, srcsetFor } = getHeroSources(caseData);
   const [imageIndex, setImageIndex] = useState(0);
 
   // Reset when the candidates change (navigating between cases reuses this
