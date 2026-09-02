@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
@@ -52,6 +53,41 @@ const EmbedCaseCard = () => {
     enabled: !!id,
   });
 
+  // The uploaded card ladder first, then the deprecated URLs — the same order,
+  // and the same "/admin/ paths are not publicly loadable" guard, that every
+  // other case surface uses. This card is what an embedding site shows its
+  // readers, and the backend's own oEmbed payload already serves a rendition,
+  // so reading only the free-text URLs here left the two halves disagreeing.
+  //
+  // Declared above the early returns below because it holds state: hooks cannot
+  // be called conditionally.
+  const { candidates, srcsetFor } = caseImageSources(
+    caseData?.thumbnail,
+    caseData?.thumbnail_url,
+    caseData?.banner_url,
+  );
+  // The embed has its own no-image treatment — a short navy band rather than
+  // the scales illustration — so the shared placeholder that always ends the
+  // candidate list is dropped here rather than rendered.
+  const embedCandidates = candidates.filter(
+    (url) => url !== CASE_PLACEHOLDER_IMAGE,
+  );
+  const [imageIndex, setImageIndex] = useState(0);
+
+  // Same reset rule as CaseCard: keyed on the candidate LIST, so a refetch that
+  // yields the same urls does not discard an error-advance and flip the card
+  // back to a source that just failed.
+  const candidateKey = embedCandidates.join("|");
+  useEffect(() => {
+    setImageIndex(0);
+  }, [candidateKey]);
+
+  // Undefined once every candidate has failed, which falls through to the
+  // no-image band. Walking the list matters here for the same reason it does on
+  // the card: a case whose thumbnail_url points at an article page should still
+  // get to try its banner before the embed gives up on showing anything.
+  const thumbnailUrl = embedCandidates[imageIndex];
+
   if (isLoading) {
     return (
       <div className="flex h-full min-h-[360px] items-center justify-center bg-white p-4">
@@ -95,20 +131,6 @@ const EmbedCaseCard = () => {
   };
 
   const status = stateMap[caseData.state] || stateMap.PUBLISHED;
-  // The uploaded card ladder first, then the deprecated URLs — the same order,
-  // and the same "/admin/ paths are not publicly loadable" guard, that every
-  // other case surface uses. This card is what an embedding site shows its
-  // readers, and the backend's own oEmbed payload already serves a rendition,
-  // so reading only the free-text URLs here left the two halves disagreeing.
-  const { candidates, srcsetFor } = caseImageSources(
-    caseData.thumbnail,
-    caseData.thumbnail_url,
-    caseData.banner_url,
-  );
-  // The embed has its own no-image treatment below — a short navy band rather
-  // than the scales illustration — so the shared placeholder that always ends
-  // the candidate list is not wanted here.
-  const thumbnailUrl = candidates.find((url) => url !== CASE_PLACEHOLDER_IMAGE);
   const primaryEntity = getPrimaryEntity(caseData.entities);
   const locationEntity = getLocationEntity(caseData.entities);
   const dateRange = formatCaseDateRange(
@@ -141,6 +163,7 @@ const EmbedCaseCard = () => {
               alt={caseData.title}
               className="h-full w-full object-cover"
               loading="lazy"
+              onError={() => setImageIndex((i) => i + 1)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             <div className="absolute left-3 top-3">

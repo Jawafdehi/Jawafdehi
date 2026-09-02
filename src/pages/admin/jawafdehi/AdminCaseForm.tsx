@@ -325,6 +325,13 @@ export default function AdminCaseForm() {
     thumbnail: CaseImage | null;
     banner: CaseImage | null;
   }>({ thumbnail: null, banner: null });
+  // Which image slots have an upload still in flight. CaseImageField only calls
+  // onChange once its upload RESOLVES, so without this the form is submittable
+  // in the window between picking a file and the id reaching form state: a
+  // create would omit the image and an edit would save without it, leaving the
+  // uploaded image orphaned in the library with no case pointing at it.
+  const [uploading, setUploading] = useState({ thumbnail: false, banner: false });
+  const imageUploadPending = uploading.thumbnail || uploading.banner;
 
   const set = <K extends keyof CaseFormState>(k: K, v: CaseFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -424,6 +431,8 @@ export default function AdminCaseForm() {
   );
   const canSave =
     !saving &&
+    // An in-flight image upload has not reached form state yet — see `uploading`.
+    !imageUploadPending &&
     form.title.trim() !== "" &&
     form.case_type.trim() !== "" &&
     slugValid &&
@@ -970,6 +979,10 @@ export default function AdminCaseForm() {
             help={t("admin.caseForm.thumbnailHelp")}
             imageId={form.thumbnail_image_id}
             preview={previews.thumbnail}
+            disabled={saving}
+            onUploadingChange={(pending) =>
+              setUploading((u) => ({ ...u, thumbnail: pending }))
+            }
             onChange={(id, preview) => {
               set("thumbnail_image_id", id);
               setPreviews((p) => ({ ...p, thumbnail: preview }));
@@ -982,6 +995,10 @@ export default function AdminCaseForm() {
             help={t("admin.caseForm.bannerHelp")}
             imageId={form.banner_image_id}
             preview={previews.banner}
+            disabled={saving}
+            onUploadingChange={(pending) =>
+              setUploading((u) => ({ ...u, banner: pending }))
+            }
             onChange={(id, preview) => {
               set("banner_image_id", id);
               setPreviews((p) => ({ ...p, banner: preview }));

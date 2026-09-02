@@ -41,6 +41,17 @@ interface Props {
   preview: CaseImage | null;
   /** Called with the new id (or null when cleared) and its preview. */
   onChange: (imageId: number | null, preview: CaseImage | null) => void;
+  /** Reports whether an upload is in flight.
+   *
+   * The parent form needs this to block save. `onChange` only fires once the
+   * upload RESOLVES, so without it the form can be submitted in the window
+   * between picking a file and the id landing in form state — a create would
+   * omit the image entirely and an edit would save without it, leaving the
+   * uploaded image orphaned in the library with nothing pointing at it.
+   */
+  onUploadingChange?: (uploading: boolean) => void;
+  /** Set while the form is saving, so a picker cannot start a late upload. */
+  disabled?: boolean;
   testId?: string;
 }
 
@@ -59,6 +70,8 @@ export default function CaseImageField({
   imageId,
   preview,
   onChange,
+  onUploadingChange,
+  disabled = false,
   testId,
 }: Props) {
   const { t } = useTranslation();
@@ -75,13 +88,20 @@ export default function CaseImageField({
   const actionLabel = (action: string) => `${action}: ${label}`;
   const labelId = `case-image-${variant}-label`;
 
+  // One setter for both the local spinner and the parent's save gate, so the
+  // two can never disagree about whether an upload is still in flight.
+  const setPending = (pending: boolean) => {
+    setUploading(pending);
+    onUploadingChange?.(pending);
+  };
+
   const pick = async (file: File | undefined) => {
     if (!file) return;
     if (file.size > MAX_FILE_BYTES) {
       setError(t("admin.caseForm.imageTooLarge"));
       return;
     }
-    setUploading(true);
+    setPending(true);
     setError(null);
     try {
       const result = await uploadCaseImage(file);
@@ -91,7 +111,7 @@ export default function CaseImageField({
     } catch (err) {
       setError(adminErrorMessage(err, t("admin.caseForm.imageUploadFailed")));
     } finally {
-      setUploading(false);
+      setPending(false);
       // Reset the input so re-picking the SAME file fires onChange again (a
       // file input does not emit when the value is unchanged).
       if (inputRef.current) inputRef.current.value = "";
@@ -142,7 +162,7 @@ export default function CaseImageField({
           type="button"
           variant="outline"
           size="sm"
-          disabled={uploading}
+          disabled={uploading || disabled}
           onClick={() => inputRef.current?.click()}
           className="gap-2"
           aria-label={actionLabel(
@@ -166,7 +186,7 @@ export default function CaseImageField({
             type="button"
             variant="ghost"
             size="sm"
-            disabled={uploading}
+            disabled={uploading || disabled}
             onClick={() => onChange(null, null)}
             className="gap-2 text-muted-foreground"
             aria-label={actionLabel(t("admin.caseForm.imageClear"))}

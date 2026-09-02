@@ -296,13 +296,18 @@ export function CaseDetailBanner({
               )}
             >
               <Link to="/" className={cn("shrink-0 transition-colors", crumbHover)}>
-                {homeLabel || "jawafdehi.org"}
+                {/* Translated defaults, not hardcoded English. The only
+                    production caller (CaseDetail) passes NEITHER label, so
+                    these ARE what renders — a Nepali reader was getting
+                    "jawafdehi.org / case". Reuses the keys the header and the
+                    nav already carry rather than adding near-duplicates. */}
+                {homeLabel || t("header.title")}
               </Link>
 
               <span className="shrink-0 opacity-50">/</span>
 
               <Link to="/cases" className={cn("shrink-0 transition-colors", crumbHover)}>
-                {casesLabel || "case"}
+                {casesLabel || t("nav.cases")}
               </Link>
 
               <span className="shrink-0 opacity-50">/</span>
