@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { CaseCard } from "@/components/CaseCard";
+import type { CaseImage } from "@/types/jds";
 import { Seo } from "@/components/Seo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ type CaseCardViewModel = {
   title: string;
   tags: string[];
   status: CaseLifecycleStatus;
-  heroImageUrl?: string;
+  image: CaseImage | null;
   thumbnailUrl?: string;
   bannerUrl?: string;
   bigo: number | null;
@@ -88,10 +89,10 @@ function toCaseCardViewModel(result: ArchiveSearchResult): CaseCardViewModel {
     title: pickTitle(result, card),
     tags: card?.tags || [],
     status: normalizeStatus(card?.status || result.extra.case_status),
+    image: card?.thumbnail ?? null,
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
     // Editor hero (tier 1) — pass-through; the index does not carry it yet.
-    heroImageUrl: card?.hero_image_url || undefined,
     // /cases reads the same indexed card payload as /search, so बिगो has to be
     // carried here too — otherwise the shared <CaseCard> shows the amount on the
     // search results and drops it on the browse page.
@@ -329,7 +330,7 @@ function CaseResults({
               entityIds={caseItem.subjectEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
               locationIds={caseItem.locationEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
               bigo={caseItem.bigo}
-              heroImageUrl={caseItem.heroImageUrl}
+              image={caseItem.image}
               thumbnailUrl={caseItem.thumbnailUrl}
               bannerUrl={caseItem.bannerUrl}
               caseType={caseItem.caseType}

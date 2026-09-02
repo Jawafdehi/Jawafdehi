@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +8,8 @@ import { CaseThumbnail } from "@/components/CaseThumbnail";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
-import {
-  CASE_PLACEHOLDER_IMAGE,
-  caseImageCandidates,
-} from "@/lib/case-images";
+import { useCaseImage } from "@/lib/use-case-image";
+import type { CaseImage } from "@/types/jds";
 import { formatBigo } from "@/utils/number";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
@@ -28,18 +25,17 @@ interface CaseCardProps {
   tags?: string[];
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
-  // Editor-uploaded bespoke hero image (tier 1 of the thumbnail ladder). Wins
-  // over thumbnail/banner when present. The API does not send it yet; the prop
-  // is the pass-through so cards light up the moment the backend field ships.
-  heroImageUrl?: string;
-  thumbnailUrl?: string; //Thumbnail image
-  bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
+  // The card image as a responsive ladder. Preferred over the two URL props
+  // below, which are the fallback for cases that predate uploaded images.
+  image?: CaseImage | null;
+  thumbnailUrl?: string; // DEPRECATED bare URL
+  bannerUrl?: string; // DEPRECATED bare URL, tried when the thumbnail fails
   // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
   // Inputs for the generative fallback thumbnail (tier 3) a card renders when
-  // it has no usable image. All optional: a card missing them still renders,
-  // just with a sparser glyph.
+  // it has no usable image at all. All optional: a card missing them still
+  // renders, just with a sparser glyph.
   caseType?: string | null;
   accusedCount?: number;
   timelineCount?: number;
@@ -83,7 +79,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, heroImageUrl, thumbnailUrl, bannerUrl, bigo, caseType, accusedCount, timelineCount, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, caseType, accusedCount, timelineCount, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -95,39 +91,18 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Candidate images, best first: editor hero (tier 1), then thumbnail, then
-  // banner. Cases sometimes carry a non-image thumbnail URL (an article/page
-  // link), so a load error must fall through the whole chain. The shared
-  // placeholder illustration is filtered OUT: when every real candidate is
-  // gone the card renders the generative data thumbnail (tier 3) instead of a
-  // repeated stock image.
-  const imageCandidates = caseImageCandidates(heroImageUrl, thumbnailUrl, bannerUrl)
-    .filter((url) => url !== CASE_PLACEHOLDER_IMAGE);
-  const [imageIndex, setImageIndex] = useState(0);
-
-  // React reuses a card instance when a list re-sorts or refetches, so another
-  // case's images can arrive on the component that already advanced past a
-  // broken one. Without this the index survives and the card opens on a later
-  // candidate — often the placeholder — instead of the new thumbnail.
-  //
-  // Keyed on the candidate list, not the raw props: a prop change that yields
-  // the same list (whitespace, or a duplicate collapsing) must NOT discard an
-  // error-advance, or the card would swing back to a URL known to fail.
-  const candidateKey = imageCandidates.join("|");
-  useEffect(() => {
-    setImageIndex(0);
-  }, [candidateKey]);
-
-  // Exhausted = no real image is usable: either the case never carried one, or
-  // every candidate errored. The card then renders the generative data
-  // thumbnail (tier 3), which cannot fail to load — it draws from case fields.
-  const imagesExhausted = imageCandidates.length === 0 || imageIndex >= imageCandidates.length;
-  const imageSrc = imagesExhausted ? undefined : imageCandidates[imageIndex];
-
-  // Handle image load errors by advancing to the next candidate.
-  const handleImageError = () => {
-    setImageIndex((i) => i + 1);
-  };
+  // Candidate images, best first: the uploaded rendition ladder, then the
+  // deprecated thumbnail and banner URLs. Cases sometimes carry a non-image
+  // thumbnail URL (an article/page link), so a load error must fall through
+  // the rest — useCaseImage owns that walk, shared with the hero and the
+  // oEmbed card. The shared placeholder illustration is opted OUT: when every
+  // real candidate is gone, `src` goes undefined and the card renders the
+  // generative data thumbnail (tier 3) instead of a repeated stock image.
+  const {
+    src: imageSrc,
+    srcSet,
+    onError: handleImageError,
+  } = useCaseImage(image, [thumbnailUrl, bannerUrl], { includePlaceholder: false });
 
   const statusLabel = t(getCaseStatusLabelKey(status));
 
@@ -150,10 +125,34 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
         <div className={`relative overflow-hidden ${imageContainerClass}`}>
-          {imagesExhausted ? (
-            // Tier-3 generative fallback: a deterministic per-case data
-            // portrait instead of the shared stock illustration every
-            // imageless case used to repeat.
+          {imageSrc ? (
+            <>
+              <img
+                src={imageSrc}
+                // Only the uploaded ladder has a srcset, and it goes away if a load
+                // error advances past it — see CaseImageSources.srcsetFor.
+                srcSet={srcSet}
+                // The card box is a third of the row in list view and a grid column
+                // otherwise; ~400px covers both, and the browser picks up from there.
+                sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+                alt={t("caseCard.thumbnailAlt", { title })}
+                loading="lazy"
+                decoding="async"
+                onError={handleImageError}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              {/* Legibility scrim for the status badge over a real photograph. The
+                  generative thumbnail below supplies its own scrim. */}
+              {/* Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
+                  semantic equivalent is --foreground, which is the same near-black
+                  in light and correctly inverts in dark. `white` is not a palette
+                  name, so to-white/10 stays. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
+            </>
+          ) : (
+            // Tier-3 generative fallback: a deterministic per-case data portrait
+            // instead of the shared stock illustration every imageless case used
+            // to repeat. It draws from case fields, so it cannot fail to load.
             <CaseThumbnail
               slug={caseSlug ?? id}
               bigo={bigo}
@@ -161,24 +160,6 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
               accusedCount={accusedCount}
               timelineCount={timelineCount}
             />
-          ) : (
-            <>
-              <img
-                src={imageSrc}
-                alt={t("caseCard.thumbnailAlt", { title })}
-                loading="lazy"
-                decoding="async"
-                onError={handleImageError}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Legibility scrim for the status badge over a real photograph.
-                  The generative thumbnail supplies its own scrim. */}
-              {/* Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
-                  semantic equivalent is --foreground, which is the same near-black
-                  in light and correctly inverts in dark. `white` is not a palette
-                  name, so to-white/10 stays. */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
-            </>
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
