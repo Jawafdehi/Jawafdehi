@@ -79,6 +79,7 @@ function CourtCaseResultCard({
     <CourtCaseCard
       caseNumber={result.extra.case_number}
       court={result.extra.court}
+      courtType={result.extra.court_type}
       registrationDate={result.extra.date}
       registrationDateBs={result.extra.date_bs}
       status={result.extra.case_status}

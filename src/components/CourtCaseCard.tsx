@@ -16,8 +16,9 @@ import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import {
   courtStatusBadgeValue,
+  courtTypeValue,
   formatCourtName,
-  type CourtStatusBadgeValue,
+  type CourtTypeValue,
 } from "@/utils/court-case-format";
 import { formatDateWithBS } from "@/utils/date";
 import { cn } from "@/lib/utils";
@@ -138,6 +139,10 @@ function getLatestCourtUpdate(courtCase: CourtCase) {
 export interface CourtCaseCardProps {
   caseNumber?: string | null;
   court?: string | null;
+  // The API's `court_type` for this case. Optional: absent on documents indexed
+  // before the field existed, and `courtTypeValue` then derives the tier from
+  // `court` instead.
+  courtType?: string | null;
   registrationDate?: string | null;
   registrationDateBs?: string | null;
   status?: string | null;
@@ -154,22 +159,45 @@ function displayCourtStatus(status: string) {
     .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 }
 
-function courtStatusGradientClass(status: CourtStatusBadgeValue | null) {
-  if (status === "resolved") {
-    return "[background-image:linear-gradient(to_bottom,hsl(var(--success-strong)/0.09)_0%,transparent_44%)]";
-  }
-  if (status === "ongoing") {
-    return "[background-image:linear-gradient(to_bottom,hsl(var(--alert-strong)/0.09)_0%,transparent_44%)]";
-  }
-  if (status === "under-investigation") {
-    return "[background-image:linear-gradient(to_bottom,hsl(var(--muted)/0.7)_0%,transparent_44%)]";
-  }
-  return "";
+// The top-down wash encodes the COURT TIER. It used to encode the case status,
+// which duplicated the status pill sitting on top of it while telling the
+// reader nothing about which court they were looking at.
+//
+// Colours are the `--court-*` reds and browns (see src/index.css for how that
+// ladder was picked and measured). Note they are deliberately NOT the
+// success/alert tokens the pill uses, so wash and pill can no longer be
+// confused for each other.
+//
+// THE ALPHA RISES WITH TIER, and that is doing real work rather than decorating.
+// A tint is alpha-diluted against a near-white card, so at one flat alpha the
+// four collapse: at today's 0.09 the closest pair measures deltaE00 2.4 in
+// normal vision and 0.5 under red-green colour blindness — invisible. Raising
+// alpha as the colour darkens restores the lightness ladder that the diluting
+// destroys: the closest pair becomes 6.2 normal, 3.8 colour-blind, 5.8 in
+// greyscale, while the card title holds 4.77:1 (AA needs 4.5).
+//
+// This is the honest ceiling for a tint. If the tier ever needs to be readable
+// at a glance for colour-blind users, the colour has to appear somewhere
+// undiluted — a rule, border or badge — where these same four separate by 13.8
+// and 8.9 instead. Re-measure before retuning any of these numbers.
+const COURT_TYPE_GRADIENTS: Record<CourtTypeValue, string> = {
+  district:
+    "[background-image:linear-gradient(to_bottom,hsl(var(--court-district)/0.10)_0%,transparent_44%)]",
+  high: "[background-image:linear-gradient(to_bottom,hsl(var(--court-high)/0.18)_0%,transparent_44%)]",
+  special:
+    "[background-image:linear-gradient(to_bottom,hsl(var(--court-special)/0.26)_0%,transparent_44%)]",
+  supreme:
+    "[background-image:linear-gradient(to_bottom,hsl(var(--court-supreme)/0.34)_0%,transparent_44%)]",
+};
+
+function courtTypeGradientClass(courtType: CourtTypeValue | null) {
+  return courtType ? COURT_TYPE_GRADIENTS[courtType] : "";
 }
 
 export function CourtCaseCard({
   caseNumber,
   court,
+  courtType,
   registrationDate,
   registrationDateBs,
   status,
@@ -188,16 +216,25 @@ export function CourtCaseCard({
       : registrationDate || registrationDateBs || "";
   const viewCaseLabel = t("courtCaseDetail.viewCase", "View case");
   const statusBadgeValue = status ? courtStatusBadgeValue(status) : null;
+  const courtTier = courtTypeValue(court, courtType);
 
   return (
     <Link
       aria-label={`${viewCaseLabel}: ${title}`}
       className={cn(
         "group block h-full bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] ring-1 ring-border/40 transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none",
-        courtStatusGradientClass(statusBadgeValue),
+        courtTypeGradientClass(courtTier),
         isCard
-          ? "min-h-[17rem] rounded-2xl p-4 motion-safe:hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] sm:min-h-[19rem] sm:rounded-3xl sm:p-5 xl:p-6"
-          : "min-h-48 rounded-2xl p-4 hover:bg-muted/20 sm:p-5",
+          // The floor used to be 17rem/19rem, which is 272-304px, against a
+          // court case whose content measures 150-210px. That left 72-80px of
+          // dead air above the "view case" row on every card with no status
+          // pill, because `mt-auto` pins that row to a bottom the content never
+          // reaches. It does NOT need to be tall to keep the grid tidy: the
+          // cards are grid items with `h-full` and the default `stretch`, so
+          // every card in a row already matches the tallest one in that row.
+          // The floor only has to stop a sparse card collapsing into a stub.
+          ? "min-h-[13rem] rounded-2xl p-4 motion-safe:hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] sm:rounded-3xl sm:p-5 xl:p-6"
+          : "min-h-40 rounded-2xl p-4 hover:bg-muted/20 sm:p-5",
       )}
       to={url}
     >
@@ -277,8 +314,10 @@ export function CourtCaseCardSkeleton({
       className={cn(
         "flex h-full flex-col bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] ring-1 ring-border/40",
         isCard
-          ? "min-h-[17rem] rounded-2xl p-4 sm:min-h-[19rem] sm:rounded-3xl sm:p-5 xl:p-6"
-          : "min-h-48 rounded-2xl p-4 sm:p-5",
+          // Tracks the live card's floor (see the note there) so the grid does
+          // not jump when the skeleton is swapped out for real results.
+          ? "min-h-[13rem] rounded-2xl p-4 sm:rounded-3xl sm:p-5 xl:p-6"
+          : "min-h-40 rounded-2xl p-4 sm:p-5",
       )}
       data-court-case-card-skeleton=""
     >

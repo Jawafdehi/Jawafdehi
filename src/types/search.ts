@@ -97,6 +97,10 @@ export interface SearchResultExtra {
   case_type?: string;
   case_status?: string;
   court?: string;
+  // Court tier: "district" | "high" | "special" | "supreme". Typed wide
+  // because it is promoted from a top-level index field and so is absent on
+  // documents indexed before that field existed — see `courtTypeValue`.
+  court_type?: string;
   case_number?: string;
 }
 

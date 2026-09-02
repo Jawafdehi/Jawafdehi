@@ -729,7 +729,14 @@ function readParams(
   };
 }
 
-const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 2xl:grid-cols-3";
+// Three across from `xl`, not `2xl`. The third column used to arrive only at
+// 1536px, so every laptop sat in a two-up band that stretched from 640px all
+// the way up, leaving cards 459-519px wide with ~200px of content in them.
+// `lg` is too early on this page specifically: unlike /cases, the results share
+// the row with a 250px filter sidebar, so three columns there would be ~235px
+// each. At `xl` they are ~299px and by 1440px ~339px, which is the width
+// /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
+const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
 
 function ArchiveSearchResults({
   data,

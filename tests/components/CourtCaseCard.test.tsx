@@ -157,13 +157,93 @@ describe("CourtCaseCard", () => {
     );
     expect(screen.getByText("फैसला भएको").className).toContain("truncate");
     expect(container.querySelector(".bg-success-strong.text-white")).toBeTruthy();
+    // The wash keys off the COURT TIER, not the status: this resolved Supreme
+    // Court case keeps its green status pill but takes the supreme oxblood
+    // wash, where it used to take a green one derived from that same status.
     expect(
       container.querySelector(
-        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--success-strong)']",
+        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--court-supreme)/0.34)']",
       ),
     ).toBeTruthy();
     expect(
+      container.querySelector("[class*='hsl(var(--success-strong)/0.09)']"),
+    ).toBeNull();
+    expect(
       container.querySelector('a[href="/courtcase/supreme/079-wo-0811"]'),
     ).toBeTruthy();
+  });
+
+  // One wash per tier, and the tier is what selects it. `status` is held
+  // constant across all four, so a regression that reinstated status-driven
+  // colouring would collapse them onto one class and fail here.
+  it.each([
+    ["district", "kathmandudc", "--court-district)/0.10"],
+    ["high", "patanhc", "--court-high)/0.18"],
+    ["special", "special", "--court-special)/0.26"],
+    ["supreme", "supreme", "--court-supreme)/0.34"],
+  ])("washes a %s court case with its own tier colour", (courtType, court, token) => {
+    const { container } = render(
+      <MemoryRouter>
+        <CourtCaseCard
+          court={court}
+          courtType={courtType}
+          status="फैसला भएको"
+          title="मुद्दा"
+          url={`/courtcase/${court}/1`}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(
+      container.querySelector(
+        `[class*='background-image:linear-gradient(to_bottom,hsl(var(${token})']`,
+      ),
+    ).toBeTruthy();
+  });
+
+  // The alpha rises with tier on purpose — a flat alpha makes the four
+  // indistinguishable. Pin the ordering so a "tidy up the magic numbers"
+  // refactor cannot quietly flatten it.
+  it("deepens the wash as the tier rises", () => {
+    const alphas = ["kathmandudc", "patanhc", "special", "supreme"].map((court) => {
+      const { container } = render(
+        <MemoryRouter>
+          <CourtCaseCard court={court} title="मुद्दा" url={`/courtcase/${court}/1`} />
+        </MemoryRouter>,
+      );
+      const cls = container.querySelector("a")?.className ?? "";
+      return Number(/\/(0\.\d+)\)/.exec(cls)?.[1]);
+    });
+
+    expect(alphas).toEqual([...alphas].sort((a, b) => a - b));
+    expect(new Set(alphas).size).toBe(4);
+  });
+
+  // `court_type` is absent on documents indexed before the field existed, so
+  // the tier has to survive being derived from the identifier alone.
+  it("falls back to the court identifier when the API sends no court_type", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <CourtCaseCard court="butwalhc" title="मुद्दा" url="/courtcase/butwalhc/1" />
+      </MemoryRouter>,
+    );
+
+    expect(
+      container.querySelector(
+        "[class*='background-image:linear-gradient(to_bottom,hsl(var(--court-high)/0.18)']",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("applies no wash when the tier cannot be established", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <CourtCaseCard court="appellate" title="मुद्दा" url="/courtcase/appellate/1" />
+      </MemoryRouter>,
+    );
+
+    expect(
+      container.querySelector("[class*='background-image:linear-gradient']"),
+    ).toBeNull();
   });
 });

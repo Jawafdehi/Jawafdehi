@@ -17,6 +17,55 @@ export type CourtStatusBadgeValue =
   | "under-investigation";
 
 /**
+ * The court tiers, and the only four values the API's `court_type` facet holds
+ * (JawafdehiAPI `search.service.ALL_COURT_TYPES`).
+ */
+export type CourtTypeValue = "district" | "high" | "special" | "supreme";
+
+const COURT_TYPES: readonly CourtTypeValue[] = [
+  "district",
+  "high",
+  "special",
+  "supreme",
+];
+
+/**
+ * Resolve a court case's tier, preferring the API's own `court_type` and
+ * falling back to the court identifier.
+ *
+ * `extra.court_type` is on every court-case hit today — sampled 50 per tier
+ * plus 50 unfiltered against production, with no gaps — so the fallback is not
+ * the normal path. It exists because that field is promoted from a top-level
+ * index field and so is absent on documents written before the index was
+ * rebuilt for it, whereas `extra.court` is sourced from `raw` and is present on
+ * every court-case document ever indexed.
+ *
+ * Deriving it is safe because the identifier suffix IS the tier: checked
+ * against all 97 courts in GET /api/courts/, the `*dc`/`*hc`/`special`/
+ * `supreme` rule reproduces `court_type` with zero disagreements.
+ */
+export function courtTypeValue(
+  court: string | null | undefined,
+  courtType?: string | null,
+): CourtTypeValue | null {
+  const explicit = courtType?.trim().toLowerCase();
+  const known = COURT_TYPES.find((value) => value === explicit);
+  if (known) return known;
+
+  const lower = court?.trim().toLowerCase().replace(/[\s_-]+/g, "");
+  if (!lower) return null;
+
+  if (lower === "special" || lower === "specialcourt") return "special";
+  if (lower === "supreme" || lower === "supremecourt") return "supreme";
+  if (lower.endsWith("hc")) return "high";
+  if (lower.endsWith("dc")) return "district";
+
+  // Anything else (e.g. the retired "appellate" courts, which `court_type`
+  // has no value for) gets no tier rather than a wrong one.
+  return null;
+}
+
+/**
  * Formats a court identifier (e.g., "kanchanpurdc", "butwalhc", "special")
  * into a human-readable court name in either English or Nepali.
  */

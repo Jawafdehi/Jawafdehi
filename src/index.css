@@ -290,6 +290,28 @@ All colors MUST be HSL.
     --tone-fuchsia: 299 66% 35%;
     --tone-pink: 328 66% 38%;
     --tone-rose: 345 75% 37%;
+
+    /* Court tier — the four values the API's `court_type` facet holds.
+       Deliberately a REDS-AND-BROWNS family, kept out of --tone-*: it reads as
+       one register (brown at the base, blood-red at the apex) rather than as
+       four unrelated categories.
+
+       Because red and brown ARE one hue family, and because red-green colour
+       blindness collapses that whole span toward olive, hue does almost none of
+       the work here. Separation is carried by a LIGHTNESS LADDER — L* 58 / 43 /
+       32 / 16 — the axis that also survives greyscale and print. Measured: the
+       closest pair is deltaE00 13.8 in normal vision, 8.9 under
+       protanopia/deuteranopia, 11.0 in pure greyscale. If you retune these,
+       re-measure the L* gaps rather than trusting the hues to carry it.
+
+       These necessarily sit near three existing tokens (nearest distances:
+       --accent 9.3, --danger 7.9, --alert 7.5). An earlier fire-red for
+       `special` measured 1.5 from --danger — the Special Court would have worn
+       the error colour — which is why it is a carmine, not a scarlet. */
+    --court-district: 32 51% 48%;   /* caramel brown #BA7F3C */
+    --court-high: 18 65% 39%;       /* sienna        #A64A23 */
+    --court-special: 348 72% 34%;   /* carmine red   #931831 */
+    --court-supreme: 352 66% 19%;   /* oxblood       #4F1018 */
   }
 
 }
@@ -398,6 +420,20 @@ All colors MUST be HSL.
     --tone-fuchsia: 299 66% 55%;
     --tone-pink: 328 66% 58%;
     --tone-rose: 345 75% 59%;
+
+    /* Court tier, dark theme. Hue and saturation are held exactly; only
+       lightness moves, so a tier reads as the same colour in both themes —
+       the same rule the tones above follow.
+       The LADDER INVERTS: on a near-black card the emphatic end is the bright
+       end, so district (52% of the corpus, and the one that should stay
+       quietest) is dimmest and supreme is brightest. Each still clears 3:1
+       against both dark surfaces, and the L* ladder is re-solved for this
+       background rather than reused — at the light-theme lightnesses,
+       district and supreme collided at 0.1 L* apart. */
+    --court-district: 32 51% 41%;   /* #9F6D33  L* 50 */
+    --court-high: 18 65% 58%;       /* #DA7950  L* 61 */
+    --court-special: 348 72% 76%;   /* #EE94A6  L* 71 */
+    --court-supreme: 352 66% 85%;   /* #F2BFC6  L* 82 */
   }
 
 @layer base {
