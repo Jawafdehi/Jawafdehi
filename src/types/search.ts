@@ -83,6 +83,9 @@ export interface CaseSearchCard {
   case_start_date: string | null;
   case_end_date: string | null;
   bigo: number | null;
+  // Editor-uploaded bespoke hero image (tier 1 of the card-thumbnail ladder).
+  // Not indexed yet — typed optional so cards light up when the backend ships it.
+  hero_image_url?: string | null;
   thumbnail_url: string | null;
   banner_url: string | null;
   timeline: Array<Record<string, unknown>>;

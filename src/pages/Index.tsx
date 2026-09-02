@@ -77,11 +77,18 @@ function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
     entityNames: names,
     location: locations.join(", ") || unknownLocation,
     status: mapCaseStatus(card?.status || result.extra.case_status),
+    heroImageUrl: card?.hero_image_url || undefined,
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
     tags: card?.tags || [],
     entityIds: entityIds(subjectEntities),
     locationIds: entityIds(locationEntities),
+    // Generative-thumbnail (tier 3) inputs, matching the /cases and /search
+    // mappings so an imageless featured case renders its data portrait here too.
+    bigo: card?.bigo ?? null,
+    caseType: card?.case_type ?? null,
+    accusedCount: entities.filter((entity) => entity.type === "accused").length,
+    timelineCount: card?.timeline?.length ?? 0,
   };
 }
 

@@ -5,15 +5,14 @@ import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
+import { CaseThumbnail } from "@/components/CaseThumbnail";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
 import {
-  CASE_PLACEHOLDER_DARK_CLASS,
   CASE_PLACEHOLDER_IMAGE,
   caseImageCandidates,
 } from "@/lib/case-images";
-import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
@@ -29,11 +28,21 @@ interface CaseCardProps {
   tags?: string[];
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
+  // Editor-uploaded bespoke hero image (tier 1 of the thumbnail ladder). Wins
+  // over thumbnail/banner when present. The API does not send it yet; the prop
+  // is the pass-through so cards light up the moment the backend field ships.
+  heroImageUrl?: string;
   thumbnailUrl?: string; //Thumbnail image
   bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
   // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
+  // Inputs for the generative fallback thumbnail (tier 3) a card renders when
+  // it has no usable image. All optional: a card missing them still renders,
+  // just with a sparser glyph.
+  caseType?: string | null;
+  accusedCount?: number;
+  timelineCount?: number;
   viewMode?: "grid" | "list";
   // When set, tags render as buttons that invoke this instead of plain badges —
   // the archive search uses it to toggle a tag as a URL refinement.
@@ -74,7 +83,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, heroImageUrl, thumbnailUrl, bannerUrl, bigo, caseType, accusedCount, timelineCount, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -86,11 +95,14 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Candidate images, best first: thumbnail, then banner, then the shared
-  // placeholder illustration the case detail banner also falls back to. Cases
-  // sometimes carry a non-image thumbnail URL (an article/page link), so a load
-  // error must fall through to the banner before landing on the placeholder.
-  const imageCandidates = caseImageCandidates(thumbnailUrl, bannerUrl);
+  // Candidate images, best first: editor hero (tier 1), then thumbnail, then
+  // banner. Cases sometimes carry a non-image thumbnail URL (an article/page
+  // link), so a load error must fall through the whole chain. The shared
+  // placeholder illustration is filtered OUT: when every real candidate is
+  // gone the card renders the generative data thumbnail (tier 3) instead of a
+  // repeated stock image.
+  const imageCandidates = caseImageCandidates(heroImageUrl, thumbnailUrl, bannerUrl)
+    .filter((url) => url !== CASE_PLACEHOLDER_IMAGE);
   const [imageIndex, setImageIndex] = useState(0);
 
   // React reuses a card instance when a list re-sorts or refetches, so another
@@ -106,10 +118,11 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     setImageIndex(0);
   }, [candidateKey]);
 
-  // Clamped, not `?? placeholder`: if the placeholder itself fails to load,
-  // advancing past it must not reset the card to a real URL that already failed.
-  const imageSrc = imageCandidates[Math.min(imageIndex, imageCandidates.length - 1)];
-  const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
+  // Exhausted = no real image is usable: either the case never carried one, or
+  // every candidate errored. The card then renders the generative data
+  // thumbnail (tier 3), which cannot fail to load — it draws from case fields.
+  const imagesExhausted = imageCandidates.length === 0 || imageIndex >= imageCandidates.length;
+  const imageSrc = imagesExhausted ? undefined : imageCandidates[imageIndex];
 
   // Handle image load errors by advancing to the next candidate.
   const handleImageError = () => {
@@ -137,32 +150,35 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
         <div className={`relative overflow-hidden ${imageContainerClass}`}>
-          <img
-            src={imageSrc}
-            // The placeholder illustration carries no information about this
-            // case, so it stays out of the accessibility tree entirely rather
-            // than announcing a thumbnail that does not exist.
-            alt={isPlaceholder ? "" : t("caseCard.thumbnailAlt", { title })}
-            loading="lazy"
-            decoding="async"
-            onError={handleImageError}
-            className={cn(
-              "h-full w-full object-cover",
-              // Zoom-on-hover reads as "there is a photograph here"; it only
-              // makes the placeholder illustration lurch.
-              !isPlaceholder && "transition-transform duration-500 group-hover:scale-105",
-              isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
-            )}
-          />
-          {/* Legibility scrim for the status badge over a real photograph. The
-              placeholder is a near-flat light panel and needs no scrim — and in
-              dark mode the inverted placeholder would tint it the wrong way. */}
-          {!isPlaceholder && (
-            // Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
-            // semantic equivalent is --foreground, which is the same near-black
-            // in light and correctly inverts in dark. `white` is not a palette
-            // name, so to-white/10 stays.
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
+          {imagesExhausted ? (
+            // Tier-3 generative fallback: a deterministic per-case data
+            // portrait instead of the shared stock illustration every
+            // imageless case used to repeat.
+            <CaseThumbnail
+              slug={caseSlug ?? id}
+              bigo={bigo}
+              caseType={caseType}
+              accusedCount={accusedCount}
+              timelineCount={timelineCount}
+            />
+          ) : (
+            <>
+              <img
+                src={imageSrc}
+                alt={t("caseCard.thumbnailAlt", { title })}
+                loading="lazy"
+                decoding="async"
+                onError={handleImageError}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              {/* Legibility scrim for the status badge over a real photograph.
+                  The generative thumbnail supplies its own scrim. */}
+              {/* Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
+                  semantic equivalent is --foreground, which is the same near-black
+                  in light and correctly inverts in dark. `white` is not a palette
+                  name, so to-white/10 stays. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
+            </>
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">

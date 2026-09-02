@@ -985,6 +985,14 @@
   "caseCard": {
     "thumbnailAlt": "मुद्दाको थम्बनेल तस्बिर: {{title}}",
     "bigo": "बिगो",
+    "generativeThumbnail": {
+      "summary": "मुद्दाको सारांश चित्र: {{amount}}, {{accused}} अभियुक्त, {{events}} घटनाक्रम",
+      "amountKicker": "बिगो · आरोपित रकम",
+      "typeKicker": "मुद्दाको प्रकार",
+      "accused": "अभियुक्त",
+      "events": "घटनाक्रम",
+      "caseFallback": "मुद्दा"
+    },
     "status": {
       "ongoing": "चलिरहेको",
       "resolved": "समाधान भएको",

@@ -254,6 +254,9 @@ export interface Case {
   case_end_date: string | null; // ISO date format
   thumbnail_url?: string | null; // URL for case card thumbnail image
   banner_url?: string | null; // URL for wide banner image on case detail page
+  // Editor-uploaded bespoke hero image (tier 1 of the card-thumbnail ladder).
+  // Not served yet — typed optional so cards light up when the backend ships it.
+  hero_image_url?: string | null;
   entities: JawafEntity[]; // Unified entity relationships with type field
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   key_allegations: string[]; // List of key allegation statements
