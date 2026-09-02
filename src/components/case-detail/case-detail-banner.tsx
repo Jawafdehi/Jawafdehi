@@ -261,7 +261,31 @@ export function CaseDetailBanner({
               characters of the title. The old half-width layout never collided
               with it because the text started at the midpoint. Below `lg` the
               rail is hidden, so the padding is not needed there. */}
-          <div className="mx-auto flex min-h-64 w-full max-w-8xl flex-col justify-end px-6 pb-6 pt-28 sm:min-h-80 sm:px-10 sm:pb-8 sm:pt-40 lg:min-h-[420px] lg:pl-24 lg:pt-56">
+          {/* The floor is a FRACTION OF THE VIEWPORT WIDTH, not a pixel height.
+              The band is full-bleed, so a fixed height makes its aspect ratio a
+              function of the window: at 1440px a 420px floor is 3.4:1, and
+              because the image behind is object-cover, a 16:9 source then shows
+              52% of its height and a 4:3 source 38% — the wider the screen, the
+              more of the photograph is thrown away, which is the opposite of
+              what a hero should do.
+
+              Tying the floor to `vw` fixes the ratio instead of the height, so
+              the crop is bounded at every width: ~1.7:1 on a phone, ~2.1:1 on a
+              tablet, ~2.3:1 on a desktop. A 16:9 source keeps roughly three
+              quarters of its height there rather than half.
+
+              Capped at 680px so an ultra-wide monitor does not get a hero tall
+              enough to bury the बिगो and the case dates below the fold. The cap
+              does mean the ratio widens again past ~1550px, so a 4:3 source is
+              still cropped hard on a 2560px screen — the remedy for that is a
+              WIDER SOURCE, not a taller band: the 2.17:1 photograph on
+              local-hydropower-claim keeps 93% of its height at 1440 and 70% at
+              1920, where the 4:3 portrait keeps 56% and 42%.
+
+              Still a MIN height, so the original reason it exists holds: a long
+              Nepali title (four lines on a phone) pushes the band taller rather
+              than being clipped. */}
+          <div className="mx-auto flex min-h-[58vw] w-full max-w-8xl flex-col justify-end px-6 pb-6 pt-24 sm:min-h-[48vw] sm:px-10 sm:pb-8 sm:pt-32 lg:min-h-[min(44vw,680px)] lg:pl-24 lg:pt-40">
             <nav
               aria-label="breadcrumb"
               className={cn(
