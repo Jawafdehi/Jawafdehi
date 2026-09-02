@@ -137,13 +137,25 @@ export interface ArchiveSearchResponse {
   next_cursor: string | null;
   // A single suggested spelling for the query, or null when there is nothing to
   // suggest. The backend offers one on either of two conditions: the search
-  // returned nothing, OR it returned only fuzzy matches — meaning every
-  // spell-checkable token was itself a misspelling, so the hits have no
-  // exactly-matching anchor. A correctly spelled query that found real records
-  // never carries one.
+  // returned nothing, OR it returned only fuzzy matches — meaning no result
+  // matched the query as typed, so the hits have no exactly-matching anchor. A
+  // correctly spelled query that found real records never carries one.
   //
   // So it is NOT only an empty-state affordance: `?q=coruption` returns 199 real
   // records AND a suggestion of "corruption". Render it in both cases.
+  //
+  // EXPECT IT TO COME AND GO, and do not treat that as a bug. The second
+  // condition is judged from the returned page — the backend reads which of its
+  // two recall routes matched each hit — so it is only asked on the FIRST page of
+  // a RELEVANCE-sorted search, the one place where "the exact matches come first"
+  // makes a page speak for the whole result set. Page 2, or a switch to
+  // `newest`/`oldest`/`title`/`featured`, therefore returns null for a query that
+  // carried a suggestion on page 1. That is deliberate: the backend declines to
+  // argue with results it cannot verify. The first condition (no results at all)
+  // reads the total, so it is unaffected by page or sort.
+  //
+  // This matches how the page requests search anyway — a typed query defaults to
+  // `relevance` (see `parseParams`) — so the common path is unaffected.
   //
   // Never apply it automatically. Silently rewriting a search for a person's name
   // in an accountability archive would show the reader records about someone they

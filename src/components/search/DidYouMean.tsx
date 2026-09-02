@@ -6,11 +6,17 @@ import { useTranslation } from "react-i18next";
  *
  * Deliberately NOT part of the empty state. The backend offers a suggestion on
  * either of design §11's two triggers: the search returned nothing, OR it
- * returned only fuzzy matches (every spell-checkable token was itself a
- * misspelling, so the hits have no exactly-matching anchor). The second case is
- * the common one now that bounded fuzzy matching ships — `?q=coruption` finds
- * 199 real records AND suggests "corruption" — so a banner that only rendered
- * when there were no results would stay invisible almost always.
+ * returned only fuzzy matches (no result matched the query as typed, so the hits
+ * have no exactly-matching anchor). The second case is the common one now that
+ * bounded fuzzy matching ships — `?q=coruption` finds 199 real records AND
+ * suggests "corruption" — so a banner that only rendered when there were no
+ * results would stay invisible almost always.
+ *
+ * That second trigger is judged from the RETURNED PAGE, so the API only offers it
+ * on the first page of a relevance-sorted search. Paging on, or re-sorting, drops
+ * the field and this unmounts — deliberate, not a glitch to paper over. Holding a
+ * stale suggestion across a page the backend declined to vouch for is precisely
+ * what the gating exists to prevent. See `ArchiveSearchResponse.did_you_mean`.
  *
  * The suggestion is an OFFER, never applied for the reader. Silently rewriting a
  * search for a person's name in an accountability archive would show records
