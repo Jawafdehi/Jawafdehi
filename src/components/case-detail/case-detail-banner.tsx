@@ -222,7 +222,13 @@ export function CaseDetailBanner({
           // element on this page: fetch it eagerly and at high priority rather
           // than letting it queue behind the rest.
           loading="eager"
-          fetchPriority="high"
+          // Lowercase, via a spread. React only learned the camelCase
+          // `fetchPriority` prop in 19; on 18 it warns "React does not
+          // recognize the fetchPriority prop" and DROPS the attribute, so the
+          // hint above never reached the DOM at all. React does pass an unknown
+          // all-lowercase attribute straight through. Collapse this back to
+          // `fetchPriority="high"` when the app is on React 19.
+          {...{ fetchpriority: "high" }}
           decoding="async"
           onError={() => setImageIndex((i) => i + 1)}
           // No width/height attributes: the box is reserved by the content
