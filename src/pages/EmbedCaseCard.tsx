@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
 import { formatCaseDateRange } from "@/utils/date";
-import { CASE_PLACEHOLDER_IMAGE, caseImageSources } from "@/lib/case-images";
+import { useCaseImage } from "@/lib/use-case-image";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 
@@ -59,34 +58,21 @@ const EmbedCaseCard = () => {
   // readers, and the backend's own oEmbed payload already serves a rendition,
   // so reading only the free-text URLs here left the two halves disagreeing.
   //
+  // includePlaceholder: false because this card has its OWN no-image treatment
+  // below — a short navy band rather than the shared scales illustration — so
+  // `src` goes undefined once every candidate has failed and the band renders.
+  //
   // Declared above the early returns below because it holds state: hooks cannot
   // be called conditionally.
-  const { candidates, srcsetFor } = caseImageSources(
+  const {
+    src: thumbnailUrl,
+    srcSet,
+    onError: advanceImage,
+  } = useCaseImage(
     caseData?.thumbnail,
-    caseData?.thumbnail_url,
-    caseData?.banner_url,
+    [caseData?.thumbnail_url, caseData?.banner_url],
+    { includePlaceholder: false },
   );
-  // The embed has its own no-image treatment — a short navy band rather than
-  // the scales illustration — so the shared placeholder that always ends the
-  // candidate list is dropped here rather than rendered.
-  const embedCandidates = candidates.filter(
-    (url) => url !== CASE_PLACEHOLDER_IMAGE,
-  );
-  const [imageIndex, setImageIndex] = useState(0);
-
-  // Same reset rule as CaseCard: keyed on the candidate LIST, so a refetch that
-  // yields the same urls does not discard an error-advance and flip the card
-  // back to a source that just failed.
-  const candidateKey = embedCandidates.join("|");
-  useEffect(() => {
-    setImageIndex(0);
-  }, [candidateKey]);
-
-  // Undefined once every candidate has failed, which falls through to the
-  // no-image band. Walking the list matters here for the same reason it does on
-  // the card: a case whose thumbnail_url points at an article page should still
-  // get to try its banner before the embed gives up on showing anything.
-  const thumbnailUrl = embedCandidates[imageIndex];
 
   if (isLoading) {
     return (
@@ -156,14 +142,14 @@ const EmbedCaseCard = () => {
           <div className="relative h-36 overflow-hidden bg-muted">
             <img
               src={thumbnailUrl}
-              srcSet={srcsetFor(thumbnailUrl)}
+              srcSet={srcSet}
               // The embed renders inside someone else's page at whatever width
               // they gave the iframe; 600px covers the common desktop card.
               sizes="(min-width: 640px) 600px, 100vw"
               alt={caseData.title}
               className="h-full w-full object-cover"
               loading="lazy"
-              onError={() => setImageIndex((i) => i + 1)}
+              onError={advanceImage}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             <div className="absolute left-3 top-3">

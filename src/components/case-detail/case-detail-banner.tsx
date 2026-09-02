@@ -6,11 +6,8 @@ import { Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
-import {
-  CASE_PLACEHOLDER_DARK_CLASS,
-  CASE_PLACEHOLDER_IMAGE,
-  caseImageSources,
-} from "@/lib/case-images";
+import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
+import { useCaseImage } from "@/lib/use-case-image";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
@@ -67,17 +64,6 @@ function formatCourtCaseRef(courtCase: string, language: "en" | "ne") {
   };
 }
 
-// The hero image in preference order: the uploaded rendition ladder first, then
-// the deprecated banner/thumbnail URLs, then the placeholder. Shared with the
-// card via caseImageSources so the two surfaces cannot drift.
-function getHeroSources(caseData: CaseDetail) {
-  return caseImageSources(
-    caseData.banner,
-    caseData.banner_url,
-    caseData.thumbnail_url,
-  );
-}
-
 export function CaseDetailBanner({
   caseData,
   resolvedEntities,
@@ -99,24 +85,17 @@ export function CaseDetailBanner({
         ? "text-2xl leading-snug sm:text-3xl md:text-3xl"
         : "text-2xl sm:text-3xl md:text-4xl";
 
-  // Walk the candidate list on load error rather than jumping straight to the
-  // placeholder: a case whose banner_url points at an article page should still
-  // get to try its thumbnail before giving up.
-  const { candidates, srcsetFor } = getHeroSources(caseData);
-  const [imageIndex, setImageIndex] = useState(0);
-
-  // Reset when the candidates change (navigating between cases reuses this
-  // component), keyed on the list so a prop change yielding the same list does
-  // not discard an error-advance. Same reasoning as CaseCard.
-  const candidateKey = candidates.join("|");
-  useEffect(() => {
-    setImageIndex(0);
-  }, [candidateKey]);
-
-  // Clamped so that if the placeholder itself fails, advancing past it does not
-  // wrap back to a URL already known to fail.
-  const imageSrc = candidates[Math.min(imageIndex, candidates.length - 1)];
-  const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
+  // The hero image in preference order — the uploaded rendition ladder first,
+  // then the deprecated banner/thumbnail URLs, then the placeholder — walking
+  // the list on load error rather than jumping straight to the placeholder: a
+  // case whose banner_url points at an article page should still get to try its
+  // thumbnail before giving up. Shared with the card so the two cannot drift.
+  const {
+    src: imageSrc,
+    srcSet,
+    isPlaceholder,
+    onError: advanceImage,
+  } = useCaseImage(caseData.banner, [caseData.banner_url, caseData.thumbnail_url]);
   // A real photograph gets a scrim and white text; the placeholder gets neither.
   const onDarkBackdrop = !isPlaceholder;
   const crumbHover = onDarkBackdrop ? "hover:text-white" : "hover:text-foreground";
@@ -210,7 +189,7 @@ export function CaseDetailBanner({
       <div className="relative w-full overflow-hidden">
         <img
           src={imageSrc}
-          srcSet={srcsetFor(imageSrc)}
+          srcSet={srcSet}
           // Full-bleed at every breakpoint, so the browser should pick by
           // viewport width alone.
           sizes="100vw"
@@ -230,7 +209,7 @@ export function CaseDetailBanner({
           // `fetchPriority="high"` when the app is on React 19.
           {...{ fetchpriority: "high" }}
           decoding="async"
-          onError={() => setImageIndex((i) => i + 1)}
+          onError={advanceImage}
           // No width/height attributes: the box is reserved by the content
           // column's min-height below, and with both dimensions set in CSS the
           // intrinsic aspect-ratio hint would do nothing anyway.

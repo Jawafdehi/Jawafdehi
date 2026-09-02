@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,11 +7,8 @@ import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
-import {
-  CASE_PLACEHOLDER_DARK_CLASS,
-  CASE_PLACEHOLDER_IMAGE,
-  caseImageSources,
-} from "@/lib/case-images";
+import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
+import { useCaseImage } from "@/lib/use-case-image";
 import type { CaseImage } from "@/types/jds";
 import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
@@ -94,36 +90,14 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   // deprecated thumbnail and banner URLs, then the shared placeholder
   // illustration the case detail banner also falls back to. Cases sometimes
   // carry a non-image thumbnail URL (an article/page link), so a load error must
-  // fall through the rest before landing on the placeholder.
-  const { candidates: imageCandidates, srcsetFor } = caseImageSources(
-    image,
-    thumbnailUrl,
-    bannerUrl,
-  );
-  const [imageIndex, setImageIndex] = useState(0);
-
-  // React reuses a card instance when a list re-sorts or refetches, so another
-  // case's images can arrive on the component that already advanced past a
-  // broken one. Without this the index survives and the card opens on a later
-  // candidate — often the placeholder — instead of the new thumbnail.
-  //
-  // Keyed on the candidate list, not the raw props: a prop change that yields
-  // the same list (whitespace, or a duplicate collapsing) must NOT discard an
-  // error-advance, or the card would swing back to a URL known to fail.
-  const candidateKey = imageCandidates.join("|");
-  useEffect(() => {
-    setImageIndex(0);
-  }, [candidateKey]);
-
-  // Clamped, not `?? placeholder`: if the placeholder itself fails to load,
-  // advancing past it must not reset the card to a real URL that already failed.
-  const imageSrc = imageCandidates[Math.min(imageIndex, imageCandidates.length - 1)];
-  const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
-
-  // Handle image load errors by advancing to the next candidate.
-  const handleImageError = () => {
-    setImageIndex((i) => i + 1);
-  };
+  // fall through the rest before landing on the placeholder — useCaseImage owns
+  // that walk, shared with the hero and the oEmbed card.
+  const {
+    src: imageSrc,
+    srcSet,
+    isPlaceholder,
+    onError: handleImageError,
+  } = useCaseImage(image, [thumbnailUrl, bannerUrl]);
 
   const statusLabel = t(getCaseStatusLabelKey(status));
 
@@ -150,7 +124,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
             src={imageSrc}
             // Only the uploaded ladder has a srcset, and it goes away if a load
             // error advances past it — see CaseImageSources.srcsetFor.
-            srcSet={srcsetFor(imageSrc)}
+            srcSet={srcSet}
             // The card box is a third of the row in list view and a grid column
             // otherwise; ~400px covers both, and the browser picks up from there.
             sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
