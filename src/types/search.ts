@@ -2,6 +2,8 @@
 // One ranked, typed, bilingual result set across entities, materials, court
 // cases, and PUBLISHED Jawafdehi cases. Served by GET /api/search/.
 
+import type { CaseImage } from "./jds";
+
 // The four indexed result domains. "all" is a UI-only sentinel (sent as "no type
 // filter"); it is never a value the backend returns on a result.
 export type ArchiveSearchResultType =
@@ -83,6 +85,13 @@ export interface CaseSearchCard {
   case_start_date: string | null;
   case_end_date: string | null;
   bigo: number | null;
+  /** Card ladder, denormalized into the index doc at reindex time.
+   *
+   * Optional, not just nullable: docs indexed before this field existed carry
+   * no `thumbnail` key at all, and they stay that way until their next reindex.
+   */
+  thumbnail?: CaseImage | null;
+  /** DEPRECATED bare URLs; the fallback for cases with no uploaded image. */
   thumbnail_url: string | null;
   banner_url: string | null;
   timeline: Array<Record<string, unknown>>;

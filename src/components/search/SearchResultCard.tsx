@@ -158,6 +158,7 @@ function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult
     tags: card.tags || [],
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
+    image: card.thumbnail ?? null,
     thumbnailUrl: card.thumbnail_url || undefined,
     bannerUrl: card.banner_url || undefined,
     bigo: card.bigo,
@@ -191,6 +192,7 @@ function caseCardPropsFromDetail(
     tags: detail.tags || [],
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
+    image: detail.thumbnail ?? null,
     thumbnailUrl: detail.thumbnail_url || undefined,
     bannerUrl: detail.banner_url || undefined,
     // Kept in step with the indexed-card path above: the two mappings feed the

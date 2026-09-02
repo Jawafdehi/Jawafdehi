@@ -165,3 +165,64 @@ describe("CaseCard image fallback", () => {
     expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
   });
 });
+
+describe("CaseCard uploaded image", () => {
+  const uploaded = {
+    src: "https://s3.jawafdehi.org/case_uploads/abc.width-1200.format-webp.webp",
+    srcset:
+      "https://s3.jawafdehi.org/case_uploads/abc.width-400.format-webp.webp 400w, " +
+      "https://s3.jawafdehi.org/case_uploads/abc.width-1200.format-webp.webp 1200w",
+    width: 1200,
+    height: 800,
+    alt: "",
+  };
+
+  it("renders the rendition ladder with a sizes hint", () => {
+    const { image } = renderCard({ image: uploaded });
+
+    expect(image.getAttribute("src")).toBe(uploaded.src);
+    expect(image.getAttribute("srcset")).toBe(uploaded.srcset);
+    // Without `sizes` the browser assumes 100vw and picks the widest tier on
+    // every card, which is most of what the ladder exists to avoid.
+    expect(image.getAttribute("sizes")).toBeTruthy();
+    // No width/height: CSS sizes this image in both dimensions, so the
+    // attributes' only effect (the UA aspect-ratio hint) would not apply, and
+    // the fixed-height container already reserves the box.
+    expect(image.getAttribute("width")).toBeNull();
+    expect(image.getAttribute("height")).toBeNull();
+  });
+
+  it("prefers the uploaded image over a legacy URL on the same case", () => {
+    const { image } = renderCard({
+      image: uploaded,
+      thumbnailUrl: "https://cdn.example.org/legacy.jpg",
+    });
+
+    expect(image.getAttribute("src")).toBe(uploaded.src);
+  });
+
+  it("drops the srcset when a load error falls back past the ladder", () => {
+    const { image } = renderCard({
+      image: uploaded,
+      thumbnailUrl: "https://cdn.example.org/legacy.jpg",
+    });
+
+    fireEvent.error(image);
+
+    // The legacy URL has no renditions. Leaving the old srcset attached would
+    // have the browser keep fetching the tier that just failed and never reach
+    // the fallback at all.
+    expect(image.getAttribute("src")).toBe("https://cdn.example.org/legacy.jpg");
+    expect(image.getAttribute("srcset")).toBeNull();
+  });
+
+  it("falls through to the placeholder when the uploaded image fails and nothing else is set", () => {
+    const { image } = renderCard({ image: uploaded });
+
+    fireEvent.error(image);
+
+    expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
+    expect(image.getAttribute("srcset")).toBeNull();
+    expect(image.getAttribute("alt")).toBe("");
+  });
+});

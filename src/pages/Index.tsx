@@ -77,6 +77,7 @@ function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
     entityNames: names,
     location: locations.join(", ") || unknownLocation,
     status: mapCaseStatus(card?.status || result.extra.case_status),
+    image: card?.thumbnail ?? null,
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
     tags: card?.tags || [],
