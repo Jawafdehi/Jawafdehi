@@ -43,6 +43,12 @@ const DIR = arg("dir", "dist/client");
 // and the way there is more dynamic imports, not a bigger number here. When you
 // take bytes out, ratchet this DOWN in the same commit — a limit left slack after
 // a win silently re-permits the regression you just fixed.
+//
+// 2026-08: briefly raised 660 → 750 for the homepage redesign, then reverted
+// after measurement showed the redesign adds only ~2 KB gzip to the initial
+// payload (review feedback on PR #359) — the headroom was never needed. The
+// lazy-loading rules above still apply unchanged — three.js stays fully
+// deferred.
 const MAX_INITIAL_JS_GZIP = 660_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
@@ -62,6 +68,15 @@ const MUST_BE_DEFERRED = [
       "the initial payload because ResearchCorruption (pre-rendered, therefore " +
       "eagerly imported) imported the charts directly. Load them through " +
       "lazyChart() in src/components/charts/lazy.tsx.",
+  },
+  {
+    marker: "THREE.WebGLRenderer",
+    why:
+      "three.js + @react-three/fiber are ~250 KB gzip and the homepage hero " +
+      "scene is the only consumer. The initial payload sits ~1 KB under the " +
+      "limit, so a single static import of the 3D stack blows the budget. " +
+      "Load it only through the React.lazy() dynamic import in " +
+      "src/components/home/hero-scene-gate.tsx.",
   },
 ];
 

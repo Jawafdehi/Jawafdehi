@@ -132,7 +132,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
 
   return (
     <Card
-      className={`group relative flex overflow-hidden rounded-3xl bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] cursor-pointer ${cardLayout}`}
+      className={`group relative flex overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-within:border-accent/40 cursor-pointer ${cardLayout}`}
       onClick={handleCardClick}
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
@@ -181,7 +181,11 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
               {caseSlug ? (
                 <Link
                   to={`/case/${caseSlug}`}
-                  className="rounded-sm outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  // Gradient-underline trick: a 2px accent line drawn by
+                  // animating background-size, so it wraps correctly across
+                  // the clamped two lines (a pseudo-element underline would
+                  // only sit under the last line's box).
+                  className="rounded-sm bg-gradient-to-r from-accent to-accent bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 outline-none transition-[background-size,color] duration-300 hover:text-primary group-hover:bg-[length:100%_2px] group-focus-within:bg-[length:100%_2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {title}
