@@ -165,3 +165,61 @@ describe("CaseCard image fallback", () => {
     expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
   });
 });
+
+describe("CaseCard uploaded image", () => {
+  const uploaded = {
+    src: "https://s3.jawafdehi.org/case_uploads/abc.width-1200.format-webp.webp",
+    srcset:
+      "https://s3.jawafdehi.org/case_uploads/abc.width-400.format-webp.webp 400w, " +
+      "https://s3.jawafdehi.org/case_uploads/abc.width-1200.format-webp.webp 1200w",
+    width: 1200,
+    height: 800,
+    alt: "",
+  };
+
+  it("renders the rendition ladder with a sizes hint and intrinsic dimensions", () => {
+    const { image } = renderCard({ image: uploaded });
+
+    expect(image.getAttribute("src")).toBe(uploaded.src);
+    expect(image.getAttribute("srcset")).toBe(uploaded.srcset);
+    expect(image.getAttribute("sizes")).toBeTruthy();
+    // Reserves the box before the bytes land; without these a case list
+    // reflows as each card's image arrives.
+    expect(image.getAttribute("width")).toBe("1200");
+    expect(image.getAttribute("height")).toBe("800");
+  });
+
+  it("prefers the uploaded image over a legacy URL on the same case", () => {
+    const { image } = renderCard({
+      image: uploaded,
+      thumbnailUrl: "https://cdn.example.org/legacy.jpg",
+    });
+
+    expect(image.getAttribute("src")).toBe(uploaded.src);
+  });
+
+  it("drops the srcset when a load error falls back past the ladder", () => {
+    const { image } = renderCard({
+      image: uploaded,
+      thumbnailUrl: "https://cdn.example.org/legacy.jpg",
+    });
+
+    fireEvent.error(image);
+
+    // The legacy URL has no renditions. Leaving the old srcset attached would
+    // have the browser keep fetching the tier that just failed and never reach
+    // the fallback at all.
+    expect(image.getAttribute("src")).toBe("https://cdn.example.org/legacy.jpg");
+    expect(image.getAttribute("srcset")).toBeNull();
+  });
+
+  it("falls through to the placeholder when the uploaded image fails and nothing else is set", () => {
+    const { image } = renderCard({ image: uploaded });
+
+    fireEvent.error(image);
+
+    expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
+    expect(image.getAttribute("srcset")).toBeNull();
+    expect(image.getAttribute("alt")).toBe("");
+  });
+});

@@ -9,7 +9,7 @@ import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
 import {
   CASE_PLACEHOLDER_DARK_CLASS,
   CASE_PLACEHOLDER_IMAGE,
-  isValidCaseImage,
+  caseImageSources,
 } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
@@ -67,16 +67,15 @@ function formatCourtCaseRef(courtCase: string, language: "en" | "ne") {
   };
 }
 
-function getCaseBannerSrc(caseData: CaseDetail) {
-  if (isValidCaseImage(caseData.banner_url)) {
-    return caseData.banner_url!.trim();
-  }
-
-  if (isValidCaseImage(caseData.thumbnail_url)) {
-    return caseData.thumbnail_url!.trim();
-  }
-
-  return CASE_PLACEHOLDER_IMAGE;
+// The hero image in preference order: the uploaded rendition ladder first, then
+// the deprecated banner/thumbnail URLs, then the placeholder. Shared with the
+// card via caseImageSources so the two surfaces cannot drift.
+function getHeroSources(caseData: CaseDetail) {
+  return caseImageSources(
+    caseData.banner,
+    caseData.banner_url,
+    caseData.thumbnail_url,
+  );
 }
 
 export function CaseDetailBanner({
@@ -100,12 +99,27 @@ export function CaseDetailBanner({
         ? "text-2xl leading-snug sm:text-3xl md:text-3xl"
         : "text-2xl sm:text-3xl md:text-4xl";
 
-  const bannerSrc = getCaseBannerSrc(caseData);
-  const [imageSrc, setImageSrc] = useState(bannerSrc);
+  // Walk the candidate list on load error rather than jumping straight to the
+  // placeholder: a case whose banner_url points at an article page should still
+  // get to try its thumbnail before giving up.
+  const { candidates, srcsetFor, intrinsic } = getHeroSources(caseData);
+  const [imageIndex, setImageIndex] = useState(0);
 
+  // Reset when the candidates change (navigating between cases reuses this
+  // component), keyed on the list so a prop change yielding the same list does
+  // not discard an error-advance. Same reasoning as CaseCard.
+  const candidateKey = candidates.join("|");
   useEffect(() => {
-    setImageSrc(bannerSrc);
-  }, [bannerSrc]);
+    setImageIndex(0);
+  }, [candidateKey]);
+
+  // Clamped so that if the placeholder itself fails, advancing past it does not
+  // wrap back to a URL already known to fail.
+  const imageSrc = candidates[Math.min(imageIndex, candidates.length - 1)];
+  const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
+  // A real photograph gets a scrim and white text; the placeholder gets neither.
+  const onDarkBackdrop = !isPlaceholder;
+  const crumbHover = onDarkBackdrop ? "hover:text-white" : "hover:text-foreground";
 
   // Derive the chip from state + end date so a concluded case (one with a
   // `case_end_date`) no longer reads "Ongoing".
@@ -175,62 +189,121 @@ export function CaseDetailBanner({
 
   return (
     <section className="w-full text-foreground no-print">
-      <div className="mx-auto w-full max-w-8xl px-0 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2">
-          <img
-            src={imageSrc}
-            alt={title}
-            onError={() => {
-              if (imageSrc !== CASE_PLACEHOLDER_IMAGE) {
-                setImageSrc(CASE_PLACEHOLDER_IMAGE);
-              }
-            }}
-            className={cn(
-              "order-2 h-52 w-full object-cover object-top sm:h-[440px] lg:order-none lg:h-[520px] xl:h-[560px]",
-              // This branch hand-wrote the invert/hue-rotate treatment against a
-              // PLACEHOLDER_IMAGE constant that never existed here. Main landed
-              // the same idea in #299 as two shared exports, with the rationale
-              // recorded at the constant, so use those rather than a local copy.
-              imageSrc === CASE_PLACEHOLDER_IMAGE && CASE_PLACEHOLDER_DARK_CLASS,
-            )}
+      {/* Full-bleed hero. The image spans the viewport and the breadcrumb and
+          title sit ON it, bottom-aligned, over a scrim — rather than the old
+          half-width image with a navy panel pulled across it by lg:-ml-20. One
+          wide image reads as a photograph of the case; a half-column one read as
+          a decorative sidebar, and the negative margin meant the crop had to be
+          chosen around the panel that covered its left edge.
+
+          Heights are shorter than the old 560px because the image no longer has
+          to fill a column beside the metadata: it is a band above it.
+
+          The band's height is driven by its CONTENT with a per-breakpoint floor,
+          not fixed. Case titles here are long Nepali sentences — the oxygen-plant
+          case wraps to four lines on a phone — and against a fixed 256px band
+          that text plus the breadcrumb covered all but a sliver of the
+          photograph. A min-height keeps the intended proportions for a short
+          title and lets a long one push the band taller instead of burying the
+          image. The image is the background layer so it fills whatever height
+          results. */}
+      <div className="relative w-full overflow-hidden">
+        <img
+          src={imageSrc}
+          srcSet={srcsetFor(imageSrc)}
+          // Full-bleed at every breakpoint, so the browser should pick by
+          // viewport width alone.
+          sizes="100vw"
+          // The placeholder illustration says nothing about this case, so it
+          // stays out of the accessibility tree instead of announcing a hero
+          // image that does not exist. Same rule as CaseCard.
+          alt={isPlaceholder ? "" : title}
+          // The hero is the largest thing above the fold, so it is the LCP
+          // element on this page: fetch it eagerly and at high priority rather
+          // than letting it queue behind the rest.
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          onError={() => setImageIndex((i) => i + 1)}
+          // No width/height attributes: the box is reserved by the content
+          // column's min-height below, and with both dimensions set in CSS the
+          // intrinsic aspect-ratio hint would do nothing anyway.
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover object-center",
+            isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
+          )}
+        />
+
+        {/* Scrim. Opaque at the bottom where the title sits and clear at the
+            top, so the photograph is still legible as a photograph. Skipped on
+            the placeholder, which is a near-flat light panel that needs no
+            help — and which dark mode has already inverted. */}
+        {!isPlaceholder && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/45 to-transparent"
           />
+        )}
 
-          {/* relative z-10: the image above carries a CSS filter in dark mode,
-              which gives it its own stacking context. Without an explicit layer
-              here it would paint over this panel and clip the 80px that
-              lg:-ml-20 pulls across it. */}
-          <div className="relative z-10 order-1 flex flex-col justify-center py-0 lg:order-none lg:py-10">
-            <div className="bg-primary-surface px-6 py-5 text-white lg:-ml-20 lg:px-10">
-              <nav
-                aria-label="breadcrumb"
-                className="mb-3 flex min-w-0 items-center gap-2 text-xs font-medium text-white/70"
-              >
-                <Link
-                  to="/"
-                  className="shrink-0 transition-colors hover:text-white"
-                >
-                  {homeLabel || "jawafdehi.org"}
-                </Link>
+        <div className="relative">
+          {/* pt-* is generous so a short title still sits low in the band rather
+              than floating mid-image.
 
-                <span className="shrink-0 text-white/40">/</span>
+              lg:pl-24 clears the FloatingShareSidebar, which is `fixed left-4`
+              and vertically centred, so on a short viewport its rail lands over
+              the bottom of this hero and clipped the breadcrumb and the first
+              characters of the title. The old half-width layout never collided
+              with it because the text started at the midpoint. Below `lg` the
+              rail is hidden, so the padding is not needed there. */}
+          <div className="mx-auto flex min-h-64 w-full max-w-8xl flex-col justify-end px-6 pb-6 pt-28 sm:min-h-80 sm:px-10 sm:pb-8 sm:pt-40 lg:min-h-[420px] lg:pl-24 lg:pt-56">
+            <nav
+              aria-label="breadcrumb"
+              className={cn(
+                "mb-3 flex min-w-0 items-center gap-2 text-xs font-medium",
+                onDarkBackdrop
+                  ? "text-white/70 drop-shadow"
+                  : "text-muted-foreground",
+              )}
+            >
+              <Link to="/" className={cn("shrink-0 transition-colors", crumbHover)}>
+                {homeLabel || "jawafdehi.org"}
+              </Link>
 
-                <Link
-                  to="/cases"
-                  className="shrink-0 transition-colors hover:text-white"
-                >
-                  {casesLabel || "case"}
-                </Link>
+              <span className="shrink-0 opacity-50">/</span>
 
-                <span className="shrink-0 text-white/40">/</span>
+              <Link to="/cases" className={cn("shrink-0 transition-colors", crumbHover)}>
+                {casesLabel || "case"}
+              </Link>
 
-                <span className="min-w-0 truncate text-white/80">{breadcrumbCase}</span>
-              </nav>
+              <span className="shrink-0 opacity-50">/</span>
 
-              <h1 className={cn("max-w-4xl break-words font-bold tracking-tight text-bg", titleSizeClass)}>
-                {title}
-              </h1>
-            </div>
+              <span className="min-w-0 truncate opacity-90">{breadcrumbCase}</span>
+            </nav>
 
+            <h1
+              className={cn(
+                "max-w-4xl break-words font-bold tracking-tight",
+                // On a photograph the text is white over the scrim. On the
+                // placeholder there IS no scrim (it is a near-flat light panel
+                // that a gradient would only muddy), so white-on-white would be
+                // unreadable — use the normal foreground, which inverts with the
+                // placeholder in dark mode.
+                onDarkBackdrop
+                  ? "text-white drop-shadow-lg"
+                  : "text-foreground",
+                titleSizeClass,
+              )}
+            >
+              {title}
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Metadata below the hero, in the content column. */}
+      <div className="mx-auto w-full max-w-8xl px-0 sm:px-6">
+        <div className="grid grid-cols-1">
+          <div className="relative z-10 flex flex-col justify-center">
             <div className="px-6 py-6 text-sm lg:px-10 lg:py-7">
               <div className="mb-5 flex flex-wrap items-center gap-2">
                 <CaseStatusBadge status={effectiveStatus}>

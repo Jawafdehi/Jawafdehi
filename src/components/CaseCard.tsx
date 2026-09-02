@@ -11,8 +11,9 @@ import { entityPath } from "@/lib/entity-links";
 import {
   CASE_PLACEHOLDER_DARK_CLASS,
   CASE_PLACEHOLDER_IMAGE,
-  caseImageCandidates,
+  caseImageSources,
 } from "@/lib/case-images";
+import type { CaseImage } from "@/types/jds";
 import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 
@@ -29,8 +30,11 @@ interface CaseCardProps {
   tags?: string[];
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
-  thumbnailUrl?: string; //Thumbnail image
-  bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
+  // The card image as a responsive ladder. Preferred over the two URL props
+  // below, which are the fallback for cases that predate uploaded images.
+  image?: CaseImage | null;
+  thumbnailUrl?: string; // DEPRECATED bare URL
+  bannerUrl?: string; // DEPRECATED bare URL, tried when the thumbnail fails
   // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
@@ -74,7 +78,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -86,11 +90,16 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Candidate images, best first: thumbnail, then banner, then the shared
-  // placeholder illustration the case detail banner also falls back to. Cases
-  // sometimes carry a non-image thumbnail URL (an article/page link), so a load
-  // error must fall through to the banner before landing on the placeholder.
-  const imageCandidates = caseImageCandidates(thumbnailUrl, bannerUrl);
+  // Candidate images, best first: the uploaded rendition ladder, then the
+  // deprecated thumbnail and banner URLs, then the shared placeholder
+  // illustration the case detail banner also falls back to. Cases sometimes
+  // carry a non-image thumbnail URL (an article/page link), so a load error must
+  // fall through the rest before landing on the placeholder.
+  const { candidates: imageCandidates, srcsetFor, intrinsic } = caseImageSources(
+    image,
+    thumbnailUrl,
+    bannerUrl,
+  );
   const [imageIndex, setImageIndex] = useState(0);
 
   // React reuses a card instance when a list re-sorts or refetches, so another
@@ -139,6 +148,14 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
         <div className={`relative overflow-hidden ${imageContainerClass}`}>
           <img
             src={imageSrc}
+            // Only the uploaded ladder has a srcset, and it goes away if a load
+            // error advances past it — see CaseImageSources.srcsetFor.
+            srcSet={srcsetFor(imageSrc)}
+            // The card box is a third of the row in list view and a grid column
+            // otherwise; ~400px covers both, and the browser picks up from there.
+            sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+            width={intrinsic?.width}
+            height={intrinsic?.height}
             // The placeholder illustration carries no information about this
             // case, so it stays out of the accessibility tree entirely rather
             // than announcing a thumbnail that does not exist.
