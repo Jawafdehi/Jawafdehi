@@ -8,12 +8,16 @@
 //   1. mounted        — never during SSR/prerender (hydration stays identical)
 //   2. WebGL support  — probe a throwaway canvas; no context, no scene
 //   3. reduced motion — prefers-reduced-motion keeps the static backdrop
-//   4. idle           — requestIdleCallback after load, so the 3D chunk never
+//   4. affordability  — Data Saver / 2g-3g / low-memory devices never download
+//                       the ~237 KB chunk at all (hero-connection-gate.ts)
+//   5. idle           — requestIdleCallback after load, so the 3D chunk never
 //                       competes with LCP for bandwidth or main-thread time
 //
 // When any gate fails the component renders nothing and the existing static
 // map backdrop simply remains — that IS the fallback.
 import { lazy, Suspense, useEffect, useState } from "react";
+
+import { heroSceneAffordable, readConnectionSignals } from "./hero-connection-gate";
 
 const HeroScene = lazy(() => import("./hero-scene"));
 
@@ -51,6 +55,7 @@ export function HeroSceneGate({
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!webglSupported()) return;
+    if (!heroSceneAffordable(readConnectionSignals())) return;
 
     let cancelled = false;
     const arm = () => {
