@@ -279,8 +279,15 @@ function HeroStage({ scrollRef }: Readonly<{ scrollRef: { current: number } }>) 
 
 function HeroStatBand({ stats }: Readonly<{ stats: HeroStat[] }>) {
   return (
-    <div className="relative border-t border-primary-foreground/10 bg-primary">
-      <div className="layout-container grid grid-cols-2 gap-x-4 gap-y-7 py-8 md:grid-cols-4 md:py-10">
+    // No divider above: both the stage and this band are bg-primary, and the
+    // map backdrop + numbers should read as one continuous surface — spacing
+    // does the separating (PR #359 visual review, item 3).
+    <div className="relative bg-primary">
+      {/* max-w-4xl = 56rem = the hero title's measure (--font-home-hero-measure-md),
+          so the band aligns with the headline column instead of spreading
+          across the full layout container (item 4). */}
+      <div className="layout-container">
+        <div className="mx-auto grid w-full max-w-4xl grid-cols-2 gap-x-4 gap-y-7 pb-14 pt-6 md:grid-cols-4 md:pb-16 md:pt-8">
         {stats.map(({ value, label, href, highlight }) => {
           const content = (
             <>
@@ -297,7 +304,10 @@ function HeroStatBand({ stats }: Readonly<{ stats: HeroStat[] }>) {
                 <HeroStatValue value={value} />
               </p>
 
-              <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-primary-foreground/60 transition-colors group-hover:text-primary-foreground/85">
+              {/* Sentence case, no letterspacing: uppercase+tracking got lost
+                  under the figures and visibly split Devanagari matras in the
+                  Nepali locale (PR #359 visual review, items 1-2). */}
+              <p className="mt-1.5 text-sm font-semibold text-primary-foreground/75 transition-colors group-hover:text-primary-foreground/90">
                 {label}
               </p>
             </>
@@ -317,6 +327,7 @@ function HeroStatBand({ stats }: Readonly<{ stats: HeroStat[] }>) {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

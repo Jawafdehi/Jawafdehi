@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, MapPin, User } from "lucide-react";
+import { MapPin, User } from "lucide-react";
 
 import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
@@ -150,18 +150,18 @@ export function FeaturedCaseSpotlight({
         )}
 
         <div className="mt-auto pt-7">
+          {/* Design-system primary variant, same as CaseCard. No ArrowRight
+              icon: common.viewDetails already ends with an arrow in both
+              locales (PR #359 visual review, item 6). */}
           <Button
             asChild={Boolean(caseSlug)}
             disabled={!caseSlug}
-            className="rounded-2xl bg-accent px-6 font-bold text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90"
+            variant="primary"
+            className="rounded-2xl px-6"
           >
             {caseSlug ? (
               <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>
                 {t("common.viewDetails")}
-                <ArrowRight
-                  className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-focus-within:translate-x-1"
-                  aria-hidden="true"
-                />
               </Link>
             ) : (
               <span>{t("common.viewDetails")}</span>
@@ -170,7 +170,10 @@ export function FeaturedCaseSpotlight({
         </div>
       </div>
 
-      <div className="relative min-h-[220px] md:min-h-0">
+      {/* overflow-hidden: the image scales on hover, and without clipping the
+          enlarged edge leaks past the seam onto the navy panel outside the
+          blending gradient (PR #359 visual review, item 7). */}
+      <div className="relative min-h-[220px] overflow-hidden md:min-h-0">
         <img
           src={imageSrc}
           alt={isPlaceholder ? "" : t("caseCard.thumbnailAlt", { title })}

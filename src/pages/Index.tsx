@@ -193,20 +193,16 @@ const Index = () => {
             but external links to jawafdehi.org/#recent-cases would break. */}
         <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
           <div className="layout-container">
-            <Reveal className="group">
+            <Reveal>
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">
+                  {/* Same title/subtitle treatment as the other sections
+                      (FaqSection) — no one-off underline here (PR #359
+                      visual review, item 5). */}
+                  <h2 className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl">
                     {t("home.featuredCases.heading", "Featured Cases")}
                   </h2>
-                  {/* Crimson rule that draws itself in as the section arrives.
-                      Hidden state is the exception: idle (SSR / no-JS /
-                      reduced motion) renders it fully drawn. */}
-                  <span
-                    aria-hidden="true"
-                    className="mt-2 block h-1 w-14 origin-left rounded-full bg-accent transition-transform delay-200 duration-700 ease-out group-data-[reveal=hidden]:scale-x-0"
-                  />
-                  <p className="text-muted-foreground mt-2">
+                  <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
                     {t(
                       "home.featuredCases.subtitle",
                       "Recent high-impact corruption cases under public scrutiny",
