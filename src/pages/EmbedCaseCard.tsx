@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
 import { formatCaseDateRange } from "@/utils/date";
+import { CASE_PLACEHOLDER_IMAGE, caseImageSources } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 
@@ -94,7 +95,20 @@ const EmbedCaseCard = () => {
   };
 
   const status = stateMap[caseData.state] || stateMap.PUBLISHED;
-  const thumbnailUrl = caseData.thumbnail_url || caseData.banner_url;
+  // The uploaded card ladder first, then the deprecated URLs — the same order,
+  // and the same "/admin/ paths are not publicly loadable" guard, that every
+  // other case surface uses. This card is what an embedding site shows its
+  // readers, and the backend's own oEmbed payload already serves a rendition,
+  // so reading only the free-text URLs here left the two halves disagreeing.
+  const { candidates, srcsetFor } = caseImageSources(
+    caseData.thumbnail,
+    caseData.thumbnail_url,
+    caseData.banner_url,
+  );
+  // The embed has its own no-image treatment below — a short navy band rather
+  // than the scales illustration — so the shared placeholder that always ends
+  // the candidate list is not wanted here.
+  const thumbnailUrl = candidates.find((url) => url !== CASE_PLACEHOLDER_IMAGE);
   const primaryEntity = getPrimaryEntity(caseData.entities);
   const locationEntity = getLocationEntity(caseData.entities);
   const dateRange = formatCaseDateRange(
@@ -120,6 +134,10 @@ const EmbedCaseCard = () => {
           <div className="relative h-36 overflow-hidden bg-muted">
             <img
               src={thumbnailUrl}
+              srcSet={srcsetFor(thumbnailUrl)}
+              // The embed renders inside someone else's page at whatever width
+              // they gave the iframe; 600px covers the common desktop card.
+              sizes="(min-width: 640px) 600px, 100vw"
               alt={caseData.title}
               className="h-full w-full object-cover"
               loading="lazy"
