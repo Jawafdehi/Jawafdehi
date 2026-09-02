@@ -49,7 +49,13 @@ const DIR = arg("dir", "dist/client");
 // payload (review feedback on PR #359) — the headroom was never needed. The
 // lazy-loading rules above still apply unchanged — three.js stays fully
 // deferred.
-const MAX_INITIAL_JS_GZIP = 660_000;
+//
+// 2026-09: 660 → 662 for the generative case-thumbnail fallback (PR #362).
+// Case cards render on eager pre-rendered routes (SSR constraint), so the
+// ~1.6 KB gzip of card + formatting logic cannot be lazy-loaded. Measured,
+// not padded: the bikram-sambat package the first draft pulled in was cut
+// before this bump.
+const MAX_INITIAL_JS_GZIP = 662_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

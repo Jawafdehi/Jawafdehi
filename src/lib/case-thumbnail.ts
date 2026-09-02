@@ -7,7 +7,11 @@
 // only from the case's own fields, so the same case always renders the same
 // thumbnail (no randomness, no per-render state).
 
-import { toNepaliNumerals } from "@/utils/bs-calendar";
+// NOTE: deliberately no import from @/utils/bs-calendar here. That module
+// imports the whole bikram-sambat package at top level; case cards render on
+// eager pre-rendered routes, so importing it would drag the calendar package
+// into the entry chunk (it blew the bundle budget in CI). The digit mapping
+// below is all this module needs.
 
 /**
  * FNV-1a hash of the case slug. Drives the glyph's per-case rotation so two
@@ -84,7 +88,7 @@ export function formatBigoCompact(amount: number, language: string): CompactBigo
 
 /** Localize a number the thumbnail shows inline (counts). */
 export function formatCount(count: number, language: string): string {
-  return language.startsWith("ne") ? toNepaliNumerals(count) : String(count);
+  return language.startsWith("ne") ? toNepaliDecimal(String(count)) : String(count);
 }
 
 // `toNepaliNumerals` takes a number and would mangle decimal strings via
