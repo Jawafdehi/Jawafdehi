@@ -180,8 +180,30 @@ export const FloatingShareSidebar = ({
 
   return (
     <TooltipProvider>
+      {/* min-[1536px], not lg. This rail is `fixed left-4` and 58px wide, so its
+          right edge is at x=74 at EVERY viewport width, while the page's own
+          content moves with the viewport: `.layout-container` is capped at
+          1400px and centred, so a left gutter only opens above 1400px.
+
+              width   content-left   gap to the rail
+              1280         32            -42  collides
+              1440         52            -22  collides
+              1500         82             +8  collides
+              1536        100            +26  fits
+
+          Below 1536 the rail therefore painted over the page — at 1024-1400 it
+          sat directly on the sticky section jump-nav, covering the first
+          character of every jump link. Because it is `fixed` and vertically
+          centred, what it covered changed as the reader scrolled, which is why
+          this looked like a rendering artefact rather than a collision.
+
+          Showing it from `lg` was the bug: `lg` (1024px) is the width at which
+          the two-column layout appears, not the width at which there is room
+          for a third rail beside it. Nothing is lost below 1536 — the same
+          actions are on the in-page "Share case" button, which opens the same
+          dialog this rail's last item does. */}
       <div
-        className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-2 p-2 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg animate-in slide-in-from-left-4 fade-in duration-300 no-print"
+        className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden min-[1536px]:flex flex-col gap-2 p-2 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg animate-in slide-in-from-left-4 fade-in duration-300 no-print"
         role="region"
         aria-label={t("share.share")}
       >

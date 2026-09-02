@@ -314,11 +314,28 @@ export function CaseDetailBanner({
         </div>
       </div>
 
-      {/* Metadata below the hero, in the content column. */}
+      {/* Metadata below the hero, in the content column.
+
+          lg:pl-24 for the same reason the hero column above carries it: the
+          FloatingShareSidebar is `fixed left-4 top-1/2` and 58px wide, so its
+          right edge sits at x=74 at EVERY viewport width, while this strip's
+          left edge was 64px. The rail therefore painted over the first
+          character of every left-aligned line here — the "Location:",
+          "Case Date:" and "Embezzled / Irregular Amount:" labels, their values,
+          and the description — at every desktop width, 1024 through 1920.
+          Because the rail is `fixed` and vertically centred, which lines got
+          clipped changed as you scrolled, so it read as a rendering glitch
+          rather than a layout bug.
+
+          This padding was not missing by design; the hero above was given the
+          clearance when it became full-bleed and this sibling was not, which
+          also left the metadata 32px out of alignment with the title directly
+          above it. Matching lg:pl-24 fixes the collision and the alignment
+          together. */}
       <div className="mx-auto w-full max-w-8xl px-0 sm:px-6">
         <div className="grid grid-cols-1">
           <div className="relative z-10 flex flex-col justify-center">
-            <div className="px-6 py-6 text-sm lg:px-10 lg:py-7">
+            <div className="px-6 py-6 text-sm lg:px-10 lg:py-7 lg:pl-24">
               <div className="mb-5 flex flex-wrap items-center gap-2">
                 <CaseStatusBadge status={effectiveStatus}>
                   {statusLabel}
