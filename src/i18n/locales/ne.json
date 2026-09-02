@@ -2013,6 +2013,8 @@
     "cardView": "कार्ड दृश्य",
     "results_one": "{{count}} नतिजा",
     "results_other": "{{count}} नतिजाहरू",
+    "didYouMean": "तपाईंले भन्न खोजेको",
+    "didYouMeanPunctuation": " हो?",
     "sort": "क्रमबद्ध",
     "filters": {
       "entityType": "संस्था प्रकार",

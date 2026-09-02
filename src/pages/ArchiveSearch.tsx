@@ -13,6 +13,7 @@ import { AlertCircle, ArrowRight, ChevronDown, LayoutGrid, List, X } from "lucid
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { DidYouMean } from "@/components/search/DidYouMean";
 import {
   SearchFilters,
   SearchFiltersSkeleton,
@@ -636,6 +637,22 @@ export default function ArchiveSearch({
                   </Button>
                 </AlertDescription>
               </Alert>
+            ) : null}
+
+            {/* Gated on a settled response: showing a suggestion derived from the
+                PREVIOUS query while the next one is still in flight would offer a
+                correction for a term the reader has already moved on from. */}
+            {!showError && !isFetching && !isPlaceholderData && data?.did_you_mean ? (
+              <DidYouMean
+                onAccept={(suggestion) => {
+                  // `query` is local state seeded from the URL only on mount, so
+                  // updating the params alone would leave the misspelling sitting
+                  // in the search box while the results below it changed.
+                  setQuery(suggestion);
+                  updateParams({ page: 1, q: suggestion });
+                }}
+                suggestion={data.did_you_mean}
+              />
             ) : null}
 
             <ArchiveSearchResults
