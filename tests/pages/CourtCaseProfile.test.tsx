@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,12 +7,21 @@ import { HelmetProvider } from "react-helmet-async";
 import CourtCaseProfile from "@/pages/CourtCaseProfile";
 import type { CourtCase } from "@/types/jds";
 
+// The active language is mutable so the Nepali-first rendering can be asserted
+// as well as the English. `vi.hoisted` because a vi.mock factory is lifted
+// above the module body, so it cannot close over a plain `let` declared here.
+const i18nState = vi.hoisted(() => ({ language: "en" }));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
-    i18n: { language: "en" },
+    i18n: { language: i18nState.language },
   }),
 }));
+
+afterEach(() => {
+  i18nState.language = "en";
+});
 
 // Mock the API client
 vi.mock("@/services/datalake-api", () => ({
@@ -155,6 +164,34 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(screen.getByRole("heading", { level: 2, name: /Source/i })).toBeTruthy();
     expect(screen.getByText("Jawafdehi Governance Archive")).toBeTruthy();
     expect(screen.getByText("View source")).toBeTruthy();
+  });
+
+  // Both halves of the Copilot review comment on PR #352: the court name was
+  // formatted with `formatCourtName`'s default "en", and the date came from
+  // `formatDateWithBS`, which always emits "AD | BS" in that order — so a
+  // Nepali reader got an English court name and a Gregorian-first date.
+  it("localises the court name and leads with the BS date in Nepali", async () => {
+    i18nState.language = "ne";
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(mockCourtCase);
+
+    renderPage();
+
+    expect(await screen.findByText("Kanchanpur जिल्ला अदालत")).toBeTruthy();
+    expect(screen.queryByText("Kanchanpur District Court")).toBeNull();
+
+    // BS primary, AD parenthesised after it — not the old fixed "AD | BS".
+    const registeredRow = screen.getByText("Registered").closest("div")?.parentElement;
+    expect(registeredRow?.textContent).toContain("२०८३ भाद्र ९ (Aug 25, 2026)");
+  });
+
+  it("keeps the AD date first in English", async () => {
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(mockCourtCase);
+
+    renderPage();
+
+    expect(await screen.findByText("Kanchanpur District Court")).toBeTruthy();
+    const registeredRow = screen.getByText("Registered").closest("div")?.parentElement;
+    expect(registeredRow?.textContent).toContain("Aug 25, 2026 (२०८३ भाद्र ९)");
   });
 
   it("renders not-found alert when the API returns error", async () => {

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   CalendarCheck,
   CalendarDays,
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
-import { formatDateWithBS, formatDate, convertToBS } from "@/utils/date";
+import { formatDateForLanguage, formatDate, convertToBS } from "@/utils/date";
 import { formatBSString } from "@/utils/bs-calendar";
 import { formatCourtName, courtStatusBadgeValue } from "@/utils/court-case-format";
 
@@ -87,26 +88,43 @@ export function CourtCaseProfileView({
   courtIdentifier,
   isLoading,
 }: Readonly<CourtCaseProfileViewProps>) {
+  // Ahead of the isLoading early return: a hook must not sit behind a branch.
+  const { i18n } = useTranslation();
+
   if (isLoading) {
     return <CourtCaseProfileSkeleton />;
   }
 
+  const language = typeof i18n.language === "string" ? i18n.language : "en";
   const displayTitle = courtCase?.case_type || caseNumber || "Court case";
-  const courtName = formatCourtName(courtCase?.court_identifier || courtIdentifier);
+  // Language is required, not optional: `formatCourtName` defaults to "en", so
+  // omitting it rendered "Kathmandu District Court" on the Nepali site instead
+  // of "Kathmandu जिल्ला अदालत".
+  const courtName = formatCourtName(
+    courtCase?.court_identifier || courtIdentifier,
+    language,
+  );
 
-  const registeredFormatted = courtCase?.registration_date_ad
-    ? formatDateWithBS(
+  // `formatDateForLanguage`, not `formatDateWithBS`: the latter always emits
+  // "AD | BS" in that order, which puts the Gregorian date first on a
+  // Nepali-first page. This returns the active language's calendar as
+  // `primary` with the other as `secondary`, matching how case-byline renders
+  // the same pair.
+  const registered = courtCase?.registration_date_ad
+    ? formatDateForLanguage(
         courtCase.registration_date_ad,
         "PP",
         courtCase.registration_date_bs,
+        language,
       )
     : null;
 
-  const decisionFormatted = courtCase?.verdict_date_ad
-    ? formatDateWithBS(
+  const decision = courtCase?.verdict_date_ad
+    ? formatDateForLanguage(
         courtCase.verdict_date_ad,
         "PP",
         courtCase.verdict_date_bs,
+        language,
       )
     : null;
 
@@ -147,7 +165,7 @@ export function CourtCaseProfileView({
         {/* Case number */}
         <div className="flex items-start gap-4">
           <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-            <IdCard className="h-4.5 w-4.5 text-muted-foreground/80 shrink-0" aria-hidden="true" />
+            <IdCard className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
             <span>Case number</span>
           </div>
           <div className="text-base sm:text-lg font-semibold text-foreground min-w-0 break-words" translate="no">
@@ -158,7 +176,7 @@ export function CourtCaseProfileView({
         {/* Court */}
         <div className="flex items-start gap-4">
           <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-            <Landmark className="h-4.5 w-4.5 text-muted-foreground/80 shrink-0" aria-hidden="true" />
+            <Landmark className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
             <span>Court</span>
           </div>
           <div className="text-base sm:text-lg font-medium text-foreground min-w-0 break-words">
@@ -167,27 +185,29 @@ export function CourtCaseProfileView({
         </div>
 
         {/* Registered */}
-        {registeredFormatted && (
+        {registered && (
           <div className="flex items-start gap-4">
             <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-              <CalendarCheck className="h-4.5 w-4.5 text-muted-foreground/80 shrink-0" aria-hidden="true" />
+              <CalendarCheck className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
               <span>Registered</span>
             </div>
             <div className="text-base sm:text-lg font-medium text-foreground min-w-0 break-words">
-              {registeredFormatted}
+              {registered.primary}
+              {registered.secondary ? ` (${registered.secondary})` : ""}
             </div>
           </div>
         )}
 
         {/* Decision date (if available) */}
-        {decisionFormatted && (
+        {decision && (
           <div className="flex items-start gap-4">
             <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-              <CalendarDays className="h-4.5 w-4.5 text-muted-foreground/80 shrink-0" aria-hidden="true" />
+              <CalendarDays className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
               <span>Decision date</span>
             </div>
             <div className="text-base sm:text-lg font-medium text-foreground min-w-0 break-words">
-              {decisionFormatted}
+              {decision.primary}
+              {decision.secondary ? ` (${decision.secondary})` : ""}
             </div>
           </div>
         )}
@@ -404,7 +424,7 @@ export function CourtCaseProfileSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex items-center gap-4">
             <div className="flex w-40 sm:w-48 items-center gap-2.5">
-              <Skeleton className="h-4.5 w-4.5 rounded-sm" />
+              <Skeleton className="h-[1.125rem] w-[1.125rem] rounded-sm" />
               <Skeleton className="h-4 w-24" />
             </div>
             <Skeleton className="h-5 w-52" />
