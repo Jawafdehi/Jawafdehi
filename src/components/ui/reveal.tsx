@@ -62,9 +62,14 @@ export function Reveal({ children, className, delayMs = 0 }: Readonly<RevealProp
       className={cn(
         // Rises further and unblurs as it lands — an easeOutQuint-style curve
         // makes the deceleration read as camera settle rather than a fade.
+        // will-change only while hidden (i.e. an animation is imminent):
+        // leaving it on after the reveal pins every revealed section to its
+        // own compositor layer permanently, which costs GPU memory on
+        // low-end phones for zero benefit.
         state !== "idle" &&
-          "transition-all duration-[850ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-        state === "hidden" && "translate-y-10 scale-[0.99] opacity-0 [filter:blur(6px)]",
+          "transition-all duration-[850ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+        state === "hidden" &&
+          "will-change-transform translate-y-10 scale-[0.99] opacity-0 [filter:blur(6px)]",
         state === "shown" && "translate-y-0 scale-100 opacity-100 [filter:blur(0px)]",
         className,
       )}
