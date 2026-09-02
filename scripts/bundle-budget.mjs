@@ -44,10 +44,12 @@ const DIR = arg("dir", "dist/client");
 // take bytes out, ratchet this DOWN in the same commit — a limit left slack after
 // a win silently re-permits the regression you just fixed.
 //
-// 2026-08: raised 660 → 750 deliberately (owner sign-off) to make room for the
-// homepage redesign's scroll/motion work. The lazy-loading rules above still
-// apply unchanged — three.js stays fully deferred.
-const MAX_INITIAL_JS_GZIP = 750_000;
+// 2026-08: briefly raised 660 → 750 for the homepage redesign, then reverted
+// after measurement showed the redesign adds only ~2 KB gzip to the initial
+// payload (review feedback on PR #359) — the headroom was never needed. The
+// lazy-loading rules above still apply unchanged — three.js stays fully
+// deferred.
+const MAX_INITIAL_JS_GZIP = 660_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
