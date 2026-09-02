@@ -44,6 +44,63 @@ const crimsonColor = () => tokenColor("--accent", "357 67 43");
 const ACCENT_RATIO = 0.045; // sparse crimson — reserved, draws the eye
 const WORLD_WIDTH = 48;
 const INTRO_SECONDS = 2.4;
+/** How long the field keeps drifting after the last wake signal before the
+ * render loop parks. Long enough that the ambient drift reads as alive while
+ * the reader is actually looking; short enough that a settled page costs
+ * nothing (PR #359 review: the loop used to run forever, ~8.6s of main-thread
+ * time per 10s idle on a throttled phone). */
+const SETTLE_SECONDS = 5;
+
+/** Render-loop governor (PR #359 review, item 1).
+ *
+ * R3F's default frameloop renders 60fps forever — decoration must not do
+ * that on a phone. Two rules, both enforced here by driving invalidate()
+ * under `frameloop="demand"`:
+ *
+ *   - OFF SCREEN = hard pause. An IntersectionObserver on the canvas stops
+ *     requesting frames the moment the hero scrolls out of view.
+ *   - SETTLED = park. Once the intro has played, the loop keeps the ambient
+ *     drift alive only while there are recent wake signals (pointer movement,
+ *     scroll). SETTLE_SECONDS after the last one, it stops requesting frames
+ *     entirely; the last rendered frame simply persists.
+ *
+ * `wakeRef` holds the timestamp of the most recent wake signal; ParticleField
+ * refreshes it from its own window listeners so the two components share one
+ * clock without re-rendering.
+ */
+function RenderGovernor({
+  wakeRef,
+  introDone,
+  visibleRef,
+}: Readonly<{ wakeRef: { current: number }; introDone: { current: boolean }; visibleRef: { current: boolean } }>) {
+  const invalidate = useThree((s) => s.invalidate);
+  const gl = useThree((s) => s.gl);
+
+  useEffect(() => {
+    const el = gl.domElement;
+    if (typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => {
+      visibleRef.current = entry.isIntersecting;
+      if (entry.isIntersecting) {
+        wakeRef.current = performance.now(); // coming back = a wake signal
+        invalidate();
+      }
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [gl, invalidate, wakeRef, visibleRef]);
+
+  useFrame(() => {
+    if (!visibleRef.current) return; // parked: no invalidate, loop stops
+    if (!introDone.current) {
+      invalidate();
+      return;
+    }
+    if (performance.now() - wakeRef.current < SETTLE_SECONDS * 1000) invalidate();
+  });
+
+  return null;
+}
 
 type HeroSceneProps = {
   /** Map asset to sample for particle positions. */
@@ -202,8 +259,24 @@ function CameraFit({ worldHeight, margin = 1.14 }: Readonly<{ worldHeight: numbe
   return null;
 }
 
-function ParticleField({ mapSrc, dark, stage = false, scrollRef, onReady }: Readonly<HeroSceneProps>) {
+function ParticleField({
+  mapSrc,
+  dark,
+  stage = false,
+  scrollRef,
+  onReady,
+  wakeRef,
+  introDone,
+  visibleRef,
+}: Readonly<
+  HeroSceneProps & {
+    wakeRef: { current: number };
+    introDone: { current: boolean };
+    visibleRef: { current: boolean };
+  }
+>) {
   const [field, setField] = useState<SampledField | null>(null);
+  const invalidate = useThree((s) => s.invalidate);
   const groupRef = useRef<Group>(null);
   const readyFired = useRef(false);
   const progress = useRef(0);
@@ -227,14 +300,26 @@ function ParticleField({ mapSrc, dark, stage = false, scrollRef, onReady }: Read
 
   // The canvas is pointer-events-none (it is decoration under the readability
   // wash), so parallax input comes from the window, not from R3F events.
+  // Pointer movement and scroll are also the loop's WAKE signals: under
+  // frameloop="demand" the governor only keeps rendering while one of these
+  // is recent (see RenderGovernor).
   useEffect(() => {
+    const wake = () => {
+      wakeRef.current = performance.now();
+      if (visibleRef.current) invalidate(); // off screen stays parked
+    };
     const onMove = (e: PointerEvent) => {
       pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       pointer.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+      wake();
     };
     window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, []);
+    window.addEventListener("scroll", wake, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("scroll", wake);
+    };
+  }, [invalidate, wakeRef, visibleRef]);
 
   const material = useMemo(
     () =>
@@ -261,7 +346,8 @@ function ParticleField({ mapSrc, dark, stage = false, scrollRef, onReady }: Read
     material.uniforms.uColor.value = dark ? new Color(DARK_POINT) : navyColor();
     material.blending = dark ? AdditiveBlending : NormalBlending;
     material.needsUpdate = true;
-  }, [dark, material]);
+    invalidate(); // demand loop: a uniform change alone won't repaint
+  }, [dark, material, invalidate]);
 
   useEffect(() => () => material.dispose(), [material]);
 
@@ -288,6 +374,7 @@ function ParticleField({ mapSrc, dark, stage = false, scrollRef, onReady }: Read
     const clamped = Math.min(delta, 0.05); // tab-restore spikes must not teleport
     material.uniforms.uTime.value += clamped;
     progress.current = Math.min(1, progress.current + clamped / INTRO_SECONDS);
+    if (progress.current >= 1) introDone.current = true;
     material.uniforms.uProgress.value = progress.current;
     material.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
 
@@ -322,16 +409,37 @@ function ParticleField({ mapSrc, dark, stage = false, scrollRef, onReady }: Read
 }
 
 export default function HeroScene({ mapSrc, dark, stage, scrollRef, onReady }: Readonly<HeroSceneProps>) {
+  // Shared mutable clocks for the render governor (never re-render React):
+  // wakeRef = timestamp of the last wake signal, introDone = intro finished,
+  // visibleRef = canvas currently intersects the viewport.
+  const wakeRef = useRef(0);
+  const introDone = useRef(false);
+  const visibleRef = useRef(true);
   return (
     <Canvas
       aria-hidden="true"
       className="pointer-events-none"
       dpr={[1, 2]}
+      // demand + RenderGovernor: frames are only rendered while the intro
+      // plays or a wake signal is recent, and never while off screen. The
+      // default continuous loop burned CPU forever on a settled page
+      // (PR #359 review, item 1).
+      frameloop="demand"
       gl={{ alpha: true, antialias: false, powerPreference: "low-power" }}
       camera={{ position: [0, 0, 40], fov: 42 }}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
     >
-      <ParticleField mapSrc={mapSrc} dark={dark} stage={stage} scrollRef={scrollRef} onReady={onReady} />
+      <RenderGovernor wakeRef={wakeRef} introDone={introDone} visibleRef={visibleRef} />
+      <ParticleField
+        mapSrc={mapSrc}
+        dark={dark}
+        stage={stage}
+        scrollRef={scrollRef}
+        onReady={onReady}
+        wakeRef={wakeRef}
+        introDone={introDone}
+        visibleRef={visibleRef}
+      />
     </Canvas>
   );
 }
