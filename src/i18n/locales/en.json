@@ -140,6 +140,7 @@
       "searchLabel": "Search the Jawafdehi archive",
       "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
       "searchSubmit": "Search Jawafdehi",
+      "suggestionsLabel": "Case suggestions",
       "stats": {
         "casesDocumented": "Cases documented",
         "totalBigo": "Total embezzled amount",

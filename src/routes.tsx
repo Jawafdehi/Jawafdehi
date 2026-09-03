@@ -27,7 +27,6 @@ import WeeklyMeetings from "./pages/WeeklyMeetings";
 import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
 import EntityProfile from "./pages/EntityProfile";
-import AuthorProfile from "./pages/AuthorProfile";
 import Feedback from "./pages/Feedback";
 import ReportCase from "./pages/ReportCase";
 import Updates from "./pages/Updates";
@@ -56,6 +55,11 @@ import DocumentPreviewPage from "./pages/DocumentPreviewPage";
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
 const DataQuality = lazy(() => import("./pages/DataQuality"));
+// /author/:slug is NOT pre-rendered (scripts/pre-render.ts enumerates cases,
+// entities and updates only — no author pages), so per the split policy above
+// it is safe and free to lazy-load. It was eager by association with the other
+// detail pages, which ARE pre-rendered and must stay eager.
+const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
