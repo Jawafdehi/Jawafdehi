@@ -2075,7 +2075,9 @@
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
       "bigoNoMax": "No maximum"
-    }
+    },
+    "materialSeries": "Series",
+    "materialSource": "Source"
   },
   "materialsPage": {
     "heading": "Documents & other materials",

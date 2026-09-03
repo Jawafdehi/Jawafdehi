@@ -105,12 +105,16 @@ function MaterialResultCard({
   const language = i18n.language;
   const source = sourceFromMaterialUrl(result.url);
   const series = source ? seriesBySource(source) : undefined;
-  const sourceLabel = series
-    ? pickLocalized(series.name, language)
-    : t(
+  // Label what the value actually is. A registry match IS a series — the
+  // collection a reader can browse at /materials/?series=<slug>. Everything
+  // else resolves only to the publishing institution, which is a source, not a
+  // series; calling it one would promise a collection that does not exist.
+  const provenanceLabel = series
+    ? `${t("archiveSearch.materialSeries", "Series")}: ${pickLocalized(series.name, language)}`
+    : `${t("archiveSearch.materialSource", "Source")}: ${t(
         `dataQuality.materialsBySource.source.${sourceKeyFor(source ?? "")}`,
         source ?? "",
-      );
+      )}`;
   const dateLabel =
     formatLedgerDate(resolveMaterialDate(result.extra), language) ||
     t("materialsLanding.series.undated", "Undated");
@@ -131,7 +135,7 @@ function MaterialResultCard({
     <MaterialCard
       title={title}
       href={result.url}
-      metaLine={[sourceLabel, dateLabel].filter(Boolean).join(" · ")}
+      metaLine={[provenanceLabel, dateLabel].filter(Boolean).join(" · ")}
       description={snippet}
       shareUrl={`${SITE_URL}${result.url}`}
       viewMode={viewMode}

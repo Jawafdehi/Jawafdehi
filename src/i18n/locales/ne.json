@@ -2054,7 +2054,9 @@
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
       "bigoNoMax": "अधिकतम छैन"
-    }
+    },
+    "materialSeries": "श्रृंखला",
+    "materialSource": "स्रोत"
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

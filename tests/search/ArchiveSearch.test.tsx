@@ -709,9 +709,11 @@ describe("ArchiveSearch", () => {
       name: "Charge sheet filed against nine officials",
     });
     expect(title.getAttribute("href")).toBe("/material/ciaa_press_release/1701");
-    // Registry source token → the curated series name, not the raw token or a
-    // schema.org class ("Creative work"); the date resolves BS→AD for EN.
-    expect(screen.getByText("CIAA press releases · 2026-03-11")).toBeTruthy();
+    // Registry source token → the curated series name, labelled as a series
+    // (not the raw token or a schema.org class); date resolves BS→AD for EN.
+    expect(
+      screen.getByText("Series: CIAA press releases · 2026-03-11"),
+    ).toBeTruthy();
     // Snippet renders with its <em> highlight markup stripped.
     expect(screen.getByText("Filed at the Special Court today")).toBeTruthy();
 
@@ -726,6 +728,41 @@ describe("ArchiveSearch", () => {
       screen.queryByRole("link", { name: "Open original source" }),
     ).toBeNull();
     expect(getMaterialMock).not.toHaveBeenCalled();
+  });
+
+  it("labels a long-tail material by source, not as a series", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/court_order/special.081-cr-0111",
+          source_app: "ngm",
+          title: { ne: null, en: "Special Court verdict 081-CR-0111" },
+          snippet: { ne: null, en: null },
+          url: "/material/court_order/special.081-cr-0111",
+          api_url: null,
+          matched_fields: [],
+          score: 1,
+          extra: { date: "2025-12-29", type: "Manuscript,DigitalDocument" },
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material");
+    await screen.findByText("Special Court verdict 081-CR-0111");
+
+    // `court_order` is not in the curated series registry, so it resolves only
+    // to the publishing institution — a source. Calling that a "Series" would
+    // promise a /materials collection that does not exist.
+    //
+    // The institution name itself comes from the i18n catalogue ("Nepal
+    // Courts"), which no instance loads here, so the value falls back to the
+    // raw source token. The assertion is the LABEL, which is the behaviour
+    // under test.
+    expect(screen.getByText(/^Source: /)).toBeTruthy();
+    expect(screen.queryByText(/^Series: /)).toBeNull();
+    expect(screen.getByText(/2025-12-29$/)).toBeTruthy();
   });
 
   it("does not show an empty state after an initial request failure", async () => {
