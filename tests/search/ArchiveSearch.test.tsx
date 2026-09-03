@@ -730,7 +730,7 @@ describe("ArchiveSearch", () => {
     expect(getMaterialMock).not.toHaveBeenCalled();
   });
 
-  it("labels a long-tail material by source, not as a series", async () => {
+  it("names a series for a material outside the curated registry", async () => {
     searchArchiveMock.mockResolvedValue({
       ...baseResponse,
       results: [
@@ -752,17 +752,13 @@ describe("ArchiveSearch", () => {
     renderSearch("/search?type=material");
     await screen.findByText("Special Court verdict 081-CR-0111");
 
-    // `court_order` is not in the curated series registry, so it resolves only
-    // to the publishing institution — a source. Calling that a "Series" would
-    // promise a /materials collection that does not exist.
+    // `court_order` is not in the curated registry, so its series name comes
+    // from the source's document type instead. Every material gets one.
     //
-    // The institution name itself comes from the i18n catalogue ("Nepal
-    // Courts"), which no instance loads here, so the value falls back to the
-    // raw source token. The assertion is the LABEL, which is the behaviour
-    // under test.
-    expect(screen.getByText(/^Source: /)).toBeTruthy();
-    expect(screen.queryByText(/^Series: /)).toBeNull();
-    expect(screen.getByText(/2025-12-29$/)).toBeTruthy();
+    // The type's display string lives in the i18n catalogue ("Court orders"),
+    // which no instance loads here, so it degrades to the plain-read token.
+    expect(screen.getByText("Series: court order · 2025-12-29")).toBeTruthy();
+    expect(screen.queryByText(/^Source:/)).toBeNull();
   });
 
   it("does not show an empty state after an initial request failure", async () => {

@@ -1644,6 +1644,7 @@
       "description": "उही {{total}} सामग्री, कागजातको किसिम अनुसार वर्गीकृत।",
       "tooltip": "सामग्री",
       "type": {
+        "procurementNotice": "खरिद सूचना",
         "chargeSheet": "अभियोगपत्र",
         "precedent": "नजिर (अदालती आदेश)",
         "courtOrder": "अदालती आदेश",
@@ -2055,8 +2056,7 @@
       "bigoNoMin": "न्यूनतम छैन",
       "bigoNoMax": "अधिकतम छैन"
     },
-    "materialSeries": "श्रृंखला",
-    "materialSource": "स्रोत"
+    "materialSeries": "श्रृंखला"
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

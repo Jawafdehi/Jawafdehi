@@ -1665,6 +1665,7 @@
       "description": "The same {{total}} materials, grouped by the kind of document they are.",
       "tooltip": "Materials",
       "type": {
+        "procurementNotice": "Procurement notices",
         "chargeSheet": "Charge sheets",
         "precedent": "Court order precedents",
         "courtOrder": "Court orders",
@@ -2076,8 +2077,7 @@
       "bigoNoMin": "No minimum",
       "bigoNoMax": "No maximum"
     },
-    "materialSeries": "Series",
-    "materialSource": "Source"
+    "materialSeries": "Series"
   },
   "materialsPage": {
     "heading": "Documents & other materials",

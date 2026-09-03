@@ -10,7 +10,11 @@ import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySource } from "@/data/material-series";
-import { sourceKeyFor } from "@/lib/material-source-labels";
+import {
+  materialTypeForSchemaClass,
+  materialTypeForSource,
+} from "@/lib/material-series-labels";
+import { materialTypeKeyFor } from "@/lib/material-type-labels";
 import {
   formatLedgerDate,
   pickLocalized,
@@ -105,16 +109,26 @@ function MaterialResultCard({
   const language = i18n.language;
   const source = sourceFromMaterialUrl(result.url);
   const series = source ? seriesBySource(source) : undefined;
-  // Label what the value actually is. A registry match IS a series — the
-  // collection a reader can browse at /materials/?series=<slug>. Everything
-  // else resolves only to the publishing institution, which is a source, not a
-  // series; calling it one would promise a collection that does not exist.
-  const provenanceLabel = series
-    ? `${t("archiveSearch.materialSeries", "Series")}: ${pickLocalized(series.name, language)}`
-    : `${t("archiveSearch.materialSource", "Source")}: ${t(
-        `dataQuality.materialsBySource.source.${sourceKeyFor(source ?? "")}`,
-        source ?? "",
-      )}`;
+  // Every material names its series. A curated-registry source keeps its
+  // editorial name ("CIAA press releases" — it also has a browsable
+  // ?series= page); every other source resolves to its collection's document
+  // type, from the source map, falling back to the schema.org class the index
+  // always carries. Both read from one label catalogue, so nothing here
+  // invents copy.
+  const materialType =
+    (source ? materialTypeForSource(source) : null) ??
+    materialTypeForSchemaClass(result.extra.type);
+  const seriesName = series
+    ? pickLocalized(series.name, language)
+    : t(
+        `dataQuality.materialsByType.type.${materialTypeKeyFor(materialType)}`,
+        // Last resort for a catalogue gap: the type token read plainly, so a
+        // missing entry degrades the wording rather than dropping the line.
+        materialType.replaceAll("_", " "),
+      );
+  const seriesLabel = seriesName
+    ? `${t("archiveSearch.materialSeries", "Series")}: ${seriesName}`
+    : "";
   const dateLabel =
     formatLedgerDate(resolveMaterialDate(result.extra), language) ||
     t("materialsLanding.series.undated", "Undated");
@@ -135,7 +149,7 @@ function MaterialResultCard({
     <MaterialCard
       title={title}
       href={result.url}
-      metaLine={[provenanceLabel, dateLabel].filter(Boolean).join(" · ")}
+      metaLine={[seriesLabel, dateLabel].filter(Boolean).join(" · ")}
       description={snippet}
       shareUrl={`${SITE_URL}${result.url}`}
       viewMode={viewMode}
