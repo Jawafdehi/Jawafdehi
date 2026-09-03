@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
 import { formatCaseDateRange } from "@/utils/date";
+import { useCaseImage } from "@/lib/use-case-image";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 
@@ -51,6 +52,28 @@ const EmbedCaseCard = () => {
     enabled: !!id,
   });
 
+  // The uploaded card ladder first, then the deprecated URLs — the same order,
+  // and the same "/admin/ paths are not publicly loadable" guard, that every
+  // other case surface uses. This card is what an embedding site shows its
+  // readers, and the backend's own oEmbed payload already serves a rendition,
+  // so reading only the free-text URLs here left the two halves disagreeing.
+  //
+  // includePlaceholder: false because this card has its OWN no-image treatment
+  // below — a short navy band rather than the shared scales illustration — so
+  // `src` goes undefined once every candidate has failed and the band renders.
+  //
+  // Declared above the early returns below because it holds state: hooks cannot
+  // be called conditionally.
+  const {
+    src: thumbnailUrl,
+    srcSet,
+    onError: advanceImage,
+  } = useCaseImage(
+    caseData?.thumbnail,
+    [caseData?.thumbnail_url, caseData?.banner_url],
+    { includePlaceholder: false },
+  );
+
   if (isLoading) {
     return (
       <div className="flex h-full min-h-[360px] items-center justify-center bg-white p-4">
@@ -94,7 +117,6 @@ const EmbedCaseCard = () => {
   };
 
   const status = stateMap[caseData.state] || stateMap.PUBLISHED;
-  const thumbnailUrl = caseData.thumbnail_url || caseData.banner_url;
   const primaryEntity = getPrimaryEntity(caseData.entities);
   const locationEntity = getLocationEntity(caseData.entities);
   const dateRange = formatCaseDateRange(
@@ -120,9 +142,14 @@ const EmbedCaseCard = () => {
           <div className="relative h-36 overflow-hidden bg-muted">
             <img
               src={thumbnailUrl}
+              srcSet={srcSet}
+              // The embed renders inside someone else's page at whatever width
+              // they gave the iframe; 600px covers the common desktop card.
+              sizes="(min-width: 640px) 600px, 100vw"
               alt={caseData.title}
               className="h-full w-full object-cover"
               loading="lazy"
+              onError={advanceImage}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             <div className="absolute left-3 top-3">

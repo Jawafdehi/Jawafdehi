@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,11 +7,9 @@ import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
-import {
-  CASE_PLACEHOLDER_DARK_CLASS,
-  CASE_PLACEHOLDER_IMAGE,
-  caseImageCandidates,
-} from "@/lib/case-images";
+import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
+import { useCaseImage } from "@/lib/use-case-image";
+import type { CaseImage } from "@/types/jds";
 import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 
@@ -29,8 +26,11 @@ interface CaseCardProps {
   tags?: string[];
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
-  thumbnailUrl?: string; //Thumbnail image
-  bannerUrl?: string; // Fallback image when the thumbnail is missing or fails to load
+  // The card image as a responsive ladder. Preferred over the two URL props
+  // below, which are the fallback for cases that predate uploaded images.
+  image?: CaseImage | null;
+  thumbnailUrl?: string; // DEPRECATED bare URL
+  bannerUrl?: string; // DEPRECATED bare URL, tried when the thumbnail fails
   // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
@@ -74,7 +74,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -86,35 +86,18 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const normalizedSlug = typeof slug === "string" ? slug.trim() : "";
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
-  // Candidate images, best first: thumbnail, then banner, then the shared
-  // placeholder illustration the case detail banner also falls back to. Cases
-  // sometimes carry a non-image thumbnail URL (an article/page link), so a load
-  // error must fall through to the banner before landing on the placeholder.
-  const imageCandidates = caseImageCandidates(thumbnailUrl, bannerUrl);
-  const [imageIndex, setImageIndex] = useState(0);
-
-  // React reuses a card instance when a list re-sorts or refetches, so another
-  // case's images can arrive on the component that already advanced past a
-  // broken one. Without this the index survives and the card opens on a later
-  // candidate — often the placeholder — instead of the new thumbnail.
-  //
-  // Keyed on the candidate list, not the raw props: a prop change that yields
-  // the same list (whitespace, or a duplicate collapsing) must NOT discard an
-  // error-advance, or the card would swing back to a URL known to fail.
-  const candidateKey = imageCandidates.join("|");
-  useEffect(() => {
-    setImageIndex(0);
-  }, [candidateKey]);
-
-  // Clamped, not `?? placeholder`: if the placeholder itself fails to load,
-  // advancing past it must not reset the card to a real URL that already failed.
-  const imageSrc = imageCandidates[Math.min(imageIndex, imageCandidates.length - 1)];
-  const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
-
-  // Handle image load errors by advancing to the next candidate.
-  const handleImageError = () => {
-    setImageIndex((i) => i + 1);
-  };
+  // Candidate images, best first: the uploaded rendition ladder, then the
+  // deprecated thumbnail and banner URLs, then the shared placeholder
+  // illustration the case detail banner also falls back to. Cases sometimes
+  // carry a non-image thumbnail URL (an article/page link), so a load error must
+  // fall through the rest before landing on the placeholder — useCaseImage owns
+  // that walk, shared with the hero and the oEmbed card.
+  const {
+    src: imageSrc,
+    srcSet,
+    isPlaceholder,
+    onError: handleImageError,
+  } = useCaseImage(image, [thumbnailUrl, bannerUrl]);
 
   const statusLabel = t(getCaseStatusLabelKey(status));
 
@@ -132,13 +115,19 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
 
   return (
     <Card
-      className={`group relative flex overflow-hidden rounded-3xl bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] cursor-pointer ${cardLayout}`}
+      className={`group relative flex overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-within:border-accent/40 cursor-pointer ${cardLayout}`}
       onClick={handleCardClick}
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
         <div className={`relative overflow-hidden ${imageContainerClass}`}>
           <img
             src={imageSrc}
+            // Only the uploaded ladder has a srcset, and it goes away if a load
+            // error advances past it — see CaseImageSources.srcsetFor.
+            srcSet={srcSet}
+            // The card box is a third of the row in list view and a grid column
+            // otherwise; ~400px covers both, and the browser picks up from there.
+            sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
             // The placeholder illustration carries no information about this
             // case, so it stays out of the accessibility tree entirely rather
             // than announcing a thumbnail that does not exist.
@@ -181,7 +170,11 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
               {caseSlug ? (
                 <Link
                   to={`/case/${caseSlug}`}
-                  className="rounded-sm outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  // Gradient-underline trick: a 2px accent line drawn by
+                  // animating background-size, so it wraps correctly across
+                  // the clamped two lines (a pseudo-element underline would
+                  // only sit under the last line's box).
+                  className="rounded-sm bg-gradient-to-r from-accent to-accent bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 outline-none transition-[background-size,color] duration-300 hover:text-primary group-hover:bg-[length:100%_2px] group-focus-within:bg-[length:100%_2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {title}

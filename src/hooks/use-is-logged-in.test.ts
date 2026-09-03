@@ -4,21 +4,19 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 
 // The hook reads the persisted session directly (public pages sit outside the
-// admin auth providers), so mock both sources.
+// admin auth providers), so mock both sources. It asks `getAccessToken` — the
+// same "is there a usable token" question the request interceptor asks — rather
+// than reading the stored user, so an expired-but-refreshable session counts as
+// logged in here exactly as it does on the wire.
 vi.mock("@/services/dev-auth", () => ({ getStoredDevUser: vi.fn() }));
-vi.mock("@/services/oidc", () => ({ getUserManager: vi.fn() }));
+vi.mock("@/services/oidc", () => ({ getAccessToken: vi.fn() }));
 
 import { getStoredDevUser } from "@/services/dev-auth";
-import { getUserManager } from "@/services/oidc";
-
-const getUser = vi.fn();
+import { getAccessToken } from "@/services/oidc";
 
 beforeEach(() => {
   vi.mocked(getStoredDevUser).mockReset().mockReturnValue(null);
-  getUser.mockReset().mockResolvedValue(null);
-  vi.mocked(getUserManager)
-    .mockReset()
-    .mockReturnValue({ getUser } as unknown as ReturnType<typeof getUserManager>);
+  vi.mocked(getAccessToken).mockReset().mockResolvedValue(null);
 });
 
 describe("useIsLoggedIn", () => {
@@ -26,7 +24,7 @@ describe("useIsLoggedIn", () => {
     const { result } = renderHook(() => useIsLoggedIn());
     // Let the async OIDC lookup settle; it must resolve to logged-out.
     await act(async () => {});
-    expect(getUser).toHaveBeenCalled();
+    expect(getAccessToken).toHaveBeenCalled();
     expect(result.current).toBe(false);
   });
 
@@ -39,20 +37,22 @@ describe("useIsLoggedIn", () => {
     const { result } = renderHook(() => useIsLoggedIn());
     expect(result.current).toBe(true);
     // Dev-auth short-circuits before the OIDC manager is consulted.
-    expect(getUser).not.toHaveBeenCalled();
+    expect(getAccessToken).not.toHaveBeenCalled();
   });
 
-  it("is true when the OIDC manager has a non-expired user", async () => {
-    getUser.mockResolvedValue({ expired: false });
+  it("is true when a usable access token is available", async () => {
+    vi.mocked(getAccessToken).mockResolvedValue("jwt-token");
     const { result } = renderHook(() => useIsLoggedIn());
     await waitFor(() => expect(result.current).toBe(true));
   });
 
-  it("stays false when the OIDC user is expired", async () => {
-    getUser.mockResolvedValue({ expired: true });
+  it("stays false when the session cannot produce a token", async () => {
+    // getAccessToken has already tried the refresh grant and come back empty —
+    // an expired token with no usable refresh token is genuinely logged out.
+    vi.mocked(getAccessToken).mockResolvedValue(null);
     const { result } = renderHook(() => useIsLoggedIn());
     await act(async () => {});
-    expect(getUser).toHaveBeenCalled();
+    expect(getAccessToken).toHaveBeenCalled();
     expect(result.current).toBe(false);
   });
 });

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
+import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   ArchiveSearchResult,
@@ -57,15 +58,36 @@ function caseSlugFromUrl(url: string): string | undefined {
   return match?.[1];
 }
 
-// Result dispatcher. Case records render the shared <CaseCard> (the same
-// component the /cases page uses) in either list or grid mode; every other
-// record type falls back to a lightweight card with matching chrome.
+// Result dispatcher. Case and court-case records each render their shared rich
+// card; entities and materials use the lightweight generic card.
 export function SearchResultCard({
   result,
   viewMode = "list",
 }: Readonly<{ result: ArchiveSearchResult; viewMode?: SearchViewMode }>) {
   if (result.type === "case") return <CaseResultCard result={result} viewMode={viewMode} />;
+  if (result.type === "courtcase") {
+    return <CourtCaseResultCard result={result} viewMode={viewMode} />;
+  }
   return <GenericResultCard result={result} viewMode={viewMode} />;
+}
+
+function CourtCaseResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  return (
+    <CourtCaseCard
+      caseNumber={result.extra.case_number}
+      court={result.extra.court}
+      courtType={result.extra.court_type}
+      registrationDate={result.extra.date}
+      registrationDateBs={result.extra.date_bs}
+      status={result.extra.case_status}
+      title={formatSimpleTitle(result)}
+      url={result.url}
+      viewMode={viewMode}
+    />
+  );
 }
 
 // Rich card for Jawafdehi cases, reusing <CaseCard> for full visual parity with
@@ -158,6 +180,7 @@ function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult
     tags: card.tags || [],
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
+    image: card.thumbnail ?? null,
     thumbnailUrl: card.thumbnail_url || undefined,
     bannerUrl: card.banner_url || undefined,
     bigo: card.bigo,
@@ -191,6 +214,7 @@ function caseCardPropsFromDetail(
     tags: detail.tags || [],
     entityIds: entityIds(subject),
     locationIds: entityIds(location),
+    image: detail.thumbnail ?? null,
     thumbnailUrl: detail.thumbnail_url || undefined,
     bannerUrl: detail.banner_url || undefined,
     // Kept in step with the indexed-card path above: the two mappings feed the
@@ -201,7 +225,7 @@ function caseCardPropsFromDetail(
 }
 
 // ---------------------------------------------------------------------------
-// Generic (non-case) cards — one field set, two shells
+// Generic entity/material cards — one field set, two shells
 // ---------------------------------------------------------------------------
 
 // Single source of truth for WHAT a non-case result shows. Both view modes read
@@ -224,10 +248,9 @@ function genericResultFields(result: ArchiveSearchResult) {
   };
 }
 
-// Entity / material / court case. `viewMode` picks the shell — a compact row for
-// list, a vertical tile for card — and nothing else: every field below renders in
-// both modes at the same clamp limits. Neither mode hydrates relational data; the
-// index carries none for these types.
+// Entity / material. `viewMode` picks the shell — a compact row for list, a
+// vertical tile for card — and nothing else: every field below renders in both
+// modes at the same clamp limits.
 function GenericResultCard({
   result,
   viewMode,
@@ -289,8 +312,8 @@ function GenericResultCard({
   );
 }
 
-// Compact list-row skeleton (matches <ResultCardShell>). The card-view loading
-// state reuses <CaseCardSkeleton> so it lines up with the reused <CaseCard>.
+// Compact generic list-row skeleton. ArchiveSearch selects the dedicated case
+// or court-case skeleton while one of those record types is active.
 export function SearchResultCardSkeleton({
   showTags = false,
 }: Readonly<{ showTags?: boolean }>) {
@@ -327,11 +350,7 @@ export function SearchResultCardSkeleton({
 // Metadata line for the non-case types, derived from the search `extra` blob.
 function simpleMetadata(result: ArchiveSearchResult): string {
   const parts: string[] = [];
-  if (result.type === "courtcase") {
-    if (result.extra.court) parts.push(humanize(result.extra.court));
-    if (result.extra.case_number) parts.push(result.extra.case_number);
-    if (result.extra.case_status) parts.push(humanize(result.extra.case_status));
-  } else if (result.type === "material") {
+  if (result.type === "material") {
     if (result.extra.type) parts.push(humanize(result.extra.type));
     if (result.extra.date) parts.push(result.extra.date);
   } else if (result.type === "entity") {

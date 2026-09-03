@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Link2, Check, Share2, QrCode, Printer, Download } from "lucide-react";
 import { toast } from "sonner";
-import { ShareQrCode } from "@/components/ShareQrCode";
+import { LazyQRCode } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";
 import {
   FacebookIcon,
@@ -47,6 +47,9 @@ export const InlineShareButtons = ({
   const [copied, setCopied] = useState(false);
   const [moreDialogOpen, setMoreDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  // See LazyQRCode: the SVG is absent until the lazy chunk resolves, and the
+  // download handler finds it by id, so an early click would do nothing.
+  const [qrReady, setQrReady] = useState(false);
 
   const shareLinks = buildShareLinks({ url, title, description });
 
@@ -305,13 +308,25 @@ export const InlineShareButtons = ({
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <ShareQrCode id="inline-qr-code-svg" url={url} />
+              <LazyQRCode
+                onReady={() => setQrReady(true)}
+                id="inline-qr-code-svg"
+                value={url}
+                size={200}
+                level="H"
+                includeMargin={true}
+              />
             </div>
             <p className="text-sm text-muted-foreground text-center">
               {t("share.scanQRCode")}
             </p>
             <div className="flex gap-2 w-full">
-              <Button variant="outline" className="flex-1" onClick={downloadQRCode}>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={downloadQRCode}
+                disabled={!qrReady}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 <span className="mt-0.5">{t("share.downloadQR")}</span>
               </Button>

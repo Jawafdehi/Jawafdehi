@@ -13,6 +13,7 @@ import { AlertCircle, ArrowRight, ChevronDown, LayoutGrid, List, X } from "lucid
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { DidYouMean } from "@/components/search/DidYouMean";
 import {
   SearchFilters,
   SearchFiltersSkeleton,
@@ -22,7 +23,9 @@ import {
   SearchResultCard,
   SearchResultCardSkeleton,
 } from "@/components/search/SearchResultCard";
+import { SearchTabs } from "@/components/search/SearchTabs";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
+import { CourtCaseCardSkeleton } from "@/components/CourtCaseCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/ui/pagination";
@@ -46,6 +49,7 @@ import type {
   ArchiveSearchType,
 } from "@/types/search";
 import { cn } from "@/lib/utils";
+import { describeBigoRange, readBigoBounds } from "@/lib/bigo-range";
 import {
   normalizeArchiveSearchParams,
   setArchiveSearchParam,
@@ -57,7 +61,11 @@ import { sendSearchClick } from "@/utils/searchClick";
 import { Seo } from "@/components/Seo";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
+// "bigo" is a refinement for pill/clear purposes only — it is one removable
+// range, not a list of facet tokens, so it never joins the `selected` record the
+// checkbox groups are driven from.
 type RefinementName = SidebarFilterName | "type";
+type PillName = RefinementName | "bigo";
 
 const validSorts = new Set<ArchiveSearchSort>([
   "relevance",
@@ -76,7 +84,7 @@ const emptyFacets: ArchiveSearchFacets = {
 
 // When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
 // Materials / Court-cases landing pages reuse this component): the record-type is
-// pinned, the type selector is hidden, and the heading/SEO are overridden.
+// pinned, the type tabs are hidden, and the heading/SEO are overridden.
 export interface ArchiveSearchProps {
   lockedType?: ArchiveSearchResultType;
   heading?: string;
@@ -165,6 +173,12 @@ export default function ArchiveSearch({
   const isRefreshing = isFetching && !isInitialLoading;
   const showError = isError && !isFetching;
   const showFilters = isInitialLoading || Boolean(displayData);
+  // The locked single-type pages (/materials, /court-cases) pin the record type
+  // by route, so there is nothing for the tabs to switch between.
+  const showTypeTabs = !lockedType;
+  // Only when BOTH are on screen is there a two-column grid to place the tabs,
+  // the sidebar and the results into by hand.
+  const tabsAndFilters = showTypeTabs && showFilters;
 
   // Share metadata. This component backs three routes — /search, /materials and
   // /courtcases (see Materials.tsx and CourtCases.tsx, which pass heading,
@@ -230,12 +244,41 @@ export default function ArchiveSearch({
     // stale entity_type behind would silently filter the new record type through
     // a control the user can no longer see.
     if (type !== "entity") next.delete("entity_type");
+    // Same for the बिगो range, which only renders while browsing Cases. readParams
+    // already declines to send a stale bound, but dropping it from the URL keeps
+    // what is shared or bookmarked honest about what is actually applied.
+    if (type !== "case") {
+      next.delete("bigo_min");
+      next.delete("bigo_max");
+    }
     setSearchParams(next);
   };
 
-  const removeRefinement = (name: RefinementName, value: string) => {
+  // One request per COMMITTED range — a thumb release, an arrow key-up, or a
+  // typed amount on blur/Enter. The slider owns its position while dragging, so
+  // a 20-stop drag is one request rather than twenty and there is nothing here
+  // to debounce.
+  const updateBigoRange = ({ min, max }: { min?: number; max?: number }) => {
+    // Both bounds move as ONE edit. Setting them in sequence through
+    // setArchiveSearchParam would re-normalize in between, and a new lower bound
+    // momentarily above the OUTGOING upper bound looks inverted at that point —
+    // which drops both, losing the half already written.
+    const next = new URLSearchParams(searchParams);
+    next.delete("bigo_min");
+    next.delete("bigo_max");
+    if (min !== undefined) next.set("bigo_min", String(min));
+    if (max !== undefined) next.set("bigo_max", String(max));
+    next.delete("page");
+    setSearchParams(normalizeArchiveSearchParams(next));
+  };
+
+  const removeRefinement = (name: PillName, value: string) => {
     if (name === "type") {
       updateRecordType(undefined);
+      return;
+    }
+    if (name === "bigo") {
+      updateBigoRange({});
       return;
     }
     toggleRefinement(name, value);
@@ -244,7 +287,7 @@ export default function ArchiveSearch({
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "entity_type", "case_type", "tags"] as RefinementName[]
+      ["type", "entity_type", "case_type", "tags", "bigo_min", "bigo_max"] as const
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -262,27 +305,45 @@ export default function ArchiveSearch({
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
-    // On a locked single-type page the type isn't a removable refinement.
-    type:
-      lockedType || selectedRecordType === "all" ? [] : [selectedRecordType],
+    // Record type is represented by the tabs, so duplicating it as a removable
+    // filter chip (or in the mobile filter count) would be redundant.
+    type: [],
   };
-  const activeRefinementCount = Object.values(selectedRefinements).reduce(
-    (count, values) => count + values.length,
-    0,
-  );
+  // The active बिगो range as a single removable pill, labelled with the formatted
+  // bounds however it was set — dragged or typed — so a range is never applied
+  // invisibly. ONE pill, not one per bound: it is a single refinement, and
+  // removing it clears both sides.
+  const hasBigoRange =
+    params.bigo_min !== undefined || params.bigo_max !== undefined;
+  const bigoPill = hasBigoRange
+    ? {
+        name: "bigo" as const,
+        value: "bigo",
+        label: describeBigoRange(params.bigo_min, params.bigo_max, t),
+      }
+    : null;
+  const activeRefinementCount =
+    Object.values(selectedRefinements).reduce(
+      (count, values) => count + values.length,
+      0,
+    ) + (bigoPill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
-  const selectedItems = getSelectedItems(facets, selectedRefinements, t);
+  const selectedItems = [
+    ...getSelectedItems(facets, selectedRefinements, t),
+    ...(bigoPill ? [bigoPill] : []),
+  ];
   const searchFilters = showFilters ? (
     isInitialLoading ? (
-      <SearchFiltersSkeleton />
+      <SearchFiltersSkeleton selectedType={selectedRecordType} />
     ) : (
       <SearchFilters
-        counts={displayData?.counts || {}}
         facets={facets}
-        hideTypeSelector={Boolean(lockedType)}
         onClear={clearRefinements}
+        bigoExtent={displayData?.extents?.bigo}
+        bigoMax={params.bigo_max}
+        bigoMin={params.bigo_min}
+        onBigoCommit={updateBigoRange}
         onToggle={toggleRefinement}
-        onTypeChange={updateRecordType}
         selected={selectedSidebarFilters}
         selectedType={selectedRecordType}
       />
@@ -300,20 +361,29 @@ export default function ArchiveSearch({
       />
 
       <div className="layout-container">
-        <header className="max-w-3xl">
-
-          <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
-            {heading || t("archiveSearch.heading", "Archive Search")}
-          </h1>
-          <p className="mt-3 text-base leading-7 text-muted-foreground">
-            {description ||
-              t(
-                "archiveSearch.description",
-                "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
-              )}
-          </p>
+        {/*
+          The coverage link sits to the RIGHT of the title, not under the
+          subtitle. It is a secondary way OUT of this page, and below the subtitle
+          it pushed the search bar — the one control everybody comes here for —
+          a further ~44px down the fold. `items-start` levels it with the top of
+          the heading block; `flex-wrap` drops it under the subtitle, where it
+          used to live, once the row no longer fits.
+        */}
+        <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
+          <div className="max-w-3xl">
+            <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
+              {heading || t("archiveSearch.heading", "Archive Search")}
+            </h1>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">
+              {description ||
+                t(
+                  "archiveSearch.description",
+                  "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
+                )}
+            </p>
+          </div>
           <Link
-            className="group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            className="group mt-3 inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
             to="/data-quality"
           >
             <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -327,7 +397,7 @@ export default function ArchiveSearch({
         </header>
 
         <form
-          className="mt-7 flex w-full flex-col gap-3 lg:flex-row lg:items-center"
+          className="mt-5 flex w-full flex-col gap-3 lg:flex-row lg:items-center"
           onSubmit={submitSearch}
         >
           <label className="sr-only" htmlFor="archive-search">
@@ -441,12 +511,58 @@ export default function ArchiveSearch({
           where the single copy lands: the disclosure button is a grid item only
           below `lg`, so above it the panel takes column 1 and the results column 2.
         */}
+        {/*
+          The row template is load-bearing. The sidebar below spans BOTH rows,
+          and CSS Grid sizes a spanning item by distributing its excess
+          contribution EQUALLY over the auto tracks it spans — so with two
+          implicit `auto` rows, a facet panel taller than the cards pushed half
+          its surplus into row 1, whose only content is a 45px tab bar. That
+          inflated row 1 to 745px on "All records" and 1773px on Court cases:
+          ~700px and ~1730px of blank space between the tabs and the first card
+          (and as much again below the last card, the section being
+          `self-start`). Naming the tracks fixes it, and row 2 must stay
+          FLEXIBLE: the algorithm skips distributing a span into intrinsic
+          tracks once a flexible one is in range, so `auto auto` would not.
+        */}
         <div
           className={cn(
             "mt-5 grid items-start gap-x-7 gap-y-4 lg:mt-7",
             showFilters && "lg:grid-cols-[250px_minmax(0,1fr)]",
+            tabsAndFilters && "lg:grid-rows-[auto_minmax(0,1fr)]",
           )}
         >
+          {/*
+            The type tabs are a grid item in the RESULTS column, not a full-width
+            row above the grid. They scope the cards, so they belong over the
+            cards rather than stretching across the filter sidebar too — and the
+            underline now measures the column it applies to.
+
+            Putting them in row 1 is also what lifts the sidebar: it spans both
+            rows, so it starts level with the tabs instead of below them.
+
+            Both placements are gated on `tabsAndFilters` because an explicitly
+            placed row 1 with nothing in it still contributes `gap-y`, which would
+            drop the sidebar 16px out of line with the results on the locked
+            single-type pages (/materials, /court-cases) that render no tabs.
+
+            `order-first` is for the single-column layout below `lg`, where the
+            explicit placement does not apply and the tabs would otherwise sort
+            after the Filters disclosure button rather than above it.
+          */}
+          {showTypeTabs ? (
+            <div
+              className={cn(
+                "order-first min-w-0",
+                tabsAndFilters && "lg:col-start-2 lg:row-start-1",
+              )}
+            >
+              <SearchTabs
+                activeType={selectedRecordType}
+                onChange={updateRecordType}
+              />
+            </div>
+          ) : null}
+
           {showFilters ? (
             <>
               {/*
@@ -481,6 +597,7 @@ export default function ArchiveSearch({
                 className={cn(
                   filtersOpen ? "block" : "hidden",
                   "self-start lg:block",
+                  tabsAndFilters && "lg:col-start-1 lg:row-span-2 lg:row-start-1",
                 )}
                 id={filtersPanelId}
               >
@@ -492,7 +609,10 @@ export default function ArchiveSearch({
           <section
             aria-busy={isInitialLoading || isRefreshing}
             aria-label="Archive search results"
-            className="min-w-0 self-start"
+            className={cn(
+              "min-w-0 self-start",
+              tabsAndFilters && "lg:col-start-2 lg:row-start-2",
+            )}
           >
             {showError ? (
               <Alert className="mb-5" variant="destructive">
@@ -520,10 +640,27 @@ export default function ArchiveSearch({
               </Alert>
             ) : null}
 
+            {/* Gated on a settled response: showing a suggestion derived from the
+                PREVIOUS query while the next one is still in flight would offer a
+                correction for a term the reader has already moved on from. */}
+            {!showError && !isFetching && !isPlaceholderData && data?.did_you_mean ? (
+              <DidYouMean
+                onAccept={(suggestion) => {
+                  // `query` is local state seeded from the URL only on mount, so
+                  // updating the params alone would leave the misspelling sitting
+                  // in the search box while the results below it changed.
+                  setQuery(suggestion);
+                  updateParams({ page: 1, q: suggestion });
+                }}
+                suggestion={data.did_you_mean}
+              />
+            ) : null}
+
             <ArchiveSearchResults
               data={displayData}
               isError={showError}
               isLoading={isInitialLoading || isRefreshing}
+              resultType={selectedRecordType}
               searchTerm={params.q}
               viewMode={viewMode}
             />
@@ -556,6 +693,12 @@ function readRecordType(searchParams: URLSearchParams): ArchiveSearchType {
     : "all";
 }
 
+// The URL's बिगो bounds under the API's own param names.
+function readBigoParams(searchParams: URLSearchParams) {
+  const { min, max } = readBigoBounds(searchParams);
+  return { bigo_min: min, bigo_max: max };
+}
+
 function readParams(
   searchParams: URLSearchParams,
   selectedRecordType: ArchiveSearchType,
@@ -575,6 +718,18 @@ function readParams(
         : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
+    // Only honour the बिगो bounds while browsing Cases. No other record type
+    // carries an amount, so a bound left over from a case view would empty the
+    // results of whatever the reader switched to — with the control that set it
+    // no longer on screen. Same gate, and the same reason, as entity_type above.
+    //
+    // Read through readBigoBounds, NOT by parsing each bound here: an inverted
+    // pair parses fine bound-by-bound, and normalizeArchiveSearchParams only
+    // repairs the URL an effect later — by which point this render has already
+    // sent `bigo_min > bigo_max` and taken a 400.
+    ...(selectedRecordType === "case"
+      ? readBigoParams(searchParams)
+      : { bigo_min: undefined, bigo_max: undefined }),
     // An explicit ?sort wins. Otherwise the default depends on whether there is
     // query text: with none, EVERY document scores identically (a constant 2.0),
     // so `relevance` degenerates to the `iri` tiebreaker and browse order comes
@@ -591,18 +746,27 @@ function readParams(
   };
 }
 
-const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 2xl:grid-cols-3";
+// Three across from `xl`, not `2xl`. The third column used to arrive only at
+// 1536px, so every laptop sat in a two-up band that stretched from 640px all
+// the way up, leaving cards 459-519px wide with ~200px of content in them.
+// `lg` is too early on this page specifically: unlike /cases, the results share
+// the row with a 250px filter sidebar, so three columns there would be ~235px
+// each. At `xl` they are ~299px and by 1440px ~339px, which is the width
+// /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
+const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
 
 function ArchiveSearchResults({
   data,
   isError,
   isLoading,
+  resultType,
   searchTerm,
   viewMode,
 }: Readonly<{
   data: ArchiveSearchResponse | undefined;
   isError: boolean;
   isLoading: boolean;
+  resultType: ArchiveSearchType;
   searchTerm?: string;
   viewMode: "list" | "card";
 }>) {
@@ -613,9 +777,22 @@ function ArchiveSearchResults({
       return (
         <output aria-label={searchingLabel} className={cardGridClass}>
           {Array.from({ length: archiveSearchPageSize }, (_, index) => (
-            <CaseCardSkeleton key={index} />
+            resultType === "courtcase" ? (
+              <CourtCaseCardSkeleton key={index} />
+            ) : (
+              <CaseCardSkeleton key={index} />
+            )
           ))}
         </output>
+      );
+    }
+    if (resultType === "courtcase") {
+      return (
+        <div aria-label={searchingLabel} className="space-y-3" role="status">
+          {Array.from({ length: archiveSearchPageSize }, (_, index) => (
+            <CourtCaseCardSkeleton key={index} viewMode="list" />
+          ))}
+        </div>
       );
     }
     return (

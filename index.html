@@ -23,6 +23,13 @@
   <link rel="manifest" href="/site.webmanifest" />
   <!-- Must match the hex documented on --primary in src/index.css. -->
   <meta name="theme-color" content="#0E1F3B" />
+  <!-- The hero H1 renders in Vesper Libre Bold on every page's first paint.
+       Without a preload the font is only discovered after CSS parse, so the
+       headline sits ~2s in the Georgia fallback and then reflows — a swap
+       that alone eats most of the CLS budget on Slow 4G (PR #359 review).
+       `crossorigin` is required even same-origin: font fetches are CORS-mode,
+       and a mismatch makes the browser fetch the file twice. -->
+  <link rel="preload" href="/font/Vesper_Libre/VesperLibre-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <!-- Site-wide, so it lives here rather than in all 19 per-page Helmets. -->
   <meta name="twitter:site" content="@jawafdehi" />
   <!--helmet-title-->

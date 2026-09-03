@@ -54,12 +54,13 @@
 }
 
 /* Vesper Libre — a bilingual (Latin + Devanagari) serif used for editorial
-   headings across /insights and /data-quality. Self-hosted; covers both
-   scripts, so bilingual headlines stay in one typeface.
+   headings: the home hero headline, /insights and /data-quality. Self-hosted;
+   covers both scripts, so bilingual headlines stay in one typeface.
 
    WOFF2 only here, no other change: all four faces keep every codepoint (456),
-   every glyph and every layout feature. 27-29% off each, and unlike the app face
-   this is not on the critical path — the home page loads no Vesper at all. */
+   every glyph and every layout feature. 27-29% off each. font-display: swap
+   keeps it off the critical path — the headline paints in the fallback serif
+   and swaps in. */
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Regular.woff2') format('woff2');
@@ -129,6 +130,23 @@
 @keyframes bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
   40%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Finish flourish for the hero stat counters: a brief settle-pop as a
+   count-up lands. Only ever attached from JS after react-countup's onEnd,
+   which itself never fires under reduced motion or static rendering — the
+   media query is belt-and-braces. */
+@keyframes stat-pop {
+  0%   { transform: scale(1);    filter: brightness(1); }
+  35%  { transform: scale(1.07); filter: brightness(1.25); }
+  100% { transform: scale(1);    filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-stat-pop {
+    display: inline-block;
+    animation: stat-pop 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
@@ -340,6 +358,34 @@ All colors MUST be HSL.
     --folder-6: 0 28% 79%;    /* #D8B9B9 blush */
     --folder-7: 169 19% 72%;  /* #A9C4BF sea */
     --folder-8: 272 22% 81%;  /* #CFC4D9 lilac */
+
+    /* Court tier — the four values the API's `court_type` facet holds.
+       Deliberately a REDS-AND-BROWNS family, kept out of --tone-*: it reads as
+       one register (brown at the base, blood-red at the apex) rather than as
+       four unrelated categories.
+
+       Because red and brown ARE one hue family, and because red-green colour
+       blindness collapses that whole span toward olive, hue does almost none of
+       the work here. Separation is carried by a LIGHTNESS LADDER — L* 58 / 43 /
+       32 / 16 — the axis that also survives greyscale and print. Measured: the
+       closest pair is deltaE00 13.8 in normal vision, 8.9 under
+       protanopia/deuteranopia, 11.0 in pure greyscale. If you retune these,
+       re-measure the L* gaps rather than trusting the hues to carry it.
+
+       These necessarily sit near three existing tokens (nearest distances:
+       --accent 9.3, --danger 7.9, --alert 7.5). An earlier fire-red for
+       `special` measured 1.5 from --danger — the Special Court would have worn
+       the error colour — which is why it is a carmine, not a scarlet.
+
+       District and High were originally a caramel/sienna pair 14deg apart in
+       hue. Diluted into the card wash they landed 6.2 deltaE00 from each other
+       and simply read as "two tans". District is now a yellow-leaning OCHRE and
+       High a red-leaning RUST, which pulls them 26deg apart and their washes to
+       13.5 — the pair the eye was actually failing on. */
+    --court-district: 40 62% 52%;   /* ochre       #D09E39 */
+    --court-high: 14 72% 36%;       /* rust        #9E391A */
+    --court-special: 348 72% 34%;   /* carmine red #951831 */
+    --court-supreme: 352 66% 19%;   /* oxblood     #501019 */
   }
 
 }
@@ -468,6 +514,20 @@ All colors MUST be HSL.
     --tone-fuchsia: 299 66% 55%;
     --tone-pink: 328 66% 58%;
     --tone-rose: 345 75% 59%;
+
+    /* Court tier, dark theme. Hue and saturation are held exactly; only
+       lightness moves, so a tier reads as the same colour in both themes —
+       the same rule the tones above follow.
+       The LADDER INVERTS: on a near-black card the emphatic end is the bright
+       end, so district (52% of the corpus, and the one that should stay
+       quietest) is dimmest and supreme is brightest. Each still clears 3:1
+       against both dark surfaces, and the L* ladder is re-solved for this
+       background rather than reused — at the light-theme lightnesses,
+       district and supreme collided at 0.1 L* apart. */
+    --court-district: 40 62% 37%;   /* #977123  L* 50 */
+    --court-high: 14 72% 60%;       /* #E37351  L* 61 */
+    --court-special: 348 72% 76%;   /* #EE94A6  L* 71 */
+    --court-supreme: 352 66% 85%;   /* #F2BFC6  L* 82 */
   }
 
 @layer base {

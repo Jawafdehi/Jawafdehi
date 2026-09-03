@@ -104,8 +104,11 @@
   }
 
   .font-home-hero-title {
-    @apply text-4xl font-extrabold text-primary sm:text-5xl md:text-6xl;
-    font-family: var(--font-family-app);
+    /* Editorial serif (mockup B "The Ledger"): Vesper Libre carries both Latin
+       and Devanagari, so the bilingual headline stays in one typeface. Bold,
+       not extrabold — Vesper has no 800 face. */
+    @apply text-4xl font-bold text-primary sm:text-5xl md:text-6xl;
+    font-family: "Vesper Libre", Georgia, "Noto Sans Devanagari", serif;
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-home-hero-leading);
     max-inline-size: min(100%, var(--font-home-hero-measure));

@@ -12,6 +12,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ArchiveSearch from "@/pages/ArchiveSearch";
 import type { ArchiveSearchResponse } from "@/types/search";
 
+import "../support/resize-observer";
+
 const { getCaseByIdMock, searchArchiveMock } = vi.hoisted(() => ({
   getCaseByIdMock: vi.fn(),
   searchArchiveMock: vi.fn(),
@@ -107,6 +109,14 @@ function LocationState() {
   return <output data-testid="location-search">{location.search}</output>;
 }
 
+// The corpus extent the बिगो control needs to render at all. Absent from
+// `baseResponse` on purpose, so every other test keeps exercising the
+// no-extent path (an older cached response, or a corpus before the reindex).
+const withBigoExtent: ArchiveSearchResponse = {
+  ...baseResponse,
+  extents: { bigo: { min: 45_220, max: 66_000_000_000, count: 75 } },
+};
+
 function renderSearch(initialEntry = "/search") {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -181,6 +191,16 @@ describe("ArchiveSearch", () => {
     );
   });
 
+  it("uses the matching court-case skeleton while that tab loads", () => {
+    searchArchiveMock.mockReturnValue(new Promise(() => undefined));
+
+    renderSearch("/search?type=courtcase");
+
+    expect(
+      document.querySelectorAll("[data-court-case-card-skeleton]").length,
+    ).toBe(12);
+  });
+
   it("keeps filters stable but replaces results during a refresh", async () => {
     const refresh = deferred<ArchiveSearchResponse>();
     searchArchiveMock
@@ -242,15 +262,15 @@ describe("ArchiveSearch", () => {
     // Default selection is "All records" (the full unified corpus).
     expect(
       screen
-        .getByRole("radio", { name: "All records" })
-        .getAttribute("data-state"),
-    ).toBe("checked");
+        .getByRole("tab", { name: "All records" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
     // "all" sends no type filter to the API.
     expect(searchArchiveMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: undefined }),
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(screen.getByTestId("location-search").textContent).toContain(
@@ -259,12 +279,58 @@ describe("ArchiveSearch", () => {
     });
     expect(
       screen
-        .getByRole("radio", { name: "Cases: 8 results" })
-        .getAttribute("data-state"),
-    ).toBe("checked");
+        .getByRole("tab", { name: "Cases" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ type: "case" }),
     );
+  });
+
+  it("puts the tabs in the results column, not in a row above the whole grid", async () => {
+    // The tabs scope the CARDS, so they belong over the cards. As a full-width
+    // row above the grid their underline also ran across the filter sidebar,
+    // implying it scoped the facets too, and it pushed the sidebar a whole tab
+    // row down the page.
+    //
+    // jsdom has no layout engine, so this asserts the two things that PRODUCE
+    // the layout: the tablist is a sibling of the results section inside the
+    // grid (not an earlier element outside it), and it is placed in column 2 /
+    // row 1 with the sidebar spanning both rows so it starts level with them.
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    const tablist = screen.getByRole("tablist");
+    const results = screen.getByRole("region", {
+      name: "Archive search results",
+    });
+    const grid = tablist.parentElement!.parentElement!;
+
+    expect(results.parentElement).toBe(grid);
+    expect(grid.className).toContain("lg:grid-cols-[250px_minmax(0,1fr)]");
+    expect(tablist.parentElement!.className).toContain("lg:col-start-2");
+    expect(tablist.parentElement!.className).toContain("lg:row-start-1");
+    expect(results.className).toContain("lg:row-start-2");
+    // The sidebar spans both rows, which is what lifts it to the tab row.
+    const sidebarCell = screen.getByRole("complementary", {
+      name: "Archive search filters",
+    }).parentElement!;
+    expect(sidebarCell.className).toContain("lg:row-span-2");
+    // ...and the row template is what stops that span from inflating row 1.
+    // Two implicit `auto` rows let the sidebar push half its surplus height
+    // into the tab row: on /search (All records) that was 745px of row for a
+    // 45px tab bar, i.e. ~700px of blank space before the first card. Row 2
+    // must stay FLEXIBLE — that is what makes the sizing algorithm skip row 1
+    // when distributing the spanning sidebar. `auto auto` would not fix it.
+    expect(grid.className).toContain("lg:grid-rows-[auto_minmax(0,1fr)]");
+    // Still ahead of the mobile Filters disclosure in DOM order, so the
+    // single-column layout below `lg` keeps the tabs above it.
+    const filtersToggle = screen.getByRole("button", { name: /^Filters/ });
+    expect(
+      tablist.compareDocumentPosition(filtersToggle) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("shows the Entity type filter only while browsing Entities", async () => {
@@ -278,7 +344,7 @@ describe("ArchiveSearch", () => {
     expect(screen.queryByText("Entity type")).toBeNull();
 
     fireEvent.click(
-      screen.getByRole("radio", { name: "Entities: 3 results" }),
+      screen.getByRole("tab", { name: "Entities" }),
     );
 
     await waitFor(() => {
@@ -288,7 +354,7 @@ describe("ArchiveSearch", () => {
       screen.getByRole("checkbox", { name: "Person: 4 results" }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(screen.queryByText("Entity type")).toBeNull();
@@ -312,7 +378,7 @@ describe("ArchiveSearch", () => {
 
     // Switching record type must not leave the (now hidden) Entity type facet
     // filtering the results behind the user's back.
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -331,6 +397,92 @@ describe("ArchiveSearch", () => {
 
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ entity_type: [], type: "case" }),
+    );
+  });
+
+  // ── बिगो range ───────────────────────────────────────────────────────────────
+  //
+  // The same three gates as Entity type above, for the same reason: only cases
+  // carry an amount, so a bound left in place under another record type empties
+  // the results with the control that set it no longer on screen. These run at
+  // page level because that is where the gate lives — the unit tests around
+  // readBigoBounds cannot see `readParams`, `updateRecordType` or the pill.
+
+  it("drops the बिगो range when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: 10_000_000, type: "case" }),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Entities" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ bigo_min: undefined, type: "entity" }),
+      );
+    });
+    // ...and it leaves the URL, so a shared or bookmarked link stays honest
+    // about what is actually applied.
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "bigo_min",
+    );
+  });
+
+  it("ignores a बिगो bound carried in by a non-case URL", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=material&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: undefined, type: "material" }),
+    );
+  });
+
+  it("never sends an inverted बिगो pair, even on the first render", async () => {
+    // URL normalization repairs an inverted pair, but only from an effect — a
+    // tick AFTER this first request would already have gone out. The API answers
+    // min > max with a 400, which this page renders as its red "could not be
+    // loaded" alert, so a stale bookmark would read as a search outage.
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=100000000&bigo_max=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenCalledWith(
+      expect.objectContaining({ bigo_min: undefined, bigo_max: undefined }),
+    );
+  });
+
+  it("shows the active बिगो range as one removable pill", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    // A range is never applied invisibly, and it is ONE pill rather than one per
+    // bound, because it is a single removable refinement.
+    //
+    // Asserted on the pill's identity and behaviour, not its wording: this suite
+    // does not initialise i18next, so `t` hands back the raw default with
+    // `{{min}}` uninterpolated. The formatted label is covered where a `t` that
+    // interpolates exists — describeBigoRange's unit tests and
+    // SearchFilters.test.tsx.
+    const pills = await screen.findByLabelText("Selected filters");
+    const bigoPill = Array.from(pills.querySelectorAll("button")).filter(
+      (button) => button.textContent?.includes("above"),
+    );
+    expect(bigoPill).toHaveLength(1);
+
+    fireEvent.click(bigoPill[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location-search").textContent).not.toContain(
+        "bigo_min",
+      );
+    });
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: undefined, bigo_max: undefined }),
     );
   });
 
@@ -478,6 +630,8 @@ describe("ArchiveSearch", () => {
             court: "SPECIAL_COURT",
             case_number: "081-CR-0060",
             case_status: "SUB_JUDICE",
+            date: "2025-01-10",
+            date_bs: "2081-09-26",
           },
         },
       ],
@@ -486,25 +640,15 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Special Court 081-CR-0060");
 
-    // The metadata line used to be `truncate`d to one line in card view while the
-    // list row wrapped it in full, hiding the court and status. That regression is
-    // CSS-only, and jsdom has no layout — asserting the text is present would pass
-    // against the broken code too. So compare the classes that decide how much of
-    // each field is shown, not just that the field exists.
+    // Court cases use the dedicated reusable card in both view modes. The field
+    // set stays the same while the shell becomes more compact in list view.
     const renderedFields = () => ({
-      badge: screen.getByText("Court case").textContent,
+      status: screen.getByText("Sub Judice").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
-      description: screen.getByText("Charge sheet filed against the accused")
-        .textContent,
-      metadata: screen.getByText("special court · 081-CR-0060 · sub judice")
-        .textContent,
-      cta: screen.getByText("View").textContent,
-      // Description and metadata are clamped identically in both modes; only the
-      // title scales with the shell, so its classes are compared separately below.
-      descriptionClamp: screen.getByText("Charge sheet filed against the accused")
-        .className,
-      metadataClamp: screen.getByText("special court · 081-CR-0060 · sub judice")
-        .className,
+      caseNumber: screen.getByText("081-CR-0060").textContent,
+      court: screen.getByText("Special Court").textContent,
+      registered: screen.getByText("Registered: 2025-01-10").textContent,
+      cta: screen.getByText("View case").textContent,
     });
 
     const cardView = renderedFields();
@@ -512,17 +656,12 @@ describe("ArchiveSearch", () => {
     const listView = renderedFields();
 
     expect(listView).toEqual(cardView);
-    // Neither mode may truncate a field to a single line.
-    expect(cardView.metadataClamp).not.toContain("truncate");
-    expect(cardView.descriptionClamp).not.toContain("truncate");
-    // The title clamps to the same number of lines in both, at different sizes,
-    // and sits at the same heading level as <CaseCard>'s title (h3) rather than
-    // the h2 the list row used to render.
+    // The title keeps the same semantic level and clamp in both shells.
     const heading = () =>
       screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" });
     expect(heading().className).toContain("line-clamp-2");
     fireEvent.click(screen.getByRole("button", { name: "Card view" }));
-    expect(heading().className).toContain("line-clamp-2");
+    expect(heading().className).toContain("line-clamp-3");
   });
 
   it("does not show an empty state after an initial request failure", async () => {
@@ -617,7 +756,7 @@ describe("ArchiveSearch", () => {
           .length,
       ).toBe(1);
       expect(screen.getAllByRole("checkbox").length).toBe(2);
-      expect(screen.getAllByRole("radio").length).toBe(5);
+      expect(screen.getAllByRole("tab").length).toBe(5);
       expect(document.querySelectorAll("details").length).toBe(0);
     });
 

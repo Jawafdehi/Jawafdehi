@@ -146,11 +146,13 @@
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover"
+      "coverageLink": "See what we cover",
+      "scrollCue": "Scroll"
     },
     "featuredCases": {
       "heading": "Featured Cases",
       "subtitle": "Recent high-impact corruption cases under public scrutiny",
+      "spotlightLabel": "Featured case",
       "viewAll": "View all cases"
     },
     "mission": {
@@ -179,26 +181,6 @@
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
     }
-  },
-  "septemberEvent": {
-    "eyebrow": "Public event · Free · Open to everyone",
-    "title": "Building Nepal's online corruption database",
-    "description": "We will go through the archive in the open: where the records come from, and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
-    "dateUs": "Wednesday 2 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
-    "dateNepal": "Thursday 3 September 2026 in Nepal, 6:45 AM (भदौ १८)",
-    "formatZoom": "Zoom",
-    "formatFacebook": "live on Facebook",
-    "cta": "Register free",
-    "viewFlyer": "View the full flyer",
-    "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
-    "barLabel": "Upcoming public event",
-    "barTitle": "Public event",
-    "barWhenParts": [
-      "2 September, 6 PM Pacific",
-      "3 September, 6:45 AM in Nepal"
-    ],
-    "barCta": "Register free",
-    "barDismiss": "Dismiss event announcement"
   },
   "ourProcess": {
     "hero": {
@@ -1177,7 +1159,12 @@
     "shareOnViber": "Share on Viber",
     "shareOnReddit": "Share on Reddit",
     "shareOnMessenger": "Share on Messenger",
-    "shareOnThreads": "Share on Threads"
+    "shareOnThreads": "Share on Threads",
+    "shareOnInstagram": "Share on Instagram",
+    "shareOnTikTok": "Share on TikTok",
+    "appOnlyHandoff": "Link copied. {{platform}} only accepts posts made in the app — paste it there.",
+    "appOnlyHandoffNoCopy": "{{platform}} only accepts posts made in the app. Copy this page's link and paste it there.",
+    "printLetterheadTagline": "Corruption case record"
   },
   "courts": {
     "supreme": "Supreme Court",
@@ -1185,7 +1172,8 @@
   },
   "courtCaseDetail": {
     "relatedCases": "Related Jawafdehi Cases",
-    "moreCases": "+{{count}} more"
+    "moreCases": "+{{count}} more",
+    "viewCase": "View case"
   },
   "research": {
     "corruption": {
@@ -1966,8 +1954,19 @@
       "bigoInvalid": "Must be a number.",
       "labelTags": "Tags",
       "tagsPlaceholder": "Add a tag and press Enter",
-      "labelThumbnail": "Thumbnail URL",
-      "labelBanner": "Banner URL",
+      "labelThumbnail": "Card image",
+      "thumbnailHelp": "Shown on the home page and in search results. Any size — the platform generates the rest.",
+      "labelBanner": "Hero image",
+      "bannerHelp": "Shown full-width at the top of the case page. Use a wide image; the middle stays visible when it crops.",
+      "imageUpload": "Upload an image",
+      "imageReplace": "Replace",
+      "imageClear": "Remove",
+      "imageNone": "No image",
+      "imageUploaded": "Image uploaded",
+      "imageUploadFailed": "Upload failed",
+      "imageTooLarge": "Image exceeds the 10MB limit.",
+      "legacyImageUrls": "Legacy image links",
+      "legacyImageUrlsHelp": "This case still points at externally hosted images, which load at full size on every view. Upload replacements above, then clear these.",
       "labelCourtCases": "Court-case references",
       "courtCasesHelp": "Link related court cases by their canonical @id IRI.",
       "courtCaseInvalid": "Use the canonical court-case @id IRI.",
@@ -2054,11 +2053,28 @@
     "cardView": "Card view",
     "results_one": "{{count}} result",
     "results_other": "{{count}} results",
+    "didYouMean": "Did you mean",
+    "didYouMeanPunctuation": "?",
     "sort": "Sort",
     "filters": {
       "entityType": "Entity type",
       "caseType": "Case type",
-      "tags": "Tags"
+      "tags": "Tags",
+      "bigo": "Embezzled amount",
+      "bigoRange": {
+        "any": "Any amount",
+        "between": "{{min}} – {{max}}",
+        "from": "{{min}} and above",
+        "upTo": "Up to {{max}}"
+      },
+      "bigoMinField": "Min (Rs)",
+      "bigoMaxField": "Max (Rs)",
+      "bigoNote_one": "Filtering by amount includes only the {{count}} case with a recorded amount.",
+      "bigoNote_other": "Filtering by amount includes only the {{count}} cases with a recorded amount.",
+      "bigoMinThumb": "Minimum amount",
+      "bigoMaxThumb": "Maximum amount",
+      "bigoNoMin": "No minimum",
+      "bigoNoMax": "No maximum"
     }
   },
   "materialsPage": {
