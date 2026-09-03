@@ -5,6 +5,7 @@ import {
   replaceMaterial,
   getMaterialByPath,
   deleteMaterial,
+  uploadMaterialFile,
   adminErrorMessage,
 } from "@/services/admin-api";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/lib/datalake-forms";
 import DeleteButton from "@/components/admin/DeleteButton";
 import MaterialFileUpload from "@/components/admin/datalake/MaterialFileUpload";
+import type { StagedMaterialFile } from "@/components/admin/datalake/MaterialFileUpload";
 import MaterialVisibilityControl from "@/components/admin/datalake/MaterialVisibilityControl";
 import FormPageShell from "@/components/admin/FormPageShell";
 import AdminFormActions from "@/components/admin/AdminFormActions";
@@ -134,6 +136,12 @@ export default function MaterialForm() {
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Create mode: a file picked before the material exists, uploaded by onSubmit
+  // once the create has returned an @id. See MaterialFileUpload's `mode` prop.
+  const [staged, setStaged] = useState<StagedMaterialFile | null>(null);
+  // Edit mode: bytes in flight, so Save can't race an upload (a PUT replaces
+  // `data` wholesale and would drop the MediaObject the upload is appending).
+  const [uploadPending, setUploadPending] = useState(false);
 
   const applyDoc = (next: Doc) => {
     setDoc(next);
@@ -203,7 +211,8 @@ export default function MaterialForm() {
       ? (doc["jawafdehi:sourceType"] as string)
       : "";
   const rows = mediaRows(doc);
-  const canSave = !saving && !loading && !rawError && iriValid && hasName;
+  const canSave =
+    !saving && !loading && !uploadPending && !rawError && iriValid && hasName;
   // Caseworker visibility policy + its derived visibility, surfaced only on an
   // authed read (jawafdehi:visibility[Policy]). Presence gates the out-of-band
   // control below; the values seed it.
@@ -236,10 +245,48 @@ export default function MaterialForm() {
         toast({ title: "Material updated", description: iri });
       } else {
         const created = await createMaterial(doc, materialType);
-        toast({
-          title: "Material saved",
-          description: (created as Doc)["@id"] as string,
-        });
+        const createdDoc = (created ?? {}) as Doc;
+        const createdIri =
+          typeof createdDoc["@id"] === "string" ? (createdDoc["@id"] as string) : iri;
+        toast({ title: "Material saved", description: createdIri });
+
+        // Only now does the material exist, so its {source}/{ident} — the
+        // upload route's key — is finally known. The order matters: the create
+        // above writes `data` wholesale, so uploading first would have its
+        // MediaObject erased by this save. Uploading last lets the endpoint's
+        // read-modify-write keep the typed document AND the file.
+        if (staged) {
+          const parts = parseMaterialIri(createdIri);
+          try {
+            if (!parts) {
+              throw new Error("Saved material's @id is not a valid material IRI.");
+            }
+            await uploadMaterialFile(
+              parts.source,
+              parts.ident,
+              staged.file,
+              staged.role,
+            );
+            setStaged(null);
+            toast({ title: "File uploaded", description: staged.file.name });
+          } catch (err) {
+            // The material saved and only the attachment failed, so reporting a
+            // failed save would be a lie and dropping the file silently would be
+            // worse. Send the caseworker to the edit page, where the immediate
+            // upload control can retry against the material that now exists.
+            toast({
+              title: "Material saved, but the file was not attached",
+              description: adminErrorMessage(err, "Upload failed"),
+              variant: "destructive",
+            });
+            navigate(
+              parts
+                ? `/admin/datalake/materials/edit/${parts.source}/${parts.ident}`
+                : "/admin/datalake/materials",
+            );
+            return;
+          }
+        }
       }
       navigate("/admin/datalake/materials");
     } catch (err) {
@@ -490,6 +537,17 @@ export default function MaterialForm() {
           </div>
         </details>
 
+        {/* Create mode: the file is part of THIS save (staged now, uploaded
+            once the create returns an @id), so unlike the edit-mode control
+            below it belongs inside the form, above the Save it rides on. */}
+        {!editing && (
+          <MaterialFileUpload
+            mode="deferred"
+            disabled={saving}
+            onStagedChange={setStaged}
+          />
+        )}
+
         <AdminFormActions
           saving={saving}
           canSave={canSave}
@@ -528,10 +586,12 @@ export default function MaterialForm() {
         />
       )}
 
-      {/* F8 — file upload. Only in edit mode (the material must exist so its
-          {source}/{ident} path is known). Prefer the components parsed from the
-          doc's @id (canonical location); fall back to the route ref. Refresh the
-          doc after upload so the new contentUrl/associatedMedia shows. */}
+      {/* F8 — file upload, edit mode: the material exists, so this posts
+          immediately and out-of-band (NOT part of Save), like the visibility
+          control above. The create-mode counterpart is inside the form. Prefer
+          the components parsed from the doc's @id (canonical location); fall
+          back to the route ref. Refresh the doc after upload so the new
+          contentUrl/associatedMedia shows. */}
       {editing &&
         (() => {
           const parts = iri ? parseMaterialIri(iri) : null;
@@ -550,10 +610,25 @@ export default function MaterialForm() {
             <MaterialFileUpload
               source={source}
               ident={ident}
+              disabled={saving}
+              onUploadingChange={setUploadPending}
               onUploaded={(res) => {
-                if (res && typeof res === "object") {
-                  applyDoc(res as Doc);
+                if (!res || typeof res !== "object") return;
+                // The upload returns the stored document as the WRITE plane
+                // sees it — without the annotations an authed read adds.
+                // Applying it verbatim would blank jawafdehi:visibilityPolicy
+                // and make the visibility control above disappear, so carry
+                // those two keys across.
+                const merged = { ...(res as Doc) };
+                for (const k of [
+                  "jawafdehi:visibilityPolicy",
+                  "jawafdehi:visibility",
+                ]) {
+                  if (merged[k] === undefined && doc[k] !== undefined) {
+                    merged[k] = doc[k];
+                  }
                 }
+                applyDoc(merged);
               }}
             />
           );
