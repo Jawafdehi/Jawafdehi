@@ -41,6 +41,7 @@ interface ShareButtonProps {
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   showLabel?: boolean;
+  className?: string;
 }
 
 export const ShareButton = ({
@@ -50,6 +51,7 @@ export const ShareButton = ({
   variant = "outline",
   size = "default",
   showLabel = true,
+  className,
 }: ShareButtonProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -147,7 +149,12 @@ export const ShareButton = ({
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant={variant} size={size} aria-label={t("share.share")}>
+          <Button
+            variant={variant}
+            size={size}
+            className={className}
+            aria-label={t("share.share")}
+          >
             <Share2 className="h-4 w-4" />
             {showLabel && size !== "icon" && (
               <span className="mt-1 hidden sm:inline">{t("share.share")}</span>
