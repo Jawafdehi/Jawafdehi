@@ -442,7 +442,28 @@ const CaseDetail = () => {
       />
 
       <div className="flex-1 py-6 sm:py-8">
-        <div className="layout-container">
+        {/* lg:pl-24 reserves the left gutter the FloatingShareSidebar occupies.
+            The rail is `fixed left-4` and 58px wide, so its right edge is at
+            x=74 at EVERY width, while this container is capped at 1400px and
+            centred — meaning a gutter of its own only opens above 1400px. Below
+            that the rail sat on the page: at 1024-1400 it covered the first
+            character of every link in the sticky section jump-nav.
+
+            min-[1536px]:pl-8 hands the gutter back to the centred container once
+            it has one of its own. pl-8, NOT pl-0: the container's own left
+            padding is md:px-8, so zeroing it would push content 32px FURTHER
+            left than normal and re-create the collision it was meant to end --
+            which it did, at 1536-1560, where the jump-nav landed at x=68.
+
+                width   content-left   gap to rail
+                1280         32           -42   <- needs the padding
+                1440         52           -22   <- needs the padding
+                1536        100           +26   <- has its own gutter
+
+            The alternative — hiding the rail below 1536 — was tried and
+            rejected: a share control that vanishes on a 1440px laptop and
+            returns on a wider screen is worse than one that is always there. */}
+        <div className="layout-container lg:pl-24 min-[1536px]:pl-8">
           <div className="min-w-0">
             <div className="min-w-0">
               <FloatingShareSidebar
@@ -465,6 +486,33 @@ const CaseDetail = () => {
               )}
 
               <div id="print-content" className="print-content min-w-0">
+                {/* Print letterhead. A printed case is a document that leaves
+                    the site — handed over, filed, attached to something — so it
+                    has to say who published it on its face. It did not: the
+                    print stylesheet hides `header` outright and then hides every
+                    image and svg inside .print-content, so a printout carried no
+                    mark at all. This block is print-only, and print.css grants
+                    .print-letterhead an explicit exemption from that img rule. */}
+                {/* Layout classes deliberately live in print.css, not here: this
+                    block only ever renders in print, and print.css already has
+                    later `[class*="mb-"]` and `[class*="pb-"]` overrides that
+                    would win against Tailwind utilities set on this element. */}
+                <div className="print-letterhead hidden print:flex">
+                  <img
+                    src="/assets/logo.svg"
+                    alt="Jawafdehi"
+                    className="h-9 w-auto"
+                    width={160}
+                    height={36}
+                  />
+                  {/* Colour and size come from print.css for the same reason
+                      as the layout above; a raw palette class here also trips
+                      the semantic-token lint rule. */}
+                  <span>
+                    {t("share.printLetterheadTagline")} · jawafdehi.org
+                  </span>
+                </div>
+
                 <div className="mb-8 hidden print:block">
                   <h1 className="mb-6 text-4xl font-bold text-foreground">{caseData.title}</h1>
 

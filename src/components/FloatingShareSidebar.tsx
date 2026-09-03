@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Link2, Check, Share2, QrCode, Printer, Download } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+import { LazyQRCode } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";
 import {
   FacebookIcon,
@@ -27,6 +27,8 @@ import {
   RedditIcon,
   MessengerIcon,
   ThreadsIcon,
+  InstagramIcon,
+  TikTokIcon,
 } from "./SocialIcons";
 
 interface FloatingShareSidebarProps {
@@ -53,9 +55,45 @@ export const FloatingShareSidebar = ({
 
   const shareLinks = buildShareLinks({ url, title, description });
 
-  const handleShare = (platform: keyof typeof shareLinks) => {
-    const shareUrl = shareLinks[platform];
-    window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=400");
+  // Where to send someone for a network that has no share-by-URL intent.
+  const APP_ONLY_DESTINATION: Record<string, string> = {
+    instagram: "https://www.instagram.com/",
+    tiktok: "https://www.tiktok.com/upload",
+  };
+
+  const handleShare = async (platform: string, label?: string) => {
+    const destination = APP_ONLY_DESTINATION[platform];
+    if (!destination) {
+      const shareUrl = shareLinks[platform as keyof typeof shareLinks];
+      window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=400");
+      return;
+    }
+
+    // Instagram and TikTok only accept a post composed inside the app, so there
+    // is nothing to open with the URL pre-filled. Best effort, in order:
+
+    // 1. The OS share sheet, which on a phone lists Instagram and TikTok
+    //    themselves — the only route that genuinely hands them the link.
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title, text: description, url });
+        return;
+      } catch (err) {
+        // The user dismissing the sheet is a choice, not a failure — do not
+        // then dump them on instagram.com behind the sheet they just closed.
+        if ((err as Error)?.name === "AbortError") return;
+      }
+    }
+
+    // 2. No sheet (desktop): put the link where the app can reach it and open
+    //    the app, rather than pretending the share happened.
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("share.appOnlyHandoff", { platform: label ?? platform }));
+    } catch {
+      toast.info(t("share.appOnlyHandoffNoCopy", { platform: label ?? platform }));
+    }
+    window.open(destination, "_blank", "noopener,noreferrer");
   };
 
   const handleCopyLink = async () => {
@@ -109,27 +147,59 @@ export const FloatingShareSidebar = ({
     img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
+  // The five networks Jawafdehi actually publishes on, in one order, used by BOTH
+  // the rail and the "Share via" dialog. The dialog previously rendered only the
+  // secondary list, so the primary networks were missing from it entirely.
+  //
+  // Instagram and TikTok are `appOnly`. Neither has a web share intent — there is
+  // no instagram.com/share?url= or tiktok.com/share?url= the way there is a
+  // facebook.com/sharer or twitter.com/intent — because both only accept a post
+  // composed in the app. Rendering them as ordinary share links would give two
+  // buttons that quietly do nothing useful, so they take the handoff path in
+  // `handleShare`: the OS share sheet where one exists, otherwise copy-the-link
+  // and open the app.
   const primaryPlatforms = [
     {
       key: "facebook" as const,
       icon: FacebookIcon,
+      tileBg: "bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900",
       label: "Facebook",
       color: "text-[#1877F2]",
       bg: "hover:bg-blue-50 dark:hover:bg-blue-950",
     },
     {
-      key: "twitter" as const,
-      icon: XTwitterIcon,
-      label: "X",
+      key: "instagram" as const,
+      appOnly: true,
+      icon: InstagramIcon,
+      tileBg: "bg-pink-50 hover:bg-pink-100 dark:bg-pink-950 dark:hover:bg-pink-900",
+      label: "Instagram",
+      color: "text-[#E4405F]",
+      bg: "hover:bg-pink-50 dark:hover:bg-pink-950",
+    },
+    {
+      key: "tiktok" as const,
+      appOnly: true,
+      icon: TikTokIcon,
+      tileBg: "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+      label: "TikTok",
       color: "text-black dark:text-white",
       bg: "hover:bg-gray-100 dark:hover:bg-gray-800",
     },
     {
       key: "linkedin" as const,
       icon: LinkedInIcon,
+      tileBg: "bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900",
       label: "LinkedIn",
       color: "text-[#0A66C2]",
       bg: "hover:bg-blue-50 dark:hover:bg-blue-950",
+    },
+    {
+      key: "twitter" as const,
+      icon: XTwitterIcon,
+      tileBg: "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+      label: "X",
+      color: "text-black dark:text-white",
+      bg: "hover:bg-gray-100 dark:hover:bg-gray-800",
     },
   ];
 
@@ -197,13 +267,15 @@ export const FloatingShareSidebar = ({
           centred, what it covered changed as the reader scrolled, which is why
           this looked like a rendering artefact rather than a collision.
 
-          Showing it from `lg` was the bug: `lg` (1024px) is the width at which
-          the two-column layout appears, not the width at which there is room
-          for a third rail beside it. Nothing is lost below 1536 — the same
-          actions are on the in-page "Share case" button, which opens the same
-          dialog this rail's last item does. */}
+          The rail stays visible from `lg` and the PAGE reserves the gutter
+          instead (`lg:pl-24` on the case body, dropped again at 1536 where the
+          centred container opens a real gutter of its own). Gating the rail on
+          width was tried first and rejected: it made the rail vanish on a
+          1440px laptop and reappear on a wider screen, and a control that
+          comes and goes with the window is worse than one that is simply
+          always there. */}
       <div
-        className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden min-[1536px]:flex flex-col gap-2 p-2 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg animate-in slide-in-from-left-4 fade-in duration-300 no-print"
+        className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-2 p-2 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg animate-in slide-in-from-left-4 fade-in duration-300 no-print"
         role="region"
         aria-label={t("share.share")}
       >
@@ -214,7 +286,7 @@ export const FloatingShareSidebar = ({
                 variant="ghost"
                 size="icon"
                 className={`transition-all ${bg}`}
-                onClick={() => handleShare(key)}
+                onClick={() => handleShare(key, label)}
                 aria-label={t(`share.shareOn${label.replace(" ", "")}`)}
               >
                 <Icon className={`h-5 w-5 ${color}`} />
@@ -276,21 +348,30 @@ export const FloatingShareSidebar = ({
           <DialogHeader>
             <DialogTitle>{t("share.shareVia")}</DialogTitle>
           </DialogHeader>
+          {/* The primary five first, then the messaging apps. This dialog used
+              to render `secondaryPlatforms` ALONE, so "Share via" offered
+              WhatsApp and Reddit but not Facebook, Instagram, TikTok, LinkedIn
+              or X — the networks Jawafdehi actually publishes on, and the ones
+              already on the rail. Both surfaces now read from the same list. */}
           <div className="grid grid-cols-3 gap-3 py-4">
-            {secondaryPlatforms.map(({ key, icon: Icon, label, color, bg }) => (
-              <button
-                key={key}
-                onClick={() => {
-                  handleShare(key);
-                  setMoreDialogOpen(false);
-                }}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${bg}`}
-                aria-label={t(`share.shareOn${label.replace(" ", "")}`)}
-              >
-                <Icon className={`h-6 w-6 ${color}`} />
-                <span className="text-xs font-medium text-foreground">{label}</span>
-              </button>
-            ))}
+            {[...primaryPlatforms, ...secondaryPlatforms].map((platform) => {
+              const { key, icon: Icon, label, color } = platform;
+              const tile = "tileBg" in platform ? platform.tileBg : platform.bg;
+              return (
+                <button
+                  key={key}
+                  onClick={() => {
+                    handleShare(key, label);
+                    setMoreDialogOpen(false);
+                  }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${tile}`}
+                  aria-label={t(`share.shareOn${label.replace(" ", "")}`)}
+                >
+                  <Icon className={`h-6 w-6 ${color}`} />
+                  <span className="text-xs font-medium text-foreground">{label}</span>
+                </button>
+              );
+            })}
           </div>
           
           <div className="border-t pt-4 space-y-3">
@@ -335,7 +416,7 @@ export const FloatingShareSidebar = ({
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <QRCodeSVG
+              <LazyQRCode
                 id="floating-qr-code-svg"
                 value={url}
                 size={200}

@@ -31,7 +31,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+import { LazyQRCode } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";
 
 interface ShareButtonProps {
@@ -357,7 +357,7 @@ export const ShareButton = ({
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <div className="bg-white p-4 rounded-lg">
-              <QRCodeSVG
+              <LazyQRCode
                 id="qr-code-svg"
                 value={url}
                 size={200}
