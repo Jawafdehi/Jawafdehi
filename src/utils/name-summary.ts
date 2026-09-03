@@ -17,6 +17,18 @@ import type { TFunction } from "i18next";
 // making. Moved here from CaseCard, which is now one fewer copy, not one more.
 const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
 
+// A court registry's free-text party field often already ends in "समेत" — its
+// own way of saying "and others" without saying how many. Appending our count
+// to that reads "… समेत समेत ३ अन्यहरू", so the vague marker gives way to the
+// count that is about to state the same thing precisely. Measured at 12 of 900
+// party sides sampled across all four court tiers, one of which had the
+// `total > 1` needed to double it up.
+//
+// Only ever applied when a count IS being appended: on a lone party the name's
+// own "समेत" is the only signal that other parties exist, and dropping it there
+// would quietly narrow what the record claims.
+const TRAILING_AND_OTHERS = /\s*समेत\s*$/;
+
 /**
  * A group of names that may be larger than the names themselves.
  *
@@ -82,19 +94,23 @@ export function summarizeNames(
   const remainingCount = Math.max(total - 1, 0);
   if (remainingCount === 0) return firstName;
 
+  // Falls back to the untouched name if the marker was the whole of it, so a
+  // party recorded only as "समेत" still renders something.
+  const name = firstName.replace(TRAILING_AND_OTHERS, "") || firstName;
+
   const lang = normalizeLanguage(language);
   if (lang.startsWith("ne")) {
     // `count` still goes along: i18next selects the _one/_other plural form
     // from it, while `countLabel` is what actually gets shown.
     return t("common.nameSummary.withOthersNepali", {
-      name: firstName,
+      name,
       count: remainingCount,
       countLabel: formatNameCount(remainingCount, lang),
     });
   }
 
   return t("common.nameSummary.withOthers", {
-    name: firstName,
+    name,
     count: remainingCount,
   });
 }

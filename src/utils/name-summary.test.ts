@@ -74,6 +74,37 @@ describe("summarizeNames", () => {
     );
   });
 
+  it("does not say समेत twice when the name already ends in it", () => {
+    // Real shape, from District Court Bhaktapur 081-C1-0343: the registry's
+    // free-text defendant field carries its own vague "and others" marker, and
+    // appending our count to it read "… समेत समेत ३ अन्यहरू".
+    expect(
+      summarizeNames({ names: ["सिलशोभा शाक्य समेत"], total: 4 }, { t, language: "ne" }),
+    ).toBe("common.nameSummary.withOthersNepali|name=सिलशोभा शाक्य|count=3|countLabel=३");
+  });
+
+  it("keeps a trailing समेत when there is no count to replace it with", () => {
+    // On a lone party that marker is the ONLY signal that other parties exist;
+    // dropping it here would narrow what the record claims.
+    expect(summarizeNames({ names: ["सिलशोभा शाक्य समेत"], total: 1 }, { t, language: "ne" })).toBe(
+      "सिलशोभा शाक्य समेत",
+    );
+  });
+
+  it("strips the marker under English too", () => {
+    // The name is Nepali whichever locale is rendering it, so the doubling has
+    // to be fixed in both — "… समेत with 3 others" reads no better.
+    expect(summarizeNames({ names: ["सिलशोभा शाक्य समेत"], total: 4 }, { t, language: "en" })).toBe(
+      "common.nameSummary.withOthers|name=सिलशोभा शाक्य|count=3|countLabel=undefined",
+    );
+  });
+
+  it("keeps a name that is nothing but the marker", () => {
+    expect(summarizeNames({ names: ["समेत"], total: 3 }, { t, language: "ne" })).toBe(
+      "common.nameSummary.withOthersNepali|name=समेत|count=2|countLabel=२",
+    );
+  });
+
   it("drops blank, whitespace-only and null names before counting", () => {
     expect(
       summarizeNames({ names: ["  Ram  ", "", "   ", null, undefined, "Shyam"] }, { t, language: "en" }),
