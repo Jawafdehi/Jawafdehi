@@ -68,13 +68,27 @@ const DIR = arg("dir", "dist/client");
 // 100 KB gzip of the initial payload, 15% of the budget, eager only because the
 // routes that render it are pre-rendered. Deferring it would pay for this
 // change forty times over.
+// 2026-09: 661_000 → 657_000. Ratcheted DOWN, per the rule above, in the commit
+// that took the bytes out. Adding Instagram and TikTok to the share surfaces put
+// the payload 470 bytes OVER the old line, so rather than move the line up, the
+// QR encoder came off the critical path: `qrcode.react` was imported at module
+// scope by all four share components, two of which live in the eager shell, so
+// it shipped on pages that never draw a QR — and in every one of them the code
+// only renders inside a dialog or sheet the reader has to open. Routing them
+// through src/components/LazyQRCode.tsx recovered 5,603 bytes gzip against the
+// two icons' 1,400: 661,470 → 655,941 as built.
 //
-// 2026-09: 661 → 662 for the generative case-thumbnail fallback (PR #362).
-// Case cards render on eager pre-rendered routes (SSR constraint), so the
-// ~1 KB gzip of card + formatting logic cannot be lazy-loaded. Measured, not
-// padded: a bikram-sambat import the first draft pulled into the entry chunk
-// was cut before this bump.
-const MAX_INITIAL_JS_GZIP = 662_000;
+// The line sits ~1,000 bytes above that, matching the headroom the previous
+// entry left. 656_000 was tried and is too tight to be useful: it left 59 bytes,
+// so the next incidental change would fail CI for no reason worth stopping on.
+//
+// 2026-09: 657_000 → 658_700 for the generative case-thumbnail fallback
+// (PR #362). Case cards render on eager pre-rendered routes (SSR constraint),
+// so the ~1 KB gzip of card + formatting logic cannot be lazy-loaded. Measured
+// (657,715 as built) plus the same ~1,000-byte headroom convention as the entry
+// above; a bikram-sambat import the first draft pulled into the entry chunk was
+// cut before any bump.
+const MAX_INITIAL_JS_GZIP = 658_700;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

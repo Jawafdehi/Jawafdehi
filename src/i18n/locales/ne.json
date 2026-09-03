@@ -1167,7 +1167,12 @@
     "shareOnViber": "Viber मा साझेदारी गर्नुहोस्",
     "shareOnReddit": "Reddit मा साझेदारी गर्नुहोस्",
     "shareOnMessenger": "Messenger मा साझेदारी गर्नुहोस्",
-    "shareOnThreads": "Threads मा साझेदारी गर्नुहोस्"
+    "shareOnThreads": "Threads मा साझेदारी गर्नुहोस्",
+    "shareOnInstagram": "इन्स्टाग्राममा साझेदारी गर्नुहोस्",
+    "shareOnTikTok": "टिकटकमा साझेदारी गर्नुहोस्",
+    "appOnlyHandoff": "लिंक प्रतिलिपि गरियो। {{platform}} मा एपबाटै पोस्ट गर्नुपर्ने हुँदा त्यहाँ टाँस्नुहोस्।",
+    "appOnlyHandoffNoCopy": "{{platform}} मा एपबाटै पोस्ट गर्नुपर्छ। यो पृष्ठको लिंक प्रतिलिपि गरी त्यहाँ टाँस्नुहोस्।",
+    "printLetterheadTagline": "भ्रष्टाचार मुद्दा अभिलेख"
   },
   "courts": {
     "supreme": "सर्वोच्च अदालत",

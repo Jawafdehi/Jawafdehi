@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Link2, MoreHorizontal, Printer, QrCode, Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+import { LazyQRCode } from "@/components/LazyQRCode";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -186,7 +186,7 @@ export function MobileShareExpander({
           {showQr ? (
             <div className="flex justify-center border-t pt-4">
               <div className="rounded-lg bg-white p-3">
-                <QRCodeSVG value={url} size={184} level="H" includeMargin />
+                <LazyQRCode value={url} size={184} level="H" includeMargin />
               </div>
             </div>
           ) : null}
