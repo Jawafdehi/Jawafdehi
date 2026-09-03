@@ -641,7 +641,45 @@
     },
     "breadcrumbFallback": "Case",
     "readMore": "Read more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "progress": {
+      "heading": "Where this case stands",
+      "caveat": "Reconstructed from the court dockets we hold. It describes our record, not the court's file.",
+      "openTimeline": "Read the full case timeline",
+      "currentLabel": "Now",
+      "noAppealRecorded": "We hold no record of an appeal. The time to file one has passed, but an appeal we have not found may still exist — nothing links a Supreme Court docket back to its Special Court original.",
+      "noOutcomeRecorded": "The appeal is on record; we hold no decision for it yet.",
+      "appealWindowOpen": "Appeal window open — {{days}} days remain of the 35 allowed by the Special Court Act, 2059 (s.17).",
+      "appealExtensionPossible": "The 35-day appeal period (Special Court Act, 2059 s.17) has passed. Section 11 allows an extension of up to 15 days, so an appeal may still be filed.",
+      "forum": {
+        "ciaa": "CIAA",
+        "special": "Special Court",
+        "supreme": "Supreme Court"
+      },
+      "stage": {
+        "charge_filed": "Charge sheet filed",
+        "trial": "Trial at the Special Court",
+        "trial_verdict": "Special Court verdict",
+        "appeal_filed": "Appeal to the Supreme Court",
+        "appeal_verdict": "Supreme Court decision"
+      },
+      "verdict": {
+        "ACQUITTED": "Acquitted",
+        "CONVICTED": "Convicted",
+        "PARTIALLY_CONVICTED": "Partially convicted",
+        "AFFIRMED": "Lower decision affirmed",
+        "REVERSED": "Lower decision reversed",
+        "PARTIALLY_REVERSED": "Lower decision partly reversed"
+      },
+      "badge": {
+        "charge_filed": "Charge filed",
+        "trial": "On trial",
+        "appeal_window": "Verdict — appeal window open",
+        "no_appeal_recorded": "Special Court verdict — no appeal found",
+        "appeal_pending": "Under appeal",
+        "appeal_decided": "Appeal decided"
+      }
+    }
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",

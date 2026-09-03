@@ -149,12 +149,19 @@ export async function getCourtCaseFull(courtOrRef: string, caseNumber?: string):
       ? parseCourtCaseRef(courtOrRef)
       : { court: courtOrRef, caseNumber };
   // The core case MUST load (it determines whether the case exists / the page
-  // 404s). Hearings + entities are supplementary: a flaky or empty sub-resource
-  // must NOT tank an otherwise-valid page, so they degrade to [] on failure.
+  // 404s). Hearings + entities are supplementary: a flaky sub-resource must NOT
+  // tank an otherwise-valid page, so a failure degrades to `undefined`.
+  //
+  // `undefined` (could not load) and `[]` (loaded, genuinely none) are kept
+  // DISTINCT on purpose. Collapsing both into `[]` is a correctness bug for any
+  // reader that infers from absence: the case-progress rail reads hearings to
+  // find verdicts the case row never received, so a failed request disguised as
+  // "no hearings" would report a decided case as still on trial. Display-only
+  // readers are unaffected — they already use `hearings ?? []`.
   const core = await getCourtCase(court, number);
   const [hearings, entities] = await Promise.all([
-    getCaseSubResource<CourtCaseHearing>(court, number, 'hearings').catch(() => []),
-    getCaseSubResource<CourtCaseEntity>(court, number, 'entities').catch(() => []),
+    getCaseSubResource<CourtCaseHearing>(court, number, 'hearings').catch(() => undefined),
+    getCaseSubResource<CourtCaseEntity>(court, number, 'entities').catch(() => undefined),
   ]);
   return { ...core, hearings, entities };
 }

@@ -181,6 +181,17 @@ export interface CourtCase {
   priority: string | null;
   registration_number: string;
   case_status: string | null;
+  /**
+   * Classified outcome — ACQUITTED / CONVICTED / PARTIALLY_CONVICTED for a trial
+   * court, AFFIRMED / REVERSED / PARTIALLY_REVERSED for an appellate bench.
+   *
+   * The API whitelists this before serving it: the column carries no DB
+   * constraint and ~1.3% of Supreme rows hold raw portal text — bench referrals
+   * and interlocutory orders that read like dispositions while the case is
+   * still live. Unrecognised values arrive as null, so null means "no
+   * classified verdict on record", NOT "still pending". See JawafdehiAPI#438.
+   */
+  verdict_type: string | null;
   verdict_date_bs: string | null;
   verdict_date_ad: string | null;
   verdict_judge: string | null;

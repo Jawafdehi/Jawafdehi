@@ -15,6 +15,20 @@ interface ChangelogContentProps {
   description?: string;
   heading?: string;
   releases: Release[];
+  /**
+   * Prefix for the per-row anchor ids, which are otherwise just "1-1", "1-2".
+   * Set it when a second copy of the same timeline can be mounted at the same
+   * time — the print sheet alongside the modal — so the two do not both claim
+   * the same DOM id.
+   */
+  idPrefix?: string;
+  /**
+   * Whether the date pills track the reader down the page. Their offset is
+   * measured from the app's sticky header, so inside a modal — which has no such
+   * header and scrolls in its own box — sticking leaves them floating ~5rem
+   * below the top of the content. Pass false there.
+   */
+  sticky?: boolean;
 }
 
 function groupReleases(releases: Release[]) {
@@ -58,22 +72,28 @@ const ChangelogContent = ({
   className,
   description = "Discover what has been added, changed, fixed, improved, and updated in this release.",
   heading = "Changelog Origin Update",
+  idPrefix = "",
   releases,
+  sticky = true,
 }: ChangelogContentProps) => {
   const groupedReleases = groupReleases(releases);
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="mb-8 space-y-4 text-left ">
-        <h2 className=" font-semibold tracking-tight text-primary text-xl md:text-2xl">
-          {heading}
-        </h2>
-        {description ? (
-          <p className="max-w-3xl text-lg leading-8 text-primary/75">
-            {description}
-          </p>
-        ) : null}
-      </div>
+      {heading || description ? (
+        <div className="mb-8 space-y-4 text-left ">
+          {heading ? (
+            <h2 className=" font-semibold tracking-tight text-primary text-xl md:text-2xl">
+              {heading}
+            </h2>
+          ) : null}
+          {description ? (
+            <p className="max-w-3xl text-lg leading-8 text-primary/75">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="space-y-9">
         {groupedReleases.map((group, groupIndex) => (
@@ -90,15 +110,25 @@ const ChangelogContent = ({
             {group.releases.map((release, index) => (
               <div
                 key={`${release.version}-${groupIndex}-${index}`}
-                id={`${groupIndex + 1}-${index + 1}`}
+                id={`${idPrefix}${groupIndex + 1}-${index + 1}`}
                 className="relative flex scroll-mt-[4.5rem] justify-end gap-2"
               >
-                <div className="sticky top-[4.75rem] hidden w-36 flex-col items-end gap-2 self-start pb-4 md:flex">
+                <div
+                  className={cn(
+                    "hidden w-36 flex-col items-end gap-2 self-start pb-4 md:flex",
+                    sticky && "sticky top-[4.75rem]",
+                  )}
+                >
                   <TimelineDatePill date={release.date} version={release.version} />
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <div className="sticky top-[4.75rem] flex size-6 items-center justify-center max-sm:top-5">
+                  <div
+                    className={cn(
+                      "flex size-6 items-center justify-center",
+                      sticky && "sticky top-[4.75rem] max-sm:top-5",
+                    )}
+                  >
                     <span className="flex size-[1.125rem] shrink-0 items-center justify-center rounded-full bg-accent/20">
                       <span className="size-3 rounded-full bg-accent/85" />
                     </span>
