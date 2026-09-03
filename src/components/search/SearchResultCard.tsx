@@ -7,7 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { CourtCaseCard } from "@/components/CourtCaseCard";
+import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { seriesBySource } from "@/data/material-series";
+import { sourceKeyFor } from "@/lib/material-source-labels";
+import {
+  formatLedgerDate,
+  pickLocalized,
+  resolveMaterialDate,
+  sourceFromMaterialUrl,
+} from "@/lib/materials-landing";
+import { SITE_URL } from "@/utils/seo";
 import type {
   ArchiveSearchResult,
   BilingualText,
@@ -16,6 +26,8 @@ import type {
 } from "@/types/search";
 import type { CaseDetail } from "@/types/jds";
 import { getCaseById } from "@/services/jds-api";
+import { getMaterial, materialTail } from "@/services/datalake-api";
+import { getMaterialSourceLinks } from "@/lib/material-links";
 import { cn } from "@/lib/utils";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
@@ -58,8 +70,8 @@ function caseSlugFromUrl(url: string): string | undefined {
   return match?.[1];
 }
 
-// Result dispatcher. Case and court-case records each render their shared rich
-// card; entities and materials use the lightweight generic card.
+// Result dispatcher. Case, court-case and material records each render their
+// shared rich card; entities use the lightweight generic card.
 export function SearchResultCard({
   result,
   viewMode = "list",
@@ -68,7 +80,71 @@ export function SearchResultCard({
   if (result.type === "courtcase") {
     return <CourtCaseResultCard result={result} viewMode={viewMode} />;
   }
+  if (result.type === "material") {
+    return <MaterialResultCard result={result} viewMode={viewMode} />;
+  }
   return <GenericResultCard result={result} viewMode={viewMode} />;
+}
+
+// Materials render the archive's shared document card (the /materials series
+// rows). The index hit fills the text: the source token in the URL names the
+// series (registry) or the publishing institution (long tail, same chain as
+// RecentMaterialsCarousel), and the mixed-calendar `extra.date` resolves
+// through the same BS-in-AD quirk handling as the /materials surfaces, so
+// 2082-* dates render as BS in the reader's calendar instead of leaking raw.
+// The download/source buttons need the record's associatedMedia, which the
+// search index does NOT carry — each row lazily hydrates the detail record
+// (same query key as MaterialProfile, so a later click lands on a warm cache).
+function MaterialResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  const tail = materialTail(result.id);
+  const { data: detail, isLoading: linksLoading } = useQuery({
+    queryKey: ["datalake-material", tail],
+    queryFn: () => getMaterial(tail),
+    enabled: tail.length > 0,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  const source = sourceFromMaterialUrl(result.url);
+  const series = source ? seriesBySource(source) : undefined;
+  const sourceLabel = series
+    ? pickLocalized(series.name, language)
+    : t(
+        `dataQuality.materialsBySource.source.${sourceKeyFor(source ?? "")}`,
+        source ?? "",
+      );
+  const dateLabel =
+    formatLedgerDate(resolveMaterialDate(result.extra), language) ||
+    t("materialsLanding.series.undated", "Undated");
+  const title =
+    pickLocalized(result.title, language) ||
+    t("materialsLanding.recent.untitled", "Untitled document");
+  // Snippets only arrive on text queries; pickLocalized strips the <em>
+  // highlight markup they carry. Many press-release bodies open with the title
+  // sentence, so a snippet that merely echoes the title — in either truncation
+  // direction — adds nothing; drop it.
+  const rawSnippet = pickLocalized(result.snippet, language);
+  const snippet =
+    rawSnippet.startsWith(title) || title.startsWith(rawSnippet)
+      ? ""
+      : rawSnippet;
+
+  return (
+    <MaterialCard
+      title={title}
+      href={result.url}
+      metaLine={[sourceLabel, dateLabel].filter(Boolean).join(" · ")}
+      description={snippet}
+      links={detail ? getMaterialSourceLinks(detail) : []}
+      linksLoading={linksLoading}
+      shareUrl={`${SITE_URL}${result.url}`}
+      viewMode={viewMode}
+    />
+  );
 }
 
 function CourtCaseResultCard({
@@ -225,7 +301,7 @@ function caseCardPropsFromDetail(
 }
 
 // ---------------------------------------------------------------------------
-// Generic entity/material cards — one field set, two shells
+// Generic entity cards — one field set, two shells
 // ---------------------------------------------------------------------------
 
 // Single source of truth for WHAT a non-case result shows. Both view modes read
@@ -248,9 +324,9 @@ function genericResultFields(result: ArchiveSearchResult) {
   };
 }
 
-// Entity / material. `viewMode` picks the shell — a compact row for list, a
-// vertical tile for card — and nothing else: every field below renders in both
-// modes at the same clamp limits.
+// Entity (and any future untyped result). `viewMode` picks the shell — a
+// compact row for list, a vertical tile for card — and nothing else: every
+// field below renders in both modes at the same clamp limits.
 function GenericResultCard({
   result,
   viewMode,
@@ -347,20 +423,11 @@ export function SearchResultCardSkeleton({
   );
 }
 
-// Metadata line for the non-case types, derived from the search `extra` blob.
+// Metadata line for the generic types, derived from the search `extra` blob.
+// Materials no longer pass through here — they have their own card above.
 function simpleMetadata(result: ArchiveSearchResult): string {
-  const parts: string[] = [];
-  if (result.type === "material") {
-    if (result.extra.type) parts.push(humanize(result.extra.type));
-    if (result.extra.date) parts.push(result.extra.date);
-  } else if (result.type === "entity") {
-    if (result.extra.date) parts.push(result.extra.date);
-  }
-  return parts.join(" · ");
-}
-
-function humanize(value: string) {
-  return value.replaceAll("_", " ").toLowerCase();
+  if (result.type === "entity" && result.extra.date) return result.extra.date;
+  return "";
 }
 
 // Entity locations carry an IRI-like title (``.../location/kathmandu``); show the

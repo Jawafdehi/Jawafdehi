@@ -36,6 +36,14 @@ describe("resolveMaterialDate", () => {
     expect(resolved.bs).toMatch(/^2083-/);
   });
 
+  it("reads the date part of a full timestamp", () => {
+    // A few records carry "2025-12-16T06:16:34.722964"-style values in the
+    // date field; the date part is still a usable AD date.
+    const resolved = resolveMaterialDate({ date: "2025-12-16T06:16:34.722964" }, NOW);
+    expect(resolved.ad).toBe("2025-12-16");
+    expect(resolved.bs).toMatch(/^2082-/);
+  });
+
   it("returns nulls for missing or malformed dates", () => {
     expect(resolveMaterialDate(undefined, NOW)).toEqual({ ad: null, bs: null });
     expect(resolveMaterialDate({}, NOW)).toEqual({ ad: null, bs: null });

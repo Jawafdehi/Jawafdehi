@@ -58,7 +58,9 @@ export function resolveMaterialDate(
   extra: SearchResultExtra | undefined,
   currentAdYear: number = new Date().getFullYear(),
 ): ResolvedMaterialDate {
-  const date = extra?.date ?? null;
+  // A few records carry a full timestamp ("2025-12-16T06:16:34…"); the date
+  // part is still trustworthy, so read it rather than dropping to undated.
+  const date = extra?.date?.split("T")[0] ?? null;
   const dateBs = extra?.date_bs ?? null;
   if (date && dateBs) return { ad: date, bs: dateBs };
   if (!date) return { ad: null, bs: dateBs };
@@ -152,7 +154,9 @@ export function pickLocalized(
   language: string,
 ): string {
   if (!text) return "";
-  const nepali = language.startsWith("ne");
+  // `language` comes from i18n.language, which is undefined until the i18n
+  // instance initializes (and in component tests that never initialize one).
+  const nepali = Boolean(language?.startsWith("ne"));
   const primary = nepali ? text.ne : text.en;
   const fallback = nepali ? text.en : text.ne;
   return (primary || fallback || "").replace(/<[^>]*>/g, "");
@@ -166,7 +170,8 @@ export function pickLocalized(
 export function formatLedgerDate(date: ResolvedMaterialDate, language: string): string {
   const devanagari = (value: string) =>
     value.replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
-  if (language.startsWith("ne")) {
+  // Same undefined-until-init guard as pickLocalized above.
+  if (language?.startsWith("ne")) {
     if (date.bs) return devanagari(date.bs);
     return date.ad ?? "";
   }

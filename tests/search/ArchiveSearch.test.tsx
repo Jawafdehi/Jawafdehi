@@ -14,8 +14,9 @@ import type { ArchiveSearchResponse } from "@/types/search";
 
 import "../support/resize-observer";
 
-const { getCaseByIdMock, searchArchiveMock } = vi.hoisted(() => ({
+const { getCaseByIdMock, getMaterialMock, searchArchiveMock } = vi.hoisted(() => ({
   getCaseByIdMock: vi.fn(),
+  getMaterialMock: vi.fn(),
   searchArchiveMock: vi.fn(),
 }));
 
@@ -26,6 +27,16 @@ vi.mock("@/services/search-api", () => ({
 vi.mock("@/services/jds-api", () => ({
   getCaseById: getCaseByIdMock,
 }));
+
+// Material rows hydrate their download/source buttons from the detail API;
+// keep the rest of the module (materialTail etc.) real.
+vi.mock("@/services/datalake-api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/services/datalake-api")>();
+  return {
+    ...actual,
+    getMaterial: (...args: unknown[]) => getMaterialMock(...args),
+  };
+});
 
 const baseResponse: ArchiveSearchResponse = {
   query: "",
@@ -158,6 +169,7 @@ describe("ArchiveSearch", () => {
       entities: [],
     });
     searchArchiveMock.mockReset();
+    getMaterialMock.mockReset();
   });
 
   it("shows filter, count, and result skeletons on the initial load", () => {
@@ -662,6 +674,80 @@ describe("ArchiveSearch", () => {
     expect(heading().className).toContain("line-clamp-2");
     fireEvent.click(screen.getByRole("button", { name: "Card view" }));
     expect(heading().className).toContain("line-clamp-3");
+  });
+
+  it("renders materials as shared document rows with hydrated actions", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/ciaa_press_release/1701",
+          source_app: "ngm",
+          title: { ne: null, en: "Charge sheet filed against nine officials" },
+          snippet: { ne: null, en: "Filed at the <em>Special Court</em> today" },
+          url: "/material/ciaa_press_release/1701",
+          api_url: null,
+          matched_fields: ["body"],
+          score: 1,
+          // The BS-in-AD data-lake quirk: 2082 cannot be an AD document year,
+          // so the card must show it resolved (EN locale → the AD pair), not raw.
+          extra: { date: "2082-11-27", type: "CreativeWork" },
+        },
+      ],
+    });
+    // The detail record behind the row's download/source buttons.
+    getMaterialMock.mockResolvedValue({
+      "@id": "https://jawafdehi.org/material/ciaa_press_release/1701",
+      name: { en: "Charge sheet filed against nine officials" },
+      associatedMedia: [
+        {
+          "@type": "MediaObject",
+          contentUrl: "https://ciaa.gov.np/pressrelease/1701",
+          encodingFormat: "text/html",
+          "jawafdehi:linkRole": "SOURCE_PAGE",
+        },
+        {
+          "@type": "MediaObject",
+          contentUrl: "https://s3.jawafdehi.org/case_uploads/abc.pdf",
+          encodingFormat: "application/pdf",
+          "jawafdehi:linkRole": "RAW",
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material");
+    await screen.findByText("Charge sheet filed against nine officials");
+
+    // Materials have one canonical presentation (the /materials series row),
+    // so the card/list toggle is hidden on this tab.
+    expect(
+      screen.getByRole("group", { name: "View mode" }).className,
+    ).toContain("hidden");
+
+    const title = screen.getByRole("link", {
+      name: "Charge sheet filed against nine officials",
+    });
+    expect(title.getAttribute("href")).toBe("/material/ciaa_press_release/1701");
+    // Registry source token → the curated series name, not the raw token or a
+    // schema.org class ("Creative work"); the date resolves BS→AD for EN.
+    expect(screen.getByText("CIAA press releases · 2026-03-11")).toBeTruthy();
+    // Snippet renders with its <em> highlight markup stripped.
+    expect(screen.getByText("Filed at the Special Court today")).toBeTruthy();
+
+    // Hydrated actions: the original-source page and the PDF download, in the
+    // same shape as the /materials series rows.
+    await waitFor(() => {
+      expect(getMaterialMock).toHaveBeenCalledWith("ciaa_press_release/1701");
+      expect(screen.getByText(".PDF").closest("a")?.getAttribute("href")).toBe(
+        "https://s3.jawafdehi.org/case_uploads/abc.pdf",
+      );
+    });
+    expect(
+      screen
+        .getByRole("link", { name: "Open original source" })
+        .getAttribute("href"),
+    ).toBe("https://ciaa.gov.np/pressrelease/1701");
   });
 
   it("does not show an empty state after an initial request failure", async () => {
