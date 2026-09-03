@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * The 2/3 September 2026 public event was postponed on 29 August, after the
@@ -19,21 +19,33 @@ import { useEffect, useState } from "react";
 export const EVENT_POSTPONED_NOTICE_ENDS_AT = Date.parse("2026-09-03T01:00:00Z");
 
 /**
+ * The cutoff cannot move while a tab is open, so there is nothing to subscribe
+ * to. `useSyncExternalStore` still wants a subscribe function, and an
+ * unsubscribe that does nothing is the honest implementation of "this value
+ * never changes underneath you".
+ */
+const subscribe = () => () => {};
+
+/**
  * Deterministic on the server, real on the client.
  *
  * The home route is prerendered, so evaluating the clock during render would
  * bake one answer into the static HTML and then contradict it at hydration.
- * Instead the server always renders the notice and the client hides it on
- * mount once the cutoff is past. The cost is one frame of a stale bar on the
- * first load after it; the alternative is a hydration mismatch on every load
- * before it.
+ * `useSyncExternalStore` is the hook built for exactly that split: React reads
+ * `getServerSnapshot` while hydrating, then reconciles against the client
+ * snapshot as part of the same commit.
+ *
+ * This deliberately is NOT `useState` + `useEffect`. Effects run after paint,
+ * so that shape renders the notice, lets the browser paint it, and only then
+ * removes it — a visible frame of a stale bar on every hard load past the
+ * cutoff, for every visitor, indefinitely. It was invisible while the strip was
+ * navy on the navy home hero and became a full-width amber flash the moment it
+ * was recoloured for contrast, which is how it was found.
  */
 export function useEventPostponedNoticePast(): boolean {
-  const [past, setPast] = useState(false);
-
-  useEffect(() => {
-    setPast(Date.now() > EVENT_POSTPONED_NOTICE_ENDS_AT);
-  }, []);
-
-  return past;
+  return useSyncExternalStore(
+    subscribe,
+    () => Date.now() > EVENT_POSTPONED_NOTICE_ENDS_AT,
+    () => false,
+  );
 }
