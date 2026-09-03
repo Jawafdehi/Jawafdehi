@@ -2082,6 +2082,86 @@
     "description": "Browse public government records and documents in the Jawafdehi archive — development projects, agency publications, and official materials.",
     "placeholder": "Search documents & other materials"
   },
+  "materialsLanding": {
+    "title": "Documents & other materials — Nepal's public records",
+    "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
+    "heroTitle": "Nepal's public records. One archive.",
+    "heroLede": "Documents collected from government bodies — searchable, citable, always open.",
+    "ctaBrowse": "Browse the archive",
+    "ctaAsk": "Ask the AI assistant",
+    "grid": {
+      "title": "Browse by series",
+      "documents": "documents",
+      "browseAll": "Browse all series"
+    },
+    "capabilities": {
+      "title": "The archive works for you",
+      "lede": "Read it, question it, or take all of it — the records stay public either way.",
+      "downloadTitle": "Download everything",
+      "downloadLine": "Open any series and follow every document to its source file.",
+      "askTitle": "Ask the AI assistant",
+      "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
+      "analyzeTitle": "Analyze in bulk",
+      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub."
+    },
+    "recent": {
+      "title": "Recently added",
+      "untitled": "Untitled document",
+      "previous": "Previous documents",
+      "next": "Next documents"
+    },
+    "sourceDescriptions": {
+      "ag": "Charge sheets filed by the Office of the Attorney General.",
+      "nkp": "Precedents published in the Nepal Kanun Patrika.",
+      "courts": "Orders and verdicts from Nepal's courts.",
+      "ciaa": "Publications of the Commission for the Investigation of Abuse of Authority.",
+      "dfmis": "Development-finance records from DFMIS.",
+      "jawafdehi": "Original documents collected by Jawafdehi.",
+      "koshi": "Official records from Koshi Province.",
+      "ppmo": "Blacklist and debarment records from the PPMO.",
+      "auditorGeneral": "Audit reports from the Office of the Auditor General.",
+      "lawsOfNepal": "Nepali statutes, regulations and bills.",
+      "news": "News coverage archived as evidence.",
+      "socialMedia": "Public social-media posts archived as evidence.",
+      "other": "A document from the Jawafdehi archive."
+    },
+    "series": {
+      "searchPlaceholder": "Search inside this series…",
+      "searchSubmit": "Search this series",
+      "sortLabel": "Sort",
+      "sortLatest": "Latest first",
+      "sortOldest": "Oldest first",
+      "showingLoaded": "Showing {{shown}} of {{loaded}} loaded",
+      "loadMore": "Load more",
+      "loading": "Loading…",
+      "empty": "No documents are visible in this series right now.",
+      "unknown": "This series does not exist. Browse the archive instead:",
+      "backToArchive": "Back to the archive",
+      "undated": "Undated",
+      "openSource": "Open original source",
+      "download": "Download {{format}}"
+    },
+    "filters": {
+      "title": "Filter",
+      "description": "Filter the loaded documents",
+      "active": "{{count}} active",
+      "none": "No filters applied",
+      "clear": "Clear filters",
+      "dateRange": "Filter by date range",
+      "customRange": "Custom date range",
+      "startDate": "From date (AD)",
+      "endDate": "To date (AD)",
+      "invalidRange": "The from date must be before the to date.",
+      "noMatches": "No loaded documents match these filters.",
+      "loadMoreHint": "Load more documents to extend the filtered results.",
+      "presets": {
+        "all": "All time",
+        "30-days": "Last 30 days",
+        "6-months": "Last 6 months",
+        "1-year": "Last year"
+      }
+    }
+  },
   "courtCasesPage": {
     "heading": "Court cases",
     "description": "Browse court cases from Nepal's judiciary in the Jawafdehi governance archive — listings, hearings, and orders harvested from public court records.",

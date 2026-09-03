@@ -39,6 +39,20 @@
   font-display: swap;
 }
 
+/* Inter is used by the materials filter controls. The self-hosted Latin
+   variable file keeps that compact UI face deterministic while Nepali text
+   continues through the Noto Sans Devanagari fallback. */
+@font-face {
+  font-family: 'Inter';
+  src: url('/font/Inter/Inter-latin-wght.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Vesper Libre — a bilingual (Latin + Devanagari) serif used for editorial
    headings: the home hero headline, /insights and /data-quality. Self-hosted;
    covers both scripts, so bilingual headlines stay in one typeface.
@@ -309,6 +323,42 @@ All colors MUST be HSL.
     --tone-pink: 328 66% 38%;
     --tone-rose: 345 75% 37%;
 
+    /* Raised surfaces — the archive elevation model (/materials). The page
+       layers paper (--background) → --surface-2 grouping panels → --surface
+       cards; a raised element combines the surface, a 1px --border hairline
+       and one --shadow-elev-* step. Like --tone-*, these encode a ROLE, not a
+       place: reuse them anywhere a card floats above the page. */
+    --surface: var(--base-white);
+    --surface-2: var(--base-cream);
+
+    /* Elevation scale. All four are the brand navy at low alpha — a shadow is
+       the ink of the thing casting it, not grey soot. Deliberately shadows
+       only: no glows, no coloured shadows. Restated in .dark (black-based;
+       navy-tinted shadows vanish on a near-black page). */
+    --shadow-elev-xs: 0 1px 2px hsl(var(--base-navy) / 0.05);
+    --shadow-elev-sm: 0 2px 8px -2px hsl(var(--base-navy) / 0.08);
+    --shadow-elev-md: 0 8px 24px -8px hsl(var(--base-navy) / 0.14);
+    --shadow-elev-lg: 0 20px 48px -16px hsl(var(--base-navy) / 0.22);
+
+    /* The darkest navy: the far edge of the capabilities section's radial
+       ink wash (--primary-surface → this, off-centre). Text never sits on it
+       alone — it is always blended under --primary-surface content. */
+    --navy-deep: 217 62% 9%;
+
+    /* Series folder tints — the /materials archive's shelf palette. These
+       encode SERIES IDENTITY (folder card fills, series dots in tables), not
+       category or severity — for those use --tone-*. Pastel band (L 72–83%)
+       so --foreground ink passes AA on every one; assigned to series by
+       cycling in registry order (src/data/material-series.ts). */
+    --folder-1: 251 36% 83%;  /* #C9C3E3 lavender */
+    --folder-2: 126 17% 76%;  /* #B9CDBB sage */
+    --folder-3: 27 37% 76%;   /* #D9C1AD tan */
+    --folder-4: 205 27% 78%;  /* #B7C9D6 mist */
+    --folder-5: 45 35% 75%;   /* #D6CBA9 sand */
+    --folder-6: 0 28% 79%;    /* #D8B9B9 blush */
+    --folder-7: 169 19% 72%;  /* #A9C4BF sea */
+    --folder-8: 272 22% 81%;  /* #CFC4D9 lilac */
+
     /* Court tier — the four values the API's `court_type` facet holds.
        Deliberately a REDS-AND-BROWNS family, kept out of --tone-*: it reads as
        one register (brown at the base, blood-red at the apex) rather than as
@@ -430,6 +480,26 @@ All colors MUST be HSL.
     --chart-4: 249 55% 57%;
     --chart-5: 41 95% 45%;
 
+    /* Raised surfaces + elevation, dark. Surfaces step LIGHTER as they rise
+       (the dark inverse of white-on-paper); shadows go black — the navy-alpha
+       light values are invisible on a near-black page. Folder tints drop to
+       the 30% lightness band, hues intact, so a series keeps its colour. */
+    --surface: 217 32% 11%;
+    --surface-2: 217 34% 9%;
+    --shadow-elev-xs: 0 1px 2px hsl(0 0% 0% / 0.5);
+    --shadow-elev-sm: 0 2px 8px -2px hsl(0 0% 0% / 0.55);
+    --shadow-elev-md: 0 8px 24px -8px hsl(0 0% 0% / 0.6);
+    --shadow-elev-lg: 0 20px 48px -16px hsl(0 0% 0% / 0.65);
+    --navy-deep: 217 55% 5%;
+    --folder-1: 251 26% 32%;
+    --folder-2: 126 14% 28%;
+    --folder-3: 27 27% 30%;
+    --folder-4: 205 22% 30%;
+    --folder-5: 45 26% 29%;
+    --folder-6: 0 21% 31%;
+    --folder-7: 169 16% 28%;
+    --folder-8: 272 17% 32%;
+
     --tone-red: 346 70% 65%;
     --tone-orange: 15 79% 55%;
     --tone-amber: 36 71% 55%;
@@ -534,5 +604,19 @@ All colors MUST be HSL.
     .t-tt {
       transition: none !important;
     }
+  }
+}
+
+@layer utilities {
+  /* Hide the scrollbar on a horizontal snap row. The row's own arrow buttons
+     and the snap points are the affordance; a scrollbar under the cards adds
+     a second, redundant one — and on desktop the row does not overflow at
+     all, so there is nothing for it to show. */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
