@@ -146,11 +146,13 @@
         "materials": "कागजात तथा अन्य सामग्री",
         "courtCasesTracked": "अनुगमन गरिएका अदालती मुद्दा"
       },
-      "coverageLink": "हामी के के समेट्छौं"
+      "coverageLink": "हामी के के समेट्छौं",
+      "scrollCue": "तल हेर्नुहोस्"
     },
     "featuredCases": {
       "heading": "विशेष मुद्दाहरू",
       "subtitle": "सार्वजनिक जाँचमा रहेका हालैका उच्च प्रभाव भ्रष्टाचारका मुद्दाहरू",
+      "spotlightLabel": "प्रमुख मुद्दा",
       "viewAll": "सबै मुद्दाहरू हेर्नुहोस्"
     },
     "mission": {
@@ -1157,7 +1159,12 @@
     "shareOnViber": "Viber मा साझेदारी गर्नुहोस्",
     "shareOnReddit": "Reddit मा साझेदारी गर्नुहोस्",
     "shareOnMessenger": "Messenger मा साझेदारी गर्नुहोस्",
-    "shareOnThreads": "Threads मा साझेदारी गर्नुहोस्"
+    "shareOnThreads": "Threads मा साझेदारी गर्नुहोस्",
+    "shareOnInstagram": "इन्स्टाग्राममा साझेदारी गर्नुहोस्",
+    "shareOnTikTok": "टिकटकमा साझेदारी गर्नुहोस्",
+    "appOnlyHandoff": "लिंक प्रतिलिपि गरियो। {{platform}} मा एपबाटै पोस्ट गर्नुपर्ने हुँदा त्यहाँ टाँस्नुहोस्।",
+    "appOnlyHandoffNoCopy": "{{platform}} मा एपबाटै पोस्ट गर्नुपर्छ। यो पृष्ठको लिंक प्रतिलिपि गरी त्यहाँ टाँस्नुहोस्।",
+    "printLetterheadTagline": "भ्रष्टाचार मुद्दा अभिलेख"
   },
   "courts": {
     "supreme": "सर्वोच्च अदालत",
@@ -1926,8 +1933,19 @@
       "bigoInvalid": "अंक हुनुपर्छ।",
       "labelTags": "ट्यागहरू",
       "tagsPlaceholder": "ट्याग थपेर Enter थिच्नुहोस्",
-      "labelThumbnail": "थम्बनेल URL",
-      "labelBanner": "ब्यानर URL",
+      "labelThumbnail": "कार्ड तस्बिर",
+      "thumbnailHelp": "गृहपृष्ठ र खोज नतिजामा देखिन्छ। जुनसुकै आकार हुन सक्छ — बाँकी आकारहरू प्लेटफर्मले आफैँ बनाउँछ।",
+      "labelBanner": "मुख्य तस्बिर",
+      "bannerHelp": "मुद्दा पृष्ठको सिरानमा पूरा चौडाइमा देखिन्छ। चौडा तस्बिर प्रयोग गर्नुहोस्; काटिँदा बीचको भाग देखिइरहन्छ।",
+      "imageUpload": "तस्बिर अपलोड गर्नुहोस्",
+      "imageReplace": "बदल्नुहोस्",
+      "imageClear": "हटाउनुहोस्",
+      "imageNone": "तस्बिर छैन",
+      "imageUploaded": "तस्बिर अपलोड भयो",
+      "imageUploadFailed": "अपलोड असफल भयो",
+      "imageTooLarge": "तस्बिर 10MB को सीमाभन्दा ठूलो छ।",
+      "legacyImageUrls": "पुराना तस्बिर लिंकहरू",
+      "legacyImageUrlsHelp": "यो मुद्दाले अझै बाहिर होस्ट गरिएका तस्बिरहरू देखाउँछ, जुन हरेक पटक पूरा आकारमै लोड हुन्छन्। माथि नयाँ तस्बिर अपलोड गरेर यी खाली गर्नुहोस्।",
       "labelCourtCases": "अदालती मुद्दा सन्दर्भहरू",
       "courtCasesHelp": "सम्बन्धित अदालती मुद्दाहरूलाई तिनको प्रामाणिक @id IRI द्वारा जोड्नुहोस्।",
       "courtCaseInvalid": "प्रामाणिक अदालती मुद्दा @id IRI प्रयोग गर्नुहोस्।",
@@ -2014,6 +2032,8 @@
     "cardView": "कार्ड दृश्य",
     "results_one": "{{count}} नतिजा",
     "results_other": "{{count}} नतिजाहरू",
+    "didYouMean": "तपाईंले भन्न खोजेको",
+    "didYouMeanPunctuation": " हो?",
     "sort": "क्रमबद्ध",
     "filters": {
       "entityType": "संस्था प्रकार",

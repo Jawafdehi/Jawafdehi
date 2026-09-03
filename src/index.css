@@ -40,12 +40,13 @@
 }
 
 /* Vesper Libre — a bilingual (Latin + Devanagari) serif used for editorial
-   headings across /insights and /data-quality. Self-hosted; covers both
-   scripts, so bilingual headlines stay in one typeface.
+   headings: the home hero headline, /insights and /data-quality. Self-hosted;
+   covers both scripts, so bilingual headlines stay in one typeface.
 
    WOFF2 only here, no other change: all four faces keep every codepoint (456),
-   every glyph and every layout feature. 27-29% off each, and unlike the app face
-   this is not on the critical path — the home page loads no Vesper at all. */
+   every glyph and every layout feature. 27-29% off each. font-display: swap
+   keeps it off the critical path — the headline paints in the fallback serif
+   and swaps in. */
 @font-face {
   font-family: 'Vesper Libre';
   src: url('/font/Vesper_Libre/VesperLibre-Regular.woff2') format('woff2');
@@ -115,6 +116,23 @@
 @keyframes bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
   40%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Finish flourish for the hero stat counters: a brief settle-pop as a
+   count-up lands. Only ever attached from JS after react-countup's onEnd,
+   which itself never fires under reduced motion or static rendering — the
+   media query is belt-and-braces. */
+@keyframes stat-pop {
+  0%   { transform: scale(1);    filter: brightness(1); }
+  35%  { transform: scale(1.07); filter: brightness(1.25); }
+  100% { transform: scale(1);    filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-stat-pop {
+    display: inline-block;
+    animation: stat-pop 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 

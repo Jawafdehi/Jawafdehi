@@ -43,7 +43,45 @@ const DIR = arg("dir", "dist/client");
 // and the way there is more dynamic imports, not a bigger number here. When you
 // take bytes out, ratchet this DOWN in the same commit — a limit left slack after
 // a win silently re-permits the regression you just fixed.
-const MAX_INITIAL_JS_GZIP = 660_000;
+//
+// 2026-08: briefly raised 660 → 750 for the homepage redesign, then reverted
+// after measurement showed the redesign adds only ~2 KB gzip to the initial
+// payload (review feedback on PR #359) — the headroom was never needed. The
+// lazy-loading rules above still apply unchanged — three.js stays fully
+// deferred.
+//
+// 2026-09: 660_000 → 661_000 for responsive case images (PR #361). Measured,
+// not estimated: main built to 659,095 bytes and the branch to 660,016, so the
+// feature costs 922 bytes gzip — 0.14% — and left 16 bytes over the old line.
+// The whole cost is in the shell (the i18n chunk is byte-identical, and the
+// admin widget and the oEmbed card ride their existing lazy chunks).
+//
+// Taken deliberately rather than trimmed, because the trade runs the right way:
+// those 922 bytes are what lets every card and hero serve a width-appropriate
+// WebP rendition instead of a full-size original — hundreds of KB of image
+// transfer per page against a fraction of one KB of JS. Deduplicating the
+// candidate-walk into src/lib/use-case-image.ts was tried first and recovered
+// exactly 1 byte: gzip had already collapsed the repeated copy, so there was
+// nothing there to win.
+//
+// The real headroom is elsewhere and is NOT this PR's to spend: `markdown` is
+// 100 KB gzip of the initial payload, 15% of the budget, eager only because the
+// routes that render it are pre-rendered. Deferring it would pay for this
+// change forty times over.
+// 2026-09: 661_000 → 657_000. Ratcheted DOWN, per the rule above, in the commit
+// that took the bytes out. Adding Instagram and TikTok to the share surfaces put
+// the payload 470 bytes OVER the old line, so rather than move the line up, the
+// QR encoder came off the critical path: `qrcode.react` was imported at module
+// scope by all four share components, two of which live in the eager shell, so
+// it shipped on pages that never draw a QR — and in every one of them the code
+// only renders inside a dialog or sheet the reader has to open. Routing them
+// through src/components/LazyQRCode.tsx recovered 5,603 bytes gzip against the
+// two icons' 1,400: 661,470 → 655,941 as built.
+//
+// The line sits ~1,000 bytes above that, matching the headroom the previous
+// entry left. 656_000 was tried and is too tight to be useful: it left 59 bytes,
+// so the next incidental change would fail CI for no reason worth stopping on.
+const MAX_INITIAL_JS_GZIP = 657_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
@@ -62,6 +100,15 @@ const MUST_BE_DEFERRED = [
       "the initial payload because ResearchCorruption (pre-rendered, therefore " +
       "eagerly imported) imported the charts directly. Load them through " +
       "lazyChart() in src/components/charts/lazy.tsx.",
+  },
+  {
+    marker: "THREE.WebGLRenderer",
+    why:
+      "three.js + @react-three/fiber are ~250 KB gzip and the homepage hero " +
+      "scene is the only consumer. The initial payload sits ~1 KB under the " +
+      "limit, so a single static import of the 3D stack blows the budget. " +
+      "Load it only through the React.lazy() dynamic import in " +
+      "src/components/home/hero-scene-gate.tsx.",
   },
 ];
 

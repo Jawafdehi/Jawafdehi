@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
+import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
+import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/home/faq";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { ShareOurVision } from "@/components/home/share-our-vision";
@@ -75,6 +77,7 @@ function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
     entityNames: names,
     location: locations.join(", ") || unknownLocation,
     status: mapCaseStatus(card?.status || result.extra.case_status),
+    image: card?.thumbnail ?? null,
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
     tags: card?.tags || [],
@@ -191,42 +194,63 @@ const Index = () => {
             but external links to jawafdehi.org/#recent-cases would break. */}
         <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
           <div className="layout-container">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  {t("home.featuredCases.heading", "Featured Cases")}
-                </h2>
-                <p className="text-muted-foreground mt-1">
-                  {t(
-                    "home.featuredCases.subtitle",
-                    "Recent high-impact corruption cases under public scrutiny",
-                  )}
-                </p>
+            <Reveal>
+              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+                <div>
+                  {/* Same title/subtitle treatment as the other sections
+                      (FaqSection) — no one-off underline here (PR #359
+                      visual review, item 5). */}
+                  <h2 className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl">
+                    {t("home.featuredCases.heading", "Featured Cases")}
+                  </h2>
+                  <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
+                    {t(
+                      "home.featuredCases.subtitle",
+                      "Recent high-impact corruption cases under public scrutiny",
+                    )}
+                  </p>
+                </div>
               </div>
-            </div>
+            </Reveal>
 
             {featuredCases.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {featuredCases.map((caseItem) => (
-                  <CaseCard key={caseItem.id} {...caseItem} />
-                ))}
-              </div>
+              <>
+                {/* The lead case gets the navy spotlight treatment; the rest
+                    stay on the standard card. Order comes from the editorial
+                    `weight` ranking in the search source. */}
+                <Reveal>
+                  <FeaturedCaseSpotlight {...featuredCases[0]} />
+                </Reveal>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
+                  {featuredCases.slice(1).map((caseItem, index) => (
+                    <Reveal key={caseItem.id} className="h-full" delayMs={(index % 3) * 90}>
+                      <CaseCard {...caseItem} />
+                    </Reveal>
+                  ))}
+                </div>
+              </>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {Array.from({ length: FEATURED_CASE_COUNT }, (_, i) => (
-                  <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
-                ))}
-              </div>
+              <>
+                <div className="h-72 rounded-3xl bg-muted animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
+                  {Array.from({ length: FEATURED_CASE_COUNT - 1 }, (_, i) => (
+                    <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              </>
             )}
 
-            <div className="text-center mt-10 mb-4 flex justify-center">
-              <Button variant="primary" size="xl" asChild>
-                <Link to="/search?type=case">
-                  {t("home.featuredCases.viewAll", "View all cases")}{" "}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
+            <Reveal>
+              <div className="text-center mt-10 mb-4 flex justify-center">
+                <Button variant="primary" size="xl" asChild className="group">
+                  <Link to="/search?type=case">
+                    {t("home.featuredCases.viewAll", "View all cases")}{" "}
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
+                  </Link>
+                </Button>
+              </div>
+            </Reveal>
           </div>
         </section>
 

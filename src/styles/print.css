@@ -91,6 +91,40 @@
     display: none !important;
   }
 
+  /* ...except the letterhead. The blanket rule above exists so a printout is a
+     plain text record rather than a reproduction of the page, and that is still
+     right for case photography and icons — but it also stripped the one mark
+     that says who published the document, since `header` is hidden too. Higher
+     specificity than the rule above, so the exemption is scoped to exactly this
+     block and nothing else comes back with it.
+
+     print-color-adjust is load-bearing: browsers drop background and image
+     colour in print by default, which would render the navy wordmark blank. */
+  .print-content .print-letterhead {
+    display: flex !important;
+  }
+
+  .print-content .print-letterhead img {
+    display: block !important;
+    height: 9mm !important;
+    width: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-content .print-letterhead {
+    border-bottom: 1px solid #ccc !important;
+    padding-bottom: 3mm !important;
+    margin-bottom: 5mm !important;
+    align-items: center !important;
+    gap: 3mm !important;
+  }
+
+  .print-content .print-letterhead span {
+    color: #555 !important;
+    font-size: 8pt !important;
+  }
+
   .print-content .max-h-\[100svh\] {
     max-height: none !important;
     overflow: visible !important;

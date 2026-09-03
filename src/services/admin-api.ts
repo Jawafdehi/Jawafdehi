@@ -19,6 +19,7 @@
 import { http as client, API_BASE_URL, extractErrorMessage } from "./http";
 
 import type { ArchiveSearchResponse, ArchiveSearchResult } from "@/types/search";
+import type { CaseImage } from "@/types/jds";
 
 // Note: axios lowercases response header keys, so `res.headers.etag` is the
 // ETag the backend sends as `ETag`. CORS must expose it — the dev proxy is
@@ -537,6 +538,11 @@ export interface CreateCasePayload {
   notes?: string;
   public_notes?: string;
   key_allegations?: string[];
+  // Ids from uploadCaseImage. Sent on create so an image picked before the
+  // first save survives it — the form navigates straight to the edit page
+  // afterwards, and without these the upload would be silently orphaned.
+  thumbnail_image_id?: number | null;
+  banner_image_id?: number | null;
   [k: string]: unknown;
 }
 
@@ -703,6 +709,39 @@ export async function updateFirm<T = Record<string, unknown>>(
   payload: FirmWrite,
 ): Promise<T> {
   const { data } = await client.patch<T>(`/api/firms/${id}/`, payload);
+  return data;
+}
+
+// --- Case image upload (caseworker role). Multipart: file, optional title.
+// Endpoint: POST /api/case-images/ (flat, unprefixed).
+//
+// Deliberately NOT scoped to a case: the upload only puts the image in the
+// library and hands back its id. Pointing a case at that id is a separate
+// `replace /thumbnail_image_id` op on the ordinary case PATCH, so there stays
+// exactly one write path onto a Case and an upload cannot half-succeed into a
+// case record.
+export interface CaseImageUploadResult {
+  id: number;
+  title: string;
+  width: number;
+  height: number;
+  // Both ladders, generated eagerly by the backend, so the form can preview the
+  // uploaded image at the size it will actually render at.
+  thumbnail: CaseImage;
+  banner: CaseImage;
+}
+
+export async function uploadCaseImage(
+  file: File,
+  title?: string,
+): Promise<CaseImageUploadResult> {
+  const form = new FormData();
+  form.append("file", file);
+  if (title) form.append("title", title);
+  const { data } = await client.post<CaseImageUploadResult>(
+    "/api/case-images/",
+    form,
+  );
   return data;
 }
 

@@ -85,3 +85,38 @@ describe("CaseDetailBanner public_notes byline (on-screen)", () => {
     expect(screen.queryByTestId("case-byline")).toBeNull();
   });
 });
+
+describe("CaseDetailBanner breadcrumb defaults", () => {
+  it("takes its default labels from i18n, not hardcoded English", () => {
+    // CaseDetail — the only production caller — passes neither homeLabel nor
+    // casesLabel, so these defaults ARE what renders. They used to be the
+    // literals "jawafdehi.org" and "case", which a Nepali reader saw untranslated.
+    renderBanner(makeCase());
+
+    const nav = screen.getByRole("navigation", { name: /breadcrumb/i });
+
+    // The mock returns the key when no fallback is given, so a translated
+    // default shows up as its key and a hardcoded string as itself.
+    expect(nav.textContent).toContain("header.title");
+    expect(nav.textContent).toContain("nav.cases");
+    expect(nav.textContent).not.toContain("jawafdehi.org");
+  });
+
+  it("still prefers labels the caller supplies", () => {
+    render(
+      <MemoryRouter>
+        <CaseDetailBanner
+          caseData={makeCase()}
+          resolvedEntities={{}}
+          homeLabel="Jawafdehi"
+          casesLabel="Cases"
+        />
+      </MemoryRouter>,
+    );
+
+    const nav = screen.getByRole("navigation", { name: /breadcrumb/i });
+    expect(nav.textContent).toContain("Jawafdehi");
+    expect(nav.textContent).toContain("Cases");
+    expect(nav.textContent).not.toContain("nav.cases");
+  });
+});

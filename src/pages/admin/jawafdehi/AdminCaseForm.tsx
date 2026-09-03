@@ -42,6 +42,8 @@ import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshi
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
+import CaseImageField from "@/components/admin/case/CaseImageField";
+import type { CaseImage } from "@/types/jds";
 import CaseBylineEditor, {
   type AuthorRow,
   type EditHistoryRow,
@@ -65,6 +67,10 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Trash2 } from "lucide-react";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
+// An image-library id read back off a loaded case. Null for "no image", which is
+// distinct from 0 — hence the explicit Number.isFinite rather than `v || null`.
+const num = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
 
 // The mutable editor state. Sub-resource lists (entities/timeline/evidence) are
 // edited by the F3/F4/F5 child editors; F6 field editors extend this shape.
@@ -92,6 +98,14 @@ interface CaseFormState {
   evidence: EvidenceRow[];
   // F6 first-class field editors.
   bigo: string; // kept as string in the input; sent as number|null
+  // The two case images, as ids into the shared image library. The preview
+  // payloads that go with them are NOT form state — they are display-only and
+  // never patched, so they live in their own state beside the form (see
+  // `previews` below) rather than polluting the dirty-check.
+  thumbnail_image_id: number | null;
+  banner_image_id: number | null;
+  // DEPRECATED free-text URLs, superseded by the ids above. Kept editable only
+  // so the cases that predate the upload flow can be corrected and cleared.
   thumbnail_url: string;
   banner_url: string;
   tags: string[];
@@ -120,6 +134,8 @@ const EMPTY: CaseFormState = {
   timeline: [],
   evidence: [],
   bigo: "",
+  thumbnail_image_id: null,
+  banner_image_id: null,
   thumbnail_url: "",
   banner_url: "",
   tags: [],
@@ -220,6 +236,14 @@ function parseEvidence(c: Record<string, unknown>): EvidenceRow[] {
     .filter((e) => e.material_iri.trim());
 }
 
+// The two rendition payloads off a loaded case, for the image previews.
+// Separate from fromCase because these are display-only and never patched.
+function previewsFromCase(c: Record<string, unknown>) {
+  const image = (v: unknown): CaseImage | null =>
+    v && typeof v === "object" && "srcset" in v ? (v as CaseImage) : null;
+  return { thumbnail: image(c.thumbnail), banner: image(c.banner) };
+}
+
 // Parse a loaded case (loose read-plane shape) into the editor state.
 function fromCase(c: Record<string, unknown>): CaseFormState {
   const allegations = Array.isArray(c.key_allegations)
@@ -244,6 +268,8 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     timeline: parseTimeline(c),
     evidence: parseEvidence(c),
     bigo: c.bigo == null ? "" : str(c.bigo),
+    thumbnail_image_id: num(c.thumbnail_image_id),
+    banner_image_id: num(c.banner_image_id),
     thumbnail_url: str(c.thumbnail_url),
     banner_url: str(c.banner_url),
     tags: strList(c.tags),
@@ -292,6 +318,20 @@ export default function AdminCaseForm() {
   const [conflict, setConflict] = useState(false);
   // Bumped to force the history panel to refetch (after a transition/save).
   const [historyKey, setHistoryKey] = useState(0);
+  // Rendition payloads for the two image controls. Display-only, and NOT part of
+  // CaseFormState: they are derived from the image ids, never patched, and
+  // putting them in the form state would make the dirty-check compare URLs.
+  const [previews, setPreviews] = useState<{
+    thumbnail: CaseImage | null;
+    banner: CaseImage | null;
+  }>({ thumbnail: null, banner: null });
+  // Which image slots have an upload still in flight. CaseImageField only calls
+  // onChange once its upload RESOLVES, so without this the form is submittable
+  // in the window between picking a file and the id reaching form state: a
+  // create would omit the image and an edit would save without it, leaving the
+  // uploaded image orphaned in the library with no case pointing at it.
+  const [uploading, setUploading] = useState({ thumbnail: false, banner: false });
+  const imageUploadPending = uploading.thumbnail || uploading.banner;
 
   const set = <K extends keyof CaseFormState>(k: K, v: CaseFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -308,6 +348,7 @@ export default function AdminCaseForm() {
       const parsed = fromCase(c);
       setForm(parsed);
       setOriginal(parsed);
+      setPreviews(previewsFromCase(c));
       setCaseState(str(c.state ?? c.status) || "DRAFT");
       setEtag(tok);
       // A fresh load resolves any prior conflict and refreshes the history.
@@ -390,6 +431,8 @@ export default function AdminCaseForm() {
   );
   const canSave =
     !saving &&
+    // An in-flight image upload has not reached form state yet — see `uploading`.
+    !imageUploadPending &&
     form.title.trim() !== "" &&
     form.case_type.trim() !== "" &&
     slugValid &&
@@ -441,6 +484,12 @@ export default function AdminCaseForm() {
       const n = form.bigo.trim() === "" ? null : Number(form.bigo);
       ops.push(replaceOp("/bigo", n));
     }
+    // The image ids are already number|null, so send them as-is — a `|| null`
+    // here would be wrong the day an id is 0, and pointless otherwise.
+    if (form.thumbnail_image_id !== original.thumbnail_image_id)
+      ops.push(replaceOp("/thumbnail_image_id", form.thumbnail_image_id));
+    if (form.banner_image_id !== original.banner_image_id)
+      ops.push(replaceOp("/banner_image_id", form.banner_image_id));
     if (form.thumbnail_url !== original.thumbnail_url)
       ops.push(replaceOp("/thumbnail_url", form.thumbnail_url || null));
     if (form.banner_url !== original.banner_url)
@@ -475,6 +524,8 @@ export default function AdminCaseForm() {
       form.missing_details.trim() !== "" ||
       cleanedAllegations.length > 0 ||
       form.bigo.trim() !== "" ||
+      form.thumbnail_image_id !== null ||
+      form.banner_image_id !== null ||
       form.thumbnail_url.trim() !== "" ||
       form.banner_url.trim() !== "" ||
       form.tags.length > 0 ||
@@ -506,6 +557,7 @@ export default function AdminCaseForm() {
         const parsed = fromCase(updated);
         setForm(parsed);
         setOriginal(parsed);
+        setPreviews(previewsFromCase(updated));
         setCaseState(str(updated.state ?? updated.status) || caseState);
         setEtag(tok);
         toast({ title: t("admin.caseForm.updated") });
@@ -528,6 +580,11 @@ export default function AdminCaseForm() {
           key_allegations: cleanedAllegations.length
             ? cleanedAllegations
             : undefined,
+          // Carried through create so an image uploaded before the first save
+          // isn't orphaned. `undefined` (omit the key) rather than `null`, to
+          // match how every other optional field here is handled.
+          thumbnail_image_id: form.thumbnail_image_id ?? undefined,
+          banner_image_id: form.banner_image_id ?? undefined,
         };
         if (effectiveSlug) payload.slug = effectiveSlug;
         const created = await createCase<Record<string, unknown>>(payload);
@@ -911,30 +968,84 @@ export default function AdminCaseForm() {
           />
         </div>
 
+        {/* The two case images. Upload once each; the backend generates every
+            display size, so there is nothing here to get the dimensions of
+            right. */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="thumbnail_url">
-              {t("admin.caseForm.labelThumbnail")}
-            </Label>
-            <Input
-              id="thumbnail_url"
-              value={form.thumbnail_url}
-              onChange={(e) => set("thumbnail_url", e.target.value)}
-              className="text-xs"
-              placeholder="https://…"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="banner_url">{t("admin.caseForm.labelBanner")}</Label>
-            <Input
-              id="banner_url"
-              value={form.banner_url}
-              onChange={(e) => set("banner_url", e.target.value)}
-              className="text-xs"
-              placeholder="https://…"
-            />
-          </div>
+          <CaseImageField
+            variant="card"
+            testId="case-thumbnail-field"
+            label={t("admin.caseForm.labelThumbnail")}
+            help={t("admin.caseForm.thumbnailHelp")}
+            imageId={form.thumbnail_image_id}
+            preview={previews.thumbnail}
+            disabled={saving}
+            onUploadingChange={(pending) =>
+              setUploading((u) => ({ ...u, thumbnail: pending }))
+            }
+            onChange={(id, preview) => {
+              set("thumbnail_image_id", id);
+              setPreviews((p) => ({ ...p, thumbnail: preview }));
+            }}
+          />
+          <CaseImageField
+            variant="hero"
+            testId="case-banner-field"
+            label={t("admin.caseForm.labelBanner")}
+            help={t("admin.caseForm.bannerHelp")}
+            imageId={form.banner_image_id}
+            preview={previews.banner}
+            disabled={saving}
+            onUploadingChange={(pending) =>
+              setUploading((u) => ({ ...u, banner: pending }))
+            }
+            onChange={(id, preview) => {
+              set("banner_image_id", id);
+              setPreviews((p) => ({ ...p, banner: preview }));
+            }}
+          />
         </div>
+
+        {/* The DEPRECATED free-text image URLs. Shown only when a case still
+            carries one, so a caseworker can see what the legacy link was while
+            uploading a replacement, then clear it. Hidden on every other case
+            so nothing new gets written here — same treatment as public_notes. */}
+        {(form.thumbnail_url.trim() !== "" || form.banner_url.trim() !== "") && (
+          <div className="grid gap-4 rounded-md border border-dashed p-4 sm:grid-cols-2">
+            <div className="space-y-1 sm:col-span-2">
+              <Label className="text-sm font-semibold">
+                {t("admin.caseForm.legacyImageUrls")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("admin.caseForm.legacyImageUrlsHelp")}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="thumbnail_url">
+                {t("admin.caseForm.labelThumbnail")}
+              </Label>
+              <Input
+                id="thumbnail_url"
+                value={form.thumbnail_url}
+                onChange={(e) => set("thumbnail_url", e.target.value)}
+                className="text-xs"
+                placeholder="https://…"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="banner_url">
+                {t("admin.caseForm.labelBanner")}
+              </Label>
+              <Input
+                id="banner_url"
+                value={form.banner_url}
+                onChange={(e) => set("banner_url", e.target.value)}
+                className="text-xs"
+                placeholder="https://…"
+              />
+            </div>
+          </div>
+        )}
 
         <ChipListEditor
           label={t("admin.caseForm.labelCourtCases")}
