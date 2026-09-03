@@ -80,6 +80,11 @@ function CourtCaseResultCard({
       caseNumber={result.extra.case_number}
       court={result.extra.court}
       courtType={result.extra.court_type}
+      // Absent on documents indexed before the indexer carried parties, so
+      // both of these are routinely undefined — the card drops the row rather
+      // than showing an empty one.
+      defendant={result.extra.parties?.defendant}
+      plaintiff={result.extra.parties?.plaintiff}
       registrationDate={result.extra.date}
       registrationDateBs={result.extra.date_bs}
       status={result.extra.case_status}

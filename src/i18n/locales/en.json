@@ -975,7 +975,11 @@
     "loading": "Loading…",
     "notAvailable": "N/A",
     "view": "View",
-    "viewDetails": "View Details →"
+    "viewDetails": "View Details →",
+    "nameSummary": {
+      "withOthers_one": "{{name}} with {{count}} other",
+      "withOthers_other": "{{name}} with {{count}} others"
+    }
   },
   "themeToggle": {
     "toggleTheme": "Toggle theme",
@@ -995,12 +999,6 @@
       "medium": "Medium",
       "high": "High",
       "critical": "Critical"
-    },
-    "entitySummary": {
-      "withOthers_one": "{{name}} with {{count}} other",
-      "withOthers_other": "{{name}} with {{count}} others",
-      "withOthersNepali_one": "{{name}} with {{countLabel}} other",
-      "withOthersNepali_other": "{{name}} with {{countLabel}} others"
     }
   },
   "entityCard": {
