@@ -27,6 +27,7 @@
     --font-table-leading: 1.3;
     --font-table-tracking: 0;
     --font-table-transform: none;
+    --font-archive-display-leading: 1.1;
   }
 
   :root[lang="ne"] {
@@ -50,6 +51,9 @@
     --font-table-leading: 1.5;
     --font-table-tracking: 0;
     --font-table-transform: none;
+    /* Vesper's Devanagari carries matras above and below the base; 1.1 clips
+       them, so the display leading opens up in Nepali like every role here. */
+    --font-archive-display-leading: 1.32;
   }
 
   :where(body, button, input, select, textarea) {
@@ -231,6 +235,26 @@
     @apply text-xs font-semibold;
     font-family: var(--font-family-app);
     line-height: var(--font-meta-leading);
+  }
+
+  /* Archive display roles (/materials): the serif register of the catalogue.
+     Vesper Libre at weight 500 — display for the H1 and section headings ONLY;
+     body/UI stays on the app face. Both roles share the archive display
+     leading, which opens up under lang="ne". */
+  .font-archive-hero-title {
+    @apply font-display text-4xl font-medium text-primary sm:text-5xl;
+    letter-spacing: var(--font-heading-tracking);
+    line-height: var(--font-archive-display-leading);
+  }
+
+  .font-archive-section-title {
+    @apply font-display text-2xl font-medium text-primary md:text-3xl;
+    letter-spacing: var(--font-heading-tracking);
+    line-height: var(--font-archive-display-leading);
+  }
+
+  .font-archive-title-inverse {
+    @apply text-primary-foreground;
   }
 
   .font-stat-value {
@@ -466,5 +490,12 @@
     .content-table :is(td, th) {
       @apply whitespace-nowrap text-xs;
     }
+  }
+
+  .font-filter-panel,
+  .font-filter-panel :where(*),
+  .font-material-folder,
+  .font-material-folder :where(*) {
+    font-family: "Inter", "Noto Sans Devanagari", sans-serif;
   }
 }

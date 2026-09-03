@@ -31,7 +31,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
-import { LazyQRCodeSVG as QRCodeSVG } from "@/components/LazyQRCode";
+import { LazyQRCode } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";
 
 interface ShareButtonProps {
@@ -41,6 +41,7 @@ interface ShareButtonProps {
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   showLabel?: boolean;
+  className?: string;
 }
 
 export const ShareButton = ({
@@ -50,10 +51,14 @@ export const ShareButton = ({
   variant = "outline",
   size = "default",
   showLabel = true,
+  className,
 }: ShareButtonProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  // See LazyQRCode: the SVG is absent until the lazy chunk resolves, and the
+  // download handler finds it by id, so an early click would do nothing.
+  const [qrReady, setQrReady] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState<string | null>(null);
   const [showMore, setShowMore] = useState(false);
@@ -144,7 +149,12 @@ export const ShareButton = ({
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant={variant} size={size} aria-label={t("share.share")}>
+          <Button
+            variant={variant}
+            size={size}
+            className={className}
+            aria-label={t("share.share")}
+          >
             <Share2 className="h-4 w-4" />
             {showLabel && size !== "icon" && (
               <span className="mt-1 hidden sm:inline">{t("share.share")}</span>
@@ -357,7 +367,8 @@ export const ShareButton = ({
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <div className="bg-white p-4 rounded-lg">
-              <QRCodeSVG
+              <LazyQRCode
+                onReady={() => setQrReady(true)}
                 id="qr-code-svg"
                 value={url}
                 size={200}
@@ -373,6 +384,7 @@ export const ShareButton = ({
                 variant="outline"
                 className="flex-1"
                 onClick={downloadQRCode}
+                disabled={!qrReady}
               >
                 <Download className="h-4 w-4 mr-2" />
                 <span className="mt-0.5">{t("share.downloadQR")}</span>

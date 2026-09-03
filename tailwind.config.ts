@@ -78,6 +78,7 @@ export default {
         navy: {
           dark: "hsl(var(--navy-dark))",
           light: "hsl(var(--navy-light))",
+          deep: "hsl(var(--navy-deep))",
         },
         "code-surface": {
           DEFAULT: "hsl(var(--code-surface))",
@@ -107,6 +108,24 @@ export default {
           4: "hsl(var(--chart-4))",
           5: "hsl(var(--chart-5))",
         },
+        // Raised-surface roles for the archive elevation model — see
+        // src/index.css. Pair with a 1px border and a shadow-elev-* step.
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          2: "hsl(var(--surface-2))",
+        },
+        // Series folder tints — series identity on /materials (folder cards,
+        // series dots). Categorical/severity colours stay in tone.*.
+        folder: {
+          1: "hsl(var(--folder-1))",
+          2: "hsl(var(--folder-2))",
+          3: "hsl(var(--folder-3))",
+          4: "hsl(var(--folder-4))",
+          5: "hsl(var(--folder-5))",
+          6: "hsl(var(--folder-6))",
+          7: "hsl(var(--folder-7))",
+          8: "hsl(var(--folder-8))",
+        },
         // Categorical tones — see src/index.css. Use opacity for fills and
         // borders (bg-tone-blue/10, border-tone-blue/25).
         tone: {
@@ -131,6 +150,19 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      // The archive elevation scale — tokens in src/index.css. Elevation
+      // changes animate shadow and translateY together; see FolderCard.
+      boxShadow: {
+        "elev-xs": "var(--shadow-elev-xs)",
+        "elev-sm": "var(--shadow-elev-sm)",
+        "elev-md": "var(--shadow-elev-md)",
+        "elev-lg": "var(--shadow-elev-lg)",
+      },
+      transitionTimingFunction: {
+        // Stronger ease-out than Tailwind's built-in: the initial movement is
+        // where responsiveness is perceived, so front-load it.
+        "out-strong": "cubic-bezier(0.23, 1, 0.32, 1)",
+      },
       keyframes: {
         "accordion-down": {
           from: {
@@ -148,10 +180,33 @@ export default {
             height: "0",
           },
         },
+        // One-time hero flourish on /materials: the front folder's sheets
+        // settle upward once the page is on screen. Runs once, forwards.
+        "sheet-rise": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(-8px)" },
+        },
+        // The /materials hero shelf opens on load: the back folders start
+        // stacked behind the front one (translated to centre, unrotated) and
+        // fan out to their resting pose. `both` fill keeps them stacked
+        // through the start delay. The from/to poses must stay in step with
+        // the folders' base utilities in MaterialsLanding.
+        "fan-out-left": {
+          from: { transform: "translate(58%, 10%) rotate(0deg)" },
+          to: { transform: "translate(0, 0) rotate(-6deg)" },
+        },
+        "fan-out-right": {
+          from: { transform: "translate(-58%, 10%) rotate(0deg)" },
+          to: { transform: "translate(0, 0) rotate(6deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        // Sequenced after fan-out: the pile opens, then the papers settle.
+        "sheet-rise": "sheet-rise 600ms cubic-bezier(0.23, 1, 0.32, 1) 950ms forwards",
+        "fan-out-left": "fan-out-left 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
+        "fan-out-right": "fan-out-right 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
       },
     },
   },

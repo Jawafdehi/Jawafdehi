@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -67,6 +67,8 @@ describe("MaterialProfile — overflow-safe rendering", () => {
     getMaterial.mockResolvedValue(material({ text: { ne: `TRANSCRIPT_MARKER ${longRun}` } }));
     renderPage();
 
+    // Radix activates a tab on mousedown/focus, not on a synthetic click.
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: "Document text" }));
     const para = await screen.findByText(/TRANSCRIPT_MARKER/);
     expect(para.className).toMatch(/\bwhitespace-pre-wrap\b/); // keep formatting
     expect(para.className).toMatch(/\bbreak-words\b/); // but break over-long runs
