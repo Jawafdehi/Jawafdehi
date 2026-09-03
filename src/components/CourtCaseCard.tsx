@@ -1,6 +1,15 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarDays, FileText, Landmark } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  FileText,
+  Landmark,
+  Scale,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -9,6 +18,7 @@ import {
   formatCourtName,
   type CourtTypeValue,
 } from "@/utils/court-case-format";
+import { summarizeNames, type NameGroup } from "@/utils/name-summary";
 import { cn } from "@/lib/utils";
 
 
@@ -25,6 +35,12 @@ export interface CourtCaseCardProps {
   title: string;
   url: string;
   viewMode?: "card" | "list";
+  // The case's parties, one {names, total} group per side, straight off the
+  // search hit's `extra.parties`. Both are optional and stay that way: the
+  // index only carries parties on documents written since the indexer gained
+  // the field, so a card must read exactly the same with neither side present.
+  defendant?: NameGroup | null;
+  plaintiff?: NameGroup | null;
 }
 
 function displayCourtStatus(status: string) {
@@ -74,10 +90,86 @@ function courtTypeGradientClass(courtType: CourtTypeValue | null) {
   return courtType ? COURT_TYPE_GRADIENTS[courtType] : "";
 }
 
+/**
+ * One icon-and-value line in the card's meta block.
+ *
+ * Every field in that block is the same shape, and this is the single copy of
+ * it — so a spacing or wrapping fix lands on all of them at once, and the list
+ * view's `grid-cols-3` keeps getting uniform cells as fields are added.
+ *
+ * Values WRAP rather than truncate, deliberately: a court case's number, court
+ * and party names are the whole point of the card, and card view used to
+ * ellipsise them while list view showed them in full.
+ */
+function CourtCaseMetaRow({
+  icon: Icon,
+  className,
+  valueClassName,
+  translate,
+  children,
+}: Readonly<{
+  icon: LucideIcon;
+  className?: string;
+  valueClassName?: string;
+  translate?: "no";
+  children: ReactNode;
+}>) {
+  return (
+    <div className={cn("flex min-w-0 items-center gap-2.5 sm:gap-3", className)}>
+      <Icon aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
+      <span
+        className={cn("min-w-0 break-words [overflow-wrap:anywhere]", valueClassName)}
+        translate={translate}
+      >
+        {children}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * One side of the case: "प्रतिवादी: राम समेत ३ अन्यहरू".
+ *
+ * A card has no room for a party list, so it names the first party and counts
+ * the rest — the same summary the Jawafdehi case card renders for its subject
+ * entities, via the shared `summarizeNames`, so the two cannot word or localise
+ * it differently. The count comes from the side's uncapped `total`, not from
+ * the (capped) names, or it would stall at the indexer's cap.
+ *
+ * Renders nothing at all when the side has no names: a bare "Defendant:" would
+ * imply the record is empty rather than that this field was never indexed.
+ */
+function CourtCasePartyRow({
+  icon,
+  labelKey,
+  labelFallback,
+  party,
+}: Readonly<{
+  icon: LucideIcon;
+  labelKey: string;
+  labelFallback: string;
+  party?: NameGroup | null;
+}>) {
+  const { t, i18n } = useTranslation();
+  const summary = summarizeNames(party, { t, language: i18n.language });
+  if (!summary) return null;
+
+  return (
+    <CourtCaseMetaRow icon={icon}>
+      {/* Same label treatment as the court-case detail page's parties row, so
+          the two surfaces read as the same field. */}
+      <span className="font-medium text-primary/90">{t(labelKey, labelFallback)}:</span>{" "}
+      {summary}
+    </CourtCaseMetaRow>
+  );
+}
+
 export function CourtCaseCard({
   caseNumber,
   court,
   courtType,
+  defendant,
+  plaintiff,
   registrationDate,
   registrationDateBs,
   status,
@@ -149,27 +241,40 @@ export function CourtCaseCard({
           )}
         >
           {caseNumber ? (
-            <div className="flex min-w-0 items-center gap-2.5 text-foreground sm:gap-3">
-              <FileText aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
-              <span className="min-w-0 break-words font-medium [overflow-wrap:anywhere]" translate="no">
-                {caseNumber}
-              </span>
-            </div>
+            <CourtCaseMetaRow
+              className="text-foreground"
+              icon={FileText}
+              translate="no"
+              valueClassName="font-medium"
+            >
+              {caseNumber}
+            </CourtCaseMetaRow>
           ) : null}
           {courtName ? (
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <Landmark aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
-              <span className="min-w-0 break-words [overflow-wrap:anywhere]">{courtName}</span>
-            </div>
+            <CourtCaseMetaRow icon={Landmark}>{courtName}</CourtCaseMetaRow>
           ) : null}
           {registered ? (
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <CalendarDays aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
-              <span className="min-w-0 break-words [overflow-wrap:anywhere]">
-                {t("caseDetail.courtRegistered", "Registered")}: {registered}
-              </span>
-            </div>
+            <CourtCaseMetaRow icon={CalendarDays}>
+              {t("caseDetail.courtRegistered", "Registered")}: {registered}
+            </CourtCaseMetaRow>
           ) : null}
+          {/* Defendant before plaintiff, which is the reverse of the legal
+              citation order the detail page uses. On a results grid the
+              defendant is the party that distinguishes one card from the next;
+              the plaintiff on these records is very often नेपाल सरकार, i.e. the
+              same string on thousands of cards. */}
+          <CourtCasePartyRow
+            icon={Users}
+            labelFallback="Defendant"
+            labelKey="caseDetail.courtDefendant"
+            party={defendant}
+          />
+          <CourtCasePartyRow
+            icon={Scale}
+            labelFallback="Plaintiff"
+            labelKey="caseDetail.courtPlaintiff"
+            party={plaintiff}
+          />
         </div>
 
         <div className="mt-auto flex items-center justify-end gap-2 pt-5 text-sm font-semibold text-success-strong sm:pt-6">
@@ -206,6 +311,11 @@ export function CourtCaseCardSkeleton({
         <Skeleton className="h-6 w-full" />
         <Skeleton className="h-6 w-4/5" />
       </div>
+      {/* Three rows, not five: the party rows are per-document (a side with no
+          names renders nothing, and no side has any on a document indexed
+          before the field existed), so the number/court/date rows are the only
+          ones a skeleton can promise. Reserving space for parties would leave
+          the card shrinking on load everywhere they are absent. */}
       <div
         className={cn(
           "mt-5 space-y-3 sm:mt-6",

@@ -98,6 +98,27 @@ export interface CaseSearchCard {
   entities: CaseSearchCardEntity[];
 }
 
+// One side of a court case, as the search index stores it.
+//
+// `names` is CAPPED by the indexer (JawafdehiAPI `PARTY_NAME_CAP`, 5 today) and
+// `total` is not, so the two disagree on a case with many parties — and that is
+// the point: `total` is what a "+N others" affordance has to count from, or it
+// silently stops at the cap. It can also be 0 with an empty `names`, for a side
+// the record simply never named.
+export interface SearchResultPartySide {
+  names: string[];
+  total: number;
+}
+
+// Party names for a court-case hit, attributed to a side. Both keys are written
+// together, but each is optional here: a side the API could not attribute is
+// dropped rather than guessed at, since a wrong party on a court record is
+// worse than a missing one.
+export interface SearchResultParties {
+  plaintiff?: SearchResultPartySide;
+  defendant?: SearchResultPartySide;
+}
+
 // Type-specific metadata the service surfaces in the `extra` blob (all optional).
 export interface SearchResultExtra {
   date?: string;
@@ -111,6 +132,11 @@ export interface SearchResultExtra {
   // documents indexed before that field existed — see `courtTypeValue`.
   court_type?: string;
   case_number?: string;
+  // Optional for a stronger reason than the rest of this blob: unlike `court`,
+  // which every court-case document has ever carried, `parties` was added to
+  // the indexer later, so a document only gains it on reindex. Until the index
+  // is rebuilt this key is simply absent — the cards must render without it.
+  parties?: SearchResultParties;
 }
 
 // One result hit — the common envelope every type shares. Rich per-result

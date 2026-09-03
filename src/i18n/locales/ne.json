@@ -975,7 +975,13 @@
     "loading": "लोड हुँदैछ…",
     "notAvailable": "उपलब्ध छैन",
     "view": "हेर्नुहोस्",
-    "viewDetails": "विवरण हेर्नुहोस् →"
+    "viewDetails": "विवरण हेर्नुहोस् →",
+    "nameSummary": {
+      "withOthers_one": "{{name}} समेत {{count}} अन्य",
+      "withOthers_other": "{{name}} समेत {{count}} अन्यहरू",
+      "withOthersNepali_one": "{{name}} समेत {{countLabel}} अन्य",
+      "withOthersNepali_other": "{{name}} समेत {{countLabel}} अन्यहरू"
+    }
   },
   "themeToggle": {
     "toggleTheme": "थिम परिवर्तन गर्नुहोस्",
@@ -995,12 +1001,6 @@
       "medium": "मध्यम",
       "high": "उच्च",
       "critical": "गम्भीर"
-    },
-    "entitySummary": {
-      "withOthers_one": "{{name}} समेत {{count}} अन्य",
-      "withOthers_other": "{{name}} समेत {{count}} अन्यहरू",
-      "withOthersNepali_one": "{{name}} समेत {{countLabel}} अन्य",
-      "withOthersNepali_other": "{{name}} समेत {{countLabel}} अन्यहरू"
     }
   },
   "entityCard": {

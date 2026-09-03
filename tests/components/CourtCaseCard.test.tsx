@@ -6,11 +6,19 @@ import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { CourtCaseDetails } from "@/components/courtcase/CourtCaseDetails";
 import type { CourtCase } from "@/types/jds";
 
-// Passthrough translations so assertions don't depend on i18n resources.
+// Passthrough translations so assertions don't depend on i18n resources. The
+// one exception is the interpolating branch: the "X and N others" party
+// summaries are the only strings here whose VALUE an assertion cares about, so
+// they get a stand-in rendering rather than a bare key.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string | { count?: number }) =>
-      typeof fallback === "string" ? fallback : key,
+    t: (key: string, fallback?: string | { count?: number; name?: string; countLabel?: string }) => {
+      if (typeof fallback === "string") return fallback;
+      if (fallback && "name" in fallback) {
+        return `${fallback.name} +${fallback.countLabel ?? fallback.count}`;
+      }
+      return key;
+    },
     i18n: { language: "en" },
   }),
 }));
@@ -246,5 +254,90 @@ describe("CourtCaseCard", () => {
     expect(
       container.querySelector("[class*='background-image:linear-gradient']"),
     ).toBeNull();
+  });
+});
+
+describe("CourtCaseCard parties", () => {
+  const partyProps = {
+    caseNumber: "083-C1-0163",
+    court: "chitwandc",
+    courtType: "district",
+    registrationDate: "2026-08-31",
+    title: "District Court Chitwan 083-C1-0163",
+    url: "/courtcase/chitwandc/083-c1-0163",
+  };
+
+  function renderCard(props: Partial<React.ComponentProps<typeof CourtCaseCard>> = {}) {
+    const { container } = render(
+      <MemoryRouter>
+        <CourtCaseCard {...partyProps} {...props} />
+      </MemoryRouter>,
+    );
+    return container;
+  }
+
+  it("names each side's first party and counts the rest", () => {
+    const container = renderCard({
+      defendant: { names: ["राम बहादुर", "श्याम", "हरि"], total: 3 },
+      plaintiff: { names: ["नेपाल सरकार"], total: 1 },
+    });
+
+    expect(container.textContent).toContain("Defendant:");
+    expect(container.textContent).toContain("राम बहादुर +2");
+    expect(container.textContent).toContain("Plaintiff:");
+    // A lone party gets no count appended at all.
+    expect(container.textContent).toContain("नेपाल सरकार");
+    expect(container.textContent).not.toContain("नेपाल सरकार +");
+  });
+
+  it("counts from the uncapped total rather than the capped name list", () => {
+    // The indexer stores at most PARTY_NAME_CAP (5) names but the true count in
+    // `total`; counting the array would under-report every large case and stop
+    // being true at the cap.
+    const container = renderCard({
+      defendant: { names: ["A", "B", "C", "D", "E"], total: 12 },
+    });
+
+    expect(container.textContent).toContain("A +11");
+  });
+
+  it("shows the defendant before the plaintiff", () => {
+    // Deliberately the reverse of the detail page's legal citation order: on a
+    // results grid the defendant is what tells two cards apart, while the
+    // plaintiff is very often the same government body on all of them.
+    const container = renderCard({
+      defendant: { names: ["Defendant Name"], total: 1 },
+      plaintiff: { names: ["Plaintiff Name"], total: 1 },
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Defendant:");
+    expect(text.indexOf("Defendant:")).toBeLessThan(text.indexOf("Plaintiff:"));
+  });
+
+  it("renders no party rows for a document indexed before parties existed", () => {
+    // `extra.parties` is absent until the index is rebuilt, so this is the
+    // common case in production today. It has to look exactly like the card did
+    // before, not like a case with no parties on record.
+    const container = renderCard();
+
+    expect(container.textContent).not.toContain("Defendant");
+    expect(container.textContent).not.toContain("Plaintiff");
+    // The fields that were always there are untouched.
+    expect(screen.getByText("083-C1-0163")).toBeTruthy();
+    expect(screen.getByText("Chitwan District Court")).toBeTruthy();
+  });
+
+  it("drops only the side that has no names", () => {
+    // The API writes both sides together, but a side it could not attribute
+    // comes back empty rather than guessed at — a wrong party on a court record
+    // is worse than a missing one.
+    const container = renderCard({
+      defendant: { names: ["Sole Defendant"], total: 1 },
+      plaintiff: { names: [], total: 0 },
+    });
+
+    expect(container.textContent).toContain("Defendant:");
+    expect(container.textContent).not.toContain("Plaintiff:");
   });
 });
