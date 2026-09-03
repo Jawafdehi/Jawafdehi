@@ -10,12 +10,16 @@ import type { CourtCase } from "@/types/jds";
 // one exception is the interpolating branch: the "X and N others" party
 // summaries are the only strings here whose VALUE an assertion cares about, so
 // they get a stand-in rendering rather than a bare key.
+//
+// It reads `count`, standing in for en.json — `summarizeNames` passes `count`
+// AND `countLabel` on every call and lets the resource file choose (ne.json
+// takes `countLabel`), so a mock has to pick a side just as a locale does.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string | { count?: number; name?: string; countLabel?: string }) => {
       if (typeof fallback === "string") return fallback;
       if (fallback && "name" in fallback) {
-        return `${fallback.name} +${fallback.countLabel ?? fallback.count}`;
+        return `${fallback.name} +${fallback.count}`;
       }
       return key;
     },
@@ -326,6 +330,22 @@ describe("CourtCaseCard parties", () => {
     // The fields that were always there are untouched.
     expect(screen.getByText("083-C1-0163")).toBeTruthy();
     expect(screen.getByText("Chitwan District Court")).toBeTruthy();
+  });
+
+  it("leaves the registry's own समेत standing instead of counting over it", () => {
+    // Real shape from District Court Bhaktapur 081-C1-0343. "X समेत" is the
+    // registry saying "X and others" without saying how many; our count only
+    // counts the parties actually named, so it is a floor. Replacing the marker
+    // with it would publish a hard count of four that the record never made.
+    const container = renderCard({
+      defendant: {
+        names: ["सिलशोभा  शाक्य समेत", "श्रद्धा  पौडेल", "रामहरी  खड्का क्षेत्री"],
+        total: 4,
+      },
+    });
+
+    expect(container.textContent).toContain("सिलशोभा  शाक्य समेत");
+    expect(container.textContent).not.toContain("+3");
   });
 
   it("drops only the side that has no names", () => {

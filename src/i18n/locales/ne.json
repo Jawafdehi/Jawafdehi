@@ -977,10 +977,8 @@
     "view": "हेर्नुहोस्",
     "viewDetails": "विवरण हेर्नुहोस् →",
     "nameSummary": {
-      "withOthers_one": "{{name}} समेत {{count}} अन्य",
-      "withOthers_other": "{{name}} समेत {{count}} अन्यहरू",
-      "withOthersNepali_one": "{{name}} समेत {{countLabel}} अन्य",
-      "withOthersNepali_other": "{{name}} समेत {{countLabel}} अन्यहरू"
+      "withOthers_one": "{{name}} समेत {{countLabel}} अन्य",
+      "withOthers_other": "{{name}} समेत {{countLabel}} अन्यहरू"
     }
   },
   "themeToggle": {

@@ -18,7 +18,7 @@ import {
   formatCourtName,
   type CourtTypeValue,
 } from "@/utils/court-case-format";
-import { summarizeNames, type NameGroup } from "@/utils/name-summary";
+import { normalizeLanguage, summarizeNames, type NameGroup } from "@/utils/name-summary";
 import { cn } from "@/lib/utils";
 
 
@@ -134,7 +134,9 @@ function CourtCaseMetaRow({
  * the rest — the same summary the Jawafdehi case card renders for its subject
  * entities, via the shared `summarizeNames`, so the two cannot word or localise
  * it differently. The count comes from the side's uncapped `total`, not from
- * the (capped) names, or it would stall at the indexer's cap.
+ * the (capped) names, or it would stall at the indexer's cap — except where the
+ * registry already wrote its own open-ended "समेत", which `summarizeNames`
+ * leaves standing rather than overwrite with a count the record does not back.
  *
  * Renders nothing at all when the side has no names: a bare "Defendant:" would
  * imply the record is empty rather than that this field was never indexed.
@@ -150,8 +152,8 @@ function CourtCasePartyRow({
   labelFallback: string;
   party?: NameGroup | null;
 }>) {
-  const { t, i18n } = useTranslation();
-  const summary = summarizeNames(party, { t, language: i18n.language });
+  const { t } = useTranslation();
+  const summary = summarizeNames(party, { t });
   if (!summary) return null;
 
   return (
@@ -179,8 +181,7 @@ export function CourtCaseCard({
 }: Readonly<CourtCaseCardProps>) {
   const { t, i18n } = useTranslation();
   const isCard = viewMode === "card";
-  const language =
-    typeof i18n.language === "string" ? i18n.language : "en";
+  const language = normalizeLanguage(i18n.language);
   const courtName = formatCourtName(court, language);
   const registered =
     language.startsWith("ne") && registrationDateBs

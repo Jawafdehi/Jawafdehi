@@ -978,9 +978,7 @@
     "viewDetails": "View Details →",
     "nameSummary": {
       "withOthers_one": "{{name}} with {{count}} other",
-      "withOthers_other": "{{name}} with {{count}} others",
-      "withOthersNepali_one": "{{name}} with {{countLabel}} other",
-      "withOthersNepali_other": "{{name}} with {{countLabel}} others"
+      "withOthers_other": "{{name}} with {{count}} others"
     }
   },
   "themeToggle": {

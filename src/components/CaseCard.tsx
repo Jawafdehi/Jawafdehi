@@ -40,19 +40,18 @@ interface CaseCardProps {
 }
 
 // `entityNames` is the structured list; older callers pass only the joined
-// `entity` string, which is split back apart here. The phrasing, pluralisation
-// and Devanagari count then come from `summarizeNames`, shared with the
-// court-case card so the two cards cannot drift apart on how they say
-// "X and N others".
-function getEntitySummary(entity: string, entityNames: string[] | undefined, language: string | undefined, t: TFunction) {
-  const names = entityNames?.filter(Boolean) ?? entity.split(",").map((name) => name.trim()).filter(Boolean);
-  return summarizeNames({ names }, { t, language, fallback: entity });
+// `entity` string, which is split back apart here. Everything after the split —
+// trimming, dropping blanks, phrasing, pluralisation, the Devanagari count —
+// belongs to `summarizeNames`, shared with the court-case card so the two
+// cannot drift apart on how they say "X and N others".
+function getEntitySummary(entity: string, entityNames: string[] | undefined, t: TFunction) {
+  return summarizeNames({ names: entityNames ?? entity.split(",") }, { t, fallback: entity });
 }
 
 export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
+  const entitySummary = getEntitySummary(entity, entityNames, t);
 
   // Slug-only navigation: never fall back to numeric id. The slug-only API
   // would 404 on /case/<numeric>, and the worker.ts edge redirect only fires
