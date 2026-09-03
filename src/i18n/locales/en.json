@@ -1159,7 +1159,12 @@
     "shareOnViber": "Share on Viber",
     "shareOnReddit": "Share on Reddit",
     "shareOnMessenger": "Share on Messenger",
-    "shareOnThreads": "Share on Threads"
+    "shareOnThreads": "Share on Threads",
+    "shareOnInstagram": "Share on Instagram",
+    "shareOnTikTok": "Share on TikTok",
+    "appOnlyHandoff": "Link copied. {{platform}} only accepts posts made in the app — paste it there.",
+    "appOnlyHandoffNoCopy": "{{platform}} only accepts posts made in the app. Copy this page's link and paste it there.",
+    "printLetterheadTagline": "Corruption case record"
   },
   "courts": {
     "supreme": "Supreme Court",
