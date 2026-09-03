@@ -2077,7 +2077,13 @@
       "bigoNoMin": "No minimum",
       "bigoNoMax": "No maximum"
     },
-    "materialSeries": "Series"
+    "materialSeries": "Series",
+    "filterSearch": "Search {{filter}}",
+    "filterMore": "More",
+    "filterLess": "Less",
+    "filterNoMatch": "No matches",
+    "materialSource": "Source",
+    "materialDate": "Date"
   },
   "materialsPage": {
     "heading": "Documents & other materials",

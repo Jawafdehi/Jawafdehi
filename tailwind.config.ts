@@ -126,6 +126,8 @@ export default {
           7: "hsl(var(--folder-7))",
           8: "hsl(var(--folder-8))",
         },
+        // Search-match highlight (see --search-highlight in src/index.css).
+        "search-highlight": "hsl(var(--search-highlight))",
         // Categorical tones — see src/index.css. Use opacity for fills and
         // borders (bg-tone-blue/10, border-tone-blue/25).
         tone: {

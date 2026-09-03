@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Calendar, Landmark, Library } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -10,14 +10,20 @@ import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySource } from "@/data/material-series";
+import { sourceKeyFor } from "@/lib/material-source-labels";
 import {
   materialTypeForSchemaClass,
   materialTypeForSource,
 } from "@/lib/material-series-labels";
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
 import {
+  renderSnippetHighlights,
+  renderTextHighlights,
+} from "@/lib/search-highlight";
+import {
   formatLedgerDate,
   pickLocalized,
+  pickLocalizedRaw,
   resolveMaterialDate,
   sourceFromMaterialUrl,
 } from "@/lib/materials-landing";
@@ -107,6 +113,9 @@ function MaterialResultCard({
 }: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
+  // The query text, for highlighting the fields the API does not mark up.
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
   const source = sourceFromMaterialUrl(result.url);
   const series = source ? seriesBySource(source) : undefined;
   // Every material names its series. A curated-registry source keeps its
@@ -126,12 +135,17 @@ function MaterialResultCard({
         // missing entry degrades the wording rather than dropping the line.
         materialType.replaceAll("_", " "),
       );
-  const seriesLabel = seriesName
-    ? `${t("archiveSearch.materialSeries", "Series")}: ${seriesName}`
-    : "";
   const dateLabel =
     formatLedgerDate(resolveMaterialDate(result.extra), language) ||
     t("materialsLanding.series.undated", "Undated");
+  // The publishing office — the catalogue's "creator", a different axis from
+  // the series: CIAA owns two series (press releases AND annual reports), and
+  // one series spans several offices (press releases come from CIAA, CIB and
+  // DMLI). Neither line implies the other, so the card carries both.
+  const officeLabel = t(
+    `dataQuality.materialsBySource.source.${sourceKeyFor(source ?? "")}`,
+    source ?? "",
+  );
   const title =
     pickLocalized(result.title, language) ||
     t("materialsLanding.recent.untitled", "Untitled document");
@@ -140,17 +154,40 @@ function MaterialResultCard({
   // sentence, so a snippet that merely echoes the title — in either truncation
   // direction — adds nothing; drop it.
   const rawSnippet = pickLocalized(result.snippet, language);
-  const snippet =
-    rawSnippet.startsWith(title) || title.startsWith(rawSnippet)
-      ? ""
-      : rawSnippet;
+  const isTitleEcho =
+    rawSnippet.startsWith(title) || title.startsWith(rawSnippet);
+
+  const metaRows = [
+    {
+      icon: Library,
+      label: t("archiveSearch.materialSeries", "Series"),
+      value: renderTextHighlights(seriesName, query),
+    },
+    {
+      icon: Landmark,
+      label: t("archiveSearch.materialSource", "Source"),
+      value: renderTextHighlights(officeLabel, query),
+    },
+    {
+      icon: Calendar,
+      label: t("archiveSearch.materialDate", "Date"),
+      value: dateLabel,
+    },
+  ].filter((row) => Boolean(row.value));
 
   return (
     <MaterialCard
       title={title}
+      titleNode={renderTextHighlights(title, query)}
       href={result.url}
-      metaLine={[seriesLabel, dateLabel].filter(Boolean).join(" · ")}
-      description={snippet}
+      metaRows={metaRows}
+      // The API marks the snippet's matches itself, including stemmed and
+      // fuzzy hits, so those are rendered as given rather than re-guessed.
+      description={
+        isTitleEcho
+          ? undefined
+          : renderSnippetHighlights(pickLocalizedRaw(result.snippet, language))
+      }
       shareUrl={`${SITE_URL}${result.url}`}
       viewMode={viewMode}
     />

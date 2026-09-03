@@ -115,6 +115,16 @@ function deferred<T>() {
   return { promise, reject, resolve };
 }
 
+/**
+ * The value of one labelled metadata row on a material card. Rows render as
+ * `<dt>Series:</dt><dd>…</dd>`, so the value is read through its label rather
+ * than by matching a whole meta line as one string.
+ */
+function metaValue(label: string): string | undefined {
+  const term = screen.getByText(`${label}:`);
+  return term.parentElement?.querySelector("dd")?.textContent ?? undefined;
+}
+
 function LocationState() {
   const location = useLocation();
   return <output data-testid="location-search">{location.search}</output>;
@@ -709,13 +719,21 @@ describe("ArchiveSearch", () => {
       name: "Charge sheet filed against nine officials",
     });
     expect(title.getAttribute("href")).toBe("/material/ciaa_press_release/1701");
-    // Registry source token → the curated series name, labelled as a series
-    // (not the raw token or a schema.org class); date resolves BS→AD for EN.
-    expect(
-      screen.getByText("Series: CIAA press releases · 2026-03-11"),
-    ).toBeTruthy();
-    // Snippet renders with its <em> highlight markup stripped.
-    expect(screen.getByText("Filed at the Special Court today")).toBeTruthy();
+    // Catalogue-style labelled rows. Series is the curated registry name (not
+    // the raw token or a schema.org class); Source is the publishing office, a
+    // separate axis; Date resolves the BS-in-AD quirk to the AD pair for EN.
+    expect(metaValue("Series")).toBe("CIAA press releases");
+    expect(metaValue("Date")).toBe("2026-03-11");
+    // Office names live in the i18n catalogue, which no instance loads here,
+    // so the value degrades to the raw source token.
+    expect(metaValue("Source")).toBe("ciaa_press_release");
+    // The API pre-marks the snippet's matches with <em>; those render as
+    // highlights, so the text is split across nodes rather than one string.
+    const snippetMark = document.querySelector("p > mark");
+    expect(snippetMark?.textContent).toBe("Special Court");
+    expect(snippetMark?.parentElement?.textContent).toBe(
+      "Filed at the Special Court today",
+    );
 
     // No download/source buttons and NO detail fetch: the index carries no
     // media, and hydrating it would cost a GET per hit on a 346k-record browse
@@ -757,8 +775,50 @@ describe("ArchiveSearch", () => {
     //
     // The type's display string lives in the i18n catalogue ("Court orders"),
     // which no instance loads here, so it degrades to the plain-read token.
-    expect(screen.getByText("Series: court order · 2025-12-29")).toBeTruthy();
-    expect(screen.queryByText(/^Source:/)).toBeNull();
+    expect(metaValue("Series")).toBe("court order");
+    expect(metaValue("Source")).toBe("court_order");
+    expect(metaValue("Date")).toBe("2025-12-29");
+  });
+
+  it("highlights the query in a material title and its series row", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/court_order/special.081-cr-0111",
+          source_app: "ngm",
+          title: { ne: null, en: "Special Court verdict on the order" },
+          snippet: { ne: null, en: null },
+          url: "/material/court_order/special.081-cr-0111",
+          api_url: null,
+          matched_fields: ["title_en"],
+          score: 1,
+          extra: { date: "2025-12-29", type: "Manuscript,DigitalDocument" },
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material&q=order");
+    await screen.findByRole("link", {
+      name: "Special Court verdict on the order",
+    });
+
+    // The API leaves `title` unmarked, so the query's terms are matched here —
+    // in the title and in the labelled rows alike. Asserted per field rather
+    // than as a document-wide count, since which rows contain the term depends
+    // on the catalogue copy.
+    const title = screen.getByRole("link", {
+      name: "Special Court verdict on the order",
+    });
+    expect(title.querySelector("mark")?.textContent).toBe("order");
+    const seriesRow = screen.getByText("Series:").parentElement;
+    expect(seriesRow?.querySelector("mark")?.textContent).toBe("order");
+    // Highlighting must not change what the fields say. The title keeps its
+    // accessible name (asserted by the getByRole above) and the row its value.
+    expect(metaValue("Series")).toBe("court order");
+    // A term shorter than two characters would speckle Devanagari with marks.
+    expect(document.querySelectorAll("mark").length).toBeGreaterThan(0);
   });
 
   it("does not show an empty state after an initial request failure", async () => {

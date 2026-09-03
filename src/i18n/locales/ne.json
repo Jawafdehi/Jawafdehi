@@ -2056,7 +2056,13 @@
       "bigoNoMin": "न्यूनतम छैन",
       "bigoNoMax": "अधिकतम छैन"
     },
-    "materialSeries": "श्रृंखला"
+    "materialSeries": "श्रृंखला",
+    "filterSearch": "{{filter}} खोज्नुहोस्",
+    "filterMore": "थप",
+    "filterLess": "थोरै",
+    "filterNoMatch": "कुनै मेल भएन",
+    "materialSource": "स्रोत",
+    "materialDate": "मिति"
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

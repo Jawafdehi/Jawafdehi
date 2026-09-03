@@ -148,8 +148,15 @@ export function folderTintClass(tint: number): string {
   return FOLDER_TINT_CLASSES[tint] ?? FOLDER_TINT_CLASSES[1];
 }
 
-/** Language-aware pick from a bilingual pair, falling back across languages. */
-export function pickLocalized(
+/**
+ * Language-aware pick from a bilingual pair, falling back across languages,
+ * KEEPING any markup the value carries.
+ *
+ * Only search snippets carry markup — the `<em>` runs OpenSearch wraps around
+ * the terms it matched — so this is for callers that render those as
+ * highlights. Everything else wants `pickLocalized`.
+ */
+export function pickLocalizedRaw(
   text: { ne?: string | null; en?: string | null } | undefined,
   language: string,
 ): string {
@@ -159,7 +166,15 @@ export function pickLocalized(
   const nepali = Boolean(language?.startsWith("ne"));
   const primary = nepali ? text.ne : text.en;
   const fallback = nepali ? text.en : text.ne;
-  return (primary || fallback || "").replace(/<[^>]*>/g, "");
+  return primary || fallback || "";
+}
+
+/** Language-aware pick from a bilingual pair, with any markup stripped. */
+export function pickLocalized(
+  text: { ne?: string | null; en?: string | null } | undefined,
+  language: string,
+): string {
+  return pickLocalizedRaw(text, language).replace(/<[^>]*>/g, "");
 }
 
 /**

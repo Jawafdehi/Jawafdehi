@@ -359,6 +359,12 @@ All colors MUST be HSL.
     --folder-7: 169 19% 72%;  /* #A9C4BF sea */
     --folder-8: 272 22% 81%;  /* #CFC4D9 lilac */
 
+    /* Search-match highlight. Its own token, NOT --accent (crimson) or a
+       --tone-*: a highlight marks WHERE THE QUERY MATCHED and carries no
+       severity or category meaning, so it must not borrow a hue that does.
+       The sand of --folder-5, lightened so --foreground keeps AA on it. */
+    --search-highlight: 45 78% 82%;
+
     /* Court tier — the four values the API's `court_type` facet holds.
        Deliberately a REDS-AND-BROWNS family, kept out of --tone-*: it reads as
        one register (brown at the base, blood-red at the apex) rather than as
@@ -499,6 +505,9 @@ All colors MUST be HSL.
     --folder-6: 0 21% 31%;
     --folder-7: 169 16% 28%;
     --folder-8: 272 17% 32%;
+    /* Dark: a dim sand that reads as a highlight behind --foreground ink
+       rather than as a light-mode swatch punched into a dark page. */
+    --search-highlight: 45 42% 30%;
 
     --tone-red: 346 70% 65%;
     --tone-orange: 15 79% 55%;
