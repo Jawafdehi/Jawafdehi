@@ -93,7 +93,7 @@ export function Hero({
       href: "/search?type=case",
       highlight: true,
     },
-    { value: materials, label: t("home.hero.stats.materials"), href: "/search?type=material" },
+    { value: materials, label: t("home.hero.stats.materials"), href: "/materials" },
     {
       value: courtCasesTracked,
       label: t("home.hero.stats.courtCasesTracked"),

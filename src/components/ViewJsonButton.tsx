@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentProps } from "react";
 import { Braces, Check, Copy, ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,19 +9,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface ViewJsonButtonProps {
   data: unknown;
   title?: string;
   rawUrl?: string;
   disabled?: boolean;
+  variant?: ComponentProps<typeof Button>["variant"];
+  className?: string;
+  label?: string;
 }
 
 // A small "View JSON" affordance for record pages (entities, materials): opens a popup
 // showing the record's raw JSON-LD, pretty-printed — mirroring the document-source preview
 // dialog. Copy-to-clipboard + an "open raw" link to the API endpoint are included. It reuses
 // the already-fetched record, so opening the popup makes no extra request.
-export function ViewJsonButton({ data, title = "Raw JSON", rawUrl, disabled }: Readonly<ViewJsonButtonProps>) {
+export function ViewJsonButton({
+  data,
+  title = "Raw JSON",
+  rawUrl,
+  disabled,
+  variant = "ghost",
+  className,
+  label = "View JSON",
+}: Readonly<ViewJsonButtonProps>) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const json = useMemo(() => (data == null ? "" : JSON.stringify(data, null, 2)), [data]);
@@ -40,14 +52,14 @@ export function ViewJsonButton({ data, title = "Raw JSON", rawUrl, disabled }: R
     <>
       <Button
         type="button"
-        variant="ghost"
+        variant={variant}
         size="sm"
-        className="text-muted-foreground"
+        className={cn(variant === "ghost" && "text-muted-foreground", className)}
         disabled={disabled || data == null}
         onClick={() => setOpen(true)}
       >
         <Braces className="mr-1 h-4 w-4" aria-hidden="true" />
-        View JSON
+        {label}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

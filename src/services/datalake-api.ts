@@ -56,6 +56,48 @@ export interface Material {
 }
 
 /**
+ * One page of a source's materials. The list endpoint is cursor-paginated
+ * with a FIXED server-side page size (`limit`/`page_size` are ignored) and no
+ * text search or ordering controls — documents come newest-ingested first.
+ * `count` is not in the response; the total for a source is the
+ * /api/statistics/ `materials.by_source` figure.
+ */
+export interface MaterialListPage {
+  next: string | null;
+  previous: string | null;
+  results: Material[];
+}
+
+/**
+ * List a source's materials (`/api/materials/?source=…`), one cursor page at
+ * a time. `cursor` is the opaque token from a previous page's `next` URL.
+ */
+export async function listMaterialsBySource(
+  source: string,
+  cursor?: string,
+): Promise<MaterialListPage> {
+  const endpoint = '/api/materials/';
+  try {
+    const response = await http.get<MaterialListPage>(endpoint, {
+      params: { source, ...(cursor ? { cursor } : {}) },
+    });
+    return response.data;
+  } catch (error) {
+    handleDataLakeError(error, endpoint);
+  }
+}
+
+/** The `cursor` param of a page's `next` URL, or null when it is the last. */
+export function cursorFromNextUrl(next: string | null): string | null {
+  if (!next) return null;
+  try {
+    return new URL(next, 'https://jawafdehi.org').searchParams.get('cursor');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Retrieve a material's JSON-LD by its IRI path component (`<source>/<ident>`).
  * Accepts either the bare tail or a full material IRI.
  */
@@ -139,7 +181,7 @@ async function getCaseSubResource<T>(
 /**
  * Retrieve a FULL court case: the composite-key core plus its hearings and
  * party entities (separate sub-resource endpoints), assembled into one CourtCase
- * shaped for CourtCaseCard. Accepts a `<court>:<number>` ref or explicit pair.
+ * shaped for CourtCaseDetails. Accepts a `<court>:<number>` ref or explicit pair.
  */
 export async function getCourtCaseFull(ref: string): Promise<CourtCase>;
 export async function getCourtCaseFull(court: string, caseNumber: string): Promise<CourtCase>;

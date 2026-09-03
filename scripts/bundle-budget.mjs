@@ -82,13 +82,42 @@ const DIR = arg("dir", "dist/client");
 // entry left. 656_000 was tried and is too tight to be useful: it left 59 bytes,
 // so the next incidental change would fail CI for no reason worth stopping on.
 //
-// 2026-09: 657_000 → 658_700 for the generative case-thumbnail fallback
+// 2026-09: 657_000 → 666_500 for the /materials archive landing (PR #353).
+// Measured, not estimated: main built to 656,542 bytes and the merged branch to
+// 665,403, so the landing costs 8,861 bytes gzip — 1.35%, and 8,403 over the old
+// line. Where those bytes are decided whether they could be trimmed:
+//
+//   ~5,150  MaterialsLanding, FolderCard, the series registry and the JSON-LD
+//    2,220  the materialsLanding blocks in en.json and ne.json (10,170 raw)
+//    1,491  RecentMaterialsCarousel
+//
+// Only the last is deferrable, and deferring it was tried and reverted. It buys
+// 1,491 of the 8,403 needed and pays for them by dropping the four recently-added
+// cards out of the pre-rendered HTML — a cost with no benefit while the other
+// 6,912 keep the gate red anyway.
+//
+// The rest is not deferrable at any price worth paying. It IS the reason
+// /materials is pre-rendered: renderToString does not await Suspense (see the
+// split policy in src/routes.tsx), so a lazy boundary around the hero, the series
+// grid or the JSON-LD would serve the archive's landing page as a fallback with
+// no Helmet meta — empty HTML for the one page whose job is to be indexed. The
+// translations cannot be deferred at all without splitting the i18n bundle into
+// namespaces, which is its own project.
+//
+// So this one is taken deliberately rather than trimmed, like the responsive
+// images above. The line sits ~1,100 bytes over the measured build, matching the
+// headroom the entries above leave.
+//
+// The real headroom is STILL elsewhere and still not this PR's to spend, and it
+// has grown: `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
+// `markdown` another 100 KB. Either would pay for this change many times over.
+//
+// 2026-09: 666_500 → 668_500 for the generative case-thumbnail fallback
 // (PR #362). Case cards render on eager pre-rendered routes (SSR constraint),
 // so the ~1 KB gzip of card + formatting logic cannot be lazy-loaded. Measured
-// (657,715 as built) plus the same ~1,000-byte headroom convention as the entry
-// above; a bikram-sambat import the first draft pulled into the entry chunk was
-// cut before any bump.
-const MAX_INITIAL_JS_GZIP = 658_700;
+// ~667,450 as built on top of the /materials baseline above; the line sits
+// ~1,000 bytes over that, matching the headroom convention of the entries above.
+const MAX_INITIAL_JS_GZIP = 668_500;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

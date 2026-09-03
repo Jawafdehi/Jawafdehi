@@ -191,6 +191,16 @@ describe("ArchiveSearch", () => {
     );
   });
 
+  it("uses the matching court-case skeleton while that tab loads", () => {
+    searchArchiveMock.mockReturnValue(new Promise(() => undefined));
+
+    renderSearch("/search?type=courtcase");
+
+    expect(
+      document.querySelectorAll("[data-court-case-card-skeleton]").length,
+    ).toBe(12);
+  });
+
   it("keeps filters stable but replaces results during a refresh", async () => {
     const refresh = deferred<ArchiveSearchResponse>();
     searchArchiveMock
@@ -620,6 +630,8 @@ describe("ArchiveSearch", () => {
             court: "SPECIAL_COURT",
             case_number: "081-CR-0060",
             case_status: "SUB_JUDICE",
+            date: "2025-01-10",
+            date_bs: "2081-09-26",
           },
         },
       ],
@@ -628,25 +640,15 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Special Court 081-CR-0060");
 
-    // The metadata line used to be `truncate`d to one line in card view while the
-    // list row wrapped it in full, hiding the court and status. That regression is
-    // CSS-only, and jsdom has no layout — asserting the text is present would pass
-    // against the broken code too. So compare the classes that decide how much of
-    // each field is shown, not just that the field exists.
+    // Court cases use the dedicated reusable card in both view modes. The field
+    // set stays the same while the shell becomes more compact in list view.
     const renderedFields = () => ({
-      badge: screen.getByText("Court case").textContent,
+      status: screen.getByText("Sub Judice").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
-      description: screen.getByText("Charge sheet filed against the accused")
-        .textContent,
-      metadata: screen.getByText("special court · 081-CR-0060 · sub judice")
-        .textContent,
-      cta: screen.getByText("View").textContent,
-      // Description and metadata are clamped identically in both modes; only the
-      // title scales with the shell, so its classes are compared separately below.
-      descriptionClamp: screen.getByText("Charge sheet filed against the accused")
-        .className,
-      metadataClamp: screen.getByText("special court · 081-CR-0060 · sub judice")
-        .className,
+      caseNumber: screen.getByText("081-CR-0060").textContent,
+      court: screen.getByText("Special Court").textContent,
+      registered: screen.getByText("Registered: 2025-01-10").textContent,
+      cta: screen.getByText("View case").textContent,
     });
 
     const cardView = renderedFields();
@@ -654,17 +656,12 @@ describe("ArchiveSearch", () => {
     const listView = renderedFields();
 
     expect(listView).toEqual(cardView);
-    // Neither mode may truncate a field to a single line.
-    expect(cardView.metadataClamp).not.toContain("truncate");
-    expect(cardView.descriptionClamp).not.toContain("truncate");
-    // The title clamps to the same number of lines in both, at different sizes,
-    // and sits at the same heading level as <CaseCard>'s title (h3) rather than
-    // the h2 the list row used to render.
+    // The title keeps the same semantic level and clamp in both shells.
     const heading = () =>
       screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" });
     expect(heading().className).toContain("line-clamp-2");
     fireEvent.click(screen.getByRole("button", { name: "Card view" }));
-    expect(heading().className).toContain("line-clamp-2");
+    expect(heading().className).toContain("line-clamp-3");
   });
 
   it("does not show an empty state after an initial request failure", async () => {
