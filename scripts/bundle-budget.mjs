@@ -68,7 +68,7 @@ const DIR = arg("dir", "dist/client");
 // 100 KB gzip of the initial payload, 15% of the budget, eager only because the
 // routes that render it are pre-rendered. Deferring it would pay for this
 // change forty times over.
-// 2026-09: 661_000 → 656_000. Ratcheted DOWN, per the rule above, in the commit
+// 2026-09: 661_000 → 657_000. Ratcheted DOWN, per the rule above, in the commit
 // that took the bytes out. Adding Instagram and TikTok to the share surfaces put
 // the payload 470 bytes OVER the old line, so rather than move the line up, the
 // QR encoder came off the critical path: `qrcode.react` was imported at module
@@ -76,8 +76,12 @@ const DIR = arg("dir", "dist/client");
 // it shipped on pages that never draw a QR — and in every one of them the code
 // only renders inside a dialog or sheet the reader has to open. Routing them
 // through src/components/LazyQRCode.tsx recovered 5,603 bytes gzip against the
-// two icons' 1,400, measured: 661,470 → 655,867.
-const MAX_INITIAL_JS_GZIP = 656_000;
+// two icons' 1,400: 661,470 → 655,941 as built.
+//
+// The line sits ~1,000 bytes above that, matching the headroom the previous
+// entry left. 656_000 was tried and is too tight to be useful: it left 59 bytes,
+// so the next incidental change would fail CI for no reason worth stopping on.
+const MAX_INITIAL_JS_GZIP = 657_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

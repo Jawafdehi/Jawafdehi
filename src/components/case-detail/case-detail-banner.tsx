@@ -332,7 +332,11 @@ export function CaseDetailBanner({
           also left the metadata 32px out of alignment with the title directly
           above it. Matching lg:pl-24 fixes the collision and the alignment
           together. */}
-      <div className="mx-auto w-full max-w-8xl px-0 sm:px-6">
+      {/* lg:px-0 so the inner lg:pl-24 below is the ONLY left padding at lg+.
+          Without it the two stack -- 24px here plus 96px there -- and the
+          metadata lands 24px right of the hero title instead of under it,
+          measured at every width from 1024 to 1920. */}
+      <div className="mx-auto w-full max-w-8xl px-0 sm:px-6 lg:px-0">
         <div className="grid grid-cols-1">
           <div className="relative z-10 flex flex-col justify-center">
             <div className="px-6 py-6 text-sm lg:px-10 lg:py-7 lg:pl-24">

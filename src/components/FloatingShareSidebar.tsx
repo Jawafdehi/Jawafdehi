@@ -50,6 +50,10 @@ export const FloatingShareSidebar = ({
   const [copied, setCopied] = useState(false);
   const [uncontrolledMoreDialogOpen, setUncontrolledMoreDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  // The QR encoder is a lazy chunk, so its SVG is briefly absent after the
+  // dialog opens; downloadQRCode() looks it up by id and returns silently if
+  // it is not there yet. Gate the button on the real mount instead.
+  const [qrReady, setQrReady] = useState(false);
   const moreDialogOpen = open ?? uncontrolledMoreDialogOpen;
   const setMoreDialogOpen = onOpenChange ?? setUncontrolledMoreDialogOpen;
 
@@ -358,18 +362,23 @@ export const FloatingShareSidebar = ({
               const { key, icon: Icon, label, color } = platform;
               const tile = "tileBg" in platform ? platform.tileBg : platform.bg;
               return (
-                <button
+                // shadcn Button rather than a bare <button>, per the repo's UI
+                // guideline and for the focus-visible ring it brings with it.
+                // h-auto and flex-col override the variant's fixed-height single
+                // row, which a stacked icon-over-label tile is not.
+                <Button
                   key={key}
+                  variant="ghost"
                   onClick={() => {
                     handleShare(key, label);
                     setMoreDialogOpen(false);
                   }}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${tile}`}
+                  className={`flex h-auto flex-col items-center gap-2 rounded-xl p-4 transition-all ${tile}`}
                   aria-label={t(`share.shareOn${label.replace(" ", "")}`)}
                 >
                   <Icon className={`h-6 w-6 ${color}`} />
                   <span className="text-xs font-medium text-foreground">{label}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -417,6 +426,7 @@ export const FloatingShareSidebar = ({
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <LazyQRCode
+                onReady={() => setQrReady(true)}
                 id="floating-qr-code-svg"
                 value={url}
                 size={200}
@@ -428,7 +438,12 @@ export const FloatingShareSidebar = ({
               {t("share.scanQRCode")}
             </p>
             <div className="flex gap-2 w-full">
-              <Button variant="outline" className="flex-1" onClick={downloadQRCode}>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={downloadQRCode}
+                disabled={!qrReady}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 <span className="mt-0.5">{t("share.downloadQR")}</span>
               </Button>

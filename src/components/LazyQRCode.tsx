@@ -12,7 +12,7 @@
 //
 // See docs/testing/bundle-and-code-splitting.md — only a dynamic import moves
 // bytes off the critical path; a manualChunks split just renames them.
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 
 const QRCodeSVGLazy = lazy(() =>
   import("qrcode.react").then((m) => ({ default: m.QRCodeSVG })),
@@ -25,9 +25,31 @@ export interface LazyQRCodeProps {
   size?: number;
   level?: "L" | "M" | "Q" | "H";
   includeMargin?: boolean;
+  /**
+   * Fired once the real QR has mounted and its SVG is in the DOM.
+   *
+   * Load-bearing, not a convenience. Every "Download QR" handler finds its SVG
+   * with `getElementById` and returns silently when it is absent — behaviour
+   * that was unreachable while `qrcode.react` was imported synchronously, but
+   * became reachable the moment this component started rendering a fallback
+   * first. Without this signal a click during that window does nothing at all,
+   * with no error and no download. Callers gate the download on it.
+   */
+  onReady?: () => void;
 }
 
-export function LazyQRCode({ size = 200, ...props }: LazyQRCodeProps) {
+/** Mounts only once Suspense resolves, so it is the signal that the SVG exists. */
+function ReadySignal({ onReady }: { onReady?: () => void }) {
+  const fired = useRef(false);
+  useEffect(() => {
+    if (fired.current) return;
+    fired.current = true;
+    onReady?.();
+  }, [onReady]);
+  return null;
+}
+
+export function LazyQRCode({ size = 200, onReady, ...props }: LazyQRCodeProps) {
   return (
     <Suspense
       // A blank box of the final size, so opening the dialog does not reflow
@@ -36,6 +58,7 @@ export function LazyQRCode({ size = 200, ...props }: LazyQRCodeProps) {
       fallback={<div style={{ width: size, height: size }} aria-hidden="true" />}
     >
       <QRCodeSVGLazy size={size} {...props} />
+      <ReadySignal onReady={onReady} />
     </Suspense>
   );
 }
