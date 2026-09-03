@@ -26,8 +26,6 @@ import type {
 } from "@/types/search";
 import type { CaseDetail } from "@/types/jds";
 import { getCaseById } from "@/services/jds-api";
-import { getMaterial, materialTail } from "@/services/datalake-api";
-import { getMaterialSourceLinks } from "@/lib/material-links";
 import { cn } from "@/lib/utils";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
@@ -87,28 +85,24 @@ export function SearchResultCard({
 }
 
 // Materials render the archive's shared document card (the /materials series
-// rows). The index hit fills the text: the source token in the URL names the
+// rows), fed entirely from the index hit: the source token in the URL names the
 // series (registry) or the publishing institution (long tail, same chain as
 // RecentMaterialsCarousel), and the mixed-calendar `extra.date` resolves
 // through the same BS-in-AD quirk handling as the /materials surfaces, so
 // 2082-* dates render as BS in the reader's calendar instead of leaking raw.
-// The download/source buttons need the record's associatedMedia, which the
-// search index does NOT carry — each row lazily hydrates the detail record
-// (same query key as MaterialProfile, so a later click lands on a warm cache).
+//
+// No download/source buttons here, unlike the series rows: those need the
+// record's `associatedMedia`, which the search index does not carry, and
+// hydrating it per row cost a detail GET for every hit on a 346k-record browse
+// surface. The card links to the document, where the downloads live. Restoring
+// them belongs with indexing the media onto material docs — the same
+// denormalization cases already got (`result.card`).
 function MaterialResultCard({
   result,
   viewMode,
 }: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const tail = materialTail(result.id);
-  const { data: detail, isLoading: linksLoading } = useQuery({
-    queryKey: ["datalake-material", tail],
-    queryFn: () => getMaterial(tail),
-    enabled: tail.length > 0,
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  });
   const source = sourceFromMaterialUrl(result.url);
   const series = source ? seriesBySource(source) : undefined;
   const sourceLabel = series
@@ -139,8 +133,6 @@ function MaterialResultCard({
       href={result.url}
       metaLine={[sourceLabel, dateLabel].filter(Boolean).join(" · ")}
       description={snippet}
-      links={detail ? getMaterialSourceLinks(detail) : []}
-      linksLoading={linksLoading}
       shareUrl={`${SITE_URL}${result.url}`}
       viewMode={viewMode}
     />

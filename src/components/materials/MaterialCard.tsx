@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import type { MaterialSourceLink } from "@/lib/material-links";
@@ -34,7 +33,6 @@ export function MaterialCard({
   metaLine,
   description,
   links = [],
-  linksLoading = false,
   shareUrl,
   viewMode = "list",
 }: Readonly<{
@@ -45,10 +43,12 @@ export function MaterialCard({
   metaLine: string;
   /** Optional muted line under the meta (e.g. a search snippet). */
   description?: string;
-  /** Download / original-source actions; the card renders at most two. */
+  /**
+   * Download / original-source actions; the card renders at most two. Only the
+   * series browse passes these — it holds the full data-lake record. Search
+   * hits have no media in the index, so their cards are title + meta + share.
+   */
   links?: readonly MaterialSourceLink[];
-  /** True while a caller is still hydrating `links` (renders placeholders). */
-  linksLoading?: boolean;
   shareUrl: string;
   viewMode?: MaterialCardViewMode;
 }>) {
@@ -85,14 +85,6 @@ export function MaterialCard({
           isTile ? "mt-auto" : "md:justify-end",
         )}
       >
-        {linksLoading && links.length === 0 ? (
-          // Same footprint as the settled icon + download pair, so the row
-          // doesn't jump when the hydrated links arrive.
-          <>
-            <Skeleton aria-hidden="true" className={ICON_ACTION_BUTTON_CLASS} />
-            <Skeleton aria-hidden="true" className="h-9 w-28 rounded-md" />
-          </>
-        ) : null}
         {links.slice(0, 2).map((link) => (
           <Button
             asChild

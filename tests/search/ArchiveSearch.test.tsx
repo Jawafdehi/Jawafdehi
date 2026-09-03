@@ -676,7 +676,7 @@ describe("ArchiveSearch", () => {
     expect(heading().className).toContain("line-clamp-3");
   });
 
-  it("renders materials as shared document rows with hydrated actions", async () => {
+  it("renders materials as shared document rows, fed only by the index", async () => {
     searchArchiveMock.mockResolvedValue({
       ...baseResponse,
       results: [
@@ -696,26 +696,6 @@ describe("ArchiveSearch", () => {
         },
       ],
     });
-    // The detail record behind the row's download/source buttons.
-    getMaterialMock.mockResolvedValue({
-      "@id": "https://jawafdehi.org/material/ciaa_press_release/1701",
-      name: { en: "Charge sheet filed against nine officials" },
-      associatedMedia: [
-        {
-          "@type": "MediaObject",
-          contentUrl: "https://ciaa.gov.np/pressrelease/1701",
-          encodingFormat: "text/html",
-          "jawafdehi:linkRole": "SOURCE_PAGE",
-        },
-        {
-          "@type": "MediaObject",
-          contentUrl: "https://s3.jawafdehi.org/case_uploads/abc.pdf",
-          encodingFormat: "application/pdf",
-          "jawafdehi:linkRole": "RAW",
-        },
-      ],
-    });
-
     renderSearch("/search?type=material");
     await screen.findByText("Charge sheet filed against nine officials");
 
@@ -735,19 +715,17 @@ describe("ArchiveSearch", () => {
     // Snippet renders with its <em> highlight markup stripped.
     expect(screen.getByText("Filed at the Special Court today")).toBeTruthy();
 
-    // Hydrated actions: the original-source page and the PDF download, in the
-    // same shape as the /materials series rows.
-    await waitFor(() => {
-      expect(getMaterialMock).toHaveBeenCalledWith("ciaa_press_release/1701");
-      expect(screen.getByText(".PDF").closest("a")?.getAttribute("href")).toBe(
-        "https://s3.jawafdehi.org/case_uploads/abc.pdf",
-      );
-    });
+    // No download/source buttons and NO detail fetch: the index carries no
+    // media, and hydrating it would cost a GET per hit on a 346k-record browse
+    // surface. Share is the only action; the downloads live on the document.
+    // No i18n instance in this suite and ShareButton's aria-label has no
+    // fallback, so its accessible name is the raw catalogue key.
+    expect(screen.getByRole("button", { name: "share.share" })).toBeTruthy();
+    expect(screen.queryByText(/^\.[A-Z]+$/)).toBeNull();
     expect(
-      screen
-        .getByRole("link", { name: "Open original source" })
-        .getAttribute("href"),
-    ).toBe("https://ciaa.gov.np/pressrelease/1701");
+      screen.queryByRole("link", { name: "Open original source" }),
+    ).toBeNull();
+    expect(getMaterialMock).not.toHaveBeenCalled();
   });
 
   it("does not show an empty state after an initial request failure", async () => {
