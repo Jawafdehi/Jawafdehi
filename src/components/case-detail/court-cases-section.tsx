@@ -1,5 +1,19 @@
-import { CourtCaseDetails } from "@/components/CourtCaseCard";
+import { Suspense, lazy } from "react";
+
+import { Skeleton } from "@/components/ui/skeleton";
 import type { CourtCase } from "@/types/jds";
+
+// Lazy, and the laziness is load-bearing rather than tidying. This is the ONLY
+// consumer of @/components/ui/collapsible in the app, and the case-detail route
+// is eager (it is pre-rendered), so a static import put Radix Collapsible plus
+// this hearings table in the initial payload of EVERY page — including /search,
+// which never renders a court case this way. The section is below the fold and
+// already conditional, so a Suspense fallback here costs nothing visible.
+const CourtCaseDetails = lazy(() =>
+  import("@/components/courtcase/CourtCaseDetails").then((m) => ({
+    default: m.CourtCaseDetails,
+  })),
+);
 
 export type CourtCaseSectionItem = {
   courtCase?: CourtCase;
@@ -25,7 +39,15 @@ export function CourtCasesSection({
       </h2>
 
       <div className="space-y-4 text-primary/75">
-        {courtCases.map(({ courtCase, id, isLoading }) => (
+        <Suspense
+          fallback={
+            <div className="space-y-2 rounded-lg border border-border p-4">
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          }
+        >
+          {courtCases.map(({ courtCase, id, isLoading }) => (
           <CourtCaseDetails
             key={id}
             courtCaseId={id}
@@ -33,7 +55,8 @@ export function CourtCasesSection({
             isLoading={isLoading}
             linkToDetail
           />
-        ))}
+          ))}
+        </Suspense>
       </div>
     </section>
   );

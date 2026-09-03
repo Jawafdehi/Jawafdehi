@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import { CourtCaseCard, CourtCaseDetails } from "@/components/CourtCaseCard";
+import { CourtCaseCard } from "@/components/CourtCaseCard";
+import { CourtCaseDetails } from "@/components/courtcase/CourtCaseDetails";
 import type { CourtCase } from "@/types/jds";
 
 // Passthrough translations so assertions don't depend on i18n resources.
