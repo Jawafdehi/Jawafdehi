@@ -83,6 +83,12 @@ function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
     tags: card?.tags || [],
     entityIds: entityIds(subjectEntities),
     locationIds: entityIds(locationEntities),
+    // Generative-thumbnail (tier 3) inputs, matching the /cases and /search
+    // mappings so an imageless featured case renders its data portrait here too.
+    bigo: card?.bigo ?? null,
+    caseType: card?.case_type ?? null,
+    accusedCount: entities.filter((entity) => entity.type === "accused").length,
+    timelineCount: card?.timeline?.length ?? 0,
   };
 }
 

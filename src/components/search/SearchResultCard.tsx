@@ -184,6 +184,11 @@ function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult
     thumbnailUrl: card.thumbnail_url || undefined,
     bannerUrl: card.banner_url || undefined,
     bigo: card.bigo,
+    // Generative-thumbnail (tier 3) inputs. Accused only — subject entities can
+    // include non-accused parties, which must not count into an "accused" glyph.
+    caseType: card.case_type,
+    accusedCount: (card.entities || []).filter((e) => e.type === "accused").length,
+    timelineCount: card.timeline?.length ?? 0,
   };
 }
 
@@ -221,6 +226,9 @@ function caseCardPropsFromDetail(
     // same <CaseCard>, so a field added to one must be added to both or a case
     // silently loses it on older docs that fall back to the detail fetch.
     bigo: detail.bigo,
+    caseType: detail.case_type ?? null,
+    accusedCount: entities.filter((e) => e.type === "accused").length,
+    timelineCount: detail.timeline?.length ?? 0,
   };
 }
 

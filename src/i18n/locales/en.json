@@ -985,6 +985,14 @@
   "caseCard": {
     "thumbnailAlt": "Thumbnail image for the case: {{title}}",
     "bigo": "Embezzled amount",
+    "generativeThumbnail": {
+      "summary": "Case summary graphic: {{amount}}, {{accused}} accused, {{events}} timeline events",
+      "amountKicker": "Bigo · alleged amount",
+      "typeKicker": "Case type",
+      "accused": "accused",
+      "events": "events",
+      "caseFallback": "Case"
+    },
     "status": {
       "ongoing": "Ongoing",
       "resolved": "Resolved",

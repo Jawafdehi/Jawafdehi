@@ -111,7 +111,13 @@ const DIR = arg("dir", "dist/client");
 // The real headroom is STILL elsewhere and still not this PR's to spend, and it
 // has grown: `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
 // `markdown` another 100 KB. Either would pay for this change many times over.
-const MAX_INITIAL_JS_GZIP = 666_500;
+//
+// 2026-09: 666_500 → 668_500 for the generative case-thumbnail fallback
+// (PR #362). Case cards render on eager pre-rendered routes (SSR constraint),
+// so the ~1 KB gzip of card + formatting logic cannot be lazy-loaded. Measured
+// ~667,450 as built on top of the /materials baseline above; the line sits
+// ~1,000 bytes over that, matching the headroom convention of the entries above.
+const MAX_INITIAL_JS_GZIP = 668_500;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

@@ -4,13 +4,12 @@ import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
+import { CaseThumbnail } from "@/components/CaseThumbnail";
 import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
-import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { CaseImage } from "@/types/jds";
-import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 
 const nepaliDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
@@ -34,6 +33,12 @@ interface CaseCardProps {
   // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
+  // Inputs for the generative fallback thumbnail (tier 3) a card renders when
+  // it has no usable image at all. All optional: a card missing them still
+  // renders, just with a sparser glyph.
+  caseType?: string | null;
+  accusedCount?: number;
+  timelineCount?: number;
   viewMode?: "grid" | "list";
   // When set, tags render as buttons that invoke this instead of plain badges —
   // the archive search uses it to toggle a tag as a URL refinement.
@@ -74,7 +79,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, lan
   return t("caseCard.entitySummary.withOthers", { count: remainingCount, name: firstName });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, caseType, accusedCount, timelineCount, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, i18n.language, t);
@@ -87,17 +92,17 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
   const caseSlug = normalizedSlug && normalizedSlug.toLowerCase() !== "null" ? normalizedSlug : null;
 
   // Candidate images, best first: the uploaded rendition ladder, then the
-  // deprecated thumbnail and banner URLs, then the shared placeholder
-  // illustration the case detail banner also falls back to. Cases sometimes
-  // carry a non-image thumbnail URL (an article/page link), so a load error must
-  // fall through the rest before landing on the placeholder — useCaseImage owns
-  // that walk, shared with the hero and the oEmbed card.
+  // deprecated thumbnail and banner URLs. Cases sometimes carry a non-image
+  // thumbnail URL (an article/page link), so a load error must fall through
+  // the rest — useCaseImage owns that walk, shared with the hero and the
+  // oEmbed card. The shared placeholder illustration is opted OUT: when every
+  // real candidate is gone, `src` goes undefined and the card renders the
+  // generative data thumbnail (tier 3) instead of a repeated stock image.
   const {
     src: imageSrc,
     srcSet,
-    isPlaceholder,
     onError: handleImageError,
-  } = useCaseImage(image, [thumbnailUrl, bannerUrl]);
+  } = useCaseImage(image, [thumbnailUrl, bannerUrl], { includePlaceholder: false });
 
   const statusLabel = t(getCaseStatusLabelKey(status));
 
@@ -120,38 +125,41 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
         <div className={`relative overflow-hidden ${imageContainerClass}`}>
-          <img
-            src={imageSrc}
-            // Only the uploaded ladder has a srcset, and it goes away if a load
-            // error advances past it — see CaseImageSources.srcsetFor.
-            srcSet={srcSet}
-            // The card box is a third of the row in list view and a grid column
-            // otherwise; ~400px covers both, and the browser picks up from there.
-            sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
-            // The placeholder illustration carries no information about this
-            // case, so it stays out of the accessibility tree entirely rather
-            // than announcing a thumbnail that does not exist.
-            alt={isPlaceholder ? "" : t("caseCard.thumbnailAlt", { title })}
-            loading="lazy"
-            decoding="async"
-            onError={handleImageError}
-            className={cn(
-              "h-full w-full object-cover",
-              // Zoom-on-hover reads as "there is a photograph here"; it only
-              // makes the placeholder illustration lurch.
-              !isPlaceholder && "transition-transform duration-500 group-hover:scale-105",
-              isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
-            )}
-          />
-          {/* Legibility scrim for the status badge over a real photograph. The
-              placeholder is a near-flat light panel and needs no scrim — and in
-              dark mode the inverted placeholder would tint it the wrong way. */}
-          {!isPlaceholder && (
-            // Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
-            // semantic equivalent is --foreground, which is the same near-black
-            // in light and correctly inverts in dark. `white` is not a palette
-            // name, so to-white/10 stays.
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
+          {imageSrc ? (
+            <>
+              <img
+                src={imageSrc}
+                // Only the uploaded ladder has a srcset, and it goes away if a load
+                // error advances past it — see CaseImageSources.srcsetFor.
+                srcSet={srcSet}
+                // The card box is a third of the row in list view and a grid column
+                // otherwise; ~400px covers both, and the browser picks up from there.
+                sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+                alt={t("caseCard.thumbnailAlt", { title })}
+                loading="lazy"
+                decoding="async"
+                onError={handleImageError}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              {/* Legibility scrim for the status badge over a real photograph. The
+                  generative thumbnail below supplies its own scrim. */}
+              {/* Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
+                  semantic equivalent is --foreground, which is the same near-black
+                  in light and correctly inverts in dark. `white` is not a palette
+                  name, so to-white/10 stays. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
+            </>
+          ) : (
+            // Tier-3 generative fallback: a deterministic per-case data portrait
+            // instead of the shared stock illustration every imageless case used
+            // to repeat. It draws from case fields, so it cannot fail to load.
+            <CaseThumbnail
+              slug={caseSlug ?? id}
+              bigo={bigo}
+              caseType={caseType}
+              accusedCount={accusedCount}
+              timelineCount={timelineCount}
+            />
           )}
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
