@@ -29,7 +29,13 @@ export function DidYouMean({
 }: Readonly<{ onAccept: (suggestion: string) => void; suggestion: string }>) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm">
+    // Plain text, not a card. The bordered/filled box read as another result
+    // tile — same rounded-xl border as the cards directly beneath it — so a
+    // one-line aside competed with the results it was meant to annotate. The
+    // margin is the element's own because the parent section has no `space-y`
+    // and the results grid carries no top margin; without it this would sit flush
+    // against the first card.
+    <p className="mb-4 text-sm">
       {t("archiveSearch.didYouMean", "Did you mean")}{" "}
       {/* A button, not a link: accepting it edits the query that is already on
           screen rather than navigating somewhere new, and the correction lands in
@@ -42,6 +48,6 @@ export function DidYouMean({
         {suggestion}
       </button>
       {t("archiveSearch.didYouMeanPunctuation", "?")}
-    </div>
+    </p>
   );
 }
