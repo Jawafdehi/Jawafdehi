@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
 
 type Doc = Record<string, unknown>;
 
@@ -142,6 +142,15 @@ export default function MaterialForm() {
   // Edit mode: bytes in flight, so Save can't race an upload (a PUT replaces
   // `data` wholesale and would drop the MediaObject the upload is appending).
   const [uploadPending, setUploadPending] = useState(false);
+  // Whether the Links card's upload panel is revealed ("Upload file").
+  const [showUpload, setShowUpload] = useState(false);
+
+  // Collapsing the panel must drop whatever it staged: a File the caseworker
+  // can no longer see must not still be uploaded by the next Save.
+  const closeUpload = () => {
+    setShowUpload(false);
+    setStaged(null);
+  };
 
   const applyDoc = (next: Doc) => {
     setDoc(next);
@@ -246,9 +255,12 @@ export default function MaterialForm() {
       } else {
         const created = await createMaterial(doc, materialType);
         const createdDoc = (created ?? {}) as Doc;
+        // Fall back on EMPTINESS, not just type: a response carrying "@id": ""
+        // would otherwise defeat the fallback and lose the staged file, even
+        // though `iri` is right there and already validated.
+        const returnedIri = createdDoc["@id"];
         const createdIri =
-          typeof createdDoc["@id"] === "string" ? (createdDoc["@id"] as string) : iri;
-        toast({ title: "Material saved", description: createdIri });
+          typeof returnedIri === "string" && returnedIri !== "" ? returnedIri : iri;
 
         // Only now does the material exist, so its {source}/{ident} — the
         // upload route's key — is finally known. The order matters: the create
@@ -268,12 +280,21 @@ export default function MaterialForm() {
               staged.role,
             );
             setStaged(null);
-            toast({ title: "File uploaded", description: staged.file.name });
+            // ONE toast describes the whole action. A "Material saved" fired
+            // before the upload would contradict the failure toast below.
+            toast({
+              title: "Material saved",
+              description: `${createdIri} — ${staged.file.name} attached`,
+            });
           } catch (err) {
             // The material saved and only the attachment failed, so reporting a
             // failed save would be a lie and dropping the file silently would be
             // worse. Send the caseworker to the edit page, where the immediate
             // upload control can retry against the material that now exists.
+            // Clear the staging: both routes render this same element, so React
+            // Router reconciles them as one instance and a surviving `staged`
+            // would be unreachable state that no longer matches any control.
+            setStaged(null);
             toast({
               title: "Material saved, but the file was not attached",
               description: adminErrorMessage(err, "Upload failed"),
@@ -286,6 +307,8 @@ export default function MaterialForm() {
             );
             return;
           }
+        } else {
+          toast({ title: "Material saved", description: createdIri });
         }
       }
       navigate("/admin/datalake/materials");
@@ -450,22 +473,35 @@ export default function MaterialForm() {
         </div>
 
         {/* Roled links (associatedMedia). Unknown per-entry fields survive the
-            row editor; file uploads below append entries server-side. */}
+            row editor. An uploaded file becomes an entry here too — the server
+            appends it — so both ways to attach a document are offered from this
+            one card: paste a URL, or upload the file itself. */}
         <div className="space-y-2 rounded-md border bg-white p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <Label className="text-sm font-semibold">Links</Label>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                setMediaRows([...rows, { contentUrl: "", role: "RAW", original: null }])
-              }
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add link
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setMediaRows([...rows, { contentUrl: "", role: "RAW", original: null }])
+                }
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add link
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                aria-expanded={showUpload}
+                onClick={() => (showUpload ? closeUpload() : setShowUpload(true))}
+              >
+                <Upload className="mr-1 h-4 w-4" /> Upload file
+              </Button>
+            </div>
           </div>
-          {rows.length === 0 ? (
+          {rows.length === 0 && !showUpload ? (
             <p className="text-sm text-muted-foreground">No links yet.</p>
           ) : (
             rows.map((row, i) => (
@@ -517,6 +553,67 @@ export default function MaterialForm() {
               </div>
             ))
           )}
+
+          {/* Revealed by "Upload file". Two modes, because the upload endpoint
+              is keyed on a material that must already exist: on the edit page
+              it posts straight away; on the create page it stages the file and
+              onSubmit uploads it after the create has minted the @id. */}
+          {showUpload &&
+            (() => {
+              if (!editing) {
+                return (
+                  <MaterialFileUpload
+                    mode="deferred"
+                    disabled={saving}
+                    onStagedChange={setStaged}
+                    onDismiss={closeUpload}
+                  />
+                );
+              }
+              // Prefer the components parsed from the doc's @id (the canonical
+              // location); fall back to the route ref. Only split refPath when
+              // it actually contains a slash — slice(0, -1) would otherwise
+              // truncate and make ident the whole (wrong) string.
+              const parts = iri ? parseMaterialIri(iri) : null;
+              const lastSlash = refPath.lastIndexOf("/");
+              const fallback =
+                lastSlash > 0
+                  ? {
+                      source: refPath.slice(0, lastSlash),
+                      ident: refPath.slice(lastSlash + 1),
+                    }
+                  : { source: "", ident: "" };
+              const source = parts?.source ?? fallback.source;
+              const ident = parts?.ident ?? fallback.ident;
+              if (!source || !ident) return null;
+              return (
+                <MaterialFileUpload
+                  source={source}
+                  ident={ident}
+                  disabled={saving}
+                  onDismiss={closeUpload}
+                  onUploadingChange={setUploadPending}
+                  onUploaded={(res) => {
+                    if (!res || typeof res !== "object") return;
+                    // The upload returns the stored document as the WRITE plane
+                    // sees it — without the annotations an authed read adds.
+                    // Applying it verbatim would blank
+                    // jawafdehi:visibilityPolicy and make the visibility
+                    // control disappear, so carry those two keys across.
+                    const merged = { ...(res as Doc) };
+                    for (const k of [
+                      "jawafdehi:visibilityPolicy",
+                      "jawafdehi:visibility",
+                    ]) {
+                      if (merged[k] === undefined && doc[k] !== undefined) {
+                        merged[k] = doc[k];
+                      }
+                    }
+                    applyDoc(merged);
+                  }}
+                />
+              );
+            })()}
         </div>
 
         {/* The full document remains editable for fields the form doesn't
@@ -536,17 +633,6 @@ export default function MaterialForm() {
             <FieldError message={rawError} />
           </div>
         </details>
-
-        {/* Create mode: the file is part of THIS save (staged now, uploaded
-            once the create returns an @id), so unlike the edit-mode control
-            below it belongs inside the form, above the Save it rides on. */}
-        {!editing && (
-          <MaterialFileUpload
-            mode="deferred"
-            disabled={saving}
-            onStagedChange={setStaged}
-          />
-        )}
 
         <AdminFormActions
           saving={saving}
@@ -585,54 +671,6 @@ export default function MaterialForm() {
           visibility={visibility}
         />
       )}
-
-      {/* F8 — file upload, edit mode: the material exists, so this posts
-          immediately and out-of-band (NOT part of Save), like the visibility
-          control above. The create-mode counterpart is inside the form. Prefer
-          the components parsed from the doc's @id (canonical location); fall
-          back to the route ref. Refresh the doc after upload so the new
-          contentUrl/associatedMedia shows. */}
-      {editing &&
-        (() => {
-          const parts = iri ? parseMaterialIri(iri) : null;
-          const lastSlash = refPath.lastIndexOf("/");
-          // Fall back to splitting refPath ONLY when it actually contains a
-          // slash — otherwise slice(0, -1) would silently truncate and ident
-          // would be the whole (wrong) string, passing the non-empty guard.
-          const fallback =
-            lastSlash > 0
-              ? { source: refPath.slice(0, lastSlash), ident: refPath.slice(lastSlash + 1) }
-              : { source: "", ident: "" };
-          const source = parts?.source ?? fallback.source;
-          const ident = parts?.ident ?? fallback.ident;
-          if (!source || !ident) return null;
-          return (
-            <MaterialFileUpload
-              source={source}
-              ident={ident}
-              disabled={saving}
-              onUploadingChange={setUploadPending}
-              onUploaded={(res) => {
-                if (!res || typeof res !== "object") return;
-                // The upload returns the stored document as the WRITE plane
-                // sees it — without the annotations an authed read adds.
-                // Applying it verbatim would blank jawafdehi:visibilityPolicy
-                // and make the visibility control above disappear, so carry
-                // those two keys across.
-                const merged = { ...(res as Doc) };
-                for (const k of [
-                  "jawafdehi:visibilityPolicy",
-                  "jawafdehi:visibility",
-                ]) {
-                  if (merged[k] === undefined && doc[k] !== undefined) {
-                    merged[k] = doc[k];
-                  }
-                }
-                applyDoc(merged);
-              }}
-            />
-          );
-        })()}
     </FormPageShell>
   );
 }

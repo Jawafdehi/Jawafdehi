@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { uploadMaterialFile, adminErrorMessage } from "@/services/admin-api";
 import { FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 
 // Link-role choices for an uploaded material file (matches DocumentSource
 // link-role vocabulary: RAW is the primary/original file).
@@ -54,6 +54,9 @@ interface Props {
   onUploadingChange?: (uploading: boolean) => void;
   // "deferred" only: the currently-staged file, or null when cleared.
   onStagedChange?: (staged: StagedMaterialFile | null) => void;
+  // Renders a dismiss button. The parent reveals this panel from the Links
+  // card, so it owns closing it (and clearing whatever was staged).
+  onDismiss?: () => void;
 }
 
 // Backend upload cap (see test plan M9). Rejected client-side so an oversize
@@ -71,7 +74,10 @@ export default function MaterialFileUpload({
   onUploaded,
   onUploadingChange,
   onStagedChange,
+  onDismiss,
 }: Props) {
+  const headingId = useId();
+  const fileId = useId();
   const [file, setFile] = useState<File | null>(null);
   const [role, setRole] = useState<string>("RAW");
   const [uploading, setUploading] = useState(false);
@@ -104,6 +110,11 @@ export default function MaterialFileUpload({
       // Don't keep a file the server would reject, and clear any prior staging.
       setFile(null);
       if (deferred) onStagedChange?.(null);
+      // Remount the input so it stops displaying the rejected filename AND so
+      // re-picking that same path fires a change event again — a file input is
+      // silent when its value is unchanged, which would otherwise wedge the
+      // control until a different file was chosen.
+      setInputKey((k) => k + 1);
       return;
     }
     setFile(picked);
@@ -117,8 +128,9 @@ export default function MaterialFileUpload({
   };
 
   const upload = async () => {
+    // pick() is the only writer of `file` and refuses anything over the cap, so
+    // no size re-check is needed here.
     if (!file || !source || !ident) return;
-    if (tooBig(file)) return;
     setPending(true);
     setError(null);
     try {
@@ -135,43 +147,75 @@ export default function MaterialFileUpload({
   };
 
   return (
-    <div className="space-y-3 rounded-md border bg-white p-4">
-      <Label className="text-sm font-semibold">Attach a file</Label>
-      <p className="text-xs text-muted-foreground">
-        {deferred
-          ? "Attached when you save this material (≤100MB). Pick a link role for the stored file."
-          : "Uploads to this material (≤100MB). Pick a link role for the stored file."}
-      </p>
-
-      <input
-        key={inputKey}
-        type="file"
-        aria-label="Material file"
-        disabled={uploading || disabled}
-        onChange={(e) => pick(e.target.files?.[0] ?? null)}
-        className="block w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-secondary"
-      />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Role</Label>
-          <Select
-            value={role}
-            onValueChange={changeRole}
-            disabled={uploading || disabled}
-          >
-            <SelectTrigger aria-label="Link role">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FILE_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    // A nested panel inside the Links card, not a card of its own: an uploaded
+    // file becomes an associatedMedia entry exactly like a pasted URL, so the
+    // two entry points are presented as siblings.
+    <div
+      role="group"
+      aria-labelledby={headingId}
+      className="space-y-3 rounded-md border bg-muted/40 p-3"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-0.5">
+          <Label id={headingId} className="text-sm font-semibold">
+            Attach a file
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            {deferred
+              ? "Attached when you save this material (≤100MB)."
+              : "Uploads to this material now (≤100MB)."}
+          </p>
         </div>
+        {onDismiss && (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={onDismiss}
+            disabled={uploading}
+            title="Cancel upload"
+            aria-label="Cancel upload"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor={fileId} className="text-xs">
+          File
+        </Label>
+        <input
+          id={fileId}
+          key={inputKey}
+          type="file"
+          disabled={uploading || disabled}
+          onChange={(e) => pick(e.target.files?.[0] ?? null)}
+          className="block w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-secondary"
+        />
+      </div>
+
+      <div className="space-y-1">
+        {/* Visible text and accessible name are the same string (WCAG 2.5.3);
+            the Radix trigger isn't a labelable control, so it carries the name
+            itself rather than being pointed at by the <Label>. */}
+        <Label className="text-xs">Link role</Label>
+        <Select
+          value={role}
+          onValueChange={changeRole}
+          disabled={uploading || disabled}
+        >
+          <SelectTrigger aria-label="Link role" className="sm:max-w-[12rem]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FILE_ROLES.map((r) => (
+              <SelectItem key={r} value={r}>
+                {r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <FieldError message={error} />
@@ -196,7 +240,10 @@ export default function MaterialFileUpload({
           ) : (
             <Upload className="mr-1 h-4 w-4" />
           )}
-          Upload file
+          {/* NOT "Upload file": that is the Links-card button which reveals
+              this panel, and two same-named buttons on one page are ambiguous
+              to screen readers and to anyone scanning it. */}
+          Attach file
         </Button>
       )}
     </div>

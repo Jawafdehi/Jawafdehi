@@ -75,9 +75,14 @@ function fillRequired(container: HTMLElement, iri = IRI) {
   fireEvent.change(nameNe, { target: { value: "सीआईएए प्रेस विज्ञप्ति" } });
 }
 
+// "Upload file" in the Links card reveals the upload panel; nothing renders a
+// file input until it is clicked.
+const openUpload = () =>
+  fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
 function stageFile(container: HTMLElement, name = "order.pdf") {
   const input = container.querySelector<HTMLInputElement>('input[type="file"]');
-  if (!input) throw new Error("no file input on the create form");
+  if (!input) throw new Error("no file input — was the upload panel opened?");
   const file = new File(["x".repeat(64)], name, { type: "application/pdf" });
   Object.defineProperty(input, "files", { value: [file], configurable: true });
   fireEvent.change(input);
@@ -98,20 +103,46 @@ beforeEach(() => {
 });
 
 describe("MaterialForm — create page file upload", () => {
-  it("offers the attach-a-file control on /new", () => {
-    // Regression: the control used to render only in edit mode, so a caseworker
-    // had to save, return to the list and re-open the material to attach a file.
+  it("offers both ways to attach a document from the Links card on /new", () => {
+    // Regression: the upload control used to render only in edit mode, so a
+    // caseworker had to save, return to the list and re-open the material to
+    // attach a file. Pasting a URL was the only option on /new.
     const { container } = render(<MaterialForm />);
+    expect(screen.getByRole("button", { name: /add link/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy();
+    // The panel itself stays collapsed until asked for.
+    expect(container.querySelector('input[type="file"]')).toBeNull();
+
+    openUpload();
     expect(screen.getByText("Attach a file")).toBeTruthy();
     expect(container.querySelector('input[type="file"]')).toBeTruthy();
   });
 
-  it("defers the upload: no upload button, and nothing is sent before Save", () => {
+  it("defers the upload: the panel has no action button, and nothing is sent before Save", () => {
     const { container } = render(<MaterialForm />);
+    openUpload();
     stageFile(container);
-    expect(screen.queryByRole("button", { name: /upload file/i })).toBeNull();
+    // "Attach file" is the immediate-mode action; deferred mode rides on Save,
+    // so offering it here would imply a write that doesn't happen.
+    expect(screen.queryByRole("button", { name: /attach file/i })).toBeNull();
     expect(uploadMock).not.toHaveBeenCalled();
     expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it("drops the staged file when the upload panel is dismissed", async () => {
+    // A File the caseworker can no longer see must not still be uploaded.
+    createMock.mockResolvedValue({ "@id": IRI });
+    const { container } = render(<MaterialForm />);
+    fillRequired(container);
+    openUpload();
+    stageFile(container);
+    fireEvent.click(screen.getByRole("button", { name: /cancel upload/i }));
+    save();
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith("/admin/datalake/materials"),
+    );
+    expect(uploadMock).not.toHaveBeenCalled();
   });
 
   it("creates the material FIRST, then attaches the staged file", async () => {
@@ -123,6 +154,7 @@ describe("MaterialForm — create page file upload", () => {
 
     const { container } = render(<MaterialForm />);
     fillRequired(container);
+    openUpload();
     const file = stageFile(container);
     save();
 
@@ -145,6 +177,7 @@ describe("MaterialForm — create page file upload", () => {
 
     const { container } = render(<MaterialForm />);
     fillRequired(container, "https://jawafdehi.org/material/court/sc/068-ci-0123");
+    openUpload();
     stageFile(container);
     save();
 
@@ -178,6 +211,7 @@ describe("MaterialForm — create page file upload", () => {
 
     const { container } = render(<MaterialForm />);
     fillRequired(container);
+    openUpload();
     stageFile(container);
     save();
 
@@ -200,6 +234,7 @@ describe("MaterialForm — create page file upload", () => {
     createMock.mockRejectedValue(new Error("422"));
     const { container } = render(<MaterialForm />);
     fillRequired(container);
+    openUpload();
     stageFile(container);
     save();
 
@@ -227,10 +262,13 @@ describe("MaterialForm — edit page file upload", () => {
   it("still uploads immediately, with its own button", async () => {
     uploadMock.mockResolvedValue({ "@id": IRI });
     const { container } = render(<MaterialForm />);
-    await waitFor(() => expect(screen.getByText("Attach a file")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy(),
+    );
 
+    openUpload();
     stageFile(container);
-    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
 
     await waitFor(() =>
       expect(uploadMock).toHaveBeenCalledWith(
@@ -242,6 +280,43 @@ describe("MaterialForm — edit page file upload", () => {
     );
     // The upload is out-of-band: it must not trigger the form's own save.
     expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks Save while an upload is in flight", async () => {
+    // The headline data-loss guard: a PUT during the gap replaces `data`
+    // wholesale and drops the MediaObject the upload is still appending.
+    // Asserted here, not just in the child's onUploadingChange test, because
+    // dropping the prop from the call site would silently un-fix the race.
+    let resolveUpload: (v: unknown) => void = () => {};
+    uploadMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveUpload = resolve;
+      }),
+    );
+
+    const { container } = render(<MaterialForm />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy(),
+    );
+    const saveBtn = () =>
+      screen.getByRole("button", { name: /save material/i }) as HTMLButtonElement;
+    expect(saveBtn().disabled).toBe(false);
+
+    openUpload();
+    stageFile(container);
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
+
+    await waitFor(() => expect(saveBtn().disabled).toBe(true));
+    // The endpoint returns the whole stored document (a name is required by the
+    // backend validator), so resolve with one — an @id-only body would blank
+    // `name` via applyDoc and keep Save disabled for an unrelated reason.
+    resolveUpload({
+      "@context": "https://schema.org",
+      "@id": IRI,
+      "@type": "DigitalDocument",
+      name: { ne: "प्रेस विज्ञप्ति" },
+    });
+    await waitFor(() => expect(saveBtn().disabled).toBe(false));
   });
 
   it("keeps the visibility annotations the upload response omits", async () => {
@@ -258,9 +333,12 @@ describe("MaterialForm — edit page file upload", () => {
     });
 
     const { container } = render(<MaterialForm />);
-    await waitFor(() => expect(screen.getByText("Attach a file")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy(),
+    );
+    openUpload();
     stageFile(container);
-    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
 
     // The uploaded file's URL reached the Links editor...
     await waitFor(() =>

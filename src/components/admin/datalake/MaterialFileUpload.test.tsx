@@ -86,7 +86,7 @@ describe("MaterialFileUpload — immediate mode (edit page)", () => {
     const { input, onUploaded } = renderControl();
     const file = fileOf("order.pdf");
     pick(input, file);
-    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
 
     await waitFor(() =>
       expect(uploadMock).toHaveBeenCalledWith("ciaa", "press-2081-042", file, "RAW"),
@@ -104,7 +104,7 @@ describe("MaterialFileUpload — immediate mode (edit page)", () => {
     fireEvent.change(screen.getByTestId("role-select"), {
       target: { value: "PERMALINK" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
 
     await waitFor(() =>
       expect(uploadMock).toHaveBeenCalledWith(
@@ -128,7 +128,7 @@ describe("MaterialFileUpload — immediate mode (edit page)", () => {
 
     const { input, onUploadingChange } = renderControl();
     pick(input, fileOf("slow.pdf"));
-    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
 
     await waitFor(() => expect(onUploadingChange).toHaveBeenCalledWith(true));
     resolveUpload({});
@@ -139,7 +139,7 @@ describe("MaterialFileUpload — immediate mode (edit page)", () => {
     uploadMock.mockRejectedValue(new Error("boom"));
     const { input, onUploaded } = renderControl();
     pick(input, fileOf("order.pdf"));
-    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
 
     await waitFor(() => expect(screen.getByText("Upload failed")).toBeTruthy());
     expect(onUploaded).not.toHaveBeenCalled();
@@ -156,7 +156,7 @@ describe("MaterialFileUpload — deferred mode (create page)", () => {
     pick(input, file);
 
     expect(uploadMock).not.toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: /upload file/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /attach file/i })).toBeNull();
     expect(onStagedChange).toHaveBeenCalledWith({ file, role: "RAW" });
     expect(screen.getByText(/will be attached on save/i)).toBeTruthy();
   });
@@ -195,9 +195,49 @@ describe("MaterialFileUpload — deferred mode (create page)", () => {
     pick(input, huge);
 
     expect(screen.getByText("File exceeds the 100MB limit.")).toBeTruthy();
-    expect(onStagedChange).not.toHaveBeenCalledWith(
-      expect.objectContaining({ file: huge }),
-    );
+    // Assert the POSITIVE clear, not just the absence of a staging call: the
+    // weaker `not.toHaveBeenCalledWith(...)` also passes when the control never
+    // calls back at all, which would leave a previously-staged file in place.
+    expect(onStagedChange).toHaveBeenCalledWith(null);
     expect(uploadMock).not.toHaveBeenCalled();
+  });
+
+  it("clears a previously staged file when the next pick is oversize", () => {
+    const { input, onStagedChange, container } = renderControl({ mode: "deferred" });
+    pick(input, fileOf("good.pdf"));
+    expect(onStagedChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ role: "RAW" }),
+    );
+
+    const huge = fileOf("huge.pdf", 0);
+    Object.defineProperty(huge, "size", { value: 101 * 1024 * 1024 });
+    // The input is remounted on rejection, so pick against the current one.
+    const live = container.querySelector<HTMLInputElement>('input[type="file"]');
+    pick(live!, huge);
+
+    expect(onStagedChange).toHaveBeenLastCalledWith(null);
+  });
+});
+
+describe("MaterialFileUpload — oversize does not wedge the picker", () => {
+  it("resets the input after rejecting, so the same file can be picked again", () => {
+    // A file input emits no change event when its value is unchanged, so
+    // leaving the rejected filename in place would make re-picking that exact
+    // path a no-op and strand the control until a different file was chosen.
+    const { input, container } = renderControl();
+    const huge = fileOf("huge.pdf", 0);
+    Object.defineProperty(huge, "size", { value: 101 * 1024 * 1024 });
+    pick(input, huge);
+
+    const live = container.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(live).not.toBe(input); // remounted
+    expect(live!.value).toBe("");
+    // And a valid pick on the fresh input still works.
+    pick(live!, fileOf("ok.pdf"));
+    expect(screen.queryByText("File exceeds the 100MB limit.")).toBeNull();
+    expect(
+      (screen.getByRole("button", { name: /attach file/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
   });
 });
