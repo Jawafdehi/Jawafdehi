@@ -139,7 +139,7 @@ async function getCaseSubResource<T>(
 /**
  * Retrieve a FULL court case: the composite-key core plus its hearings and
  * party entities (separate sub-resource endpoints), assembled into one CourtCase
- * shaped for CourtCaseCard. Accepts a `<court>:<number>` ref or explicit pair.
+ * shaped for CourtCaseDetails. Accepts a `<court>:<number>` ref or explicit pair.
  */
 export async function getCourtCaseFull(ref: string): Promise<CourtCase>;
 export async function getCourtCaseFull(court: string, caseNumber: string): Promise<CourtCase>;

@@ -58,11 +58,14 @@ describe("getCaseStatusLabelKey", () => {
 describe("getCaseBadgeClassName for a concluded status", () => {
   it("uses the success (green) pill, not the alert (orange) pill", () => {
     const concluded = getCaseBadgeClassName("status", "concluded");
-    expect(concluded).toContain("bg-success");
+    expect(concluded).toContain("bg-success-strong");
+    expect(concluded).toContain("text-white");
     expect(concluded).not.toContain("bg-alert");
   });
 
   it("keeps the alert pill for an ongoing/published status", () => {
-    expect(getCaseBadgeClassName("status", "PUBLISHED")).toContain("bg-alert");
+    const published = getCaseBadgeClassName("status", "PUBLISHED");
+    expect(published).toContain("bg-alert-strong");
+    expect(published).toContain("text-white");
   });
 });
