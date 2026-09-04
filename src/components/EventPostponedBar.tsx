@@ -11,7 +11,13 @@ const DISMISSED_KEY = "jawafdehi.eventPostponed.dismissed";
  * It replaces the announcement bar that invited people to it, and deliberately
  * does not inherit its look — that bar was a primary-to-accent gradient with a
  * Register call to action, which is the wrong voice for "this is not
- * happening". Flat navy, an info mark, no button.
+ * happening". Flat amber (the --alert token), an info mark, no button.
+ *
+ * Amber, not navy: the home hero is full-bleed navy and the navbar over it is
+ * transparent, so a navy strip at the very top of "/" disappeared into the
+ * hero — invisible exactly where most visitors land. --alert contrasts on
+ * both the navy hero and the cream inner pages, and reads as a notice, which
+ * this is. Its foreground is dark ink by design (white on this amber fails AA).
  *
  * English only, unlike the rest of the site. This is a short-lived notice with
  * a fixed expiry hours away, and shipping it now in one language beats holding
@@ -49,7 +55,7 @@ export function EventPostponedBar() {
   return (
     <aside
       aria-label="Event announcement"
-      className="relative z-[60] bg-primary text-white"
+      className="relative z-[60] bg-alert text-alert-foreground"
     >
       {/* One wrapping row. The horizontal padding is symmetric rather than a
           bare `pr` to clear the dismiss button: the content is centred, so
@@ -59,7 +65,7 @@ export function EventPostponedBar() {
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-sm leading-6">
           <span className="whitespace-nowrap font-semibold">
             <Info
-              className="mb-0.5 mr-2 hidden h-4 w-4 align-text-bottom text-secondary sm:inline-block"
+              className="mb-0.5 mr-2 hidden h-4 w-4 align-text-bottom sm:inline-block"
               aria-hidden="true"
             />
             Event postponed
@@ -68,7 +74,7 @@ export function EventPostponedBar() {
               the navbar on every route, so a fifth line is a fifth of a phone
               screen spent on it — the session's subject is dropped rather than
               the reason or the promise of a new date. */}
-          <span className="text-white/80">
+          <span className="text-alert-foreground/80">
             Our 2/3 September public session is postponed following the floods in Rasuwa,
             Nuwakot, Dhading and Gorkha. We will announce a new date.
           </span>
@@ -79,7 +85,7 @@ export function EventPostponedBar() {
           type="button"
           onClick={dismiss}
           aria-label="Dismiss event announcement"
-          className="absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white after:absolute after:-inset-[2px] after:content-['']"
+          className="absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-alert-foreground/70 transition-colors hover:bg-alert-foreground/10 hover:text-alert-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-alert-foreground after:absolute after:-inset-[2px] after:content-['']"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
