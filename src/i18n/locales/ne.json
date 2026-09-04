@@ -1118,7 +1118,12 @@
     "member": "सदस्य",
     "representative": "प्रतिनिधि",
     "federalParliament": "संघीय संसद",
-    "viewSource": "स्रोत हेर्नुहोस्"
+    "viewSource": "स्रोत हेर्नुहोस्",
+    "relatedCaseFiled": "दायर मिति",
+    "relatedCaseDecided": "फैसला मिति",
+    "relatedCaseBigoUnknown": "बिगो रकम उल्लेख नभएको",
+    "outcomeConvictedSpecial": "विशेष अदालतबाट दोषी ठहर",
+    "outcomeAcquittedSpecial": "विशेष अदालतबाट सफाइ"
   },
   "updates": {
     "title": "अपडेटहरू तथा समाचार",

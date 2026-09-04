@@ -7,7 +7,7 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { formatDateForLanguage } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
@@ -15,6 +15,11 @@ import {
   outcomeLabel,
   shouldShowOutcome,
 } from "@/utils/case-outcome";
+import {
+  judicialStatusBadgeClass,
+  judicialStatusLabel,
+  judicialStatusOf,
+} from "@/utils/case-judicial-status";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -33,6 +38,20 @@ const ROLE_LABEL_KEY: Record<string, string> = {
 
 // First page only — the corpus is small and an entity rarely spans many cases.
 const PAGE_SIZE = 20;
+
+// Which court handed down the verdict, for the outcome chip.
+//
+// "Convicted" on its own does not say who convicted them, which matters most on
+// exactly the cases where it is contested — a Special Court conviction under
+// appeal is not the same claim as a settled one. Only qualify when the case
+// actually cites a Special Court proceeding; the archive also holds Revenue
+// Tribunal and writ matters, where "विशेष अदालतबाट" would be false.
+const SPECIAL_COURT_IRI = /\/courtcase\/special\//i;
+
+const SPECIAL_COURT_OUTCOME_KEY: Record<string, string> = {
+  convicted: "entityDetail.outcomeConvictedSpecial",
+  acquitted: "entityDetail.outcomeAcquittedSpecial",
+};
 
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
@@ -121,15 +140,42 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.case_start_date || c.created_at);
+          // Label the dates rather than printing a bare one. `case_start_date`
+          // is when the case was filed and `case_end_date` when it was decided —
+          // an unlabelled date left the reader guessing which they were seeing,
+          // and on a decided case the filing date alone reads as stale.
+          //
+          // `created_at` is when WE authored the record, not a fact about the
+          // case, so it is no longer used as a fallback: an authoring timestamp
+          // presented as a case date is simply wrong. A case with no filing date
+          // shows no date at all.
+          // Bikram Sambat leads in the Nepali UI, Gregorian in the English one —
+          // `formatDateForLanguage` is the shared helper the case surfaces
+          // already use for this. The other calendar comes back as `secondary`
+          // and is carried in `title`, so the Gregorian date stays available on
+          // hover without a second date cluttering every row.
+          //
+          // These cases carry no curated BS override (only timeline entries have
+          // `date_bs`), so the BS date is converted from the Gregorian one.
+          const filed = c.case_start_date
+            ? formatDateForLanguage(c.case_start_date, "PP", null, i18n.language)
+            : null;
+          const decided = c.case_end_date
+            ? formatDateForLanguage(c.case_end_date, "PP", null, i18n.language)
+            : null;
           const typeKey = getCaseTypeLabelKey(c.case_type);
           const typeLabel = typeKey ? t(typeKey) : c.case_type;
           const href = c.slug ? `/case/${c.slug}` : undefined;
+          const status = judicialStatusOf(c, outcome);
+          const inSpecialCourt = (c.court_cases ?? []).some((iri) =>
+            SPECIAL_COURT_IRI.test(iri ?? ""),
+          );
+          const outcomeKey = String(outcome ?? "").toLowerCase();
 
           const row = (
             <div
               className={cn(
-                "group flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40",
+                "group flex items-start gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-border hover:bg-muted/50",
                 accused && "border-l-4 border-l-accent",
               )}
             >
@@ -151,23 +197,68 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   </Badge>
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
-                      {outcomeLabel(outcome, language)}
+                      {inSpecialCourt && SPECIAL_COURT_OUTCOME_KEY[outcomeKey]
+                        ? t(SPECIAL_COURT_OUTCOME_KEY[outcomeKey])
+                        : outcomeLabel(outcome, language)}
                     </Badge>
                   ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    {[typeLabel, date].filter(Boolean).join(" · ")}
-                  </span>
+                  {/* Where the case itself has got to, as opposed to what
+                      happened to this person in it. */}
+                  <Badge variant="outline" className={judicialStatusBadgeClass(status)}>
+                    {judicialStatusLabel(status, language)}
+                  </Badge>
                 </div>
-                {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
-                    amount — a missing bigo is not a zero-rupee case. */}
-                {c.bigo ? (
-                  <p className="text-xs text-muted-foreground">
-                    <span>{t("caseCard.bigo")}: </span>
-                    <span className="font-medium tabular-nums text-foreground">
+
+                <dl className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                  <div className="flex items-baseline gap-1.5">
+                    <dt className="text-muted-foreground">{typeLabel}</dt>
+                  </div>
+                  {filed ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <dt className="text-muted-foreground">
+                        {t("entityDetail.relatedCaseFiled")}:
+                      </dt>
+                      <dd
+                        className="font-medium text-foreground"
+                        title={filed.secondary ?? undefined}
+                      >
+                        {filed.primary}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {decided ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <dt className="text-muted-foreground">
+                        {t("entityDetail.relatedCaseDecided")}:
+                      </dt>
+                      <dd
+                        className="font-medium text-foreground"
+                        title={decided.secondary ?? undefined}
+                      >
+                        {decided.primary}
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+
+                {/* The bigo line renders on EVERY card so the figure is always
+                    in the same place and its absence is legible as a gap in the
+                    record rather than an oversight.
+                    `formatBigo(0)` is the literal "Rs 0", so a falsy bigo is
+                    reported as unrecorded — a missing amount is not a
+                    zero-rupee case. */}
+                <p className="text-sm">
+                  <span className="text-muted-foreground">{t("caseCard.bigo")}: </span>
+                  {c.bigo ? (
+                    <span className="font-semibold tabular-nums text-accent">
                       {formatBigo(c.bigo)}
                     </span>
-                  </p>
-                ) : null}
+                  ) : (
+                    <span className="italic text-muted-foreground">
+                      {t("entityDetail.relatedCaseBigoUnknown")}
+                    </span>
+                  )}
+                </p>
               </div>
               {href ? (
                 <ArrowRight
