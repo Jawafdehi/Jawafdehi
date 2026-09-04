@@ -32,6 +32,50 @@ vi.mock("@/components/ui/select", () => ({
   ),
 }));
 
+// Radix Tabs activates via pointer events jsdom doesn't implement, so a click
+// never switches panels. Swap in a minimal native equivalent that keeps the
+// real roles ("tab"/"tabpanel") so the queries still assert real semantics.
+vi.mock("@/components/ui/tabs", async () => {
+  const React = await import("react");
+  const Ctx = React.createContext<{ value: string; set: (v: string) => void }>({
+    value: "",
+    set: () => {},
+  });
+  return {
+    Tabs: ({
+      value,
+      onValueChange,
+      children,
+    }: {
+      value: string;
+      onValueChange: (v: string) => void;
+      children?: ReactNode;
+    }) => (
+      <Ctx.Provider value={{ value, set: onValueChange }}>{children}</Ctx.Provider>
+    ),
+    TabsList: ({ children }: { children?: ReactNode }) => (
+      <div role="tablist">{children}</div>
+    ),
+    TabsTrigger: ({ value, children }: { value: string; children?: ReactNode }) => {
+      const c = React.useContext(Ctx);
+      return (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={c.value === value}
+          onClick={() => c.set(value)}
+        >
+          {children}
+        </button>
+      );
+    },
+    TabsContent: ({ value, children }: { value: string; children?: ReactNode }) => {
+      const c = React.useContext(Ctx);
+      return c.value === value ? <div role="tabpanel">{children}</div> : null;
+    },
+  };
+});
+
 const toast = vi.fn();
 vi.mock("@/hooks/use-toast", () => ({ toast: (...a: unknown[]) => toast(...a) }));
 
@@ -75,10 +119,13 @@ function fillRequired(container: HTMLElement, iri = IRI) {
   fireEvent.change(nameNe, { target: { value: "सीआईएए प्रेस विज्ञप्ति" } });
 }
 
-// "Upload file" in the Links card reveals the upload panel; nothing renders a
-// file input until it is clicked.
+// The Links card's composer is tabbed: the list of attached items is always
+// visible, and the tabs switch only HOW you add one. Nothing renders a file
+// input until the "Upload file" tab is selected.
 const openUpload = () =>
-  fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+  fireEvent.click(screen.getByRole("tab", { name: /upload file/i }));
+const openLinkTab = () =>
+  fireEvent.click(screen.getByRole("tab", { name: /add link/i }));
 
 function stageFile(container: HTMLElement, name = "order.pdf") {
   const input = container.querySelector<HTMLInputElement>('input[type="file"]');
@@ -108,14 +155,46 @@ describe("MaterialForm — create page file upload", () => {
     // caseworker had to save, return to the list and re-open the material to
     // attach a file. Pasting a URL was the only option on /new.
     const { container } = render(<MaterialForm />);
-    expect(screen.getByRole("button", { name: /add link/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy();
-    // The panel itself stays collapsed until asked for.
+    expect(screen.getByRole("tab", { name: /add link/i })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /upload file/i })).toBeTruthy();
+    // Link is the default tab, so no file input until the other one is chosen.
     expect(container.querySelector('input[type="file"]')).toBeNull();
 
     openUpload();
     expect(screen.getByText("Attach a file")).toBeTruthy();
     expect(container.querySelector('input[type="file"]')).toBeTruthy();
+  });
+
+  it("keeps a staged file visible in the list, and across a tab switch", () => {
+    // The staged file must never be invisible state that the next Save acts on,
+    // so it is listed with the links rather than living only inside the tab.
+    const { container } = render(<MaterialForm />);
+    openUpload();
+    stageFile(container, "charge-sheet.pdf");
+
+    expect(screen.getByText("charge-sheet.pdf")).toBeTruthy();
+    expect(screen.getByText(/attaches on save/i)).toBeTruthy();
+
+    // Switching back to the link tab hides the picker but NOT the staged row.
+    openLinkTab();
+    expect(container.querySelector('input[type="file"]')).toBeNull();
+    expect(screen.getByText("charge-sheet.pdf")).toBeTruthy();
+  });
+
+  it("removing the staged row un-stages the file so Save does not upload it", async () => {
+    createMock.mockResolvedValue({ "@id": IRI });
+    const { container } = render(<MaterialForm />);
+    fillRequired(container);
+    openUpload();
+    stageFile(container);
+    fireEvent.click(screen.getByRole("button", { name: /remove staged file/i }));
+    expect(screen.queryByText(/attaches on save/i)).toBeNull();
+
+    save();
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith("/admin/datalake/materials"),
+    );
+    expect(uploadMock).not.toHaveBeenCalled();
   });
 
   it("defers the upload: the panel has no action button, and nothing is sent before Save", () => {
@@ -127,22 +206,6 @@ describe("MaterialForm — create page file upload", () => {
     expect(screen.queryByRole("button", { name: /attach file/i })).toBeNull();
     expect(uploadMock).not.toHaveBeenCalled();
     expect(createMock).not.toHaveBeenCalled();
-  });
-
-  it("drops the staged file when the upload panel is dismissed", async () => {
-    // A File the caseworker can no longer see must not still be uploaded.
-    createMock.mockResolvedValue({ "@id": IRI });
-    const { container } = render(<MaterialForm />);
-    fillRequired(container);
-    openUpload();
-    stageFile(container);
-    fireEvent.click(screen.getByRole("button", { name: /cancel upload/i }));
-    save();
-
-    await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith("/admin/datalake/materials"),
-    );
-    expect(uploadMock).not.toHaveBeenCalled();
   });
 
   it("creates the material FIRST, then attaches the staged file", async () => {
@@ -263,7 +326,7 @@ describe("MaterialForm — edit page file upload", () => {
     uploadMock.mockResolvedValue({ "@id": IRI });
     const { container } = render(<MaterialForm />);
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy(),
+      expect(screen.getByRole("tab", { name: /upload file/i })).toBeTruthy(),
     );
 
     openUpload();
@@ -296,7 +359,7 @@ describe("MaterialForm — edit page file upload", () => {
 
     const { container } = render(<MaterialForm />);
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy(),
+      expect(screen.getByRole("tab", { name: /upload file/i })).toBeTruthy(),
     );
     const saveBtn = () =>
       screen.getByRole("button", { name: /save material/i }) as HTMLButtonElement;
@@ -334,7 +397,7 @@ describe("MaterialForm — edit page file upload", () => {
 
     const { container } = render(<MaterialForm />);
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: /upload file/i })).toBeTruthy(),
+      expect(screen.getByRole("tab", { name: /upload file/i })).toBeTruthy(),
     );
     openUpload();
     stageFile(container);

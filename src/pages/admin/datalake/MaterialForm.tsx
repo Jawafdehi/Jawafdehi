@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Paperclip, Plus, Trash2, Upload } from "lucide-react";
 
 type Doc = Record<string, unknown>;
 
@@ -142,14 +143,17 @@ export default function MaterialForm() {
   // Edit mode: bytes in flight, so Save can't race an upload (a PUT replaces
   // `data` wholesale and would drop the MediaObject the upload is appending).
   const [uploadPending, setUploadPending] = useState(false);
-  // Whether the Links card's upload panel is revealed ("Upload file").
-  const [showUpload, setShowUpload] = useState(false);
+  // Which composer tab is open in the Links card ("link" | "file"). Switching
+  // it never clears a staged file — the staged row stays visible in the list
+  // above, so nothing the next Save acts on is hidden.
+  const [composer, setComposer] = useState("link");
+  // Bumped to remount MaterialFileUpload, so removing the staged row from the
+  // list also clears the picker's own filename display.
+  const [stagedKey, setStagedKey] = useState(0);
 
-  // Collapsing the panel must drop whatever it staged: a File the caseworker
-  // can no longer see must not still be uploaded by the next Save.
-  const closeUpload = () => {
-    setShowUpload(false);
+  const clearStaged = () => {
     setStaged(null);
+    setStagedKey((k) => k + 1);
   };
 
   const applyDoc = (next: Doc) => {
@@ -273,13 +277,10 @@ export default function MaterialForm() {
             if (!parts) {
               throw new Error("Saved material's @id is not a valid material IRI.");
             }
-            await uploadMaterialFile(
-              parts.source,
-              parts.ident,
-              staged.file,
-              staged.role,
-            );
-            setStaged(null);
+            // Always RAW: an upload is the primary document, and the role of
+            // the resulting entry stays editable on its row in the Links list.
+            await uploadMaterialFile(parts.source, parts.ident, staged.file, "RAW");
+            clearStaged();
             // ONE toast describes the whole action. A "Material saved" fired
             // before the upload would contradict the failure toast below.
             toast({
@@ -294,7 +295,7 @@ export default function MaterialForm() {
             // Clear the staging: both routes render this same element, so React
             // Router reconciles them as one instance and a surviving `staged`
             // would be unreachable state that no longer matches any control.
-            setStaged(null);
+            clearStaged();
             toast({
               title: "Material saved, but the file was not attached",
               description: adminErrorMessage(err, "Upload failed"),
@@ -472,149 +473,187 @@ export default function MaterialForm() {
           </div>
         </div>
 
-        {/* Roled links (associatedMedia). Unknown per-entry fields survive the
-            row editor. An uploaded file becomes an entry here too — the server
-            appends it — so both ways to attach a document are offered from this
-            one card: paste a URL, or upload the file itself. */}
-        <div className="space-y-2 rounded-md border bg-white p-4">
-          <div className="flex items-center justify-between gap-2">
-            <Label className="text-sm font-semibold">Links</Label>
-            <div className="flex items-center gap-2">
+        {/* Roled links (associatedMedia): the single list of everything
+            attached to this material. A pasted URL and an uploaded file both
+            become entries here, so the list stays visible and only the COMPOSER
+            below it switches between the two ways of adding one. */}
+        <div className="space-y-3 rounded-md border bg-white p-4">
+          <Label className="text-sm font-semibold">Links</Label>
+
+          {rows.length === 0 && !staged ? (
+            <p className="text-sm text-muted-foreground">No links yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {rows.map((row, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <Input
+                    aria-label={`Link ${i + 1} URL`}
+                    value={row.contentUrl}
+                    onChange={(e) =>
+                      setMediaRows(
+                        rows.map((r, idx) =>
+                          idx === i ? { ...r, contentUrl: e.target.value } : r,
+                        ),
+                      )
+                    }
+                    className="font-mono text-xs"
+                    placeholder="https://…"
+                  />
+                  <Select
+                    value={row.role}
+                    onValueChange={(v) =>
+                      setMediaRows(
+                        rows.map((r, idx) => (idx === i ? { ...r, role: v } : r)),
+                      )
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-40 shrink-0"
+                      aria-label={`Link ${i + 1} role`}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MATERIAL_LINK_ROLES.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                      {!MATERIAL_LINK_ROLES.includes(
+                        row.role as (typeof MATERIAL_LINK_ROLES)[number],
+                      ) && <SelectItem value={row.role}>{row.role}</SelectItem>}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setMediaRows(rows.filter((_, idx) => idx !== i))}
+                    title="Remove link"
+                  >
+                    <Trash2 className="h-4 w-4 text-danger" />
+                  </Button>
+                </div>
+              ))}
+
+              {/* A staged upload is shown in the SAME list, so a file waiting to
+                  be attached is never invisible state the next Save would act on
+                  without the caseworker seeing it. */}
+              {staged && (
+                <div className="flex items-center gap-2 rounded-md border border-dashed bg-muted/40 px-3 py-2">
+                  <Paperclip className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate font-mono text-xs">{staged.file.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    attaches on save
+                  </span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="ml-auto shrink-0"
+                    onClick={clearStaged}
+                    title="Remove staged file"
+                    aria-label="Remove staged file"
+                  >
+                    <Trash2 className="h-4 w-4 text-danger" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* The composer. Tabs switch how you add an entry; they never hide
+              the list above, and an uploaded file lands in that same list. */}
+          <Tabs value={composer} onValueChange={setComposer} className="pt-1">
+            <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
+              <TabsTrigger
+                value="link"
+                className="rounded-none border-b-2 border-transparent px-4 py-2 text-sm data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add link
+              </TabsTrigger>
+              <TabsTrigger
+                value="file"
+                className="rounded-none border-b-2 border-transparent px-4 py-2 text-sm data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              >
+                <Upload className="mr-1 h-4 w-4" /> Upload file
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="link" className="mt-3">
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={() =>
-                  setMediaRows([...rows, { contentUrl: "", role: "RAW", original: null }])
+                  setMediaRows([
+                    ...rows,
+                    { contentUrl: "", role: "RAW", original: null },
+                  ])
                 }
               >
-                <Plus className="mr-1 h-4 w-4" /> Add link
+                <Plus className="mr-1 h-4 w-4" /> Add a link row
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                aria-expanded={showUpload}
-                onClick={() => (showUpload ? closeUpload() : setShowUpload(true))}
-              >
-                <Upload className="mr-1 h-4 w-4" /> Upload file
-              </Button>
-            </div>
-          </div>
-          {rows.length === 0 && !showUpload ? (
-            <p className="text-sm text-muted-foreground">No links yet.</p>
-          ) : (
-            rows.map((row, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <Input
-                  aria-label={`Link ${i + 1} URL`}
-                  value={row.contentUrl}
-                  onChange={(e) =>
-                    setMediaRows(
-                      rows.map((r, idx) =>
-                        idx === i ? { ...r, contentUrl: e.target.value } : r,
-                      ),
-                    )
-                  }
-                  className="font-mono text-xs"
-                  placeholder="https://…"
-                />
-                <Select
-                  value={row.role}
-                  onValueChange={(v) =>
-                    setMediaRows(
-                      rows.map((r, idx) => (idx === i ? { ...r, role: v } : r)),
-                    )
-                  }
-                >
-                  <SelectTrigger className="w-40 shrink-0" aria-label={`Link ${i + 1} role`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MATERIAL_LINK_ROLES.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                    {!MATERIAL_LINK_ROLES.includes(
-                      row.role as (typeof MATERIAL_LINK_ROLES)[number],
-                    ) && <SelectItem value={row.role}>{row.role}</SelectItem>}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setMediaRows(rows.filter((_, idx) => idx !== i))}
-                  title="Remove link"
-                >
-                  <Trash2 className="h-4 w-4 text-danger" />
-                </Button>
-              </div>
-            ))
-          )}
+            </TabsContent>
 
-          {/* Revealed by "Upload file". Two modes, because the upload endpoint
-              is keyed on a material that must already exist: on the edit page
-              it posts straight away; on the create page it stages the file and
-              onSubmit uploads it after the create has minted the @id. */}
-          {showUpload &&
-            (() => {
-              if (!editing) {
-                return (
-                  <MaterialFileUpload
-                    mode="deferred"
-                    disabled={saving}
-                    onStagedChange={setStaged}
-                    onDismiss={closeUpload}
-                  />
-                );
-              }
-              // Prefer the components parsed from the doc's @id (the canonical
-              // location); fall back to the route ref. Only split refPath when
-              // it actually contains a slash — slice(0, -1) would otherwise
-              // truncate and make ident the whole (wrong) string.
-              const parts = iri ? parseMaterialIri(iri) : null;
-              const lastSlash = refPath.lastIndexOf("/");
-              const fallback =
-                lastSlash > 0
-                  ? {
-                      source: refPath.slice(0, lastSlash),
-                      ident: refPath.slice(lastSlash + 1),
-                    }
-                  : { source: "", ident: "" };
-              const source = parts?.source ?? fallback.source;
-              const ident = parts?.ident ?? fallback.ident;
-              if (!source || !ident) return null;
-              return (
+            <TabsContent value="file" className="mt-3">
+              {!editing ? (
                 <MaterialFileUpload
-                  source={source}
-                  ident={ident}
+                  key={stagedKey}
+                  mode="deferred"
                   disabled={saving}
-                  onDismiss={closeUpload}
-                  onUploadingChange={setUploadPending}
-                  onUploaded={(res) => {
-                    if (!res || typeof res !== "object") return;
-                    // The upload returns the stored document as the WRITE plane
-                    // sees it — without the annotations an authed read adds.
-                    // Applying it verbatim would blank
-                    // jawafdehi:visibilityPolicy and make the visibility
-                    // control disappear, so carry those two keys across.
-                    const merged = { ...(res as Doc) };
-                    for (const k of [
-                      "jawafdehi:visibilityPolicy",
-                      "jawafdehi:visibility",
-                    ]) {
-                      if (merged[k] === undefined && doc[k] !== undefined) {
-                        merged[k] = doc[k];
-                      }
-                    }
-                    applyDoc(merged);
-                  }}
+                  onStagedChange={setStaged}
                 />
-              );
-            })()}
+              ) : (
+                (() => {
+                  // Prefer the components parsed from the doc's @id (the
+                  // canonical location); fall back to the route ref. Only split
+                  // refPath when it actually contains a slash — slice(0, -1)
+                  // would otherwise truncate and make ident the whole string.
+                  const parts = iri ? parseMaterialIri(iri) : null;
+                  const lastSlash = refPath.lastIndexOf("/");
+                  const fallback =
+                    lastSlash > 0
+                      ? {
+                          source: refPath.slice(0, lastSlash),
+                          ident: refPath.slice(lastSlash + 1),
+                        }
+                      : { source: "", ident: "" };
+                  const source = parts?.source ?? fallback.source;
+                  const ident = parts?.ident ?? fallback.ident;
+                  if (!source || !ident) return null;
+                  return (
+                    <MaterialFileUpload
+                      source={source}
+                      ident={ident}
+                      disabled={saving}
+                      onUploadingChange={setUploadPending}
+                      onUploaded={(res) => {
+                        if (!res || typeof res !== "object") return;
+                        // The upload returns the stored document as the WRITE
+                        // plane sees it — without the annotations an authed read
+                        // adds. Applying it verbatim would blank
+                        // jawafdehi:visibilityPolicy and make the visibility
+                        // control disappear, so carry those two keys across.
+                        const merged = { ...(res as Doc) };
+                        for (const k of [
+                          "jawafdehi:visibilityPolicy",
+                          "jawafdehi:visibility",
+                        ]) {
+                          if (merged[k] === undefined && doc[k] !== undefined) {
+                            merged[k] = doc[k];
+                          }
+                        }
+                        applyDoc(merged);
+                      }}
+                    />
+                  );
+                })()
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
+
 
         {/* The full document remains editable for fields the form doesn't
             surface (about, additionalType, jawafdehi:* extensions, …). */}

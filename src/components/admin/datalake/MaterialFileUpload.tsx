@@ -3,25 +3,21 @@ import { uploadMaterialFile, adminErrorMessage } from "@/services/admin-api";
 import { FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Upload, X } from "lucide-react";
 
-// Link-role choices for an uploaded material file (matches DocumentSource
-// link-role vocabulary: RAW is the primary/original file).
-const FILE_ROLES = ["RAW", "ALTERNATE", "PERMALINK"] as const;
+// An upload is always the primary document: the link-role vocabulary describes
+// what kind of URL an entry is (PERMALINK = the source's own canonical page,
+// SOURCE_PAGE = the HTML it was scraped from, MARKDOWN = our OCR output), and
+// none of those can describe bytes we are storing ourselves. So this control
+// asks nobody to classify anything and sends RAW; the role stays editable on
+// the resulting row in the Links list if a document really is an ALTERNATE.
+const UPLOAD_ROLE = "RAW";
 
 // A file the caseworker has picked but which has not been sent yet — the
 // deferred mode's output (see `mode` below).
 export interface StagedMaterialFile {
   file: File;
-  role: string;
 }
 
 interface Props {
@@ -79,7 +75,6 @@ export default function MaterialFileUpload({
   const headingId = useId();
   const fileId = useId();
   const [file, setFile] = useState<File | null>(null);
-  const [role, setRole] = useState<string>("RAW");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Bumped after a successful upload to remount the uncontrolled <input
@@ -118,13 +113,7 @@ export default function MaterialFileUpload({
       return;
     }
     setFile(picked);
-    if (deferred) onStagedChange?.(picked ? { file: picked, role } : null);
-  };
-
-  const changeRole = (next: string) => {
-    setRole(next);
-    // Keep the staged role in step, or the parent would upload with a stale one.
-    if (deferred && file) onStagedChange?.({ file, role: next });
+    if (deferred) onStagedChange?.(picked ? { file: picked } : null);
   };
 
   const upload = async () => {
@@ -134,7 +123,7 @@ export default function MaterialFileUpload({
     setPending(true);
     setError(null);
     try {
-      const res = await uploadMaterialFile(source, ident, file, role);
+      const res = await uploadMaterialFile(source, ident, file, UPLOAD_ROLE);
       toast({ title: "File uploaded", description: file.name });
       setFile(null);
       setInputKey((k) => k + 1);
@@ -195,41 +184,14 @@ export default function MaterialFileUpload({
         />
       </div>
 
-      <div className="space-y-1">
-        {/* Visible text and accessible name are the same string (WCAG 2.5.3);
-            the Radix trigger isn't a labelable control, so it carries the name
-            itself rather than being pointed at by the <Label>. */}
-        <Label className="text-xs">Link role</Label>
-        <Select
-          value={role}
-          onValueChange={changeRole}
-          disabled={uploading || disabled}
-        >
-          <SelectTrigger aria-label="Link role" className="sm:max-w-[12rem]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FILE_ROLES.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       <FieldError message={error} />
 
       {/* Deferred mode has no button of its own — the form's Save sends the
-          file, so a second one here would imply a write that doesn't happen. */}
-      {deferred ? (
-        file && (
-          <p className="text-xs text-muted-foreground">
-            <span className="font-medium">{file.name}</span> will be attached on
-            save.
-          </p>
-        )
-      ) : (
+          file, so a second one here would imply a write that doesn't happen.
+          Nor does it echo the filename: the parent lists the staged file as a
+          pending row alongside the links, which is where it actually lands. */}
+      {deferred ? null : (
         <Button
           type="button"
           onClick={upload}

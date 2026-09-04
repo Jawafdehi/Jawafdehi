@@ -1,37 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { ReactNode } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-
-// Radix Select relies on pointer/layout APIs jsdom lacks; swap it for a native
-// <select> so onValueChange can be driven deterministically with fireEvent.
-vi.mock("@/components/ui/select", () => ({
-  Select: ({
-    value,
-    onValueChange,
-    disabled,
-    children,
-  }: {
-    value?: string;
-    onValueChange: (v: string) => void;
-    disabled?: boolean;
-    children?: ReactNode;
-  }) => (
-    <select
-      data-testid="role-select"
-      value={value ?? ""}
-      disabled={disabled}
-      onChange={(e) => onValueChange(e.currentTarget.value)}
-    >
-      {children}
-    </select>
-  ),
-  SelectTrigger: ({ children }: { children?: ReactNode }) => <>{children}</>,
-  SelectValue: () => null,
-  SelectContent: ({ children }: { children?: ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children?: ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
-}));
 
 const toast = vi.fn();
 vi.mock("@/hooks/use-toast", () => ({ toast: (...a: unknown[]) => toast(...a) }));
@@ -97,24 +65,6 @@ describe("MaterialFileUpload — immediate mode (edit page)", () => {
     );
   });
 
-  it("sends the chosen link role", async () => {
-    uploadMock.mockResolvedValue({});
-    const { input } = renderControl();
-    pick(input, fileOf("scan.pdf"));
-    fireEvent.change(screen.getByTestId("role-select"), {
-      target: { value: "PERMALINK" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
-
-    await waitFor(() =>
-      expect(uploadMock).toHaveBeenCalledWith(
-        "ciaa",
-        "press-2081-042",
-        expect.any(File),
-        "PERMALINK",
-      ),
-    );
-  });
 
   it("reports in-flight state so the parent form can block Save", async () => {
     // The upload response is the only thing that carries the new MediaObject
@@ -157,23 +107,12 @@ describe("MaterialFileUpload — deferred mode (create page)", () => {
 
     expect(uploadMock).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: /attach file/i })).toBeNull();
-    expect(onStagedChange).toHaveBeenCalledWith({ file, role: "RAW" });
-    expect(screen.getByText(/will be attached on save/i)).toBeTruthy();
+    expect(onStagedChange).toHaveBeenCalledWith({ file });
+    // The filename is NOT echoed here — the parent lists the staged file as a
+    // pending row next to the links, which is where it actually lands.
+    expect(screen.queryByText(/will be attached on save/i)).toBeNull();
   });
 
-  it("re-stages with the new role when the role changes after picking", () => {
-    // Otherwise the form would upload with a role the caseworker had changed.
-    const { input, onStagedChange } = renderControl({ mode: "deferred" });
-    const file = fileOf("alt.pdf");
-    pick(input, file);
-    onStagedChange.mockClear();
-
-    fireEvent.change(screen.getByTestId("role-select"), {
-      target: { value: "ALTERNATE" },
-    });
-
-    expect(onStagedChange).toHaveBeenCalledWith({ file, role: "ALTERNATE" });
-  });
 
   it("clears the staged file when the picker is emptied", () => {
     const { input, onStagedChange } = renderControl({ mode: "deferred" });
@@ -205,9 +144,7 @@ describe("MaterialFileUpload — deferred mode (create page)", () => {
   it("clears a previously staged file when the next pick is oversize", () => {
     const { input, onStagedChange, container } = renderControl({ mode: "deferred" });
     pick(input, fileOf("good.pdf"));
-    expect(onStagedChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ role: "RAW" }),
-    );
+    expect(onStagedChange).toHaveBeenLastCalledWith({ file: expect.any(File) });
 
     const huge = fileOf("huge.pdf", 0);
     Object.defineProperty(huge, "size", { value: 101 * 1024 * 1024 });
