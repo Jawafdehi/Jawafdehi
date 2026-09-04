@@ -1,0 +1,18 @@
+# Deploy:  npx wrangler deploy -c workers/mta-sts/wrangler.toml
+#
+# Separate from the site Worker at the repo root — see workers/mta-sts/worker.ts
+# for why. No assets binding here, deliberately.
+#
+# This is a plain route, not `custom_domain = true`: a custom domain makes
+# wrangler create and own the DNS record, and DNS for this zone is authored in
+# services/infra/terraform/cloudflare/dns.tf. A plain route attaches the Worker
+# to a hostname that must already resolve through Cloudflare's proxy, and
+# creates nothing. Deploying before that record exists is harmless — the route
+# just never matches.
+name = "jawafdehi-mta-sts"
+main = "worker.ts"
+compatibility_date = "2025-12-25"
+
+routes = [
+  { pattern = "mta-sts.jawafdehi.org/*", zone_name = "jawafdehi.org" },
+]
