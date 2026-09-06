@@ -16,10 +16,20 @@ const CaseEntityCards = lazy(() =>
   })),
 );
 
+// Parties shown before the "view more" toggle — three rows of the 3-up grid.
+// Owned here, not in the lazy chunk, because CardsFallback has to reserve the
+// same number of tiles and importing the constant from there would pull the
+// chunk back into the initial payload.
+const INITIAL_PARTY_LIMIT = 9;
+
+// Same grid, same tile height, same count as the real thing, so the swap when
+// the chunk lands is a repaint and not a reflow. Reserving a flat 3 tiles was
+// two rows short at `md` and six short on mobile's single column — and 48% of
+// relation groups carry more than three parties.
 function CardsFallback({ count }: Readonly<{ count: number }>) {
   return (
     <div aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 print:hidden">
-      {Array.from({ length: Math.min(count, 3) }, (_, i) => (
+      {Array.from({ length: Math.min(count, INITIAL_PARTY_LIMIT) }, (_, i) => (
         <div key={i} className="min-h-[15rem] rounded-2xl bg-muted/50" />
       ))}
     </div>
@@ -95,6 +105,7 @@ export function InvolvedPartiesSection({
                   entities={entities}
                   resolvedEntities={resolvedEntities}
                   language={language}
+                  initialLimit={INITIAL_PARTY_LIMIT}
                 />
               </Suspense>
               <p className="hidden print:block">

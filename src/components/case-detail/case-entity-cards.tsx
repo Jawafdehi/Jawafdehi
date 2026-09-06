@@ -29,8 +29,12 @@ interface CaseEntityCardsProps {
   entities: JawafEntity[];
   resolvedEntities: Record<string, Entity>;
   language: string;
-  /** Cards shown before the "view more" toggle. Three rows of the 3-up grid. */
-  initialLimit?: number;
+  /**
+   * Cards shown before the "view more" toggle. Required, not defaulted: the
+   * Suspense fallback in involved-parties-section reserves exactly this many
+   * tiles, and a default here would let the two drift apart silently.
+   */
+  initialLimit: number;
 }
 
 function getNames(jawafEntity: JawafEntity, entity: Entity | null, language: string) {
@@ -88,15 +92,29 @@ const EASE_OUT = "[transition-timing-function:cubic-bezier(0.23,1,0.32,1)]";
 const SURFACE = "bg-muted/50 transition-colors duration-200 group-hover:bg-muted/70";
 
 // Flip: the back face is pre-rotated and both faces hide their backface; the
-// inner wrapper rotates on hover / focus-within / tap (data-flipped).
+// inner wrapper rotates whenever the card is `revealed` (data-flipped).
+//
+// Every trigger — hover, focus, tap — routes through React state rather than a
+// `group-hover:` / `group-focus-within:` variant, so `aria-expanded` can never
+// disagree with what is on screen. Two things went wrong when the CSS drove it:
+// a keyboard Tab flipped the card via focus-within while the button still
+// announced "collapsed" (and Enter then toggled only the announcement), and on
+// touch — where Tailwind 3 does not gate `hover:` behind `@media (hover:hover)`
+// unless `future.hoverOnlyWhenSupported` is set — the sticky tap-hover flipped
+// cards independently of the state that was supposed to own them.
 const FLIP_INNER =
-  "[transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)] group-data-[flipped=true]:[transform:rotateY(180deg)]";
+  "[transform-style:preserve-3d] group-data-[flipped=true]:[transform:rotateY(180deg)]";
 const FLIP_FRONT = "[backface-visibility:hidden]";
 const FLIP_BACK = "[backface-visibility:hidden] [transform:rotateY(180deg)]";
 
 // Details content rises 6px + fades in once the face has arrived, so the
 // reveal reads as two beats (face, then words) instead of one hard swap.
-const SETTLE = `translate-y-1.5 opacity-0 transition-[transform,opacity] duration-300 ${EASE_OUT} group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 group-data-[flipped=true]:translate-y-0 group-data-[flipped=true]:opacity-100 motion-reduce:translate-y-0 motion-reduce:transition-opacity`;
+const SETTLE = `translate-y-1.5 opacity-0 transition-[transform,opacity] duration-300 ${EASE_OUT} group-data-[flipped=true]:translate-y-0 group-data-[flipped=true]:opacity-100 motion-reduce:translate-y-0 motion-reduce:transition-opacity`;
+
+// Hover-intent: a pointer sweeping across the grid must not flip every card it
+// crosses. Was a `group-hover:delay-75` on the transition; now that hover is
+// state, the state itself waits instead.
+const HOVER_INTENT_MS = 75;
 
 interface EntityCardProps {
   jawafEntity: JawafEntity;
@@ -105,22 +123,26 @@ interface EntityCardProps {
 }
 
 function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>) {
-  // The front face is a button: on touch (no hover) a tap flips the card and
-  // the details face — itself the profile link — is what the second tap lands
-  // on; with a keyboard, Enter/Space does the same. On pointer devices hover
-  // flips the card before the button can be pressed (a turned-away backface is
-  // not hit-testable), so nothing fights.
+  // Three independent reasons a card shows its details, all in state so the
+  // ARIA and the transform read from one value (`revealed`):
+  //   flipped     — an explicit toggle: Enter/Space on the front button, or a tap
+  //   hovered     — a pointer resting on the card, after the hover-intent delay
+  //   backFocused — Tab reached the details link, which must not be invisible
+  // The front button's `aria-expanded` is therefore always what is on screen,
+  // and pressing it from the keyboard makes a real, visible change instead of
+  // toggling an announcement over an already-flipped card.
   const [flipped, setFlipped] = useState(false);
-  // Pointer hover, tracked so the turned-away front can be hidden from
-  // assistive tech. Focus deliberately does NOT hide it: the focused element
-  // is the front button itself.
   const [hovered, setHovered] = useState(false);
+  const [backFocused, setBackFocused] = useState(false);
+  const revealed = flipped || hovered || backFocused;
 
+  const cardRef = useRef<HTMLDivElement>(null);
   // A scrolled details face must come back to the top the next time it is
   // revealed. Reset after the card has finished turning away (the face is
   // still visible mid-flip, so an immediate reset would visibly jump).
   const scrollRef = useRef<HTMLDivElement>(null);
   const resetTimer = useRef<ReturnType<typeof setTimeout>>();
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>();
   const scheduleScrollReset = () => {
     clearTimeout(resetTimer.current);
     resetTimer.current = setTimeout(() => {
@@ -128,14 +150,26 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     }, 550);
   };
   const cancelScrollReset = () => clearTimeout(resetTimer.current);
-  useEffect(() => () => clearTimeout(resetTimer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(resetTimer.current);
+      clearTimeout(hoverTimer.current);
+    },
+    [],
+  );
   const onMouseEnter = () => {
     cancelScrollReset();
-    setHovered(true);
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHovered(true), HOVER_INTENT_MS);
   };
   const onMouseLeave = () => {
+    clearTimeout(hoverTimer.current);
     scheduleScrollReset();
     setHovered(false);
+    // A tap fires an emulated mouseenter, so a touch flip also carries `hovered`
+    // and `flipped`. Clearing both here keeps a tapped card from staying turned
+    // over after the pointer moves on — unless the keyboard put focus inside it.
+    if (!cardRef.current?.contains(document.activeElement)) setFlipped(false);
   };
   // Focus leaving the card entirely puts a keyboard/tap-flipped card back.
   const onBlur = (e: FocusEvent<HTMLDivElement>) => {
@@ -224,9 +258,16 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     FLIP_BACK,
   );
 
-  // The whole details face links to the profile (no separate button).
+  // The whole details face links to the profile (no separate button). It stays
+  // in the tab order at rest — Tab reaching it is itself a reason to reveal the
+  // card, so focus never lands on a face that is turned away.
   const back: ReactNode = href ? (
-    <Link to={href} className={backClass}>
+    <Link
+      to={href}
+      className={backClass}
+      onFocus={() => setBackFocused(true)}
+      onBlur={() => setBackFocused(false)}
+    >
       {details}
     </Link>
   ) : (
@@ -237,12 +278,13 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     // The card is as tall as its front (min 15rem); the grid row stretches every
     // card to the tallest one, and the details face fills that and scrolls inside.
     <div
+      ref={cardRef}
       className={cn(
         "group relative h-full touch-manipulation rounded-2xl transition-transform duration-200 [-webkit-tap-highlight-color:transparent] [perspective:1200px]",
         EASE_OUT,
         "hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:hover:translate-y-0",
       )}
-      data-flipped={flipped}
+      data-flipped={revealed}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onFocus={cancelScrollReset}
@@ -251,21 +293,19 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
       <div
         className={cn(
           // Asymmetric: 500ms in (the reveal is the moment worth watching),
-          // 300ms back — exits should always be quicker than entries. The 75ms
-          // hover-intent delay keeps a pointer sweeping across the grid from
-          // flipping every card it crosses; leaving is immediate.
-          "relative h-full w-full transition-transform duration-300 group-hover:delay-75 group-hover:duration-500 group-focus-within:duration-500 group-data-[flipped=true]:duration-500 motion-reduce:transition-none",
+          // 300ms back — exits should always be quicker than entries.
+          "relative h-full w-full transition-transform duration-300 group-data-[flipped=true]:duration-500 motion-reduce:transition-none",
           EASE_OUT,
           FLIP_INNER,
         )}
       >
-        {/* Hidden from AT only while the pointer holds it turned away; after a
-            keyboard/tap toggle it stays exposed as an expanded disclosure. */}
+        {/* Never `aria-hidden` — the turned-away front keeps its focus and its
+            place in the tab order, and hiding a focused control from assistive
+            tech is a WCAG 4.1.2 failure. The details are reachable to a screen
+            reader either way, via the back face's own link. */}
         <button
           type="button"
-          aria-expanded={hovered || flipped}
-          aria-hidden={hovered}
-          tabIndex={hovered ? -1 : 0}
+          aria-expanded={revealed}
           onClick={toggleFlipped}
           className={cn(frontClass, FLIP_FRONT, "focus-visible:outline-none")}
         >
@@ -282,7 +322,7 @@ export function CaseEntityCards({
   entities,
   resolvedEntities,
   language,
-  initialLimit = 9,
+  initialLimit,
 }: Readonly<CaseEntityCardsProps>) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);

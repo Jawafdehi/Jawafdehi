@@ -23,19 +23,21 @@ interface EntityAvatarProps {
 }
 
 export function EntityAvatar({ kind, src, size = "lg" }: Readonly<EntityAvatarProps>) {
-  const [failed, setFailed] = useState(false);
+  // Remember WHICH url failed, not just that one did: a reused instance handed a
+  // new `src` must try it rather than inherit the previous entity's glyph.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const s = SIZE[size];
   const Glyph = GLYPH[kind];
   return (
     <div className={cn("shrink-0 overflow-hidden rounded-full border border-border/70 bg-muted", s.box)}>
-      {src && !failed ? (
+      {src && failedSrc !== src ? (
         <img
           src={src}
           alt=""
           width={s.px}
           height={s.px}
           loading="lazy"
-          onError={() => setFailed(true)}
+          onError={() => setFailedSrc(src)}
           className={cn("h-full w-full", kind === "person" ? "object-cover" : "object-contain bg-white p-3")}
         />
       ) : (
