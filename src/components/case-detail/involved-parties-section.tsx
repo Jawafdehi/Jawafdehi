@@ -1,4 +1,4 @@
-import { CaseEntityChips } from "@/components/CaseEntityChips";
+import { CaseEntityCards } from "@/components/case-detail/case-entity-cards";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
@@ -38,7 +38,9 @@ export function InvolvedPartiesSection({
         {title}
       </h2>
 
-      <div className="space-y-7 text-primary/75">
+      {/* 42.5rem matches the key-allegations content (numeral + 65ch prose),
+          so the grid's right edge lines up with the text above it. */}
+      <div className="max-w-[42.5rem] space-y-7 text-primary/75">
         {Object.entries(groupedEntities)
           .sort(([typeA], [typeB]) => (RELATION_PRIORITY[typeA] ?? 99) - (RELATION_PRIORITY[typeB] ?? 99))
           .map(([type, entities]) => {
@@ -66,12 +68,11 @@ export function InvolvedPartiesSection({
                 </h3>
 
               </div>
-              <CaseEntityChips
+              <CaseEntityCards
                 className="print:hidden"
                 entities={entities}
                 resolvedEntities={resolvedEntities}
                 language={language}
-                initialLimit={8}
               />
               <p className="hidden print:block">
                 <strong>{translateRelation(type)}:</strong> {names.join(", ")}

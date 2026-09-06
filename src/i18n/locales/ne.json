@@ -584,6 +584,8 @@
       "unknown": "अन्य सम्बद्ध पक्षहरू"
     },
     "andMoreAccused": "र {{count}} थप",
+    "showMoreParties": "थप {{count}} हेर्नुहोस्",
+    "showLessParties": "थोरै हेर्नुहोस्",
     "evidence": "प्रमाण र स्रोतहरू",
     "missingDetails": "अपुग विवरणहरू",
     "notes": "टिप्पणीहरू",
