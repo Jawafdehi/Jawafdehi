@@ -30,6 +30,21 @@ export const humanizeEntityType = (raw: string | null | undefined): string => {
     .trim();
 };
 
+export type EntityKind = 'person' | 'organization' | 'location';
+
+// Which glyph an entity gets. Accepts the schema.org / jawafdehi: types the API
+// sends on case binds and search hits ("Person", "GovernmentOrganization",
+// "AdministrativeArea,jawafdehi:District", "Courthouse"...) as well as the
+// lowercase NES kind of a resolved record.
+export const entityKindFor = (type: string | null | undefined): EntityKind => {
+  const t = (type ?? '').toLowerCase();
+  if (/administrativearea|place|location/.test(t)) return 'location';
+  if (/organi[sz]ation|corporation|ngo|politicalparty|judicialbody|courthouse|educational|hospital|civicstructure/.test(t)) {
+    return 'organization';
+  }
+  return 'person';
+};
+
 // Get primary name in specified language
 export const getPrimaryName = (names: Name[] | null | undefined, lang: 'en' | 'ne' = 'en'): string => {
   const primaryName = names?.find(n => n.kind === 'PRIMARY');
