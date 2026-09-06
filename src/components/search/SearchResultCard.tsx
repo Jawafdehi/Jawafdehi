@@ -334,9 +334,13 @@ function EntityResultCard({
   const kind = entityKindFor(result.extra.type);
   const title = formatSimpleTitle(result);
   // pickLang shows the English name when there is one, so the Nepali spelling is
-  // the alternate. Location titles are IRIs in the index, not names — skip those.
+  // the alternate. Place-kind hits are NOT exempt: they carry real bilingual
+  // names in the index ("Banke"/"बाँके", "Nepal"/"नेपाल"), and dropping the
+  // second script on a Nepali-first site loses the more useful of the two. Only
+  // the legacy `extra.type === "location"` documents ever held an IRI in the
+  // title, and formatSimpleTitle already unwraps those.
   const { en, ne } = result.title;
-  const alternate = kind !== "location" && en && ne && en !== ne ? stripHighlight(ne) : null;
+  const alternate = en && ne && en !== ne ? stripHighlight(ne) : null;
   // Generic kinds are localised; a specific subtype ("District", "Government
   // Organization") is shown as the index names it, since only the three kinds
   // have translations.
