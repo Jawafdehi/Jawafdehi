@@ -1,9 +1,30 @@
-import { CaseEntityCards } from "@/components/case-detail/case-entity-cards";
+import { Suspense, lazy } from "react";
+
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+
+// Lazy for the same reason CourtCasesSection is: the case-detail route is
+// eager, so a static import would put the flip-card grid in the initial payload
+// of every page — including /search, which never renders it. The section sits
+// below the fold; the fallback keeps the tiles' footprint so nothing shifts.
+const CaseEntityCards = lazy(() =>
+  import("@/components/case-detail/case-entity-cards").then((m) => ({
+    default: m.CaseEntityCards,
+  })),
+);
+
+function CardsFallback({ count }: Readonly<{ count: number }>) {
+  return (
+    <div aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 print:hidden">
+      {Array.from({ length: Math.min(count, 3) }, (_, i) => (
+        <div key={i} className="min-h-[15rem] rounded-2xl bg-muted/50" />
+      ))}
+    </div>
+  );
+}
 
 const RELATION_PRIORITY: Record<string, number> = {
   accused: 1,
@@ -68,12 +89,14 @@ export function InvolvedPartiesSection({
                 </h3>
 
               </div>
-              <CaseEntityCards
-                className="print:hidden"
-                entities={entities}
-                resolvedEntities={resolvedEntities}
-                language={language}
-              />
+              <Suspense fallback={<CardsFallback count={entities.length} />}>
+                <CaseEntityCards
+                  className="print:hidden"
+                  entities={entities}
+                  resolvedEntities={resolvedEntities}
+                  language={language}
+                />
+              </Suspense>
               <p className="hidden print:block">
                 <strong>{translateRelation(type)}:</strong> {names.join(", ")}
               </p>
