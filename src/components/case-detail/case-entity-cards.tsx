@@ -11,13 +11,14 @@
 import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Building2, ChevronDown, MapPin, User } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { EntityAvatar } from "@/components/EntityAvatar";
 import { Reveal } from "@/components/ui/reveal";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
-import { getPrimaryName } from "@/utils/entity-helpers";
+import { entityKindFor, getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
@@ -71,24 +72,11 @@ function stripNotes(notes: string | undefined, language: string) {
   return translateDynamicText(text, language);
 }
 
-// The bind's `entity_type` is a schema.org type ("Person", "Organization",
-// "GovernmentOrganization", "Place", "AdministrativeArea,jawafdehi:District",
-// "Courthouse"...) and is the curated value, so it wins; the resolved record's
-// lowercase `type` is derived from the IRI path and can lag it (an organization
-// filed under /entity/person/ still says "person" there).
-function entityKind(jawafEntity: JawafEntity, entity: Entity | null): "person" | "organization" | "location" {
-  const kind = (jawafEntity.entity_type || entity?.type || "").toLowerCase();
-  if (/administrativearea|place|location/.test(kind)) return "location";
-  if (/organi[sz]ation|corporation|ngo|politicalparty|judicialbody|courthouse|educational|hospital|civicstructure/.test(kind)) {
-    return "organization";
-  }
-  return "person";
-}
-
-function FallbackGlyph({ kind, className }: { kind: string; className?: string }) {
-  if (kind === "location") return <MapPin className={className} />;
-  if (kind === "organization") return <Building2 className={className} />;
-  return <User className={className} />;
+// The bind's `entity_type` is the curated schema.org value, so it wins; the
+// resolved record's lowercase `type` is derived from the IRI path and can lag it
+// (an organization filed under /entity/person/ still says "person" there).
+function entityKind(jawafEntity: JawafEntity, entity: Entity | null) {
+  return entityKindFor(jawafEntity.entity_type || entity?.type);
 }
 
 // Strong ease-out — the built-in curves are too weak to read as intentional.
@@ -127,8 +115,6 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
   // assistive tech. Focus deliberately does NOT hide it: the focused element
   // is the front button itself.
   const [hovered, setHovered] = useState(false);
-  // A broken picture URL falls back to the kind glyph.
-  const [imageFailed, setImageFailed] = useState(false);
 
   // A scrolled details face must come back to the top the next time it is
   // revealed. Reset after the card has finished turning away (the face is
@@ -159,7 +145,7 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
   };
 
   const names = getNames(jawafEntity, entity, language);
-  const imageUrl = imageFailed ? null : getEntityImage(entity);
+  const imageUrl = getEntityImage(entity);
   const kind = entityKind(jawafEntity, entity);
   const notes = stripNotes(jawafEntity.notes, language);
   const href = entityPath(jawafEntity.nes_id);
@@ -174,23 +160,7 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
   // Front: photo (or glyph) + name only.
   const frontContent = (
     <>
-      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border/70 bg-muted">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            width={96}
-            height={96}
-            loading="lazy"
-            onError={() => setImageFailed(true)}
-            className={cn("h-full w-full", kind === "person" ? "object-cover" : "object-contain bg-white p-3")}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-            <FallbackGlyph kind={kind} aria-hidden="true" className="h-10 w-10" />
-          </div>
-        )}
-      </div>
+      <EntityAvatar kind={kind} src={imageUrl} />
       <div className="min-w-0">
         <span className="block text-balance break-words text-base font-medium leading-snug text-primary">
           {names.primary}
