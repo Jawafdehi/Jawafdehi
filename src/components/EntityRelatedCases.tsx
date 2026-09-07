@@ -5,7 +5,6 @@ import { ArrowRight } from "lucide-react";
 
 import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
@@ -109,9 +108,10 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
         <h2 id="related-cases-heading" className="text-lg font-semibold text-foreground">
           {t("entityDetail.relatedCases")}
         </h2>
-        <span className="text-sm font-medium text-muted-foreground">{data.count}</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          {data.count} {t(data.count === 1 ? "entityDetail.caseOne" : "entityDetail.cases").toLowerCase()}
+        </span>
       </div>
-      <Separator className="mt-3" />
 
       <ul className="mt-4 space-y-3">
         {cases.map((c) => {

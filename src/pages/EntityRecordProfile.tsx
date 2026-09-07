@@ -14,10 +14,8 @@ import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCasesCitingEntity } from "@/services/jds-api";
-import { normalizeOutcome } from "@/utils/case-outcome";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 
 // Entity records are schema.org JSON-LD with a jawafdehi: extension namespace. We type
@@ -226,16 +224,6 @@ function RelationFact({ label, refObj }: Readonly<{ label: string; refObj?: Json
   );
 }
 
-// One number in the profile's stats strip.
-function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
-  return (
-    <div className="min-w-[5.5rem]">
-      <div className="font-stat-value tabular-nums leading-none">{value}</div>
-      <div className="font-meta mt-1.5">{label}</div>
-    </div>
-  );
-}
-
 export default function EntityRecordProfile() {
   const params = useParams();
   const { t, i18n } = useTranslation();
@@ -260,18 +248,7 @@ export default function EntityRecordProfile() {
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
-  // This entity's role and verdict on each citing case, read from the case's
-  // own binds. Counts are over the loaded page; `count` is the true total.
-  const binds = (citing?.results ?? []).map((c) => {
-    const mine = (c.entities ?? []).filter((e) => e.nes_id === entityIri);
-    return mine.find((b) => b.type === "accused" || b.type === "alleged") ?? mine[0];
-  });
-  const stats = {
-    cases: citing?.count ?? 0,
-    accused: binds.filter((b) => b && (b.type === "accused" || b.type === "alleged")).length,
-    convicted: binds.filter((b) => b?.outcome && normalizeOutcome(b.outcome) === "convicted").length,
-    acquitted: binds.filter((b) => b?.outcome && normalizeOutcome(b.outcome) === "acquitted").length,
-  };
+  const caseCount = citing?.count ?? 0;
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
@@ -381,8 +358,8 @@ export default function EntityRecordProfile() {
           <article>
             <div className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] xl:gap-14">
               {/* Identity + details take the left 60%: avatar beside the name, the
-                  numbers, the facts (when there are any beyond the type, which the
-                  identity line already states), and the actions. */}
+                  facts (when there are any beyond the type, which the identity
+                  line already states), and the actions. */}
               <div className="min-w-0 space-y-8">
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
                   <EntityAvatar kind={kind} src={imageUrl} size="xl" />
@@ -397,15 +374,6 @@ export default function EntityRecordProfile() {
                     ) : null}
                   </div>
                 </header>
-
-                {stats.cases > 0 ? (
-                  <dl className="flex flex-wrap gap-x-10 gap-y-6 border-y border-border/70 py-6">
-                    <Stat value={stats.cases} label={stats.cases === 1 ? "Case" : "Cases"} />
-                    {stats.accused > 0 ? <Stat value={stats.accused} label="As accused" /> : null}
-                    {stats.convicted > 0 ? <Stat value={stats.convicted} label="Convicted" /> : null}
-                    {stats.acquitted > 0 ? <Stat value={stats.acquitted} label="Acquitted" /> : null}
-                  </dl>
-                ) : null}
 
                 {blacklisted ? (
                   <Alert variant="destructive">
@@ -472,7 +440,6 @@ export default function EntityRecordProfile() {
                   <h2 id="entity-actions-heading" className="text-lg font-semibold text-foreground">
                     Actions
                   </h2>
-                  <Separator className="mt-3" />
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     {tail ? (
                       <ViewJsonButton
@@ -499,7 +466,7 @@ export default function EntityRecordProfile() {
               {/* Right 40%: what this entity has been part of. */}
               <div className="min-w-0 space-y-8 lg:pt-2">
                 {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
-                {stats.cases === 0 ? (
+                {caseCount === 0 ? (
                   <p className="text-base text-muted-foreground">No published case cites this entity yet.</p>
                 ) : null}
               </div>
@@ -508,7 +475,7 @@ export default function EntityRecordProfile() {
             {/* Record footnote runs the full width beneath both columns. */}
             <section
               aria-labelledby="entity-record-heading"
-              className="mt-12 border-t border-border/70 pt-6 text-xs leading-5 text-muted-foreground"
+              className="mt-12 text-xs leading-5 text-muted-foreground"
             >
               <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
                 Record

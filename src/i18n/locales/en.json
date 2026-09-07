@@ -1093,6 +1093,7 @@
     "constituency": "Constituency",
     "totalAllegations": "Total Accusations",
     "cases": "Cases",
+    "caseOne": "Case",
     "entityDetails": "Entity Details",
     "noNesDataAlert": "This entity does not have detailed profile information available yet. Only basic information from case records is shown.",
     "allegedCasesDescription": "Cases where this entity is accused of involvement",
