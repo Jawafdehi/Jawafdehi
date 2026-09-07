@@ -584,6 +584,8 @@
       "unknown": "अन्य सम्बद्ध पक्षहरू"
     },
     "andMoreAccused": "र {{count}} थप",
+    "showMoreParties": "थप {{count}} हेर्नुहोस्",
+    "showLessParties": "थोरै हेर्नुहोस्",
     "evidence": "प्रमाण र स्रोतहरू",
     "missingDetails": "अपुग विवरणहरू",
     "notes": "टिप्पणीहरू",
@@ -975,7 +977,11 @@
     "loading": "लोड हुँदैछ…",
     "notAvailable": "उपलब्ध छैन",
     "view": "हेर्नुहोस्",
-    "viewDetails": "विवरण हेर्नुहोस् →"
+    "viewDetails": "विवरण हेर्नुहोस् →",
+    "nameSummary": {
+      "withOthers_one": "{{name}} समेत {{countLabel}} अन्य",
+      "withOthers_other": "{{name}} समेत {{countLabel}} अन्यहरू"
+    }
   },
   "themeToggle": {
     "toggleTheme": "थिम परिवर्तन गर्नुहोस्",
@@ -1003,12 +1009,6 @@
       "medium": "मध्यम",
       "high": "उच्च",
       "critical": "गम्भीर"
-    },
-    "entitySummary": {
-      "withOthers_one": "{{name}} समेत {{count}} अन्य",
-      "withOthers_other": "{{name}} समेत {{count}} अन्यहरू",
-      "withOthersNepali_one": "{{name}} समेत {{countLabel}} अन्य",
-      "withOthersNepali_other": "{{name}} समेत {{countLabel}} अन्यहरू"
     }
   },
   "entityCard": {
@@ -1652,6 +1652,7 @@
       "description": "उही {{total}} सामग्री, कागजातको किसिम अनुसार वर्गीकृत।",
       "tooltip": "सामग्री",
       "type": {
+        "procurementNotice": "खरिद सूचना",
         "chargeSheet": "अभियोगपत्र",
         "precedent": "नजिर (अदालती आदेश)",
         "courtOrder": "अदालती आदेश",
@@ -2062,7 +2063,14 @@
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
       "bigoNoMax": "अधिकतम छैन"
-    }
+    },
+    "materialSeries": "श्रृंखला",
+    "filterSearch": "{{filter}} खोज्नुहोस्",
+    "filterMore": "थप",
+    "filterLess": "थोरै",
+    "filterNoMatch": "कुनै मेल भएन",
+    "materialSource": "स्रोत",
+    "materialDate": "मिति"
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

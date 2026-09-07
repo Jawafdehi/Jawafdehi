@@ -1,8 +1,12 @@
+import { Search } from "lucide-react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import type {
   ArchiveSearchFacets,
   ArchiveSearchType,
@@ -13,6 +17,18 @@ import type { BigoExtent } from "@/lib/bigo-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
 export type SidebarFilterName = "entity_type" | "case_type" | "tags";
+
+/**
+ * How many options a group shows before collapsing behind "More", and the size
+ * at which it gains its own search box.
+ *
+ * The backend returns up to 50 buckets per facet, and `tags` and `case_type`
+ * both sit at that cap on a broad search — 100 checkboxes and ~4,800px of
+ * sidebar. Neither number is a data limit, so the group cannot show everything
+ * and cannot be scanned; it needs both a cut and a way to search past it.
+ */
+const COLLAPSED_COUNT = 8;
+const SEARCHABLE_THRESHOLD = 8;
 
 // `title` is the English fallback; `titleKey` resolves the Nepali label from the
 // bilingual bundle (see src/i18n/locales/*.json → archiveSearch.filters).
@@ -199,42 +215,151 @@ function FilterGroup({
   title: string;
 }>) {
   const { t } = useTranslation();
-  const displayItems = [...(items || [])];
-  // Keep any selected value visible even if it dropped out of the current facet
-  // buckets (e.g. it has zero hits under the active query).
-  selectedValues.forEach((val) => {
-    if (!displayItems.some((item) => item.name === val)) {
-      displayItems.push({ name: val, count: 0 });
-    }
-  });
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const searchId = useId();
 
-  if (displayItems.length === 0) return null;
+  const displayItems = useMemo(() => {
+    const all = [...(items || [])];
+    // Keep any selected value visible even if it dropped out of the current
+    // facet buckets (e.g. it has zero hits under the active query).
+    selectedValues.forEach((val) => {
+      if (!all.some((item) => item.name === val)) {
+        all.push({ name: val, count: 0 });
+      }
+    });
+    // Selected first, so a refinement never hides below the collapse cut.
+    return all.sort((a, b) => {
+      const aSel = selectedValues.includes(a.name) ? 0 : 1;
+      const bSel = selectedValues.includes(b.name) ? 0 : 1;
+      return aSel - bSel;
+    });
+  }, [items, selectedValues]);
+
+  // Labels are resolved once: the search matches what the reader can SEE, not
+  // the raw facet token behind it.
+  const labelled = useMemo(
+    () =>
+      displayItems.map((item) => ({
+        item,
+        label: getFacetItemLabel(name, item, t),
+      })),
+    [displayItems, name, t],
+  );
+
+  const needle = query.trim().toLocaleLowerCase();
+  const matches = needle
+    ? labelled.filter(({ label }) => label.toLocaleLowerCase().includes(needle))
+    : labelled;
+
+  // A search box earns its place only once scanning the list stops being
+  // instant; below that it is chrome over five options.
+  const isSearchable = labelled.length > SEARCHABLE_THRESHOLD;
+  // While searching, show every match — the reader has already narrowed.
+  const isCollapsed = !expanded && !needle && matches.length > COLLAPSED_COUNT;
+  const visible = isCollapsed ? matches.slice(0, COLLAPSED_COUNT) : matches;
+  const hiddenCount = matches.length - visible.length;
+
+  if (labelled.length === 0) return null;
 
   return (
     // min-w-0: <fieldset> defaults to min-width:min-content and ignores width
     // constraints, so a long facet name would overflow the viewport on mobile.
-    <fieldset className="min-w-0 space-y-0.5">
+    <fieldset className="min-w-0 space-y-2">
       <legend className="mb-1.5 text-sm font-semibold text-foreground">
         {title}
       </legend>
-      {displayItems.map((item) => {
-        const isChecked = selectedValues.includes(item.name);
-        const label = getFacetItemLabel(name, item, t);
-        return (
-          <label
-            className="flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            key={item.name}
+
+      {isSearchable ? (
+        <div className="relative">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+          />
+          {/* font-input rather than a raw size: a sub-16px field zooms the
+              page on iOS when focused. The class is 16px on touch and 14px
+              where there is a real pointer (src/styles/typography.css). */}
+          <Input
+            aria-label={t("archiveSearch.filterSearch", "Search {{filter}}", {
+              filter: title,
+            })}
+            className="h-9 rounded-full pl-9 font-input"
+            id={searchId}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t("archiveSearch.filterSearch", "Search {{filter}}", {
+              filter: title,
+            })}
+            type="search"
+            value={query}
+          />
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-1.5">
+        {visible.map(({ item, label }) => {
+          const isChecked = selectedValues.includes(item.name);
+          return (
+            <label
+              className={cn(
+                "inline-flex min-h-9 max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors",
+                "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+                isChecked
+                  ? "border-primary bg-primary-surface text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+              key={item.name}
+              title={label}
+            >
+              {/* Visually hidden but still the real control: the pill IS the
+                  checkbox, so the role, checked state and accessible name stay
+                  exactly as they were before the restyle. */}
+              <Checkbox
+                aria-label={`${label}: ${item.count} results`}
+                checked={isChecked}
+                className="sr-only"
+                onCheckedChange={() => onToggle(name, item.name)}
+              />
+              <span className="min-w-0 truncate">{label}</span>
+              <span
+                aria-hidden="true"
+                className="shrink-0 text-xs tabular-nums opacity-70"
+              >
+                {item.count}
+              </span>
+            </label>
+          );
+        })}
+
+        {hiddenCount > 0 ? (
+          <Button
+            className="h-9 rounded-full px-3 text-sm font-normal"
+            onClick={() => setExpanded(true)}
+            size="sm"
+            type="button"
+            variant="secondary"
           >
-            <Checkbox
-              aria-label={`${label}: ${item.count} results`}
-              checked={isChecked}
-              onCheckedChange={() => onToggle(name, item.name)}
-            />
-            <span className="min-w-0 flex-1 truncate">{label}</span>
-            <span className="shrink-0 text-xs tabular-nums">{item.count}</span>
-          </label>
-        );
-      })}
+            {t("archiveSearch.filterMore", "More")}
+          </Button>
+        ) : null}
+
+        {expanded && !needle && matches.length > COLLAPSED_COUNT ? (
+          <Button
+            className="h-9 rounded-full px-3 text-sm font-normal"
+            onClick={() => setExpanded(false)}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            {t("archiveSearch.filterLess", "Less")}
+          </Button>
+        ) : null}
+      </div>
+
+      {needle && matches.length === 0 ? (
+        <p className="px-1 text-sm text-muted-foreground">
+          {t("archiveSearch.filterNoMatch", "No matches")}
+        </p>
+      ) : null}
     </fieldset>
   );
 }

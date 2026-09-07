@@ -112,12 +112,29 @@ const DIR = arg("dir", "dist/client");
 // has grown: `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
 // `markdown` another 100 KB. Either would pay for this change many times over.
 //
-// 2026-09: 666_500 → 668_500 for the generative case-thumbnail fallback
-// (PR #362). Case cards render on eager pre-rendered routes (SSR constraint),
-// so the ~1 KB gzip of card + formatting logic cannot be lazy-loaded. Measured
-// ~667,450 as built on top of the /materials baseline above; the line sits
-// ~1,000 bytes over that, matching the headroom convention of the entries above.
-const MAX_INITIAL_JS_GZIP = 668_500;
+// 2026-09: 666_500 → 672_500 for the /search material rows (style/materials).
+// Measured: main builds to 649.7 KB gzip in CI (646.1 locally — the runner's zlib
+// packs ~3.6 KB larger, so the line is judged against CI); this branch builds to
+// 652.8 KB locally, ~656.5 KB in CI. What the bytes buy: every material on /search
+// renders the same catalogue row as the /materials series pages (MaterialCard),
+// with a series for every document and the query highlighted in the fields the
+// index does not mark up — plus a search box and collapse on each facet group.
+// Deferring the search material card was measured at ~2.5 KB (its body,
+// search-highlight and material-series-labels are its only eager consumers)
+// and does not cover the gap, because MaterialCard itself stays eager for the
+// pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
+// bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
+// entries above leave.
+//
+// PR #362 rides on top of the above: the generative case-thumbnail fallback
+// adds ~1 KB gzip of card + formatting logic that stays eager (case cards
+// render on pre-rendered routes, SSR constraint, so it cannot be lazy-loaded).
+// Re-measured on the merged tree (main #369/#370/#371 + #362): 657.9 KB gzip
+// locally (673,690 bytes). The runner's zlib packs ~3.7 KB larger than local
+// here — main alone was 652.8 KB local / 656.5 KB CI — so this maps to ~661.6 KB
+// (~677.4 KB… 677_400 bytes) in CI; 678_500 leaves ~1,100 bytes over that,
+// matching the headroom convention of the entries above.
+const MAX_INITIAL_JS_GZIP = 678_500;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

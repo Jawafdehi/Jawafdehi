@@ -117,6 +117,12 @@ export default function ArchiveSearch({
   // entities and बिगो rather than a text row. The choice is intentionally NOT
   // persisted across visits or mirrored into the URL — that's a separate change.
   const [viewMode, setViewMode] = useState<"list" | "card">("card");
+  // Materials have one canonical presentation — the full-width document row
+  // shared with the /materials series browse (title left, download/source/share
+  // actions right). A grid tile would just be that row squeezed into a third of
+  // the width, so the tab forces rows and hides the view toggle instead of
+  // offering a mode that renders the same thing worse.
+  const effectiveViewMode = selectedRecordType === "material" ? "list" : viewMode;
   // Mobile-only disclosure state for the filter panel. Above `lg` the panel is
   // shown unconditionally by CSS, so this is ignored there (see the panel below).
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -437,7 +443,11 @@ export default function ArchiveSearch({
             </div>
             <div
               aria-label={t("archiveSearch.viewMode", "View mode")}
-              className="flex items-center gap-1 rounded-full border p-0.5"
+              className={cn(
+                "flex items-center gap-1 rounded-full border p-0.5",
+                // Materials render rows only (see effectiveViewMode above).
+                selectedRecordType === "material" && "hidden",
+              )}
               role="group"
             >
               {/* Card first, then list — the toggle reads in the same order as
@@ -662,7 +672,7 @@ export default function ArchiveSearch({
               isLoading={isInitialLoading || isRefreshing}
               resultType={selectedRecordType}
               searchTerm={params.q}
-              viewMode={viewMode}
+              viewMode={effectiveViewMode}
             />
 
             {!showError &&
@@ -754,6 +764,9 @@ function readParams(
 // each. At `xl` they are ~299px and by 1440px ~339px, which is the width
 // /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
 const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
+// Entity hits are compact avatar cards (see EntityResultCard), so a page of them
+// sits four across where the richer case cards need three.
+const entityCardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 function ArchiveSearchResults({
   data,
@@ -831,7 +844,7 @@ function ArchiveSearchResults({
 
   if (viewMode === "card") {
     return (
-      <div className={cardGridClass}>
+      <div className={resultType === "entity" ? entityCardGridClass : cardGridClass}>
         {data.results.map((result, index) => (
           <TrackedSearchResult
             key={`${result.type}-${result.id}`}
