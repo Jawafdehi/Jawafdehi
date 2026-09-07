@@ -54,8 +54,10 @@ const makeCase = (overrides: Partial<Case> = {}) =>
     timeline: [],
     evidence: [],
     bigo: null,
-    case_start_date: null,
-    case_end_date: null,
+    trial_start_date: null,
+    trial_end_date: null,
+    appeal_start_date: null,
+    appeal_end_date: null,
     ...overrides,
   }) as unknown as Case;
 

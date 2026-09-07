@@ -120,8 +120,8 @@ const EmbedCaseCard = () => {
   const primaryEntity = getPrimaryEntity(caseData.entities);
   const locationEntity = getLocationEntity(caseData.entities);
   const dateRange = formatCaseDateRange(
-    caseData.case_start_date,
-    caseData.case_end_date,
+    caseData.trial_start_date,
+    caseData.trial_end_date,
     t("cases.status.ongoing")
   );
   const description =

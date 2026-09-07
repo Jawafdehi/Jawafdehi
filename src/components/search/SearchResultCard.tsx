@@ -332,9 +332,19 @@ function caseCardPropsFromDetail(
   const location = entities.filter((e) => e.type === "location");
   const names = entityNames(subject);
   const locationList = entityNames(location);
-  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
-  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
-  const status: CaseCardStatus = hasStart && !hasEnd ? "ongoing" : hasStart && hasEnd ? "resolved" : "under-investigation";
+  const hasStart = Boolean(detail.trial_start_date && detail.trial_start_date.trim() !== "");
+  const hasEnd = Boolean(detail.trial_end_date && detail.trial_end_date.trim() !== "");
+  // Pending appeal (filed, not yet decided) outranks a concluded trial — matches
+  // the server's own `case_status` facet, which the indexed-card path above
+  // already carries.
+  const appealPending =
+    Boolean(detail.appeal_start_date && detail.appeal_start_date.trim() !== "") &&
+    !(detail.appeal_end_date && detail.appeal_end_date.trim() !== "");
+  const status: CaseCardStatus = appealPending || (hasStart && !hasEnd)
+    ? "ongoing"
+    : hasStart && hasEnd
+      ? "resolved"
+      : "under-investigation";
   return {
     id: result.id,
     slug: detail.slug || fallbackSlug || null,

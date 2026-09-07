@@ -44,7 +44,7 @@ function isAccusedTier(role: string): boolean {
 // The date a card is ordered by — the same one it displays. Falls back to the
 // record's creation time only when the case has no start date of its own.
 function sortDateOf(caseItem: Case): string {
-  return caseItem.case_start_date || caseItem.created_at || "";
+  return caseItem.trial_start_date || caseItem.created_at || "";
 }
 
 // This entity's role/verdict on a given case, read from the case's own entity
@@ -93,7 +93,7 @@ export function EntityRelatedCases({
 
   // accused/alleged first, then newest case first within each tier.
   //
-  // Sort on the SAME date the card shows (`case_start_date`, i.e. when the case
+  // Sort on the SAME date the card shows (`trial_start_date`, i.e. when the case
   // began) rather than `created_at` (when we happened to author the record).
   // Those orders are unrelated: this entity's five cases were authored in the
   // reverse of their real chronology, so ordering by `created_at` rendered the
@@ -133,7 +133,7 @@ export function EntityRelatedCases({
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.case_start_date || c.created_at);
+          const date = formatDate(c.trial_start_date || c.created_at);
           const typeKey = getCaseTypeLabelKey(c.case_type);
           const typeLabel = typeKey ? t(typeKey) : c.case_type;
           const href = c.slug ? `/case/${c.slug}` : undefined;

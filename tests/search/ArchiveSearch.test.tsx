@@ -93,8 +93,10 @@ function caseResult(
       tags: [],
       case_type: "CORRUPTION",
       status: "ongoing",
-      case_start_date: "2024-01-01",
-      case_end_date: null,
+      trial_start_date: "2024-01-01",
+      trial_end_date: null,
+      appeal_start_date: null,
+      appeal_end_date: null,
       bigo: null,
       thumbnail_url: null,
       banner_url: null,
@@ -542,6 +544,29 @@ describe("ArchiveSearch", () => {
     expect(getCaseByIdMock).toHaveBeenCalledWith("original-result");
   });
 
+  it("treats a pending appeal as ongoing on the detail fallback, even with a concluded trial", async () => {
+    getCaseByIdMock.mockResolvedValue({
+      banner_url: null,
+      thumbnail_url: null,
+      tags: [],
+      entities: [],
+      trial_start_date: "2024-01-01",
+      trial_end_date: "2024-06-01",
+      appeal_start_date: "2024-07-01",
+      appeal_end_date: null,
+    });
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    // Matches the server's own `case_status` facet: a concluded trial with a
+    // pending appeal is still "ongoing", not "resolved".
+    await waitFor(() => {
+      expect(screen.getByText("caseDetail.status.ongoing")).toBeTruthy();
+    });
+    expect(screen.queryByText("caseDetail.status.resolved")).toBeNull();
+  });
+
   it("renders enriched case cards without hydrating the detail endpoint", async () => {
     searchArchiveMock.mockResolvedValue({
       ...baseResponse,
@@ -556,8 +581,10 @@ describe("ArchiveSearch", () => {
             tags: ["indexed-tag"],
             case_type: "CORRUPTION",
             status: "ongoing",
-            case_start_date: "2024-01-01",
-            case_end_date: null,
+            trial_start_date: "2024-01-01",
+            trial_end_date: null,
+            appeal_start_date: null,
+            appeal_end_date: null,
             bigo: null,
             thumbnail_url: "https://example.com/indexed-card.jpg",
             banner_url: null,
