@@ -628,7 +628,8 @@ const CaseDetail = () => {
                       </span>
                     </div>
 
-                    {!isBlank(caseData.appeal_start_date) && (
+                    {(!isBlank(caseData.appeal_start_date) ||
+                      !isBlank(caseData.appeal_end_date)) && (
                       <div className="flex items-center text-muted-foreground">
                         <span className="text-sm">
                           {t("caseDetail.appealDate")}:{" "}

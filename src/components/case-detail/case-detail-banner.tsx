@@ -43,11 +43,15 @@ const COURT_NAME_MAP: Record<string, { en: string; ne: string }> = {
   },
 };
 
-/** Label key for the first-instance date line, from the case's first court ref. */
+/** Label key for the first-instance date line, from the case's court refs. */
 export function trialDateLabelKey(courtCases: string[] | null | undefined): string {
-  const first = parseCourtCaseRef(courtCases?.[0]);
+  // ANY Special Court docket names the trial court: the Supreme Court hears
+  // only the appeal in these cases, and court_cases has no guaranteed order.
+  const atSpecialCourt = (courtCases || []).some(
+    (ref) => parseCourtCaseRef(ref)?.court.toLowerCase() === "special",
+  );
 
-  return first?.court.toLowerCase() === "special"
+  return atSpecialCourt
     ? "caseDetail.trialDateSpecialCourt"
     : "caseDetail.trialDateCourt";
 }
@@ -134,7 +138,11 @@ export function CaseDetailBanner({
     currentLang
   );
 
-  const hasAppeal = !isBlank(caseData.appeal_start_date);
+  // Either date is enough: an appellate verdict with no recorded registration
+  // date is still an appeal, and the formatter renders an end-only range as the
+  // single date.
+  const hasAppeal =
+    !isBlank(caseData.appeal_start_date) || !isBlank(caseData.appeal_end_date);
   const appealRange = formatCaseDateRangeForLanguage(
     caseData.appeal_start_date,
     caseData.appeal_end_date,

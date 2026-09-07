@@ -3,7 +3,10 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import type { CaseDetail } from "@/types/jds";
-import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
+import {
+  CaseDetailBanner,
+  trialDateLabelKey,
+} from "@/components/case-detail/case-detail-banner";
 
 // Passthrough translations so assertions don't depend on i18n resources
 // (mirrors case-overview-section.test.tsx). t() returns its fallback or the key.
@@ -155,13 +158,15 @@ describe("CaseDetailBanner trial and appeal date lines", () => {
     expect(container.textContent).not.toContain("caseDetail.trialDateSpecialCourt");
   });
 
-  it("labels the first court case, not a later special one", () => {
+  it("labels Special Court when any docket is at the Special Court", () => {
+    // court_cases has no guaranteed order, and the Supreme Court hears only the
+    // appeal in these cases — so a Special Court docket anywhere in the list
+    // means the trial court was the Special Court.
     const { container } = renderBanner(
       withTrialDates({ court_cases: [DISTRICT_IRI, SPECIAL_IRI] }),
     );
 
-    expect(container.textContent).toContain("caseDetail.trialDateCourt");
-    expect(container.textContent).not.toContain("caseDetail.trialDateSpecialCourt");
+    expect(container.textContent).toContain("caseDetail.trialDateSpecialCourt");
   });
 
   it("shows a pending appeal line and an under-appeal chip", () => {
@@ -192,6 +197,31 @@ describe("CaseDetailBanner trial and appeal date lines", () => {
     expect(screen.getByText("caseDetail.status.concluded")).toBeTruthy();
   });
 
+  it("shows the appeal line for a lone appeal end date", () => {
+    // An appellate verdict with no recorded registration date still belongs on
+    // the page: the formatter renders an end-only range as the single date.
+    const { container } = renderBanner(
+      withTrialDates({
+        court_cases: [SPECIAL_IRI],
+        appeal_start_date: null,
+        appeal_end_date: "2025-02-20",
+      }),
+    );
+
+    expect(container.textContent).toContain("caseDetail.appealDate");
+    expect(container.textContent).toContain("Feb 20, 2025");
+    expect(container.textContent).not.toContain("caseDetail.appealPending");
+    expect(screen.getByText("caseDetail.status.concluded")).toBeTruthy();
+  });
+
+  it("omits the appeal line when both appeal dates are only whitespace", () => {
+    const { container } = renderBanner(
+      withTrialDates({ appeal_start_date: "   ", appeal_end_date: "  " }),
+    );
+
+    expect(container.textContent).not.toContain("caseDetail.appealDate");
+  });
+
   it("omits the appeal line when appeal_start_date is only whitespace", () => {
     const { container } = renderBanner(
       withTrialDates({ appeal_start_date: "   ", appeal_end_date: null }),
@@ -204,5 +234,33 @@ describe("CaseDetailBanner trial and appeal date lines", () => {
     const { container } = renderBanner(withTrialDates());
 
     expect(container.textContent).not.toContain("caseDetail.period");
+  });
+});
+
+describe("trialDateLabelKey", () => {
+  const SPECIAL_IRI = "https://jawafdehi.org/courtcase/special/080-cr-0111";
+  const DISTRICT_IRI = "https://jawafdehi.org/courtcase/kathmandudc/080-cr-0222";
+
+  it("returns the Special Court key when any ref parses to court `special`", () => {
+    expect(trialDateLabelKey([SPECIAL_IRI])).toBe(
+      "caseDetail.trialDateSpecialCourt",
+    );
+    expect(trialDateLabelKey([DISTRICT_IRI, SPECIAL_IRI])).toBe(
+      "caseDetail.trialDateSpecialCourt",
+    );
+    // A malformed ref alongside a good one does not hide the Special Court.
+    expect(trialDateLabelKey(["not-a-ref", SPECIAL_IRI])).toBe(
+      "caseDetail.trialDateSpecialCourt",
+    );
+  });
+
+  it("returns the generic key for an empty, absent or unparseable list", () => {
+    expect(trialDateLabelKey([DISTRICT_IRI])).toBe("caseDetail.trialDateCourt");
+    expect(trialDateLabelKey([])).toBe("caseDetail.trialDateCourt");
+    expect(trialDateLabelKey(undefined)).toBe("caseDetail.trialDateCourt");
+    expect(trialDateLabelKey(null)).toBe("caseDetail.trialDateCourt");
+    expect(trialDateLabelKey(["", "not-a-ref"])).toBe(
+      "caseDetail.trialDateCourt",
+    );
   });
 });
