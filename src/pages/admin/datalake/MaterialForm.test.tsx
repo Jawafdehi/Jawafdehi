@@ -69,9 +69,33 @@ vi.mock("@/components/ui/tabs", async () => {
         </button>
       );
     },
-    TabsContent: ({ value, children }: { value: string; children?: ReactNode }) => {
+    // `forceMount` is honoured because the edit-mode upload panel depends on
+    // it: without it Radix unmounts the panel on a tab switch and destroys the
+    // uploader's in-flight/error state. A mock that always unmounted would test
+    // the mock instead of the fix.
+    //
+    // Real Radix leaves `hidden` FALSE under forceMount (`hidden: !present`,
+    // `present = forceMount || isSelected`) and relies on the panel's
+    // `data-[state=inactive]:hidden` class to hide it. jsdom applies no
+    // Tailwind, so stand that class in with the `hidden` attribute — role
+    // queries then behave the way a real browser's a11y tree does.
+    TabsContent: ({
+      value,
+      forceMount,
+      children,
+    }: {
+      value: string;
+      forceMount?: true;
+      children?: ReactNode;
+    }) => {
       const c = React.useContext(Ctx);
-      return c.value === value ? <div role="tabpanel">{children}</div> : null;
+      const active = c.value === value;
+      if (!active && !forceMount) return null;
+      return (
+        <div role="tabpanel" hidden={!active}>
+          {children}
+        </div>
+      );
     },
   };
 });
@@ -293,6 +317,36 @@ describe("MaterialForm — create page file upload", () => {
     expect(screen.queryByText("Failed to save material")).toBeNull();
   });
 
+  it("reopens the upload tab on partial failure, so the retry control is on screen", async () => {
+    // `composer` survives the redirect for the same reason `staged` does —
+    // both routes render this element, so React reconciles them as one
+    // instance. Staging on "Upload file" and then switching back to "Add link"
+    // would otherwise land the caseworker on an edit page whose only visible
+    // affordance is "Add a link row".
+    createMock.mockResolvedValue({ "@id": IRI });
+    uploadMock.mockRejectedValue(new Error("boom"));
+
+    const { container } = render(<MaterialForm />);
+    fillRequired(container);
+    openUpload();
+    stageFile(container);
+    openLinkTab();
+    expect(
+      screen.getByRole("tab", { name: /add link/i }).getAttribute("aria-selected"),
+    ).toBe("true");
+
+    save();
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith(
+        "/admin/datalake/materials/edit/ciaa/press-2081-042",
+      ),
+    );
+    expect(
+      screen.getByRole("tab", { name: /upload file/i }).getAttribute("aria-selected"),
+    ).toBe("true");
+  });
+
   it("surfaces a create failure and never attempts the upload", async () => {
     createMock.mockRejectedValue(new Error("422"));
     const { container } = render(<MaterialForm />);
@@ -412,5 +466,87 @@ describe("MaterialForm — edit page file upload", () => {
     );
     // ...and the visibility control survived the refresh.
     expect(screen.getByText("LISTED")).toBeTruthy();
+  });
+
+  it("keeps an upload failure reportable across a composer tab switch", async () => {
+    // Regression: the panel used to unmount on a tab switch, so `setError`
+    // landed on a dead component. With no toast on the failure path either,
+    // the upload failed in total silence and the picked file was destroyed.
+    let rejectUpload: (e: unknown) => void = () => {};
+    uploadMock.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectUpload = reject;
+      }),
+    );
+
+    const { container } = render(<MaterialForm />);
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /upload file/i })).toBeTruthy(),
+    );
+    openUpload();
+    stageFile(container);
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
+
+    // The caseworker wanders off to the link tab while the bytes are in flight.
+    openLinkTab();
+    rejectUpload(new Error("boom"));
+
+    // Coming back, the failure is still on screen and the pick survived, so
+    // "Attach file" can retry it without re-picking from disk.
+    await waitFor(() => expect(screen.getByText("Upload failed")).toBeTruthy());
+    openUpload();
+    expect(screen.getByText("Upload failed")).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: /attach file/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
+  });
+
+  it("does not let a tab switch start a second, overlapping upload", async () => {
+    // Regression: remounting reset the child's `uploading`, so "Attach file"
+    // came back enabled mid-flight. A second upload could start, and the FIRST
+    // one settling cleared `uploadPending` while the second was still going —
+    // re-opening the Save-vs-upload race, since a PUT in that window replaces
+    // `data` wholesale and drops the MediaObject being appended.
+    const resolvers: Array<(v: unknown) => void> = [];
+    uploadMock.mockImplementation(
+      () => new Promise((resolve) => resolvers.push(resolve)),
+    );
+
+    const { container } = render(<MaterialForm />);
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /upload file/i })).toBeTruthy(),
+    );
+    const saveBtn = () =>
+      screen.getByRole("button", { name: /save material/i }) as HTMLButtonElement;
+
+    openUpload();
+    stageFile(container);
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
+    await waitFor(() => expect(saveBtn().disabled).toBe(true));
+
+    openLinkTab();
+    openUpload();
+
+    // Try in earnest to start a second one: pick another file and click. The
+    // surviving instance is still uploading, so its input and button are both
+    // disabled and React drops the events. (Without forceMount this is a fresh
+    // instance with `uploading` reset, the pick lands, and the click fires a
+    // second POST — which is what makes the gate below fail open.)
+    stageFile(container, "second.pdf");
+    fireEvent.click(screen.getByRole("button", { name: /attach file/i }));
+    expect(uploadMock).toHaveBeenCalledTimes(1);
+    expect(saveBtn().disabled).toBe(true);
+
+    // The first upload settling may only unlock Save because it is the ONLY
+    // one; if a second were in flight this is where the race would open.
+    resolvers[0]({
+      "@context": "https://schema.org",
+      "@id": IRI,
+      "@type": "DigitalDocument",
+      name: { ne: "प्रेस विज्ञप्ति" },
+    });
+    await waitFor(() => expect(saveBtn().disabled).toBe(false));
+    expect(resolvers).toHaveLength(1);
   });
 });

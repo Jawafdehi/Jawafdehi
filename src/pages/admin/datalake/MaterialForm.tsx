@@ -296,6 +296,14 @@ export default function MaterialForm() {
             // Router reconciles them as one instance and a surviving `staged`
             // would be unreachable state that no longer matches any control.
             clearStaged();
+            // Open the composer on the upload tab for the same reason the line
+            // above clears `staged`: both routes render this element, so
+            // `composer` ALSO survives the redirect. A caseworker who staged on
+            // "Upload file" and then switched back to "Add link" would otherwise
+            // land on a page whose Links card reads "No links yet." with "Add a
+            // link row" as its only affordance — with the retry control this
+            // branch promises nowhere on screen.
+            setComposer("file");
             toast({
               title: "Material saved, but the file was not attached",
               description: adminErrorMessage(err, "Upload failed"),
@@ -596,7 +604,25 @@ export default function MaterialForm() {
               </Button>
             </TabsContent>
 
-            <TabsContent value="file" className="mt-3">
+            {/* forceMount in EDIT mode only. Radix unmounts an inactive panel,
+                which threw away the immediate uploader's in-flight and error
+                state: a failed upload reported nothing at all (setError landed
+                on an unmounted component, and the catch path fires no toast),
+                and the remounted picker re-enabled "Attach file" so a SECOND
+                upload could start — when the first settled it cleared
+                `uploadPending` while the second was still in flight, reopening
+                the Save-vs-upload race this form gates on.
+                Deferred (create) mode is left unmounting: the parent owns
+                `staged`, so there is no child state to lose.
+                The class is required, not cosmetic — under forceMount Radix's
+                own `hidden` attribute is always false (`hidden: !present`, and
+                `present` is `forceMount || isSelected`), so without it BOTH
+                panels would render visible. */}
+            <TabsContent
+              value="file"
+              forceMount={editing || undefined}
+              className="mt-3 data-[state=inactive]:hidden"
+            >
               {!editing ? (
                 <MaterialFileUpload
                   key={stagedKey}
