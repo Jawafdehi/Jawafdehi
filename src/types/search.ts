@@ -82,8 +82,10 @@ export interface CaseSearchCard {
   tags: string[];
   case_type: string | null;
   status: "ongoing" | "closed" | "others";
-  trial_start_date: string | null;
-  trial_end_date: string | null;
+  /** Optional: docs indexed before the rename carry no `trial_*` keys. */
+  trial_start_date?: string | null;
+  /** Optional: docs indexed before the rename carry no `trial_*` keys. */
+  trial_end_date?: string | null;
   /** Optional: docs indexed before the appeal columns existed carry no `appeal_*` keys. */
   appeal_start_date?: string | null;
   /** Optional: docs indexed before the appeal columns existed carry no `appeal_*` keys. */

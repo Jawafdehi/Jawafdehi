@@ -41,9 +41,10 @@ const state = async (idBase) => ({
   bs: await bsInput(idBase).inputValue(),
 });
 
-// Devanagari-digit helper for display assertions (the BS box renders Nepali).
+// Devanagari-digit helpers for display assertions (the BS box renders Nepali).
 const DEV = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 const toDev = (s) => s.replace(/\d/g, (d) => DEV[Number(d)]);
+const fromDev = (s) => s.replace(/[०-९]/g, (d) => String(DEV.indexOf(d)));
 
 // --- Scenario 1: pick an AD date on Trial start; BS must follow -------------
 console.log('\n== Scenario 1: AD pick on trial-start ==');
@@ -51,14 +52,27 @@ await adButton('trial-start').click();
 await page.locator('button[name="day"]:not([disabled])', { hasText: /^15$/ }).first().click();
 await page.waitForTimeout(600);
 let s = await state('trial-start');
+const trialStart = s;
 console.log(`   AD="${s.ad}" BS="${s.bs}"`);
 check('AD shows a 15th', /^\d{4}-\d{2}-15$/.test(s.ad), s.ad);
 check('BS box followed (Devanagari date, not empty/corrupt)', /^[०-९]{4}-[०-९]{2}-[०-९]{2}$/.test(s.bs), s.bs);
 await page.screenshot({ path: `${SHOTS}/fix-s1-after-ad-pick.png` });
 
 // --- Scenario 2: pick a BS date on Trial end; box shows the date, no crash --
+// The BS target is DERIVED from scenario 1 — same month, one BS year later — so
+// trial end is provably after trial start. The form now applies the API's
+// chronology rule client-side, and a backwards pair would disable Save before
+// scenario 6 ever reaches its round-trip.
 console.log('\n== Scenario 2: BS pick on trial-end ==');
+const [s1BsYear, s1BsMonth] = fromDev(trialStart.bs).split('-').map(Number);
+const targetBsYear = s1BsYear + 1;
+console.log(`   target BS ${targetBsYear}-${s1BsMonth}-15`);
 await bsInput('trial-end').click();
+// The library's header renders two selects: month first, then year.
+const bsHeaderSelects = page.locator('#trial-end-bs select');
+await bsHeaderSelects.nth(1).selectOption(String(targetBsYear));
+await bsHeaderSelects.nth(0).selectOption(String(s1BsMonth));
+await page.waitForTimeout(300);
 const dayCell = page.locator('#trial-end-bs').getByText('१५', { exact: true }).first();
 await dayCell.waitFor({ timeout: 10000 });
 await dayCell.click();
@@ -67,6 +81,8 @@ s = await state('trial-end');
 console.log(`   AD="${s.ad}" BS="${s.bs}"`);
 check('BS box shows a full Devanagari date', /^[०-९]{4}-[०-९]{2}-[०-९]{2}$/.test(s.bs), s.bs);
 check('paired AD auto-filled', /^\d{4}-\d{2}-\d{2}$/.test(s.ad), s.ad);
+check('trial end lands after the trial start', s.ad > trialStart.ad, `${trialStart.ad} -> ${s.ad}`);
+check('BS year is the derived one', fromDev(s.bs).startsWith(String(targetBsYear)), s.bs);
 
 // Click the BS input again — the previously-crashing path.
 await bsInput('trial-end').click();
@@ -130,6 +146,10 @@ const [patchReq] = await Promise.all([
 const ops = patchReq.postDataJSON();
 const byPath = Object.fromEntries(ops.map((o) => [o.path, o.value]));
 console.log('   PATCH ops:', JSON.stringify(byPath).slice(0, 400));
+// The request going out is not the same as the write landing: a 422 from the
+// chronology rule would otherwise leave every assertion below passing.
+const resp = await patchReq.response();
+check('PATCH accepted', resp?.status() === 200, String(resp?.status()));
 check('bigo saved as number', byPath['/bigo'] === 185850001, String(byPath['/bigo']));
 check('trial_start_date saved as ASCII YYYY-MM-DD', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/trial_start_date'] ?? ''), String(byPath['/trial_start_date']));
 check('trial_end_date saved as ASCII YYYY-MM-DD', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/trial_end_date'] ?? ''), String(byPath['/trial_end_date']));
