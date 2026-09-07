@@ -1665,6 +1665,7 @@
       "description": "The same {{total}} materials, grouped by the kind of document they are.",
       "tooltip": "Materials",
       "type": {
+        "procurementNotice": "Procurement notices",
         "chargeSheet": "Charge sheets",
         "precedent": "Court order precedents",
         "courtOrder": "Court orders",
@@ -2075,7 +2076,14 @@
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
       "bigoNoMax": "No maximum"
-    }
+    },
+    "materialSeries": "Series",
+    "filterSearch": "Search {{filter}}",
+    "filterMore": "More",
+    "filterLess": "Less",
+    "filterNoMatch": "No matches",
+    "materialSource": "Source",
+    "materialDate": "Date"
   },
   "materialsPage": {
     "heading": "Documents & other materials",

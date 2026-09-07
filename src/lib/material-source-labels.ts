@@ -42,12 +42,19 @@ export function sourceKeyFor(source: string): string {
     official_report: "auditorGeneral",
     // The corpus of Nepali statutes, regulations and bills.
     legal_corpus: "lawsOfNepal",
-    // Reporting drawn from the press and social platforms.
+    // Reporting drawn from the press and social platforms. A couple of early
+    // ingests minted outlet-named tokens; they are the same institution kind.
     news: "news",
+    news_setopati: "news",
+    news_shilaptra: "news",
     social_media: "socialMedia",
     dfmis: "dfmis",
     jawafdehi: "jawafdehi",
     "province/koshi": "koshi",
+    // PPMO operates bolpatra.gov.np — its ~206k procurement notices carry
+    // publisher "Public Procurement Monitoring Office" on the record itself.
+    bolpatra: "ppmo",
+    ppmo: "ppmo",
     ppmo_blacklist: "ppmo",
     // `document` = mixed-provenance case uploads with no single issuing office;
     // it deliberately falls through to "other".
