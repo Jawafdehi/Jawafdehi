@@ -754,6 +754,9 @@ function readParams(
 // each. At `xl` they are ~299px and by 1440px ~339px, which is the width
 // /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
 const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
+// Entity hits are compact avatar cards (see EntityResultCard), so a page of them
+// sits four across where the richer case cards need three.
+const entityCardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 function ArchiveSearchResults({
   data,
@@ -831,7 +834,7 @@ function ArchiveSearchResults({
 
   if (viewMode === "card") {
     return (
-      <div className={cardGridClass}>
+      <div className={resultType === "entity" ? entityCardGridClass : cardGridClass}>
         {data.results.map((result, index) => (
           <TrackedSearchResult
             key={`${result.type}-${result.id}`}

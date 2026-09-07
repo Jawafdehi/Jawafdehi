@@ -584,6 +584,8 @@
       "unknown": "Other Related Parties"
     },
     "andMoreAccused": "and {{count}} more",
+    "showMoreParties": "View {{count}} more",
+    "showLessParties": "View less",
     "evidence": "Evidence & Sources",
     "missingDetails": "Missing Details",
     "notes": "Notes",

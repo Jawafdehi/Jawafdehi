@@ -20,7 +20,8 @@ import { cn } from "@/lib/utils";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
 import { getSubjectEntities } from "@/utils/case-entities";
-import { humanizeEntityType } from "@/utils/entity-helpers";
+import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
+import { EntityAvatar } from "@/components/EntityAvatar";
 
 // Both the /search list and card views render the same components; `viewMode`
 // only decides whether the shared <CaseCard> lays out horizontally (list) or as
@@ -29,9 +30,11 @@ export type SearchViewMode = "list" | "card";
 
 // Auto-language: prefer English, fall back to Nepali (no toggle). Strips the HTML
 // <em> highlight tags that snippets carry so we render plain text.
+// Search highlights arrive as <em> marks; the cards render plain text.
+const stripHighlight = (value: string) => value.replace(/<\/?em>/g, "");
+
 function pickLang(text: BilingualText | undefined): string {
-  const value = text?.en || text?.ne || "";
-  return value.replace(/<\/?em>/g, "");
+  return stripHighlight(text?.en || text?.ne || "");
 }
 
 // Per-type display label for the badge.
@@ -59,7 +62,7 @@ function caseSlugFromUrl(url: string): string | undefined {
 }
 
 // Result dispatcher. Case and court-case records each render their shared rich
-// card; entities and materials use the lightweight generic card.
+// card; entities get the avatar card and materials the lightweight generic card.
 export function SearchResultCard({
   result,
   viewMode = "list",
@@ -68,6 +71,7 @@ export function SearchResultCard({
   if (result.type === "courtcase") {
     return <CourtCaseResultCard result={result} viewMode={viewMode} />;
   }
+  if (result.type === "entity") return <EntityResultCard result={result} viewMode={viewMode} />;
   return <GenericResultCard result={result} viewMode={viewMode} />;
 }
 
@@ -307,6 +311,75 @@ function GenericResultCard({
             className="h-4 w-4 transition-transform group-hover:translate-x-1"
           />
         </div>
+      </article>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Entity hits — avatar, name, supporting line
+// ---------------------------------------------------------------------------
+
+const GENERIC_KIND_LABELS = new Set(["Entity", "Person", "Organization", "Place", "Location", "Administrative Area"]);
+
+// The directory pattern: a leading avatar, the name as the headline, and one
+// muted supporting line. No type pill and no "View" footer — the glyph shows the
+// kind at a glance, the caption says it in words, and the whole card is the link.
+function EntityResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  const { t } = useTranslation();
+  const isCard = viewMode === "card";
+  const kind = entityKindFor(result.extra.type);
+  const title = formatSimpleTitle(result);
+  // pickLang shows the English name when there is one, so the Nepali spelling is
+  // the alternate. Place-kind hits are NOT exempt: they carry real bilingual
+  // names in the index ("Banke"/"बाँके", "Nepal"/"नेपाल"), and dropping the
+  // second script on a Nepali-first site loses the more useful of the two. Only
+  // the legacy `extra.type === "location"` documents ever held an IRI in the
+  // title, and formatSimpleTitle already unwraps those.
+  const { en, ne } = result.title;
+  const alternate = en && ne && en !== ne ? stripHighlight(ne) : null;
+  // Generic kinds are localised; a specific subtype ("District", "Government
+  // Organization") is shown as the index names it, since only the three kinds
+  // have translations.
+  const humanized = humanizeEntityType(result.extra.type);
+  const kindLabel = GENERIC_KIND_LABELS.has(humanized) ? t(`entityDetail.${kind}`) : humanized;
+  const supporting = [kindLabel, simpleMetadata(result)].filter(Boolean).join(" · ");
+
+  return (
+    <div
+      className={cn(
+        "group relative flex overflow-hidden transition-colors duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+        // The same tinted, borderless surface as the party cards on the case page.
+        isCard
+          ? "h-full min-h-[15rem] flex-col items-center justify-center gap-3 rounded-2xl bg-muted/50 p-4 text-center hover:bg-muted/70"
+          : "min-h-20 flex-row items-center gap-4 rounded-xl bg-card p-4 hover:bg-muted/35",
+      )}
+    >
+      <EntityAvatar kind={kind} size={isCard ? "lg" : "sm"} />
+      {/* In the tile the text must not stretch, or the avatar+text group sits
+          high and the air under the caption outweighs the air above the avatar. */}
+      <article className={cn("flex min-w-0 flex-col", !isCard && "flex-1")}>
+        <h3
+          className={cn(
+            "line-clamp-2 break-words text-base font-medium leading-snug text-primary",
+            isCard && "text-balance",
+          )}
+        >
+          <Link
+            to={result.url}
+            className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <span aria-hidden="true" className="absolute inset-0" />
+            {title}
+          </Link>
+        </h3>
+        {alternate ? (
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">{alternate}</p>
+        ) : null}
+        <p className={cn("font-meta break-words", isCard ? "mt-2" : "mt-1")}>{supporting}</p>
       </article>
     </div>
   );
