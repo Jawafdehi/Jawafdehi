@@ -61,7 +61,10 @@ function roleFor(caseItem: Case, entityIri: string) {
  * everything else reverse-chronologically below. Renders nothing when the entity
  * has no published citations (or on error), so it can be dropped in unconditionally.
  */
-export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
+export function EntityRelatedCases({
+  entityIri,
+  className,
+}: Readonly<{ entityIri: string; className?: string }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language === "ne" ? "ne" : "en";
 
@@ -103,8 +106,10 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
   const remaining = data.count - cases.length;
 
   return (
-    <section aria-labelledby="related-cases-heading">
-      <div className="flex items-baseline justify-between gap-3">
+    // A flex column so a height-constrained parent makes the LIST scroll while
+    // the heading and the "more" line stay put.
+    <section aria-labelledby="related-cases-heading" className={cn("flex min-h-0 flex-col", className)}>
+      <div className="flex shrink-0 items-baseline justify-between gap-3">
         <h2 id="related-cases-heading" className="text-lg font-semibold text-foreground">
           {t("entityDetail.relatedCases")}
         </h2>
@@ -113,7 +118,7 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
         </span>
       </div>
 
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 min-h-0 space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
         {cases.map((c) => {
           const { role, outcome } = roleFor(c, entityIri);
           const accused = isAccusedTier(role);
@@ -195,7 +200,7 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
       </ul>
 
       {remaining > 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-4 shrink-0 text-sm text-muted-foreground">
           {t("entityDetail.moreCases", { count: remaining })}
         </p>
       ) : null}

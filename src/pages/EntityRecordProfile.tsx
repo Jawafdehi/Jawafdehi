@@ -477,11 +477,13 @@ export default function EntityRecordProfile() {
                 </section>
               </div>
 
-              {/* Right 40%: the cases. Pinned to the viewport on desktop and
-                  scrolling inside itself when the list outgrows it, so the
-                  identity column and the cases stay side by side. */}
-              <div className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]">
-                {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
+              {/* Right 40%: the cases. On desktop the column is pinned where it
+                  first sits (under the 76px header, the page padding and the back
+                  link row — 11.25rem) and capped to the viewport with a 2rem
+                  margin, so it never runs below the fold; the heading stays and
+                  only the list scrolls. */}
+              <div className="min-w-0 lg:sticky lg:top-[11.25rem] lg:flex lg:max-h-[calc(100vh-13.25rem)] lg:flex-col">
+                {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} className="lg:min-h-0" /> : null}
                 {noCases ? (
                   <p className="text-base text-muted-foreground">No published case cites this entity yet.</p>
                 ) : null}
