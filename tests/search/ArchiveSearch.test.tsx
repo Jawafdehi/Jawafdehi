@@ -646,8 +646,16 @@ describe("ArchiveSearch", () => {
       status: screen.getByText("Sub Judice").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
       caseNumber: screen.getByText("081-CR-0060").textContent,
-      court: screen.getByText("Special Court").textContent,
-      registered: screen.getByText("Registered: 2025-01-10").textContent,
+      // Nepali court name and BS date: this suite runs the real i18n, which has
+      // not resolved a language here, and `normalizeLanguage` defaults to `ne`
+      // to match the app (`lng`/`fallbackLng` are both `ne`, as is the SSR
+      // prerender) — so the card takes `date_bs` over `date`, as it should for a
+      // Nepali reader. The labels stay English because an unresolved i18next
+      // returns each `t()` call's default value. What this assertion is for is
+      // that the field appears identically in both views, which is
+      // language-independent either way.
+      court: screen.getByText("विशेष अदालत").textContent,
+      registered: screen.getByText("Registered: 2081-09-26").textContent,
       cta: screen.getByText("View case").textContent,
     });
 
