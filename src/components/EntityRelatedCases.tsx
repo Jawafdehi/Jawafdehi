@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
@@ -103,18 +104,16 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
   const remaining = data.count - cases.length;
 
   return (
-    <section aria-labelledby="related-cases-heading" className="space-y-4">
+    <section aria-labelledby="related-cases-heading">
       <div className="flex items-baseline justify-between gap-3">
-        <h2
-          id="related-cases-heading"
-          className="text-xl font-semibold tracking-tight text-primary"
-        >
+        <h2 id="related-cases-heading" className="text-lg font-semibold text-foreground">
           {t("entityDetail.relatedCases")}
         </h2>
         <span className="text-sm font-medium text-muted-foreground">{data.count}</span>
       </div>
+      <Separator className="mt-3" />
 
-      <ul className="space-y-3">
+      <ul className="mt-4 space-y-3">
         {cases.map((c) => {
           const { role, outcome } = roleFor(c, entityIri);
           const accused = isAccusedTier(role);
@@ -196,7 +195,7 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
       </ul>
 
       {remaining > 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-4 text-sm text-muted-foreground">
           {t("entityDetail.moreCases", { count: remaining })}
         </p>
       ) : null}

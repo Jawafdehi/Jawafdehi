@@ -1,4 +1,4 @@
-import { useState } from "react";
+import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
@@ -8,13 +8,17 @@ import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-reac
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
+import { ShareButton } from "@/components/ShareButton";
+import { EntityAvatar } from "@/components/EntityAvatar";
 import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { humanizeEntityType } from "@/utils/entity-helpers";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 
 // Entity records are schema.org JSON-LD with a jawafdehi: extension namespace. We type
 // the spine we read explicitly and keep an index signature for the long tail of
@@ -195,23 +199,30 @@ function imageUrlOf(rec: EntityRecord | undefined): string | undefined {
   return pick(rec?.image) ?? pick(rec?.logo);
 }
 
-function RelationLink({ label, refObj }: { label: string; refObj?: JsonLdRef }) {
+// One labelled row of the summary table — the same shape the material page uses.
+function Row({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
+  return (
+    <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
+      <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">{label}</dt>
+      <dd className="min-w-0 break-words text-foreground">{children}</dd>
+    </div>
+  );
+}
+
+function RelationRow({ label, refObj }: Readonly<{ label: string; refObj?: JsonLdRef }>) {
   const iri = refObj?.["@id"];
   const path = entityPath(iri);
   if (!iri) return null;
   return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-sm">
-        {path ? (
-          <Link to={path} className="text-primary hover:underline">
-            {iriLabel(iri)}
-          </Link>
-        ) : (
-          <span className="text-foreground">{iriLabel(iri)}</span>
-        )}
-      </dd>
-    </div>
+    <Row label={label}>
+      {path ? (
+        <Link to={path} className="text-primary underline underline-offset-2 hover:no-underline">
+          {iriLabel(iri)}
+        </Link>
+      ) : (
+        iriLabel(iri)
+      )}
+    </Row>
   );
 }
 
@@ -220,7 +231,6 @@ export default function EntityRecordProfile() {
   const { i18n } = useTranslation();
   const currentLang = (i18n.language || "ne").startsWith("en") ? "en" : "ne";
   const tail = params["*"] || "";
-  const [failedImgUrl, setFailedImgUrl] = useState<string | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["entity-record", tail],
     queryFn: async () => {
@@ -234,7 +244,9 @@ export default function EntityRecordProfile() {
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
-  const typeLabel = humanizeEntityType(data ? typeToken(data["@type"], data.additionalType) : undefined);
+  const rawType = data ? typeToken(data["@type"], data.additionalType) : undefined;
+  const typeLabel = humanizeEntityType(rawType);
+  const kind = entityKindFor(rawType);
   const description = data ? bilingual(data.description) : { en: "", ne: "" };
   // Nepali-first: show the active language, falling back to the other only when
   // that language is missing.
@@ -264,166 +276,194 @@ export default function EntityRecordProfile() {
     }
   }
 
+  const revision = version
+    ? [
+        `${version.version_number ?? "?"}`,
+        version.created_at ? `updated ${String(version.created_at).slice(0, 10)}` : null,
+        version.change_description || null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
+  const debarment = data?.["jawafdehi:debarment"] as Record<string, unknown> | undefined;
+  const debarmentText = (() => {
+    const type = debarment && scalar(debarment["jawafdehi:debarmentType"]);
+    const start = debarment && scalar(debarment["jawafdehi:debarmentStartAD"]);
+    const end = debarment && scalar(debarment["jawafdehi:debarmentEndAD"]);
+    const parts = [type, start && end ? `${start} → ${end}` : null].filter(Boolean);
+    return parts.length ? parts.join(" · ") : "See public procurement debarment register.";
+  })();
+
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
       <Helmet>
         <title>{displayName} | Jawafdehi Entity Registry</title>
         <meta
           name="description"
-          content={`${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
+          content={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
         />
       </Helmet>
 
-      <div className="layout-container max-w-3xl">
-        <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="layout-container">
+        <div className="mb-8 flex items-center justify-between gap-2">
           <Button asChild variant="ghost" size="sm" className="-ml-2">
             <Link to="/search?type=entity">
               <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-              Back to search
+              Back to entities
             </Link>
           </Button>
-          {tail ? (
-            <ViewJsonButton
-              data={data}
-              title={`${displayName} — JSON-LD`}
-              rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
-              disabled={!data}
-            />
-          ) : null}
         </div>
 
         {isError ? (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              This entity could not be found in the registry.
-            </AlertDescription>
+            <AlertDescription>This entity could not be found in the registry.</AlertDescription>
           </Alert>
         ) : isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-9 w-2/3" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="mt-6 h-32 w-full" />
+          <div className="space-y-4">
+            <div className="flex items-center gap-5">
+              <Skeleton className="h-24 w-24 rounded-full" />
+              <Skeleton className="h-12 w-3/5" />
+            </div>
+            <Skeleton className="h-80 w-full" />
           </div>
         ) : data ? (
-          <article className="space-y-6">
-            <header className="space-y-2">
-              {imageUrl && imageUrl !== failedImgUrl ? (
-                <div className="mb-1 flex h-24 w-fit items-center justify-center overflow-hidden rounded-xl border bg-white p-3">
-                  <img
-                    src={imageUrl}
-                    alt={displayName}
-                    loading="lazy"
-                    className="max-h-full max-w-[16rem] object-contain"
-                    onError={() => setFailedImgUrl(imageUrl)}
-                  />
-                </div>
-              ) : null}
-              <Badge variant="outline" className="capitalize">{typeLabel}</Badge>
-              <h1 className="text-3xl font-extrabold text-primary md:text-4xl">{displayName}</h1>
-              {name.ne && name.ne !== displayName ? (
-                <p className="text-lg text-muted-foreground">{name.ne}</p>
-              ) : null}
+          <article>
+            {/* The same header as a material page, led by the entity's avatar so it
+                reads as the same record that appears on case pages and in search. */}
+            <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+              <EntityAvatar kind={kind} src={imageUrl} />
+              <div className="min-w-0 sm:pt-2">
+                <h1 className="font-archive-hero-title max-w-4xl">{displayName}</h1>
+                {name.ne && name.ne !== displayName ? (
+                  <p className="mt-3 text-lg text-muted-foreground">{name.ne}</p>
+                ) : null}
+              </div>
             </header>
 
-            {/* Blacklist / debarment alert (contractors). */}
             {blacklisted ? (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mt-8">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Blacklisted / debarred.</strong>{" "}
-                  {(() => {
-                    const deb = data["jawafdehi:debarment"] as Record<string, unknown> | undefined;
-                    const type = deb && scalar(deb["jawafdehi:debarmentType"]);
-                    const start = deb && scalar(deb["jawafdehi:debarmentStartAD"]);
-                    const end = deb && scalar(deb["jawafdehi:debarmentEndAD"]);
-                    const parts = [type, start && end ? `${start} → ${end}` : null].filter(Boolean);
-                    return parts.length ? parts.join(" · ") : "See public procurement debarment register.";
-                  })()}
+                  <strong>Blacklisted / debarred.</strong> {debarmentText}
                 </AlertDescription>
               </Alert>
             ) : null}
 
-            {descText ? <p className="text-base leading-7 text-foreground">{descText}</p> : null}
+            <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] xl:gap-14">
+              <div className="min-w-0 space-y-10">
+                <Tabs defaultValue="summary">
+                  <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
+                    <TabsTrigger
+                      value="summary"
+                      className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                    >
+                      Summary
+                    </TabsTrigger>
+                  </TabsList>
 
-            {/* External links. */}
-            {data.url || data.sameAs ? (
-              <div className="flex flex-wrap gap-2">
-                {data.url ? (
-                  <Button asChild variant="outline" size="sm">
-                    <a href={data.url} target="_blank" rel="noopener noreferrer">
-                      Official website <ExternalLink className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
-                    </a>
-                  </Button>
-                ) : null}
-                {data.sameAs ? (
-                  <Button asChild variant="outline" size="sm">
-                    <a href={data.sameAs} target="_blank" rel="noopener noreferrer">
-                      Wikidata <ExternalLink className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
-                    </a>
-                  </Button>
-                ) : null}
+                  <TabsContent value="summary" className="mt-0">
+                    <Card className="rounded-none border border-t-0 shadow-none">
+                      <div className="p-5 md:p-8">
+                        {descText ? (
+                          <p className="mb-6 max-w-3xl text-base leading-7 text-foreground">{descText}</p>
+                        ) : null}
+                        <dl className="divide-y divide-border/70">
+                          <Row label="Type">{typeLabel}</Row>
+                          {aliases.length > 0 ? <Row label="Also known as">{aliases.join(" · ")}</Row> : null}
+                          <RelationRow label="Located in" refObj={data.containedInPlace} />
+                          <RelationRow label="Part of" refObj={data.parentOrganization} />
+                          {data["jawafdehi:appealsTo"] ? (
+                            <RelationRow label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
+                          ) : null}
+                          {address ? <Row label="Address">{address}</Row> : null}
+                          {detailRows.map((r) => (
+                            <Row key={r.label} label={r.label}>
+                              <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
+                            </Row>
+                          ))}
+                          {identifiers.map((id, i) => (
+                            <Row key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
+                              {id.value}
+                            </Row>
+                          ))}
+                          {created ? <Row label="Created">{created}</Row> : null}
+                          {revision ? <Row label="Revision">{revision}</Row> : null}
+                          <Row label="Source">
+                            Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations,
+                            and places.
+                          </Row>
+                          <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
+                            <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">
+                              Canonical ID
+                            </dt>
+                            <dd className="min-w-0 break-all font-mono text-xs text-muted-foreground">{data["@id"]}</dd>
+                          </div>
+                        </dl>
+                      </div>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Published cases citing this entity; renders nothing when there are none. */}
+                {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
               </div>
-            ) : null}
 
-            {/* Details + relationships + identifiers. */}
-            <dl className="grid gap-4 rounded-xl bg-card p-5 sm:grid-cols-2">
-              {detailRows.map((r) => (
-                <div key={r.label}>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</dt>
-                  <dd className="mt-1 text-sm capitalize text-foreground">{r.value.replace(/-/g, " ")}</dd>
-                </div>
-              ))}
-              <RelationLink label="Located in" refObj={data.containedInPlace} />
-              <RelationLink label="Part of" refObj={data.parentOrganization} />
-              {data["jawafdehi:appealsTo"] ? (
-                <RelationLink label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
-              ) : null}
-              {address ? (
-                <div className="sm:col-span-2">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Address</dt>
-                  <dd className="mt-1 text-sm text-foreground">{address}</dd>
-                </div>
-              ) : null}
-              {identifiers.map((id, i) => (
-                <div key={`${id.propertyID}-${i}`}>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {labelFor(id.propertyID || "Identifier")}
-                  </dt>
-                  <dd className="mt-1 text-sm text-foreground">{id.value}</dd>
-                </div>
-              ))}
-              {aliases.length > 0 ? (
-                <div className="sm:col-span-2">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Also known as</dt>
-                  <dd className="mt-1 text-sm text-foreground">{aliases.join(" · ")}</dd>
-                </div>
-              ) : null}
-              <div className="sm:col-span-2">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Canonical ID</dt>
-                <dd className="mt-1 break-all font-mono text-xs text-muted-foreground">{data["@id"]}</dd>
-              </div>
-            </dl>
+              <aside className="space-y-8 lg:sticky lg:top-24">
+                {data.url || data.sameAs ? (
+                  <section aria-labelledby="entity-links-heading">
+                    <h2 id="entity-links-heading" className="text-lg font-semibold text-foreground">
+                      Links
+                    </h2>
+                    <Separator className="mt-3" />
+                    <div className="mt-4 inline-grid gap-3">
+                      {data.url ? (
+                        <Button asChild variant="outline" className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left">
+                          <a href={data.url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            Official website
+                          </a>
+                        </Button>
+                      ) : null}
+                      {data.sameAs ? (
+                        <Button asChild variant="outline" className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left">
+                          <a href={data.sameAs} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            Wikidata
+                          </a>
+                        </Button>
+                      ) : null}
+                    </div>
+                  </section>
+                ) : null}
 
-            {/* Published cases citing this entity (accused/alleged floated to
-                the top). Renders nothing when there are none. */}
-            {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
-
-            {/* Provenance. */}
-            <div className="space-y-1 rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
-              <p>
-                <strong>Source:</strong> Jawafdehi entity registry — a public registry of Nepal&apos;s
-                people, organizations, and places.
-              </p>
-              {created ? <p>Created {created}.</p> : null}
-              {version ? (
-                <p>
-                  Revision {version.version_number ?? "?"}
-                  {version.created_at ? ` · updated ${String(version.created_at).slice(0, 10)}` : ""}
-                  {version.change_description ? ` · ${version.change_description}` : ""}
-                </p>
-              ) : null}
+                <section aria-labelledby="entity-actions-heading">
+                  <h2 id="entity-actions-heading" className="text-lg font-semibold text-foreground">
+                    Actions
+                  </h2>
+                  <Separator className="mt-3" />
+                  <div className="mt-4 inline-grid gap-2">
+                    {tail ? (
+                      <ViewJsonButton
+                        data={data}
+                        title={`${displayName} — JSON-LD`}
+                        rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
+                        variant="outline"
+                        className="h-11 justify-start gap-3 px-4"
+                      />
+                    ) : null}
+                    <ShareButton
+                      url={data["@id"]}
+                      title={displayName}
+                      description={descText}
+                      variant="ghost"
+                      size="default"
+                      showLabel
+                      className="h-11 justify-start gap-3 px-4 [&_span]:!mt-0 [&_span]:!inline"
+                    />
+                  </div>
+                </section>
+              </aside>
             </div>
           </article>
         ) : null}
