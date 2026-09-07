@@ -353,7 +353,7 @@ export default function EntityRecordProfile() {
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
                   <EntityAvatar kind={kind} src={imageUrl} size="xl" />
                   <div className="min-w-0">
-                    <h1 className="font-archive-hero-title break-words">{displayName}</h1>
+                    <h1 className="font-archive-section-title text-balance break-words">{displayName}</h1>
                     {name.ne && name.ne !== displayName ? (
                       <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
                     ) : null}
