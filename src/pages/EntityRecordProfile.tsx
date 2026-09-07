@@ -248,7 +248,9 @@ export default function EntityRecordProfile() {
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
-  const caseCount = citing?.count ?? 0;
+  // Only a *settled* zero is an empty state; while the list loads it shows its
+  // own skeleton and the message must not sit beneath it.
+  const noCases = citing !== undefined && citing.count === 0;
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
@@ -361,9 +363,9 @@ export default function EntityRecordProfile() {
                   facts (when there are any beyond the type, which the identity
                   line already states), and the actions. */}
               <div className="min-w-0 space-y-8">
-                <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+                <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
                   <EntityAvatar kind={kind} src={imageUrl} size="xl" />
-                  <div className="min-w-0 sm:pt-1">
+                  <div className="min-w-0">
                     <h1 className="font-archive-hero-title break-words">{displayName}</h1>
                     {name.ne && name.ne !== displayName ? (
                       <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
@@ -461,32 +463,30 @@ export default function EntityRecordProfile() {
                     />
                   </div>
                 </section>
+
+                <section aria-labelledby="entity-record-heading" className="text-xs leading-5 text-muted-foreground">
+                  <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
+                    Record
+                  </h2>
+                  <p className="mt-2">
+                    Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations, and places.
+                    {created ? ` Created ${created}.` : ""}
+                    {revision ? ` Revision ${revision}` : ""}
+                  </p>
+                  <p className="mt-2 break-all font-mono">{data["@id"]}</p>
+                </section>
               </div>
 
-              {/* Right 40%: what this entity has been part of. */}
-              <div className="min-w-0 space-y-8 lg:pt-2">
+              {/* Right 40%: the cases. Pinned to the viewport on desktop and
+                  scrolling inside itself when the list outgrows it, so the
+                  identity column and the cases stay side by side. */}
+              <div className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]">
                 {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
-                {caseCount === 0 ? (
+                {noCases ? (
                   <p className="text-base text-muted-foreground">No published case cites this entity yet.</p>
                 ) : null}
               </div>
             </div>
-
-            {/* Record footnote runs the full width beneath both columns. */}
-            <section
-              aria-labelledby="entity-record-heading"
-              className="mt-12 text-xs leading-5 text-muted-foreground"
-            >
-              <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
-                Record
-              </h2>
-              <p className="mt-2">
-                Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations, and places.
-                {created ? ` Created ${created}.` : ""}
-                {revision ? ` Revision ${revision}` : ""}
-              </p>
-              <p className="mt-2 break-all font-mono">{data["@id"]}</p>
-            </section>
           </article>
         ) : null}
       </div>
