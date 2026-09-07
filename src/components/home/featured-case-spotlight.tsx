@@ -15,11 +15,14 @@ import {
   caseImageCandidates,
 } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
+import { summarizeNames } from "@/utils/name-summary";
 
 type FeaturedCaseSpotlightProps = {
   slug?: string | null;
   title: string;
   entity: string;
+  /** Structured subject names; summarized the way <CaseCard> summarizes them. */
+  entityNames?: string[];
   location: string;
   status: "ongoing" | "resolved" | "under-investigation";
   tags?: string[];
@@ -31,6 +34,7 @@ export function FeaturedCaseSpotlight({
   slug,
   title,
   entity,
+  entityNames,
   location,
   status,
   tags = [],
@@ -39,6 +43,13 @@ export function FeaturedCaseSpotlight({
 }: Readonly<FeaturedCaseSpotlightProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // One truncating line, so the full comma-joined list would read as a cut-off
+  // fragment. Same "X and N others" phrasing as <CaseCard> and the court-case
+  // card, via the shared summarizer.
+  const entitySummary = summarizeNames(
+    { names: entityNames ?? entity.split(",") },
+    { t, fallback: entity },
+  );
 
   // Same slug-only navigation contract as CaseCard: never fall back to the
   // numeric id (the slug-only API would 404 on it).
@@ -128,7 +139,7 @@ export function FeaturedCaseSpotlight({
         <div className="mt-5 space-y-2 text-sm text-primary-foreground/75">
           <p className="flex min-w-0 items-center">
             <User className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
-            <span className="min-w-0 truncate">{entity}</span>
+            <span className="min-w-0 truncate">{entitySummary}</span>
           </p>
           <p className="flex min-w-0 items-center">
             <MapPin className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
