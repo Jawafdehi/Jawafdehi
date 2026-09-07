@@ -324,6 +324,18 @@ export default function EntityRecordProfile() {
     const parts = [type, start && end ? `${start} → ${end}` : null].filter(Boolean);
     return parts.length ? parts.join(" · ") : "See public procurement debarment register.";
   })();
+  // The About panel only earns its place with facts beyond the type, which the
+  // identity line already states.
+  const hasFacts = Boolean(
+    data?.containedInPlace?.["@id"] ||
+      data?.parentOrganization?.["@id"] ||
+      data?.["jawafdehi:appealsTo"] ||
+      address ||
+      detailRows.length > 0 ||
+      identifiers.length > 0 ||
+      data?.url ||
+      data?.sameAs,
+  );
   // The identity line under the name: what it is, where it is, since when.
   const placeIri = data?.containedInPlace?.["@id"];
   const identity = [
@@ -366,142 +378,148 @@ export default function EntityRecordProfile() {
             </div>
           </div>
         ) : data ? (
-          <article className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] lg:grid-rows-[auto_1fr] xl:gap-14">
-            {/* Identity + details take the left 60%: avatar beside the name, then
-                the About facts. On a phone the cases follow and the
-                actions/record footnote come last. */}
-            <aside className="space-y-8 lg:col-start-1">
-              <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
-                <EntityAvatar kind={kind} src={imageUrl} size="xl" />
-                <div className="min-w-0 sm:pt-1">
-                  <h1 className="font-archive-hero-title break-words">{displayName}</h1>
-                  {name.ne && name.ne !== displayName ? (
-                    <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
-                  ) : null}
-                  <p className="mt-3 text-base text-muted-foreground">{identity.join(" · ")}</p>
-                  {aliases.length > 0 ? (
-                    <p className="mt-1 text-sm text-muted-foreground">Also known as {aliases.join(", ")}</p>
-                  ) : null}
-                </div>
-              </header>
-
-              <section aria-labelledby="entity-about-heading" className="rounded-2xl bg-muted/50 p-5">
-                <h2 id="entity-about-heading" className="text-lg font-semibold text-foreground">
-                  About
-                </h2>
-                <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <Fact label="Type">{typeLabel}</Fact>
-                  <RelationFact label="Located in" refObj={data.containedInPlace} />
-                  <RelationFact label="Part of" refObj={data.parentOrganization} />
-                  {data["jawafdehi:appealsTo"] ? (
-                    <RelationFact label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
-                  ) : null}
-                  {address ? (
-                    <div className="sm:col-span-2">
-                      <Fact label="Address">{address}</Fact>
-                    </div>
-                  ) : null}
-                  {detailRows.map((r) => (
-                    <Fact key={r.label} label={r.label}>
-                      <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
-                    </Fact>
-                  ))}
-                  {identifiers.map((id, i) => (
-                    <Fact key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
-                      {id.value}
-                    </Fact>
-                  ))}
-                </dl>
-                {data.url || data.sameAs ? (
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {data.url ? (
-                      <Button asChild variant="outline" size="sm">
-                        <a href={data.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                          Official website
-                        </a>
-                      </Button>
+          <article>
+            <div className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] xl:gap-14">
+              {/* Identity + details take the left 60%: avatar beside the name, the
+                  numbers, the facts (when there are any beyond the type, which the
+                  identity line already states), and the actions. */}
+              <div className="min-w-0 space-y-8">
+                <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+                  <EntityAvatar kind={kind} src={imageUrl} size="xl" />
+                  <div className="min-w-0 sm:pt-1">
+                    <h1 className="font-archive-hero-title break-words">{displayName}</h1>
+                    {name.ne && name.ne !== displayName ? (
+                      <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
                     ) : null}
-                    {data.sameAs ? (
-                      <Button asChild variant="outline" size="sm">
-                        <a href={data.sameAs} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                          Wikidata
-                        </a>
-                      </Button>
+                    <p className="mt-3 text-base text-muted-foreground">{identity.join(" · ")}</p>
+                    {aliases.length > 0 ? (
+                      <p className="mt-1 text-sm text-muted-foreground">Also known as {aliases.join(", ")}</p>
                     ) : null}
                   </div>
+                </header>
+
+                {stats.cases > 0 ? (
+                  <dl className="flex flex-wrap gap-x-10 gap-y-6 border-y border-border/70 py-6">
+                    <Stat value={stats.cases} label={stats.cases === 1 ? "Case" : "Cases"} />
+                    {stats.accused > 0 ? <Stat value={stats.accused} label="As accused" /> : null}
+                    {stats.convicted > 0 ? <Stat value={stats.convicted} label="Convicted" /> : null}
+                    {stats.acquitted > 0 ? <Stat value={stats.acquitted} label="Acquitted" /> : null}
+                  </dl>
                 ) : null}
-              </section>
-            </aside>
 
-            <aside className="order-3 space-y-8 lg:order-none lg:col-start-1">
-              <section aria-labelledby="entity-actions-heading">
-                <h2 id="entity-actions-heading" className="text-lg font-semibold text-foreground">
-                  Actions
-                </h2>
-                <Separator className="mt-3" />
-                <div className="mt-4 inline-grid gap-2">
-                  {tail ? (
-                    <ViewJsonButton
-                      data={data}
-                      title={`${displayName} — JSON-LD`}
-                      rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
-                      variant="outline"
-                      className="h-11 justify-start gap-3 px-4"
+                {blacklisted ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Blacklisted / debarred.</strong> {debarmentText}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                {descText ? <p className="max-w-3xl text-lg leading-8 text-foreground">{descText}</p> : null}
+
+                {hasFacts ? (
+                  <section aria-labelledby="entity-about-heading" className="rounded-2xl bg-muted/50 p-5">
+                    <h2 id="entity-about-heading" className="text-lg font-semibold text-foreground">
+                      About
+                    </h2>
+                    <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <RelationFact label="Located in" refObj={data.containedInPlace} />
+                      <RelationFact label="Part of" refObj={data.parentOrganization} />
+                      {data["jawafdehi:appealsTo"] ? (
+                        <RelationFact label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
+                      ) : null}
+                      {address ? (
+                        <div className="sm:col-span-2">
+                          <Fact label="Address">{address}</Fact>
+                        </div>
+                      ) : null}
+                      {detailRows.map((r) => (
+                        <Fact key={r.label} label={r.label}>
+                          <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
+                        </Fact>
+                      ))}
+                      {identifiers.map((id, i) => (
+                        <Fact key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
+                          {id.value}
+                        </Fact>
+                      ))}
+                    </dl>
+                    {data.url || data.sameAs ? (
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {data.url ? (
+                          <Button asChild variant="outline" size="sm">
+                            <a href={data.url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                              Official website
+                            </a>
+                          </Button>
+                        ) : null}
+                        {data.sameAs ? (
+                          <Button asChild variant="outline" size="sm">
+                            <a href={data.sameAs} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                              Wikidata
+                            </a>
+                          </Button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </section>
+                ) : null}
+
+                <section aria-labelledby="entity-actions-heading">
+                  <h2 id="entity-actions-heading" className="text-lg font-semibold text-foreground">
+                    Actions
+                  </h2>
+                  <Separator className="mt-3" />
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {tail ? (
+                      <ViewJsonButton
+                        data={data}
+                        title={`${displayName} — JSON-LD`}
+                        rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
+                        variant="outline"
+                        className="h-11 gap-3 px-4"
+                      />
+                    ) : null}
+                    <ShareButton
+                      url={data["@id"]}
+                      title={displayName}
+                      description={descText}
+                      variant="ghost"
+                      size="default"
+                      showLabel
+                      className="h-11 gap-3 px-4 [&_span]:!mt-0 [&_span]:!inline"
                     />
-                  ) : null}
-                  <ShareButton
-                    url={data["@id"]}
-                    title={displayName}
-                    description={descText}
-                    variant="ghost"
-                    size="default"
-                    showLabel
-                    className="h-11 justify-start gap-3 px-4 [&_span]:!mt-0 [&_span]:!inline"
-                  />
-                </div>
-              </section>
+                  </div>
+                </section>
+              </div>
 
-              <section aria-labelledby="entity-record-heading" className="text-xs leading-5 text-muted-foreground">
-                <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
-                  Record
-                </h2>
-                <p className="mt-2">
-                  Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations, and places.
-                </p>
-                {created ? <p className="mt-1">Created {created}.</p> : null}
-                {revision ? <p className="mt-1">Revision {revision}</p> : null}
-                <p className="mt-2 break-all font-mono">{data["@id"]}</p>
-              </section>
-            </aside>
-
-            {/* Activity column: the numbers, then what this entity has been part of. */}
-            <div className="order-2 min-w-0 space-y-8 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
-              {stats.cases > 0 ? (
-                <dl className="flex flex-wrap gap-x-10 gap-y-6 border-b border-border/70 pb-6 lg:pt-2">
-                  <Stat value={stats.cases} label={stats.cases === 1 ? "Case" : "Cases"} />
-                  {stats.accused > 0 ? <Stat value={stats.accused} label="As accused" /> : null}
-                  {stats.convicted > 0 ? <Stat value={stats.convicted} label="Convicted" /> : null}
-                  {stats.acquitted > 0 ? <Stat value={stats.acquitted} label="Acquitted" /> : null}
-                </dl>
-              ) : null}
-
-              {blacklisted ? (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Blacklisted / debarred.</strong> {debarmentText}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-
-              {descText ? <p className="max-w-3xl text-lg leading-8 text-foreground">{descText}</p> : null}
-              {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
-              {stats.cases === 0 && !descText ? (
-                <p className="text-base text-muted-foreground">No published case cites this entity yet.</p>
-              ) : null}
+              {/* Right 40%: what this entity has been part of. */}
+              <div className="min-w-0 space-y-8 lg:pt-2">
+                {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
+                {stats.cases === 0 ? (
+                  <p className="text-base text-muted-foreground">No published case cites this entity yet.</p>
+                ) : null}
+              </div>
             </div>
+
+            {/* Record footnote runs the full width beneath both columns. */}
+            <section
+              aria-labelledby="entity-record-heading"
+              className="mt-12 border-t border-border/70 pt-6 text-xs leading-5 text-muted-foreground"
+            >
+              <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
+                Record
+              </h2>
+              <p className="mt-2">
+                Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations, and places.
+                {created ? ` Created ${created}.` : ""}
+                {revision ? ` Revision ${revision}` : ""}
+              </p>
+              <p className="mt-2 break-all font-mono">{data["@id"]}</p>
+            </section>
           </article>
         ) : null}
       </div>
