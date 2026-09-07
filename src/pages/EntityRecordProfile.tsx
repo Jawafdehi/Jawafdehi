@@ -14,10 +14,10 @@ import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCasesCitingEntity } from "@/services/jds-api";
+import { normalizeOutcome } from "@/utils/case-outcome";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 
 // Entity records are schema.org JSON-LD with a jawafdehi: extension namespace. We type
@@ -199,22 +199,22 @@ function imageUrlOf(rec: EntityRecord | undefined): string | undefined {
   return pick(rec?.image) ?? pick(rec?.logo);
 }
 
-// One labelled row of the summary table — the same shape the material page uses.
-function Row({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
+// One fact in the About panel: small caps label over the value.
+function Fact({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
-    <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
-      <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">{label}</dt>
-      <dd className="min-w-0 break-words text-foreground">{children}</dd>
+    <div>
+      <dt className="font-meta uppercase tracking-wide">{label}</dt>
+      <dd className="mt-1 break-words text-sm text-foreground">{children}</dd>
     </div>
   );
 }
 
-function RelationRow({ label, refObj }: Readonly<{ label: string; refObj?: JsonLdRef }>) {
+function RelationFact({ label, refObj }: Readonly<{ label: string; refObj?: JsonLdRef }>) {
   const iri = refObj?.["@id"];
   const path = entityPath(iri);
   if (!iri) return null;
   return (
-    <Row label={label}>
+    <Fact label={label}>
       {path ? (
         <Link to={path} className="text-primary underline underline-offset-2 hover:no-underline">
           {iriLabel(iri)}
@@ -222,13 +222,23 @@ function RelationRow({ label, refObj }: Readonly<{ label: string; refObj?: JsonL
       ) : (
         iriLabel(iri)
       )}
-    </Row>
+    </Fact>
+  );
+}
+
+// One number in the profile's stats strip.
+function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
+  return (
+    <div className="min-w-[5.5rem]">
+      <div className="text-3xl font-semibold tabular-nums leading-none text-primary">{value}</div>
+      <div className="font-meta mt-1.5">{label}</div>
+    </div>
   );
 }
 
 export default function EntityRecordProfile() {
   const params = useParams();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentLang = (i18n.language || "ne").startsWith("en") ? "en" : "ne";
   const tail = params["*"] || "";
   const { data, isLoading, isError } = useQuery({
@@ -241,6 +251,27 @@ export default function EntityRecordProfile() {
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
+
+  const entityIri = data?.["@id"] ?? "";
+  const { data: citing } = useQuery({
+    queryKey: ["entity-related-cases", entityIri],
+    queryFn: () => getCasesCitingEntity(entityIri, { page_size: 20 }),
+    enabled: entityIri.length > 0,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  // This entity's role and verdict on each citing case, read from the case's
+  // own binds. Counts are over the loaded page; `count` is the true total.
+  const binds = (citing?.results ?? []).map((c) => {
+    const mine = (c.entities ?? []).filter((e) => e.nes_id === entityIri);
+    return mine.find((b) => b.type === "accused" || b.type === "alleged") ?? mine[0];
+  });
+  const stats = {
+    cases: citing?.count ?? 0,
+    accused: binds.filter((b) => b && (b.type === "accused" || b.type === "alleged")).length,
+    convicted: binds.filter((b) => b?.outcome && normalizeOutcome(b.outcome) === "convicted").length,
+    acquitted: binds.filter((b) => b?.outcome && normalizeOutcome(b.outcome) === "acquitted").length,
+  };
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
@@ -293,6 +324,13 @@ export default function EntityRecordProfile() {
     const parts = [type, start && end ? `${start} → ${end}` : null].filter(Boolean);
     return parts.length ? parts.join(" · ") : "See public procurement debarment register.";
   })();
+  // The identity line under the name: what it is, where it is, since when.
+  const placeIri = data?.containedInPlace?.["@id"];
+  const identity = [
+    t(`entityDetail.${kind}`),
+    placeIri ? iriLabel(placeIri) : null,
+    created ? `In the registry since ${created.slice(0, 4)}` : null,
+  ].filter(Boolean);
 
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
@@ -305,7 +343,7 @@ export default function EntityRecordProfile() {
       </Helmet>
 
       <div className="layout-container">
-        <div className="mb-8 flex items-center justify-between gap-2">
+        <div className="mb-6 flex items-center justify-between gap-2">
           <Button asChild variant="ghost" size="sm" className="-ml-2">
             <Link to="/search?type=entity">
               <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
@@ -321,22 +359,42 @@ export default function EntityRecordProfile() {
           </Alert>
         ) : isLoading ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-5">
-              <Skeleton className="h-24 w-24 rounded-full" />
-              <Skeleton className="h-12 w-3/5" />
+            <Skeleton className="h-36 w-full rounded-3xl" />
+            <div className="flex items-end gap-5 px-6">
+              <Skeleton className="-mt-16 h-32 w-32 rounded-full" />
+              <Skeleton className="h-12 w-2/5" />
             </div>
-            <Skeleton className="h-80 w-full" />
           </div>
         ) : data ? (
           <article>
-            {/* The same header as a material page, led by the entity's avatar so it
-                reads as the same record that appears on case pages and in search. */}
-            <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-              <EntityAvatar kind={kind} src={imageUrl} />
-              <div className="min-w-0 sm:pt-2">
-                <h1 className="font-archive-hero-title max-w-4xl">{displayName}</h1>
-                {name.ne && name.ne !== displayName ? (
-                  <p className="mt-3 text-lg text-muted-foreground">{name.ne}</p>
+            {/* Profile header: a quiet band the avatar breaks out of, then name,
+                identity line and the numbers that matter. */}
+            <header>
+              <div className="h-32 rounded-3xl bg-gradient-to-br from-muted/80 via-muted/50 to-muted/20 md:h-40" aria-hidden="true" />
+              <div className="px-4 md:px-8">
+                <EntityAvatar
+                  kind={kind}
+                  src={imageUrl}
+                  size="xl"
+                  className="-mt-16 ring-8 ring-background"
+                />
+                <div className="mt-4 max-w-4xl">
+                  <h1 className="font-archive-hero-title">{displayName}</h1>
+                  {name.ne && name.ne !== displayName ? (
+                    <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
+                  ) : null}
+                  <p className="mt-3 text-base text-muted-foreground">{identity.join(" · ")}</p>
+                  {aliases.length > 0 ? (
+                    <p className="mt-1 text-sm text-muted-foreground">Also known as {aliases.join(", ")}</p>
+                  ) : null}
+                </div>
+                {stats.cases > 0 ? (
+                  <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-6 border-y border-border/70 py-6">
+                    <Stat value={stats.cases} label={stats.cases === 1 ? "Case" : "Cases"} />
+                    {stats.accused > 0 ? <Stat value={stats.accused} label="As accused" /> : null}
+                    {stats.convicted > 0 ? <Stat value={stats.convicted} label="Convicted" /> : null}
+                    {stats.acquitted > 0 ? <Stat value={stats.acquitted} label="Acquitted" /> : null}
+                  </dl>
                 ) : null}
               </div>
             </header>
@@ -350,92 +408,64 @@ export default function EntityRecordProfile() {
               </Alert>
             ) : null}
 
-            <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] xl:gap-14">
+            <div className="mt-10 grid items-start gap-10 px-0 md:px-8 lg:grid-cols-[minmax(0,1fr)_20rem] xl:gap-14">
+              {/* Activity: what this entity has been part of. */}
               <div className="min-w-0 space-y-10">
-                <Tabs defaultValue="summary">
-                  <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
-                    <TabsTrigger
-                      value="summary"
-                      className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                    >
-                      Summary
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="summary" className="mt-0">
-                    <Card className="rounded-none border border-t-0 shadow-none">
-                      <div className="p-5 md:p-8">
-                        {descText ? (
-                          <p className="mb-6 max-w-3xl text-base leading-7 text-foreground">{descText}</p>
-                        ) : null}
-                        <dl className="divide-y divide-border/70">
-                          <Row label="Type">{typeLabel}</Row>
-                          {aliases.length > 0 ? <Row label="Also known as">{aliases.join(" · ")}</Row> : null}
-                          <RelationRow label="Located in" refObj={data.containedInPlace} />
-                          <RelationRow label="Part of" refObj={data.parentOrganization} />
-                          {data["jawafdehi:appealsTo"] ? (
-                            <RelationRow label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
-                          ) : null}
-                          {address ? <Row label="Address">{address}</Row> : null}
-                          {detailRows.map((r) => (
-                            <Row key={r.label} label={r.label}>
-                              <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
-                            </Row>
-                          ))}
-                          {identifiers.map((id, i) => (
-                            <Row key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
-                              {id.value}
-                            </Row>
-                          ))}
-                          {created ? <Row label="Created">{created}</Row> : null}
-                          {revision ? <Row label="Revision">{revision}</Row> : null}
-                          <Row label="Source">
-                            Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations,
-                            and places.
-                          </Row>
-                          <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
-                            <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">
-                              Canonical ID
-                            </dt>
-                            <dd className="min-w-0 break-all font-mono text-xs text-muted-foreground">{data["@id"]}</dd>
-                          </div>
-                        </dl>
-                      </div>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-
-                {/* Published cases citing this entity; renders nothing when there are none. */}
+                {descText ? <p className="max-w-3xl text-lg leading-8 text-foreground">{descText}</p> : null}
                 {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} /> : null}
+                {stats.cases === 0 && !descText ? (
+                  <p className="text-base text-muted-foreground">
+                    No published case cites this entity yet.
+                  </p>
+                ) : null}
               </div>
 
+              {/* About panel + actions, the way a profile sidebar does it. */}
               <aside className="space-y-8 lg:sticky lg:top-24">
-                {data.url || data.sameAs ? (
-                  <section aria-labelledby="entity-links-heading">
-                    <h2 id="entity-links-heading" className="text-lg font-semibold text-foreground">
-                      Links
-                    </h2>
-                    <Separator className="mt-3" />
-                    <div className="mt-4 inline-grid gap-3">
+                <section aria-labelledby="entity-about-heading" className="rounded-2xl bg-muted/50 p-5">
+                  <h2 id="entity-about-heading" className="text-lg font-semibold text-foreground">
+                    About
+                  </h2>
+                  <dl className="mt-4 space-y-4">
+                    <Fact label="Type">{typeLabel}</Fact>
+                    <RelationFact label="Located in" refObj={data.containedInPlace} />
+                    <RelationFact label="Part of" refObj={data.parentOrganization} />
+                    {data["jawafdehi:appealsTo"] ? (
+                      <RelationFact label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
+                    ) : null}
+                    {address ? <Fact label="Address">{address}</Fact> : null}
+                    {detailRows.map((r) => (
+                      <Fact key={r.label} label={r.label}>
+                        <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
+                      </Fact>
+                    ))}
+                    {identifiers.map((id, i) => (
+                      <Fact key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
+                        {id.value}
+                      </Fact>
+                    ))}
+                  </dl>
+                  {data.url || data.sameAs ? (
+                    <div className="mt-5 flex flex-wrap gap-2">
                       {data.url ? (
-                        <Button asChild variant="outline" className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left">
+                        <Button asChild variant="outline" size="sm">
                           <a href={data.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                             Official website
                           </a>
                         </Button>
                       ) : null}
                       {data.sameAs ? (
-                        <Button asChild variant="outline" className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left">
+                        <Button asChild variant="outline" size="sm">
                           <a href={data.sameAs} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                             Wikidata
                           </a>
                         </Button>
                       ) : null}
                     </div>
-                  </section>
-                ) : null}
+                  ) : null}
+                </section>
 
                 <section aria-labelledby="entity-actions-heading">
                   <h2 id="entity-actions-heading" className="text-lg font-semibold text-foreground">
@@ -462,6 +492,19 @@ export default function EntityRecordProfile() {
                       className="h-11 justify-start gap-3 px-4 [&_span]:!mt-0 [&_span]:!inline"
                     />
                   </div>
+                </section>
+
+                <section aria-labelledby="entity-record-heading" className="text-xs leading-5 text-muted-foreground">
+                  <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
+                    Record
+                  </h2>
+                  <p className="mt-2">
+                    Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations, and
+                    places.
+                  </p>
+                  {created ? <p className="mt-1">Created {created}.</p> : null}
+                  {revision ? <p className="mt-1">Revision {revision}</p> : null}
+                  <p className="mt-2 break-all font-mono">{data["@id"]}</p>
                 </section>
               </aside>
             </div>

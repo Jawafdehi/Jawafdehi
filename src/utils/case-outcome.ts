@@ -38,7 +38,7 @@ const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
 // Coerce any incoming value to a known outcome, defaulting to `charged`. Guards
 // the lookups below against unexpected/cased values (e.g. a stray uppercase from
 // the admin enum) so they can never index the maps with `undefined`.
-function normalizeOutcome(outcome: string): EntityOutcome {
+export function normalizeOutcome(outcome: string): EntityOutcome {
   const v = String(outcome).toLowerCase();
   return v === "convicted" || v === "acquitted" || v === "abated" || v === "charged"
     ? (v as EntityOutcome)

@@ -13,6 +13,7 @@ const GLYPH = { person: User, organization: Building2, location: MapPin } as con
 const SIZE = {
   sm: { box: "h-12 w-12", px: 48, glyph: "h-5 w-5" },
   lg: { box: "h-24 w-24", px: 96, glyph: "h-10 w-10" },
+  xl: { box: "h-32 w-32", px: 128, glyph: "h-14 w-14" },
 } as const;
 
 interface EntityAvatarProps {
@@ -20,16 +21,17 @@ interface EntityAvatarProps {
   /** Picture URL; a load failure falls back to the glyph. */
   src?: string | null;
   size?: keyof typeof SIZE;
+  className?: string;
 }
 
-export function EntityAvatar({ kind, src, size = "lg" }: Readonly<EntityAvatarProps>) {
+export function EntityAvatar({ kind, src, size = "lg", className }: Readonly<EntityAvatarProps>) {
   // Remember WHICH url failed, not just that one did: a reused instance handed a
   // new `src` must try it rather than inherit the previous entity's glyph.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const s = SIZE[size];
   const Glyph = GLYPH[kind];
   return (
-    <div className={cn("shrink-0 overflow-hidden rounded-full border border-border/70 bg-muted", s.box)}>
+    <div className={cn("shrink-0 overflow-hidden rounded-full border border-border/70 bg-muted", s.box, className)}>
       {src && failedSrc !== src ? (
         <img
           src={src}
