@@ -282,26 +282,48 @@ export default function EntityRecordProfile() {
         .filter(Boolean)
         .join(" · ")
     : "";
-  const debarment = data?.["jawafdehi:debarment"] as Record<string, unknown> | undefined;
-  const debarmentText = (() => {
-    const type = debarment && scalar(debarment["jawafdehi:debarmentType"]);
-    const start = debarment && scalar(debarment["jawafdehi:debarmentStartAD"]);
-    const end = debarment && scalar(debarment["jawafdehi:debarmentEndAD"]);
+  const debarmentSummary = () => {
+    const deb = data?.["jawafdehi:debarment"] as Record<string, unknown> | undefined;
+    const type = deb && scalar(deb["jawafdehi:debarmentType"]);
+    const start = deb && scalar(deb["jawafdehi:debarmentStartAD"]);
+    const end = deb && scalar(deb["jawafdehi:debarmentEndAD"]);
     const parts = [type, start && end ? `${start} → ${end}` : null].filter(Boolean);
     return parts.length ? parts.join(" · ") : "See public procurement debarment register.";
-  })();
-  // The About panel only earns its place with facts beyond the type, which the
-  // identity line already states.
-  const hasFacts = Boolean(
-    data?.containedInPlace?.["@id"] ||
-      data?.parentOrganization?.["@id"] ||
-      data?.["jawafdehi:appealsTo"] ||
-      address ||
-      detailRows.length > 0 ||
-      identifiers.length > 0 ||
-      data?.url ||
-      data?.sameAs,
-  );
+  };
+  // The About panel's rows, built once so the panel and its guard agree. The
+  // type is left out — the identity line already states it.
+  const facts: ReactNode[] = data
+    ? [
+        <RelationFact key="in" label="Located in" refObj={data.containedInPlace} />,
+        <RelationFact key="of" label="Part of" refObj={data.parentOrganization} />,
+        data["jawafdehi:appealsTo"] ? (
+          <RelationFact key="appeals" label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
+        ) : null,
+        address ? (
+          <div key="address" className="sm:col-span-2">
+            <Fact label="Address">{address}</Fact>
+          </div>
+        ) : null,
+        ...detailRows.map((r) => (
+          <Fact key={r.label} label={r.label}>
+            <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
+          </Fact>
+        )),
+        ...identifiers.map((id, i) => (
+          <Fact key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
+            {id.value}
+          </Fact>
+        )),
+      ].filter((row) => {
+        // RelationFact renders nothing without an IRI; don't count those.
+        if (row && typeof row === "object" && "props" in row && "refObj" in (row.props as object)) {
+          return Boolean((row.props as { refObj?: JsonLdRef }).refObj?.["@id"]);
+        }
+        return Boolean(row);
+      })
+    : [];
+  const hasLinks = Boolean(data?.url || data?.sameAs);
+  const hasFacts = facts.length > 0 || hasLinks;
   // The identity line under the name: what it is, where it is, since when.
   const placeIri = data?.containedInPlace?.["@id"];
   const identity = [
@@ -336,11 +358,18 @@ export default function EntityRecordProfile() {
             <AlertDescription>This entity could not be found in the registry.</AlertDescription>
           </Alert>
         ) : isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-36 w-full rounded-3xl" />
-            <div className="flex items-end gap-5 px-6">
-              <Skeleton className="-mt-16 h-32 w-32 rounded-full" />
-              <Skeleton className="h-12 w-2/5" />
+          <div className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] xl:gap-14" aria-busy="true">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+              <Skeleton className="h-32 w-32 shrink-0 rounded-full" />
+              <div className="w-full space-y-3">
+                <Skeleton className="h-8 w-4/5" />
+                <Skeleton className="h-5 w-1/2" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-[4.5rem] w-full rounded-xl" />
+              <Skeleton className="h-[4.5rem] w-full rounded-xl" />
             </div>
           </div>
         ) : data ? (
@@ -368,7 +397,7 @@ export default function EntityRecordProfile() {
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Blacklisted / debarred.</strong> {debarmentText}
+                      <strong>Blacklisted / debarred.</strong> {debarmentSummary()}
                     </AlertDescription>
                   </Alert>
                 ) : null}
@@ -380,29 +409,8 @@ export default function EntityRecordProfile() {
                     <h2 id="entity-about-heading" className="text-lg font-semibold text-foreground">
                       About
                     </h2>
-                    <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-                      <RelationFact label="Located in" refObj={data.containedInPlace} />
-                      <RelationFact label="Part of" refObj={data.parentOrganization} />
-                      {data["jawafdehi:appealsTo"] ? (
-                        <RelationFact label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
-                      ) : null}
-                      {address ? (
-                        <div className="sm:col-span-2">
-                          <Fact label="Address">{address}</Fact>
-                        </div>
-                      ) : null}
-                      {detailRows.map((r) => (
-                        <Fact key={r.label} label={r.label}>
-                          <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
-                        </Fact>
-                      ))}
-                      {identifiers.map((id, i) => (
-                        <Fact key={`${id.propertyID}-${i}`} label={labelFor(id.propertyID || "Identifier")}>
-                          {id.value}
-                        </Fact>
-                      ))}
-                    </dl>
-                    {data.url || data.sameAs ? (
+                    {facts.length > 0 ? <dl className="mt-4 grid gap-4 sm:grid-cols-2">{facts}</dl> : null}
+                    {hasLinks ? (
                       <div className="mt-5 flex flex-wrap gap-2">
                         {data.url ? (
                           <Button asChild variant="outline" size="sm">

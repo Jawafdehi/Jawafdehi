@@ -21,17 +21,16 @@ interface EntityAvatarProps {
   /** Picture URL; a load failure falls back to the glyph. */
   src?: string | null;
   size?: keyof typeof SIZE;
-  className?: string;
 }
 
-export function EntityAvatar({ kind, src, size = "lg", className }: Readonly<EntityAvatarProps>) {
+export function EntityAvatar({ kind, src, size = "lg" }: Readonly<EntityAvatarProps>) {
   // Remember WHICH url failed, not just that one did: a reused instance handed a
   // new `src` must try it rather than inherit the previous entity's glyph.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const s = SIZE[size];
   const Glyph = GLYPH[kind];
   return (
-    <div className={cn("shrink-0 overflow-hidden rounded-full border border-border/70 bg-muted", s.box, className)}>
+    <div className={cn("shrink-0 overflow-hidden rounded-full border border-border/70 bg-muted", s.box)}>
       {src && failedSrc !== src ? (
         <img
           src={src}
