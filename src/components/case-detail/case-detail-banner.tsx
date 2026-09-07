@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
-import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
+import { deriveCaseStatus, getCaseStatusLabelKey, isBlank } from "@/lib/case-badges";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";
 import { cn } from "@/lib/utils";
@@ -44,7 +44,7 @@ const COURT_NAME_MAP: Record<string, { en: string; ne: string }> = {
 };
 
 /** Label key for the first-instance date line, from the case's first court ref. */
-export function trialDateLabelKey(courtCases: string[] | undefined): string {
+export function trialDateLabelKey(courtCases: string[] | null | undefined): string {
   const first = parseCourtCaseRef(courtCases?.[0]);
 
   return first?.court.toLowerCase() === "special"
@@ -134,7 +134,7 @@ export function CaseDetailBanner({
     currentLang
   );
 
-  const hasAppeal = Boolean(caseData.appeal_start_date?.trim());
+  const hasAppeal = !isBlank(caseData.appeal_start_date);
   const appealRange = formatCaseDateRangeForLanguage(
     caseData.appeal_start_date,
     caseData.appeal_end_date,

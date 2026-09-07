@@ -296,4 +296,44 @@ describe("AdminCaseForm — trial/appeal dates (B3)", () => {
     expect("/trial_start_date" in byPath).toBe(false);
     expect("/appeal_end_date" in byPath).toBe(false);
   });
+
+  it("emits a null value when a populated date is cleared", async () => {
+    loadCase("PUBLISHED", {
+      trial_start_date: "2080-01-01",
+      trial_end_date: "2080-06-15",
+      appeal_start_date: null,
+      appeal_end_date: null,
+    });
+    vi.mocked(patchCaseWithEtag).mockResolvedValue({
+      data: {
+        slug: "ncell-tax-case",
+        title: "Ncell tax case",
+        case_type: "CORRUPTION",
+        state: "PUBLISHED",
+      },
+      etag: 'W/"2"',
+    });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("admin.caseForm.trialEnd")).toBeTruthy(),
+    );
+
+    fireEvent.change(screen.getByLabelText("admin.caseForm.trialEnd"), {
+      target: { value: "" },
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "admin.caseForm.saveChanges" }),
+    );
+
+    await waitFor(() =>
+      expect(patchCaseWithEtag).toHaveBeenCalledTimes(1),
+    );
+    const [, ops] = vi.mocked(patchCaseWithEtag).mock.calls[0];
+    const byPath = Object.fromEntries(
+      (ops as { path: string; value: unknown }[]).map((o) => [o.path, o.value]),
+    );
+    expect(byPath["/trial_end_date"]).toBe(null);
+  });
 });

@@ -124,7 +124,7 @@ export interface CaseStageDates {
   appeal_end_date?: string | null;
 }
 
-function isBlank(value: string | null | undefined) {
+export function isBlank(value: string | null | undefined) {
   return !value || value.trim() === "";
 }
 

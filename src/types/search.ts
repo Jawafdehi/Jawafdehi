@@ -84,8 +84,10 @@ export interface CaseSearchCard {
   status: "ongoing" | "closed" | "others";
   trial_start_date: string | null;
   trial_end_date: string | null;
-  appeal_start_date: string | null;
-  appeal_end_date: string | null;
+  /** Optional: docs indexed before the appeal columns existed carry no `appeal_*` keys. */
+  appeal_start_date?: string | null;
+  /** Optional: docs indexed before the appeal columns existed carry no `appeal_*` keys. */
+  appeal_end_date?: string | null;
   bigo: number | null;
   /** Card ladder, denormalized into the index doc at reindex time.
    *

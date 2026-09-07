@@ -9,6 +9,7 @@ import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isBlank } from "@/lib/case-badges";
 import { seriesBySource } from "@/data/material-series";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import {
@@ -332,14 +333,12 @@ function caseCardPropsFromDetail(
   const location = entities.filter((e) => e.type === "location");
   const names = entityNames(subject);
   const locationList = entityNames(location);
-  const hasStart = Boolean(detail.trial_start_date && detail.trial_start_date.trim() !== "");
-  const hasEnd = Boolean(detail.trial_end_date && detail.trial_end_date.trim() !== "");
+  const hasStart = !isBlank(detail.trial_start_date);
+  const hasEnd = !isBlank(detail.trial_end_date);
   // Pending appeal (filed, not yet decided) outranks a concluded trial — matches
   // the server's own `case_status` facet, which the indexed-card path above
   // already carries.
-  const appealPending =
-    Boolean(detail.appeal_start_date && detail.appeal_start_date.trim() !== "") &&
-    !(detail.appeal_end_date && detail.appeal_end_date.trim() !== "");
+  const appealPending = !isBlank(detail.appeal_start_date) && isBlank(detail.appeal_end_date);
   const status: CaseCardStatus = appealPending || (hasStart && !hasEnd)
     ? "ongoing"
     : hasStart && hasEnd

@@ -17,6 +17,7 @@ import {
   CaseDetailBanner,
   trialDateLabelKey,
 } from "@/components/case-detail/case-detail-banner";
+import { isBlank } from "@/lib/case-badges";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
 import { CaseDisclaimerBanner } from "@/components/case-detail/case-disclaimer-banner";
 import { CaseOverviewSection } from "@/components/case-detail/case-overview-section";
@@ -600,8 +601,7 @@ const CaseDetail = () => {
                       </div>
                     </div>
 
-                    {/* First-instance dates, then the appeal — same two lines
-                        the banner shows, so the sidebar cannot drift from it. */}
+                    {/* Same two lines as the banner; keep both in step. */}
                     <div className="flex items-center text-muted-foreground">
                       <span className="text-sm">
                         {t(trialDateLabelKey(caseData.court_cases))}:{" "}
@@ -628,7 +628,7 @@ const CaseDetail = () => {
                       </span>
                     </div>
 
-                    {Boolean(caseData.appeal_start_date?.trim()) && (
+                    {!isBlank(caseData.appeal_start_date) && (
                       <div className="flex items-center text-muted-foreground">
                         <span className="text-sm">
                           {t("caseDetail.appealDate")}:{" "}
