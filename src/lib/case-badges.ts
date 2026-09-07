@@ -149,7 +149,9 @@ export function deriveCaseStatus(
 
   if (!isBlank(dates.appeal_start_date) && isBlank(dates.appeal_end_date)) return "under_appeal";
 
-  if (!isBlank(dates.trial_end_date)) return "concluded";
+  // A decided appeal is over even if the trial verdict date was never
+  // captured, so either end date alone is enough to conclude the case.
+  if (!isBlank(dates.trial_end_date) || !isBlank(dates.appeal_end_date)) return "concluded";
 
   return normalizedState || "PUBLISHED";
 }

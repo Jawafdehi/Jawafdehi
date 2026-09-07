@@ -81,6 +81,27 @@ describe("deriveCaseStatus", () => {
     ).toBe("concluded");
   });
 
+  it("reads a decided appeal as concluded even with no trial end date", () => {
+    // The imported case never captured a trial verdict date, but the appeal
+    // itself was decided — the case is over regardless.
+    expect(
+      deriveCaseStatus("PUBLISHED", {
+        trial_end_date: null,
+        appeal_start_date: "2023-07-02",
+        appeal_end_date: "2024-01-15",
+      }),
+    ).toBe("concluded");
+  });
+
+  it("reads an appeal end date alone (start blank) as concluded", () => {
+    expect(
+      deriveCaseStatus("PUBLISHED", {
+        trial_end_date: null,
+        appeal_end_date: "2024-01-15",
+      }),
+    ).toBe("concluded");
+  });
+
   it("treats a blank appeal start as no appeal at all", () => {
     expect(
       deriveCaseStatus("PUBLISHED", { trial_end_date: "2023-06-09", appeal_start_date: "  " }),
