@@ -13,6 +13,7 @@ const GLYPH = { person: User, organization: Building2, location: MapPin } as con
 const SIZE = {
   sm: { box: "h-12 w-12", px: 48, glyph: "h-5 w-5" },
   lg: { box: "h-24 w-24", px: 96, glyph: "h-10 w-10" },
+  xl: { box: "h-32 w-32", px: 128, glyph: "h-14 w-14" },
 } as const;
 
 interface EntityAvatarProps {
