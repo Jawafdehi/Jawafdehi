@@ -12,85 +12,16 @@ import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
-import { featuredCasesQuery, FEATURED_CASE_COUNT } from "@/queries/home";
+import {
+  featuredCasesQuery,
+  FEATURED_CASE_COUNT,
+  FEATURED_CASE_GRID_COUNT,
+} from "@/queries/home";
 import { formatBigo } from "@/utils/number";
 import { useMemo } from "react";
-
-import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@/types/search";
-import { translateDynamicText } from "@/lib/translate-dynamic-content";
-import { getSubjectEntities } from "@/utils/case-entities";
+import { caseCardPropsFromSearchResult } from "@/lib/case-card-props";
 import { useTranslation } from "react-i18next";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_NEPALI, SITE_URL } from "@/utils/seo";
-
-type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
-
-function stripTags(value: string): string {
-  return value.replace(/<[^>]*>/g, "");
-}
-
-function pickText(text: BilingualText | undefined): string {
-  return stripTags(text?.en || text?.ne || "");
-}
-
-function caseSlugFromUrl(url: string): string | null {
-  const match = /\/case\/([^/?#]+)/.exec(url);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-function mapCaseStatus(status: string | null | undefined): CaseCardStatus {
-  if (status === "ongoing") return "ongoing";
-  if (status === "closed") return "resolved";
-  return "under-investigation";
-}
-
-function entityNames(
-  entities: readonly CaseSearchCardEntity[],
-  fallback: string,
-): string[] {
-  return entities.map((entity) => entity.display_name || entity.nes_id || fallback);
-}
-
-function entityIds(entities: readonly CaseSearchCardEntity[]): string[] {
-  return entities
-    .map((entity) => entity.nes_id)
-    .filter((id): id is string => Boolean(id));
-}
-
-function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
-  const card = result.card;
-  const entities = card?.entities ?? [];
-  const subjectEntities = getSubjectEntities<CaseSearchCardEntity>(
-    entities,
-    (entity) => entity.type,
-  );
-  const locationEntities = entities.filter((entity) => entity.type === "location");
-  const unknownEntity = translateDynamicText("Unknown Entity", currentLang);
-  const unknownLocation = translateDynamicText("Unknown Location", currentLang);
-  const names = entityNames(subjectEntities, unknownEntity);
-  const locations = entityNames(locationEntities, unknownLocation);
-
-  return {
-    id: result.id,
-    slug: card?.slug || caseSlugFromUrl(result.url),
-    title: card?.title || pickText(result.title) || result.id,
-    entity: names[0] || unknownEntity,
-    entityNames: names,
-    location: locations.join(", ") || unknownLocation,
-    status: mapCaseStatus(card?.status || result.extra.case_status),
-    image: card?.thumbnail ?? null,
-    thumbnailUrl: card?.thumbnail_url || undefined,
-    bannerUrl: card?.banner_url || undefined,
-    tags: card?.tags || [],
-    entityIds: entityIds(subjectEntities),
-    locationIds: entityIds(locationEntities),
-    // Generative-thumbnail (tier 3) inputs, matching the /cases and /search
-    // mappings so an imageless featured case renders its data portrait here too.
-    bigo: card?.bigo ?? null,
-    caseType: card?.case_type ?? null,
-    accusedCount: entities.filter((entity) => entity.type === "accused").length,
-    timelineCount: card?.timeline?.length ?? 0,
-  };
-}
 
 const Index = () => {
   const { t, i18n } = useTranslation();
@@ -130,7 +61,7 @@ const Index = () => {
     if (!casesData?.results) return [];
     return casesData.results
       .slice(0, FEATURED_CASE_COUNT)
-      .map((result) => recentCaseToCard(result, currentLang));
+      .map((result) => caseCardPropsFromSearchResult(result, currentLang));
   }, [casesData, currentLang]);
 
   return (
@@ -203,10 +134,12 @@ const Index = () => {
             <Reveal>
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
                 <div>
-                  {/* Same title/subtitle treatment as the other sections
-                      (FaqSection) — no one-off underline here (PR #359
-                      visual review, item 5). */}
-                  <h2 className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl">
+                  {/* Same subtitle treatment and no one-off underline as the
+                      other sections (PR #359 visual review, item 5). One step
+                      down from FaqSection's heading scale, matching the CTA
+                      sections — the cards below carry this section, not the
+                      heading. */}
+                  <h2 className="text-3xl font-bold leading-tight tracking-normal text-primary md:text-4xl">
                     {t("home.featuredCases.heading", "Featured Cases")}
                   </h2>
                   <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
@@ -240,7 +173,7 @@ const Index = () => {
               <>
                 <div className="h-72 rounded-3xl bg-muted animate-pulse" />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
-                  {Array.from({ length: FEATURED_CASE_COUNT - 1 }, (_, i) => (
+                  {Array.from({ length: FEATURED_CASE_GRID_COUNT }, (_, i) => (
                     <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
                   ))}
                 </div>
