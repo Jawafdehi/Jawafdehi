@@ -15,7 +15,6 @@ import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCasesCitingEntity } from "@/services/jds-api";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 
 // Entity records are schema.org JSON-LD with a jawafdehi: extension namespace. We type
@@ -239,18 +238,6 @@ export default function EntityRecordProfile() {
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
-
-  const entityIri = data?.["@id"] ?? "";
-  const { data: citing } = useQuery({
-    queryKey: ["entity-related-cases", entityIri],
-    queryFn: () => getCasesCitingEntity(entityIri, { page_size: 20 }),
-    enabled: entityIri.length > 0,
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  });
-  // Only a *settled* zero is an empty state; while the list loads it shows its
-  // own skeleton and the message must not sit beneath it.
-  const noCases = citing !== undefined && citing.count === 0;
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
@@ -484,9 +471,6 @@ export default function EntityRecordProfile() {
                   only the list scrolls. */}
               <div className="min-w-0 lg:sticky lg:top-[11.25rem] lg:flex lg:max-h-[calc(100vh-13.25rem)] lg:flex-col">
                 {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} className="lg:min-h-0" /> : null}
-                {noCases ? (
-                  <p className="text-base text-muted-foreground">No published case cites this entity yet.</p>
-                ) : null}
               </div>
             </div>
           </article>

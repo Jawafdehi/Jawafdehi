@@ -1024,7 +1024,7 @@
     "allegedCases": "Accused Cases",
     "relatedCases": "Related Cases",
     "noAllegedCases": "No accused cases found.",
-    "noRelatedCases": "No related cases found.",
+    "noRelatedCases": "No related cases yet.",
     "moreCases": "+{{count}} more",
     "loading": "Loading entity details...",
     "activeCases": "Active Cases",
