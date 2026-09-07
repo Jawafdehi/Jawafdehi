@@ -45,34 +45,34 @@ const state = async (idBase) => ({
 const DEV = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 const toDev = (s) => s.replace(/\d/g, (d) => DEV[Number(d)]);
 
-// --- Scenario 1: pick an AD date on Case start; BS must follow --------------
-console.log('\n== Scenario 1: AD pick on case-start ==');
-await adButton('case-start').click();
+// --- Scenario 1: pick an AD date on Trial start; BS must follow -------------
+console.log('\n== Scenario 1: AD pick on trial-start ==');
+await adButton('trial-start').click();
 await page.locator('button[name="day"]:not([disabled])', { hasText: /^15$/ }).first().click();
 await page.waitForTimeout(600);
-let s = await state('case-start');
+let s = await state('trial-start');
 console.log(`   AD="${s.ad}" BS="${s.bs}"`);
 check('AD shows a 15th', /^\d{4}-\d{2}-15$/.test(s.ad), s.ad);
 check('BS box followed (Devanagari date, not empty/corrupt)', /^[०-९]{4}-[०-९]{2}-[०-९]{2}$/.test(s.bs), s.bs);
 await page.screenshot({ path: `${SHOTS}/fix-s1-after-ad-pick.png` });
 
-// --- Scenario 2: pick a BS date on Case end; box shows the date, no crash ---
-console.log('\n== Scenario 2: BS pick on case-end ==');
-await bsInput('case-end').click();
-const dayCell = page.locator('#case-end-bs').getByText('१५', { exact: true }).first();
+// --- Scenario 2: pick a BS date on Trial end; box shows the date, no crash --
+console.log('\n== Scenario 2: BS pick on trial-end ==');
+await bsInput('trial-end').click();
+const dayCell = page.locator('#trial-end-bs').getByText('१५', { exact: true }).first();
 await dayCell.waitFor({ timeout: 10000 });
 await dayCell.click();
 await page.waitForTimeout(600);
-s = await state('case-end');
+s = await state('trial-end');
 console.log(`   AD="${s.ad}" BS="${s.bs}"`);
 check('BS box shows a full Devanagari date', /^[०-९]{4}-[०-९]{2}-[०-९]{2}$/.test(s.bs), s.bs);
 check('paired AD auto-filled', /^\d{4}-\d{2}-\d{2}$/.test(s.ad), s.ad);
 
 // Click the BS input again — the previously-crashing path.
-await bsInput('case-end').click();
+await bsInput('trial-end').click();
 await page.waitForTimeout(800);
 check('no crash screen after re-click', (await page.getByText('Something went wrong').count()) === 0);
-check('BS value survives re-click', (await bsInput('case-end').inputValue()) === s.bs);
+check('BS value survives re-click', (await bsInput('trial-end').inputValue()) === s.bs);
 await page.keyboard.press('Escape');
 await page.screenshot({ path: `${SHOTS}/fix-s2-after-bs-pick.png` });
 
@@ -131,9 +131,8 @@ const ops = patchReq.postDataJSON();
 const byPath = Object.fromEntries(ops.map((o) => [o.path, o.value]));
 console.log('   PATCH ops:', JSON.stringify(byPath).slice(0, 400));
 check('bigo saved as number', byPath['/bigo'] === 185850001, String(byPath['/bigo']));
-check('case_start_date_bs saved as ASCII YYYY-MM-DD', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/case_start_date_bs'] ?? ''), String(byPath['/case_start_date_bs']));
-check('case_end_date_bs saved as ASCII YYYY-MM-DD', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/case_end_date_bs'] ?? ''), String(byPath['/case_end_date_bs']));
-check('case_end_date (AD) saved', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/case_end_date'] ?? ''), String(byPath['/case_end_date']));
+check('trial_start_date saved as ASCII YYYY-MM-DD', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/trial_start_date'] ?? ''), String(byPath['/trial_start_date']));
+check('trial_end_date saved as ASCII YYYY-MM-DD', /^\d{4}-\d{2}-\d{2}$/.test(byPath['/trial_end_date'] ?? ''), String(byPath['/trial_end_date']));
 
 console.log('\npageErrors:', pageErrors.length ? pageErrors : 'none');
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`);
