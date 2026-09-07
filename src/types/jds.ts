@@ -92,6 +92,7 @@ export interface JawafEntity {
   nes_id: string | null; // Entity ID from Nepal Entity Service
   display_name: string | null; // Display name for the entity
   type?: string; // Relationship type: 'accused', 'alleged', 'related', 'witness', 'location', 'respondent', 'petitioner', etc.
+  entity_type?: string; // schema.org type of the entity ('Person', 'Organization', 'Place', 'AdministrativeArea,jawafdehi:District', ...); lets the UI pick a glyph before the record resolves
   outcome?: EntityOutcome | null; // Verdict — only on 'accused'; null for every other role
   notes?: string; // Additional notes about the relationship
   related_cases?: EntityCaseRelationship[]; // Unified case links with relation metadata
