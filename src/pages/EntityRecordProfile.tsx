@@ -366,35 +366,41 @@ export default function EntityRecordProfile() {
             </div>
           </div>
         ) : data ? (
-          <article className="grid items-start gap-10 lg:grid-cols-[20rem_minmax(0,1fr)] lg:grid-rows-[auto_1fr] xl:gap-16">
-            {/* Identity rail, the way a GitHub or Crunchbase profile leads: avatar,
-                name, one identity line, then the facts. On a phone the activity
-                column follows it and the actions/record footnote come last. */}
+          <article className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] lg:grid-rows-[auto_1fr] xl:gap-14">
+            {/* Identity + details take the left 60%: avatar beside the name, then
+                the About facts. On a phone the cases follow and the
+                actions/record footnote come last. */}
             <aside className="space-y-8 lg:col-start-1">
-              <header>
+              <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
                 <EntityAvatar kind={kind} src={imageUrl} size="xl" />
-                <h1 className="font-archive-section-title mt-5 break-words">{displayName}</h1>
-                {name.ne && name.ne !== displayName ? (
-                  <p className="mt-1.5 text-base text-muted-foreground">{name.ne}</p>
-                ) : null}
-                <p className="mt-3 text-sm text-muted-foreground">{identity.join(" · ")}</p>
-                {aliases.length > 0 ? (
-                  <p className="mt-1 text-sm text-muted-foreground">Also known as {aliases.join(", ")}</p>
-                ) : null}
+                <div className="min-w-0 sm:pt-1">
+                  <h1 className="font-archive-hero-title break-words">{displayName}</h1>
+                  {name.ne && name.ne !== displayName ? (
+                    <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
+                  ) : null}
+                  <p className="mt-3 text-base text-muted-foreground">{identity.join(" · ")}</p>
+                  {aliases.length > 0 ? (
+                    <p className="mt-1 text-sm text-muted-foreground">Also known as {aliases.join(", ")}</p>
+                  ) : null}
+                </div>
               </header>
 
               <section aria-labelledby="entity-about-heading" className="rounded-2xl bg-muted/50 p-5">
                 <h2 id="entity-about-heading" className="text-lg font-semibold text-foreground">
                   About
                 </h2>
-                <dl className="mt-4 space-y-4">
+                <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                   <Fact label="Type">{typeLabel}</Fact>
                   <RelationFact label="Located in" refObj={data.containedInPlace} />
                   <RelationFact label="Part of" refObj={data.parentOrganization} />
                   {data["jawafdehi:appealsTo"] ? (
                     <RelationFact label="Appeals to" refObj={data["jawafdehi:appealsTo"] as JsonLdRef} />
                   ) : null}
-                  {address ? <Fact label="Address">{address}</Fact> : null}
+                  {address ? (
+                    <div className="sm:col-span-2">
+                      <Fact label="Address">{address}</Fact>
+                    </div>
+                  ) : null}
                   {detailRows.map((r) => (
                     <Fact key={r.label} label={r.label}>
                       <span className="capitalize">{r.value.replace(/-/g, " ")}</span>
@@ -471,7 +477,7 @@ export default function EntityRecordProfile() {
             </aside>
 
             {/* Activity column: the numbers, then what this entity has been part of. */}
-            <div className="order-2 min-w-0 max-w-2xl space-y-8 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="order-2 min-w-0 space-y-8 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
               {stats.cases > 0 ? (
                 <dl className="flex flex-wrap gap-x-10 gap-y-6 border-b border-border/70 pb-6 lg:pt-2">
                   <Stat value={stats.cases} label={stats.cases === 1 ? "Case" : "Cases"} />
