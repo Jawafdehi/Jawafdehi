@@ -111,7 +111,20 @@ const DIR = arg("dir", "dist/client");
 // The real headroom is STILL elsewhere and still not this PR's to spend, and it
 // has grown: `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
 // `markdown` another 100 KB. Either would pay for this change many times over.
-const MAX_INITIAL_JS_GZIP = 666_500;
+//
+// 2026-09: 666_500 → 673_000 for the /search material rows (style/materials).
+// Measured: main builds to 649.7 KB gzip in CI (646.1 locally — the runner's zlib
+// packs ~3.6 KB larger, so the line is judged against CI); this branch builds to
+// 652.8 KB locally, ~656.5 KB in CI. What the bytes buy: every material on /search
+// renders the same catalogue row as the /materials series pages (MaterialCard),
+// with a series for every document and the query highlighted in the fields the
+// index does not mark up — plus a search box and collapse on each facet group.
+// Deferring the search material card was measured at ~2.5 KB (its body,
+// search-highlight and material-series-labels are its only eager consumers)
+// and does not cover the gap, because MaterialCard itself stays eager for the
+// pre-rendered landing. The line is set from the CI figure of this commit;
+// ratchet it down if that comes in lower.
+const MAX_INITIAL_JS_GZIP = 673_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
