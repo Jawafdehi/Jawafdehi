@@ -543,6 +543,12 @@ export interface CreateCasePayload {
   // afterwards, and without these the upload would be silently orphaned.
   thumbnail_image_id?: number | null;
   banner_image_id?: number | null;
+  // The four stage dates, AD "YYYY-MM-DD" or null. The create path accepts them,
+  // so a date typed before the first save is not discarded.
+  trial_start_date?: string | null;
+  trial_end_date?: string | null;
+  appeal_start_date?: string | null;
+  appeal_end_date?: string | null;
   [k: string]: unknown;
 }
 

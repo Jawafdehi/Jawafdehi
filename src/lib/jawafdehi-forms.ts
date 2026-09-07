@@ -143,6 +143,65 @@ export function isValidDateField(value: string): boolean {
   return v === "" || /^\d{4}-\d{1,2}-\d{1,2}$/.test(v);
 }
 
+// The four stage dates as the editor holds them (AD, "" when unset).
+export interface CaseStageDateFields {
+  trial_start_date: string;
+  trial_end_date: string;
+  appeal_start_date: string;
+  appeal_end_date: string;
+}
+
+// The fields the chronology rule can blame, mapped to an i18n message key. Keyed
+// by the API's own error keys so a client-side message and a 422 land in the
+// same place.
+export type CaseDateChronologyErrors = Partial<
+  Record<"trial_end_date" | "appeal_start_date" | "appeal_end_date", string>
+>;
+
+// Zero-pad an accepted "YYYY-M-D" so a string compare is a chronological one;
+// null for anything that is not a date the editor accepts (empty, half-typed).
+function comparableDate(value: string): string | null {
+  const v = value.trim();
+  if (!/^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return null;
+  const [year, month, day] = v.split("-");
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+// The transitive ordering rule the API enforces (JawafdehiAPI
+// `cases/chronology.py`), applied client-side so a caseworker sees the problem
+// before the round-trip: within a stage end is not before start, and each appeal
+// date is not before the latest known trial date (trial end, else trial start).
+// Every comparison is skipped unless both of its sides are set.
+export function dateChronologyErrors(
+  dates: CaseStageDateFields,
+): CaseDateChronologyErrors {
+  const trialStart = comparableDate(dates.trial_start_date);
+  const trialEnd = comparableDate(dates.trial_end_date);
+  const appealStart = comparableDate(dates.appeal_start_date);
+  const appealEnd = comparableDate(dates.appeal_end_date);
+  const errors: CaseDateChronologyErrors = {};
+
+  if (trialStart && trialEnd && trialEnd < trialStart)
+    errors.trial_end_date = "admin.caseForm.trialEndBeforeStart";
+
+  // The trial anchor every appeal date is measured against.
+  const latestTrial = trialEnd || trialStart;
+
+  if (appealStart && latestTrial && appealStart < latestTrial)
+    errors.appeal_start_date = "admin.caseForm.appealStartBeforeTrial";
+
+  if (appealEnd) {
+    if (appealStart) {
+      if (appealEnd < appealStart)
+        errors.appeal_end_date = "admin.caseForm.appealEndBeforeStart";
+    } else if (latestTrial && appealEnd < latestTrial) {
+      errors.appeal_end_date = "admin.caseForm.appealEndBeforeTrial";
+    }
+  }
+
+  return errors;
+}
+
 // A court-case reference: the canonical @id IRI — the ONLY format, exactly
 // what parseCourtCaseRef accepts (one grammar, shared with the renderers).
 export function isValidCourtCaseRef(value: string): boolean {

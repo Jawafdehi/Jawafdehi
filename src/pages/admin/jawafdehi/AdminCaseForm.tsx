@@ -18,6 +18,7 @@ import {
   RELATIONSHIP_TYPES,
   isValidSlug,
   isValidDateField,
+  dateChronologyErrors,
   isValidCourtCaseRef,
   isValidTimelineRow,
   isValidEntityRow,
@@ -33,6 +34,7 @@ import {
   type EvidenceRow,
   type RelationshipType,
   type OutcomeType,
+  type CaseDateChronologyErrors,
 } from "@/lib/jawafdehi-forms";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -420,11 +422,19 @@ export default function AdminCaseForm() {
   const bigoValid = form.bigo.trim() === "" || Number.isFinite(Number(form.bigo));
   // AD is the stored source of truth (BS is derived for display only), so
   // validate the AD fields.
-  const datesValid =
+  const dateShapesValid =
     isValidDateField(form.trial_start_date) &&
     isValidDateField(form.trial_end_date) &&
     isValidDateField(form.appeal_start_date) &&
     isValidDateField(form.appeal_end_date);
+  // The API's transitive ordering rule, applied here so a backwards pair is
+  // caught before the round-trip. Only once every field parses: a half-typed
+  // date would otherwise compare as an earlier one and flash a wrong message.
+  const chronologyErrors: CaseDateChronologyErrors = dateShapesValid
+    ? dateChronologyErrors(form)
+    : {};
+  const datesValid =
+    dateShapesValid && Object.keys(chronologyErrors).length === 0;
   // A partially-filled timeline row (title without a date, etc.) would serialize into the /timeline replace and 422 the whole PATCH, so block save until every *populated* timeline row is complete — a fully-blank trailing timeline add-row is fine, the patch builder drops it.
   const timelineRowsValid = form.timeline.every(
     (r) =>
@@ -599,6 +609,12 @@ export default function AdminCaseForm() {
           // match how every other optional field here is handled.
           thumbnail_image_id: form.thumbnail_image_id ?? undefined,
           banner_image_id: form.banner_image_id ?? undefined,
+          // Explicit null (not an omitted key) for a blank date, so create and
+          // edit send the same shape and the API records "no date" either way.
+          trial_start_date: form.trial_start_date || null,
+          trial_end_date: form.trial_end_date || null,
+          appeal_start_date: form.appeal_start_date || null,
+          appeal_end_date: form.appeal_end_date || null,
         };
         if (effectiveSlug) payload.slug = effectiveSlug;
         const created = await createCase<Record<string, unknown>>(payload);
@@ -1088,6 +1104,13 @@ export default function AdminCaseForm() {
           adValue={form.trial_end_date}
           onAdChange={(ad) => set("trial_end_date", ad)}
         />
+        {/* Each ordering message sits under the field the API blames for it. */}
+        <FieldError
+          message={
+            chronologyErrors.trial_end_date &&
+            t(chronologyErrors.trial_end_date)
+          }
+        />
         <h3 className="text-sm font-semibold">{t("admin.caseForm.appealHeading")}</h3>
         <DatePairInput
           label={t("admin.caseForm.appealStart")}
@@ -1096,6 +1119,12 @@ export default function AdminCaseForm() {
           adValue={form.appeal_start_date}
           onAdChange={(ad) => set("appeal_start_date", ad)}
         />
+        <FieldError
+          message={
+            chronologyErrors.appeal_start_date &&
+            t(chronologyErrors.appeal_start_date)
+          }
+        />
         <DatePairInput
           label={t("admin.caseForm.appealEnd")}
           idBase="appeal-end"
@@ -1103,7 +1132,13 @@ export default function AdminCaseForm() {
           adValue={form.appeal_end_date}
           onAdChange={(ad) => set("appeal_end_date", ad)}
         />
-        <FieldError message={!datesValid && t("admin.caseForm.datesInvalid")} />
+        <FieldError
+          message={
+            chronologyErrors.appeal_end_date &&
+            t(chronologyErrors.appeal_end_date)
+          }
+        />
+        <FieldError message={!dateShapesValid && t("admin.caseForm.datesInvalid")} />
 
         {/* Sub-resource editors (F3/F4/F5). Shown only in edit mode: a case
             must exist (have a slug) before entities/evidence can be linked. On

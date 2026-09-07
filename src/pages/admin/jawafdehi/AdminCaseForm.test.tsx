@@ -24,10 +24,14 @@ vi.mock("react-i18next", () => {
   return { useTranslation: () => translation };
 });
 
-// Router: the editor reads the slug from the URL and never navigates in this test.
+// Router: the editor reads the slug from the URL. Most tests are edit-mode, so
+// the slug defaults to the fixture; a create-mode test clears it. Hoisted (not a
+// plain `let`) because the mock factory runs before this file's own bindings are
+// initialized.
+const route = vi.hoisted(() => ({ slug: "ncell-tax-case" as string | undefined }));
 const navigate = vi.fn();
 vi.mock("react-router-dom", () => ({
-  useParams: () => ({ slug: "ncell-tax-case" }),
+  useParams: () => ({ slug: route.slug }),
   useNavigate: () => navigate,
 }));
 
@@ -42,11 +46,12 @@ vi.mock("@/services/admin-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/admin-api")>()),
   getCaseWithEtag: vi.fn(),
   patchCaseWithEtag: vi.fn(),
+  createCase: vi.fn(),
   // The byline editor fetches the account roster on mount. Stubbed so the test
   // exercises the form, not axios against a jsdom origin that has no server.
   listCaseAuthorCandidates: vi.fn(async () => []),
 }));
-import { getCaseWithEtag, patchCaseWithEtag } from "@/services/admin-api";
+import { createCase, getCaseWithEtag, patchCaseWithEtag } from "@/services/admin-api";
 
 // Heavy / side-effectful children are irrelevant to the header link under test;
 // stub them so the form renders fast and without the Markdown editor, the
@@ -85,6 +90,7 @@ vi.mock("@/components/admin/DatePairInput", () => ({
 }));
 
 import AdminCaseForm from "./AdminCaseForm";
+import { dateChronologyErrors } from "@/lib/jawafdehi-forms";
 
 // The byline editor reads its roster through React Query, so the component
 // needs a provider — the real app mounts one above this route.
@@ -113,8 +119,10 @@ const viewLink = (): HTMLAnchorElement | null =>
   document.querySelector('a[href="/case/ncell-tax-case"]');
 
 beforeEach(() => {
+  route.slug = "ncell-tax-case";
   vi.mocked(getCaseWithEtag).mockReset();
   vi.mocked(patchCaseWithEtag).mockReset();
+  vi.mocked(createCase).mockReset();
   navigate.mockReset();
 });
 
@@ -335,5 +343,189 @@ describe("AdminCaseForm — trial/appeal dates (B3)", () => {
       (ops as { path: string; value: unknown }[]).map((o) => [o.path, o.value]),
     );
     expect(byPath["/trial_end_date"]).toBe(null);
+  });
+});
+
+describe("dateChronologyErrors", () => {
+  const CONSISTENT = {
+    trial_start_date: "2023-01-15",
+    trial_end_date: "2024-06-10",
+    appeal_start_date: "2024-07-01",
+    appeal_end_date: "2025-02-20",
+  };
+
+  it("returns nothing for a consistent set of four dates", () => {
+    expect(dateChronologyErrors(CONSISTENT)).toEqual({});
+  });
+
+  it("returns nothing when every field is blank", () => {
+    expect(
+      dateChronologyErrors({
+        trial_start_date: "",
+        trial_end_date: "",
+        appeal_start_date: "",
+        appeal_end_date: "",
+      }),
+    ).toEqual({});
+  });
+
+  it("flags a trial end before the trial start", () => {
+    expect(
+      dateChronologyErrors({ ...CONSISTENT, trial_end_date: "2022-12-31" }),
+    ).toEqual({
+      trial_end_date: "admin.caseForm.trialEndBeforeStart",
+      // The appeal end is then compared against that (earlier) trial end, which
+      // it still follows, so only the trial pair is at fault.
+    });
+  });
+
+  it("flags an appeal start before the latest trial date", () => {
+    expect(
+      dateChronologyErrors({ ...CONSISTENT, appeal_start_date: "2024-01-01" }),
+    ).toEqual({
+      appeal_start_date: "admin.caseForm.appealStartBeforeTrial",
+    });
+  });
+
+  it("flags an appeal end before the appeal start", () => {
+    expect(
+      dateChronologyErrors({ ...CONSISTENT, appeal_end_date: "2024-06-30" }),
+    ).toEqual({
+      appeal_end_date: "admin.caseForm.appealEndBeforeStart",
+    });
+  });
+
+  it("flags an appeal end before the trial dates when no appeal start is set", () => {
+    expect(
+      dateChronologyErrors({
+        ...CONSISTENT,
+        appeal_start_date: "",
+        appeal_end_date: "2024-01-01",
+      }),
+    ).toEqual({
+      appeal_end_date: "admin.caseForm.appealEndBeforeTrial",
+    });
+  });
+
+  it("anchors the appeal on the trial start when no trial end is set", () => {
+    expect(
+      dateChronologyErrors({
+        trial_start_date: "2024-06-10",
+        trial_end_date: "",
+        appeal_start_date: "2024-01-01",
+        appeal_end_date: "",
+      }),
+    ).toEqual({
+      appeal_start_date: "admin.caseForm.appealStartBeforeTrial",
+    });
+  });
+
+  it("compares an unpadded date chronologically, not lexically", () => {
+    // The editor accepts "YYYY-M-D" (isValidDateField), where a raw string
+    // compare would read "2024-9-01" as earlier than "2024-10-01".
+    expect(
+      dateChronologyErrors({
+        trial_start_date: "2024-9-01",
+        trial_end_date: "2024-10-01",
+        appeal_start_date: "",
+        appeal_end_date: "",
+      }),
+    ).toEqual({});
+  });
+});
+
+describe("AdminCaseForm — client-side date chronology", () => {
+  it("shows an inline message under the offending field and disables Save", async () => {
+    loadCase("PUBLISHED", {
+      trial_start_date: "2024-06-01",
+      trial_end_date: null,
+      appeal_start_date: null,
+      appeal_end_date: null,
+    });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("admin.caseForm.trialEnd")).toBeTruthy(),
+    );
+
+    fireEvent.change(screen.getByLabelText("admin.caseForm.trialEnd"), {
+      target: { value: "2024-01-01" },
+    });
+
+    expect(screen.getByText("admin.caseForm.trialEndBeforeStart")).toBeTruthy();
+    // The malformed-shape hint is NOT what fires here — both dates parse.
+    expect(screen.queryByText("admin.caseForm.datesInvalid")).toBeNull();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "admin.caseForm.saveChanges",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  it("clears the message and re-enables Save once the order is fixed", async () => {
+    loadCase("PUBLISHED", {
+      trial_start_date: "2024-06-01",
+      trial_end_date: null,
+      appeal_start_date: null,
+      appeal_end_date: null,
+    });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("admin.caseForm.trialEnd")).toBeTruthy(),
+    );
+
+    const trialEnd = screen.getByLabelText("admin.caseForm.trialEnd");
+    fireEvent.change(trialEnd, { target: { value: "2024-01-01" } });
+    expect(screen.getByText("admin.caseForm.trialEndBeforeStart")).toBeTruthy();
+
+    fireEvent.change(trialEnd, { target: { value: "2024-08-01" } });
+    expect(screen.queryByText("admin.caseForm.trialEndBeforeStart")).toBeNull();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "admin.caseForm.saveChanges",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
+  });
+});
+
+describe("AdminCaseForm — create mode carries the four dates", () => {
+  it("posts the typed trial/appeal dates, and null for the ones left blank", async () => {
+    route.slug = undefined;
+    vi.mocked(createCase).mockResolvedValue({ slug: "new-case" });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("admin.caseForm.trialStart")).toBeTruthy(),
+    );
+
+    fireEvent.change(screen.getByLabelText("admin.caseForm.labelTitle"), {
+      target: { value: "A brand new case" },
+    });
+    fireEvent.change(screen.getByLabelText("admin.caseForm.trialStart"), {
+      target: { value: "2024-01-15" },
+    });
+    fireEvent.change(screen.getByLabelText("admin.caseForm.trialEnd"), {
+      target: { value: "2024-06-10" },
+    });
+    fireEvent.change(screen.getByLabelText("admin.caseForm.appealStart"), {
+      target: { value: "2024-07-01" },
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "admin.caseForm.createCase" }),
+    );
+
+    await waitFor(() => expect(createCase).toHaveBeenCalledTimes(1));
+    const [payload] = vi.mocked(createCase).mock.calls[0];
+    expect(payload.trial_start_date).toBe("2024-01-15");
+    expect(payload.trial_end_date).toBe("2024-06-10");
+    expect(payload.appeal_start_date).toBe("2024-07-01");
+    // Left blank — sent explicitly as null rather than silently dropped.
+    expect(payload.appeal_end_date).toBe(null);
   });
 });
