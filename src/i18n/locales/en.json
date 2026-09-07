@@ -625,6 +625,7 @@
     "status": {
       "ongoing": "Ongoing",
       "concluded": "Concluded",
+      "underAppeal": "Under appeal",
       "resolved": "Resolved",
       "underInvestigation": "Under Investigation"
     },

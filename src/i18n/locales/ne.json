@@ -625,6 +625,7 @@
     "status": {
       "ongoing": "चलिरहेको",
       "concluded": "समाप्त भएको",
+      "underAppeal": "पुनरावेदनमा",
       "resolved": "समाधान भएको",
       "underInvestigation": "अनुसन्धानमा"
     },

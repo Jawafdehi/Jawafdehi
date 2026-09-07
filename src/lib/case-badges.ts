@@ -9,6 +9,7 @@ export type CaseStatusValue =
   | "CLOSED"
   | "ongoing"
   | "concluded"
+  | "under_appeal"
   | "resolved"
   | "under-investigation"
   | "closed"
@@ -29,6 +30,8 @@ const statusPillClassNames: Record<string, string> = {
   CLOSED: "border-transparent bg-success-strong text-white hover:bg-success-strong/90 dark:bg-success dark:text-primary-surface",
   ongoing: "border-transparent bg-alert-strong text-white hover:bg-alert-strong/90 dark:bg-alert dark:text-primary-surface",
   concluded: "border-transparent bg-success-strong text-white hover:bg-success-strong/90 dark:bg-success dark:text-primary-surface",
+  under_appeal: "border-transparent bg-alert-strong text-white hover:bg-alert-strong/90 dark:bg-alert dark:text-primary-surface",
+  "under-appeal": "border-transparent bg-alert-strong text-white hover:bg-alert-strong/90 dark:bg-alert dark:text-primary-surface",
   resolved: "border-transparent bg-success-strong text-white hover:bg-success-strong/90 dark:bg-success dark:text-primary-surface",
   closed: "border-transparent bg-success-strong text-white hover:bg-success-strong/90 dark:bg-success dark:text-primary-surface",
   "under-investigation": "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
@@ -47,6 +50,8 @@ const CASE_STATUS_LABEL_KEYS: Record<string, string> = {
   CLOSED: "caseDetail.status.resolved",
   ongoing: "caseDetail.status.ongoing",
   concluded: "caseDetail.status.concluded",
+  under_appeal: "caseDetail.status.underAppeal",
+  "under-appeal": "caseDetail.status.underAppeal",
   resolved: "caseDetail.status.resolved",
   closed: "caseDetail.status.resolved",
   "under-investigation": "caseDetail.status.underInvestigation",
@@ -112,16 +117,28 @@ export function getCaseStatusLabelKey(status: CaseStatusValue) {
   return key ? CASE_STATUS_LABEL_KEYS[key] : "caseDetail.status.underInvestigation";
 }
 
+/** Stage dates a case chip is derived from. */
+export interface CaseStageDates {
+  trial_end_date?: string | null;
+  appeal_start_date?: string | null;
+  appeal_end_date?: string | null;
+}
+
+function isBlank(value: string | null | undefined) {
+  return !value || value.trim() === "";
+}
+
 /**
  * Derive the status shown on a public case chip from the case's workflow state
- * and its recorded end date, rather than assuming every published case is
- * "ongoing". A published case that carries a `case_end_date` has concluded, so
- * it must not read "Ongoing". Draft/in-review cases keep their workflow state so
- * the reviewer-facing chip is unchanged; an explicit CLOSED state also wins.
+ * and its stage dates, rather than assuming every published case is "ongoing".
+ * An appealed verdict puts the case back before the Supreme Court, so a pending
+ * appeal outranks the trial verdict; a decided appeal, or a trial verdict never
+ * appealed, reads "concluded". Draft/in-review cases keep their workflow state
+ * so the reviewer-facing chip is unchanged; an explicit CLOSED state also wins.
  */
 export function deriveCaseStatus(
   state: string | null | undefined,
-  caseEndDate?: string | null,
+  dates: CaseStageDates,
 ): CaseStatusValue {
   // Normalize case and separators so a lowercase/mixed-case API value
   // ("draft", "in-review", "closed") is compared the same as its canonical form.
@@ -130,7 +147,9 @@ export function deriveCaseStatus(
   if (normalizedState === "DRAFT" || normalizedState === "IN_REVIEW") return normalizedState;
   if (normalizedState === "CLOSED") return "CLOSED";
 
-  if (caseEndDate && caseEndDate.trim() !== "") return "concluded";
+  if (!isBlank(dates.appeal_start_date) && isBlank(dates.appeal_end_date)) return "under_appeal";
+
+  if (!isBlank(dates.trial_end_date)) return "concluded";
 
   return normalizedState || "PUBLISHED";
 }

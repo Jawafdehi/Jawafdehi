@@ -82,8 +82,10 @@ export interface CaseSearchCard {
   tags: string[];
   case_type: string | null;
   status: "ongoing" | "closed" | "others";
-  case_start_date: string | null;
-  case_end_date: string | null;
+  trial_start_date: string | null;
+  trial_end_date: string | null;
+  appeal_start_date: string | null;
+  appeal_end_date: string | null;
   bigo: number | null;
   /** Card ladder, denormalized into the index doc at reindex time.
    *
