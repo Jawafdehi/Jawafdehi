@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render as rtlRender, screen, waitFor } from "@testing-library/react";
+import { render as rtlRender, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // BB-37 — the admin case editor gains a "View on website" link to the public
@@ -41,11 +41,12 @@ vi.mock("@/context/CaseworkAuthContext", () => ({
 vi.mock("@/services/admin-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/admin-api")>()),
   getCaseWithEtag: vi.fn(),
+  patchCaseWithEtag: vi.fn(),
   // The byline editor fetches the account roster on mount. Stubbed so the test
   // exercises the form, not axios against a jsdom origin that has no server.
   listCaseAuthorCandidates: vi.fn(async () => []),
 }));
-import { getCaseWithEtag } from "@/services/admin-api";
+import { getCaseWithEtag, patchCaseWithEtag } from "@/services/admin-api";
 
 // Heavy / side-effectful children are irrelevant to the header link under test;
 // stub them so the form renders fast and without the Markdown editor, the
@@ -57,7 +58,31 @@ vi.mock("@/components/admin/case/EvidenceEditor", () => ({ default: () => <div /
 vi.mock("@/components/admin/case/ChipListEditor", () => ({ default: () => <div /> }));
 vi.mock("@/components/admin/case/CaseStateControl", () => ({ default: () => <div /> }));
 vi.mock("@/components/admin/case/CaseHistoryPanel", () => ({ default: () => <div /> }));
-vi.mock("@/components/admin/DatePairInput", () => ({ default: () => <div /> }));
+// Interactive enough for B3: renders the label and an AD input wired to
+// onAdChange, so a test can find a date field by its label and drive a value
+// through it without exercising the real calendar popovers.
+vi.mock("@/components/admin/DatePairInput", () => ({
+  default: ({
+    label,
+    idBase,
+    adValue,
+    onAdChange,
+  }: {
+    label: string;
+    idBase: string;
+    adValue: string;
+    onAdChange: (ad: string) => void;
+  }) => (
+    <div>
+      <label htmlFor={`${idBase}-ad`}>{label}</label>
+      <input
+        id={`${idBase}-ad`}
+        value={adValue}
+        onChange={(e) => onAdChange(e.target.value)}
+      />
+    </div>
+  ),
+}));
 
 import AdminCaseForm from "./AdminCaseForm";
 
@@ -89,6 +114,7 @@ const viewLink = (): HTMLAnchorElement | null =>
 
 beforeEach(() => {
   vi.mocked(getCaseWithEtag).mockReset();
+  vi.mocked(patchCaseWithEtag).mockReset();
   navigate.mockReset();
 });
 
@@ -206,5 +232,68 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     const hint = document.getElementById(describedBy as string);
     expect(hint?.textContent).toBe("admin.caseForm.viewOnWebsiteNotPublic");
     expect(hint?.className).toContain("sr-only");
+  });
+});
+
+describe("AdminCaseForm — trial/appeal dates (B3)", () => {
+  it("renders the four date inputs by label under an appeal heading", async () => {
+    loadCase("PUBLISHED");
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.appealHeading")).toBeTruthy(),
+    );
+    expect(screen.getByLabelText("admin.caseForm.trialStart")).toBeTruthy();
+    expect(screen.getByLabelText("admin.caseForm.trialEnd")).toBeTruthy();
+    expect(screen.getByLabelText("admin.caseForm.appealStart")).toBeTruthy();
+    expect(screen.getByLabelText("admin.caseForm.appealEnd")).toBeTruthy();
+  });
+
+  it("emits replace ops only for the trial/appeal date fields that changed", async () => {
+    loadCase("PUBLISHED", {
+      trial_start_date: "2080-01-01",
+      trial_end_date: "2080-06-15",
+      appeal_start_date: null,
+      appeal_end_date: null,
+    });
+    vi.mocked(patchCaseWithEtag).mockResolvedValue({
+      data: {
+        slug: "ncell-tax-case",
+        title: "Ncell tax case",
+        case_type: "CORRUPTION",
+        state: "PUBLISHED",
+      },
+      etag: 'W/"2"',
+    });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("admin.caseForm.trialEnd")).toBeTruthy(),
+    );
+
+    // Change trial end and appeal start; leave trial start and appeal end alone.
+    fireEvent.change(screen.getByLabelText("admin.caseForm.trialEnd"), {
+      target: { value: "2080-07-20" },
+    });
+    fireEvent.change(screen.getByLabelText("admin.caseForm.appealStart"), {
+      target: { value: "2080-08-01" },
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "admin.caseForm.saveChanges" }),
+    );
+
+    await waitFor(() =>
+      expect(patchCaseWithEtag).toHaveBeenCalledTimes(1),
+    );
+    const [, ops] = vi.mocked(patchCaseWithEtag).mock.calls[0];
+    const byPath = Object.fromEntries(
+      (ops as { path: string; value: unknown }[]).map((o) => [o.path, o.value]),
+    );
+    expect(byPath["/trial_end_date"]).toBe("2080-07-20");
+    expect(byPath["/appeal_start_date"]).toBe("2080-08-01");
+    // Unchanged fields (one populated, one still blank) emit no op at all.
+    expect("/trial_start_date" in byPath).toBe(false);
+    expect("/appeal_end_date" in byPath).toBe(false);
   });
 });

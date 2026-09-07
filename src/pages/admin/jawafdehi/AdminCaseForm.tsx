@@ -113,8 +113,10 @@ interface CaseFormState {
   // AD (Gregorian) is the single source of truth. Bikram Sambat is DERIVED from
   // the AD date at display time (public pages and the admin BS picker), never
   // stored — the backend has no BS columns.
-  case_start_date: string; // AD
-  case_end_date: string; // AD
+  trial_start_date: string; // AD; first-instance court
+  trial_end_date: string; // AD; first-instance court
+  appeal_start_date: string; // AD; Supreme Court appeal
+  appeal_end_date: string; // AD; Supreme Court appeal
 }
 
 const EMPTY: CaseFormState = {
@@ -140,8 +142,10 @@ const EMPTY: CaseFormState = {
   banner_url: "",
   tags: [],
   court_cases: [],
-  case_start_date: "",
-  case_end_date: "",
+  trial_start_date: "",
+  trial_end_date: "",
+  appeal_start_date: "",
+  appeal_end_date: "",
 };
 
 // Coerce a loaded relationship_type into the known enum (default ACCUSED).
@@ -275,8 +279,10 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     tags: strList(c.tags),
     // Canonical @id IRIs — the only court-case reference format.
     court_cases: strList(c.court_cases),
-    case_start_date: str(c.case_start_date),
-    case_end_date: str(c.case_end_date),
+    trial_start_date: str(c.trial_start_date),
+    trial_end_date: str(c.trial_end_date),
+    appeal_start_date: str(c.appeal_start_date),
+    appeal_end_date: str(c.appeal_end_date),
   };
 }
 
@@ -415,8 +421,10 @@ export default function AdminCaseForm() {
   // AD is the stored source of truth (BS is derived for display only), so
   // validate the AD fields.
   const datesValid =
-    isValidDateField(form.case_start_date) &&
-    isValidDateField(form.case_end_date);
+    isValidDateField(form.trial_start_date) &&
+    isValidDateField(form.trial_end_date) &&
+    isValidDateField(form.appeal_start_date) &&
+    isValidDateField(form.appeal_end_date);
   // A partially-filled timeline row (title without a date, etc.) would serialize into the /timeline replace and 422 the whole PATCH, so block save until every *populated* timeline row is complete — a fully-blank trailing timeline add-row is fine, the patch builder drops it.
   const timelineRowsValid = form.timeline.every(
     (r) =>
@@ -499,11 +507,15 @@ export default function AdminCaseForm() {
     if (changed(form.court_cases, original.court_cases))
       ops.push(buildStringListPatch("/court_cases", form.court_cases));
     // Only AD dates are stored; BS is derived from them at display time, so no
-    // /case_*_date_bs ops are emitted (those columns don't exist on the backend).
-    if (form.case_start_date !== original.case_start_date)
-      ops.push(replaceOp("/case_start_date", form.case_start_date || null));
-    if (form.case_end_date !== original.case_end_date)
-      ops.push(replaceOp("/case_end_date", form.case_end_date || null));
+    // /*_date_bs ops are emitted (those columns don't exist on the backend).
+    if (form.trial_start_date !== original.trial_start_date)
+      ops.push(replaceOp("/trial_start_date", form.trial_start_date || null));
+    if (form.trial_end_date !== original.trial_end_date)
+      ops.push(replaceOp("/trial_end_date", form.trial_end_date || null));
+    if (form.appeal_start_date !== original.appeal_start_date)
+      ops.push(replaceOp("/appeal_start_date", form.appeal_start_date || null));
+    if (form.appeal_end_date !== original.appeal_end_date)
+      ops.push(replaceOp("/appeal_end_date", form.appeal_end_date || null));
     return ops;
   };
 
@@ -530,8 +542,10 @@ export default function AdminCaseForm() {
       form.banner_url.trim() !== "" ||
       form.tags.length > 0 ||
       form.court_cases.length > 0 ||
-      form.case_start_date.trim() !== "" ||
-      form.case_end_date.trim() !== "";
+      form.trial_start_date.trim() !== "" ||
+      form.trial_end_date.trim() !== "" ||
+      form.appeal_start_date.trim() !== "" ||
+      form.appeal_end_date.trim() !== "";
   const { confirmDiscard } = useUnsavedChanges(dirty);
 
   const onCancel = () => {
@@ -1061,18 +1075,33 @@ export default function AdminCaseForm() {
             no BS columns). Authors may still pick in the Nepali calendar — that
             selection sets the AD date, and the shown BS re-derives from it. */}
         <DatePairInput
-          label={t("admin.caseForm.caseStart")}
-          idBase="case-start"
+          label={t("admin.caseForm.trialStart")}
+          idBase="trial-start"
           deriveBs
-          adValue={form.case_start_date}
-          onAdChange={(ad) => set("case_start_date", ad)}
+          adValue={form.trial_start_date}
+          onAdChange={(ad) => set("trial_start_date", ad)}
         />
         <DatePairInput
-          label={t("admin.caseForm.caseEnd")}
-          idBase="case-end"
+          label={t("admin.caseForm.trialEnd")}
+          idBase="trial-end"
           deriveBs
-          adValue={form.case_end_date}
-          onAdChange={(ad) => set("case_end_date", ad)}
+          adValue={form.trial_end_date}
+          onAdChange={(ad) => set("trial_end_date", ad)}
+        />
+        <h3 className="text-sm font-semibold">{t("admin.caseForm.appealHeading")}</h3>
+        <DatePairInput
+          label={t("admin.caseForm.appealStart")}
+          idBase="appeal-start"
+          deriveBs
+          adValue={form.appeal_start_date}
+          onAdChange={(ad) => set("appeal_start_date", ad)}
+        />
+        <DatePairInput
+          label={t("admin.caseForm.appealEnd")}
+          idBase="appeal-end"
+          deriveBs
+          adValue={form.appeal_end_date}
+          onAdChange={(ad) => set("appeal_end_date", ad)}
         />
         <FieldError message={!datesValid && t("admin.caseForm.datesInvalid")} />
 
