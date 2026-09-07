@@ -567,6 +567,50 @@ describe("ArchiveSearch", () => {
     expect(screen.queryByText("caseDetail.status.resolved")).toBeNull();
   });
 
+  it("treats a decided appeal as resolved even when the trial end date was never captured", async () => {
+    getCaseByIdMock.mockResolvedValue({
+      banner_url: null,
+      thumbnail_url: null,
+      tags: [],
+      entities: [],
+      trial_start_date: "2024-01-01",
+      trial_end_date: null,
+      appeal_start_date: "2024-07-01",
+      appeal_end_date: "2025-02-20",
+    });
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    // The appellate verdict ends the case, so the missing trial verdict date no
+    // longer leaves it reading "ongoing".
+    await waitFor(() => {
+      expect(screen.getByText("caseDetail.status.resolved")).toBeTruthy();
+    });
+    expect(screen.queryByText("caseDetail.status.ongoing")).toBeNull();
+  });
+
+  it("treats a decided appeal as resolved with no trial dates at all", async () => {
+    getCaseByIdMock.mockResolvedValue({
+      banner_url: null,
+      thumbnail_url: null,
+      tags: [],
+      entities: [],
+      trial_start_date: null,
+      trial_end_date: null,
+      appeal_start_date: null,
+      appeal_end_date: "2025-02-20",
+    });
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    await waitFor(() => {
+      expect(screen.getByText("caseDetail.status.resolved")).toBeTruthy();
+    });
+    expect(screen.queryByText("caseDetail.status.underInvestigation")).toBeNull();
+  });
+
   it("renders enriched case cards without hydrating the detail endpoint", async () => {
     searchArchiveMock.mockResolvedValue({
       ...baseResponse,

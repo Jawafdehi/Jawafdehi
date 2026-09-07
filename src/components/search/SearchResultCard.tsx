@@ -335,13 +335,16 @@ function caseCardPropsFromDetail(
   const locationList = entityNames(location);
   const hasStart = !isBlank(detail.trial_start_date);
   const hasEnd = !isBlank(detail.trial_end_date);
-  // Pending appeal (filed, not yet decided) outranks a concluded trial — matches
-  // the server's own `case_status` facet, which the indexed-card path above
-  // already carries.
+  // The appeal outranks the trial dates in both directions, matching the
+  // server's own `case_status` facet (which the indexed-card path above already
+  // carries) and the public chip: a filed-but-undecided appeal is ongoing, and
+  // an appellate verdict resolves the case even where the trial verdict date
+  // was never captured.
   const appealPending = !isBlank(detail.appeal_start_date) && isBlank(detail.appeal_end_date);
-  const status: CaseCardStatus = appealPending || (hasStart && !hasEnd)
+  const appealDecided = !isBlank(detail.appeal_end_date);
+  const status: CaseCardStatus = appealPending || (!appealDecided && hasStart && !hasEnd)
     ? "ongoing"
-    : hasStart && hasEnd
+    : appealDecided || (hasStart && hasEnd)
       ? "resolved"
       : "under-investigation";
   return {
