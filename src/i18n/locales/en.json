@@ -560,7 +560,10 @@
     "severity": "Severity",
     "filed": "Filed",
     "location": "Location",
-    "period": "Case Date",
+    "trialDateSpecialCourt": "Special Court case date",
+    "trialDateCourt": "Court case date",
+    "appealDate": "Appeal date",
+    "appealPending": "Pending",
     "byline": {
       "firstPublished": "First published {{date}}.",
       "editHistory_one": "{{count}} subsequent edit",

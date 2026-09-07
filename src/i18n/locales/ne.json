@@ -560,7 +560,10 @@
     "severity": "गम्भीरता",
     "filed": "दायर गरिएको",
     "location": "स्थान",
-    "period": "मुद्दा मिति",
+    "trialDateSpecialCourt": "विशेष अदालत मुद्दा मिति",
+    "trialDateCourt": "अदालत मुद्दा मिति",
+    "appealDate": "पुनरावेदन मिति",
+    "appealPending": "विचाराधीन",
     "byline": {
       "firstPublished": "पहिलो पटक {{date}} मा प्रकाशित।",
       "editHistory_one": "{{count}} पछिल्लो सम्पादन",

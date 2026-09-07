@@ -35,7 +35,12 @@ vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => false }));
 vi.mock("@/components/FloatingShareSidebar", () => ({ FloatingShareSidebar: () => null }));
 vi.mock("@/components/ReportCaseDialog", () => ({ ReportCaseDialog: () => null }));
 vi.mock("@/components/DisqusComments", () => ({ DisqusComments: () => null }));
-vi.mock("@/components/case-detail/case-detail-banner", () => ({ CaseDetailBanner: () => null }));
+// Only the component is stubbed: the page also imports trialDateLabelKey from
+// this module for its sidebar, and that should stay the real helper.
+vi.mock("@/components/case-detail/case-detail-banner", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/case-detail/case-detail-banner")>()),
+  CaseDetailBanner: () => null,
+}));
 vi.mock("@/components/case-detail/case-contact-strip", () => ({ CaseContactStrip: () => null }));
 vi.mock("@/components/case-detail/case-disclaimer-banner", () => ({ CaseDisclaimerBanner: () => null }));
 vi.mock("@/components/case-detail/case-overview-section", () => ({ CaseOverviewSection: () => null }));
@@ -57,8 +62,10 @@ const makeCase = (slug: string | null): CaseDetailType => ({
   case_type: "CORRUPTION",
   state: "PUBLISHED",
   title: "Test case",
-  case_start_date: null,
-  case_end_date: null,
+  trial_start_date: null,
+  trial_end_date: null,
+  appeal_start_date: null,
+  appeal_end_date: null,
   entities: [],
   tags: [],
   key_allegations: [],

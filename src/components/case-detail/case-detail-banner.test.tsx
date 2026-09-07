@@ -24,8 +24,10 @@ const makeCase = (overrides: Partial<CaseDetail> = {}): CaseDetail => ({
   state: "PUBLISHED",
   title: "Test case title",
   short_description: SHORT_DESC,
-  case_start_date: null,
-  case_end_date: null,
+  trial_start_date: null,
+  trial_end_date: null,
+  appeal_start_date: null,
+  appeal_end_date: null,
   entities: [],
   tags: [],
   key_allegations: [],
@@ -118,5 +120,89 @@ describe("CaseDetailBanner breadcrumb defaults", () => {
     expect(nav.textContent).toContain("Jawafdehi");
     expect(nav.textContent).toContain("Cases");
     expect(nav.textContent).not.toContain("nav.cases");
+  });
+});
+
+describe("CaseDetailBanner trial and appeal date lines", () => {
+  const SPECIAL_IRI = "https://jawafdehi.org/courtcase/special/080-cr-0111";
+  const DISTRICT_IRI = "https://jawafdehi.org/courtcase/kathmandudc/080-cr-0222";
+
+  const withTrialDates = (overrides: Partial<CaseDetail> = {}) =>
+    makeCase({
+      trial_start_date: "2023-01-15",
+      trial_end_date: "2024-06-10",
+      ...overrides,
+    });
+
+  it("labels the trial line for the Special Court when the first court case is special", () => {
+    const { container } = renderBanner(withTrialDates({ court_cases: [SPECIAL_IRI] }));
+
+    expect(container.textContent).toContain("caseDetail.trialDateSpecialCourt");
+    expect(container.textContent).not.toContain("caseDetail.appealDate");
+  });
+
+  it("uses the generic court label for a non-special court", () => {
+    const { container } = renderBanner(withTrialDates({ court_cases: [DISTRICT_IRI] }));
+
+    expect(container.textContent).toContain("caseDetail.trialDateCourt");
+    expect(container.textContent).not.toContain("caseDetail.trialDateSpecialCourt");
+  });
+
+  it("uses the generic court label when the case has no court cases", () => {
+    const { container } = renderBanner(withTrialDates({ court_cases: [] }));
+
+    expect(container.textContent).toContain("caseDetail.trialDateCourt");
+    expect(container.textContent).not.toContain("caseDetail.trialDateSpecialCourt");
+  });
+
+  it("labels the first court case, not a later special one", () => {
+    const { container } = renderBanner(
+      withTrialDates({ court_cases: [DISTRICT_IRI, SPECIAL_IRI] }),
+    );
+
+    expect(container.textContent).toContain("caseDetail.trialDateCourt");
+    expect(container.textContent).not.toContain("caseDetail.trialDateSpecialCourt");
+  });
+
+  it("shows a pending appeal line and an under-appeal chip", () => {
+    const { container } = renderBanner(
+      withTrialDates({
+        court_cases: [SPECIAL_IRI],
+        appeal_start_date: "2024-07-01",
+        appeal_end_date: null,
+      }),
+    );
+
+    expect(container.textContent).toContain("caseDetail.appealDate");
+    expect(container.textContent).toContain("caseDetail.appealPending");
+    expect(screen.getByText("caseDetail.status.underAppeal")).toBeTruthy();
+  });
+
+  it("shows a decided appeal line and a concluded chip", () => {
+    const { container } = renderBanner(
+      withTrialDates({
+        court_cases: [SPECIAL_IRI],
+        appeal_start_date: "2024-07-01",
+        appeal_end_date: "2025-02-20",
+      }),
+    );
+
+    expect(container.textContent).toContain("caseDetail.appealDate");
+    expect(container.textContent).not.toContain("caseDetail.appealPending");
+    expect(screen.getByText("caseDetail.status.concluded")).toBeTruthy();
+  });
+
+  it("omits the appeal line when appeal_start_date is only whitespace", () => {
+    const { container } = renderBanner(
+      withTrialDates({ appeal_start_date: "   ", appeal_end_date: null }),
+    );
+
+    expect(container.textContent).not.toContain("caseDetail.appealDate");
+  });
+
+  it("no longer renders the retired caseDetail.period label", () => {
+    const { container } = renderBanner(withTrialDates());
+
+    expect(container.textContent).not.toContain("caseDetail.period");
   });
 });

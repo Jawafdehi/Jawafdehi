@@ -43,6 +43,15 @@ const COURT_NAME_MAP: Record<string, { en: string; ne: string }> = {
   },
 };
 
+/** Label key for the first-instance date line, from the case's first court ref. */
+export function trialDateLabelKey(courtCases: string[] | undefined): string {
+  const first = parseCourtCaseRef(courtCases?.[0]);
+
+  return first?.court.toLowerCase() === "special"
+    ? "caseDetail.trialDateSpecialCourt"
+    : "caseDetail.trialDateCourt";
+}
+
 function formatCourtCaseRef(courtCase: string, language: "en" | "ne") {
   // Refs arrive as the canonical @id IRI or the legacy `<court>:<number>` form.
   const parts = parseCourtCaseRef(courtCase);
@@ -100,9 +109,13 @@ export function CaseDetailBanner({
   const onDarkBackdrop = !isPlaceholder;
   const crumbHover = onDarkBackdrop ? "hover:text-white" : "hover:text-foreground";
 
-  // Derive the chip from state + end date so a concluded case (one with a
-  // `case_end_date`) no longer reads "Ongoing".
-  const effectiveStatus = deriveCaseStatus(caseData.state, caseData.case_end_date);
+  // Derive the chip from state + the stage dates, so a decided case no longer
+  // reads "Ongoing" and a pending appeal reads "Under appeal".
+  const effectiveStatus = deriveCaseStatus(caseData.state, {
+    trial_end_date: caseData.trial_end_date,
+    appeal_start_date: caseData.appeal_start_date,
+    appeal_end_date: caseData.appeal_end_date,
+  });
   const statusLabel = t(getCaseStatusLabelKey(effectiveStatus));
   // A known case type localizes; an unknown/scraped one humanizes its raw value
   // rather than mislabelling (getCaseTypeLabelKey returns null when unknown).
@@ -111,10 +124,21 @@ export function CaseDetailBanner({
     ? t(caseTypeLabelKey)
     : (caseData.case_type || "").replaceAll("_", " ").replaceAll("-", " ");
 
-  const dateRange = formatCaseDateRangeForLanguage(
-    caseData.case_start_date,
-    caseData.case_end_date,
+  // Two stages, shown as two lines: registration-to-verdict in the first
+  // instance, then the Supreme Court appeal. A pending appeal has no end date,
+  // so it reads "<filed> - Pending" rather than the trial line's "Ongoing".
+  const trialRange = formatCaseDateRangeForLanguage(
+    caseData.trial_start_date,
+    caseData.trial_end_date,
     t("cases.status.ongoing"),
+    currentLang
+  );
+
+  const hasAppeal = Boolean(caseData.appeal_start_date?.trim());
+  const appealRange = formatCaseDateRangeForLanguage(
+    caseData.appeal_start_date,
+    caseData.appeal_end_date,
+    t("caseDetail.appealPending"),
     currentLang
   );
 
@@ -398,16 +422,32 @@ export function CaseDetailBanner({
                 </div>
 
                 <div>
-                  <p className={metaTitleClass}>{t("caseDetail.period")}:</p>
+                  <p className={metaTitleClass}>
+                    {t(trialDateLabelKey(caseData.court_cases))}:
+                  </p>
                   <div className={metaValueClass}>
-                    <p>{dateRange.primary}</p>
-                    {dateRange.secondary && (
+                    <p>{trialRange.primary}</p>
+                    {trialRange.secondary && (
                       <p className="text-sm font-normal leading-6 text-primary/65">
-                        ({dateRange.secondary})
+                        ({trialRange.secondary})
                       </p>
                     )}
                   </div>
                 </div>
+
+                {hasAppeal && (
+                  <div>
+                    <p className={metaTitleClass}>{t("caseDetail.appealDate")}:</p>
+                    <div className={metaValueClass}>
+                      <p>{appealRange.primary}</p>
+                      {appealRange.secondary && (
+                        <p className="text-sm font-normal leading-6 text-primary/65">
+                          ({appealRange.secondary})
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {caseData.bigo != null && caseData.bigo > 0 && (
                   <div>

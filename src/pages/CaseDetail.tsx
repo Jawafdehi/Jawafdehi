@@ -13,7 +13,10 @@ import {
   AlertCircle,
   SquarePen,
 } from "lucide-react";
-import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
+import {
+  CaseDetailBanner,
+  trialDateLabelKey,
+} from "@/components/case-detail/case-detail-banner";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
 import { CaseDisclaimerBanner } from "@/components/case-detail/case-disclaimer-banner";
 import { CaseOverviewSection } from "@/components/case-detail/case-overview-section";
@@ -597,24 +600,26 @@ const CaseDetail = () => {
                       </div>
                     </div>
 
+                    {/* First-instance dates, then the appeal — same two lines
+                        the banner shows, so the sidebar cannot drift from it. */}
                     <div className="flex items-center text-muted-foreground">
                       <span className="text-sm">
-                        {t("caseDetail.period")}:{" "}
+                        {t(trialDateLabelKey(caseData.court_cases))}:{" "}
                         {(() => {
-                          const dateRange = formatCaseDateRangeForLanguage(
-                            caseData.case_start_date,
-                            caseData.case_end_date,
+                          const trialRange = formatCaseDateRangeForLanguage(
+                            caseData.trial_start_date,
+                            caseData.trial_end_date,
                             t("cases.status.ongoing"),
                             currentLang
                           );
 
                           return (
                             <>
-                              {dateRange.primary}
-                              {dateRange.secondary && (
+                              {trialRange.primary}
+                              {trialRange.secondary && (
                                 <>
                                   <br />
-                                  ({dateRange.secondary})
+                                  ({trialRange.secondary})
                                 </>
                               )}
                             </>
@@ -622,6 +627,34 @@ const CaseDetail = () => {
                         })()}
                       </span>
                     </div>
+
+                    {Boolean(caseData.appeal_start_date?.trim()) && (
+                      <div className="flex items-center text-muted-foreground">
+                        <span className="text-sm">
+                          {t("caseDetail.appealDate")}:{" "}
+                          {(() => {
+                            const appealRange = formatCaseDateRangeForLanguage(
+                              caseData.appeal_start_date,
+                              caseData.appeal_end_date,
+                              t("caseDetail.appealPending"),
+                              currentLang
+                            );
+
+                            return (
+                              <>
+                                {appealRange.primary}
+                                {appealRange.secondary && (
+                                  <>
+                                    <br />
+                                    ({appealRange.secondary})
+                                  </>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </span>
+                      </div>
+                    )}
 
                     {caseData.bigo != null && caseData.bigo > 0 && (
                       <div className="flex items-center text-muted-foreground">
