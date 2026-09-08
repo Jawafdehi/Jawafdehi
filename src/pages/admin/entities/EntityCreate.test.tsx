@@ -128,6 +128,51 @@ describe("EntityCreate — picture", () => {
     await waitFor(() => expect(saveBtn().disabled).toBe(false));
   });
 
+  it("drops the key again when an uploaded picture is removed before saving", async () => {
+    // The omission test above only covers "never picked one". Removing after a
+    // successful upload must return the payload to key-ABSENT, not leave
+    // `image: undefined` behind for the backend to store verbatim.
+    uploadCaseImage.mockResolvedValue(RESULT);
+    createEntity.mockResolvedValue({ "@id": "x" });
+
+    const { container } = render(<EntityCreate />);
+    fillRequired(container);
+    pickPicture(container);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /remove picture/i })).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /remove picture/i }));
+
+    submit();
+    await waitFor(() => expect(createEntity).toHaveBeenCalled());
+    expect("image" in createEntity.mock.calls[0][0]).toBe(false);
+  });
+
+  it("passes `disabled` down so the picker cannot start a late upload mid-save", async () => {
+    // The field documents this prop as "set while the form is saving, so a
+    // picker cannot start a late upload" — but only the page can honour it, and
+    // deleting the prop here otherwise leaves every test green.
+    uploadCaseImage.mockResolvedValue(RESULT);
+    createEntity.mockReturnValue(new Promise(() => {})); // hold the create open
+
+    const { container } = render(<EntityCreate />);
+    fillRequired(container);
+    pickPicture(container);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /replace picture/i })).toBeTruthy(),
+    );
+
+    submit();
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: /replace picture/i }) as HTMLButtonElement).disabled,
+      ).toBe(true),
+    );
+    expect(
+      (screen.getByRole("button", { name: /remove picture/i }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
   it("rejects an `image` set through the extra-properties JSON box", () => {
     // The picture field owns the key; two writers would mean the spread order
     // silently decided which one won.

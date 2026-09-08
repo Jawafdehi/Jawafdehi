@@ -164,11 +164,17 @@ export default function EntityImageField({
           )}
         </div>
 
+        {/* Disabled in the same conditions as the button that opens it. The
+            button is the only thing that can reach a display:none input, so
+            this is defence in depth rather than a live path — but it means the
+            "one upload at a time" guarantee is enforced by the control itself
+            instead of resting on nothing else calling click(). */}
         <input
           ref={inputRef}
           type="file"
           accept={ACCEPT}
           className="hidden"
+          disabled={uploading || disabled}
           onChange={(e) => pick(e.target.files?.[0])}
         />
 

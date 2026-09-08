@@ -268,4 +268,24 @@ describe("EntityImageField", () => {
     expect(buttons.length).toBeGreaterThan(1); // Replace + Remove
     expect(buttons.every((b) => b.disabled)).toBe(true);
   });
+
+  it("disables both controls while ITS OWN upload is in flight", async () => {
+    // The other half of each button's guard. Unreachable today — Replace is the
+    // only thing that opens the hidden picker, so it cannot re-enter itself —
+    // but it is the reason "the last action wins", and without this a refactor
+    // could drop `uploading` from the expressions and stay green.
+    uploadCaseImage.mockReturnValue(new Promise(() => {}));
+    const { input } = renderField({ value: { "@type": "ImageObject", contentUrl: THUMB.src } });
+    pick(input);
+
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: /replace picture/i }) as HTMLButtonElement).disabled,
+      ).toBe(true),
+    );
+    expect(
+      (screen.getByRole("button", { name: /remove picture/i }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(input.disabled).toBe(true);
+  });
 });

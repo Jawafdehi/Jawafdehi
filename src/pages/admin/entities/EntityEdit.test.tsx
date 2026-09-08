@@ -187,6 +187,28 @@ describe("EntityEdit — picture", () => {
     await waitFor(() => expect(saveBtn().disabled).toBe(false));
   });
 
+  it("passes `disabled` down so the picker cannot start a late upload mid-save", async () => {
+    // Same contract as the create page: only the page can honour the prop, and
+    // deleting it here otherwise leaves every test green.
+    patchEntity.mockReturnValue(new Promise(() => {})); // hold the PATCH open
+
+    await renderEdit(doc({ image: OLD_IMAGE }));
+    fireEvent.change(screen.getByLabelText(/name \(english\)/i), {
+      target: { value: "Ram B. Thapa" },
+    });
+    await waitFor(() => expect(saveBtn().disabled).toBe(false));
+    fireEvent.click(saveBtn());
+
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: /replace picture/i }) as HTMLButtonElement).disabled,
+      ).toBe(true),
+    );
+    expect(
+      (screen.getByRole("button", { name: /remove picture/i }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
   it("rejects an `image` smuggled through the JSON box", async () => {
     const { container } = await renderEdit(doc({ jobTitle: "Mayor" }));
     fireEvent.change(extraBox(container), {
