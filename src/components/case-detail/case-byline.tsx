@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
 import type { CaseAuthorCredit, CaseEditHistoryEntry } from "@/types/jds";
 import { formatDateForLanguage } from "@/utils/date";
-import { AuthorCard } from "@/components/case-detail/author-card";
+import { AuthorCard } from "@/components/author-card";
 
 interface CaseBylineProps {
   authors?: CaseAuthorCredit[] | null;
@@ -55,6 +55,12 @@ export function CaseByline({
 
   return (
     <div className="case-byline text-sm text-muted-foreground" data-testid="case-byline">
+      {published && (
+        <p className="m-0 mb-3" data-testid="case-byline-published">
+          {t("caseDetail.byline.firstPublished", { date: published.primary })}
+          {published.secondary ? <span> ({published.secondary})</span> : null}
+        </p>
+      )}
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary/60">
         {t("caseDetail.byline.documentedByLabel")}
       </p>
@@ -67,17 +73,10 @@ export function CaseByline({
           <AuthorCard
             key={author.slug || author.display_name}
             author={author}
-            className="sm:min-w-[14rem] sm:flex-1"
+            className="w-full sm:max-w-sm"
           />
         ))}
       </div>
-
-      {published && (
-        <p className="m-0 mt-2" data-testid="case-byline-published">
-          {t("caseDetail.byline.firstPublished", { date: published.primary })}
-          {published.secondary ? ` (${published.secondary})` : ""}
-        </p>
-      )}
 
       {history.length > 0 && (
         <details className="mt-1" data-testid="case-byline-history">
