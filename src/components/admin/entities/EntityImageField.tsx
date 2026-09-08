@@ -69,8 +69,15 @@ export default function EntityImageField({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Resolve the preview through the same helper the public profile uses, so
-  // what an editor sees here is what the profile will render.
+  // Resolve the preview with the same helper the public profile uses, so the
+  // two agree on which url a given `image` value means.
+  //
+  // Scoped to `image` deliberately: the helper also falls back to `logo`, but
+  // this field neither owns nor writes that key, and previewing a logo here
+  // would invite an editor to "Replace" it and instead get a NEW `image` that
+  // silently outranks a logo still sitting in the document. The cost is that a
+  // logo-only record reads as "No picture" here while the profile shows its
+  // logo — the honest reading of a field that only speaks for `image`.
   const previewUrl = entityImageUrl({ [ENTITY_IMAGE_KEY]: value });
 
   // One setter for both the local spinner and the parent's save gate, so the
@@ -80,10 +87,20 @@ export default function EntityImageField({
     onUploadingChange?.(pending);
   };
 
+  // Clearing the input is what lets the SAME path be picked again — a file
+  // input emits no change event when its value is unchanged. Every exit from
+  // `pick` has to do it, not just the success path: an editor who is told the
+  // file is too large, shrinks it in place and re-picks it would otherwise get
+  // no event at all, and sit looking at a message that is no longer true.
+  const clearInput = () => {
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
   const pick = async (file: File | undefined) => {
     if (!file) return;
     if (file.size > MAX_FILE_BYTES) {
       setError("Image exceeds the 10MB limit.");
+      clearInput();
       return;
     }
     setPending(true);
@@ -108,9 +125,7 @@ export default function EntityImageField({
       setError(adminErrorMessage(err, "Upload failed"));
     } finally {
       setPending(false);
-      // Reset the input so re-picking the SAME file fires change again (a file
-      // input does not emit when its value is unchanged).
-      if (inputRef.current) inputRef.current.value = "";
+      clearInput();
     }
   };
 
@@ -120,9 +135,14 @@ export default function EntityImageField({
     // Label to point `htmlFor` at.
     <div className="space-y-2" role="group" aria-labelledby="entity-image-label">
       <Label id="entity-image-label">Picture</Label>
+      {/* Names only the surfaces that actually pass a `src` to EntityAvatar:
+          the entity profile (EntityRecordProfile) and the entity cards on a
+          case page. The search result card mounts EntityAvatar with no `src`
+          at all, so it always shows the kind glyph — promising a picture there
+          would be untrue until that card is given one. */}
       <p className="text-xs text-muted-foreground">
-        Shown on the entity's public profile and beside its name in search
-        results and on case pages. PNG, JPEG, WebP or GIF, up to 10MB.
+        Shown on the entity's public profile and beside its name on case pages.
+        PNG, JPEG, WebP or GIF, up to 10MB.
       </p>
 
       <div className="flex items-center gap-3">
@@ -169,7 +189,11 @@ export default function EntityImageField({
             {previewUrl ? "Replace picture" : "Upload picture"}
           </Button>
 
-          {value !== undefined && value !== null && (
+          {/* `value !== undefined` alone, NOT also `!== null`: a document
+              storing `image: null` has a useless key and no preview, and since
+              `image` is withheld from the raw JSON box this button is the only
+              thing that can drop it. */}
+          {value !== undefined && (
             <Button
               type="button"
               variant="ghost"
@@ -189,11 +213,14 @@ export default function EntityImageField({
       </div>
 
       {/* An `image` this field cannot author is left exactly as stored; say so,
-          rather than letting a Replace look like it edited one of several. */}
-      {value !== undefined && value !== null && Array.isArray(value) && (
+          rather than letting a Replace look like it edited one of several.
+          Only for a genuine plural — a one-element array is authored the same
+          way a bare object is, so claiming "several" would be false. */}
+      {Array.isArray(value) && value.length > 1 && (
         <p className="text-xs text-muted-foreground">
-          This record stores several pictures. Replacing keeps only the new one;
-          the rest stay as imported until you do.
+          This record stores {value.length} pictures and only the first is shown.
+          Replacing or removing here acts on all of them; editing one requires
+          the API, since this field authors a single picture.
         </p>
       )}
 

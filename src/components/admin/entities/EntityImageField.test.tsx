@@ -12,13 +12,15 @@ vi.mock("@/services/admin-api", () => ({
   adminErrorMessage: (_err: unknown, fallback: string) => fallback,
 }));
 
-// The card ladder, which is the one an entity picture stores (an avatar is
-// 128px at most, so the hero ladder would ship a needlessly large file).
+// The card ladder, which is the one an entity picture stores. `src` is that
+// ladder's LARGEST rendition and width/height describe that same rendition.
+// Deliberately NOT square: a square fixture lets a width/height transposition
+// at the call site pass every assertion. Mirrors CaseImageField.test.tsx.
 const THUMB: CaseImage = {
-  src: "https://s3.example.org/a.width-400.format-webp.webp",
+  src: "https://s3.example.org/a.width-1200.format-webp.webp",
   srcset: "https://s3.example.org/a.width-400.format-webp.webp 400w",
-  width: 400,
-  height: 400,
+  width: 1200,
+  height: 675,
   alt: "",
 };
 const BANNER: CaseImage = { ...THUMB, src: "https://s3.example.org/a.hero.webp", width: 1600 };
@@ -62,8 +64,8 @@ describe("EntityImageField", () => {
     expect(onChange).toHaveBeenCalledWith({
       "@type": "ImageObject",
       contentUrl: THUMB.src,
-      width: 400,
-      height: 400,
+      width: 1200,
+      height: 675,
     });
   });
 
@@ -164,15 +166,99 @@ describe("EntityImageField", () => {
       expect(
         (screen.getByTestId("entity-image-preview") as HTMLImageElement).getAttribute("src"),
       ).toBe("https://s3.example.org/1.jpg");
-      expect(screen.getByText(/stores several pictures/i)).toBeTruthy();
+      expect(screen.getByText(/stores 2 pictures/i)).toBeTruthy();
     });
 
-    it("passes an unrecognised value straight back rather than rewriting it", () => {
-      // An editor who opens a record this field cannot author and saves an
-      // unrelated field must not silently lose the pictures.
+    it("does NOT claim 'several' for a one-element array", () => {
+      // A single-element array is authored exactly like a bare object, so the
+      // plural notice would be false.
+      renderField({ value: [{ "@type": "ImageObject", contentUrl: "https://s3.example.org/1.jpg" }] });
+      expect(screen.queryByText(/pictures and only the first/i)).toBeNull();
+    });
+
+    it("renders no plural notice for the ordinary single-object case", () => {
+      renderField({ value: { "@type": "ImageObject", contentUrl: THUMB.src } });
+      expect(screen.queryByText(/pictures and only the first/i)).toBeNull();
+    });
+
+    it("hands an unrecognised value straight BACK unchanged when removed", () => {
+      // The real guarantee: the field never rewrites a shape it cannot author.
+      // Asserting only "onChange was not called" would pass with the whole
+      // component deleted, so drive the one action that does call it and check
+      // the value it reports.
       const weird = [{ "@type": "ImageObject", contentUrl: "https://s3.example.org/1.jpg" }, "x"];
       const { onChange } = renderField({ value: weird });
+      // Nothing is emitted just by rendering...
       expect(onChange).not.toHaveBeenCalled();
+      // ...and Remove drops the key rather than writing a normalised value.
+      fireEvent.click(screen.getByRole("button", { name: /remove picture/i }));
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenCalledWith(undefined);
+      // The array we passed in was not mutated in place either.
+      expect(weird).toEqual([
+        { "@type": "ImageObject", contentUrl: "https://s3.example.org/1.jpg" },
+        "x",
+      ]);
+    });
+
+    it("offers Remove for a useless `image: null`, which nothing else can drop", () => {
+      // `image` is withheld from the raw JSON box, so this button is the only
+      // way to get rid of a null key.
+      const { onChange } = renderField({ value: null });
+      expect(screen.getByText("No picture")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: /remove picture/i }));
+      expect(onChange).toHaveBeenCalledWith(undefined);
+    });
+  });
+
+  describe("the file input is always left re-pickable", () => {
+    // A file input emits no change event when its value is unchanged, so any
+    // exit that leaves the old value behind dead-ends a retry of the SAME path.
+    //
+    // jsdom reports `input.value` as "" for a file input no matter what, so
+    // asserting on it would pass whether or not the component cleared it.
+    // Observe the ASSIGNMENT instead.
+    const trackClears = (input: HTMLInputElement) => {
+      const seen = { count: 0 };
+      Object.defineProperty(input, "value", {
+        get: () => "C:\\fakepath\\chosen.png",
+        set: (v: string) => {
+          if (v === "") seen.count += 1;
+        },
+        configurable: true,
+      });
+      return seen;
+    };
+
+    it("clears the input after a rejected oversize pick", () => {
+      const { input } = renderField();
+      const cleared = trackClears(input);
+      const huge = new File(["x"], "huge.png", { type: "image/png" });
+      Object.defineProperty(huge, "size", { value: 11 * 1024 * 1024 });
+      Object.defineProperty(input, "files", { value: [huge], configurable: true });
+      fireEvent.change(input);
+
+      expect(screen.getByText("Image exceeds the 10MB limit.")).toBeTruthy();
+      expect(uploadCaseImage).not.toHaveBeenCalled();
+      expect(cleared.count).toBe(1);
+    });
+
+    it("clears the input after a FAILED upload", async () => {
+      uploadCaseImage.mockRejectedValue(new Error("boom"));
+      const { input } = renderField();
+      const cleared = trackClears(input);
+      pick(input);
+      await waitFor(() => expect(screen.getByText("Upload failed")).toBeTruthy());
+      expect(cleared.count).toBe(1);
+    });
+
+    it("clears the input after a successful upload", async () => {
+      uploadCaseImage.mockResolvedValue(RESULT);
+      const { input, onChange } = renderField();
+      const cleared = trackClears(input);
+      pick(input);
+      await waitFor(() => expect(onChange).toHaveBeenCalled());
+      expect(cleared.count).toBe(1);
     });
   });
 

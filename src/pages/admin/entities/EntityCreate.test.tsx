@@ -43,11 +43,12 @@ vi.mock("@/services/admin-api", () => ({
 
 import EntityCreate from "./EntityCreate";
 
+// Non-square, so a width/height transposition cannot pass.
 const THUMB = {
-  src: "https://s3.example.org/ram.width-400.format-webp.webp",
+  src: "https://s3.example.org/ram.width-1200.format-webp.webp",
   srcset: "",
-  width: 400,
-  height: 400,
+  width: 1200,
+  height: 675,
   alt: "",
 };
 const RESULT = { id: 3, title: "ram.png", width: 900, height: 900, thumbnail: THUMB, banner: THUMB };
@@ -92,7 +93,7 @@ describe("EntityCreate — picture", () => {
     expect(createEntity.mock.calls[0][0]).toMatchObject({
       prefix: "person",
       slug: "ram-bahadur",
-      image: { "@type": "ImageObject", contentUrl: THUMB.src, width: 400, height: 400 },
+      image: { "@type": "ImageObject", contentUrl: THUMB.src, width: 1200, height: 675 },
     });
   });
 

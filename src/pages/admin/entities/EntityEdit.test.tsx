@@ -30,11 +30,12 @@ vi.mock("@/services/admin-api", () => ({
 import EntityEdit from "./EntityEdit";
 
 const IRI = "https://jawafdehi.org/entity/person/ram-bahadur";
+// Non-square, so a width/height transposition cannot pass.
 const THUMB = {
-  src: "https://s3.example.org/new.width-400.format-webp.webp",
+  src: "https://s3.example.org/new.width-1200.format-webp.webp",
   srcset: "",
-  width: 400,
-  height: 400,
+  width: 1200,
+  height: 675,
   alt: "",
 };
 const RESULT = { id: 5, title: "new.png", width: 900, height: 900, thumbnail: THUMB, banner: THUMB };
@@ -103,7 +104,7 @@ describe("EntityEdit — picture", () => {
       {
         op: "replace",
         path: "/image",
-        value: { "@type": "ImageObject", contentUrl: THUMB.src, width: 400, height: 400 },
+        value: { "@type": "ImageObject", contentUrl: THUMB.src, width: 1200, height: 675 },
       },
     ]);
   });
@@ -135,7 +136,7 @@ describe("EntityEdit — picture", () => {
       {
         op: "add",
         path: "/image",
-        value: { "@type": "ImageObject", contentUrl: THUMB.src, width: 400, height: 400 },
+        value: { "@type": "ImageObject", contentUrl: THUMB.src, width: 1200, height: 675 },
       },
     ]);
   });
@@ -162,13 +163,24 @@ describe("EntityEdit — picture", () => {
   });
 
   it("blocks Save while the picture is uploading", async () => {
+    // There must be a PENDING EDIT first. `canSave` also requires
+    // `patchOps.length > 0`, and picking a file changes nothing until the
+    // upload resolves — so on an untouched document Save is already disabled
+    // for want of changes and this would assert nothing about the gate.
     let resolveUpload: (v: unknown) => void = () => {};
     uploadCaseImage.mockReturnValue(new Promise((r) => (resolveUpload = r)));
 
     const { container } = await renderEdit(doc());
+    fireEvent.change(screen.getByLabelText(/name \(english\)/i), {
+      target: { value: "Ram B. Thapa" },
+    });
+    await waitFor(() => expect(saveBtn().disabled).toBe(false));
+
     pickPicture(container);
     await waitFor(() => expect(uploadCaseImage).toHaveBeenCalled());
+    // Now the ONLY thing that can be disabling Save is the in-flight upload.
     expect(saveBtn().disabled).toBe(true);
+    fireEvent.click(saveBtn());
     expect(patchEntity).not.toHaveBeenCalled();
 
     resolveUpload(RESULT);
