@@ -80,6 +80,10 @@ const emptyFacets: ArchiveSearchFacets = {
   case_type: [],
   tags: [],
   status: [],
+  court: [],
+  court_type: [],
+  district: [],
+  province: [],
 };
 
 // When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
@@ -250,6 +254,13 @@ export default function ArchiveSearch({
     // stale entity_type behind would silently filter the new record type through
     // a control the user can no longer see.
     if (type !== "entity") next.delete("entity_type");
+    // Court facets are scoped like entity_type: keeping them after switching
+    // away would narrow a different record type through invisible controls.
+    if (type !== "courtcase") {
+      (["court", "court_type", "district", "province"] as const).forEach(
+        (name) => next.delete(name),
+      );
+    }
     // Same for the बिगो range, which only renders while browsing Cases. readParams
     // already declines to send a stale bound, but dropping it from the URL keeps
     // what is shared or bookmarked honest about what is actually applied.
@@ -293,7 +304,18 @@ export default function ArchiveSearch({
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "entity_type", "case_type", "tags", "bigo_min", "bigo_max"] as const
+      [
+        "type",
+        "entity_type",
+        "case_type",
+        "tags",
+        "court",
+        "court_type",
+        "district",
+        "province",
+        "bigo_min",
+        "bigo_max",
+      ] as const
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -308,6 +330,10 @@ export default function ArchiveSearch({
     entity_type: params.entity_type || [],
     case_type: params.case_type || [],
     tags: params.tags || [],
+    court: params.court || [],
+    court_type: params.court_type || [],
+    district: params.district || [],
+    province: params.province || [],
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
@@ -726,6 +752,19 @@ function readParams(
       selectedRecordType === "entity"
         ? searchParams.getAll("entity_type")
         : [],
+    // These dimensions describe court records, not ordinary Jawafdehi cases.
+    // Ignore stale hand-authored/bookmarked values on other tabs so the result
+    // set can never be narrowed by a control the reader cannot see.
+    court:
+      selectedRecordType === "courtcase" ? searchParams.getAll("court") : [],
+    court_type:
+      selectedRecordType === "courtcase"
+        ? searchParams.getAll("court_type")
+        : [],
+    district:
+      selectedRecordType === "courtcase" ? searchParams.getAll("district") : [],
+    province:
+      selectedRecordType === "courtcase" ? searchParams.getAll("province") : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
     // Only honour the बिगो bounds while browsing Cases. No other record type

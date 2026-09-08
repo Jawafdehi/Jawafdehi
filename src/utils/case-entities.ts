@@ -77,11 +77,36 @@ export function getFacetItemLabel(
   translate: (key: string) => string,
 ): string {
   const humanize = (v: string) => v.replaceAll("_", " ").replaceAll("-", " ");
+  const titleCase = (v: string) =>
+    humanize(v)
+      .toLocaleLowerCase()
+      .replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase());
   if (facetName === "case_type") {
     const key = getCaseTypeLabelKey(item.name);
     // Known type → localized label; unknown (e.g. scraped WRIT) → humanized raw
     // value, never a wrong default.
     return key ? translate(key) : humanize(item.name);
   }
+  if (facetName === "court_type") {
+    const labels: Record<string, string> = {
+      district: "District Court",
+      high: "High Court",
+      special: "Special Court",
+      supreme: "Supreme Court",
+    };
+    return labels[item.name] || titleCase(item.name);
+  }
+  if (facetName === "court") {
+    if (item.name === "special") return "Special Court";
+    if (item.name === "supreme") return "Supreme Court";
+    if (item.name.endsWith("dc")) {
+      return `${titleCase(item.name.slice(0, -2))} District Court`;
+    }
+    if (item.name.endsWith("hc")) {
+      return `${titleCase(item.name.slice(0, -2))} High Court`;
+    }
+    return titleCase(item.name);
+  }
+  if (facetName === "province") return titleCase(item.name);
   return item.display_name || humanize(item.name);
 }

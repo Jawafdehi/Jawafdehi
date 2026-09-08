@@ -16,7 +16,14 @@ import { BigoRangeFilter } from "@/components/search/BigoRangeFilter";
 import type { BigoExtent } from "@/lib/bigo-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
-export type SidebarFilterName = "entity_type" | "case_type" | "tags";
+export type SidebarFilterName =
+  | "entity_type"
+  | "case_type"
+  | "tags"
+  | "court"
+  | "court_type"
+  | "district"
+  | "province";
 
 /**
  * How many options a group shows before collapsing behind "More", and the size
@@ -41,6 +48,26 @@ const FILTER_GROUPS: {
     name: "entity_type",
     titleKey: "archiveSearch.filters.entityType",
     title: "Entity type",
+  },
+  {
+    name: "court_type",
+    titleKey: "archiveSearch.filters.courtType",
+    title: "Court level",
+  },
+  {
+    name: "province",
+    titleKey: "archiveSearch.filters.province",
+    title: "Province",
+  },
+  {
+    name: "district",
+    titleKey: "archiveSearch.filters.district",
+    title: "District",
+  },
+  {
+    name: "court",
+    titleKey: "archiveSearch.filters.court",
+    title: "Court",
   },
   {
     name: "case_type",
@@ -121,7 +148,21 @@ export function SearchFilters({
         // "Entity type" only makes sense while browsing Entities — for every
         // other record type (or "all") its buckets are either irrelevant or,
         // as originally reported, collapse to a single confusing value.
-        .filter(({ name }) => name !== "entity_type" || selectedType === "entity")
+        .filter(({ name }) => {
+          if (name === "entity_type") return selectedType === "entity";
+          // Court facets are intentionally absent from the all-records view:
+          // applying one there hides unrelated entity/material/case results,
+          // while the control itself is only useful once Court cases is selected.
+          if (
+            name === "court" ||
+            name === "court_type" ||
+            name === "district" ||
+            name === "province"
+          ) {
+            return selectedType === "courtcase";
+          }
+          return true;
+        })
         .map(({ name, titleKey, title }) => (
           <FilterGroup
             items={facets[name]}
@@ -139,7 +180,17 @@ export function SearchFilters({
 export function SearchFiltersSkeleton({
   selectedType,
 }: Readonly<{ selectedType?: ArchiveSearchType }> = {}) {
-  const groupRowCounts = [4, 3, 3] as const;
+  // Match the set of groups each tab can render. Court-case browsing has four
+  // location groups in addition to terms, so reserving only generic blocks
+  // would pull a long desktop sidebar in after data lands.
+  const groupRowCounts =
+    selectedType === "courtcase"
+      ? [3, 3, 3, 3, 3, 3]
+      : selectedType === "entity"
+        ? [4]
+        : selectedType === "case"
+          ? [4, 3]
+          : [4, 3];
 
   return (
     <aside

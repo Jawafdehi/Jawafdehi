@@ -29,7 +29,16 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-const emptyFacets = { entity_type: [], case_type: [], tags: [], status: [] };
+const emptyFacets = {
+  entity_type: [],
+  case_type: [],
+  tags: [],
+  status: [],
+  court: [],
+  court_type: [],
+  district: [],
+  province: [],
+};
 
 // The live corpus extent, as the API emits it.
 const CORPUS: BigoExtent = { min: 45_220, max: 66_000_000_000, count: 75 };
@@ -52,7 +61,9 @@ function renderFilters(
       onBigoCommit={extra.onCommit ?? vi.fn()}
       onClear={vi.fn()}
       onToggle={vi.fn()}
-      selected={{ entity_type: [], case_type: [], tags: [] }}
+      selected={{
+        entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+      }}
       selectedType={selectedType}
     />,
   );
@@ -147,7 +158,9 @@ describe("SearchFilters — बिगो range control", () => {
         onBigoCommit={vi.fn()}
         onClear={vi.fn()}
         onToggle={vi.fn()}
-        selected={{ entity_type: [], case_type: [], tags: [] }}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
         selectedType="case"
       />,
     );
@@ -235,10 +248,10 @@ describe("SearchFiltersSkeleton", () => {
     const aside = container.querySelector("aside");
     expect(aside).toBeTruthy();
 
-    // header + बिगो block + three facet groups. The record-type group is gone
+    // Header + bigo block + case type and tags. The record-type group is gone
     // from this column — it is a row of tabs above the results now.
     const blocks = Array.from(aside!.children);
-    expect(blocks).toHaveLength(5);
+    expect(blocks).toHaveLength(4);
 
     // The बिगो placeholder is the one carrying the histogram-height bar.
     expect(blocks[1].querySelector(".h-14")).toBeTruthy();
@@ -255,14 +268,81 @@ describe("SearchFiltersSkeleton", () => {
     // dragging every facet below it upward. The old justification ("no way to
     // know whether the case index is in scope") was wrong: the type is read
     // synchronously off the URL, well before the first response.
-    for (const type of ["all", "entity", "material", "courtcase"] as const) {
+    for (const type of ["all", "entity", "material"] as const) {
       const { container, unmount } = render(
         <SearchFiltersSkeleton selectedType={type} />,
       );
       const blocks = Array.from(container.querySelector("aside")!.children);
-      expect(blocks).toHaveLength(4);
+      expect(blocks).toHaveLength(type === "entity" ? 2 : 3);
       expect(container.querySelector(".h-14")).toBeNull();
       unmount();
     }
+  });
+
+  it("reserves every court-case facet group", () => {
+    const { container } = render(<SearchFiltersSkeleton selectedType="courtcase" />);
+    // Header + case type/tags + court level/court/district/province.
+    expect(container.querySelector("aside")!.children).toHaveLength(7);
+  });
+});
+
+describe("SearchFilters — court-case facets", () => {
+  it("renders the court-only filters with readable court labels", () => {
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          court: [{ name: "kathmandudc", count: 5_477 }],
+          court_type: [{ name: "district", count: 14_307 }],
+          district: [{ name: "Kathmandu", count: 5_477 }],
+          province: [{ name: "Bagmati", count: 7_617 }],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="courtcase"
+      />,
+    );
+
+    expect(screen.getByText("Court level")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "District Court: 14307 results" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Kathmandu District Court: 5477 results" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Kathmandu: 5477 results" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Bagmati: 7617 results" })).toBeTruthy();
+
+    // Court browsing narrows from broad structural choices to a specific court,
+    // then to subject matter. A wall of tags must not bury the primary path.
+    expect(Array.from(document.querySelectorAll("legend")).map((legend) => legend.textContent)).toEqual([
+      "Court level",
+      "Province",
+      "District",
+      "Court",
+    ]);
+  });
+
+  it("keeps court filters off every non-court tab", () => {
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{ ...emptyFacets, court: [{ name: "kathmandudc", count: 1 }] }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="case"
+      />,
+    );
+
+    expect(screen.queryByText("Court")).toBeNull();
   });
 });
