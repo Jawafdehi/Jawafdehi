@@ -5,6 +5,8 @@
 // prefer the accused entities, but fall back to any other *named* (non-location)
 // entity when there are none. Locations are never a subject.
 
+import { formatCourtName, formatCourtType } from "@/utils/court-case-format";
+
 const LOCATION_ROLE = "location";
 const ACCUSED_ROLE = "accused";
 
@@ -66,47 +68,44 @@ export function getCaseTypeLabelKey(
  * Display label for a search facet item.
  *
  * `case_type` facets are localized to the viewer's language from their stable
- * `name` (the CaseType value) via i18n keys. Every other facet uses its
+ * `name` (the CaseType value) via i18n keys. The court facets are named by the
+ * shared `court-case-format` helpers, so a court is spelled the same way in the
+ * sidebar as on the card it filters to. Every other facet uses its
  * `display_name` when the backend provides one, else a humanized `name` — the
  * unified search service returns bare `{name, count}` facets (no display_name),
  * so the humanized fallback is the normal path there.
+ *
+ * `language` is what selects the Nepali court names; it defaults to English for
+ * the non-court callers that have no reason to pass one.
  */
 export function getFacetItemLabel(
   facetName: string,
   item: { name: string; display_name?: string },
-  translate: (key: string) => string,
+  translate: (key: string, fallback?: string) => string,
+  language = "en",
 ): string {
   const humanize = (v: string) => v.replaceAll("_", " ").replaceAll("-", " ");
-  const titleCase = (v: string) =>
-    humanize(v)
-      .toLocaleLowerCase()
-      .replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase());
   if (facetName === "case_type") {
     const key = getCaseTypeLabelKey(item.name);
     // Known type → localized label; unknown (e.g. scraped WRIT) → humanized raw
     // value, never a wrong default.
     return key ? translate(key) : humanize(item.name);
   }
-  if (facetName === "court_type") {
-    const labels: Record<string, string> = {
-      district: "District Court",
-      high: "High Court",
-      special: "Special Court",
-      supreme: "Supreme Court",
-    };
-    return labels[item.name] || titleCase(item.name);
+  // Court tier ("district") and court identifier ("kathmandudc") are different
+  // vocabularies over the same names, so they take the two matching helpers.
+  if (facetName === "court_type") return formatCourtType(item.name, language);
+  if (facetName === "court") return formatCourtName(item.name, language);
+  // `NATIONAL` is NOT a province: the API uses it as the sentinel for the two
+  // courts with country-wide jurisdiction (supreme + special), and it is the
+  // LARGEST bucket in this facet — ~44% of the court corpus. Reshaping it into
+  // "National" would file a sentinel among the seven real provinces, so it gets
+  // a label that says what it selects. Every other bucket already arrives as a
+  // canonical title-case English province name and needs no reshaping.
+  if (facetName === "province" && item.name === "NATIONAL") {
+    return translate(
+      "archiveSearch.filters.provinceNational",
+      "National jurisdiction",
+    );
   }
-  if (facetName === "court") {
-    if (item.name === "special") return "Special Court";
-    if (item.name === "supreme") return "Supreme Court";
-    if (item.name.endsWith("dc")) {
-      return `${titleCase(item.name.slice(0, -2))} District Court`;
-    }
-    if (item.name.endsWith("hc")) {
-      return `${titleCase(item.name.slice(0, -2))} High Court`;
-    }
-    return titleCase(item.name);
-  }
-  if (facetName === "province") return titleCase(item.name);
   return item.display_name || humanize(item.name);
 }

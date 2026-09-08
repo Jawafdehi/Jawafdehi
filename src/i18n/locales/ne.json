@@ -2045,6 +2045,7 @@
       "court": "अदालत",
       "district": "जिल्ला",
       "province": "प्रदेश",
+      "provinceNational": "राष्ट्रिय क्षेत्राधिकार",
       "bigo": "बिगो (रकम)",
       "bigoRange": {
         "any": "जुनसुकै रकम",

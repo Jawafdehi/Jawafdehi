@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import {
@@ -9,6 +9,10 @@ import type { BigoExtent } from "@/lib/bigo-range";
 import type { ArchiveSearchType } from "@/types/search";
 
 import "../support/resize-observer";
+
+// Mutable so a test can render the sidebar under a Nepali UI. Court names are
+// language-dependent, and the component reads the language off `useTranslation`.
+const mockI18n = vi.hoisted(() => ({ language: "en" }));
 
 // Passthrough translations so assertions don't depend on i18n resources. Plural
 // resolution is mirrored rather than skipped: `_one` vs `_other` is the whole
@@ -25,9 +29,13 @@ vi.mock("react-i18next", () => ({
         String(options?.[name]),
       );
     },
-    i18n: { language: "en" },
+    i18n: mockI18n,
   }),
 }));
+
+afterEach(() => {
+  mockI18n.language = "en";
+});
 
 const emptyFacets = {
   entity_type: [],
@@ -268,15 +276,32 @@ describe("SearchFiltersSkeleton", () => {
     // dragging every facet below it upward. The old justification ("no way to
     // know whether the case index is in scope") was wrong: the type is read
     // synchronously off the URL, well before the first response.
+    // Block counts are the header plus the groups that tab can actually fill:
+    // "all" shows case type + tags, entities fill only their own type facet,
+    // and materials have no facet at all (see the test below).
+    const expectedBlocks = { all: 3, entity: 2, material: 1 } as const;
     for (const type of ["all", "entity", "material"] as const) {
       const { container, unmount } = render(
         <SearchFiltersSkeleton selectedType={type} />,
       );
       const blocks = Array.from(container.querySelector("aside")!.children);
-      expect(blocks).toHaveLength(type === "entity" ? 2 : 3);
+      expect(blocks).toHaveLength(expectedBlocks[type]);
       expect(container.querySelector(".h-14")).toBeNull();
       unmount();
     }
+  });
+
+  // Same failure as the बिगो block above, one level down: /materials is a
+  // locked-type landing route, and the API returns NO facet for a material —
+  // case_type, tags and every court bucket come back empty, and its one
+  // non-empty bucket (entity_type) is hidden on this tab. Reserving generic
+  // groups here paints two blocks that never fill.
+  it("reserves nothing on the tab that has no facets at all", () => {
+    const { container } = render(
+      <SearchFiltersSkeleton selectedType="material" />,
+    );
+    // The header row, and nothing after it.
+    expect(container.querySelector("aside")!.children).toHaveLength(1);
   });
 
   it("reserves every court-case facet group", () => {
@@ -324,6 +349,93 @@ describe("SearchFilters — court-case facets", () => {
       "District",
       "Court",
     ]);
+  });
+
+  // `NATIONAL` is the API's sentinel for the two country-wide courts (supreme +
+  // special), not an eighth province — and it is the biggest bucket in the
+  // group, so a label that merely title-cased it to "National" would file a
+  // sentinel among Bagmati and Koshi as though it were one of them.
+  it("labels the NATIONAL province sentinel by what it selects", () => {
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          province: [
+            { name: "NATIONAL", count: 12_076 },
+            { name: "Bagmati", count: 7_617 },
+          ],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="courtcase"
+      />,
+    );
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: "National jurisdiction: 12076 results",
+      }),
+    ).toBeTruthy();
+    expect(screen.queryByText("National")).toBeNull();
+    // The real province names pass through untouched.
+    expect(
+      screen.getByRole("checkbox", { name: "Bagmati: 7617 results" }),
+    ).toBeTruthy();
+  });
+
+  // The sidebar is the one place a court is named next to the result set it
+  // filters, so it has to speak the same language as the cards it filters to.
+  it("names courts in Nepali under a Nepali UI", () => {
+    mockI18n.language = "ne";
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          court: [
+            { name: "kathmandudc", count: 5_477 },
+            { name: "supreme", count: 9_100 },
+          ],
+          court_type: [
+            { name: "district", count: 14_307 },
+            { name: "high", count: 1_100 },
+          ],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="courtcase"
+      />,
+    );
+
+    // Tiers are wholly Nepali; a named court keeps its place name, exactly as
+    // <CourtCaseCard> renders it, because both go through court-case-format.
+    expect(
+      screen.getByRole("checkbox", { name: "जिल्ला अदालत: 14307 results" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", { name: "उच्च अदालत: 1100 results" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", { name: "सर्वोच्च अदालत: 9100 results" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", {
+        name: "Kathmandu जिल्ला अदालत: 5477 results",
+      }),
+    ).toBeTruthy();
   });
 
   it("keeps court filters off every non-court tab", () => {

@@ -361,7 +361,7 @@ export default function ArchiveSearch({
     ) + (bigoPill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
   const selectedItems = [
-    ...getSelectedItems(facets, selectedRefinements, t),
+    ...getSelectedItems(facets, selectedRefinements, t, i18n.language),
     ...(bigoPill ? [bigoPill] : []),
   ];
   const searchFilters = showFilters ? (
@@ -960,7 +960,8 @@ function TrackedSearchResult({
 function getSelectedItems(
   facets: ArchiveSearchFacets,
   selected: Record<RefinementName, string[]>,
-  translate: (key: string) => string,
+  translate: (key: string, fallback?: string) => string,
+  language: string,
 ) {
   // Selected-filter pill labels are localized via getFacetItemLabel. The "type"
   // refinement has no facet group (it's the record-type radio), so it falls back
@@ -971,7 +972,11 @@ function getSelectedItems(
         name === "type"
           ? { name: value }
           : facets[name].find((item) => item.name === value) ?? { name: value };
-      return { name, value, label: getFacetItemLabel(name, facetItem, translate) };
+      return {
+        name,
+        value,
+        label: getFacetItemLabel(name, facetItem, translate, language),
+      };
     }),
   );
 }

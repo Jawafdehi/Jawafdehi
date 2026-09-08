@@ -180,16 +180,24 @@ export function SearchFilters({
 export function SearchFiltersSkeleton({
   selectedType,
 }: Readonly<{ selectedType?: ArchiveSearchType }> = {}) {
-  // Match the set of groups each tab can render. Court-case browsing has four
-  // location groups in addition to terms, so reserving only generic blocks
-  // would pull a long desktop sidebar in after data lands.
+  // Reserve exactly the groups each tab can FILL — checked against what the API
+  // actually returns per type, not against the union of every group. Both
+  // directions are a jump: under-reserving pushes the sidebar down when data
+  // lands, and over-reserving collapses it on first paint, which is the same
+  // failure the बिगो block below is gated against.
+  //
+  // Court-case browsing adds four location groups to the two term groups.
+  // Entities fill only "Entity type" — the case_type and tags facets come back
+  // empty for them. Materials carry NO facet at all (their only non-empty
+  // bucket is entity_type, which this tab hides), so that tab reserves nothing
+  // rather than two blocks that never arrive on a /materials cold load.
   const groupRowCounts =
     selectedType === "courtcase"
       ? [3, 3, 3, 3, 3, 3]
       : selectedType === "entity"
         ? [4]
-        : selectedType === "case"
-          ? [4, 3]
+        : selectedType === "material"
+          ? []
           : [4, 3];
 
   return (
@@ -265,7 +273,7 @@ function FilterGroup({
   selectedValues: string[];
   title: string;
 }>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const searchId = useId();
@@ -288,14 +296,15 @@ function FilterGroup({
   }, [items, selectedValues]);
 
   // Labels are resolved once: the search matches what the reader can SEE, not
-  // the raw facet token behind it.
+  // the raw facet token behind it. That includes the court names, which are
+  // Nepali under a Nepali UI — so the language is part of the dependency list.
   const labelled = useMemo(
     () =>
       displayItems.map((item) => ({
         item,
-        label: getFacetItemLabel(name, item, t),
+        label: getFacetItemLabel(name, item, t, i18n.language),
       })),
-    [displayItems, name, t],
+    [displayItems, name, t, i18n.language],
   );
 
   const needle = query.trim().toLocaleLowerCase();
