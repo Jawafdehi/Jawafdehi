@@ -380,7 +380,11 @@
       "description": "Jawafdehi is run by volunteers and funded by people who believe corruption should never be forgotten. Your donation pays for the servers, document archiving, and tooling that keep this public record permanent and free for everyone.",
       "giveNow": "Ways to contribute",
       "contactUs": "Contact us",
-      "email": "Email us"
+      "email": "Email us",
+      "stats": {
+        "cases": "Cases documented",
+        "entities": "Entities tracked"
+      }
     },
     "impact": {
       "eyebrow": "Where your money goes",
@@ -476,6 +480,9 @@
           "a": "Yes. You can help with research, translation, design, engineering, documentation, outreach, or reviewing public records. Email us and tell us how you would like to contribute."
         }
       ]
+    },
+    "journey": {
+      "you": "Your donation"
     }
   },
   "products": {

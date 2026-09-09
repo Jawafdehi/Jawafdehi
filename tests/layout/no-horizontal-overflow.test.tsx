@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { render } from '@testing-library/react';
 
-import { DonationInfo } from '@/components/donate/info';
+import { PayCard } from '@/components/donate/pay-card';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -47,7 +47,9 @@ function tsxFiles(dir: string): string[] {
 
 describe('the /donate CTA can wrap its Nepali label', () => {
   it('renders whitespace-normal, and tailwind-merge drops the base nowrap', () => {
-    const { container } = render(<DonationInfo />);
+    const { container } = render(<PayCard />);
+    // The PayPal CTA lives on the "from abroad" panel; it stays mounted behind
+    // `hidden` while the Nepal tab is active, so it is queryable either way.
     const cta = container.querySelector<HTMLAnchorElement>('a[href*="paypal"]');
 
     expect(cta, 'no PayPal CTA rendered').not.toBeNull();

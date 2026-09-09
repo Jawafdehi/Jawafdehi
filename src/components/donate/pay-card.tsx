@@ -25,6 +25,9 @@ const WALLETS = [
 
 type WalletId = (typeof WALLETS)[number]["id"];
 
+const REGIONS = ["nepal", "abroad"] as const;
+type Region = (typeof REGIONS)[number];
+
 // Best-effort clipboard write. Prefers the async Clipboard API but falls back to
 // a legacy execCommand("copy") for insecure (HTTP) contexts and older browsers
 // where navigator.clipboard is unavailable. Returns whether the copy succeeded.
@@ -91,70 +94,62 @@ function useCopyFeedback(duration = 1800) {
   return { copied, failed, copy };
 }
 
-// Nepal — direct bank transfer, plus the two Nepali QR networks.
-function NepalCard() {
+// Nepal — the two Nepali QR networks, plus direct bank transfer.
+function NepalPanel() {
   const { t } = useTranslation();
   const { copied, failed, copy } = useCopyFeedback();
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
   return (
-    <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
-      <h3 className="text-3xl font-bold leading-[1.05] text-primary">
-        {t("donate.ways.nepali.title")}
-      </h3>
+    <div>
+      <p className="text-base font-semibold leading-6 text-primary">
+        {t("donate.ways.nepali.qrTitle")}
+      </p>
+      <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
+        {t("donate.ways.nepali.qrDescription")}
+      </p>
 
-      {/* No rule here: the title carries no subtitle, so a divider would sit
-          straight under it and push the QR down for nothing. */}
-      <div className="mt-4">
-        <p className="text-base font-semibold leading-6 text-primary">
-          {t("donate.ways.nepali.qrTitle")}
-        </p>
-        <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
-          {t("donate.ways.nepali.qrDescription")}
-        </p>
-
-        <div
-          role="group"
-          aria-label={t("donate.ways.nepali.walletSwitchAria")}
-          className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
-        >
-          {WALLETS.map(({ id }) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={id === wallet}
-              onClick={() => setWallet(id)}
-              className={
-                id === wallet
-                  ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
-                  : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-              }
-            >
-              {t(`donate.ways.nepali.wallets.${id}.label`)}
-            </button>
-          ))}
-        </div>
-
-        {/* Both networks stay mounted so switching never re-fetches, and the two
-            images share one canvas size so the card cannot shift height. */}
-        <div className="mt-3 w-[200px] overflow-hidden rounded-md bg-white p-2">
-          {WALLETS.map(({ id, src }) => (
-            <img
-              key={id}
-              src={src}
-              alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
-              width={600}
-              height={736}
-              loading="lazy"
-              hidden={id !== wallet}
-              className="h-auto w-full"
-            />
-          ))}
-        </div>
+      <div
+        role="group"
+        aria-label={t("donate.ways.nepali.walletSwitchAria")}
+        className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
+      >
+        {WALLETS.map(({ id }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={id === wallet}
+            onClick={() => setWallet(id)}
+            className={
+              id === wallet
+                ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
+                : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+            }
+          >
+            {t(`donate.ways.nepali.wallets.${id}.label`)}
+          </button>
+        ))}
       </div>
 
-      <dl className="mt-6 grid gap-2.5 border-t border-border/60 pt-5">
+      {/* Both networks stay mounted so switching never re-fetches, and the two
+          images share one canvas size so the card cannot shift height. */}
+      <div className="mt-3 w-[180px] overflow-hidden rounded-md bg-white p-2">
+        {WALLETS.map(({ id, src }) => (
+          <img
+            key={id}
+            src={src}
+            alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
+            width={600}
+            height={736}
+            loading="lazy"
+            hidden={id !== wallet}
+            className="h-auto w-full"
+          />
+        ))}
+      </div>
+
+      <dl className="mt-5 grid gap-2.5 border-t border-border/60 pt-4">
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
             {t("donate.ways.nepali.nameLabel")}
@@ -226,20 +221,17 @@ function NepalCard() {
           ) : null}
         </div>
       </dl>
-    </article>
+    </div>
   );
 }
 
 // Outside Nepal — the US 501(c)(3), via PayPal Giving Fund.
-function UsCard() {
+function AbroadPanel() {
   const { t } = useTranslation();
 
   return (
-    <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground md:p-8">
-      <h3 className="text-3xl font-bold leading-[1.05] text-primary">
-        {t("donate.ways.us.title")}
-      </h3>
-      <p className="mt-2 text-sm font-medium text-accent">
+    <div>
+      <p className="text-sm font-medium text-accent">
         {t("donate.ways.us.whoFor")}
       </p>
       <p className="mt-2 text-xs font-medium leading-5 text-accent">
@@ -247,17 +239,15 @@ function UsCard() {
       </p>
 
       <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-1.5">
-            <SiPaypal
-              className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
-              aria-hidden="true"
-            />
-            <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
-              {t("donate.ways.us.paypal.title")}
-            </span>
+        <span className="inline-flex items-center gap-1.5">
+          <SiPaypal
+            className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
+            aria-hidden="true"
+          />
+          <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
+            {t("donate.ways.us.paypal.title")}
           </span>
-        </div>
+        </span>
         <p className="text-sm leading-5 text-card-foreground/70">
           {t("donate.ways.us.paypal.detail")}
         </p>
@@ -265,11 +255,9 @@ function UsCard() {
             sentence in Nepali: "PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्".
             `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then
             sizes the button to that unbreakable line — 350px of min-content, which
-            floored the grid track and pushed the whole card to 398px. That was 94px
-            of horizontal overflow at 320px wide, and a 29% page zoom-out.
-            This is a localisation defect as much as a layout one: the English label
-            fits and the Nepali one does not, and Nepali is the default (lang="ne").
-            `h-auto` because a wrapped label no longer fits `size="sm"`'s 36px. */}
+            floors the grid track and overflows a 320px phone. See
+            tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a
+            wrapped label no longer fits `size="sm"`'s 36px. */}
         <Button
           asChild
           variant="primary"
@@ -293,33 +281,60 @@ function UsCard() {
           </a>
         </Button>
       </div>
-    </article>
+    </div>
   );
 }
 
-export function DonationInfo() {
+/**
+ * The payment card: one card, two regions. Giving from inside Nepal (QR
+ * networks + bank transfer) is the default tab; giving from abroad (PayPal
+ * Giving Fund → the US 501(c)(3)) is the other. Both panels stay mounted so
+ * switching never re-fetches the QR images and never loses copy state.
+ */
+export function PayCard() {
   const { t } = useTranslation();
+  const [region, setRegion] = useState<Region>("nepal");
 
   return (
-    <section
-      id="donate"
-      className="scroll-mt-[76px] bg-background py-16 md:py-20"
-      aria-labelledby="donate-ways-title"
-    >
-      <div className="layout-container">
-        <div className="mx-auto max-w-6xl">
-          {/* Kept for the section's accessible name and the document outline,
-              but no longer shown — the two cards carry their own headings. */}
-          <h2 id="donate-ways-title" className="sr-only">
-            {t("donate.ways.title")}
-          </h2>
-
-          <div className="grid items-start gap-5 md:grid-cols-2 md:gap-6">
-            <NepalCard />
-            <UsCard />
-          </div>
-        </div>
+    <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground shadow-lg md:p-7">
+      <div
+        role="group"
+        aria-label={t("donate.ways.title")}
+        className="grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1"
+      >
+        {REGIONS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={id === region}
+            onClick={() => {
+              setRegion(id);
+              trackEvent("donate_click", {
+                method: "region_toggle",
+                action: id,
+              });
+            }}
+            className={
+              id === region
+                ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                : "rounded-md px-3 py-2 text-sm font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+            }
+          >
+            {t(
+              id === "nepal"
+                ? "donate.ways.nepali.title"
+                : "donate.ways.us.title",
+            )}
+          </button>
+        ))}
       </div>
-    </section>
+
+      <div className="mt-5" hidden={region !== "nepal"}>
+        <NepalPanel />
+      </div>
+      <div className="mt-5" hidden={region !== "abroad"}>
+        <AbroadPanel />
+      </div>
+    </article>
   );
 }
