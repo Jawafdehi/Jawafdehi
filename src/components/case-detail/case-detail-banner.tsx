@@ -236,7 +236,7 @@ export function CaseDetailBanner({
 
               <h1
                 className={cn(
-                  "mb-6 w-full break-words text-balance font-bold tracking-tight text-foreground",
+                  "mb-6 w-full break-words font-bold tracking-tight text-foreground",
                   titleSizeClass,
                 )}
               >
