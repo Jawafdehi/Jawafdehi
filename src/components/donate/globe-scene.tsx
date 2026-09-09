@@ -55,11 +55,13 @@ const CITIES = [
   { name: "Johannesburg", lat: -26.2041, lon: 28.0473 },
 ] as const;
 
-// Scene-local palette. The deep core and the slate/amber sprite colors are
-// stage lighting for an always-dark panel, not brand tokens — same as the
-// hero scene's DARK_POINT (tests/brand/tokens.test.ts pins the real tokens).
-const CORE_NAVY = 0x060d1a;
-const SLATE = "#8FA6CB";
+// Scene-local palette, lit for the dark stage but tuned to read as Earth:
+// deep ocean blue core, soft green land dots, blue atmosphere. The amber
+// arcs/cities and the crimson beacon are stage lighting, not brand tokens —
+// same as the hero scene's DARK_POINT (tests/brand/tokens.test.ts pins the
+// real tokens).
+const OCEAN_BLUE = 0x0d2f55;
+const LAND_GREEN = "#8FCF9B";
 const AMBER = "#F2A93B";
 const AMBER_HEX = 0xf2a93b;
 const BEACON = "#F04C54";
@@ -186,7 +188,7 @@ function mountGlobe(container: HTMLDivElement): () => void {
   // Atmosphere glow behind the globe.
   const glow = new Sprite(
     new SpriteMaterial({
-      map: glowTexture("66,110,180"),
+      map: glowTexture("90,150,220"),
       transparent: true,
       depthWrite: false,
     }),
@@ -198,7 +200,7 @@ function mountGlobe(container: HTMLDivElement): () => void {
   globe.add(
     new Mesh(
       new SphereGeometry(0.992, 48, 48),
-      new MeshBasicMaterial({ color: CORE_NAVY }),
+      new MeshBasicMaterial({ color: OCEAN_BLUE }),
     ),
   );
 
@@ -310,7 +312,7 @@ function mountGlobe(container: HTMLDivElement): () => void {
         new PointsMaterial({
           size: 0.012,
           sizeAttenuation: true,
-          map: discTexture(SLATE),
+          map: discTexture(LAND_GREEN),
           color: 0x8fa6cb,
           transparent: true,
           opacity: 0.75,

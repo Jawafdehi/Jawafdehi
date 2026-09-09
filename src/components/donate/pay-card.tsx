@@ -94,87 +94,124 @@ function useCopyFeedback(duration = 1800) {
   return { copied, failed, copy };
 }
 
-// The Prime Commercial Bank account block, shared by the Nepal panel (direct
-// transfer) and the abroad panel (remittance deposits land in the same
-// account). `trackMethod` distinguishes the two contexts in analytics. Each
-// instance owns its copy-feedback state, so copying in one panel never
-// flashes "copied" in the other.
-function BankDetails({ trackMethod }: { trackMethod: string }) {
+// One copyable row of the bank-details block: label, value, and a copy button
+// that owns its own transient feedback state, so copying one row never
+// flashes "copied" on another.
+function CopyRow({
+  label,
+  display,
+  copyText,
+  copyAria,
+  action,
+  trackMethod,
+  mono = false,
+}: {
+  label: string;
+  display: string;
+  copyText: string;
+  copyAria: string;
+  action: string;
+  trackMethod: string;
+  mono?: boolean;
+}) {
   const { t } = useTranslation();
   const { copied, failed, copy } = useCopyFeedback();
 
   return (
-    <dl className="grid gap-2.5">
-      <div>
-        <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
-          {t("donate.ways.nepali.nameLabel")}
-        </dt>
-        <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
-          {t("donate.ways.nepali.accountName")}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
-          {t("donate.ways.nepali.bankLabel")}
-        </dt>
-        <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
-          {t("donate.ways.nepali.bankName")} (
-          {t("donate.ways.nepali.branchName")})
-        </dd>
-      </div>
-      <div>
-        <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
-          {t("donate.ways.nepali.accountLabel")}
-        </dt>
-        <dd className="mt-0.5 flex items-center gap-1">
-          <span className="min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary">
-            {NEPALI_BANK_ACCOUNT_NUMBER}
+    <div>
+      <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
+        {label}
+      </dt>
+      <dd className="mt-0.5 flex items-center gap-1">
+        <span
+          className={
+            mono
+              ? "min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary"
+              : "min-w-0 select-all text-sm font-medium leading-5 text-card-foreground"
+          }
+        >
+          {display}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            copy(copyText);
+            trackEvent("donate_click", { method: trackMethod, action });
+          }}
+          aria-label={
+            copied
+              ? t("donate.ways.copied")
+              : failed
+                ? t("donate.ways.copyFailed")
+                : copyAria
+          }
+          title={
+            copied
+              ? t("donate.ways.copied")
+              : failed
+                ? t("donate.ways.copyFailed")
+                : copyAria
+          }
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {copied ? (
+            <Check className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Copy className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span aria-live="polite" className="sr-only">
+            {copied
+              ? t("donate.ways.copied")
+              : failed
+                ? t("donate.ways.copyFailed")
+                : ""}
           </span>
-          <button
-            type="button"
-            onClick={() => {
-              copy(NEPALI_BANK_ACCOUNT_NUMBER);
-              trackEvent("donate_click", {
-                method: trackMethod,
-                action: "copy_account",
-              });
-            }}
-            aria-label={
-              copied
-                ? t("donate.ways.copied")
-                : failed
-                  ? t("donate.ways.copyFailed")
-                  : t("donate.ways.nepali.copyAria")
-            }
-            title={
-              copied
-                ? t("donate.ways.copied")
-                : failed
-                  ? t("donate.ways.copyFailed")
-                  : t("donate.ways.nepali.copyAria")
-            }
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            {copied ? (
-              <Check className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Copy className="h-4 w-4" aria-hidden="true" />
-            )}
-            <span aria-live="polite" className="sr-only">
-              {copied
-                ? t("donate.ways.copied")
-                : failed
-                  ? t("donate.ways.copyFailed")
-                  : ""}
-            </span>
-          </button>
-        </dd>
-        {failed ? (
-          <p className="mt-1 text-xs font-medium text-destructive">
-            {t("donate.ways.copyFailed")}
-          </p>
-        ) : null}
-      </div>
+        </button>
+      </dd>
+      {failed ? (
+        <p className="mt-1 text-xs font-medium text-destructive">
+          {t("donate.ways.copyFailed")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+// The Prime Commercial Bank account block, shared by the Nepal panel (direct
+// transfer) and the abroad panel (remittance deposits land in the same
+// account). `trackMethod` distinguishes the two contexts in analytics. Every
+// row is copyable — donors paste each field into their banking or remittance
+// app — and each row owns its feedback state independently.
+function BankDetails({ trackMethod }: { trackMethod: string }) {
+  const { t } = useTranslation();
+
+  return (
+    <dl className="grid gap-2.5">
+      <CopyRow
+        label={t("donate.ways.nepali.nameLabel")}
+        display={t("donate.ways.nepali.accountName")}
+        copyText={t("donate.ways.nepali.accountName")}
+        copyAria={t("donate.ways.nepali.copyNameAria")}
+        action="copy_name"
+        trackMethod={trackMethod}
+      />
+      <CopyRow
+        label={t("donate.ways.nepali.bankLabel")}
+        display={`${t("donate.ways.nepali.bankName")} (${t("donate.ways.nepali.branchName")})`}
+        copyText={t("donate.ways.nepali.bankName")}
+        copyAria={t("donate.ways.nepali.copyBankAria")}
+        action="copy_bank"
+        trackMethod={trackMethod}
+      />
+      <CopyRow
+        label={t("donate.ways.nepali.accountLabel")}
+        display={NEPALI_BANK_ACCOUNT_NUMBER}
+        copyText={NEPALI_BANK_ACCOUNT_NUMBER}
+        copyAria={t("donate.ways.nepali.copyAria")}
+        action="copy_account"
+        trackMethod={trackMethod}
+        mono
+      />
     </dl>
   );
 }

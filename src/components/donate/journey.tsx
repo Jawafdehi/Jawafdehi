@@ -15,20 +15,26 @@ const isImpactItem = (item: unknown): item is ImpactItem =>
 
 /**
  * "Where your money goes", drawn as a journey rather than a feature grid:
- * donor → Jawafdehi Initiative → the four cost categories the money actually
- * covers. The connectors are dashed CSS borders, not SVG, so the board costs
- * nothing to ship and reflows naturally: a horizontal fan-out on desktop,
- * one vertical rail on phones.
+ * donor → Jawafdehi Initiative → the four cost categories the money covers →
+ * the three public outcomes it becomes. The connectors are dashed CSS borders,
+ * not SVG, so the board costs nothing to ship and reflows naturally: a
+ * horizontal fan-out on desktop, one vertical rail on phones.
  *
  * Deliberately qualitative — no percentage split is claimed anywhere, because
  * none has been published. If a real allocation breakdown lands later it can
- * be added per-card without restructuring.
+ * be added per-card without restructuring. The outcomes row states only what
+ * the site verifiably does: publishes sourced cases, keeps the archive online,
+ * and keeps it free.
  */
 export function DonationJourney() {
   const { t } = useTranslation();
   const rawImpactItems = t("donate.impact.items", { returnObjects: true });
   const impactItems = Array.isArray(rawImpactItems)
     ? rawImpactItems.filter(isImpactItem)
+    : [];
+  const rawOutcomeItems = t("donate.outcomes.items", { returnObjects: true });
+  const outcomeItems = Array.isArray(rawOutcomeItems)
+    ? rawOutcomeItems.filter(isImpactItem)
     : [];
 
   return (
@@ -52,7 +58,10 @@ export function DonationJourney() {
         </div>
 
         <div className="mx-auto mt-12 max-w-6xl md:mt-14">
-          {/* The spine: donor → initiative. */}
+          {/* Stage 1 — the spine: donor → initiative. */}
+          <p className="mb-3 text-center font-mono text-xs font-semibold uppercase tracking-wider text-accent">
+            {t("donate.journey.stageGive")}
+          </p>
           <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-primary">
               <User className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -73,12 +82,16 @@ export function DonationJourney() {
             </span>
           </div>
 
-          {/* The drop from the spine into the fan-out. */}
+          {/* The drop from the spine into the cost fan-out. */}
           <div
             aria-hidden="true"
             className="mx-auto h-10 w-0 border-l-2 border-dashed border-border"
           />
 
+          {/* Stage 2 — what the money covers. */}
+          <p className="mb-3 text-center font-mono text-xs font-semibold uppercase tracking-wider text-accent">
+            {t("donate.journey.stageAllocated")}
+          </p>
           <ol className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {impactItems.map((item, index) => (
               <li
@@ -100,6 +113,33 @@ export function DonationJourney() {
               </li>
             ))}
           </ol>
+
+          {/* The drop from costs into outcomes. */}
+          <div
+            aria-hidden="true"
+            className="mx-auto h-10 w-0 border-l-2 border-dashed border-border"
+          />
+
+          {/* Stage 3 — what it becomes. Navy cards so outcomes read as the
+              destination of the journey, not four more cost lines. */}
+          <p className="mb-3 text-center font-mono text-xs font-semibold uppercase tracking-wider text-accent">
+            {t("donate.journey.stageBecomes")}
+          </p>
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {outcomeItems.map((item) => (
+              <li
+                key={item.title}
+                className="rounded-lg bg-primary p-5 text-primary-foreground"
+              >
+                <h3 className="text-base font-bold leading-snug">
+                  {item.title}
+                </h3>
+                <p className="mt-1.5 text-sm leading-6 text-primary-foreground/75">
+                  {item.desc}
+                </p>
+              </li>
+            ))}
+          </ul>
 
           <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-6 text-foreground/60">
             {t("donate.transparency.description")}
