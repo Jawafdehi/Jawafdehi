@@ -45,6 +45,25 @@ function normalizeOutcome(outcome: string): EntityOutcome {
     : "charged";
 }
 
+/**
+ * Sort weight for a verdict: decided outcomes first — convicted, then
+ * acquitted, then abated — and undecided (`charged`, or none) last. Lower sorts
+ * first.
+ */
+export function outcomeRank(outcome: EntityOutcome | null | undefined): number {
+  if (!outcome) return 3;
+  switch (normalizeOutcome(outcome)) {
+    case "convicted":
+      return 0;
+    case "acquitted":
+      return 1;
+    case "abated":
+      return 2;
+    default:
+      return 3;
+  }
+}
+
 export function outcomeLabel(outcome: EntityOutcome, language: string): string {
   const lang = language === "ne" ? "ne" : "en";
   return OUTCOME_LABELS[normalizeOutcome(outcome)][lang];
