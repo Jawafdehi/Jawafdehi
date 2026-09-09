@@ -41,27 +41,29 @@ export function AuthorCard({ author, className }: Readonly<AuthorCardProps>) {
           src={photo}
           alt=""
           loading="lazy"
-          className="h-10 w-10 shrink-0 rounded-full object-cover"
+          width={44}
+          height={44}
+          className="h-11 w-11 shrink-0 rounded-full object-cover"
         />
       ) : (
         <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground"
           aria-hidden="true"
         >
           <User className="h-5 w-5" />
         </span>
       )}
       <span className="min-w-0">
-        <span className="block truncate text-sm font-semibold text-primary">{name}</span>
+        <span className="block break-words text-sm font-semibold leading-5 text-primary">{name}</span>
         {title && (
-          <span className="block truncate text-xs text-muted-foreground">{title}</span>
+          <span className="mt-0.5 block break-words text-xs leading-5 text-muted-foreground">{title}</span>
         )}
       </span>
     </>
   );
 
   const shared = cn(
-    "flex items-center gap-3 rounded-md border border-border/70 bg-background px-3 py-2",
+    "flex min-w-0 items-center gap-3 rounded-2xl bg-muted/60 p-3",
     className,
   );
 
@@ -76,7 +78,7 @@ export function AuthorCard({ author, className }: Readonly<AuthorCardProps>) {
   return (
     <Link
       to={`/author/${author.slug}`}
-      className={cn(shared, "transition-colors hover:border-primary/40 hover:bg-primary/5")}
+      className={cn(shared, "transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2")}
       data-testid="author-card"
     >
       {body}

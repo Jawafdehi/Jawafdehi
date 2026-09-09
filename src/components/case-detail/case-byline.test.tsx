@@ -61,6 +61,14 @@ describe("CaseByline — author cards", () => {
     expect(cards[1].textContent).toContain("BALLB 4th Year Student");
   });
 
+  it("keeps author cards compact instead of stretching across the byline row", () => {
+    const { container } = renderByline(<CaseByline authors={AUTHORS} />);
+    const card = container.querySelector('[data-testid="author-card"]');
+
+    expect(card?.className).toContain("sm:max-w-sm");
+    expect(card?.className).not.toContain("sm:flex-1");
+  });
+
   it("links a card to the profile only when that profile is published", () => {
     const { container } = renderByline(
       <CaseByline
