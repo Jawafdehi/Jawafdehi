@@ -17,6 +17,7 @@ describe("EntityIdentity", () => {
     expect(text.className).toContain("w-full");
     expect(text.className).toContain("min-w-0");
     expect(screen.getByText(LONG).className).toContain("break-words");
+    expect(screen.getByText(LONG).className).not.toContain("line-clamp");
     expect(screen.getByText("भूमि व्यवस्था मन्त्रालय").className).toContain("truncate");
   });
 
@@ -25,7 +26,9 @@ describe("EntityIdentity", () => {
     const text = screen.getByTestId("entity-identity-text");
     expect(text.className).toContain("flex-1");
     expect(text.className).toContain("min-w-0");
-    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(LONG);
+    const heading = screen.getByRole("heading", { level: 3 });
+    expect(heading.textContent).toBe(LONG);
+    expect(heading.className).toContain("line-clamp-2");
   });
 
   it("draws the kind glyph when there is no picture and hides it from AT", () => {

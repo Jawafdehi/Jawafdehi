@@ -52,7 +52,8 @@ export function EntityIdentity({
         <Name
           className={cn(
             "block break-words text-base font-medium leading-snug text-primary",
-            tile && "text-balance",
+            // A tile has room for the whole name; a row must stay compact.
+            tile ? "text-balance" : "line-clamp-2",
           )}
         >
           {name}
