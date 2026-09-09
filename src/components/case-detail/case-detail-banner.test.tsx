@@ -53,6 +53,43 @@ const renderBanner = (caseData: CaseDetail) =>
   );
 
 describe("CaseDetailBanner short_description deck (#6)", () => {
+  it("keeps actions with the case record and all three contributors in the independent sidebar", () => {
+    const authors = Array.from({ length: 3 }, (_, index) => ({
+      display_name: `Contributor ${index + 1}`, slug: `contributor-${index}`,
+      title: "Caseworker", photo_url: "", has_public_page: false,
+    }));
+    render(<MemoryRouter><CaseDetailBanner
+      caseData={makeCase({ authors, case_publish_date: "2026-01-03" })}
+      resolvedEntities={{}} actions={<button>Submit information</button>}
+    /></MemoryRouter>);
+    const main = screen.getByTestId("case-dossier-main");
+    const sidebar = screen.getByTestId("case-dossier-sidebar");
+    expect(main.contains(screen.getByRole("button", { name: "Submit information" }))).toBe(true);
+    expect(sidebar.querySelectorAll('[data-testid="author-card"]')).toHaveLength(3);
+    expect(main.querySelector('[data-testid="case-byline"]')).toBeNull();
+    expect(screen.getByTestId("case-byline-published").compareDocumentPosition(screen.getByTestId("case-byline-authors"))).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("keeps the hero and metadata in the same centered page-width column", () => {
+    renderBanner(makeCase());
+
+    expect(screen.getByTestId("case-detail-hero").className).toContain("max-w-[1400px]");
+    expect(screen.getByTestId("case-detail-metadata").className).toContain("max-w-[1400px]");
+  });
+
+  it("keeps the image standalone and places the title in the readable content block below", () => {
+    const { container } = renderBanner(makeCase());
+    const heroImage = screen.getByTestId("case-detail-hero-image");
+    const title = screen.getByRole("heading", { name: "Test case title" });
+
+    expect(heroImage.className).not.toContain("absolute");
+    expect(heroImage.getAttribute("width")).toBe("1400");
+    expect(container.querySelector("[class*='bg-gradient']")).toBeNull();
+    expect(screen.getByTestId("case-detail-hero").compareDocumentPosition(title)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it("renders the short description as a lead at the top of the case", () => {
     renderBanner(makeCase());
     expect(screen.getByText(SHORT_DESC)).toBeTruthy();
@@ -97,7 +134,7 @@ describe("CaseDetailBanner breadcrumb defaults", () => {
 
     // The mock returns the key when no fallback is given, so a translated
     // default shows up as its key and a hardcoded string as itself.
-    expect(nav.textContent).toContain("header.title");
+    expect(nav.textContent).toContain("nav.home");
     expect(nav.textContent).toContain("nav.cases");
     expect(nav.textContent).not.toContain("jawafdehi.org");
   });

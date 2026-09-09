@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { EntityAvatar } from "@/components/EntityAvatar";
+import { EntityIdentity } from "@/components/EntityIdentity";
 import { Reveal } from "@/components/ui/reveal";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
@@ -22,7 +22,7 @@ import { entityKindFor, getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
-import { outcomeBadgeClass, outcomeLabel, shouldShowOutcome } from "@/utils/case-outcome";
+import { outcomeBadgeClass, outcomeLabel, outcomeRank, shouldShowOutcome } from "@/utils/case-outcome";
 
 interface CaseEntityCardsProps {
   className?: string;
@@ -191,28 +191,25 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
       return !v;
     });
 
-  // Front: photo (or glyph) + name only.
+  // Front: photo (or glyph), name, and the verdict when there is one. Inside a
+  // <button>, so the name is a span.
   const frontContent = (
-    <>
-      <EntityAvatar kind={kind} src={imageUrl} />
-      <div className="min-w-0">
-        <span className="block text-balance break-words text-base font-medium leading-snug text-primary">
-          {names.primary}
-        </span>
-        {names.alternate && (
-          <span className="mt-0.5 block truncate text-sm text-muted-foreground">{names.alternate}</span>
-        )}
-      </div>
-    </>
+    <EntityIdentity kind={kind} src={imageUrl} layout="tile" name={names.primary} alternate={names.alternate}>
+      {showOutcome && (
+        <Badge variant="outline" className={cn("mt-3 text-sm", outcomeBadgeClass(jawafEntity.outcome))}>
+          {outcomeLabel(jawafEntity.outcome, language)}
+        </Badge>
+      )}
+    </EntityIdentity>
   );
   const frontClass = cn(
     "relative flex h-full min-h-[15rem] w-full flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center",
     SURFACE,
   );
 
-  // Nothing to reveal (no notes, no decided verdict) → the card stays put and
-  // the front itself links to the profile.
-  if (!notes && !showOutcome) {
+  // Nothing to reveal (no notes; the verdict is on the front) → the card stays
+  // put and the front itself links to the profile.
+  if (!notes) {
     const staticClass = cn(
       "group relative block h-full touch-manipulation rounded-2xl transition-transform duration-200 [-webkit-tap-highlight-color:transparent]",
       EASE_OUT,
@@ -233,20 +230,13 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
   const details = (
     <>
       <span className="sr-only">{names.primary}</span>
-      {/* One block — badge directly above the text — centred while it fits;
-          `my-auto` collapses to 0 once it overflows so the top stays reachable. */}
+      {/* Centred while it fits; `my-auto` collapses to 0 once it overflows so
+          the top stays reachable. */}
       <div
         ref={scrollRef}
         className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 [scrollbar-width:thin]", SETTLE, "delay-150")}
       >
-        <div className="my-auto flex flex-col gap-3">
-          {showOutcome && (
-            <Badge variant="outline" className={cn("self-start text-sm", outcomeBadgeClass(jawafEntity.outcome))}>
-              {outcomeLabel(jawafEntity.outcome, language)}
-            </Badge>
-          )}
-          {notes && <p className="font-paragraph font-paragraph-compact text-primary/85">{notes}</p>}
-        </div>
+        <p className="my-auto font-paragraph font-paragraph-compact text-primary/85">{notes}</p>
       </div>
     </>
   );
@@ -329,7 +319,10 @@ export function CaseEntityCards({
 
   if (entities.length === 0) return null;
 
-  const displayed = isExpanded ? entities : entities.slice(0, initialLimit);
+  // Decided verdicts lead: convicted, then acquitted, then abated; charged and
+  // verdict-less parties keep their given order after them.
+  const ordered = [...entities].sort((a, b) => outcomeRank(a.outcome) - outcomeRank(b.outcome));
+  const displayed = isExpanded ? ordered : ordered.slice(0, initialLimit);
   const remaining = entities.length - initialLimit;
   const hasMore = remaining > 0;
 

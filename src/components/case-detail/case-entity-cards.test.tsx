@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import { CaseEntityCards } from "@/components/case-detail/case-entity-cards";
 import type { JawafEntity } from "@/types/jds";
+import type { Entity } from "@/types/entity";
 
 // Passthrough translations, with `count` folded into the key so the "view more"
 // assertions don't depend on i18n resources (mirrors case-overview-section.test).
@@ -119,6 +120,34 @@ describe("CaseEntityCards — the flip and what it announces", () => {
 });
 
 describe("CaseEntityCards — which parties flip at all", () => {
+  it("constrains a long alternate-language name to its card", () => {
+    const longAlternateName = "Tek Narayan Pandey (Then-Secretary of Land Management)";
+    const entity: Pick<Entity, "names"> = {
+      names: [
+        {
+          kind: "PRIMARY",
+          en: { full: "Tek Narayan Pandey" },
+          ne: { full: longAlternateName },
+        },
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <CaseEntityCards
+          entities={[party()]}
+          resolvedEntities={{ [party().nes_id!]: entity as Entity }}
+          language="en"
+          initialLimit={9}
+        />
+      </MemoryRouter>,
+    );
+
+    // The alternate label uses `truncate`; its parent must fill, rather than
+    // grow beyond, the card for that overflow rule to take effect.
+    expect(screen.getByText(longAlternateName).parentElement?.className).toContain("w-full");
+  });
+
   it("leaves a party with nothing to reveal as a plain link, with no disclosure control", () => {
     const { container } = renderCards([party({ notes: "", outcome: null })]);
 
@@ -146,7 +175,20 @@ describe("CaseEntityCards — which parties flip at all", () => {
   it("renders the decided verdict on the details face", () => {
     renderCards([party({ outcome: "acquitted" })]);
 
-    expect(within(screen.getByRole("link")).queryByText("Acquitted")).not.toBeNull();
+    // The verdict sits on the front, under the name, not on the details face.
+    expect(within(screen.getByRole("button")).queryByText("Acquitted")).not.toBeNull();
+    expect(within(screen.getByRole("link")).queryByText("Acquitted")).toBeNull();
+  });
+
+  it("orders decided verdicts first: convicted, acquitted, abated, then charged", () => {
+    renderCards([
+      party({ nes_id: "https://jawafdehi.org/entity/person/a", display_name: "A", outcome: "charged" }),
+      party({ nes_id: "https://jawafdehi.org/entity/person/b", display_name: "B", outcome: "acquitted" }),
+      party({ nes_id: "https://jawafdehi.org/entity/person/c", display_name: "C", outcome: "abated" }),
+      party({ nes_id: "https://jawafdehi.org/entity/person/d", display_name: "D", outcome: "convicted" }),
+    ]);
+    const names = screen.getAllByRole("button").map((b) => b.textContent?.trim().charAt(0));
+    expect(names).toEqual(["D", "B", "C", "A"]);
   });
 });
 
