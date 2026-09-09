@@ -175,7 +175,20 @@ describe("CaseEntityCards — which parties flip at all", () => {
   it("renders the decided verdict on the details face", () => {
     renderCards([party({ outcome: "acquitted" })]);
 
-    expect(within(screen.getByRole("link")).queryByText("Acquitted")).not.toBeNull();
+    // The verdict sits on the front, under the name, not on the details face.
+    expect(within(screen.getByRole("button")).queryByText("Acquitted")).not.toBeNull();
+    expect(within(screen.getByRole("link")).queryByText("Acquitted")).toBeNull();
+  });
+
+  it("orders decided verdicts first: convicted, acquitted, abated, then charged", () => {
+    renderCards([
+      party({ nes_id: "https://jawafdehi.org/entity/person/a", display_name: "A", outcome: "charged" }),
+      party({ nes_id: "https://jawafdehi.org/entity/person/b", display_name: "B", outcome: "acquitted" }),
+      party({ nes_id: "https://jawafdehi.org/entity/person/c", display_name: "C", outcome: "abated" }),
+      party({ nes_id: "https://jawafdehi.org/entity/person/d", display_name: "D", outcome: "convicted" }),
+    ]);
+    const names = screen.getAllByRole("button").map((b) => b.textContent?.trim().charAt(0));
+    expect(names).toEqual(["D", "B", "C", "A"]);
   });
 });
 
