@@ -205,11 +205,11 @@ function NepalPanel() {
             type="button"
             aria-pressed={id === wallet}
             onClick={() => setWallet(id)}
-            className={
+            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               id === wallet
                 ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
                 : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-            }
+            }`}
           >
             {t(`donate.ways.nepali.wallets.${id}.label`)}
           </button>
@@ -377,11 +377,11 @@ export function PayCard() {
                 action: id,
               });
             }}
-            className={
+            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               id === region
                 ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
                 : "rounded-md px-3 py-2 text-sm font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-            }
+            }`}
           >
             {t(
               id === "nepal"
