@@ -21,7 +21,9 @@ const response: ArchiveSearchResponse = {
   page_size: 6,
   count: 1,
   counts: { case: 1 },
-  facets: { entity_type: [], case_type: [], tags: [], status: [] },
+  facets: {
+    entity_type: [], case_type: [], tags: [], status: [], court: [], court_type: [], district: [], province: [],
+  },
   next_cursor: null,
   results: [
     {

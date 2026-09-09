@@ -2062,6 +2062,11 @@
       "entityType": "Entity type",
       "caseType": "Case type",
       "tags": "Tags",
+      "courtType": "Court level",
+      "court": "Court",
+      "district": "District",
+      "province": "Province",
+      "provinceNational": "National jurisdiction",
       "bigo": "Embezzled amount",
       "bigoRange": {
         "any": "Any amount",
