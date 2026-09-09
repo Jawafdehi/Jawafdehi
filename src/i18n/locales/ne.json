@@ -584,6 +584,8 @@
       "unknown": "अन्य सम्बद्ध पक्षहरू"
     },
     "andMoreAccused": "र {{count}} थप",
+    "showMoreParties": "थप {{count}} हेर्नुहोस्",
+    "showLessParties": "थोरै हेर्नुहोस्",
     "evidence": "प्रमाण र स्रोतहरू",
     "missingDetails": "अपुग विवरणहरू",
     "notes": "टिप्पणीहरू",
@@ -1022,7 +1024,7 @@
     "allegedCases": "अभियुक्त मुद्दाहरू",
     "relatedCases": "सम्बन्धित मुद्दाहरू",
     "noAllegedCases": "कुनै अभियुक्त मुद्दा फेला परेन।",
-    "noRelatedCases": "कुनै सम्बन्धित मुद्दा फेला परेन।",
+    "noRelatedCases": "अहिलेसम्म कुनै सम्बन्धित मुद्दा छैन।",
     "moreCases": "+{{count}} थप",
     "loading": "संस्था विवरण लोड हुँदैछ...",
     "activeCases": "सक्रिय मुद्दाहरू",
@@ -1091,6 +1093,7 @@
     "constituency": "निर्वाचन क्षेत्र",
     "totalAllegations": "कुल अभियोगहरू",
     "cases": "मुद्दाहरू",
+    "caseOne": "मुद्दा",
     "entityDetails": "संस्था विवरण",
     "noNesDataAlert": "यो संस्थाको विस्तृत प्रोफाइल जानकारी अझै उपलब्ध छैन। मुद्दा रेकर्डबाट मात्र आधारभूत जानकारी देखाइएको छ।",
     "allegedCasesDescription": "यो संस्था संलग्न भएको अभियोग लागेका मुद्दाहरू",
@@ -1642,6 +1645,7 @@
       "description": "उही {{total}} सामग्री, कागजातको किसिम अनुसार वर्गीकृत।",
       "tooltip": "सामग्री",
       "type": {
+        "procurementNotice": "खरिद सूचना",
         "chargeSheet": "अभियोगपत्र",
         "precedent": "नजिर (अदालती आदेश)",
         "courtOrder": "अदालती आदेश",
@@ -2037,6 +2041,11 @@
       "entityType": "संस्था प्रकार",
       "caseType": "मुद्दा प्रकार",
       "tags": "ट्यागहरू",
+      "courtType": "अदालत तह",
+      "court": "अदालत",
+      "district": "जिल्ला",
+      "province": "प्रदेश",
+      "provinceNational": "राष्ट्रिय क्षेत्राधिकार",
       "bigo": "बिगो (रकम)",
       "bigoRange": {
         "any": "जुनसुकै रकम",
@@ -2052,7 +2061,14 @@
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
       "bigoNoMax": "अधिकतम छैन"
-    }
+    },
+    "materialSeries": "श्रृंखला",
+    "filterSearch": "{{filter}} खोज्नुहोस्",
+    "filterMore": "थप",
+    "filterLess": "थोरै",
+    "filterNoMatch": "कुनै मेल भएन",
+    "materialSource": "स्रोत",
+    "materialDate": "मिति"
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

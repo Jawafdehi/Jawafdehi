@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Calendar, Landmark, Library } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -7,20 +7,37 @@ import { Badge } from "@/components/ui/badge";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { CourtCaseCard } from "@/components/CourtCaseCard";
+import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import type {
-  ArchiveSearchResult,
-  BilingualText,
-  CaseSearchCard,
-  CaseSearchCardEntity,
-} from "@/types/search";
-import type { CaseDetail } from "@/types/jds";
+import { seriesBySource } from "@/data/material-series";
+import { sourceKeyFor } from "@/lib/material-source-labels";
+import {
+  materialTypeForSchemaClass,
+  materialTypeForSource,
+} from "@/lib/material-series-labels";
+import { materialTypeKeyFor } from "@/lib/material-type-labels";
+import {
+  renderSnippetHighlights,
+  renderTextHighlights,
+} from "@/lib/search-highlight";
+import {
+  formatLedgerDate,
+  pickLocalized,
+  pickLocalizedRaw,
+  resolveMaterialDate,
+  sourceFromMaterialUrl,
+} from "@/lib/materials-landing";
+import { SITE_URL } from "@/utils/seo";
+import type { ArchiveSearchResult, BilingualText } from "@/types/search";
 import { getCaseById } from "@/services/jds-api";
 import { cn } from "@/lib/utils";
-import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import {
+  caseCardPropsFromCaseDetail,
+  caseCardPropsFromSearchResult,
+} from "@/lib/case-card-props";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
-import { getSubjectEntities } from "@/utils/case-entities";
-import { humanizeEntityType } from "@/utils/entity-helpers";
+import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
+import { EntityIdentity } from "@/components/EntityIdentity";
 
 // Both the /search list and card views render the same components; `viewMode`
 // only decides whether the shared <CaseCard> lays out horizontally (list) or as
@@ -29,9 +46,11 @@ export type SearchViewMode = "list" | "card";
 
 // Auto-language: prefer English, fall back to Nepali (no toggle). Strips the HTML
 // <em> highlight tags that snippets carry so we render plain text.
+// Search highlights arrive as <em> marks; the cards render plain text.
+const stripHighlight = (value: string) => value.replace(/<\/?em>/g, "");
+
 function pickLang(text: BilingualText | undefined): string {
-  const value = text?.en || text?.ne || "";
-  return value.replace(/<\/?em>/g, "");
+  return stripHighlight(text?.en || text?.ne || "");
 }
 
 // Per-type display label for the badge.
@@ -58,8 +77,8 @@ function caseSlugFromUrl(url: string): string | undefined {
   return match?.[1];
 }
 
-// Result dispatcher. Case and court-case records each render their shared rich
-// card; entities and materials use the lightweight generic card.
+// Result dispatcher. Case, court-case and material records each render their
+// shared rich card; entities get the avatar card.
 export function SearchResultCard({
   result,
   viewMode = "list",
@@ -68,7 +87,111 @@ export function SearchResultCard({
   if (result.type === "courtcase") {
     return <CourtCaseResultCard result={result} viewMode={viewMode} />;
   }
+  if (result.type === "material") {
+    return <MaterialResultCard result={result} viewMode={viewMode} />;
+  }
+  if (result.type === "entity") return <EntityResultCard result={result} viewMode={viewMode} />;
   return <GenericResultCard result={result} viewMode={viewMode} />;
+}
+
+// Materials render the archive's shared document card (the /materials series
+// rows), fed entirely from the index hit: the source token in the URL names the
+// series (registry) or the publishing institution (long tail, same chain as
+// RecentMaterialsCarousel), and the mixed-calendar `extra.date` resolves
+// through the same BS-in-AD quirk handling as the /materials surfaces, so
+// 2082-* dates render as BS in the reader's calendar instead of leaking raw.
+//
+// No download/source buttons here, unlike the series rows: those need the
+// record's `associatedMedia`, which the search index does not carry, and
+// hydrating it per row cost a detail GET for every hit on a 346k-record browse
+// surface. The card links to the document, where the downloads live. Restoring
+// them belongs with indexing the media onto material docs — the same
+// denormalization cases already got (`result.card`).
+function MaterialResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  // The query text, for highlighting the fields the API does not mark up.
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const source = sourceFromMaterialUrl(result.url);
+  const series = source ? seriesBySource(source) : undefined;
+  // Every material names its series. A curated-registry source keeps its
+  // editorial name ("CIAA press releases" — it also has a browsable
+  // ?series= page); every other source resolves to its collection's document
+  // type, from the source map, falling back to the schema.org class the index
+  // always carries. Both read from one label catalogue, so nothing here
+  // invents copy.
+  const materialType =
+    (source ? materialTypeForSource(source) : null) ??
+    materialTypeForSchemaClass(result.extra.type);
+  const seriesName = series
+    ? pickLocalized(series.name, language)
+    : t(
+        `dataQuality.materialsByType.type.${materialTypeKeyFor(materialType)}`,
+        // Last resort for a catalogue gap: the type token read plainly, so a
+        // missing entry degrades the wording rather than dropping the line.
+        materialType.replaceAll("_", " "),
+      );
+  const dateLabel =
+    formatLedgerDate(resolveMaterialDate(result.extra), language) ||
+    t("materialsLanding.series.undated", "Undated");
+  // The publishing office — the catalogue's "creator", a different axis from
+  // the series: CIAA owns two series (press releases AND annual reports), and
+  // one series spans several offices (press releases come from CIAA, CIB and
+  // DMLI). Neither line implies the other, so the card carries both.
+  const officeLabel = t(
+    `dataQuality.materialsBySource.source.${sourceKeyFor(source ?? "")}`,
+    source ?? "",
+  );
+  const title =
+    pickLocalized(result.title, language) ||
+    t("materialsLanding.recent.untitled", "Untitled document");
+  // Snippets only arrive on text queries; pickLocalized strips the <em>
+  // highlight markup they carry. Many press-release bodies open with the title
+  // sentence, so a snippet that merely echoes the title — in either truncation
+  // direction — adds nothing; drop it.
+  const rawSnippet = pickLocalized(result.snippet, language);
+  const isTitleEcho =
+    rawSnippet.startsWith(title) || title.startsWith(rawSnippet);
+
+  const metaRows = [
+    {
+      icon: Library,
+      label: t("archiveSearch.materialSeries", "Series"),
+      value: renderTextHighlights(seriesName, query),
+    },
+    {
+      icon: Landmark,
+      label: t("archiveSearch.materialSource", "Source"),
+      value: renderTextHighlights(officeLabel, query),
+    },
+    {
+      icon: Calendar,
+      label: t("archiveSearch.materialDate", "Date"),
+      value: dateLabel,
+    },
+  ].filter((row) => Boolean(row.value));
+
+  return (
+    <MaterialCard
+      title={title}
+      titleNode={renderTextHighlights(title, query)}
+      href={result.url}
+      metaRows={metaRows}
+      // The API marks the snippet's matches itself, including stemmed and
+      // fuzzy hits, so those are rendered as given rather than re-guessed.
+      description={
+        isTitleEcho
+          ? undefined
+          : renderSnippetHighlights(pickLocalizedRaw(result.snippet, language))
+      }
+      shareUrl={`${SITE_URL}${result.url}`}
+      viewMode={viewMode}
+    />
+  );
 }
 
 function CourtCaseResultCard({
@@ -125,7 +248,7 @@ function CaseResultCard({
       <CaseCard
         viewMode={caseCardViewMode}
         onTagClick={handleTagClick}
-        {...caseCardPropsFromCard(indexedCard, result, i18n.language)}
+        {...caseCardPropsFromSearchResult(result, i18n.language)}
       />
     );
   }
@@ -134,7 +257,7 @@ function CaseResultCard({
       <CaseCard
         viewMode={caseCardViewMode}
         onTagClick={handleTagClick}
-        {...caseCardPropsFromDetail(caseDetail, result, i18n.language, caseSlug)}
+        {...caseCardPropsFromCaseDetail(caseDetail, result, i18n.language, caseSlug)}
       />
     );
   }
@@ -148,89 +271,7 @@ function CaseResultCard({
 }
 
 // ---------------------------------------------------------------------------
-// Case → <CaseCard> prop mapping
-// ---------------------------------------------------------------------------
-
-type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
-
-const CASE_STATUS_BADGE: Record<CaseSearchCard["status"], CaseCardStatus> = {
-  ongoing: "ongoing",
-  closed: "resolved",
-  others: "under-investigation",
-};
-
-function entityNames(entities: readonly { display_name: string | null; nes_id: string | null }[]): string[] {
-  return entities.map((e) => e.display_name || e.nes_id || "").filter(Boolean);
-}
-
-function entityIds(entities: readonly { nes_id: string | null }[]): string[] {
-  return entities.map((e) => e.nes_id).filter((id): id is string => Boolean(id));
-}
-
-// Map the indexed case-card payload (the common path on new docs) onto <CaseCard>.
-// `language` localizes the unknown-entity/location fallbacks the same way /cases does.
-function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult, language: string) {
-  const subject = getSubjectEntities<CaseSearchCardEntity>(card.entities, (e) => e.type);
-  const location = (card.entities || []).filter((e) => e.type === "location");
-  const names = entityNames(subject);
-  const locationList = entityNames(location);
-  return {
-    id: result.id,
-    slug: card.slug || caseSlugFromUrl(result.url) || null,
-    title: card.title || pickLang(result.title),
-    entity: names.join(", ") || translateDynamicText("Unknown Entity", language),
-    entityNames: names,
-    location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
-    status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
-    tags: card.tags || [],
-    entityIds: entityIds(subject),
-    locationIds: entityIds(location),
-    image: card.thumbnail ?? null,
-    thumbnailUrl: card.thumbnail_url || undefined,
-    bannerUrl: card.banner_url || undefined,
-    bigo: card.bigo,
-  };
-}
-
-// Fallback for older indexed docs with no card payload: derive from case detail.
-// Status is inferred from the case's date fields (same rule the cases list uses).
-function caseCardPropsFromDetail(
-  detail: CaseDetail,
-  result: ArchiveSearchResult,
-  language: string,
-  fallbackSlug?: string,
-) {
-  const entities = detail.entities || [];
-  const subject = getSubjectEntities(entities, (e) => e.type);
-  const location = entities.filter((e) => e.type === "location");
-  const names = entityNames(subject);
-  const locationList = entityNames(location);
-  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
-  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
-  const status: CaseCardStatus = hasStart && !hasEnd ? "ongoing" : hasStart && hasEnd ? "resolved" : "under-investigation";
-  return {
-    id: result.id,
-    slug: detail.slug || fallbackSlug || null,
-    title: detail.title || pickLang(result.title),
-    entity: names.join(", ") || translateDynamicText("Unknown Entity", language),
-    entityNames: names,
-    location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
-    status,
-    tags: detail.tags || [],
-    entityIds: entityIds(subject),
-    locationIds: entityIds(location),
-    image: detail.thumbnail ?? null,
-    thumbnailUrl: detail.thumbnail_url || undefined,
-    bannerUrl: detail.banner_url || undefined,
-    // Kept in step with the indexed-card path above: the two mappings feed the
-    // same <CaseCard>, so a field added to one must be added to both or a case
-    // silently loses it on older docs that fall back to the detail fetch.
-    bigo: detail.bigo,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Generic entity/material cards — one field set, two shells
+// Generic entity cards — one field set, two shells
 // ---------------------------------------------------------------------------
 
 // Single source of truth for WHAT a non-case result shows. Both view modes read
@@ -253,9 +294,9 @@ function genericResultFields(result: ArchiveSearchResult) {
   };
 }
 
-// Entity / material. `viewMode` picks the shell — a compact row for list, a
-// vertical tile for card — and nothing else: every field below renders in both
-// modes at the same clamp limits.
+// Entity (and any future untyped result). `viewMode` picks the shell — a
+// compact row for list, a vertical tile for card — and nothing else: every
+// field below renders in both modes at the same clamp limits.
 function GenericResultCard({
   result,
   viewMode,
@@ -317,6 +358,69 @@ function GenericResultCard({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Entity hits — avatar, name, supporting line
+// ---------------------------------------------------------------------------
+
+const GENERIC_KIND_LABELS = new Set(["Entity", "Person", "Organization", "Place", "Location", "Administrative Area"]);
+
+// The directory pattern: a leading avatar, the name as the headline, and one
+// muted supporting line. No type pill and no "View" footer — the glyph shows the
+// kind at a glance, the caption says it in words, and the whole card is the link.
+function EntityResultCard({
+  result,
+  viewMode,
+}: Readonly<{ result: ArchiveSearchResult; viewMode: SearchViewMode }>) {
+  const { t } = useTranslation();
+  const isCard = viewMode === "card";
+  const kind = entityKindFor(result.extra.type);
+  const title = formatSimpleTitle(result);
+  // pickLang shows the English name when there is one, so the Nepali spelling is
+  // the alternate. Place-kind hits are NOT exempt: they carry real bilingual
+  // names in the index ("Banke"/"बाँके", "Nepal"/"नेपाल"), and dropping the
+  // second script on a Nepali-first site loses the more useful of the two. Only
+  // the legacy `extra.type === "location"` documents ever held an IRI in the
+  // title, and formatSimpleTitle already unwraps those.
+  const { en, ne } = result.title;
+  const alternate = en && ne && en !== ne ? stripHighlight(ne) : null;
+  // Generic kinds are localised; a specific subtype ("District", "Government
+  // Organization") is shown as the index names it, since only the three kinds
+  // have translations.
+  const humanized = humanizeEntityType(result.extra.type);
+  const kindLabel = GENERIC_KIND_LABELS.has(humanized) ? t(`entityDetail.${kind}`) : humanized;
+  const supporting = [kindLabel, simpleMetadata(result)].filter(Boolean).join(" · ");
+
+  return (
+    <article
+      className={cn(
+        "group relative flex overflow-hidden transition-colors duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+        // The same tinted, borderless surface as the party cards on the case page.
+        isCard
+          ? "h-full min-h-[15rem] flex-col items-center justify-center gap-3 rounded-2xl bg-muted/50 p-4 text-center hover:bg-muted/70"
+          : "min-h-20 flex-row items-center gap-4 rounded-xl bg-card p-4 hover:bg-muted/35",
+      )}
+    >
+      <EntityIdentity
+        kind={kind}
+        layout={isCard ? "tile" : "row"}
+        nameAs="h3"
+        alternate={alternate}
+        name={
+          <Link
+            to={result.url}
+            className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <span aria-hidden="true" className="absolute inset-0" />
+            {title}
+          </Link>
+        }
+      >
+        <p className={cn("font-meta break-words", isCard ? "mt-2" : "mt-1")}>{supporting}</p>
+      </EntityIdentity>
+    </article>
+  );
+}
+
 // Compact generic list-row skeleton. ArchiveSearch selects the dedicated case
 // or court-case skeleton while one of those record types is active.
 export function SearchResultCardSkeleton({
@@ -352,20 +456,11 @@ export function SearchResultCardSkeleton({
   );
 }
 
-// Metadata line for the non-case types, derived from the search `extra` blob.
+// Metadata line for the generic types, derived from the search `extra` blob.
+// Materials no longer pass through here — they have their own card above.
 function simpleMetadata(result: ArchiveSearchResult): string {
-  const parts: string[] = [];
-  if (result.type === "material") {
-    if (result.extra.type) parts.push(humanize(result.extra.type));
-    if (result.extra.date) parts.push(result.extra.date);
-  } else if (result.type === "entity") {
-    if (result.extra.date) parts.push(result.extra.date);
-  }
-  return parts.join(" · ");
-}
-
-function humanize(value: string) {
-  return value.replaceAll("_", " ").toLowerCase();
+  if (result.type === "entity" && result.extra.date) return result.extra.date;
+  return "";
 }
 
 // Entity locations carry an IRI-like title (``.../location/kathmandu``); show the

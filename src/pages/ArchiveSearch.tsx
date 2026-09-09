@@ -80,6 +80,10 @@ const emptyFacets: ArchiveSearchFacets = {
   case_type: [],
   tags: [],
   status: [],
+  court: [],
+  court_type: [],
+  district: [],
+  province: [],
 };
 
 // When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
@@ -117,6 +121,12 @@ export default function ArchiveSearch({
   // entities and बिगो rather than a text row. The choice is intentionally NOT
   // persisted across visits or mirrored into the URL — that's a separate change.
   const [viewMode, setViewMode] = useState<"list" | "card">("card");
+  // Materials have one canonical presentation — the full-width document row
+  // shared with the /materials series browse (title left, download/source/share
+  // actions right). A grid tile would just be that row squeezed into a third of
+  // the width, so the tab forces rows and hides the view toggle instead of
+  // offering a mode that renders the same thing worse.
+  const effectiveViewMode = selectedRecordType === "material" ? "list" : viewMode;
   // Mobile-only disclosure state for the filter panel. Above `lg` the panel is
   // shown unconditionally by CSS, so this is ignored there (see the panel below).
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -244,6 +254,13 @@ export default function ArchiveSearch({
     // stale entity_type behind would silently filter the new record type through
     // a control the user can no longer see.
     if (type !== "entity") next.delete("entity_type");
+    // Court facets are scoped like entity_type: keeping them after switching
+    // away would narrow a different record type through invisible controls.
+    if (type !== "courtcase") {
+      (["court", "court_type", "district", "province"] as const).forEach(
+        (name) => next.delete(name),
+      );
+    }
     // Same for the बिगो range, which only renders while browsing Cases. readParams
     // already declines to send a stale bound, but dropping it from the URL keeps
     // what is shared or bookmarked honest about what is actually applied.
@@ -287,7 +304,18 @@ export default function ArchiveSearch({
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
-      ["type", "entity_type", "case_type", "tags", "bigo_min", "bigo_max"] as const
+      [
+        "type",
+        "entity_type",
+        "case_type",
+        "tags",
+        "court",
+        "court_type",
+        "district",
+        "province",
+        "bigo_min",
+        "bigo_max",
+      ] as const
     ).forEach((name) => next.delete(name));
     next.delete("page");
     setSearchParams(next);
@@ -302,6 +330,10 @@ export default function ArchiveSearch({
     entity_type: params.entity_type || [],
     case_type: params.case_type || [],
     tags: params.tags || [],
+    court: params.court || [],
+    court_type: params.court_type || [],
+    district: params.district || [],
+    province: params.province || [],
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
@@ -329,7 +361,7 @@ export default function ArchiveSearch({
     ) + (bigoPill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
   const selectedItems = [
-    ...getSelectedItems(facets, selectedRefinements, t),
+    ...getSelectedItems(facets, selectedRefinements, t, i18n.language),
     ...(bigoPill ? [bigoPill] : []),
   ];
   const searchFilters = showFilters ? (
@@ -437,7 +469,11 @@ export default function ArchiveSearch({
             </div>
             <div
               aria-label={t("archiveSearch.viewMode", "View mode")}
-              className="flex items-center gap-1 rounded-full border p-0.5"
+              className={cn(
+                "flex items-center gap-1 rounded-full border p-0.5",
+                // Materials render rows only (see effectiveViewMode above).
+                selectedRecordType === "material" && "hidden",
+              )}
               role="group"
             >
               {/* Card first, then list — the toggle reads in the same order as
@@ -662,7 +698,7 @@ export default function ArchiveSearch({
               isLoading={isInitialLoading || isRefreshing}
               resultType={selectedRecordType}
               searchTerm={params.q}
-              viewMode={viewMode}
+              viewMode={effectiveViewMode}
             />
 
             {!showError &&
@@ -716,6 +752,19 @@ function readParams(
       selectedRecordType === "entity"
         ? searchParams.getAll("entity_type")
         : [],
+    // These dimensions describe court records, not ordinary Jawafdehi cases.
+    // Ignore stale hand-authored/bookmarked values on other tabs so the result
+    // set can never be narrowed by a control the reader cannot see.
+    court:
+      selectedRecordType === "courtcase" ? searchParams.getAll("court") : [],
+    court_type:
+      selectedRecordType === "courtcase"
+        ? searchParams.getAll("court_type")
+        : [],
+    district:
+      selectedRecordType === "courtcase" ? searchParams.getAll("district") : [],
+    province:
+      selectedRecordType === "courtcase" ? searchParams.getAll("province") : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
     // Only honour the बिगो bounds while browsing Cases. No other record type
@@ -754,6 +803,9 @@ function readParams(
 // each. At `xl` they are ~299px and by 1440px ~339px, which is the width
 // /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
 const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
+// Entity hits are compact avatar cards (see EntityResultCard), so a page of them
+// sits four across where the richer case cards need three.
+const entityCardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 function ArchiveSearchResults({
   data,
@@ -831,7 +883,7 @@ function ArchiveSearchResults({
 
   if (viewMode === "card") {
     return (
-      <div className={cardGridClass}>
+      <div className={resultType === "entity" ? entityCardGridClass : cardGridClass}>
         {data.results.map((result, index) => (
           <TrackedSearchResult
             key={`${result.type}-${result.id}`}
@@ -908,7 +960,8 @@ function TrackedSearchResult({
 function getSelectedItems(
   facets: ArchiveSearchFacets,
   selected: Record<RefinementName, string[]>,
-  translate: (key: string) => string,
+  translate: (key: string, fallback?: string) => string,
+  language: string,
 ) {
   // Selected-filter pill labels are localized via getFacetItemLabel. The "type"
   // refinement has no facet group (it's the record-type radio), so it falls back
@@ -919,7 +972,11 @@ function getSelectedItems(
         name === "type"
           ? { name: value }
           : facets[name].find((item) => item.name === value) ?? { name: value };
-      return { name, value, label: getFacetItemLabel(name, facetItem, translate) };
+      return {
+        name,
+        value,
+        label: getFacetItemLabel(name, facetItem, translate, language),
+      };
     }),
   );
 }

@@ -14,8 +14,9 @@ import type { ArchiveSearchResponse } from "@/types/search";
 
 import "../support/resize-observer";
 
-const { getCaseByIdMock, searchArchiveMock } = vi.hoisted(() => ({
+const { getCaseByIdMock, getMaterialMock, searchArchiveMock } = vi.hoisted(() => ({
   getCaseByIdMock: vi.fn(),
+  getMaterialMock: vi.fn(),
   searchArchiveMock: vi.fn(),
 }));
 
@@ -26,6 +27,16 @@ vi.mock("@/services/search-api", () => ({
 vi.mock("@/services/jds-api", () => ({
   getCaseById: getCaseByIdMock,
 }));
+
+// Material rows hydrate their download/source buttons from the detail API;
+// keep the rest of the module (materialTail etc.) real.
+vi.mock("@/services/datalake-api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/services/datalake-api")>();
+  return {
+    ...actual,
+    getMaterial: (...args: unknown[]) => getMaterialMock(...args),
+  };
+});
 
 const baseResponse: ArchiveSearchResponse = {
   query: "",
@@ -45,6 +56,10 @@ const baseResponse: ArchiveSearchResponse = {
     case_type: [{ name: "CORRUPTION", count: 7 }],
     tags: [{ name: "CIAA", count: 6 }],
     status: [{ name: "ongoing", count: 5 }],
+    court: [],
+    court_type: [],
+    district: [],
+    province: [],
   },
   results: [
     {
@@ -58,6 +73,32 @@ const baseResponse: ArchiveSearchResponse = {
       matched_fields: [],
       score: 1,
       extra: { case_type: "CORRUPTION" },
+    },
+  ],
+};
+
+const courtFacetResponse: ArchiveSearchResponse = {
+  ...baseResponse,
+  count: 5_477,
+  counts: { courtcase: 5_477 },
+  facets: {
+    ...baseResponse.facets,
+    court: [{ name: "kathmandudc", count: 5_477 }],
+    court_type: [{ name: "district", count: 14_307 }],
+    district: [{ name: "Kathmandu", count: 5_477 }],
+    province: [{ name: "Bagmati", count: 7_617 }],
+  },
+  results: [
+    {
+      ...baseResponse.results[0],
+      type: "courtcase",
+      id: "https://jawafdehi.org/courtcase/kathmandudc/083-c1-1430",
+      title: { ne: null, en: "District Court Kathmandu 083-C1-1430" },
+      url: "/courtcase/kathmandudc/083-c1-1430",
+      extra: {
+        court: "kathmandudc",
+        court_type: "district",
+      },
     },
   ],
 };
@@ -102,6 +143,16 @@ function deferred<T>() {
     reject = rejectPromise;
   });
   return { promise, reject, resolve };
+}
+
+/**
+ * The value of one labelled metadata row on a material card. Rows render as
+ * `<dt>Series:</dt><dd>…</dd>`, so the value is read through its label rather
+ * than by matching a whole meta line as one string.
+ */
+function metaValue(label: string): string | undefined {
+  const term = screen.getByText(`${label}:`);
+  return term.parentElement?.querySelector("dd")?.textContent ?? undefined;
 }
 
 function LocationState() {
@@ -158,6 +209,7 @@ describe("ArchiveSearch", () => {
       entities: [],
     });
     searchArchiveMock.mockReset();
+    getMaterialMock.mockReset();
   });
 
   it("shows filter, count, and result skeletons on the initial load", () => {
@@ -397,6 +449,61 @@ describe("ArchiveSearch", () => {
 
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ entity_type: [], type: "case" }),
+    );
+  });
+
+  it("sends selected court filters and preserves them in the URL", async () => {
+    searchArchiveMock.mockResolvedValue(courtFacetResponse);
+    renderSearch("/search?type=courtcase");
+    await screen.findByText("Court level");
+
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: "District Court: 14307 results",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          court_type: ["district"],
+          type: "courtcase",
+        }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).toContain(
+      "court_type=district",
+    );
+  });
+
+  it("drops court filters when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(courtFacetResponse);
+    renderSearch("/search?type=courtcase&province=Bagmati");
+    await screen.findByText("Court level");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ province: ["Bagmati"], type: "courtcase" }),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ province: [], type: "case" }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "province",
+    );
+  });
+
+  it("ignores a court filter carried in by a non-court URL", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&court_type=district");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ court_type: [], type: "case" }),
     );
   });
 
@@ -670,6 +777,141 @@ describe("ArchiveSearch", () => {
     expect(heading().className).toContain("line-clamp-2");
     fireEvent.click(screen.getByRole("button", { name: "Card view" }));
     expect(heading().className).toContain("line-clamp-3");
+  });
+
+  it("renders materials as shared document rows, fed only by the index", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/ciaa_press_release/1701",
+          source_app: "ngm",
+          title: { ne: null, en: "Charge sheet filed against nine officials" },
+          snippet: { ne: null, en: "Filed at the <em>Special Court</em> today" },
+          url: "/material/ciaa_press_release/1701",
+          api_url: null,
+          matched_fields: ["body"],
+          score: 1,
+          // The BS-in-AD data-lake quirk: 2082 cannot be an AD document year,
+          // so the card must show it resolved (EN locale → the AD pair), not raw.
+          extra: { date: "2082-11-27", type: "CreativeWork" },
+        },
+      ],
+    });
+    renderSearch("/search?type=material");
+    await screen.findByText("Charge sheet filed against nine officials");
+
+    // Materials have one canonical presentation (the /materials series row),
+    // so the card/list toggle is hidden on this tab.
+    expect(
+      screen.getByRole("group", { name: "View mode" }).className,
+    ).toContain("hidden");
+
+    const title = screen.getByRole("link", {
+      name: "Charge sheet filed against nine officials",
+    });
+    expect(title.getAttribute("href")).toBe("/material/ciaa_press_release/1701");
+    // Catalogue-style labelled rows. Series is the curated registry name (not
+    // the raw token or a schema.org class); Source is the publishing office, a
+    // separate axis; Date resolves the BS-in-AD quirk to the AD pair for EN.
+    expect(metaValue("Series")).toBe("CIAA press releases");
+    expect(metaValue("Date")).toBe("2026-03-11");
+    // Office names live in the i18n catalogue, which no instance loads here,
+    // so the value degrades to the raw source token.
+    expect(metaValue("Source")).toBe("ciaa_press_release");
+    // The API pre-marks the snippet's matches with <em>; those render as
+    // highlights, so the text is split across nodes rather than one string.
+    const snippetMark = document.querySelector("p > mark");
+    expect(snippetMark?.textContent).toBe("Special Court");
+    expect(snippetMark?.parentElement?.textContent).toBe(
+      "Filed at the Special Court today",
+    );
+
+    // No download/source buttons and NO detail fetch: the index carries no
+    // media, and hydrating it would cost a GET per hit on a 346k-record browse
+    // surface. Share is the only action; the downloads live on the document.
+    // No i18n instance in this suite and ShareButton's aria-label has no
+    // fallback, so its accessible name is the raw catalogue key.
+    expect(screen.getByRole("button", { name: "share.share" })).toBeTruthy();
+    expect(screen.queryByText(/^\.[A-Z]+$/)).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Open original source" }),
+    ).toBeNull();
+    expect(getMaterialMock).not.toHaveBeenCalled();
+  });
+
+  it("names a series for a material outside the curated registry", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/court_order/special.081-cr-0111",
+          source_app: "ngm",
+          title: { ne: null, en: "Special Court verdict 081-CR-0111" },
+          snippet: { ne: null, en: null },
+          url: "/material/court_order/special.081-cr-0111",
+          api_url: null,
+          matched_fields: [],
+          score: 1,
+          extra: { date: "2025-12-29", type: "Manuscript,DigitalDocument" },
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material");
+    await screen.findByText("Special Court verdict 081-CR-0111");
+
+    // `court_order` is not in the curated registry, so its series name comes
+    // from the source's document type instead. Every material gets one.
+    //
+    // The type's display string lives in the i18n catalogue ("Court orders"),
+    // which no instance loads here, so it degrades to the plain-read token.
+    expect(metaValue("Series")).toBe("court order");
+    expect(metaValue("Source")).toBe("court_order");
+    expect(metaValue("Date")).toBe("2025-12-29");
+  });
+
+  it("highlights the query in a material title and its series row", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/court_order/special.081-cr-0111",
+          source_app: "ngm",
+          title: { ne: null, en: "Special Court verdict on the order" },
+          snippet: { ne: null, en: null },
+          url: "/material/court_order/special.081-cr-0111",
+          api_url: null,
+          matched_fields: ["title_en"],
+          score: 1,
+          extra: { date: "2025-12-29", type: "Manuscript,DigitalDocument" },
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material&q=order");
+    await screen.findByRole("link", {
+      name: "Special Court verdict on the order",
+    });
+
+    // The API leaves `title` unmarked, so the query's terms are matched here —
+    // in the title and in the labelled rows alike. Asserted per field rather
+    // than as a document-wide count, since which rows contain the term depends
+    // on the catalogue copy.
+    const title = screen.getByRole("link", {
+      name: "Special Court verdict on the order",
+    });
+    expect(title.querySelector("mark")?.textContent).toBe("order");
+    const seriesRow = screen.getByText("Series:").parentElement;
+    expect(seriesRow?.querySelector("mark")?.textContent).toBe("order");
+    // Highlighting must not change what the fields say. The title keeps its
+    // accessible name (asserted by the getByRole above) and the row its value.
+    expect(metaValue("Series")).toBe("court order");
+    // A term shorter than two characters would speckle Devanagari with marks.
+    expect(document.querySelectorAll("mark").length).toBeGreaterThan(0);
   });
 
   it("does not show an empty state after an initial request failure", async () => {

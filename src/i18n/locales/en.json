@@ -584,6 +584,8 @@
       "unknown": "Other Related Parties"
     },
     "andMoreAccused": "and {{count}} more",
+    "showMoreParties": "View {{count}} more",
+    "showLessParties": "View less",
     "evidence": "Evidence & Sources",
     "missingDetails": "Missing Details",
     "notes": "Notes",
@@ -1022,7 +1024,7 @@
     "allegedCases": "Accused Cases",
     "relatedCases": "Related Cases",
     "noAllegedCases": "No accused cases found.",
-    "noRelatedCases": "No related cases found.",
+    "noRelatedCases": "No related cases yet.",
     "moreCases": "+{{count}} more",
     "loading": "Loading entity details...",
     "activeCases": "Active Cases",
@@ -1091,6 +1093,7 @@
     "constituency": "Constituency",
     "totalAllegations": "Total Accusations",
     "cases": "Cases",
+    "caseOne": "Case",
     "entityDetails": "Entity Details",
     "noNesDataAlert": "This entity does not have detailed profile information available yet. Only basic information from case records is shown.",
     "allegedCasesDescription": "Cases where this entity is accused of involvement",
@@ -1663,6 +1666,7 @@
       "description": "The same {{total}} materials, grouped by the kind of document they are.",
       "tooltip": "Materials",
       "type": {
+        "procurementNotice": "Procurement notices",
         "chargeSheet": "Charge sheets",
         "precedent": "Court order precedents",
         "courtOrder": "Court orders",
@@ -2058,6 +2062,11 @@
       "entityType": "Entity type",
       "caseType": "Case type",
       "tags": "Tags",
+      "courtType": "Court level",
+      "court": "Court",
+      "district": "District",
+      "province": "Province",
+      "provinceNational": "National jurisdiction",
       "bigo": "Embezzled amount",
       "bigoRange": {
         "any": "Any amount",
@@ -2073,7 +2082,14 @@
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
       "bigoNoMax": "No maximum"
-    }
+    },
+    "materialSeries": "Series",
+    "filterSearch": "Search {{filter}}",
+    "filterMore": "More",
+    "filterLess": "Less",
+    "filterNoMatch": "No matches",
+    "materialSource": "Source",
+    "materialDate": "Date"
   },
   "materialsPage": {
     "heading": "Documents & other materials",

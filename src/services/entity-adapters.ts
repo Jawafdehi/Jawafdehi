@@ -67,7 +67,7 @@ function entityTypeFromJsonLd(iri: string, atType: string): EntityType {
 
 // NES stores an optional schema.org `image` on the entity JSON-LD — a URL string, an ImageObject
 // ({ url } / { contentUrl }), or an array of either. Surface it as the SPA's pictures[] so the avatar
-// consumers render it: CaseEntityChips.getEntityImage and EntityProfileHeader read pictures[].url,
+// consumers render it: getEntityImage (entity-helpers) and EntityProfileHeader read pictures[].url,
 // preferring type 'thumb' then 'full'. One logical image -> one 'full' entry; absent/blank -> [] so
 // the type-icon fallback stands.
 function toPictures(image: unknown): EntityPicture[] {

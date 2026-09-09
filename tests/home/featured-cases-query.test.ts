@@ -4,7 +4,8 @@ const { searchArchiveMock } = vi.hoisted(() => ({ searchArchiveMock: vi.fn() }))
 
 vi.mock("@/services/search-api", () => ({ searchArchive: searchArchiveMock }));
 
-const { FEATURED_CASE_COUNT, featuredCasesQuery } = await import("@/queries/home");
+const { FEATURED_CASE_COUNT, FEATURED_CASE_GRID_COUNT, featuredCasesQuery } =
+  await import("@/queries/home");
 
 describe("featuredCasesQuery", () => {
   beforeEach(() => {
@@ -23,6 +24,14 @@ describe("featuredCasesQuery", () => {
       sort: "featured",
       page_size: FEATURED_CASE_COUNT,
     });
+  });
+
+  it("fetches one more case than the grid shows, for the spotlight lead", () => {
+    // The section renders results[0] as the navy spotlight and the REST as the
+    // grid, so fetching exactly the grid size leaves the grid one card short —
+    // which is how it silently showed 5 tiles for a 6-card constant.
+    expect(FEATURED_CASE_GRID_COUNT).toBe(6);
+    expect(FEATURED_CASE_COUNT).toBe(FEATURED_CASE_GRID_COUNT + 1);
   });
 
   it("keeps the cache key stable across calls", () => {
