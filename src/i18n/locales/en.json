@@ -442,6 +442,11 @@
           "title": "PayPal",
           "detail": "Card, bank, or PayPal balance",
           "cta": "Donate via PayPal Giving Fund"
+        },
+        "remittance": {
+          "title": "Send via a remittance service",
+          "detail": "Already use Wise, Remitly, Western Union, or another remittance app to send money to Nepal? They can deposit directly into our Nepal bank account.",
+          "taxNote": "Remittance transfers go to our Nepal entity, so they are not tax-deductible in the US. For a US tax-deductible gift, use PayPal Giving Fund above."
         }
       },
       "copy": "Copy",

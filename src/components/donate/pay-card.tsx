@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, ChevronDown, Copy, ExternalLink } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
@@ -94,10 +94,94 @@ function useCopyFeedback(duration = 1800) {
   return { copied, failed, copy };
 }
 
+// The Prime Commercial Bank account block, shared by the Nepal panel (direct
+// transfer) and the abroad panel (remittance deposits land in the same
+// account). `trackMethod` distinguishes the two contexts in analytics. Each
+// instance owns its copy-feedback state, so copying in one panel never
+// flashes "copied" in the other.
+function BankDetails({ trackMethod }: { trackMethod: string }) {
+  const { t } = useTranslation();
+  const { copied, failed, copy } = useCopyFeedback();
+
+  return (
+    <dl className="grid gap-2.5">
+      <div>
+        <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
+          {t("donate.ways.nepali.nameLabel")}
+        </dt>
+        <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
+          {t("donate.ways.nepali.accountName")}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
+          {t("donate.ways.nepali.bankLabel")}
+        </dt>
+        <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
+          {t("donate.ways.nepali.bankName")} (
+          {t("donate.ways.nepali.branchName")})
+        </dd>
+      </div>
+      <div>
+        <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
+          {t("donate.ways.nepali.accountLabel")}
+        </dt>
+        <dd className="mt-0.5 flex items-center gap-1">
+          <span className="min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary">
+            {NEPALI_BANK_ACCOUNT_NUMBER}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              copy(NEPALI_BANK_ACCOUNT_NUMBER);
+              trackEvent("donate_click", {
+                method: trackMethod,
+                action: "copy_account",
+              });
+            }}
+            aria-label={
+              copied
+                ? t("donate.ways.copied")
+                : failed
+                  ? t("donate.ways.copyFailed")
+                  : t("donate.ways.nepali.copyAria")
+            }
+            title={
+              copied
+                ? t("donate.ways.copied")
+                : failed
+                  ? t("donate.ways.copyFailed")
+                  : t("donate.ways.nepali.copyAria")
+            }
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {copied ? (
+              <Check className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Copy className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span aria-live="polite" className="sr-only">
+              {copied
+                ? t("donate.ways.copied")
+                : failed
+                  ? t("donate.ways.copyFailed")
+                  : ""}
+            </span>
+          </button>
+        </dd>
+        {failed ? (
+          <p className="mt-1 text-xs font-medium text-destructive">
+            {t("donate.ways.copyFailed")}
+          </p>
+        ) : null}
+      </div>
+    </dl>
+  );
+}
+
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
 function NepalPanel() {
   const { t } = useTranslation();
-  const { copied, failed, copy } = useCopyFeedback();
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
@@ -149,85 +233,23 @@ function NepalPanel() {
         ))}
       </div>
 
-      <dl className="mt-5 grid gap-2.5 border-t border-border/60 pt-4">
-        <div>
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
-            {t("donate.ways.nepali.nameLabel")}
-          </dt>
-          <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
-            {t("donate.ways.nepali.accountName")}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
-            {t("donate.ways.nepali.bankLabel")}
-          </dt>
-          <dd className="mt-0.5 text-sm font-medium leading-5 text-card-foreground">
-            {t("donate.ways.nepali.bankName")} (
-            {t("donate.ways.nepali.branchName")})
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
-            {t("donate.ways.nepali.accountLabel")}
-          </dt>
-          <dd className="mt-0.5 flex items-center gap-1">
-            <span className="min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary">
-              {NEPALI_BANK_ACCOUNT_NUMBER}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                copy(NEPALI_BANK_ACCOUNT_NUMBER);
-                trackEvent("donate_click", {
-                  method: "nepal_bank",
-                  action: "copy_account",
-                });
-              }}
-              aria-label={
-                copied
-                  ? t("donate.ways.copied")
-                  : failed
-                    ? t("donate.ways.copyFailed")
-                    : t("donate.ways.nepali.copyAria")
-              }
-              title={
-                copied
-                  ? t("donate.ways.copied")
-                  : failed
-                    ? t("donate.ways.copyFailed")
-                    : t("donate.ways.nepali.copyAria")
-              }
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {copied ? (
-                <Check className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Copy className="h-4 w-4" aria-hidden="true" />
-              )}
-              <span aria-live="polite" className="sr-only">
-                {copied
-                  ? t("donate.ways.copied")
-                  : failed
-                    ? t("donate.ways.copyFailed")
-                    : ""}
-              </span>
-            </button>
-          </dd>
-          {failed ? (
-            <p className="mt-1 text-xs font-medium text-destructive">
-              {t("donate.ways.copyFailed")}
-            </p>
-          ) : null}
-        </div>
-      </dl>
+      <div className="mt-5 border-t border-border/60 pt-4">
+        <BankDetails trackMethod="nepal_bank" />
+      </div>
     </div>
   );
 }
 
-// Outside Nepal — the US 501(c)(3), via PayPal Giving Fund.
+// Outside Nepal — PayPal Giving Fund (the US 501(c)(3)) as the primary rail,
+// plus a secondary remittance path: many in the diaspora already use Wise,
+// Remitly, Western Union etc. to send money home, and those services can
+// deposit straight into the same Prime Commercial Bank account the QR codes
+// settle to. Collapsed by default so PayPal stays the headline; the tax note
+// matters because a remittance gift goes to the Nepal entity, not the 501(c)(3),
+// and is therefore not US-tax-deductible.
 function AbroadPanel() {
   const { t } = useTranslation();
+  const [remitOpen, setRemitOpen] = useState(false);
 
   return (
     <div>
@@ -280,6 +302,47 @@ function AbroadPanel() {
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
           </a>
         </Button>
+      </div>
+
+      <div className="mt-5 border-t border-border/60 pt-5">
+        <button
+          type="button"
+          aria-expanded={remitOpen}
+          onClick={() => {
+            setRemitOpen((open) => {
+              const next = !open;
+              if (next) {
+                trackEvent("donate_click", {
+                  method: "remittance",
+                  action: "expand",
+                });
+              }
+              return next;
+            });
+          }}
+          className="flex w-full items-center justify-between gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <span className="min-w-0">
+            <span className="block text-base font-bold text-primary">
+              {t("donate.ways.us.remittance.title")}
+            </span>
+            <span className="mt-0.5 block text-sm leading-5 text-card-foreground/70">
+              {t("donate.ways.us.remittance.detail")}
+            </span>
+          </span>
+          <ChevronDown
+            className={`h-5 w-5 shrink-0 text-primary/70 transition-transform ${remitOpen ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+        </button>
+        {remitOpen ? (
+          <div className="mt-4">
+            <BankDetails trackMethod="remittance" />
+            <p className="mt-3 text-xs leading-5 text-card-foreground/60">
+              {t("donate.ways.us.remittance.taxNote")}
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
