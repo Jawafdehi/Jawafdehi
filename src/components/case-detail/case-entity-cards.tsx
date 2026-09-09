@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { EntityAvatar } from "@/components/EntityAvatar";
+import { EntityIdentity } from "@/components/EntityIdentity";
 import { Reveal } from "@/components/ui/reveal";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
@@ -191,19 +191,9 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
       return !v;
     });
 
-  // Front: photo (or glyph) + name only.
+  // Front: photo (or glyph) + name only. Inside a <button>, so the name is a span.
   const frontContent = (
-    <>
-      <EntityAvatar kind={kind} src={imageUrl} />
-      <div className="min-w-0">
-        <span className="block text-balance break-words text-base font-medium leading-snug text-primary">
-          {names.primary}
-        </span>
-        {names.alternate && (
-          <span className="mt-0.5 block truncate text-sm text-muted-foreground">{names.alternate}</span>
-        )}
-      </div>
-    </>
+    <EntityIdentity kind={kind} src={imageUrl} layout="tile" name={names.primary} alternate={names.alternate} />
   );
   const frontClass = cn(
     "relative flex h-full min-h-[15rem] w-full flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center",
