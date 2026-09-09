@@ -4,6 +4,7 @@ import { formatDateRangeForLanguage } from "@/utils/date";
 import type { LocalizedDatePair } from "@/utils/date";
 import type { TimelineEntry } from "@/types/jds";
 import { cn } from "@/lib/utils";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { CollapsibleCaseContent } from "@/components/case-detail/collapsible-case-content";
 import { buildYearGroupHeadings } from "@/components/case-detail/case-timeline-headings";
@@ -13,6 +14,18 @@ interface CaseTimelineSectionProps {
   language: string;
   timeline: TimelineEntry[];
   title: string;
+  /**
+   * `"section"` — the standalone page section it has always been: owns the
+   * `#timeline` anchor and its heading, collapses past one screen, date pills
+   * stick under the app header.
+   *
+   * `"embedded"` — inside the "Where this case stands" modal or the print sheet,
+   * where the container already supplies the heading and the scrolling. Drops
+   * the anchor id (the stands section holds it, and two elements cannot), the
+   * collapse (a nested scroll area inside a modal traps the wheel), and the
+   * sticky offset (measured from a header that is not there).
+   */
+  presentation?: "section" | "embedded";
 }
 
 function splitSingleDateLabel(value: string, calendar: "AD" | "BS") {
@@ -55,10 +68,12 @@ function getCompactDateLabel(
 export function CaseTimelineSection({
   className,
   language,
+  presentation = "section",
   timeline,
   title,
 }: Readonly<CaseTimelineSectionProps>) {
   const { t } = useTranslation();
+  const instanceId = useId();
 
   if (timeline.length === 0) return null;
 
@@ -97,18 +112,35 @@ export function CaseTimelineSection({
     ),
   }));
 
+  const embedded = presentation === "embedded";
+  // The modal copy and the print copy are both embedded and can be mounted at
+  // once, so the row anchors need a per-instance prefix, not a per-mode one.
+  const body = (
+    <ChangelogContent
+      description=""
+      heading={embedded ? "" : title}
+      idPrefix={embedded ? `timeline${instanceId}-` : ""}
+      releases={releases}
+      sticky={!embedded}
+    />
+  );
+
   return (
     <section
-      id="timeline"
+      id={embedded ? undefined : "timeline"}
       className={cn("scroll-mt-28 no-page-break max-w-4xl", className)}
       aria-label={title}
     >
-      <CollapsibleCaseContent
-        readMoreLabel={t("caseDetail.readMore")}
-        showLessLabel={t("caseDetail.showLess")}
-      >
-        <ChangelogContent description="" heading={title} releases={releases} />
-      </CollapsibleCaseContent>
+      {embedded ? (
+        body
+      ) : (
+        <CollapsibleCaseContent
+          readMoreLabel={t("caseDetail.readMore")}
+          showLessLabel={t("caseDetail.showLess")}
+        >
+          {body}
+        </CollapsibleCaseContent>
+      )}
     </section>
   );
 }

@@ -23,6 +23,7 @@ import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseByline } from "@/components/case-detail/case-byline";
 import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
+import { CaseStandsSection } from "@/components/case-detail/case-stands-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
 import { CourtCasesSection } from "@/components/case-detail/court-cases-section";
 import { EvidenceSection } from "@/components/case-detail/evidence-section";
@@ -30,7 +31,8 @@ import { InvolvedPartiesSection } from "@/components/case-detail/involved-partie
 import { KeyAllegationsSection } from "@/components/case-detail/key-allegations-section";
 import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
 import { API_BASE_URL } from "@/services/http";
-import { getCourtCase } from "@/services/datalake-api";
+import { getCourtCaseFull } from "@/services/datalake-api";
+import { deriveCaseProgress } from "@/lib/case-progress";
 import { getEntityById } from "@/services/api";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
@@ -135,14 +137,39 @@ const CaseDetail = () => {
     })),
   });
 
+  // `getCourtCaseFull`, not `getCourtCase`: the progress rail needs hearings.
+  // For 9 of the 49 published-case dockets the Special Court verdict lands on a
+  // hearing row while the case row still reads चलिरहेको with every verdict
+  // column NULL — core-only would report those decided cases as still on trial,
+  // which is the exact bug this feature exists to fix. Hearings also populate
+  // the court-case card's table, which was always empty on this page before.
   const courtCaseQueries = useQueries({
     queries: (caseData?.court_cases ?? []).map((courtCaseId) => ({
-      queryKey: ["court-case", courtCaseId],
-      queryFn: () => getCourtCase(courtCaseId),
+      queryKey: ["court-case-full", courtCaseId],
+      queryFn: () => getCourtCaseFull(courtCaseId),
       staleTime: 10 * 60 * 1000,
       retry: false,
     })),
   });
+
+  // Derive ONLY from a complete set of dockets. A pending or failed query would
+  // otherwise silently drop out of the array, and the derivation reads absence
+  // as evidence — a Supreme docket that merely failed to load would render as
+  // "no appeal on record", which is a confident public claim manufactured from
+  // a network error. Until every docket is in, show no rail.
+  //
+  // Not memoised: a few array ops over one or two dockets, and the inputs are
+  // fresh objects each render, so a dep array would either thrash or go stale
+  // and miss the verdict arriving. Null for the 13 of 62 cases with no Special
+  // Court -CR- docket; those pages render exactly as before.
+  const allDocketsLoaded =
+    courtCaseQueries.length > 0 && courtCaseQueries.every((q) => q.isSuccess && q.data);
+  const caseProgress = allDocketsLoaded
+    ? deriveCaseProgress(courtCaseQueries.map((q) => q.data as CourtCase))
+    : null;
+  // A stable dep for the jump nav: `caseProgress` is a fresh object each render
+  // and would defeat the memo, but only its presence changes the nav.
+  const hasProgress = Boolean(caseProgress);
 
   useEffect(() => {
     const loadedCaseId = caseData?.id?.toString();
@@ -185,7 +212,12 @@ const CaseDetail = () => {
     const sections: Array<CaseJumpSection | false> = [
       { id: "allegations", label: t("caseDetail.allegations") },
       hasInvolvedParties && { id: "parties-involved", label: t("caseDetail.partiesInvolved") },
-      hasTimeline && { id: "timeline", label: t("caseDetail.timeline") },
+      // One slot, two possible occupants: the derived rail when we have one,
+      // otherwise the editorial timeline. Same anchor either way.
+      (hasProgress || hasTimeline) && {
+        id: "timeline",
+        label: hasProgress ? t("caseDetail.progress.heading") : t("caseDetail.timeline"),
+      },
       { id: "overview", label: t("caseDetail.overview") },
       hasCourtCases && { id: "court-case", label: t("caseDetail.courtUpdates", "Court updates") },
       hasEvidence && { id: "evidence", label: t("caseDetail.evidence") },
@@ -200,6 +232,7 @@ const CaseDetail = () => {
     hasInvolvedParties,
     hasMissingDetails,
     hasNotes,
+    hasProgress,
     hasTimeline,
     t,
   ]);
@@ -409,6 +442,7 @@ const CaseDetail = () => {
 
       <CaseDetailBanner
         caseData={caseData}
+        caseProgress={caseProgress}
         resolvedEntities={resolvedEntities}
         actions={
           <>
@@ -677,13 +711,47 @@ const CaseDetail = () => {
                       />
                     )}
 
-                    {hasTimeline && (
-                      <CaseTimelineSection
-                        className="mb-12 print:static print:mb-8"
-                        language={currentLang}
-                        timeline={caseData.timeline || []}
-                        title={t("caseDetail.timeline")}
-                      />
+                    {/* "Where this case stands" holds the slot the editorial
+                        timeline used to, and moves that timeline into a dialog.
+                        Without a derived rail there is no short answer to lead
+                        with, so the timeline stays a section of its own. */}
+                    {caseProgress ? (
+                      <>
+                        <CaseStandsSection
+                          className="mb-12 print:mb-8"
+                          language={currentLang}
+                          progress={caseProgress}
+                          timeline={caseData.timeline || []}
+                          timelineTitle={t("caseDetail.timeline")}
+                        />
+
+                        {/* A dialog does not print, and the printout is meant to
+                            be the whole public record — so the print sheet
+                            carries the timeline in full whether or not the
+                            reader ever opened it. */}
+                        {hasTimeline && (
+                          <div className="mb-8 hidden print:block">
+                            <h2 className="font-section-title mb-4 text-primary">
+                              {t("caseDetail.timeline")}
+                            </h2>
+                            <CaseTimelineSection
+                              language={currentLang}
+                              presentation="embedded"
+                              timeline={caseData.timeline || []}
+                              title={t("caseDetail.timeline")}
+                            />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      hasTimeline && (
+                        <CaseTimelineSection
+                          className="mb-12 print:static print:mb-8"
+                          language={currentLang}
+                          timeline={caseData.timeline || []}
+                          title={t("caseDetail.timeline")}
+                        />
+                      )
                     )}
 
                     <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />
