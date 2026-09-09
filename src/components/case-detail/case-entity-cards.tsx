@@ -195,7 +195,10 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
   const frontContent = (
     <>
       <EntityAvatar kind={kind} src={imageUrl} />
-      <div className="min-w-0">
+      {/* `items-center` makes this a shrink-to-fit flex item. Give it the
+          card's available width as well, otherwise a long alternate-language
+          name expands the item and leaves `truncate` with nothing to clip. */}
+      <div className="min-w-0 w-full">
         <span className="block text-balance break-words text-base font-medium leading-snug text-primary">
           {names.primary}
         </span>

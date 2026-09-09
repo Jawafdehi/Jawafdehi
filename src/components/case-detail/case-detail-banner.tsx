@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Share2 } from "lucide-react";
+import { ArrowUpRight, Share2 } from "lucide-react";
 import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
@@ -19,6 +19,7 @@ import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { CaseByline } from "@/components/case-detail/case-byline";
+import "./case-dossier.css";
 
 interface CaseDetailBannerProps {
   caseData: CaseDetail;
@@ -96,10 +97,6 @@ export function CaseDetailBanner({
     isPlaceholder,
     onError: advanceImage,
   } = useCaseImage(caseData.banner, [caseData.banner_url, caseData.thumbnail_url]);
-  // A real photograph gets a scrim and white text; the placeholder gets neither.
-  const onDarkBackdrop = !isPlaceholder;
-  const crumbHover = onDarkBackdrop ? "hover:text-white" : "hover:text-foreground";
-
   // Derive the chip from state + end date so a concluded case (one with a
   // `case_end_date`) no longer reads "Ongoing".
   const effectiveStatus = deriveCaseStatus(caseData.state, caseData.case_end_date);
@@ -168,31 +165,19 @@ export function CaseDetailBanner({
 
   return (
     <section className="w-full text-foreground no-print">
-      {/* Full-bleed hero. The image spans the viewport and the breadcrumb and
-          title sit ON it, bottom-aligned, over a scrim — rather than the old
-          half-width image with a navy panel pulled across it by lg:-ml-20. One
-          wide image reads as a photograph of the case; a half-column one read as
-          a decorative sidebar, and the negative margin meant the crop had to be
-          chosen around the panel that covered its left edge.
-
-          Heights are shorter than the old 560px because the image no longer has
-          to fill a column beside the metadata: it is a band above it.
-
-          The band's height is driven by its CONTENT with a per-breakpoint floor,
-          not fixed. Case titles here are long Nepali sentences — the oxygen-plant
-          case wraps to four lines on a phone — and against a fixed 256px band
-          that text plus the breadcrumb covered all but a sliver of the
-          photograph. A min-height keeps the intended proportions for a short
-          title and lets a long one push the band taller instead of burying the
-          image. The image is the background layer so it fills whatever height
-          results. */}
-      <div className="relative w-full overflow-hidden">
+      {/* A contained, standalone photograph lets the title remain consistently
+          readable even when a caseworker replaces the image with a light or
+          high-contrast source. */}
+      <div
+        className="mx-auto w-full max-w-[1400px] px-6 pt-6 sm:px-12 lg:pl-24 lg:pr-10 min-[1536px]:pl-8"
+        data-testid="case-detail-hero"
+      >
         <img
           src={imageSrc}
           srcSet={srcSet}
-          // Full-bleed at every breakpoint, so the browser should pick by
-          // viewport width alone.
-          sizes="100vw"
+          // The hero is capped at the same width as the page container, so do
+          // not request a viewport-wide source on large displays.
+          sizes="(min-width: 1400px) 1400px, 100vw"
           // The placeholder illustration says nothing about this case, so it
           // stays out of the accessibility tree instead of announcing a hero
           // image that does not exist. Same rule as CaseCard.
@@ -210,136 +195,54 @@ export function CaseDetailBanner({
           {...{ fetchpriority: "high" }}
           decoding="async"
           onError={advanceImage}
-          // No width/height attributes: the box is reserved by the content
-          // column's min-height below, and with both dimensions set in CSS the
-          // intrinsic aspect-ratio hint would do nothing anyway.
+          width={1400}
+          height={788}
           className={cn(
-            "absolute inset-0 h-full w-full object-cover object-center",
+            "block h-auto w-full rounded-lg object-contain",
             isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
           )}
+          data-testid="case-detail-hero-image"
         />
-
-        {/* Scrim. Opaque at the bottom where the title sits and clear at the
-            top, so the photograph is still legible as a photograph. Skipped on
-            the placeholder, which is a near-flat light panel that needs no
-            help — and which dark mode has already inverted. */}
-        {!isPlaceholder && (
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/45 to-transparent"
-          />
-        )}
-
-        <div className="relative">
-          {/* pt-* is generous so a short title still sits low in the band rather
-              than floating mid-image.
-
-              lg:pl-24 clears the FloatingShareSidebar, which is `fixed left-4`
-              and vertically centred, so on a short viewport its rail lands over
-              the bottom of this hero and clipped the breadcrumb and the first
-              characters of the title. The old half-width layout never collided
-              with it because the text started at the midpoint. Below `lg` the
-              rail is hidden, so the padding is not needed there. */}
-          {/* The floor is a FRACTION OF THE VIEWPORT WIDTH, not a pixel height.
-              The band is full-bleed, so a fixed height makes its aspect ratio a
-              function of the window: at 1440px a 420px floor is 3.4:1, and
-              because the image behind is object-cover, a 16:9 source then shows
-              52% of its height and a 4:3 source 38% — the wider the screen, the
-              more of the photograph is thrown away, which is the opposite of
-              what a hero should do.
-
-              Tying the floor to `vw` fixes the ratio instead of the height, so
-              the crop is bounded at every width: ~1.7:1 on a phone, ~2.1:1 on a
-              tablet, ~2.3:1 on a desktop. A 16:9 source keeps roughly three
-              quarters of its height there rather than half.
-
-              Capped at 680px so an ultra-wide monitor does not get a hero tall
-              enough to bury the बिगो and the case dates below the fold. The cap
-              does mean the ratio widens again past ~1550px, so a 4:3 source is
-              still cropped hard on a 2560px screen — the remedy for that is a
-              WIDER SOURCE, not a taller band: the 2.17:1 photograph on
-              local-hydropower-claim keeps 93% of its height at 1440 and 70% at
-              1920, where the 4:3 portrait keeps 56% and 42%.
-
-              Still a MIN height, so the original reason it exists holds: a long
-              Nepali title (four lines on a phone) pushes the band taller rather
-              than being clipped. */}
-          <div className="mx-auto flex min-h-[58vw] w-full max-w-8xl flex-col justify-end px-6 pb-6 pt-24 sm:min-h-[48vw] sm:px-10 sm:pb-8 sm:pt-32 lg:min-h-[min(44vw,680px)] lg:pl-24 lg:pt-40">
-            <nav
-              aria-label="breadcrumb"
-              className={cn(
-                "mb-3 flex min-w-0 items-center gap-2 text-xs font-medium",
-                onDarkBackdrop
-                  ? "text-white/70 drop-shadow"
-                  : "text-muted-foreground",
-              )}
-            >
-              <Link to="/" className={cn("shrink-0 transition-colors", crumbHover)}>
-                {/* Translated defaults, not hardcoded English. The only
-                    production caller (CaseDetail) passes NEITHER label, so
-                    these ARE what renders — a Nepali reader was getting
-                    "jawafdehi.org / case". Reuses the keys the header and the
-                    nav already carry rather than adding near-duplicates. */}
-                {homeLabel || t("header.title")}
-              </Link>
-
-              <span className="shrink-0 opacity-50">/</span>
-
-              <Link to="/cases" className={cn("shrink-0 transition-colors", crumbHover)}>
-                {casesLabel || t("nav.cases")}
-              </Link>
-
-              <span className="shrink-0 opacity-50">/</span>
-
-              <span className="min-w-0 truncate opacity-90">{breadcrumbCase}</span>
-            </nav>
-
-            <h1
-              className={cn(
-                "max-w-4xl break-words font-bold tracking-tight",
-                // On a photograph the text is white over the scrim. On the
-                // placeholder there IS no scrim (it is a near-flat light panel
-                // that a gradient would only muddy), so white-on-white would be
-                // unreadable — use the normal foreground, which inverts with the
-                // placeholder in dark mode.
-                onDarkBackdrop
-                  ? "text-white drop-shadow-lg"
-                  : "text-foreground",
-                titleSizeClass,
-              )}
-            >
-              {title}
-            </h1>
-          </div>
-        </div>
       </div>
 
-      {/* Metadata below the hero, in the content column.
-
-          lg:pl-24 for the same reason the hero column above carries it: the
-          FloatingShareSidebar is `fixed left-4 top-1/2` and 58px wide, so its
-          right edge sits at x=74 at EVERY viewport width, while this strip's
-          left edge was 64px. The rail therefore painted over the first
-          character of every left-aligned line here — the "Location:",
-          "Case Date:" and "Embezzled / Irregular Amount:" labels, their values,
-          and the description — at every desktop width, 1024 through 1920.
-          Because the rail is `fixed` and vertically centred, which lines got
-          clipped changed as you scrolled, so it read as a rendering glitch
-          rather than a layout bug.
-
-          This padding was not missing by design; the hero above was given the
-          clearance when it became full-bleed and this sibling was not, which
-          also left the metadata 32px out of alignment with the title directly
-          above it. Matching lg:pl-24 fixes the collision and the alignment
-          together. */}
-      {/* lg:px-0 so the inner lg:pl-24 below is the ONLY left padding at lg+.
-          Without it the two stack -- 24px here plus 96px there -- and the
-          metadata lands 24px right of the hero title instead of under it,
-          measured at every width from 1024 to 1920. */}
-      <div className="mx-auto w-full max-w-8xl px-0 sm:px-6 lg:px-0">
+      {/* The metadata shares the hero's centered page-width column. Its desktop
+          inset clears the floating share rail until the container has its own
+          wide-screen gutter. */}
+      <div
+        className="mx-auto w-full max-w-[1400px] px-0 sm:px-6 lg:px-0"
+        data-testid="case-detail-metadata"
+      >
         <div className="grid grid-cols-1">
           <div className="relative z-10 flex flex-col justify-center">
-            <div className="px-6 py-6 text-sm lg:px-10 lg:py-7 lg:pl-24">
+            <div className="px-6 py-6 text-sm lg:px-10 lg:py-7 lg:pl-24 min-[1536px]:pl-8">
+              <nav
+                aria-label="breadcrumb"
+                className="mb-3 flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground"
+              >
+                <Link to="/" className="shrink-0 transition-colors hover:text-foreground">
+                  {homeLabel || t("nav.home")}
+                </Link>
+
+                <span className="shrink-0 opacity-50">/</span>
+
+                <Link to="/cases" className="shrink-0 transition-colors hover:text-foreground">
+                  {casesLabel || t("nav.cases")}
+                </Link>
+
+                <span className="shrink-0 opacity-50">/</span>
+
+                <span className="min-w-0 truncate opacity-90">{breadcrumbCase}</span>
+              </nav>
+
+              <h1
+                className={cn(
+                  "mb-6 max-w-4xl break-words text-balance font-bold tracking-tight text-foreground",
+                  titleSizeClass,
+                )}
+              >
+                {title}
+              </h1>
+
               <div className="mb-5 flex flex-wrap items-center gap-2">
                 <CaseStatusBadge status={effectiveStatus}>
                   {statusLabel}
@@ -368,92 +271,85 @@ export function CaseDetailBanner({
                 </p>
               ) : null}
 
-              <div className="space-y-2">
-                <div>
-                  <p className={metaTitleClass}>{t("caseDetail.location")}:</p>
-
-                  <div className={metaValueClass}>
-                    {locationEntities.length > 0
-                      ? locationEntities.map((entity, index) => {
-                        // Entities are keyed/linked by their NES @id IRI; id-less
-                        // binds render as plain text (no profile to link to).
-                        const key = entity.nes_id ?? `${entity.display_name ?? "location"}-${index}`;
-                        const to = entityPath(entity.nes_id);
-
-                        return (
-                          <span key={key}>
-                            {to ? (
-                              <Link to={to} className={metaLinkClass}>
-                                {getEntityDisplayName(entity)}
-                              </Link>
-                            ) : (
-                              <span>{getEntityDisplayName(entity)}</span>
-                            )}
-                            {index < locationEntities.length - 1 && ", "}
-                          </span>
-                        );
-                      })
-                      : notAvailableLabel}
-                  </div>
-                </div>
-
-                <div>
-                  <p className={metaTitleClass}>{t("caseDetail.period")}:</p>
-                  <div className={metaValueClass}>
-                    <p>{dateRange.primary}</p>
-                    {dateRange.secondary && (
-                      <p className="text-sm font-normal leading-6 text-primary/65">
-                        ({dateRange.secondary})
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {caseData.bigo != null && caseData.bigo > 0 && (
+              <div className="case-dossier">
+                <div className="case-dossier-main" data-testid="case-dossier-main">
+                  <div className="case-dossier-facts">
                   <div>
-                    <p className={metaTitleClass}>
-                      {t("caseDetail.embezzledAmount")}:
-                    </p>
-                    <p className="text-sm font-semibold leading-6 text-accent md:text-base">
-                      {formatBigo(caseData.bigo)}
-                    </p>
-                  </div>
-                )}
+                    <p className={metaTitleClass}>{t("caseDetail.location")}:</p>
 
-                {formattedCourtCases.length > 0 && (
-                  <div>
-                    <p className={metaTitleClass}>
-                      {t("caseDetail.courtCases")}:
-                    </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {formattedCourtCases.map((courtCase) => (
-                        <Link
-                          key={courtCase.label}
-                          to={courtCase.href}
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold leading-6 text-primary underline underline-offset-4 transition-colors hover:text-primary/75"
-                        >
-                          <span>{courtCase.label}</span>
-                        </Link>
-                      ))}
+                    <div className={cn(metaValueClass, "flex flex-wrap gap-x-3 gap-y-1")}>
+                      {locationEntities.length > 0
+                        ? locationEntities.map((entity, index) => {
+                          // Entities are keyed/linked by their NES @id IRI; id-less
+                          // binds render as plain text (no profile to link to).
+                          const key = entity.nes_id ?? `${entity.display_name ?? "location"}-${index}`;
+                          const to = entityPath(entity.nes_id);
+
+                          return (
+                            <span key={key}>
+                              {to ? (
+                                <Link to={to} className={metaLinkClass}>
+                                  {getEntityDisplayName(entity)}
+                                </Link>
+                              ) : (
+                                <span>{getEntityDisplayName(entity)}</span>
+                              )}
+                            </span>
+                          );
+                        })
+                        : notAvailableLabel}
                     </div>
                   </div>
-                )}
 
-                {/* The public byline: authors, first-published date and the
-                    curated edit history (falling back to the deprecated free-text
-                    public_notes on un-backfilled cases). On-screen counterpart to
-                    the print-only block in CaseDetail; the banner is no-print, so
-                    it renders on screen without duplicating in the PDF. */}
-                <CaseByline
-                  authors={caseData.authors}
-                  publishDate={caseData.case_publish_date}
-                  editHistory={caseData.public_edit_history}
-                  markdown={caseData.public_notes}
-                />
-              </div>
+                  <div>
+                    <p className={metaTitleClass}>{t("caseDetail.period")}:</p>
+                    <div className={metaValueClass}>
+                      <p>{dateRange.primary}</p>
+                      {dateRange.secondary && (
+                        <p className="text-sm font-normal leading-6 text-primary/65">
+                          ({dateRange.secondary})
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
+                  {caseData.bigo != null && caseData.bigo > 0 && (
+                    <div>
+                      <p className={metaTitleClass}>
+                        {t("caseDetail.embezzledAmount")}:
+                      </p>
+                      <p className="text-sm font-semibold leading-6 text-accent md:text-base">
+                        {formatBigo(caseData.bigo)}
+                      </p>
+                    </div>
+                  )}
+
+                  </div>
+                  {formattedCourtCases.length > 0 && (
+                    <div className="min-w-0">
+                      <p className={metaTitleClass}>
+                        {t("caseDetail.courtCases")}:
+                      </p>
+                      <div className="case-dossier-courts mt-3">
+                        {formattedCourtCases.map((courtCase) => (
+                          <Link
+                            key={courtCase.label}
+                            to={courtCase.href}
+                            aria-label={courtCase.label}
+                            className="group flex min-w-0 items-center justify-between gap-3 rounded-xl bg-muted/50 px-3.5 py-3 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <span className="min-w-0">
+                              <span className="block break-words text-sm font-semibold leading-5 group-hover:underline group-hover:underline-offset-4">{courtCase.caseNumber}</span>
+                              <span className="mt-0.5 block break-words text-xs leading-5 text-muted-foreground">{courtCase.courtName}</span>
+                            </span>
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               {actions || shareAction ? (
-                <div className="mt-5 flex flex-wrap items-center gap-3 no-print">
+                <div className="flex flex-wrap items-center gap-3 no-print">
                   {actions}
                   {shareAction && (
                     <Button
@@ -469,6 +365,16 @@ export function CaseDetailBanner({
                   )}
                 </div>
               ) : null}
+                </div>
+                <div className="case-dossier-sidebar" data-testid="case-dossier-sidebar">
+                  <CaseByline
+                    authors={caseData.authors}
+                    publishDate={caseData.case_publish_date}
+                    editHistory={caseData.public_edit_history}
+                    markdown={caseData.public_notes}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
