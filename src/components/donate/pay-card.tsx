@@ -385,15 +385,39 @@ function AbroadPanel() {
   );
 }
 
+// Best-effort guess of whether the visitor is giving from inside Nepal, so the
+// card opens on the payment methods they can actually use. Timezone is the
+// signal: Asia/Kathmandu means QR + local bank transfer work; anything else
+// (or an unreadable timezone) means PayPal is the likelier path. Runs only
+// after hydration — the pre-rendered HTML must stay deterministic ("nepal").
+function guessRegion(): Region {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz === "Asia/Kathmandu" ? "nepal" : "abroad";
+  } catch {
+    return "nepal";
+  }
+}
+
 /**
  * The payment card: one card, two regions. Giving from inside Nepal (QR
  * networks + bank transfer) is the default tab; giving from abroad (PayPal
  * Giving Fund → the US 501(c)(3)) is the other. Both panels stay mounted so
  * switching never re-fetches the QR images and never loses copy state.
+ *
+ * The tab auto-selects from the visitor's timezone after hydration, but only
+ * until they touch it — a manual toggle always wins.
  */
 export function PayCard() {
   const { t } = useTranslation();
   const [region, setRegion] = useState<Region>("nepal");
+  const userChoseRef = useRef(false);
+
+  useEffect(() => {
+    if (userChoseRef.current) return;
+    const guessed = guessRegion();
+    if (guessed !== "nepal") setRegion(guessed);
+  }, []);
 
   return (
     <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground shadow-lg md:p-7">
@@ -408,6 +432,7 @@ export function PayCard() {
             type="button"
             aria-pressed={id === region}
             onClick={() => {
+              userChoseRef.current = true;
               setRegion(id);
               trackEvent("donate_click", {
                 method: "region_toggle",
