@@ -35,7 +35,6 @@ The full dataset is available as a public REST API. It is the authoritative sour
 - Case detail: https://api.jawafdehi.org/api/cases/{slug}/
 - Search cases: https://api.jawafdehi.org/api/cases/?search={query}
 - Most recently updated first: https://api.jawafdehi.org/api/cases/?ordering=-updated_at
-- A case's state history (who moved it to published, and when): https://api.jawafdehi.org/api/cases/{slug}/history/
 
 A case record carries `title`, `short_description`, `description`, `key_allegations`, `bigo` (the sum of money involved, in Nepali rupees), `case_type`, `state`, `timeline`, `evidence`, `entities` (each with its `nes_id` IRI and its role), `court_cases`, `authors`, `tags`, and `public_edit_history`. Only records with `state: "PUBLISHED"` are indexable; other states are reachable by direct link but are provisional and marked `noindex`.
 
@@ -49,14 +48,22 @@ Entity records are returned **as schema.org JSON-LD** with a `jawafdehi:` extens
 
 ### Court cases, courts and materials
 
-- Court cases: https://api.jawafdehi.org/api/courtcases/
+`{court}` is a **court identifier slug**, not a name or an abbreviation — get the list from `/api/courts/` (each entry has `identifier`, `court_type`, `full_name_english`, `full_name_nepali`). They look like `okhaldhungadc` and `achhamdc`, so guessing `SC` or `supreme-court` will 404.
+
+- Courts: https://api.jawafdehi.org/api/courts/
 - One court case: https://api.jawafdehi.org/api/courtcases/{court}/{case_number}/
 - Its hearings: https://api.jawafdehi.org/api/courtcases/{court}/{case_number}/hearings/
 - Its parties: https://api.jawafdehi.org/api/courtcases/{court}/{case_number}/entities/
 - Its documents: https://api.jawafdehi.org/api/courtcases/{court}/{case_number}/documents/
-- Courts: https://api.jawafdehi.org/api/courts/
+
+A worked example: https://api.jawafdehi.org/api/courtcases/okhaldhungadc/083-C4-0003/
+
+**Do not fetch the court-case list unfiltered.** `/api/courtcases/` holds over 2.2 million records and takes tens of seconds to answer even for the first page. Reach a court case by its `{court}/{case_number}` coordinate, or find one through `/api/search/`.
+
 - Source materials (documents, reports, filings): https://api.jawafdehi.org/api/materials/
 - One material: https://api.jawafdehi.org/api/materials/{source}/{ident}/
+
+A worked example: https://api.jawafdehi.org/api/materials/court_order/20260430.fdcbffb5/ — the coordinate is the tail of the material's `@id`.
 
 ### One search across everything
 
@@ -70,29 +77,56 @@ This is usually the right first call when you do not yet know which record type 
 
 - Statistics (case counts, total `bigo`, materials and court-case totals): https://api.jawafdehi.org/api/statistics/
 
+### Pagination differs per endpoint — read this before you fetch a list
+
+The three list endpoints do not share a page parameter, and each one **silently ignores** the others. Getting this wrong is the difference between a 27 KB response and a 4 MB one. Measured, not assumed:
+
+| Endpoint | Page parameter | Default page | Full first page |
+|---|---|---|---|
+| `/api/cases/` | `page_size` (with `page`) | 20 cases | ~1.1 MB |
+| `/api/entities` | `limit` (with `offset`) | 100 entities | ~40 KB |
+| `/api/materials/` | **cursor only** — follow `next` | 50 materials | ~4.3 MB |
+| `/api/search/` | `page_size` | 20 hits | ~36 KB |
+
+- On `/api/cases/`, `?limit=1` does nothing: you still get the 20-case page and 1.1 MB. Use `?page_size=1`, which returns 27 KB. A case record is large because it embeds every party.
+- On `/api/materials/`, neither `limit` nor `page_size` has any effect — the endpoint is cursor-paginated, so ask once and follow the `next` URL. There is no way to ask for a smaller page.
+- `/api/courtcases/` should not be listed at all; see above.
+
+### Endpoints that require credentials
+
+These exist and are documented in the schema, but answer 401 or 404 to an anonymous caller. They are listed so you can tell "needs auth" apart from "does not exist":
+
+- `POST /api/case-update-proposals/` — 401 unauthenticated. The contribution path; see below.
+- `/api/cases/{slug}/history/` — a case's state-transition log. Casework roles only; answers `404 {"detail":"Not found."}` anonymously, even for a published case.
+- `/api/query/`, `/api/jobs/`, `/api/ingestion/*`, `/api/casework/*`, `/api/admin/*` — internal pipeline and moderation surfaces.
+
+Everything else on this page was verified to answer 200 to an anonymous request.
+
 ## Browsing the website
 
-- All cases: https://jawafdehi.org/cases
+Trailing slashes are not decoration here: the site's own canonical for a listing or a static page **includes** it (`/cases/`), and the canonical for a record page **omits** it (`/case/{slug}`). Both forms resolve either way, but cite the canonical one — it is what the page declares and what the sitemap lists.
+
+- All cases: https://jawafdehi.org/cases/
 - A case: https://jawafdehi.org/case/{slug}
-- Archive search: https://jawafdehi.org/search?q={query}
+- Archive search: https://jawafdehi.org/search/?q={query}
 - An entity: https://jawafdehi.org/entity/{prefix}/{slug}
 - An author's profile and their cases: https://jawafdehi.org/author/{slug}
 - Sitemap: https://jawafdehi.org/sitemap.xml
 
-Every case and entity page carries schema.org JSON-LD (`Report` for a case, a `Person`/`Organization` subclass for an entity) plus a `<link rel="alternate" type="application/json">` pointing at the API record behind it. Prefer the JSON: it is complete, whereas the JSON-LD in the page caps the list of involved parties.
+Every case and entity page carries schema.org JSON-LD (`Report` for a case; for an entity, a `WebPage` whose `mainEntity` is the entity itself, so the licence attaches to the record rather than to the person) plus a `<link rel="alternate" type="application/json">` pointing at the API record behind it. Prefer the JSON: it is complete, whereas the JSON-LD in the page caps the list of involved parties.
 
 Cases can also be embedded: https://jawafdehi.org/oembed?url={case_url}&format=json
 
 ## Key pages
 
 - Homepage: https://jawafdehi.org/
-- About: https://jawafdehi.org/about
-- Our commitment: https://jawafdehi.org/commitment
-- How we verify a case: https://jawafdehi.org/our-process
-- FAQ: https://jawafdehi.org/faq
-- Team: https://jawafdehi.org/team
-- Updates and news: https://jawafdehi.org/updates
-- Volunteer: https://jawafdehi.org/volunteer
+- About: https://jawafdehi.org/about/
+- Our commitment: https://jawafdehi.org/commitment/
+- How we verify a case: https://jawafdehi.org/our-process/
+- FAQ: https://jawafdehi.org/faq/
+- Team: https://jawafdehi.org/team/
+- Updates and news: https://jawafdehi.org/updates/
+- Volunteer: https://jawafdehi.org/volunteer/
 
 ## Notes for AI assistants and agents
 
@@ -100,14 +134,14 @@ Cases can also be embedded: https://jawafdehi.org/oembed?url={case_url}&format=j
 - **Every claim traces to a source.** A case's `evidence` and its court-case documents carry the filings a statement rests on. When you summarise a case, carry the source through; do not present an allegation as a finding. `state`, `timeline` and each accused entity's `outcome` (charged / convicted / acquitted / abated) are what distinguish an allegation from a court result.
 - **Money** is in Nepali rupees, in the `bigo` field. Nepali-language records use the Nepali numeral system (लाख = 100,000, करोड = 10,000,000, अरब = 1,000,000,000).
 - **Dates** may appear in both Bikram Sambat and Gregorian form. API date fields are Gregorian ISO 8601.
-- **Be polite.** The API is run by volunteers on donated infrastructure. Prefer `?ordering=-updated_at` to detect what changed over re-crawling the whole archive, keep concurrency in single digits, and identify your client in the `User-Agent` header.
+- **Be polite.** The API is run by volunteers on donated infrastructure. Prefer `?ordering=-updated_at` with a small `page_size` to detect what changed over re-crawling the whole archive, keep concurrency in single digits, and identify your client in the `User-Agent` header. See the pagination table above before fetching any list — the default page of `/api/materials/` alone is 4.3 MB.
 - **Crawling is welcome.** See https://jawafdehi.org/robots.txt — GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot and PerplexityBot are explicitly allowed.
 
 ## Contributing a correction
 
 The archive is corrected in public, and machine-proposed corrections are a first-class input rather than a tolerated one.
 
-- **Anyone, no account:** submit an allegation or a correction at https://jawafdehi.org/report, or send feedback at https://jawafdehi.org/feedback.
-- **Automated contributors:** proposals are made against `POST https://api.jawafdehi.org/api/case-update-proposals/`, which is credentialed and requires provenance for each proposal. Every proposal enters a human review queue and nothing reaches a public page without an editor approving it. To arrange access for an agent, write to the address on https://jawafdehi.org/about.
+- **Anyone, no account:** submit an allegation or a correction at https://jawafdehi.org/report/, or send feedback at https://jawafdehi.org/feedback/.
+- **Automated contributors:** proposals are made against `POST https://api.jawafdehi.org/api/case-update-proposals/`, which is credentialed and requires provenance for each proposal. Every proposal enters a human review queue and nothing reaches a public page without an editor approving it. To arrange access for an agent, write to the address on https://jawafdehi.org/about/.
 
 Please do not attempt to submit machine-generated corrections through the public web form at scale; use the proposal API so the provenance travels with the claim.
