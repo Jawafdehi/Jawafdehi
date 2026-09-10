@@ -51,6 +51,11 @@ import type {
 import { cn } from "@/lib/utils";
 import { describeBigoRange, readBigoBounds } from "@/lib/bigo-range";
 import {
+  describeDateRange,
+  readDateBounds,
+  type DateBounds,
+} from "@/lib/date-range";
+import {
   normalizeArchiveSearchParams,
   setArchiveSearchParam,
   toggleArchiveSearchParam,
@@ -61,11 +66,11 @@ import { sendSearchClick } from "@/utils/searchClick";
 import { Seo } from "@/components/Seo";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
-// "bigo" is a refinement for pill/clear purposes only — it is one removable
-// range, not a list of facet tokens, so it never joins the `selected` record the
-// checkbox groups are driven from.
+// "bigo" and "date" are refinements for pill/clear purposes only — each is one
+// removable range, not a list of facet tokens, so neither joins the `selected`
+// record the checkbox groups are driven from.
 type RefinementName = SidebarFilterName | "type";
-type PillName = RefinementName | "bigo";
+type PillName = RefinementName | "bigo" | "date";
 
 const validSorts = new Set<ArchiveSearchSort>([
   "relevance",
@@ -84,6 +89,7 @@ const emptyFacets: ArchiveSearchFacets = {
   court_type: [],
   district: [],
   province: [],
+  material_type: [],
 };
 
 // When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
@@ -268,6 +274,13 @@ export default function ArchiveSearch({
       next.delete("bigo_min");
       next.delete("bigo_max");
     }
+    // Document type and the date range are both material-scoped controls, so
+    // they clear on the way out for the same reason.
+    if (type !== "material") {
+      next.delete("material_type");
+      next.delete("date_from");
+      next.delete("date_to");
+    }
     setSearchParams(next);
   };
 
@@ -289,6 +302,21 @@ export default function ArchiveSearch({
     setSearchParams(normalizeArchiveSearchParams(next));
   };
 
+  // One request per committed range, and both bounds move as ONE edit — same
+  // reasoning as updateBigoRange above: setting them in sequence through
+  // setArchiveSearchParam re-normalizes in between, and a new lower bound
+  // momentarily above the OUTGOING upper bound reads as inverted at that point,
+  // which drops both and loses the half already written.
+  const updateDateRange = ({ from, to }: DateBounds) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("date_from");
+    next.delete("date_to");
+    if (from !== undefined) next.set("date_from", from);
+    if (to !== undefined) next.set("date_to", to);
+    next.delete("page");
+    setSearchParams(normalizeArchiveSearchParams(next));
+  };
+
   const removeRefinement = (name: PillName, value: string) => {
     if (name === "type") {
       updateRecordType(undefined);
@@ -296,6 +324,10 @@ export default function ArchiveSearch({
     }
     if (name === "bigo") {
       updateBigoRange({});
+      return;
+    }
+    if (name === "date") {
+      updateDateRange({});
       return;
     }
     toggleRefinement(name, value);
@@ -313,8 +345,11 @@ export default function ArchiveSearch({
         "court_type",
         "district",
         "province",
+        "material_type",
         "bigo_min",
         "bigo_max",
+        "date_from",
+        "date_to",
       ] as const
     ).forEach((name) => next.delete(name));
     next.delete("page");
@@ -334,6 +369,7 @@ export default function ArchiveSearch({
     court_type: params.court_type || [],
     district: params.district || [],
     province: params.province || [],
+    material_type: params.material_type || [],
   };
   const selectedRefinements = {
     ...selectedSidebarFilters,
@@ -354,15 +390,31 @@ export default function ArchiveSearch({
         label: describeBigoRange(params.bigo_min, params.bigo_max, t),
       }
     : null;
+  // The date range gets its own single pill, on the same terms as बिगो: one
+  // refinement, one chip, and removing it clears both sides. A preset and a typed
+  // range are indistinguishable here by design — the pill states the dates that
+  // are actually applied, not the gesture that set them.
+  const hasDateRange =
+    params.date_from !== undefined || params.date_to !== undefined;
+  const datePill = hasDateRange
+    ? {
+        name: "date" as const,
+        value: "date",
+        label: describeDateRange(params.date_from, params.date_to, t),
+      }
+    : null;
   const activeRefinementCount =
     Object.values(selectedRefinements).reduce(
       (count, values) => count + values.length,
       0,
-    ) + (bigoPill ? 1 : 0);
+    ) +
+    (bigoPill ? 1 : 0) +
+    (datePill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
   const selectedItems = [
     ...getSelectedItems(facets, selectedRefinements, t, i18n.language),
     ...(bigoPill ? [bigoPill] : []),
+    ...(datePill ? [datePill] : []),
   ];
   const searchFilters = showFilters ? (
     isInitialLoading ? (
@@ -375,6 +427,9 @@ export default function ArchiveSearch({
         bigoMax={params.bigo_max}
         bigoMin={params.bigo_min}
         onBigoCommit={updateBigoRange}
+        dateFrom={params.date_from}
+        dateTo={params.date_to}
+        onDateCommit={updateDateRange}
         onToggle={toggleRefinement}
         selected={selectedSidebarFilters}
         selectedType={selectedRecordType}
@@ -735,6 +790,14 @@ function readBigoParams(searchParams: URLSearchParams) {
   return { bigo_min: min, bigo_max: max };
 }
 
+// The URL's date bounds. Already the API's param names, so this only applies the
+// rules — but it stays a named helper so the readParams spread reads the same as
+// the बिगो one above.
+function readDateParams(searchParams: URLSearchParams) {
+  const { from, to } = readDateBounds(searchParams);
+  return { date_from: from, date_to: to };
+}
+
 function readParams(
   searchParams: URLSearchParams,
   selectedRecordType: ArchiveSearchType,
@@ -765,8 +828,25 @@ function readParams(
       selectedRecordType === "courtcase" ? searchParams.getAll("district") : [],
     province:
       selectedRecordType === "courtcase" ? searchParams.getAll("province") : [],
+    // Document type is material-scoped and CLOSED on the API side, so a stale
+    // token is not merely a filter through an invisible control — it is a 400,
+    // which this page renders as the red "could not be loaded" alert. Gating it
+    // here means switching tabs cannot turn a bookmark into what reads as an
+    // outage. (updateRecordType also strips it from the URL; this is the guard
+    // for a hand-authored one that never went through a tab switch.)
+    material_type:
+      selectedRecordType === "material"
+        ? searchParams.getAll("material_type")
+        : [],
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
+    // Date bounds, gated to the tab that renders the control. Read through
+    // readDateParams for the same reason as the बिगो pair below: an inverted
+    // range parses fine bound-by-bound, and normalization only heals the URL an
+    // effect later — by which point this render has already sent the 400.
+    ...(selectedRecordType === "material"
+      ? readDateParams(searchParams)
+      : { date_from: undefined, date_to: undefined }),
     // Only honour the बिगो bounds while browsing Cases. No other record type
     // carries an amount, so a bound left over from a case view would empty the
     // results of whatever the reader switched to — with the control that set it

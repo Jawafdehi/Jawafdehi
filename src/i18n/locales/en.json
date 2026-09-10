@@ -2081,7 +2081,18 @@
       "bigoMinThumb": "Minimum amount",
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
-      "bigoNoMax": "No maximum"
+      "bigoNoMax": "No maximum",
+      "materialType": "Document type",
+      "date": "Record date",
+      "dateFromField": "From (AD)",
+      "dateToField": "To (AD)",
+      "dateNote": "Filtering by date includes only documents with a recorded date.",
+      "dateRange": {
+        "any": "Any date",
+        "between": "{{from}} – {{to}}",
+        "from": "{{from}} onwards",
+        "upTo": "Up to {{to}}"
+      }
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",
