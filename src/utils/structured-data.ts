@@ -212,11 +212,30 @@ export interface EntityStructuredDataInput {
 }
 
 /**
- * The graph for an entity page.
+ * The graph for an entity page: TWO nodes, deliberately.
  *
- * The @id is the entity's own IRI rather than the page URL, which is the whole
- * point: two agents that each read a different case both get the same identifier
- * for the same official, and can join on it.
+ * The entity is a Person, an Organization or a Place — NOT a CreativeWork. So
+ * `inLanguage`, `isPartOf` and `license` cannot sit on it: schema.org scopes all
+ * three to CreativeWork, and a validation run against the vocabulary flags each
+ * as a domain violation. It is also a category error to read aloud — "this
+ * official is licensed CC0" — because the licence covers the archive's RECORD
+ * about the entity, not the entity.
+ *
+ * So the record gets its own node. A WebPage carries the page-level facts
+ * (language, licence, which site it belongs to) and points at the entity through
+ * `mainEntity`; the entity node carries only what is true of the entity itself.
+ * That is also the pattern an agent can rely on: `mainEntity` is the documented
+ * way to ask "what is this page actually about".
+ *
+ * WebPage rather than the more specific ProfilePage: ProfilePage would say a
+ * little more, but Google evaluates it as a rich-result feature with recommended
+ * fields (dateCreated, interactionStatistic) an archive record has no business
+ * inventing, and it reads oddly over a Place. WebPage is correct for every entity
+ * type this archive holds.
+ *
+ * The entity node's @id is the entity's own IRI rather than the page URL, which is
+ * the whole point: two agents that each read a different case both get the same
+ * identifier for the same official, and can join on it.
  */
 export function entityStructuredData(
   input: EntityStructuredDataInput,
@@ -225,30 +244,47 @@ export function entityStructuredData(
     .map((value) => (value ?? "").trim())
     .filter((value) => value && value !== input.name);
 
-  const sameAs = [input.officialUrl, ...(input.sameAs ?? [])]
-    .map((value) => (value ?? "").trim())
-    .filter(Boolean);
+  // The entity's own site is `url`; other authorities' pages for it are `sameAs`
+  // (Wikidata, a ministry register). That split is the convention consumers
+  // expect, and it stops the official site being stated twice.
+  //
+  // The archive's own page is deliberately in neither — that relation is
+  // `mainEntityOfPage`, and listing our page as `sameAs` would assert the archive
+  // is another authority on the entity rather than a document about it.
+  const officialUrl = (input.officialUrl ?? "").trim() || undefined;
+  const sameAs = [...new Set((input.sameAs ?? []).map((value) => (value ?? "").trim()))].filter(
+    (value) => value && value !== officialUrl,
+  );
+
+  const entityNode = pruned({
+    "@type": schemaType(input.entityType, "Thing"),
+    "@id": input.iri || `${input.canonicalUrl}#entity`,
+    name: input.name,
+    alternateName: alternateNames.length ? [...new Set(alternateNames)] : undefined,
+    description: input.description || undefined,
+    image: input.imageUrl || undefined,
+    url: officialUrl,
+    sameAs: sameAs.length ? sameAs : undefined,
+    mainEntityOfPage: input.canonicalUrl,
+    subjectOf: input.apiUrl
+      ? { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: input.apiUrl }
+      : undefined,
+  });
 
   return [
     pruned({
       "@context": SCHEMA_CONTEXT,
-      "@type": schemaType(input.entityType, "Thing"),
-      "@id": input.iri || `${input.canonicalUrl}#entity`,
-      name: input.name,
-      alternateName: alternateNames.length ? [...new Set(alternateNames)] : undefined,
-      description: input.description || undefined,
-      image: input.imageUrl || undefined,
-      // The archive's page about this entity, distinct from `sameAs`, which is
-      // for the entity's own and other authorities' pages.
-      mainEntityOfPage: input.canonicalUrl,
+      "@type": "WebPage",
+      "@id": `${input.canonicalUrl}#page`,
       url: input.canonicalUrl,
-      sameAs: sameAs.length ? [...new Set(sameAs)] : undefined,
+      name: input.name,
+      description: input.description || undefined,
       inLanguage: languageTag(input.language),
       isPartOf: websiteRefNode(),
       license: LICENSE_URL,
-      subjectOf: input.apiUrl
-        ? { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: input.apiUrl }
-        : undefined,
+      isAccessibleForFree: true,
+      publisher: organizationNode(),
+      mainEntity: entityNode,
     }),
   ];
 }

@@ -168,56 +168,116 @@ describe('entityStructuredData', () => {
   const ENTITY_IRI = 'https://jawafdehi.org/entity/deptofsurvey/department-of-survey';
   const ENTITY_PAGE = 'https://jawafdehi.org/entity/deptofsurvey/department-of-survey';
 
-  it('uses the entity IRI as the node identity, not the page URL', () => {
-    const node = entityStructuredData({
+  function entityGraph(input: Parameters<typeof entityStructuredData>[0]) {
+    const page = entityStructuredData(input)[0];
+    return { page, entity: page.mainEntity as Record<string, unknown> };
+  }
+
+  it('separates the record from the entity, because only one of them is a CreativeWork', () => {
+    const { page, entity } = entityGraph({
       canonicalUrl: ENTITY_PAGE,
       iri: ENTITY_IRI,
       entityType: 'AdministrativeArea',
       name: 'Department of Survey, Damak',
-    })[0];
+    });
 
-    expect(node['@id']).toBe(ENTITY_IRI);
-    expect(node['@type']).toBe('AdministrativeArea');
-    // The page is where the archive talks ABOUT the entity — a separate claim
-    // from the entity's identity.
-    expect(node.mainEntityOfPage).toBe(ENTITY_PAGE);
+    // schema.org scopes inLanguage / isPartOf / license to CreativeWork, so they
+    // belong to the page. Validating the graph against the vocabulary flags each
+    // of them as a domain violation when they sit on a Place or a Person — and
+    // "this office is licensed CC0" is the wrong claim besides.
+    expect(page['@type']).toBe('WebPage');
+    expect(page.license).toBe(LICENSE_URL);
+    expect(page.inLanguage).toBe('ne');
+    expect((page.isPartOf as Record<string, unknown>)['@id']).toBe(WEBSITE_ID);
+    expect((page.publisher as Record<string, unknown>)['@id']).toBe(ORGANIZATION_ID);
+
+    for (const creativeWorkOnly of ['license', 'inLanguage', 'isPartOf', 'isAccessibleForFree']) {
+      expect(creativeWorkOnly in entity).toBe(false);
+    }
+  });
+
+  it('points the page at the entity through mainEntity', () => {
+    const { page, entity } = entityGraph({
+      canonicalUrl: ENTITY_PAGE,
+      iri: ENTITY_IRI,
+      entityType: 'AdministrativeArea',
+      name: 'Department of Survey, Damak',
+    });
+
+    expect(page['@id']).toBe(`${ENTITY_PAGE}#page`);
+    expect(page.url).toBe(ENTITY_PAGE);
+    expect(entity['@id']).toBe(ENTITY_IRI);
+    expect(entity.mainEntityOfPage).toBe(ENTITY_PAGE);
+  });
+
+  it('uses the entity IRI as the node identity, not the page URL', () => {
+    const { entity } = entityGraph({
+      canonicalUrl: ENTITY_PAGE,
+      iri: ENTITY_IRI,
+      entityType: 'AdministrativeArea',
+      name: 'Department of Survey, Damak',
+    });
+
+    expect(entity['@id']).toBe(ENTITY_IRI);
+    expect(entity['@type']).toBe('AdministrativeArea');
   });
 
   it('falls back to a page-scoped id when the record carries no IRI', () => {
-    const node = entityStructuredData({ canonicalUrl: ENTITY_PAGE, name: 'Nameless' })[0];
+    const { entity } = entityGraph({ canonicalUrl: ENTITY_PAGE, name: 'Nameless' });
 
-    expect(node['@id']).toBe(`${ENTITY_PAGE}#entity`);
+    expect(entity['@id']).toBe(`${ENTITY_PAGE}#entity`);
   });
 
   it('carries the other script as alternateName and drops duplicates', () => {
-    const node = entityStructuredData({
+    const { entity } = entityGraph({
       canonicalUrl: ENTITY_PAGE,
       name: 'Department of Survey, Damak',
       nameAlternate: 'नापी कार्यालय, दमक',
       aliases: ['नापी कार्यालय, दमक', 'Damak Survey Office'],
-    })[0];
+    });
 
-    expect(node.alternateName).toEqual(['नापी कार्यालय, दमक', 'Damak Survey Office']);
+    expect(entity.alternateName).toEqual(['नापी कार्यालय, दमक', 'Damak Survey Office']);
   });
 
   it('never repeats the display name as its own alternate', () => {
-    const node = entityStructuredData({
+    const { entity } = entityGraph({
       canonicalUrl: ENTITY_PAGE,
       name: 'Same Name',
       nameAlternate: 'Same Name',
-    })[0];
+    });
 
-    expect('alternateName' in node).toBe(false);
+    expect('alternateName' in entity).toBe(false);
   });
 
-  it('merges the official site and outside identifiers into sameAs', () => {
-    const node = entityStructuredData({
+  it("puts the entity's own site in url and other authorities in sameAs, never both", () => {
+    const { entity } = entityGraph({
       canonicalUrl: ENTITY_PAGE,
       name: 'Department of Survey, Damak',
       officialUrl: 'https://dos.gov.np/',
       sameAs: ['https://www.wikidata.org/wiki/Q1', 'https://dos.gov.np/'],
-    })[0];
+    });
 
-    expect(node.sameAs).toEqual(['https://dos.gov.np/', 'https://www.wikidata.org/wiki/Q1']);
+    expect(entity.url).toBe('https://dos.gov.np/');
+    expect(entity.sameAs).toEqual(['https://www.wikidata.org/wiki/Q1']);
+  });
+
+  it('never lists the archive page as sameAs — that relation is mainEntityOfPage', () => {
+    const { entity } = entityGraph({
+      canonicalUrl: ENTITY_PAGE,
+      iri: ENTITY_IRI,
+      name: 'Department of Survey, Damak',
+      officialUrl: 'https://dos.gov.np/',
+    });
+
+    expect(entity.sameAs).toBeUndefined();
+    expect(entity.mainEntityOfPage).toBe(ENTITY_PAGE);
+  });
+
+  it('omits url entirely when the entity has no site of its own', () => {
+    const { entity } = entityGraph({ canonicalUrl: ENTITY_PAGE, name: 'No Website' });
+
+    // Better than pointing `url` at the archive page: that is what
+    // `mainEntityOfPage` says, and the @id already resolves.
+    expect('url' in entity).toBe(false);
   });
 });

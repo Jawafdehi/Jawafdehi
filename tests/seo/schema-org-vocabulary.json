@@ -1,0 +1,335 @@
+{
+  "_source": "schemaorg-current-https.jsonld (schema.org/version/latest)",
+  "properties": {
+    "about": {
+      "domain": [
+        "Certification",
+        "CommunicateAction",
+        "CreativeWork",
+        "DefinedTerm",
+        "DefinedTermSet",
+        "Event"
+      ],
+      "range": [
+        "Thing"
+      ]
+    },
+    "address": {
+      "domain": [
+        "GeoCoordinates",
+        "GeoShape",
+        "Organization",
+        "Person",
+        "Place"
+      ],
+      "range": [
+        "PostalAddress",
+        "Text"
+      ]
+    },
+    "alternateName": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "author": {
+      "domain": [
+        "CreativeWork",
+        "Rating"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
+    "contentUrl": {
+      "domain": [
+        "MediaObject"
+      ],
+      "range": [
+        "URL"
+      ]
+    },
+    "dateModified": {
+      "domain": [
+        "CreativeWork",
+        "DataFeedItem"
+      ],
+      "range": [
+        "Date",
+        "DateTime"
+      ]
+    },
+    "datePublished": {
+      "domain": [
+        "Certification",
+        "CreativeWork"
+      ],
+      "range": [
+        "Date",
+        "DateTime"
+      ]
+    },
+    "description": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "Text",
+        "TextObject"
+      ]
+    },
+    "encodingFormat": {
+      "domain": [
+        "CreativeWork",
+        "MediaObject"
+      ],
+      "range": [
+        "Text",
+        "URL"
+      ]
+    },
+    "genre": {
+      "domain": [
+        "BroadcastChannel",
+        "CreativeWork",
+        "MusicGroup"
+      ],
+      "range": [
+        "DefinedTerm",
+        "Text",
+        "URL"
+      ]
+    },
+    "headline": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "identifier": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "PropertyValue",
+        "Text",
+        "URL"
+      ]
+    },
+    "image": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "ImageObject",
+        "URL"
+      ]
+    },
+    "inLanguage": {
+      "domain": [
+        "BroadcastService",
+        "CommunicateAction",
+        "CreativeWork",
+        "Event",
+        "LinkRole",
+        "PronounceableText",
+        "WriteAction"
+      ],
+      "range": [
+        "Language",
+        "Text"
+      ]
+    },
+    "isAccessibleForFree": {
+      "domain": [
+        "CreativeWork",
+        "Event",
+        "Place"
+      ],
+      "range": [
+        "Boolean"
+      ]
+    },
+    "isPartOf": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "CreativeWork",
+        "URL"
+      ]
+    },
+    "keywords": {
+      "domain": [
+        "CreativeWork",
+        "Event",
+        "Organization",
+        "Place",
+        "Product"
+      ],
+      "range": [
+        "DefinedTerm",
+        "Text",
+        "URL"
+      ]
+    },
+    "license": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "CreativeWork",
+        "URL"
+      ]
+    },
+    "logo": {
+      "domain": [
+        "Brand",
+        "Certification",
+        "Organization",
+        "Place",
+        "Product",
+        "Service"
+      ],
+      "range": [
+        "ImageObject",
+        "URL"
+      ]
+    },
+    "mainEntity": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Thing"
+      ]
+    },
+    "mainEntityOfPage": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "CreativeWork",
+        "URL"
+      ]
+    },
+    "name": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "publisher": {
+      "domain": [
+        "CreativeWork",
+        "FinancialIncentive"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
+    "reportNumber": {
+      "domain": [
+        "Report"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "sameAs": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "URL"
+      ]
+    },
+    "subjectOf": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "CreativeWork",
+        "Event"
+      ]
+    },
+    "url": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "URL"
+      ]
+    }
+  },
+  "subClassOf": {
+    "AdministrativeArea": [
+      "Place"
+    ],
+    "Article": [
+      "CreativeWork"
+    ],
+    "CivicStructure": [
+      "Place"
+    ],
+    "Corporation": [
+      "Organization"
+    ],
+    "Courthouse": [
+      "GovernmentBuilding"
+    ],
+    "CreativeWork": [
+      "Thing"
+    ],
+    "DataCatalog": [
+      "CreativeWork"
+    ],
+    "DataDownload": [
+      "MediaObject"
+    ],
+    "GovernmentBuilding": [
+      "CivicStructure"
+    ],
+    "GovernmentOrganization": [
+      "Organization"
+    ],
+    "LocalBusiness": [
+      "Organization",
+      "Place"
+    ],
+    "MediaObject": [
+      "CreativeWork"
+    ],
+    "Organization": [
+      "Thing"
+    ],
+    "Person": [
+      "Thing"
+    ],
+    "Place": [
+      "Thing"
+    ],
+    "ProfilePage": [
+      "WebPage"
+    ],
+    "Report": [
+      "Article"
+    ],
+    "Thing": [],
+    "WebPage": [
+      "CreativeWork"
+    ],
+    "WebSite": [
+      "CreativeWork"
+    ]
+  }
+}

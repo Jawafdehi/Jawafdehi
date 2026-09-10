@@ -192,10 +192,14 @@ describe('worker: entity page metadata', () => {
     const nodes = graphNodes(await fetchPage('/entity/namunapalika/namuna-nagarpalika'));
 
     expect(nodes).toHaveLength(1);
-    expect(nodes[0]['@id']).toBe(ENTITY_IRI);
-    expect(nodes[0]['@type']).toBe('GovernmentOrganization');
+    // The page node is the CreativeWork; the entity hangs off it as mainEntity.
+    // See tests/seo/schema-org-validity.test.ts for why they are separate.
+    expect(nodes[0]['@type']).toBe('WebPage');
+    const entity = nodes[0].mainEntity as Record<string, unknown>;
+    expect(entity['@id']).toBe(ENTITY_IRI);
+    expect(entity['@type']).toBe('GovernmentOrganization');
     // Same identifier the case graph uses for `about` — the join key.
-    expect(nodes[0].sameAs).toEqual(['https://example.invalid/']);
+    expect(entity.url).toBe('https://example.invalid/');
   });
 
   it('advertises the JSON-LD record behind the page', async () => {
