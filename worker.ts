@@ -1055,6 +1055,18 @@ export default {
       for (const [key, value] of Object.entries(secHeaders)) {
         response.headers.set(key, value);
       }
+      // The assets binding serves .txt as bare `text/plain` with no charset —
+      // /robots.txt happens to get one, /llms.txt does not. llms.txt is 11 KB of
+      // mixed English and Devanagari (the organisation's Nepali name, the numeral
+      // words), and `text/plain` with no charset is historically ISO-8859-1: a
+      // strict client renders the Nepali as mojibake. It is also the one file here
+      // written to be parsed by a machine, so leaving its encoding to sniffing is
+      // the wrong trade. Only added when absent, so an asset that declares its own
+      // charset keeps it.
+      const contentType = response.headers.get('Content-Type');
+      if (contentType?.startsWith('text/plain') && !contentType.includes('charset')) {
+        response.headers.set('Content-Type', 'text/plain; charset=utf-8');
+      }
       return response;
     }
 

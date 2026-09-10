@@ -46,6 +46,8 @@ A case record carries `title`, `short_description`, `description`, `key_allegati
 
 Entity records are returned **as schema.org JSON-LD** with a `jawafdehi:` extension namespace, so no reshaping is needed to merge them into a knowledge graph.
 
+**To enumerate every entity, use the API, not the sitemap.** `sitemap.xml` lists cases and pages but no entity URLs, so an entity is discoverable through `/api/entities` (page with `limit` and `offset`), through `/api/search/?q=`, or through the `nes_id` on any case's `entities[]`. Do not infer from the sitemap's silence that an entity has no page — it does, at `/entity/{prefix}/{slug}`.
+
 ### Court cases, courts and materials
 
 `{court}` is a **court identifier slug**, not a name or an abbreviation — get the list from `/api/courts/` (each entry has `identifier`, `court_type`, `full_name_english`, `full_name_nepali`). They look like `okhaldhungadc` and `achhamdc`, so guessing `SC` or `supreme-court` will 404.
@@ -135,7 +137,7 @@ Cases can also be embedded: https://jawafdehi.org/oembed?url={case_url}&format=j
 - **Money** is in Nepali rupees, in the `bigo` field. Nepali-language records use the Nepali numeral system (लाख = 100,000, करोड = 10,000,000, अरब = 1,000,000,000).
 - **Dates** may appear in both Bikram Sambat and Gregorian form. API date fields are Gregorian ISO 8601.
 - **Be polite.** The API is run by volunteers on donated infrastructure. Prefer `?ordering=-updated_at` with a small `page_size` to detect what changed over re-crawling the whole archive, keep concurrency in single digits, and identify your client in the `User-Agent` header. See the pagination table above before fetching any list — the default page of `/api/materials/` alone is 4.3 MB.
-- **Crawling is welcome.** See https://jawafdehi.org/robots.txt — GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot and PerplexityBot are explicitly allowed.
+- **Read robots.txt as served, not as you expect it.** https://jawafdehi.org/robots.txt is authoritative, and it is not only this project's file: the CDN in front of the site can prepend its own managed rules and a `Content-Signal` line, which may restrict user-agents that this project's own section allows. If the two disagree about you, honour the served file and, if you think that is a mistake, say so via the contact on https://jawafdehi.org/about/ — we would rather hear about it than be quietly uncrawlable.
 
 ## Contributing a correction
 
