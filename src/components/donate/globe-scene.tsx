@@ -380,41 +380,51 @@ function mountGlobe(container: HTMLDivElement): () => void {
         }),
       ),
     );
-  });
+  })
+    // Same reasoning as the borders below: decorative, so a failed fetch must
+    // not surface as an unhandled rejection. Pre-existing, fixed here rather
+    // than guarding one of two identical loaders in the same function.
+    .catch(() => {});
 
   // Country outlines over the dot grid, so the geography is readable rather
   // than impressionistic: coastlines double as continent edges, and Nepal's own
   // border is drawn in amber at a slightly larger radius so it sits above the
   // shared India/China frontier lines instead of z-fighting them.
-  void loadBorders("/assets/globe-borders.json").then((borders) => {
-    if (disposed) return;
-    if (borders.world.length > 0) {
-      globe.add(
-        new LineSegments(
-          ringsToSegments(borders.world, 1.001),
-          new LineBasicMaterial({
-            color: BORDER_BLUE,
-            transparent: true,
-            opacity: 0.28,
-            depthWrite: false,
-          }),
-        ),
-      );
-    }
-    if (borders.nepal.length > 0) {
-      globe.add(
-        new LineSegments(
-          ringsToSegments(borders.nepal, 1.0035),
-          new LineBasicMaterial({
-            color: AMBER_HEX,
-            transparent: true,
-            opacity: 0.95,
-            depthWrite: false,
-          }),
-        ),
-      );
-    }
-  });
+  void loadBorders("/assets/globe-borders.json")
+    .then((borders) => {
+      if (disposed) return;
+      if (borders.world.length > 0) {
+        globe.add(
+          new LineSegments(
+            ringsToSegments(borders.world, 1.001),
+            new LineBasicMaterial({
+              color: BORDER_BLUE,
+              transparent: true,
+              opacity: 0.28,
+              depthWrite: false,
+            }),
+          ),
+        );
+      }
+      if (borders.nepal.length > 0) {
+        globe.add(
+          new LineSegments(
+            ringsToSegments(borders.nepal, 1.0035),
+            new LineBasicMaterial({
+              color: AMBER_HEX,
+              transparent: true,
+              opacity: 0.95,
+              depthWrite: false,
+            }),
+          ),
+        );
+      }
+    })
+    // Every overlay here is decorative: the ocean sphere, arcs, city dots and
+    // the Kathmandu beacon are already on screen, so a missing or malformed
+    // asset should cost the borders and nothing else. Without this, a 404, an
+    // offline load or a truncated JSON body becomes an unhandled rejection.
+    .catch(() => {});
 
   // Initial orientation: Kathmandu front-and-center.
   const home = latLonToVec3(KTM.lat, KTM.lon, 1);
