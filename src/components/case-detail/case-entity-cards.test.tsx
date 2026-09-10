@@ -25,7 +25,11 @@ const party = (over: Partial<JawafEntity> = {}): JawafEntity => ({
   ...over,
 });
 
-function renderCards(entities: JawafEntity[], initialLimit = 9) {
+function renderCards(
+  entities: JawafEntity[],
+  initialLimit = 9,
+  forum: string | null = null,
+) {
   return render(
     <MemoryRouter>
       <CaseEntityCards
@@ -33,6 +37,7 @@ function renderCards(entities: JawafEntity[], initialLimit = 9) {
         resolvedEntities={{}}
         language="en"
         initialLimit={initialLimit}
+        forum={forum}
       />
     </MemoryRouter>,
   );
@@ -214,5 +219,34 @@ describe("CaseEntityCards — the view-more toggle", () => {
     fireEvent.click(toggle);
     expect(screen.getAllByRole("link")).toHaveLength(12);
     expect(screen.queryByText("caseDetail.showLessParties")).not.toBeNull();
+  });
+});
+
+// The verdict names the forum and asserts nothing about finality. 22 published
+// cases carry a Special Court acquittal with a live CIAA appeal at the Supreme
+// Court, and the CIAA appeals only some defendants, so "appeal pending" would
+// be false for the rest. "Special Court: acquitted" is true for everyone.
+describe("CaseEntityCards — the verdict names its forum", () => {
+  it("prefixes the verdict with the court that reached it", () => {
+    renderCards([party({ outcome: "acquitted", notes: "" })], 9, "Special Court");
+
+    expect(screen.getByText("Special Court: acquitted")).toBeTruthy();
+    expect(screen.queryByText("Acquitted")).toBeNull();
+  });
+
+  it("claims nothing about an appeal, in either direction", () => {
+    const { container } = renderCards(
+      [party({ outcome: "acquitted", notes: "" })],
+      9,
+      "Special Court",
+    );
+
+    expect(container.textContent).not.toMatch(/pending|final|upheld/i);
+  });
+
+  it("shows the bare verdict when the case has no single first instance", () => {
+    renderCards([party({ outcome: "convicted", notes: "" })], 9, null);
+
+    expect(screen.getByText("Convicted")).toBeTruthy();
   });
 });

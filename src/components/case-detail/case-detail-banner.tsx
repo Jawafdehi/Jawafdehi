@@ -12,13 +12,14 @@ import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
 import type { CaseDetail, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
-import { formatCaseDateRangeForLanguage } from "@/utils/date";
+import { caseStages } from "@/utils/case-stages";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { CaseByline } from "@/components/case-detail/case-byline";
+import { CaseStageDates } from "@/components/case-detail/case-stage-dates";
 import "./case-dossier.css";
 
 interface CaseDetailBannerProps {
@@ -97,23 +98,20 @@ export function CaseDetailBanner({
     isPlaceholder,
     onError: advanceImage,
   } = useCaseImage(caseData.banner, [caseData.banner_url, caseData.thumbnail_url]);
-  // Derive the chip from state + end date so a concluded case (one with a
-  // `case_end_date`) no longer reads "Ongoing".
-  const effectiveStatus = deriveCaseStatus(caseData.state, caseData.case_end_date);
+  // The lifecycle is derived server-side and served as `status`; only our own
+  // DRAFT/IN_REVIEW workflow states override it.
+  const effectiveStatus = deriveCaseStatus(caseData.state, caseData.status);
   const statusLabel = t(getCaseStatusLabelKey(effectiveStatus));
   // A known case type localizes; an unknown/scraped one humanizes its raw value
   // rather than mislabelling (getCaseTypeLabelKey returns null when unknown).
-  const caseTypeLabelKey = getCaseTypeLabelKey(caseData.case_type);
+  // `case_type` renamed to `offence_type`; both are served this release.
+  const offenceType = caseData.offence_type || caseData.case_type;
+  const caseTypeLabelKey = getCaseTypeLabelKey(offenceType);
   const caseTypeLabel = caseTypeLabelKey
     ? t(caseTypeLabelKey)
-    : (caseData.case_type || "").replaceAll("_", " ").replaceAll("-", " ");
+    : (offenceType || "").replaceAll("_", " ").replaceAll("-", " ");
 
-  const dateRange = formatCaseDateRangeForLanguage(
-    caseData.case_start_date,
-    caseData.case_end_date,
-    t("cases.status.ongoing"),
-    currentLang
-  );
+  const stages = caseStages(caseData.dates);
 
   const notAvailableLabel = t("common.notAvailable");
 
@@ -249,7 +247,7 @@ export function CaseDetailBanner({
                 </CaseStatusBadge>
 
                 {caseTypeLabel ? (
-                  <CaseTypeBadge caseType={caseData.case_type}>
+                  <CaseTypeBadge caseType={offenceType}>
                     {caseTypeLabel}
                   </CaseTypeBadge>
                 ) : null}
@@ -301,17 +299,11 @@ export function CaseDetailBanner({
                     </div>
                   </div>
 
-                  <div>
-                    <p className={metaTitleClass}>{t("caseDetail.period")}:</p>
-                    <div className={metaValueClass}>
-                      <p>{dateRange.primary}</p>
-                      {dateRange.secondary && (
-                        <p className="text-sm font-normal leading-6 text-primary/65">
-                          ({dateRange.secondary})
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  {/* One labelled row per stage. The single "मुद्दा मिति /
+                      Case date" range this replaces read to the public as when
+                      the corruption happened; these are court registration and
+                      verdict dates, and there is one pair per forum. */}
+                  <CaseStageDates stages={stages} language={currentLang} />
 
                   {caseData.bigo != null && caseData.bigo > 0 && (
                     <div>

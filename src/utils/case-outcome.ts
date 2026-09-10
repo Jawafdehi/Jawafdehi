@@ -69,6 +69,29 @@ export function outcomeLabel(outcome: EntityOutcome, language: string): string {
   return OUTCOME_LABELS[normalizeOutcome(outcome)][lang];
 }
 
+/**
+ * A verdict named with the forum that reached it: "Special Court: acquitted".
+ *
+ * NOT a bare "Acquitted", and NOT "acquitted — appeal pending". 22 published
+ * cases carry a Special Court acquittal with a live CIAA appeal at the Supreme
+ * Court, and the CIAA routinely appeals only SOME defendants, so any claim
+ * about pendency is wrong for whoever it does not apply to. Naming the forum is
+ * true for everyone. `forum` is empty when the case has no single first
+ * instance to attribute the verdict to — then the bare verdict stands alone
+ * rather than being pinned on a guessed court.
+ */
+export function outcomeWithForumLabel(
+  outcome: EntityOutcome,
+  forum: string | null | undefined,
+  language: string,
+): string {
+  const label = outcomeLabel(outcome, language);
+  const named = forum?.trim();
+  if (!named) return label;
+  // Devanagari is caseless; English reads as a sentence after the forum.
+  return `${named}: ${language === "ne" ? label : label.toLowerCase()}`;
+}
+
 export function outcomeBadgeClass(outcome: EntityOutcome): string {
   return OUTCOME_BADGE_CLASSES[normalizeOutcome(outcome)];
 }

@@ -17,8 +17,8 @@ import {
   CASE_TYPES,
   RELATIONSHIP_TYPES,
   isValidSlug,
-  isValidDateField,
   isValidCourtCaseRef,
+  isValidStageRow,
   isValidTimelineRow,
   isValidEntityRow,
   slugify,
@@ -27,10 +27,12 @@ import {
   buildEntitiesPatch,
   buildTimelinePatch,
   buildEvidencePatch,
+  buildStagesPatch,
   OUTCOME_TYPES,
   type EntityRelationshipRow,
   type TimelineEventRow,
   type EvidenceRow,
+  type CaseStageRow,
   type RelationshipType,
   type OutcomeType,
 } from "@/lib/jawafdehi-forms";
@@ -40,6 +42,7 @@ import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshipsEditor";
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
+import CaseStagesEditor from "@/components/admin/case/CaseStagesEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
 import CaseImageField from "@/components/admin/case/CaseImageField";
@@ -51,7 +54,6 @@ import CaseBylineEditor, {
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
 import CaseReviewScoreBadge from "@/components/admin/case/CaseReviewScoreBadge";
 import CaseHistoryPanel from "@/components/admin/case/CaseHistoryPanel";
-import DatePairInput from "@/components/admin/DatePairInput";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,11 +112,11 @@ interface CaseFormState {
   banner_url: string;
   tags: string[];
   court_cases: string[];
-  // AD (Gregorian) is the single source of truth. Bikram Sambat is DERIVED from
-  // the AD date at display time (public pages and the admin BS picker), never
+  // Every pass of the case through a forum, replacing the single start/end
+  // pair. AD (Gregorian) is the single source of truth; Bikram Sambat is
+  // DERIVED at display time (public pages and the admin BS picker), never
   // stored — the backend has no BS columns.
-  case_start_date: string; // AD
-  case_end_date: string; // AD
+  stages: CaseStageRow[];
 }
 
 const EMPTY: CaseFormState = {
@@ -140,8 +142,7 @@ const EMPTY: CaseFormState = {
   banner_url: "",
   tags: [],
   court_cases: [],
-  case_start_date: "",
-  case_end_date: "",
+  stages: [],
 };
 
 // Coerce a loaded relationship_type into the known enum (default ACCUSED).
@@ -210,6 +211,30 @@ function parseTimeline(c: Record<string, unknown>): TimelineEventRow[] {
   }));
 }
 
+// Parse a loaded case's `dates.stages` into editor rows.
+//
+// A stage whose type is outside the closed vocabulary is KEPT, not dropped:
+// the list is saved as a whole-list replace, so dropping it here would delete
+// it on the next save of any other field. The row renders with no type
+// selected and blocks save (stageRowError -> "unknownStage"), which puts the
+// choice in front of the caseworker instead of losing the record.
+function parseStages(c: Record<string, unknown>): CaseStageRow[] {
+  const dates = c.dates;
+  const list =
+    dates && typeof dates === "object" && Array.isArray((dates as Record<string, unknown>).stages)
+      ? ((dates as Record<string, unknown>).stages as Record<string, unknown>[])
+      : [];
+  return list.map((stage) => ({
+    stage: str(stage?.stage) as CaseStageRow["stage"],
+    start: str(stage?.start),
+    end: str(stage?.end),
+    courtcase_iri: str(stage?.courtcase_iri),
+    body: str(stage?.body),
+    label: str(stage?.label),
+    notes: str(stage?.notes),
+  }));
+}
+
 function parseEvidence(c: Record<string, unknown>): EvidenceRow[] {
   const list = Array.isArray(c.evidence) ? (c.evidence as Record<string, unknown>[]) : [];
   return list
@@ -275,8 +300,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     tags: strList(c.tags),
     // Canonical @id IRIs — the only court-case reference format.
     court_cases: strList(c.court_cases),
-    case_start_date: str(c.case_start_date),
-    case_end_date: str(c.case_end_date),
+    stages: parseStages(c),
   };
 }
 
@@ -412,11 +436,10 @@ export default function AdminCaseForm() {
 
   const slugValid = effectiveSlug === "" || isValidSlug(effectiveSlug);
   const bigoValid = form.bigo.trim() === "" || Number.isFinite(Number(form.bigo));
-  // AD is the stored source of truth (BS is derived for display only), so
-  // validate the AD fields.
-  const datesValid =
-    isValidDateField(form.case_start_date) &&
-    isValidDateField(form.case_end_date);
+  // Mirrors the API's PER-RECORD rule: a stage must not end before it starts
+  // (equal is allowed). Deliberately no rule BETWEEN stages — after a remand a
+  // new first instance legitimately starts after an appeal ended.
+  const stageRowsValid = form.stages.every(isValidStageRow);
   // A partially-filled timeline row (title without a date, etc.) would serialize into the /timeline replace and 422 the whole PATCH, so block save until every *populated* timeline row is complete — a fully-blank trailing timeline add-row is fine, the patch builder drops it.
   const timelineRowsValid = form.timeline.every(
     (r) =>
@@ -437,7 +460,7 @@ export default function AdminCaseForm() {
     form.case_type.trim() !== "" &&
     slugValid &&
     bigoValid &&
-    datesValid &&
+    stageRowsValid &&
     timelineRowsValid &&
     entityRowsValid &&
     courtCaseRowsValid;
@@ -499,11 +522,10 @@ export default function AdminCaseForm() {
     if (changed(form.court_cases, original.court_cases))
       ops.push(buildStringListPatch("/court_cases", form.court_cases));
     // Only AD dates are stored; BS is derived from them at display time, so no
-    // /case_*_date_bs ops are emitted (those columns don't exist on the backend).
-    if (form.case_start_date !== original.case_start_date)
-      ops.push(replaceOp("/case_start_date", form.case_start_date || null));
-    if (form.case_end_date !== original.case_end_date)
-      ops.push(replaceOp("/case_end_date", form.case_end_date || null));
+    // BS ops are emitted (those columns don't exist on the backend). The whole
+    // stage list travels as one replace, like the other sub-resources.
+    if (changed(form.stages, original.stages))
+      ops.push(buildStagesPatch(form.stages));
     return ops;
   };
 
@@ -530,8 +552,7 @@ export default function AdminCaseForm() {
       form.banner_url.trim() !== "" ||
       form.tags.length > 0 ||
       form.court_cases.length > 0 ||
-      form.case_start_date.trim() !== "" ||
-      form.case_end_date.trim() !== "";
+      form.stages.length > 0;
   const { confirmDiscard } = useUnsavedChanges(dirty);
 
   const onCancel = () => {
@@ -1057,30 +1078,19 @@ export default function AdminCaseForm() {
           invalidHint={t("admin.caseForm.courtCaseInvalid")}
         />
 
-        {/* BS is derived from AD for display and never stored (the backend has
-            no BS columns). Authors may still pick in the Nepali calendar — that
-            selection sets the AD date, and the shown BS re-derives from it. */}
-        <DatePairInput
-          label={t("admin.caseForm.caseStart")}
-          idBase="case-start"
-          deriveBs
-          adValue={form.case_start_date}
-          onAdChange={(ad) => set("case_start_date", ad)}
-        />
-        <DatePairInput
-          label={t("admin.caseForm.caseEnd")}
-          idBase="case-end"
-          deriveBs
-          adValue={form.case_end_date}
-          onAdChange={(ad) => set("case_end_date", ad)}
-        />
-        <FieldError message={!datesValid && t("admin.caseForm.datesInvalid")} />
-
-        {/* Sub-resource editors (F3/F4/F5). Shown only in edit mode: a case
-            must exist (have a slug) before entities/evidence can be linked. On
-            create, the user saves the DRAFT first, then lands on this edit page. */}
+        {/* Sub-resource editors. Shown only in edit mode: a case must exist
+            (have a slug) before stages/entities/evidence can be linked. On
+            create, the user saves the DRAFT first, then lands on this edit page.
+            The stage list belongs here rather than above for a second reason:
+            the create payload cannot carry it, so a stage typed on the create
+            form would be silently discarded — which is what happened to the
+            single start/end pair this replaces. */}
         {editing ? (
           <div className="space-y-4">
+            <CaseStagesEditor
+              rows={form.stages}
+              onChange={(rows) => set("stages", rows)}
+            />
             <EntityRelationshipsEditor
               rows={form.entities}
               onChange={(rows) => set("entities", rows)}
@@ -1100,6 +1110,11 @@ export default function AdminCaseForm() {
           </p>
         )}
 
+        <FieldError
+          message={
+            editing && !stageRowsValid && t("admin.caseForm.stageRowsInvalid")
+          }
+        />
         <FieldError
           message={
             editing &&

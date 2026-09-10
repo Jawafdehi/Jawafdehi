@@ -10,10 +10,15 @@ import {
   buildTimelinePatch,
   buildEvidencePatch,
   buildStringListPatch,
+  buildStagesPatch,
+  isValidStageRow,
+  stageRowError,
+  STAGE_NOTES_MAX,
   replaceOp,
   type EntityRelationshipRow,
   type TimelineEventRow,
   type EvidenceRow,
+  type CaseStageRow,
 } from "./jawafdehi-forms";
 
 const IRI = "https://jawafdehi.org/entity/person/ram-bahadur";
@@ -187,5 +192,133 @@ describe("buildStringListPatch", () => {
       path: "/tags",
       value: ["ciaa", "procurement"],
     });
+  });
+});
+
+
+const stageRow = (over: Partial<CaseStageRow> = {}): CaseStageRow => ({
+  stage: "initial",
+  start: "",
+  end: "",
+  courtcase_iri: "",
+  body: "",
+  label: "",
+  notes: "",
+  ...over,
+});
+
+describe("stageRowError", () => {
+  it("accepts a stage with no dates at all — the case may not have started", () => {
+    expect(stageRowError(stageRow())).toBeNull();
+    expect(isValidStageRow(stageRow())).toBe(true);
+  });
+
+  it("accepts an open stage, and one that starts and ends on the same day", () => {
+    expect(stageRowError(stageRow({ start: "2023-01-01" }))).toBeNull();
+    expect(stageRowError(stageRow({ end: "2023-01-01" }))).toBeNull();
+    expect(
+      stageRowError(stageRow({ start: "2023-01-01", end: "2023-01-01" })),
+    ).toBeNull();
+  });
+
+  it("rejects a stage that ends before it starts", () => {
+    expect(
+      stageRowError(stageRow({ start: "2023-06-09", end: "2023-01-01" })),
+    ).toBe("endBeforeStart");
+    expect(
+      isValidStageRow(stageRow({ start: "2023-06-09", end: "2023-01-01" })),
+    ).toBe(false);
+  });
+
+  it("imposes NO ordering between stages", () => {
+    // After a remand a new first instance legitimately starts after an appeal
+    // ended, so each row is judged only against itself.
+    const rows = [
+      stageRow({ stage: "appeal", start: "2022-01-01", end: "2022-06-01" }),
+      stageRow({ stage: "initial", start: "2021-01-01", end: "2021-06-01" }),
+      stageRow({ stage: "initial", start: "2023-01-01" }),
+    ];
+    expect(rows.every(isValidStageRow)).toBe(true);
+  });
+
+  it("rejects a malformed date", () => {
+    expect(stageRowError(stageRow({ start: "Jan 2 2024" }))).toBe("invalidDate");
+    expect(stageRowError(stageRow({ end: "2024/01/02" }))).toBe("invalidDate");
+  });
+
+  it("rejects a public note over the 500-character cap", () => {
+    expect(stageRowError(stageRow({ notes: "क".repeat(STAGE_NOTES_MAX) }))).toBeNull();
+    expect(stageRowError(stageRow({ notes: "क".repeat(STAGE_NOTES_MAX + 1) }))).toBe(
+      "notesTooLong",
+    );
+  });
+
+  it("rejects a stage type outside the closed vocabulary", () => {
+    // `tags` drifted to 144 distinct values across 82 cases under a free-text
+    // schema; a stage typed `first_instance` would simply never render.
+    expect(
+      stageRowError(stageRow({ stage: "first_instance" as CaseStageRow["stage"] })),
+    ).toBe("unknownStage");
+  });
+});
+
+describe("buildStagesPatch", () => {
+  it("replaces /dates with the whole stage list", () => {
+    const op = buildStagesPatch([
+      stageRow({ stage: "investigation", start: "2021-03-01", end: "2021-09-14" }),
+      stageRow({ stage: "initial", start: "2021-10-02" }),
+    ]);
+
+    expect(op).toEqual({
+      op: "replace",
+      path: "/dates",
+      value: {
+        stages: [
+          { stage: "investigation", start: "2021-03-01", end: "2021-09-14" },
+          { stage: "initial", start: "2021-10-02" },
+        ],
+      },
+    });
+  });
+
+  it("omits empty optional fields rather than sending blanks", () => {
+    const op = buildStagesPatch([
+      stageRow({
+        stage: "appeal",
+        start: " 2023-07-11 ",
+        courtcase_iri: " https://jawafdehi.org/courtcase/supreme/080-ne-0044 ",
+        body: " Supreme Court ",
+        notes: " इजलास गठन नभएको ",
+      }),
+    ]);
+
+    expect(op.value).toEqual({
+      stages: [
+        {
+          stage: "appeal",
+          start: "2023-07-11",
+          courtcase_iri: "https://jawafdehi.org/courtcase/supreme/080-ne-0044",
+          body: "Supreme Court",
+          notes: "इजलास गठन नभएको",
+        },
+      ],
+    });
+  });
+
+  it("carries a label only on an `other` stage", () => {
+    expect(
+      buildStagesPatch([stageRow({ stage: "other", label: "Arbitration tribunal" })])
+        .value,
+    ).toEqual({ stages: [{ stage: "other", label: "Arbitration tribunal" }] });
+
+    // A label left behind after switching the type back is not sent.
+    expect(
+      buildStagesPatch([stageRow({ stage: "appeal", label: "Arbitration tribunal" })])
+        .value,
+    ).toEqual({ stages: [{ stage: "appeal" }] });
+  });
+
+  it("sends an empty stage list rather than nothing, so a stage can be deleted", () => {
+    expect(buildStagesPatch([]).value).toEqual({ stages: [] });
   });
 });

@@ -14,13 +14,27 @@ import type { CaseDetail } from "@/types/jds";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
-type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
+/** The badge vocabulary every case-tile surface shares. Exported so the card
+ * and the featured spotlight cannot hold two different versions of it. */
+export type CaseCardStatus =
+  | "ongoing"
+  | "resolved"
+  | "under-investigation"
+  | "withdrawn"
+  | "dormant";
 
-// The index stores the lifecycle as `closed`; the badge calls it `resolved`.
+// Two vocabularies land here. The search index still stores the old three
+// values (`ongoing`/`closed`/`others`) so deployed cards keep working; the case
+// API serves the six-value lifecycle. `withdrawn` and `dormant` pass through as
+// themselves — neither is "resolved", because nobody decided them.
 const CASE_STATUS_BADGE: Record<string, CaseCardStatus> = {
   ongoing: "ongoing",
   closed: "resolved",
+  concluded: "resolved",
   others: "under-investigation",
+  under_investigation: "under-investigation",
+  withdrawn: "withdrawn",
+  dormant: "dormant",
 };
 
 function mapCaseStatus(status: string | null | undefined): CaseCardStatus {
@@ -101,8 +115,9 @@ export function caseCardPropsFromSearchResult(
 
 /**
  * Fallback for older indexed docs with no `card` payload: derive the same props
- * from a fetched case detail. Status is inferred from the date fields (the rule
- * the cases list uses), since the detail carries no lifecycle field.
+ * from a fetched case detail. The lifecycle is read off the API's own `status`
+ * — it is derived server-side from the case's stages, and a case running
+ * several dockets has no single end date the client could infer it from.
  *
  * Kept in step with {@link caseCardPropsFromSearchResult} — the two feed the
  * same <CaseCard>, so a field added to one must be added to both or a case
@@ -114,19 +129,11 @@ export function caseCardPropsFromCaseDetail(
   language: string,
   fallbackSlug?: string,
 ) {
-  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
-  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
-  const status: CaseCardStatus = hasStart && !hasEnd
-    ? "ongoing"
-    : hasStart && hasEnd
-      ? "resolved"
-      : "under-investigation";
-
   return {
     id: result.id,
     slug: detail.slug || fallbackSlug || null,
     title: detail.title || pickText(result.title),
-    status,
+    status: mapCaseStatus(detail.status),
     tags: detail.tags || [],
     image: detail.thumbnail ?? null,
     thumbnailUrl: detail.thumbnail_url || undefined,
