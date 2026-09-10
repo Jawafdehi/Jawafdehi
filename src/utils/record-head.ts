@@ -192,7 +192,14 @@ export function entityTypeToken(record: Record<string, unknown>): string | null 
 }
 
 export interface EntityHeadOptions {
-  language?: string;
+  /**
+   * Deliberately absent: an entity head declares the language of the CONTENT it
+   * carries, not the reader's toggle. See entityHeadInput — the name and
+   * description it emits are chosen from the record, identically for either
+   * reader, so taking the reader's language here would declare a language the
+   * bytes do not match.
+   */
+  language?: never;
 }
 
 /**
@@ -204,7 +211,7 @@ export interface EntityHeadOptions {
 export function entityHeadInput(
   record: Record<string, unknown>,
   segments: string[],
-  options: EntityHeadOptions = {},
+  _options: EntityHeadOptions = {},
 ): HeadTagInput {
   const encodedTail = segments.map(encodeURIComponent).join("/");
   const canonicalUrl = `${SITE_URL}/entity/${encodedTail}`;
@@ -218,10 +225,25 @@ export function entityHeadInput(
   const description = bilingual(record.description);
   const typeToken = entityTypeToken(record);
 
+  const descriptionText = stripHtml(description.en || description.ne || "");
   const metaDescription = truncateMeta(
-    stripHtml(description.en || description.ne || "") ||
+    descriptionText ||
       `${displayName} in the ${SITE_NAME} public entity registry — every documented case, allegation and record involving this entity.`,
   );
+
+  // The head declares the language of what it actually contains.
+  //
+  // The rest of this site is Nepali-first and says so, correctly: case titles and
+  // descriptions come out of the API in Devanagari. Entity records do not. Sampled
+  // across the live archive, 719 of 719 bound entity names are Latin — the registry
+  // is English-labelled — and the description falls back the same way. So an entity
+  // page emitting an English name and an English description while declaring
+  // og:locale ne_NP and inLanguage "ne" was telling every consumer the opposite of
+  // what it was handing them, on every entity page.
+  //
+  // Derived from the data rather than from a per-page constant, because a record
+  // that carries only Nepali should still say so.
+  const contentLanguage = name.en || description.en ? "en" : "ne";
 
   const imageUrl =
     previewImageUrl(text(record.image) || text(record.logo), MEDIA_BASE) || SOCIAL_IMAGE_URL;
@@ -235,7 +257,8 @@ export function entityHeadInput(
     type: entityOgType(typeToken),
     imageUrl,
     imageAlt: displayName,
-    language: options.language,
+    language: contentLanguage,
+    htmlLang: contentLanguage,
     alternates: [{ href: apiUrl, type: "application/json", title: "Entity record (JSON-LD)" }],
     jsonLd: entityStructuredData({
       canonicalUrl,
@@ -249,7 +272,7 @@ export function entityHeadInput(
       officialUrl: text(record.url) || null,
       sameAs: aliasList(record.sameAs),
       apiUrl,
-      language: options.language,
+      language: contentLanguage,
     }),
   };
 }

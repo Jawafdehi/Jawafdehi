@@ -410,19 +410,30 @@ function stripOverriddenHeadTags(head: string): string {
 // what pre-render.ts substitutes into it), and filling it with the escaped
 // title as well left the record's name stranded as loose text in the head,
 // ahead of the real element.
-function injectHeadMeta(indexHtml: string, metaTags: string): string {
-  if (indexHtml.includes('<!--helmet-meta-->')) {
-    return indexHtml
+function injectHeadMeta(indexHtml: string, metaTags: string, htmlLang?: string): string {
+  // The shell declares lang="ne" because the site is Nepali-first. A record whose
+  // content is English (the entity registry is English-labelled — every bound
+  // entity name sampled from the live archive is Latin) must say so, or a screen
+  // reader pronounces Latin text with Nepali rules. scripts/pre-render.ts does the
+  // same rewrite from helmet's htmlAttributes; this is the edge's copy of it, and
+  // deliberately as narrow: only the lang attribute, so the template's
+  // translate="no" survives.
+  const withLang = htmlLang
+    ? indexHtml.replace(/<html lang="[^"]*"/, () => `<html lang="${escapeHtml(htmlLang)}"`)
+    : indexHtml;
+
+  if (withLang.includes('<!--helmet-meta-->')) {
+    return withLang
       .replace('<!--helmet-title-->', () => '')
       .replace('<!--helmet-meta-->', () => metaTags);
   }
-  const headEnd = indexHtml.indexOf('</head>');
+  const headEnd = withLang.indexOf('</head>');
   if (headEnd !== -1) {
-    const head = stripOverriddenHeadTags(indexHtml.slice(0, headEnd));
-    const rest = indexHtml.slice(headEnd);
+    const head = stripOverriddenHeadTags(withLang.slice(0, headEnd));
+    const rest = withLang.slice(headEnd);
     return `${head}${metaTags}\n${rest}`;
   }
-  return indexHtml;
+  return withLang;
 }
 
 // Fetches the built index.html to use as a shell. The request is constructed
@@ -565,10 +576,11 @@ async function handleEntityMetaFallback(
   if (!indexHtml) return null;
 
   // One mapping, shared with pages/EntityRecordProfile.tsx — see
-  // src/utils/record-head.ts. `language` is omitted so a crawler sees the
-  // Nepali-first default.
-  const metaTags = buildMetaTags(entityHeadInput(record, segments));
-  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
+  // src/utils/record-head.ts. It also decides the document language from the
+  // record's own content rather than assuming the site default.
+  const headInput = entityHeadInput(record, segments);
+  const metaTags = buildMetaTags(headInput);
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags, headInput.htmlLang));
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.

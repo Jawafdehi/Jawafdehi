@@ -19,7 +19,10 @@ interface SeoProps extends HeadTagInput {
  */
 export function Seo({ children, ...input }: SeoProps) {
   return (
-    <Helmet>
+    // htmlAttributes rather than a tag: this is the <html> element's own lang, and
+    // scripts/pre-render.ts reads it off helmet.htmlAttributes to rewrite the
+    // shell. See HeadTagInput.htmlLang for why a page ever overrides it.
+    <Helmet {...(input.htmlLang ? { htmlAttributes: { lang: input.htmlLang } } : {})}>
       {buildHeadTags(input).map((tag) => {
         if (tag.kind === "title") {
           return <title key="title">{tag.content}</title>;

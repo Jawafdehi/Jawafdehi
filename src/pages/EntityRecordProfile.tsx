@@ -322,7 +322,7 @@ export default function EntityRecordProfile() {
       {/* Same mapper the Worker uses (utils/record-head), so the head an agent
           reads at the edge and the head the app renders cannot drift apart. */}
       {data ? (
-        <Seo {...entityHeadInput(data as unknown as Record<string, unknown>, tail.split("/"), { language: currentLang })} />
+        <Seo {...entityHeadInput(data as unknown as Record<string, unknown>, tail.split("/"))} />
       ) : null}
 
       <div className="layout-container">

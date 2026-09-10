@@ -183,6 +183,19 @@ export interface HeadTagInput {
   /** e.g. "noindex, nofollow" — keeps unlisted records out of search. */
   robots?: string | null;
   /**
+   * The document language for this page, when it differs from the site default.
+   *
+   * index.html declares `lang="ne"` because the site is Nepali-first, and that is
+   * right for almost everything. It is wrong for a page whose content is English —
+   * the entity registry is English-labelled — where it tells a screen reader to
+   * pronounce Latin text with Nepali rules and invites a browser to "translate"
+   * a page already in the reader's language.
+   *
+   * pre-render.ts honours a Helmet `<html lang>` override; the Worker rewrites the
+   * shell's attribute. Emitted as a tag here so both renderers read one value.
+   */
+  htmlLang?: string;
+  /**
    * Machine-readable twins of this page — the JSON API record, oEmbed. These
    * belong in the shared list rather than as page-level <Seo> children because
    * case pages are served by the Worker, not pre-rendered (see the note in
