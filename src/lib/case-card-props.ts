@@ -54,6 +54,22 @@ function entityIds(entities: readonly { nes_id: string | null }[]): string[] {
   return entities.map((e) => e.nes_id).filter((id): id is string => Boolean(id));
 }
 
+// Tier-3 generative-thumbnail inputs both mappings share, so an imageless case
+// renders the same data portrait on /search and the home grid. Accused-only:
+// subject entities can include non-accused parties, which must not count into
+// the "accused" glyph.
+function thumbnailInputs(
+  entities: readonly { type?: string | null }[],
+  caseType: string | null | undefined,
+  timelineLength: number,
+) {
+  return {
+    caseType: caseType ?? null,
+    accusedCount: entities.filter((e) => e.type === "accused").length,
+    timelineCount: timelineLength,
+  };
+}
+
 // The subject/location split both mappings below share.
 function splitEntities<T extends NamedEntity & { type?: string | null }>(
   entities: readonly T[],
@@ -96,6 +112,7 @@ export function caseCardPropsFromSearchResult(
     bannerUrl: card?.banner_url || undefined,
     bigo: card?.bigo,
     ...splitEntities<CaseSearchCardEntity>(card?.entities ?? [], language),
+    ...thumbnailInputs(card?.entities ?? [], card?.case_type, card?.timeline?.length ?? 0),
   };
 }
 
@@ -133,5 +150,6 @@ export function caseCardPropsFromCaseDetail(
     bannerUrl: detail.banner_url || undefined,
     bigo: detail.bigo,
     ...splitEntities(detail.entities || [], language),
+    ...thumbnailInputs(detail.entities || [], detail.case_type, detail.timeline?.length ?? 0),
   };
 }

@@ -29,6 +29,9 @@ type CaseCardViewModel = {
   thumbnailUrl?: string;
   bannerUrl?: string;
   bigo: number | null;
+  caseType: string | null;
+  accusedCount: number;
+  timelineCount: number;
   subjectEntities: CaseSearchCardEntity[];
   locationEntities: CaseSearchCardEntity[];
 };
@@ -89,10 +92,16 @@ function toCaseCardViewModel(result: ArchiveSearchResult): CaseCardViewModel {
     image: card?.thumbnail ?? null,
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
+    // Editor hero (tier 1) — pass-through; the index does not carry it yet.
     // /cases reads the same indexed card payload as /search, so बिगो has to be
     // carried here too — otherwise the shared <CaseCard> shows the amount on the
     // search results and drops it on the browse page.
     bigo: card?.bigo ?? null,
+    // Generative-thumbnail (tier 3) inputs. Accused only — the subject-entity
+    // fallback would count non-accused parties into an "accused" glyph.
+    caseType: card?.case_type ?? null,
+    accusedCount: (card?.entities ?? []).filter((entity) => entity.type === "accused").length,
+    timelineCount: card?.timeline?.length ?? 0,
     subjectEntities: subjectEntities(card?.entities),
     locationEntities: locationEntities(card?.entities),
   };
@@ -324,6 +333,9 @@ function CaseResults({
               image={caseItem.image}
               thumbnailUrl={caseItem.thumbnailUrl}
               bannerUrl={caseItem.bannerUrl}
+              caseType={caseItem.caseType}
+              accusedCount={caseItem.accusedCount}
+              timelineCount={caseItem.timelineCount}
               viewMode={viewMode}
             />
           );

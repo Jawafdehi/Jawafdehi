@@ -125,7 +125,16 @@ const DIR = arg("dir", "dist/client");
 // pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 672_500;
+//
+// PR #362 rides on top of the above: the generative case-thumbnail fallback
+// adds ~1 KB gzip of card + formatting logic that stays eager (case cards
+// render on pre-rendered routes, SSR constraint, so it cannot be lazy-loaded).
+// Re-measured on the merged tree (main #369/#370/#371 + #362): 657.9 KB gzip
+// locally (673,690 bytes). The runner's zlib packs ~3.7 KB larger than local
+// here — main alone was 652.8 KB local / 656.5 KB CI — so this maps to ~661.6 KB
+// (~677.4 KB… 677_400 bytes) in CI; 678_500 leaves ~1,100 bytes over that,
+// matching the headroom convention of the entries above.
+const MAX_INITIAL_JS_GZIP = 678_500;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
