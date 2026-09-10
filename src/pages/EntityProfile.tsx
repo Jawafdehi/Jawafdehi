@@ -12,6 +12,7 @@ import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
 import { SITE_URL } from "@/utils/seo";
+import { entityStructuredData } from "@/utils/structured-data";
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -60,6 +61,7 @@ export default function EntityProfile() {
           ? `${entityName} सँग सम्बन्धित भ्रष्टाचारका मुद्दाहरू हेर्नुहोस् — जवाफदेही नेपालको खुला जवाफदेहिता डेटाबेस।`
           : `View corruption cases and allegations involving ${entityName} on Jawafdehi — Nepal's open accountability database.`;
         const canonicalUrl = `${SITE_URL}/entity/${jawafEntity.id}`;
+        const recordApiUrl = `${API_BASE_URL}/api/entities/${jawafEntity.id}/`;
         return (
           <Seo
             title={pageTitle}
@@ -67,9 +69,21 @@ export default function EntityProfile() {
             canonicalUrl={canonicalUrl}
             type="profile"
             language={currentLang}
-          >
-            <link rel="alternate" type="application/json" href={`${API_BASE_URL}/api/entities/${jawafEntity.id}/`} title="Entity data (JSON API)" />
-          </Seo>
+            alternates={[
+              { href: recordApiUrl, type: "application/json", title: "Entity data (JSON API)" },
+            ]}
+            jsonLd={entityStructuredData({
+              canonicalUrl,
+              // Prefer the canonical NES IRI over this page's URL so the node is
+              // the same one cases point at through `about`.
+              iri: jawafEntity.nes_id,
+              entityType: jawafEntity.entity_type,
+              name: entityName,
+              description: pageDescription,
+              apiUrl: recordApiUrl,
+              language: currentLang,
+            })}
+          />
         );
       })()}
 

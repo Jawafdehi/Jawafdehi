@@ -38,6 +38,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
 import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
+import { caseStructuredData } from "@/utils/structured-data";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -392,20 +393,37 @@ const CaseDetail = () => {
         // out of search engines (the API serves IN_REVIEW by slug, but these are
         // provisional, pre-publication records — see the under-review banner).
         robots={caseData.state !== "PUBLISHED" ? "noindex, nofollow" : null}
-      >
-        <link
-          rel="alternate"
-          type="application/json"
-          href={`${API_BASE_URL}/api/cases/${id}/`}
-          title="Case data (JSON API)"
-        />
-        <link
-          rel="alternate"
-          type="application/json+oembed"
-          href={`${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`}
-          title={`${caseData.title} oEmbed`}
-        />
-      </Seo>
+        // Moved off <Seo> children and onto the shared list so worker.ts emits
+        // them too. Case pages are not pre-rendered (see scripts/pre-render.ts),
+        // so the edge-injected head is the only one a crawler or an agent reads —
+        // as children these links reached nothing but client-side navigation.
+        alternates={[
+          {
+            href: `${API_BASE_URL}/api/cases/${id}/`,
+            type: "application/json",
+            title: "Case data (JSON API)",
+          },
+          {
+            href: `${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`,
+            type: "application/json+oembed",
+            title: `${caseData.title} oEmbed`,
+          },
+        ]}
+        jsonLd={caseStructuredData({
+          canonicalUrl,
+          title: caseData.title,
+          description: metaDescription,
+          imageUrl: ogImage,
+          datePublished: caseData.case_publish_date ?? caseData.created_at,
+          dateModified: caseData.updated_at,
+          language: i18n.language,
+          tags: caseData.tags,
+          entities: caseData.entities,
+          authors: caseData.authors,
+          apiUrl: `${API_BASE_URL}/api/cases/${id}/`,
+          caseType: caseData.case_type,
+        })}
+      />
 
       <CaseDetailBanner
         caseData={caseData}

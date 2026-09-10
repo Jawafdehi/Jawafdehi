@@ -17,6 +17,7 @@ import {
   truncateMeta,
 } from './src/utils/seo';
 import { stripMarkdown } from './src/utils/markdown';
+import { caseStructuredData, entityStructuredData } from './src/utils/structured-data';
 
 interface Env {
   ASSETS: {
@@ -344,6 +345,12 @@ function buildMetaTags(input: {
   // When set (e.g. "noindex, nofollow"), emit a robots meta so crawlers keep
   // "unlisted" (non-PUBLISHED) records out of search — link-only, not indexed.
   robots?: string | null;
+  // Machine-readable twins of the page (JSON API record, oEmbed) and the
+  // schema.org graph describing it. These are emitted HERE and not only in the
+  // React tree because a case page is never pre-rendered (see
+  // scripts/pre-render.ts): this injected head is the only one an agent sees.
+  alternates?: Array<{ href: string; type?: string; title?: string; rel?: string }>;
+  jsonLd?: unknown[];
 }): string {
   // The tag list is shared with <Seo> so the head a scraper gets from the edge
   // matches the head the app renders — see buildHeadTags in src/utils/seo.
@@ -370,7 +377,21 @@ function stripOverriddenHeadTags(head: string): string {
     .replace(/<meta\b[^>]*\bname=["']twitter:(?!site\b)[^"']*["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']description["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']robots["'][^>]*>/gi, () => '')
-    .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
+    .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '')
+    // The shell is the pre-rendered HOMEPAGE, which carries the site-level
+    // WebSite node with its SearchAction. Riding along on a case or entity URL it
+    // is a second, irrelevant graph competing with the record's own — so it goes
+    // and the injected nodes take its place. Scoped to ld+json by the `type`
+    // attribute: the shell's other <script> tags are the module entry and the
+    // dehydrated query state, and dropping either would break the page.
+    //
+    // Alternates are deliberately NOT stripped: the shell has none, and
+    // rel="alternate" is also how hreflang pairs are expressed, so a blanket
+    // strip here would be a trap for whoever adds those.
+    .replace(
+      /<script\b[^>]*\btype=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
+      () => '',
+    );
 }
 
 // Inject the record's share metadata into the SPA shell.
@@ -479,6 +500,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
   const indexHtml = await fetchIndexHtml(request, env);
   if (!indexHtml) return null;
 
+  const apiUrl = `${JDS_API_BASE}/cases/${encodeURIComponent(canonicalSlug)}/`;
   const metaTags = buildMetaTags({
     title: `${titleRaw} | Jawafdehi`,
     description,
@@ -491,6 +513,169 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     // IN_REVIEW cases are served by direct slug but are "unlisted": keep them
     // out of search engines (only PUBLISHED is indexable). Share cards still work.
     robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
+    // The machine-readable twins. This page is not pre-rendered, so without
+    // these an agent that lands on a case URL has no way to learn the JSON
+    // record exists.
+    alternates: [
+      { href: apiUrl, type: 'application/json', title: 'Case data (JSON API)' },
+      {
+        href: `${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`,
+        type: 'application/json+oembed',
+        title: `${titleRaw} oEmbed`,
+      },
+    ],
+    jsonLd: caseStructuredData({
+      canonicalUrl,
+      title: titleRaw,
+      description,
+      imageUrl,
+      datePublished:
+        (typeof caseData.case_publish_date === 'string' ? caseData.case_publish_date : null) ??
+        (typeof caseData.created_at === 'string' ? caseData.created_at : null),
+      dateModified: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
+      tags: Array.isArray(caseData.tags) ? caseData.tags.map((tag) => String(tag)) : undefined,
+      entities: Array.isArray(caseData.entities)
+        ? (caseData.entities as Array<Record<string, unknown>>).map((entity) => ({
+            display_name:
+              typeof entity.display_name === 'string' ? entity.display_name : null,
+            nes_id: typeof entity.nes_id === 'string' ? entity.nes_id : null,
+            entity_type: typeof entity.entity_type === 'string' ? entity.entity_type : null,
+            type: typeof entity.type === 'string' ? entity.type : null,
+          }))
+        : undefined,
+      authors: Array.isArray(caseData.authors)
+        ? (caseData.authors as Array<Record<string, unknown>>).map((author) => ({
+            display_name: typeof author.display_name === 'string' ? author.display_name : null,
+            slug: typeof author.slug === 'string' ? author.slug : null,
+            has_public_page: author.has_public_page === true,
+          }))
+        : undefined,
+      apiUrl,
+      caseType: typeof caseData.case_type === 'string' ? caseData.case_type : null,
+    }),
+  });
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
+}
+
+// --------------------------------------------------------------------------
+// Entity record pages
+//
+// Entity pages are not pre-rendered either — pre-render.ts collects entity IDs
+// from `case.entities[].id`, a field the case serializer no longer returns (it
+// keys binds on `nes_id`), so that loop has quietly rendered nothing. The result
+// was that every /entity/<prefix>/<slug> URL served the SPA shell with the
+// HOMEPAGE's head: an agent asking about an official got the site's own title,
+// description and canonical, with no indication which entity the page was about.
+//
+// This is the same treatment cases get: fetch the record, inject its real head,
+// and advertise the JSON twin. The entity's canonical NES IRI becomes the
+// JSON-LD @id, so the identifier here is the same one that appears in every
+// case's `about` — which is what lets an agent join the two.
+// --------------------------------------------------------------------------
+
+type Bilingual = { en?: string | null; ne?: string | null };
+
+// A NES bilingual field, which arrives as a language map or a bare string.
+function bilingualValue(value: unknown): Bilingual {
+  if (typeof value === 'string') return { en: value, ne: value };
+  if (value && typeof value === 'object') {
+    const map = value as Record<string, unknown>;
+    return {
+      en: typeof map.en === 'string' ? map.en : null,
+      ne: typeof map.ne === 'string' ? map.ne : null,
+    };
+  }
+  return { en: null, ne: null };
+}
+
+// NES stores alternateName as a language map of arrays, an array, or a string.
+function aliasList(value: unknown): string[] {
+  if (typeof value === 'string') return [value];
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
+  if (value && typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .flatMap((item) => (Array.isArray(item) ? item : [item]))
+      .filter((item): item is string => typeof item === 'string');
+  }
+  return [];
+}
+
+async function handleEntityMetaFallback(
+  request: Request,
+  env: Env,
+  tail: string,
+): Promise<Response | null> {
+  // The record endpoint takes the IRI tail as real path segments, so the slash
+  // between prefix and slug must survive — encoding the whole tail would collapse
+  // it to one segment and 404. Each segment is encoded individually instead.
+  const encodedTail = tail.split('/').map(encodeURIComponent).join('/');
+  const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/entities/${encodedTail}`);
+  if (!apiResponse) return null;
+  if (apiResponse.status === 404) return notFoundShellResponse(request, env);
+  if (!apiResponse.ok) return null;
+
+  let record: Record<string, unknown>;
+  try {
+    record = (await apiResponse.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  const name = bilingualValue(record.name);
+  // English-first, matching EntityRecordProfile's own displayName, so the edge
+  // head and the head the app renders on client-side navigation agree.
+  const displayName = (name.en || name.ne || tail.split('/').pop() || 'Entity').trim();
+  const nameAlternate = name.en && name.ne && name.en !== displayName ? name.en : name.ne;
+  const description = bilingualValue(record.description);
+  const typeToken = typeof record['@type'] === 'string'
+    ? record['@type']
+    : Array.isArray(record['@type']) && typeof record['@type'][0] === 'string'
+      ? (record['@type'][0] as string)
+      : typeof record.additionalType === 'string'
+        ? record.additionalType
+        : null;
+
+  const canonicalUrl = `${SITE_URL}/entity/${tail.split('/').map(encodeURIComponent).join('/')}`;
+  const metaDescription = truncateMeta(
+    stripHtml(description.en || description.ne || '') ||
+    `${displayName} in the ${SITE_NAME} public entity registry — every documented case, allegation and record involving this entity.`,
+  );
+  const apiUrl = `${JDS_API_BASE}/entities/${encodedTail}`;
+
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+
+  const metaTags = buildMetaTags({
+    title: `${displayName} | Jawafdehi Entity Registry`,
+    description: metaDescription,
+    canonicalUrl,
+    imageUrl: previewImageUrl(
+      typeof record.image === 'string'
+        ? record.image
+        : typeof record.logo === 'string'
+          ? record.logo
+          : null,
+      MEDIA_BASE,
+    ) || SOCIAL_IMAGE_URL,
+    imageAlt: displayName,
+    // An entity is a thing the site holds a page about, not an article with a
+    // publication date. 'profile' is the og:type for a person or organisation.
+    type: 'profile',
+    alternates: [
+      { href: apiUrl, type: 'application/json', title: 'Entity record (JSON-LD)' },
+    ],
+    jsonLd: entityStructuredData({
+      canonicalUrl,
+      iri: typeof record['@id'] === 'string' ? record['@id'] : null,
+      entityType: typeToken,
+      name: displayName,
+      nameAlternate,
+      aliases: aliasList(record.alternateName),
+      description: metaDescription,
+      officialUrl: typeof record.url === 'string' ? record.url : null,
+      sameAs: typeof record.sameAs === 'string' ? [record.sameAs] : aliasList(record.sameAs),
+      apiUrl,
+    }),
   });
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
@@ -840,6 +1025,15 @@ export default {
     }
     if (matched?.path === '/author/:slug' && matched.params.slug) {
       const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
+      if (metaResponse) return metaResponse;
+    }
+    // Entity record pages, keyed on the IRI tail (`<prefix>/<slug>`) the splat
+    // carries. The sibling numeric /entity/:id route is deliberately not handled:
+    // the case serializer no longer returns numeric entity ids, so no page links
+    // there and the API 404s the ones that remain in circulation — which the SPA
+    // already renders as "entity not found".
+    if (matched?.path === '/entity/*' && matched.params['*']) {
+      const metaResponse = await handleEntityMetaFallback(request, env, matched.params['*']);
       if (metaResponse) return metaResponse;
     }
 

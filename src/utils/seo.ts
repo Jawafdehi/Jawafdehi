@@ -125,7 +125,38 @@ export const SOCIAL_IMAGE_HEIGHT = 630;
 export type HeadTag =
   | { kind: "title"; content: string }
   | { kind: "meta"; attr: "name" | "property"; key: string; content: string }
-  | { kind: "link"; rel: string; href: string; type?: string; title?: string };
+  | { kind: "link"; rel: string; href: string; type?: string; title?: string }
+  // A schema.org graph node, rendered as <script type="application/ld+json">.
+  // `id` only keys the React element — helmet needs a stable key and the data is
+  // an object, so it cannot key on the content the way the meta tags do.
+  | { kind: "jsonld"; id: string; data: unknown };
+
+/**
+ * A machine-readable twin of the page: the JSON API record behind it, its oEmbed
+ * endpoint. Emitted as <link rel="alternate">, which is how an agent that landed
+ * on the HTML discovers there is structured data to read instead.
+ *
+ * `rel` defaults to "alternate"; pass it only for a different relation.
+ */
+export interface AlternateLink {
+  href: string;
+  type?: string;
+  title?: string;
+  rel?: string;
+}
+
+/**
+ * Serialize a JSON-LD node for embedding in a <script> element.
+ *
+ * `<` is escaped to its JSON \u003c form so a value containing "</script>" — a
+ * case description quoting HTML, an entity name with an angle bracket — cannot
+ * close the element and inject markup. The rest is left as literal UTF-8: this
+ * is script content, not an attribute, so HTML-escaping it would corrupt the
+ * JSON and hand every parser a syntax error instead of a document.
+ */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
 
 export interface HeadTagInput {
   title: string;
@@ -151,6 +182,20 @@ export interface HeadTagInput {
   tags?: string[];
   /** e.g. "noindex, nofollow" — keeps unlisted records out of search. */
   robots?: string | null;
+  /**
+   * Machine-readable twins of this page — the JSON API record, oEmbed. These
+   * belong in the shared list rather than as page-level <Seo> children because
+   * case pages are served by the Worker, not pre-rendered (see the note in
+   * scripts/pre-render.ts), so a link emitted only in the React tree never
+   * reaches a crawler or an agent.
+   */
+  alternates?: AlternateLink[];
+  /**
+   * schema.org nodes describing what this page is about, one <script> each.
+   * Same reason as `alternates`: the Worker is the only renderer a machine sees
+   * on a case page, so structured data has to flow through here.
+   */
+  jsonLd?: unknown[];
 }
 
 // Build the ordered head tags for a page. The order matches what the pages and
@@ -236,6 +281,22 @@ export function buildHeadTags(input: HeadTagInput): HeadTag[] {
     tags.push({ kind: "meta", attr: "name", key: "twitter:image:alt", content: input.imageAlt });
   }
 
+  // Appended last, in the order the pages emitted them as <Seo> children before
+  // they moved into this list, so the rendered head is byte-identical apart from
+  // the tags that were previously missing from the Worker's copy.
+  for (const alternate of input.alternates ?? []) {
+    tags.push({
+      kind: "link",
+      rel: alternate.rel ?? "alternate",
+      href: alternate.href,
+      ...(alternate.type ? { type: alternate.type } : {}),
+      ...(alternate.title ? { title: alternate.title } : {}),
+    });
+  }
+  (input.jsonLd ?? []).forEach((data, index) => {
+    tags.push({ kind: "jsonld", id: String(index), data });
+  });
+
   return tags;
 }
 
@@ -259,6 +320,12 @@ export function renderHeadTagsToHtml(tags: HeadTag[]): string {
       }
       if (tag.kind === "meta") {
         return `<meta ${tag.attr}="${escapeHtml(tag.key)}" content="${escapeHtml(tag.content)}" />`;
+      }
+      if (tag.kind === "jsonld") {
+        // Not escapeHtml'd: see serializeJsonLd. The strip regexes in worker.ts
+        // are attribute-scoped and never read script content, so the raw JSON
+        // here cannot confuse them.
+        return `<script type="application/ld+json">${serializeJsonLd(tag.data)}</script>`;
       }
       const type = tag.type ? ` type="${escapeHtml(tag.type)}"` : "";
       const title = tag.title ? ` title="${escapeHtml(tag.title)}"` : "";

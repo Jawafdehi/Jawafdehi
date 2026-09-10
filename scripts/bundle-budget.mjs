@@ -125,7 +125,25 @@ const DIR = arg("dir", "dist/client");
 // pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 672_500;
+//
+// 2026-09: 672_500 → 674_400 for schema.org structured data on case and entity
+// pages (src/utils/structured-data.ts). Measured locally: main 672,169 bytes,
+// this branch 673,333 — the feature costs 1,164 bytes gzip. 674_400 leaves
+// ~1,067 bytes over the measured build, the same headroom as the entries above.
+//
+// Why it is eager, and so why it is paid for here: CaseDetail and EntityProfile
+// are static imports in routes.tsx, so anything they touch is initial. The module
+// could be dropped from the pages and left only in worker.ts — which is where a
+// crawler actually reads it, since case pages are not pre-rendered — and that
+// would return every byte. It is not, because then the graph an agent reads and
+// the graph the app renders would be two separate implementations of the same
+// schema, which is exactly the drift the shared buildHeadTags list was introduced
+// to end (og:locale said ne_NP in the pages and en_US at the edge for 20 pages).
+// One builder, two renderers, 1.2 KB.
+//
+// The headroom to reclaim it from is unchanged and still not this branch's to
+// spend: `@sentry-internal/replay` is ~75 KB gzip of the initial payload.
+const MAX_INITIAL_JS_GZIP = 674_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
@@ -8,6 +7,9 @@ import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-reac
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
 import { entityImageUrl } from "@/lib/entity-jsonld";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
+import { entityStructuredData } from "@/utils/structured-data";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
@@ -309,6 +311,12 @@ export default function EntityRecordProfile() {
     : [];
   const hasLinks = Boolean(data?.url || data?.sameAs);
   const hasFacts = facts.length > 0 || hasLinks;
+  // The page's own address and the record behind it. The tail must stay as
+  // multiple path segments — see lib/entity-links — so it is encoded per segment
+  // rather than whole.
+  const encodedTail = tail.split("/").map(encodeURIComponent).join("/");
+  const canonicalUrl = `${SITE_URL}/entity/${encodedTail}`;
+  const recordApiUrl = `${API_BASE_URL}/api/entities/${encodedTail}`;
   // The identity line under the name: what it is, where it is, since when.
   const placeIri = data?.containedInPlace?.["@id"];
   const identity = [
@@ -319,13 +327,34 @@ export default function EntityRecordProfile() {
 
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
-      <Helmet>
-        <title>{displayName} | Jawafdehi Entity Registry</title>
-        <meta
-          name="description"
-          content={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
-        />
-      </Helmet>
+      <Seo
+        title={`${displayName} | Jawafdehi Entity Registry`}
+        description={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
+        canonicalUrl={canonicalUrl}
+        type="profile"
+        language={currentLang}
+        // The registry record is JSON-LD already, so the alternate is the same
+        // document an agent would want rather than a reshaped copy of it.
+        alternates={[
+          { href: recordApiUrl, type: "application/json", title: "Entity record (JSON-LD)" },
+        ]}
+        jsonLd={entityStructuredData({
+          canonicalUrl,
+          // The canonical NES IRI, so this node and the `about` entry on every
+          // case that names this entity share one identifier and can be joined.
+          iri: data?.["@id"],
+          entityType: rawType,
+          name: displayName,
+          nameAlternate: currentLang === "ne" ? name.en : name.ne,
+          aliases,
+          description: descText,
+          imageUrl,
+          officialUrl: typeof data?.url === "string" ? data.url : null,
+          sameAs: typeof data?.sameAs === "string" ? [data.sameAs] : undefined,
+          apiUrl: recordApiUrl,
+          language: currentLang,
+        })}
+      />
 
       <div className="layout-container">
         <div className="mb-6 flex items-center justify-between gap-2">

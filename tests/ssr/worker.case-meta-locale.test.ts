@@ -134,8 +134,13 @@ describe('worker case-meta fallback: language and site handle', () => {
     // whole <title> element (that is what pre-render.ts substitutes), so filling
     // it with bare text would strand the case name as loose text in the head,
     // which is what a scraper reads before it reaches the real element.
+    //
+    // A <script>'s body is element content too, not loose text, so the JSON-LD
+    // graph is stripped with its element the same way the title is. Without this
+    // the assertion would forbid structured data outright.
     const leftover = head
       .replace(/<title>[\s\S]*?<\/title>/gi, '')
+      .replace(/<script\b[\s\S]*?<\/script>/gi, '')
       .replace(/<[^>]*>/g, '')
       .trim();
     expect(leftover).toBe('');

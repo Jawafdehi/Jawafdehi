@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
 
-import { buildHeadTags, type HeadTagInput } from "@/utils/seo";
+import { buildHeadTags, serializeJsonLd, type HeadTagInput } from "@/utils/seo";
 
 interface SeoProps extends HeadTagInput {
   /**
@@ -31,6 +31,13 @@ export function Seo({ children, ...input }: SeoProps) {
             <meta key={key} property={tag.key} content={tag.content} />
           ) : (
             <meta key={key} name={tag.key} content={tag.content} />
+          );
+        }
+        if (tag.kind === "jsonld") {
+          return (
+            <script key={`jsonld:${tag.id}`} type="application/ld+json">
+              {serializeJsonLd(tag.data)}
+            </script>
           );
         }
         return (
