@@ -533,23 +533,22 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
         (typeof caseData.case_publish_date === 'string' ? caseData.case_publish_date : null) ??
         (typeof caseData.created_at === 'string' ? caseData.created_at : null),
       dateModified: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
-      tags: Array.isArray(caseData.tags) ? caseData.tags.map((tag) => String(tag)) : undefined,
-      entities: Array.isArray(caseData.entities)
-        ? (caseData.entities as Array<Record<string, unknown>>).map((entity) => ({
-            display_name:
-              typeof entity.display_name === 'string' ? entity.display_name : null,
-            nes_id: typeof entity.nes_id === 'string' ? entity.nes_id : null,
-            entity_type: typeof entity.entity_type === 'string' ? entity.entity_type : null,
-            type: typeof entity.type === 'string' ? entity.type : null,
-          }))
+      // Only real strings: mapping with String() turned a stray null in `tags[]`
+      // into the keyword "null".
+      tags: Array.isArray(caseData.tags)
+        ? caseData.tags.filter((tag): tag is string => typeof tag === 'string')
         : undefined,
-      authors: Array.isArray(caseData.authors)
-        ? (caseData.authors as Array<Record<string, unknown>>).map((author) => ({
-            display_name: typeof author.display_name === 'string' ? author.display_name : null,
-            slug: typeof author.slug === 'string' ? author.slug : null,
-            has_public_page: author.has_public_page === true,
-          }))
-        : undefined,
+      entities: apiRecords(caseData.entities).map((entity) => ({
+        display_name: typeof entity.display_name === 'string' ? entity.display_name : null,
+        nes_id: typeof entity.nes_id === 'string' ? entity.nes_id : null,
+        entity_type: typeof entity.entity_type === 'string' ? entity.entity_type : null,
+        type: typeof entity.type === 'string' ? entity.type : null,
+      })),
+      authors: apiRecords(caseData.authors).map((author) => ({
+        display_name: typeof author.display_name === 'string' ? author.display_name : null,
+        slug: typeof author.slug === 'string' ? author.slug : null,
+        has_public_page: author.has_public_page === true,
+      })),
       apiUrl,
       caseType: typeof caseData.case_type === 'string' ? caseData.case_type : null,
     }),
@@ -572,6 +571,47 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
 // JSON-LD @id, so the identifier here is the same one that appears in every
 // case's `about` — which is what lets an agent join the two.
 // --------------------------------------------------------------------------
+
+// Keep only the plain objects in a list the API is supposed to return records in.
+//
+// A `null` inside `entities[]` used to reach a property access and throw, and an
+// uncaught throw here is not a missing tag — it is a 500 for the whole page. One
+// malformed row would have taken down every case page. A row that cannot be read
+// is dropped instead.
+function apiRecords(value: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is Record<string, unknown> =>
+      typeof item === 'object' && item !== null && !Array.isArray(item),
+  );
+}
+
+// An entity IRI tail (`<prefix>/<slug>`), or null when the shape is not one.
+//
+// The tail is attacker-supplied and is interpolated into an upstream API path, so
+// it is validated rather than merely encoded. `encodeURIComponent` does NOT touch
+// dots, so a `..` segment would have survived into the upstream path; the slash
+// between segments has to stay a real slash for the record endpoint to resolve, so
+// there is no encoding that both works and is inherently safe. An allowlist is.
+//
+// Rejected: a `.`/`..` segment, an empty segment, anything outside the slug
+// alphabet (which excludes NUL and every other control character), more segments
+// than a real IRI tail has, and an absurd length. A rejected tail falls through to
+// the SPA, which renders its own not-found.
+const ENTITY_TAIL_SEGMENT = /^[A-Za-z0-9_.~-]+$/;
+const MAX_ENTITY_TAIL_SEGMENTS = 6;
+const MAX_ENTITY_TAIL_LENGTH = 200;
+
+function entityTailSegments(tail: string): string[] | null {
+  if (!tail || tail.length > MAX_ENTITY_TAIL_LENGTH) return null;
+  const segments = tail.split('/');
+  if (segments.length === 0 || segments.length > MAX_ENTITY_TAIL_SEGMENTS) return null;
+  for (const segment of segments) {
+    if (!ENTITY_TAIL_SEGMENT.test(segment)) return null;
+    if (segment === '.' || segment === '..') return null;
+  }
+  return segments;
+}
 
 type Bilingual = { en?: string | null; ne?: string | null };
 
@@ -605,10 +645,13 @@ async function handleEntityMetaFallback(
   env: Env,
   tail: string,
 ): Promise<Response | null> {
+  // Validated, not merely encoded — see entityTailSegments. A tail that is not a
+  // plausible IRI tail never reaches the API.
+  const segments = entityTailSegments(tail);
+  if (!segments) return null;
   // The record endpoint takes the IRI tail as real path segments, so the slash
-  // between prefix and slug must survive — encoding the whole tail would collapse
-  // it to one segment and 404. Each segment is encoded individually instead.
-  const encodedTail = tail.split('/').map(encodeURIComponent).join('/');
+  // between prefix and slug must survive; each segment is encoded individually.
+  const encodedTail = segments.map(encodeURIComponent).join('/');
   const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/entities/${encodedTail}`);
   if (!apiResponse) return null;
   if (apiResponse.status === 404) return notFoundShellResponse(request, env);
@@ -624,7 +667,7 @@ async function handleEntityMetaFallback(
   const name = bilingualValue(record.name);
   // English-first, matching EntityRecordProfile's own displayName, so the edge
   // head and the head the app renders on client-side navigation agree.
-  const displayName = (name.en || name.ne || tail.split('/').pop() || 'Entity').trim();
+  const displayName = (name.en || name.ne || segments[segments.length - 1] || 'Entity').trim();
   const nameAlternate = name.en && name.ne && name.en !== displayName ? name.en : name.ne;
   const description = bilingualValue(record.description);
   const typeToken = typeof record['@type'] === 'string'
@@ -635,7 +678,7 @@ async function handleEntityMetaFallback(
         ? record.additionalType
         : null;
 
-  const canonicalUrl = `${SITE_URL}/entity/${tail.split('/').map(encodeURIComponent).join('/')}`;
+  const canonicalUrl = `${SITE_URL}/entity/${encodedTail}`;
   const metaDescription = truncateMeta(
     stripHtml(description.en || description.ne || '') ||
     `${displayName} in the ${SITE_NAME} public entity registry — every documented case, allegation and record involving this entity.`,
@@ -1015,26 +1058,38 @@ export default {
     // routes out of it: /updates/preview is the Wagtail preview target, not an
     // article, and asking the CMS for an article named "preview" 404'd it.
     // Params come back percent-decoded.
-    if (matched?.path === '/case/:id' && matched.params.id) {
-      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
-      if (metaResponse) return metaResponse;
-    }
-    if (matched?.path === '/updates/:slug' && matched.params.slug) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
-      if (metaResponse) return metaResponse;
-    }
-    if (matched?.path === '/author/:slug' && matched.params.slug) {
-      const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
-      if (metaResponse) return metaResponse;
-    }
-    // Entity record pages, keyed on the IRI tail (`<prefix>/<slug>`) the splat
-    // carries. The sibling numeric /entity/:id route is deliberately not handled:
-    // the case serializer no longer returns numeric entity ids, so no page links
-    // there and the API 404s the ones that remain in circulation — which the SPA
-    // already renders as "entity not found".
-    if (matched?.path === '/entity/*' && matched.params['*']) {
-      const metaResponse = await handleEntityMetaFallback(request, env, matched.params['*']);
-      if (metaResponse) return metaResponse;
+    //
+    // The whole block is guarded, because everything in it is derived from a
+    // payload we do not control. Injecting share metadata is an ENHANCEMENT: if it
+    // fails for any reason, the right outcome is the plain SPA shell — a page that
+    // works with a generic preview — not a 500 that takes the page down. A single
+    // `null` inside a case's `entities[]` used to throw here and would have done
+    // exactly that to every case page. Each handler is defensive on its own now;
+    // this is the backstop for the next shape change nobody predicted.
+    try {
+      if (matched?.path === '/case/:id' && matched.params.id) {
+        const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
+        if (metaResponse) return metaResponse;
+      }
+      if (matched?.path === '/updates/:slug' && matched.params.slug) {
+        const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
+        if (metaResponse) return metaResponse;
+      }
+      if (matched?.path === '/author/:slug' && matched.params.slug) {
+        const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
+        if (metaResponse) return metaResponse;
+      }
+      // Entity record pages, keyed on the IRI tail (`<prefix>/<slug>`) the splat
+      // carries. The sibling numeric /entity/:id route is deliberately not handled:
+      // the case serializer no longer returns numeric entity ids, so no page links
+      // there and the API 404s the ones that remain in circulation — which the SPA
+      // already renders as "entity not found".
+      if (matched?.path === '/entity/*' && matched.params['*']) {
+        const metaResponse = await handleEntityMetaFallback(request, env, matched.params['*']);
+        if (metaResponse) return metaResponse;
+      }
+    } catch {
+      // Fall through to the shell.
     }
 
     const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });

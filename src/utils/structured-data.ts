@@ -88,6 +88,27 @@ function pruned(node: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
+/**
+ * Keep only the plain objects in a list that is supposed to hold records.
+ *
+ * These lists come straight off the API, and a `null` in `entities[]` — or a bare
+ * string, or a nested array — used to reach a property access and throw. At the
+ * edge that is not a bad node in the graph, it is an uncaught exception in the
+ * Worker, so ONE malformed row would answer 500 for the whole page. A row we
+ * cannot read is dropped instead.
+ */
+function records<T>(value: T[] | undefined): T[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is T => typeof item === "object" && item !== null && !Array.isArray(item),
+  );
+}
+
+/** Only a string survives into the graph; anything else is treated as absent. */
+function text(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
 export interface CaseEntityInput {
   display_name?: string | null;
   nes_id?: string | null;
@@ -132,28 +153,37 @@ export interface CaseStructuredDataInput {
 export function caseStructuredData(
   input: CaseStructuredDataInput,
 ): Array<Record<string, unknown>> {
-  const about = (input.entities ?? [])
+  const about = records(input.entities)
     .slice(0, MAX_GRAPH_ENTITIES)
     .map((entity) =>
       pruned({
-        "@type": schemaType(entity.entity_type, "Thing"),
-        "@id": entity.nes_id ?? undefined,
-        name: entity.display_name ?? undefined,
-        url: entityUrlFromIri(entity.nes_id) ?? undefined,
+        "@type": schemaType(text(entity.entity_type), "Thing"),
+        "@id": text(entity.nes_id),
+        name: text(entity.display_name),
+        url: entityUrlFromIri(text(entity.nes_id)) ?? undefined,
       }),
     )
     .filter((node) => Boolean(node.name || node["@id"]));
 
-  const authors = (input.authors ?? [])
+  const authors = records(input.authors)
     .map((author) =>
       pruned({
         "@type": "Person",
-        name: author.display_name ?? undefined,
+        name: text(author.display_name),
         url:
-          author.has_public_page && author.slug ? `${SITE_URL}/author/${author.slug}` : undefined,
+          author.has_public_page && text(author.slug)
+            ? `${SITE_URL}/author/${author.slug}`
+            : undefined,
       }),
     )
     .filter((node) => Boolean(node.name));
+
+  // Tags arrive from the API and have been seen as a bare string; anything that is
+  // not a list of non-empty strings is dropped rather than stringified into junk
+  // keywords.
+  const keywords = Array.isArray(input.tags)
+    ? input.tags.map((tag) => text(tag)).filter((tag): tag is string => Boolean(tag))
+    : [];
 
   return [
     pruned({
@@ -167,13 +197,13 @@ export function caseStructuredData(
       name: input.title,
       description: input.description || undefined,
       inLanguage: languageTag(input.language),
-      datePublished: input.datePublished || undefined,
-      dateModified: input.dateModified || undefined,
-      image: input.imageUrl || undefined,
+      datePublished: text(input.datePublished),
+      dateModified: text(input.dateModified),
+      image: text(input.imageUrl),
       // The case type as the archive classifies it (BRIBERY, TAX_EVASION, …).
       // `genre` is the schema.org slot for a work's category.
-      genre: input.caseType || undefined,
-      keywords: input.tags?.length ? input.tags : undefined,
+      genre: text(input.caseType),
+      keywords: keywords.length ? keywords : undefined,
       about: about.length ? about : undefined,
       author: authors.length ? authors : undefined,
       publisher: organizationNode(),
@@ -241,8 +271,8 @@ export function entityStructuredData(
   input: EntityStructuredDataInput,
 ): Array<Record<string, unknown>> {
   const alternateNames = [input.nameAlternate, ...(input.aliases ?? [])]
-    .map((value) => (value ?? "").trim())
-    .filter((value) => value && value !== input.name);
+    .map((value) => text(value)?.trim())
+    .filter((value): value is string => Boolean(value) && value !== input.name);
 
   // The entity's own site is `url`; other authorities' pages for it are `sameAs`
   // (Wikidata, a ministry register). That split is the convention consumers
@@ -251,10 +281,14 @@ export function entityStructuredData(
   // The archive's own page is deliberately in neither — that relation is
   // `mainEntityOfPage`, and listing our page as `sameAs` would assert the archive
   // is another authority on the entity rather than a document about it.
-  const officialUrl = (input.officialUrl ?? "").trim() || undefined;
-  const sameAs = [...new Set((input.sameAs ?? []).map((value) => (value ?? "").trim()))].filter(
-    (value) => value && value !== officialUrl,
-  );
+  const officialUrl = text(input.officialUrl)?.trim();
+  const sameAs = [
+    ...new Set(
+      (Array.isArray(input.sameAs) ? input.sameAs : [])
+        .map((value) => text(value)?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ].filter((value) => value !== officialUrl);
 
   const entityNode = pruned({
     "@type": schemaType(input.entityType, "Thing"),
