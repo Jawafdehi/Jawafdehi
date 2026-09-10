@@ -17,7 +17,11 @@ import {
   truncateMeta,
 } from './src/utils/seo';
 import { stripMarkdown } from './src/utils/markdown';
-import { caseStructuredData, entityStructuredData } from './src/utils/structured-data';
+import {
+  caseStructuredData,
+  entityOgType,
+  entityStructuredData,
+} from './src/utils/structured-data';
 
 interface Env {
   ASSETS: {
@@ -385,11 +389,15 @@ function stripOverriddenHeadTags(head: string): string {
     // attribute: the shell's other <script> tags are the module entry and the
     // dehydrated query state, and dropping either would break the page.
     //
+    // `\s*=\s*` because HTML allows whitespace around an attribute's equals sign.
+    // Helmet does not emit it, but a hand-edited index.html could, and a missed
+    // node means two competing graphs rather than a visible error.
+    //
     // Alternates are deliberately NOT stripped: the shell has none, and
     // rel="alternate" is also how hreflang pairs are expressed, so a blanket
     // strip here would be a trap for whoever adds those.
     .replace(
-      /<script\b[^>]*\btype=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
+      /<script\b[^>]*\btype\s*=\s*["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
       () => '',
     );
 }
@@ -701,9 +709,10 @@ async function handleEntityMetaFallback(
       MEDIA_BASE,
     ) || SOCIAL_IMAGE_URL,
     imageAlt: displayName,
-    // An entity is a thing the site holds a page about, not an article with a
-    // publication date. 'profile' is the og:type for a person or organisation.
-    type: 'profile',
+    // `profile` only for an actual Person — see entityOgType. Most entities here
+    // are offices, courts and districts, and Open Graph's `profile` is the type
+    // for a person.
+    type: entityOgType(typeToken),
     alternates: [
       { href: apiUrl, type: 'application/json', title: 'Entity record (JSON-LD)' },
     ],

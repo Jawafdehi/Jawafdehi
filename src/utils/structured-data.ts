@@ -78,6 +78,24 @@ function entityUrlFromIri(iri: string | null | undefined): string | null {
   return index === -1 ? null : `${SITE_URL}/entity/${iri.slice(index + marker.length)}`;
 }
 
+/**
+ * The Open Graph type for an entity page.
+ *
+ * Open Graph's `profile` means specifically A PERSON — it exists to carry
+ * `profile:first_name`, `profile:last_name`, `profile:username` and
+ * `profile:gender`. Most entities in this archive are not people: they are
+ * ministries, survey offices, courts, districts and municipalities. Declaring
+ * `og:type=profile` for a district tells every unfurler to look for a person's
+ * given name and find nothing.
+ *
+ * So `profile` is reserved for an actual Person, and everything else gets the
+ * generic `website`. (`article` would be wrong in the other direction: an entity
+ * record is not a piece of writing with a publication date.)
+ */
+export function entityOgType(entityType: string | null | undefined): "profile" | "website" {
+  return schemaType(entityType, "Thing") === "Person" ? "profile" : "website";
+}
+
 function pruned(node: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(node)) {

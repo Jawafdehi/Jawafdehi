@@ -12,7 +12,7 @@ import { http, API_BASE_URL } from "@/services/http";
 import type { JawafEntity } from "@/types/jds";
 import { trackEvent } from "@/utils/analytics";
 import { SITE_URL } from "@/utils/seo";
-import { entityStructuredData } from "@/utils/structured-data";
+import { entityOgType, entityStructuredData } from "@/utils/structured-data";
 
 export default function EntityProfile() {
   const { t, i18n } = useTranslation();
@@ -67,7 +67,8 @@ export default function EntityProfile() {
             title={pageTitle}
             description={pageDescription}
             canonicalUrl={canonicalUrl}
-            type="profile"
+            // See entityOgType: `profile` is for a Person, not an office.
+            type={entityOgType(jawafEntity.entity_type)}
             language={currentLang}
             alternates={[
               { href: recordApiUrl, type: "application/json", title: "Entity data (JSON API)" },

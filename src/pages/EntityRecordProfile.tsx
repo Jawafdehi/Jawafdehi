@@ -9,7 +9,7 @@ import { entityPath } from "@/lib/entity-links";
 import { entityImageUrl } from "@/lib/entity-jsonld";
 import { Seo } from "@/components/Seo";
 import { SITE_URL } from "@/utils/seo";
-import { entityStructuredData } from "@/utils/structured-data";
+import { entityOgType, entityStructuredData } from "@/utils/structured-data";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
@@ -331,7 +331,9 @@ export default function EntityRecordProfile() {
         title={`${displayName} | Jawafdehi Entity Registry`}
         description={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
         canonicalUrl={canonicalUrl}
-        type="profile"
+        // `profile` is Open Graph's type for a PERSON; most entities here are
+        // offices, courts and districts. See entityOgType.
+        type={entityOgType(rawType)}
         language={currentLang}
         // The registry record is JSON-LD already, so the alternate is the same
         // document an agent would want rather than a reshaped copy of it.
