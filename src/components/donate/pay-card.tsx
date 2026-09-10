@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
@@ -177,11 +177,11 @@ function CopyRow({
   );
 }
 
-// The Prime Commercial Bank account block, shared by the Nepal panel (direct
-// transfer) and the abroad panel (remittance deposits land in the same
-// account). `trackMethod` distinguishes the two contexts in analytics. Every
-// row is copyable — donors paste each field into their banking or remittance
-// app — and each row owns its feedback state independently.
+// The Prime Commercial Bank account block. Shown only on the Nepal panel:
+// donations from abroad legally cannot be paid into this account (see
+// AbroadPanel). `trackMethod` names the context in analytics. Every row is
+// copyable — donors paste each field into their banking app — and each row owns
+// its feedback state independently.
 function BankDetails({ trackMethod }: { trackMethod: string }) {
   const { t } = useTranslation();
 
@@ -277,16 +277,16 @@ function NepalPanel() {
   );
 }
 
-// Outside Nepal — PayPal Giving Fund (the US 501(c)(3)) as the primary rail,
-// plus a secondary remittance path: many in the diaspora already use Wise,
-// Remitly, Western Union etc. to send money home, and those services can
-// deposit straight into the same Prime Commercial Bank account the QR codes
-// settle to. Collapsed by default so PayPal stays the headline; the tax note
-// matters because a remittance gift goes to the Nepal entity, not the 501(c)(3),
-// and is therefore not US-tax-deductible.
+// Outside Nepal — PayPal Giving Fund (the US 501(c)(3)) is the ONLY rail, and
+// deliberately so. Nepal's foreign-exchange rules do not permit donations from
+// abroad to be paid into the Nepal bank account: Jawafdehi Initiative, Inc.
+// (USA) holds the project approval that lets it fund the work in Nepal, so
+// every gift from outside the country is routed through it. An earlier revision
+// of this page offered a remittance-service path (Wise/Remitly/Western Union)
+// straight into the Nepal account — that was withdrawn as non-compliant, not
+// merely redundant. Do not reinstate it without a written legal sign-off.
 function AbroadPanel() {
   const { t } = useTranslation();
-  const [remitOpen, setRemitOpen] = useState(false);
 
   return (
     <div>
@@ -341,45 +341,10 @@ function AbroadPanel() {
         </Button>
       </div>
 
-      <div className="mt-5 border-t border-border/60 pt-5">
-        <button
-          type="button"
-          aria-expanded={remitOpen}
-          onClick={() => {
-            setRemitOpen((open) => {
-              const next = !open;
-              if (next) {
-                trackEvent("donate_click", {
-                  method: "remittance",
-                  action: "expand",
-                });
-              }
-              return next;
-            });
-          }}
-          className="flex w-full items-center justify-between gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <span className="min-w-0">
-            <span className="block text-base font-bold text-primary">
-              {t("donate.ways.us.remittance.title")}
-            </span>
-            <span className="mt-0.5 block text-sm leading-5 text-card-foreground/70">
-              {t("donate.ways.us.remittance.detail")}
-            </span>
-          </span>
-          <ChevronDown
-            className={`h-5 w-5 shrink-0 text-primary/70 transition-transform ${remitOpen ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
-        </button>
-        {remitOpen ? (
-          <div className="mt-4">
-            <BankDetails trackMethod="remittance" />
-            <p className="mt-3 text-xs leading-5 text-card-foreground/60">
-              {t("donate.ways.us.remittance.taxNote")}
-            </p>
-          </div>
-        ) : null}
+      <div className="mt-5 border-t border-border/60 pt-4">
+        <p className="text-xs leading-5 text-card-foreground/60">
+          {t("donate.ways.us.capitalControlNote")}
+        </p>
       </div>
     </div>
   );

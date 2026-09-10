@@ -374,9 +374,9 @@
   },
   "donate": {
     "hero": {
-      "support": "Keep Nepal's",
-      "accountabilityArchive": "accountability archive",
-      "alive": "alive",
+      "titleLead": "Help keep the",
+      "titleHighlight": "permanent record of corruption",
+      "titleTail": "alive",
       "description": "Jawafdehi is run by volunteers and funded by people who believe corruption should never be forgotten. Your donation pays for the servers, document archiving, and tooling that keep this public record permanent and free for everyone.",
       "giveNow": "Ways to contribute",
       "contactUs": "Contact us",
@@ -455,16 +455,12 @@
       "us": {
         "whoFor": "If you are giving from anywhere outside Nepal",
         "proceedsNote": "PayPal Giving Fund processes your gift and grants it to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
+        "capitalControlNote": "Nepal's foreign-exchange rules do not allow donations from abroad to be paid into our Nepal bank account. Jawafdehi Initiative, Inc. holds the approval to fund the project in Nepal, so this is the one route for a gift from outside the country.",
         "title": "From outside Nepal",
         "paypal": {
           "title": "PayPal",
           "detail": "Card, bank, or PayPal balance",
           "cta": "Donate via PayPal Giving Fund"
-        },
-        "remittance": {
-          "title": "Send via a remittance service",
-          "detail": "Already use Wise, Remitly, Western Union, or another remittance app to send money to Nepal? They can deposit directly into our Nepal bank account.",
-          "taxNote": "Remittance transfers go to our Nepal entity, so they are not tax-deductible in the US. For a US tax-deductible gift, use PayPal Giving Fund above."
         }
       },
       "copy": "Copy",
