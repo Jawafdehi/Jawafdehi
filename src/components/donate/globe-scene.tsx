@@ -38,6 +38,12 @@ import {
 
 const KTM = { np: "काठमाडौँ", lat: 27.7172, lon: 85.324 };
 
+// Centre of Nepal's bounding box (roughly 80.05–88.20°E, 26.35–30.45°N), used
+// to place the amber glow that backs the country outline. Not Kathmandu: the
+// capital sits well east of centre, so anchoring the glow there would light the
+// wrong half of the country.
+const NEPAL_CENTER = { lat: 28.4, lon: 84.1 };
+
 // Cities with large Nepali diaspora communities — the arcs' origins.
 const CITIES = [
   { name: "Doha", lat: 25.2854, lon: 51.531 },
@@ -239,6 +245,26 @@ function mountGlobe(container: HTMLDivElement): () => void {
 
   const ktmPos = latLonToVec3(KTM.lat, KTM.lon, 1.005);
   const dotTexAmber = discTexture(AMBER);
+
+  // Soft amber wash behind Nepal, so the country reads as the subject of the
+  // scene from across the globe rather than relying on the beacon and label
+  // alone. Deliberately STATIC: the Kathmandu beacon already breathes and
+  // pulses a ring, and a second animated highlight in the same few pixels
+  // reads as flicker. Added before the border lines so those draw over it.
+  const nepalGlow = new Sprite(
+    new SpriteMaterial({
+      map: glowTexture("242,169,59"),
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+      opacity: 0.75,
+    }),
+  );
+  nepalGlow.position.copy(
+    latLonToVec3(NEPAL_CENTER.lat, NEPAL_CENTER.lon, 1.0015),
+  );
+  nepalGlow.scale.set(0.42, 0.42, 1);
+  globe.add(nepalGlow);
 
   // Kathmandu — the labeled home beacon.
   const ktmDot = new Sprite(

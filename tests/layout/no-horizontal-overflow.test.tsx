@@ -76,6 +76,35 @@ describe('the /donate CTA can wrap its Nepali label', () => {
   });
 });
 
+describe('the /donate headline can wrap its emphasised phrase', () => {
+  // Same failure mode as the CTA above, one element up. The hero <h1> splits into
+  // a lead-in, an amber-emphasised phrase, and a tail so the emphasis can sit
+  // mid-sentence in either language. The emphasis span carried
+  // `sm:whitespace-nowrap`, which was harmless while the phrase was two short
+  // words ("accountability archive") and broke the moment it was reworded to
+  // "permanent record of corruption": unable to break, the span ran past its grid
+  // column and the headline rendered clipped mid-word — "permanent record of
+  // corru…" — on a 1474px desktop, not just on phones.
+  //
+  // Pinned at source level because it is invisible in review and does not throw:
+  // the text is simply gone, and only in the locale whose phrase is long enough.
+  it('has no whitespace-nowrap on the hero headline emphasis', () => {
+    const source = readFileSync(
+      join(SRC, 'components/donate/hero.tsx'),
+      'utf8',
+    );
+    const headline = /<h1[\s\S]*?<\/h1>/.exec(source);
+
+    expect(headline, 'the donate hero no longer renders an <h1>').not.toBeNull();
+    expect(
+      headline![0],
+      'the donate headline pins its emphasis to one line. Any localisation ' +
+        'longer than the column then overflows and is clipped mid-word rather ' +
+        'than wrapping. Let the headline wrap at every breakpoint.',
+    ).not.toMatch(/(?:^|[\s"'])(?:[a-z-]+:)?whitespace-nowrap/);
+  });
+});
+
 describe('sr-only is not applied to a styled control', () => {
   // `sr-only` sets width:1px;height:1px, and loses to any layout utility a
   // component's base string already carries: tailwind-merge keeps both (different

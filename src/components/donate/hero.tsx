@@ -98,7 +98,12 @@ export function DonateHero() {
                   {titleLead}{" "}
                 </>
               ) : null}
-              <span className="text-[hsl(var(--accent-on-dark))] sm:whitespace-nowrap">
+              {/* No `whitespace-nowrap` here. The previous highlight was two
+                  short words and was pinned to one line; this phrase is long
+                  enough that forbidding a wrap pushes it past the grid column
+                  and the overflow gets clipped mid-word ("permanent record of
+                  corru…"). Let it wrap. */}
+              <span className="text-[hsl(var(--accent-on-dark))]">
                 {t("donate.hero.titleHighlight")}
               </span>{" "}
               {t("donate.hero.titleTail")}
