@@ -654,13 +654,17 @@ async function handleEntityMetaFallback(
   tail: string,
 ): Promise<Response | null> {
   // Validated, not merely encoded — see entityTailSegments. A tail that is not a
-  // plausible IRI tail never reaches the API.
+  // plausible IRI tail cannot resolve, so it is a 404 rather than a fall-through:
+  // answering 200 with the homepage's head is the soft-404 this site already
+  // decided against for unrouted paths.
   const segments = entityTailSegments(tail);
-  if (!segments) return null;
+  if (!segments) return notFoundShellResponse(request, env);
   // The record endpoint takes the IRI tail as real path segments, so the slash
   // between prefix and slug must survive; each segment is encoded individually.
   const encodedTail = segments.map(encodeURIComponent).join('/');
   const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/entities/${encodedTail}`);
+  // A timeout or a network failure is NOT a positive "no such entity": fall
+  // through to the shell rather than 404-ing a page that may well exist.
   if (!apiResponse) return null;
   if (apiResponse.status === 404) return notFoundShellResponse(request, env);
   if (!apiResponse.ok) return null;
@@ -1088,13 +1092,30 @@ export default {
         const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
         if (metaResponse) return metaResponse;
       }
-      // Entity record pages, keyed on the IRI tail (`<prefix>/<slug>`) the splat
-      // carries. The sibling numeric /entity/:id route is deliberately not handled:
-      // the case serializer no longer returns numeric entity ids, so no page links
-      // there and the API 404s the ones that remain in circulation — which the SPA
-      // already renders as "entity not found".
-      if (matched?.path === '/entity/*' && matched.params['*']) {
-        const metaResponse = await handleEntityMetaFallback(request, env, matched.params['*']);
+      // Entity pages. BOTH patterns go through one handler, keyed on whatever the
+      // URL carries after /entity/ — the IRI tail from the splat, or the single
+      // segment the sibling :id route matches.
+      //
+      // The two used to be treated differently, and the numeric route was left
+      // alone on the theory that nothing links to it. That produced a soft 404: the
+      // record endpoint answers 404 for EVERY single-segment ref (verified against
+      // the live API for numeric ids and for a bare prefix), so /entity/2104 was
+      // guaranteed to be a dead end — and it answered HTTP 200 carrying the
+      // HOMEPAGE's title, description and canonical. A crawler saw a duplicate of
+      // the front page at an /entity/ URL, and a link checker saw no broken link.
+      //
+      // Asking the API rather than assuming also means the day a single-segment ref
+      // does resolve, the page gets a real head instead of a 404.
+      //
+      // A bare /entity or /entity/ is included on purpose: there is no entity index
+      // page (the plural /entities redirects to search), so it is a dead URL, and an
+      // empty tail fails validation and comes back as a 404.
+      if (matched?.path === '/entity/*' || matched?.path === '/entity/:id') {
+        const metaResponse = await handleEntityMetaFallback(
+          request,
+          env,
+          matched.params['*'] ?? matched.params.id ?? '',
+        );
         if (metaResponse) return metaResponse;
       }
     } catch {
