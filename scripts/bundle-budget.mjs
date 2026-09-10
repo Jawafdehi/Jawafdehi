@@ -125,7 +125,37 @@ const DIR = arg("dir", "dist/client");
 // pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 672_500;
+//
+// 2026-09: 672_500 → 675_000 for the materials tab's two filters
+// (feat/material-search-filters). Measured in CI, not locally: this host's
+// node_modules is missing `three`/`@react-three/fiber`, so `vite build` cannot
+// resolve hero-scene.tsx and the client build does not complete here. The CI
+// bundle-budget job put the branch at 658.1 KB gzip (~673,900 bytes), 1.3 KB
+// over the old line.
+//
+// What the bytes buy: the document-type facet and a record-date range on the
+// materials tab, which until now had no filter at all. Roughly —
+//
+//   ~1,600  DateRangeFilter (four preset pills, two native date fields) and
+//           lib/date-range's parse/normalize/preset rules
+//     ~700  the material_type facet group, its getFacetItemLabel branch, and
+//           the ArchiveSearch param/pill/clear wiring
+//     ~200  the archiveSearch.filters date + materialType keys in en.json/ne.json
+//
+// Deferring DateRangeFilter is the only lever and it is not worth pulling: it
+// is a ~1.6 KB sidebar control, /search is pre-rendered (renderToString does
+// not await Suspense — see the split policy in src/routes.tsx), and it sits
+// directly below BigoRangeFilter, which is eager for exactly that reason. A
+// lazy boundary around one of two adjacent range controls would be a
+// difference with no defence.
+//
+// 675_000 leaves ~1,100 bytes over the measured build, the same headroom as the
+// entries above.
+//
+// The real headroom is STILL elsewhere and still not this PR's to spend:
+// `markdown` is 98.1 KB gzip of this very payload and `@sentry-internal/replay`
+// ~75 KB. Either pays for every entry in this list combined.
+const MAX_INITIAL_JS_GZIP = 675_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

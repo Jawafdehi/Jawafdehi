@@ -60,6 +60,7 @@ const baseResponse: ArchiveSearchResponse = {
     court_type: [],
     district: [],
     province: [],
+    material_type: [],
   },
   results: [
     {
@@ -1055,6 +1056,130 @@ describe("ArchiveSearch", () => {
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
       });
+    });
+  });
+});
+
+// The materials tab's two controls — document type and a date range — end to
+// end: URL in, request out, pill on screen, and back out again.
+//
+// Both are MATERIAL-SCOPED, and for a sharper reason than the court facets are:
+// `material_type` is a closed vocabulary on the API side, so a token carried
+// onto another tab is a 400, which this page renders as the red "could not be
+// loaded" alert. The gating is what keeps a stale bookmark from reading as an
+// outage.
+describe("ArchiveSearch — materials tab filters", () => {
+  beforeEach(() => {
+    searchArchiveMock.mockReset();
+    getMaterialMock.mockReset();
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      counts: { material: 3 },
+      facets: {
+        ...baseResponse.facets,
+        material_type: [
+          { name: "procurement_notice", count: 205_826 },
+          { name: "charge_sheet", count: 99_783 },
+        ],
+      },
+    });
+  });
+
+  const lastRequest = () =>
+    searchArchiveMock.mock.calls[searchArchiveMock.mock.calls.length - 1][0];
+
+  it("sends both filters when the materials tab carries them", async () => {
+    renderSearch(
+      "/search?type=material&material_type=charge_sheet&date_from=2020-01-01&date_to=2024-12-31",
+    );
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest()).toMatchObject({
+      type: "material",
+      material_type: ["charge_sheet"],
+      date_from: "2020-01-01",
+      date_to: "2024-12-31",
+    });
+  });
+
+  it("repeats material_type for a reader who ticks two boxes", async () => {
+    renderSearch(
+      "/search?type=material&material_type=charge_sheet&material_type=press_release",
+    );
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().material_type).toEqual([
+      "charge_sheet",
+      "press_release",
+    ]);
+  });
+
+  it("refuses to send a stale material_type from another tab", async () => {
+    // The 400 path. A hand-edited or bookmarked URL can carry the token
+    // anywhere; sending it on ?type=case would surface as a search outage.
+    renderSearch("/search?type=case&material_type=charge_sheet");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().material_type).toEqual([]);
+  });
+
+  it("refuses to send stale date bounds from another tab", async () => {
+    renderSearch("/search?type=entity&date_from=2020-01-01&date_to=2024-12-31");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().date_from).toBeUndefined();
+    expect(lastRequest().date_to).toBeUndefined();
+  });
+
+  it("never sends an inverted date pair, not even on the first render", async () => {
+    // Normalization only rewrites the URL an effect LATER, so a request builder
+    // doing its own parsing would fire the 400 before the URL healed itself.
+    // Both halves have to drop at read time.
+    renderSearch("/search?type=material&date_from=2024-12-31&date_to=2020-01-01");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(searchArchiveMock.mock.calls[0][0].date_from).toBeUndefined();
+    expect(searchArchiveMock.mock.calls[0][0].date_to).toBeUndefined();
+  });
+
+  it("shows the date range as ONE removable pill, and clears both bounds", async () => {
+    renderSearch("/search?type=material&date_from=2020-01-01&date_to=2024-12-31");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+
+    // One pill rather than one per bound, because it is a single removable
+    // refinement — same call as the बिगो range above.
+    //
+    // Asserted on identity and behaviour, not wording: this suite does not
+    // initialise i18next, so `t` hands back the raw default with `{{from}}`
+    // uninterpolated. The formatted label is covered where a `t` that
+    // interpolates exists — describeDateRange's unit tests and
+    // SearchFilters.test.tsx.
+    const pills = await screen.findByLabelText("Selected filters");
+    const datePills = Array.from(pills.querySelectorAll("button")).filter(
+      (button) => button.textContent?.includes("{{from}}"),
+    );
+    expect(datePills).toHaveLength(1);
+
+    fireEvent.click(datePills[0]);
+
+    await waitFor(() => {
+      const search = screen.getByTestId("location-search").textContent ?? "";
+      expect(search).not.toContain("date_from");
+      expect(search).not.toContain("date_to");
+    });
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ date_from: undefined, date_to: undefined }),
+    );
+  });
+
+  it("strips both filters from the URL when the reader leaves the tab", async () => {
+    // readParams already declines to SEND them, but leaving them in the URL
+    // makes a shared or bookmarked link claim a filter that is not applied.
+    renderSearch(
+      "/search?type=material&material_type=charge_sheet&date_from=2020-01-01",
+    );
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    fireEvent.click(await screen.findByRole("tab", { name: "Cases" }));
+    await waitFor(() => {
+      const search = screen.getByTestId("location-search").textContent ?? "";
+      expect(search).toContain("type=case");
+      expect(search).not.toContain("material_type");
+      expect(search).not.toContain("date_from");
     });
   });
 });

@@ -2060,7 +2060,18 @@
       "bigoMinThumb": "न्यूनतम रकम",
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
-      "bigoNoMax": "अधिकतम छैन"
+      "bigoNoMax": "अधिकतम छैन",
+      "materialType": "कागजातको किसिम",
+      "date": "अभिलेखको मिति",
+      "dateFromField": "देखि (ई.सं.)",
+      "dateToField": "सम्म (ई.सं.)",
+      "dateNote": "मिति अनुसार छान्दा मिति उल्लेख भएका कागजातहरू मात्र समेटिन्छन्।",
+      "dateRange": {
+        "any": "कुनै पनि मिति",
+        "between": "{{from}} – {{to}}",
+        "from": "{{from}} देखि",
+        "upTo": "{{to}} सम्म"
+      }
     },
     "materialSeries": "श्रृंखला",
     "filterSearch": "{{filter}} खोज्नुहोस्",
