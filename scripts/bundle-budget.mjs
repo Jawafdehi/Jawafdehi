@@ -143,7 +143,18 @@ const DIR = arg("dir", "dist/client");
 //
 // The headroom to reclaim it from is unchanged and still not this branch's to
 // spend: `@sentry-internal/replay` is ~75 KB gzip of the initial payload.
-const MAX_INITIAL_JS_GZIP = 674_400;
+//
+// 2026-09: 674_400 → 675_200 in the same change that collapsed the case and entity
+// head mappings into one shared src/utils/record-head.ts. Measured 674,164 bytes,
+// so 674_400 still passed — with only ~230 bytes of headroom, below the ~1,000 this
+// file has kept since the entries above, which would have failed the next trivial
+// commit for no reason. The 831 bytes over the previous line are what deduplicating
+// the two mappings costs eagerly: the module is reachable from CaseDetail and
+// EntityProfile, both static imports in routes.tsx. It replaced two hand-written
+// mappings that had already drifted four ways (description fallback, slug encoding,
+// an alternate href pointing at a path nothing serves, allegation truncation), so
+// the bytes buy an invariant rather than a feature.
+const MAX_INITIAL_JS_GZIP = 675_200;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

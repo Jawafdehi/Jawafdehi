@@ -8,8 +8,7 @@ import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
 import { entityImageUrl } from "@/lib/entity-jsonld";
 import { Seo } from "@/components/Seo";
-import { SITE_URL } from "@/utils/seo";
-import { entityOgType, entityStructuredData } from "@/utils/structured-data";
+import { entityHeadInput } from "@/utils/record-head";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
@@ -18,7 +17,7 @@ import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
+import { entityKindFor } from "@/utils/entity-helpers";
 
 // Entity records are schema.org JSON-LD with a jawafdehi: extension namespace. We type
 // the spine we read explicitly and keep an index signature for the long tail of
@@ -229,7 +228,6 @@ export default function EntityRecordProfile() {
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
   const rawType = data ? typeToken(data["@type"], data.additionalType) : undefined;
-  const typeLabel = humanizeEntityType(rawType);
   const kind = entityKindFor(rawType);
   const description = data ? bilingual(data.description) : { en: "", ne: "" };
   // Nepali-first: show the active language, falling back to the other only when
@@ -311,12 +309,6 @@ export default function EntityRecordProfile() {
     : [];
   const hasLinks = Boolean(data?.url || data?.sameAs);
   const hasFacts = facts.length > 0 || hasLinks;
-  // The page's own address and the record behind it. The tail must stay as
-  // multiple path segments — see lib/entity-links — so it is encoded per segment
-  // rather than whole.
-  const encodedTail = tail.split("/").map(encodeURIComponent).join("/");
-  const canonicalUrl = `${SITE_URL}/entity/${encodedTail}`;
-  const recordApiUrl = `${API_BASE_URL}/api/entities/${encodedTail}`;
   // The identity line under the name: what it is, where it is, since when.
   const placeIri = data?.containedInPlace?.["@id"];
   const identity = [
@@ -327,36 +319,11 @@ export default function EntityRecordProfile() {
 
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
-      <Seo
-        title={`${displayName} | Jawafdehi Entity Registry`}
-        description={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
-        canonicalUrl={canonicalUrl}
-        // `profile` is Open Graph's type for a PERSON; most entities here are
-        // offices, courts and districts. See entityOgType.
-        type={entityOgType(rawType)}
-        language={currentLang}
-        // The registry record is JSON-LD already, so the alternate is the same
-        // document an agent would want rather than a reshaped copy of it.
-        alternates={[
-          { href: recordApiUrl, type: "application/json", title: "Entity record (JSON-LD)" },
-        ]}
-        jsonLd={entityStructuredData({
-          canonicalUrl,
-          // The canonical NES IRI, so this node and the `about` entry on every
-          // case that names this entity share one identifier and can be joined.
-          iri: data?.["@id"],
-          entityType: rawType,
-          name: displayName,
-          nameAlternate: currentLang === "ne" ? name.en : name.ne,
-          aliases,
-          description: descText,
-          imageUrl,
-          officialUrl: typeof data?.url === "string" ? data.url : null,
-          sameAs: typeof data?.sameAs === "string" ? [data.sameAs] : undefined,
-          apiUrl: recordApiUrl,
-          language: currentLang,
-        })}
-      />
+      {/* Same mapper the Worker uses (utils/record-head), so the head an agent
+          reads at the edge and the head the app renders cannot drift apart. */}
+      {data ? (
+        <Seo {...entityHeadInput(data as unknown as Record<string, unknown>, tail.split("/"), { language: currentLang })} />
+      ) : null}
 
       <div className="layout-container">
         <div className="mb-6 flex items-center justify-between gap-2">

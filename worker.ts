@@ -16,12 +16,7 @@ import {
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
-import { stripMarkdown } from './src/utils/markdown';
-import {
-  caseStructuredData,
-  entityOgType,
-  entityStructuredData,
-} from './src/utils/structured-data';
+import { MEDIA_BASE, caseHeadInput, entityHeadInput } from './src/utils/record-head';
 
 interface Env {
   ASSETS: {
@@ -31,10 +26,6 @@ interface Env {
 
 const JDS_API_BASE = 'https://api.jawafdehi.org/api';
 const CMS_API_BASE = `${JDS_API_BASE}/cms/v2`;
-// Uploaded media (case banners/thumbnails, CMS images) are served from the
-// portal origin, so relative media paths must resolve against it — not the
-// frontend origin — or shared links get broken Open Graph images.
-const MEDIA_BASE = 'https://portal.jawafdehi.org';
 // Bound upstream API calls made while injecting share metadata so a slow backend
 // can never hang the edge request; on timeout we fall through to the SPA shell.
 const META_FETCH_TIMEOUT_MS = 4000;
@@ -489,78 +480,13 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     return null;
   }
 
-  const titleRaw = String(caseData.title || 'Jawafdehi Case');
-  const allegationText = Array.isArray(caseData.key_allegations)
-    ? caseData.key_allegations.slice(0, 2).map((item) => String(item ?? '').trim()).filter(Boolean).join('. ')
-    : '';
-  const description = truncateMeta(
-    stripMarkdown(stripHtml(typeof caseData.description === 'string' ? caseData.description : '')) ||
-    allegationText ||
-    `A verified corruption and misconduct case documented by ${SITE_NAME}.`,
-  );
-  const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
-  const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
-  const imageUrl =
-    previewImageUrl(caseData.banner_url as string | null | undefined, MEDIA_BASE) ||
-    previewImageUrl(caseData.thumbnail_url as string | null | undefined, MEDIA_BASE) ||
-    SOCIAL_IMAGE_URL;
-
   const indexHtml = await fetchIndexHtml(request, env);
   if (!indexHtml) return null;
 
-  const apiUrl = `${JDS_API_BASE}/cases/${encodeURIComponent(canonicalSlug)}/`;
-  const metaTags = buildMetaTags({
-    title: `${titleRaw} | Jawafdehi`,
-    description,
-    canonicalUrl,
-    imageUrl,
-    imageAlt: titleRaw,
-    type: 'article',
-    publishedTime: typeof caseData.created_at === 'string' ? caseData.created_at : null,
-    modifiedTime: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
-    // IN_REVIEW cases are served by direct slug but are "unlisted": keep them
-    // out of search engines (only PUBLISHED is indexable). Share cards still work.
-    robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
-    // The machine-readable twins. This page is not pre-rendered, so without
-    // these an agent that lands on a case URL has no way to learn the JSON
-    // record exists.
-    alternates: [
-      { href: apiUrl, type: 'application/json', title: 'Case data (JSON API)' },
-      {
-        href: `${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`,
-        type: 'application/json+oembed',
-        title: `${titleRaw} oEmbed`,
-      },
-    ],
-    jsonLd: caseStructuredData({
-      canonicalUrl,
-      title: titleRaw,
-      description,
-      imageUrl,
-      datePublished:
-        (typeof caseData.case_publish_date === 'string' ? caseData.case_publish_date : null) ??
-        (typeof caseData.created_at === 'string' ? caseData.created_at : null),
-      dateModified: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
-      // Only real strings: mapping with String() turned a stray null in `tags[]`
-      // into the keyword "null".
-      tags: Array.isArray(caseData.tags)
-        ? caseData.tags.filter((tag): tag is string => typeof tag === 'string')
-        : undefined,
-      entities: apiRecords(caseData.entities).map((entity) => ({
-        display_name: typeof entity.display_name === 'string' ? entity.display_name : null,
-        nes_id: typeof entity.nes_id === 'string' ? entity.nes_id : null,
-        entity_type: typeof entity.entity_type === 'string' ? entity.entity_type : null,
-        type: typeof entity.type === 'string' ? entity.type : null,
-      })),
-      authors: apiRecords(caseData.authors).map((author) => ({
-        display_name: typeof author.display_name === 'string' ? author.display_name : null,
-        slug: typeof author.slug === 'string' ? author.slug : null,
-        has_public_page: author.has_public_page === true,
-      })),
-      apiUrl,
-      caseType: typeof caseData.case_type === 'string' ? caseData.case_type : null,
-    }),
-  });
+  // One mapping, shared with pages/CaseDetail.tsx — see src/utils/record-head.ts
+  // for the drift this replaced. `language` is deliberately omitted: a crawler
+  // should see this Nepali-first site declare itself Nepali.
+  const metaTags = buildMetaTags(caseHeadInput(caseData, slug));
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
@@ -579,20 +505,6 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
 // JSON-LD @id, so the identifier here is the same one that appears in every
 // case's `about` — which is what lets an agent join the two.
 // --------------------------------------------------------------------------
-
-// Keep only the plain objects in a list the API is supposed to return records in.
-//
-// A `null` inside `entities[]` used to reach a property access and throw, and an
-// uncaught throw here is not a missing tag — it is a 500 for the whole page. One
-// malformed row would have taken down every case page. A row that cannot be read
-// is dropped instead.
-function apiRecords(value: unknown): Array<Record<string, unknown>> {
-  if (!Array.isArray(value)) return [];
-  return value.filter(
-    (item): item is Record<string, unknown> =>
-      typeof item === 'object' && item !== null && !Array.isArray(item),
-  );
-}
 
 // An entity IRI tail (`<prefix>/<slug>`), or null when the shape is not one.
 //
@@ -619,33 +531,6 @@ function entityTailSegments(tail: string): string[] | null {
     if (segment === '.' || segment === '..') return null;
   }
   return segments;
-}
-
-type Bilingual = { en?: string | null; ne?: string | null };
-
-// A NES bilingual field, which arrives as a language map or a bare string.
-function bilingualValue(value: unknown): Bilingual {
-  if (typeof value === 'string') return { en: value, ne: value };
-  if (value && typeof value === 'object') {
-    const map = value as Record<string, unknown>;
-    return {
-      en: typeof map.en === 'string' ? map.en : null,
-      ne: typeof map.ne === 'string' ? map.ne : null,
-    };
-  }
-  return { en: null, ne: null };
-}
-
-// NES stores alternateName as a language map of arrays, an array, or a string.
-function aliasList(value: unknown): string[] {
-  if (typeof value === 'string') return [value];
-  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
-  if (value && typeof value === 'object') {
-    return Object.values(value as Record<string, unknown>)
-      .flatMap((item) => (Array.isArray(item) ? item : [item]))
-      .filter((item): item is string => typeof item === 'string');
-  }
-  return [];
 }
 
 async function handleEntityMetaFallback(
@@ -676,63 +561,13 @@ async function handleEntityMetaFallback(
     return null;
   }
 
-  const name = bilingualValue(record.name);
-  // English-first, matching EntityRecordProfile's own displayName, so the edge
-  // head and the head the app renders on client-side navigation agree.
-  const displayName = (name.en || name.ne || segments[segments.length - 1] || 'Entity').trim();
-  const nameAlternate = name.en && name.ne && name.en !== displayName ? name.en : name.ne;
-  const description = bilingualValue(record.description);
-  const typeToken = typeof record['@type'] === 'string'
-    ? record['@type']
-    : Array.isArray(record['@type']) && typeof record['@type'][0] === 'string'
-      ? (record['@type'][0] as string)
-      : typeof record.additionalType === 'string'
-        ? record.additionalType
-        : null;
-
-  const canonicalUrl = `${SITE_URL}/entity/${encodedTail}`;
-  const metaDescription = truncateMeta(
-    stripHtml(description.en || description.ne || '') ||
-    `${displayName} in the ${SITE_NAME} public entity registry — every documented case, allegation and record involving this entity.`,
-  );
-  const apiUrl = `${JDS_API_BASE}/entities/${encodedTail}`;
-
   const indexHtml = await fetchIndexHtml(request, env);
   if (!indexHtml) return null;
 
-  const metaTags = buildMetaTags({
-    title: `${displayName} | Jawafdehi Entity Registry`,
-    description: metaDescription,
-    canonicalUrl,
-    imageUrl: previewImageUrl(
-      typeof record.image === 'string'
-        ? record.image
-        : typeof record.logo === 'string'
-          ? record.logo
-          : null,
-      MEDIA_BASE,
-    ) || SOCIAL_IMAGE_URL,
-    imageAlt: displayName,
-    // `profile` only for an actual Person — see entityOgType. Most entities here
-    // are offices, courts and districts, and Open Graph's `profile` is the type
-    // for a person.
-    type: entityOgType(typeToken),
-    alternates: [
-      { href: apiUrl, type: 'application/json', title: 'Entity record (JSON-LD)' },
-    ],
-    jsonLd: entityStructuredData({
-      canonicalUrl,
-      iri: typeof record['@id'] === 'string' ? record['@id'] : null,
-      entityType: typeToken,
-      name: displayName,
-      nameAlternate,
-      aliases: aliasList(record.alternateName),
-      description: metaDescription,
-      officialUrl: typeof record.url === 'string' ? record.url : null,
-      sameAs: typeof record.sameAs === 'string' ? [record.sameAs] : aliasList(record.sameAs),
-      apiUrl,
-    }),
-  });
+  // One mapping, shared with pages/EntityRecordProfile.tsx — see
+  // src/utils/record-head.ts. `language` is omitted so a crawler sees the
+  // Nepali-first default.
+  const metaTags = buildMetaTags(entityHeadInput(record, segments));
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 

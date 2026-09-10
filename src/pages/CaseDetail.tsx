@@ -37,8 +37,8 @@ import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
-import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
-import { caseStructuredData } from "@/utils/structured-data";
+import { SITE_URL, stripHtml, truncateMeta } from "@/utils/seo";
+import { caseHeadInput } from "@/utils/record-head";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -366,64 +366,19 @@ const CaseDetail = () => {
     );
   }
 
+  // The share UI (native share sheet, copy-link, Disqus) needs these two; the
+  // head's own copies now come from caseHeadInput.
   const canonicalCaseSlug = caseData.slug || id;
   const canonicalUrl = `${SITE_URL}/case/${canonicalCaseSlug}`;
   const plainDescription = truncateMeta(stripMarkdown(stripHtml(caseData.description)));
-  const allegationDescription = truncateMeta(caseData.key_allegations?.slice(0, 2).join(". "));
-  const metaDescription = plainDescription || allegationDescription || "";
-  const metaTitle = `${caseData.title} | Jawafdehi`;
-  const ogImage =
-    previewImageUrl(caseData.banner_url, "https://portal.jawafdehi.org") ||
-    previewImageUrl(caseData.thumbnail_url, "https://portal.jawafdehi.org") ||
-    SOCIAL_IMAGE_URL;
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-      <Seo
-        title={metaTitle}
-        description={metaDescription}
-        canonicalUrl={canonicalUrl}
-        type="article"
-        imageUrl={ogImage}
-        imageAlt={caseData.title}
-        publishedTime={caseData.created_at}
-        modifiedTime={caseData.updated_at}
-        tags={caseData.tags}
-        // Non-PUBLISHED cases are "unlisted": reachable by direct slug but kept
-        // out of search engines (the API serves IN_REVIEW by slug, but these are
-        // provisional, pre-publication records — see the under-review banner).
-        robots={caseData.state !== "PUBLISHED" ? "noindex, nofollow" : null}
-        // Moved off <Seo> children and onto the shared list so worker.ts emits
-        // them too. Case pages are not pre-rendered (see scripts/pre-render.ts),
-        // so the edge-injected head is the only one a crawler or an agent reads —
-        // as children these links reached nothing but client-side navigation.
-        alternates={[
-          {
-            href: `${API_BASE_URL}/api/cases/${id}/`,
-            type: "application/json",
-            title: "Case data (JSON API)",
-          },
-          {
-            href: `${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`,
-            type: "application/json+oembed",
-            title: `${caseData.title} oEmbed`,
-          },
-        ]}
-        jsonLd={caseStructuredData({
-          canonicalUrl,
-          title: caseData.title,
-          description: metaDescription,
-          imageUrl: ogImage,
-          datePublished: caseData.case_publish_date ?? caseData.created_at,
-          dateModified: caseData.updated_at,
-          language: i18n.language,
-          tags: caseData.tags,
-          entities: caseData.entities,
-          authors: caseData.authors,
-          apiUrl: `${API_BASE_URL}/api/cases/${id}/`,
-          caseType: caseData.case_type,
-        })}
-      />
+      {/* The head comes from the SAME mapper the Worker uses (utils/record-head),
+          because a case page is not pre-rendered and the edge copy is the only one a
+          crawler reads — two hand-written mappings had already drifted on the
+          description fallback, slug encoding, and the alternate href. */}
+      <Seo {...caseHeadInput(caseData as unknown as Record<string, unknown>, id ?? "", { language: i18n.language })} />
 
       <CaseDetailBanner
         caseData={caseData}
