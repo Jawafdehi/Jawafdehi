@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CourtCase } from "@/types/jds";
 
@@ -34,9 +35,7 @@ export function CourtCasesSection({
 
   return (
     <section id="court-case" className="mb-12 scroll-mt-28 max-w-4xl">
-      <h2 className="mb-6 flex items-center text-xl md:text-2xl font-semibold tracking-tight text-primary">
-        {title}
-      </h2>
+      <CaseSectionHeading>{title}</CaseSectionHeading>
 
       <div className="space-y-4 text-primary/75">
         <Suspense

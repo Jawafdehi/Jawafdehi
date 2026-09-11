@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { getStoredDevUser } from "@/services/dev-auth";
-import { getAccessToken } from "@/services/oidc";
+import { hasStoredOidcSession } from "@/services/oidc-session";
 
 // Is there an active login session? PUBLIC pages (CaseDetail et al.) render
 // OUTSIDE the admin OIDC / CaseworkAuth providers — those live only in AdminApp,
@@ -16,6 +16,12 @@ import { getAccessToken } from "@/services/oidc";
 // admin route guards remain the authorization authority; a signed-in non-staff
 // visitor who follows the link still hits the login/permission wall there.
 //
+// Bundle note: `@/services/oidc` (and with it oidc-client-ts, ~23 KB gzip) is
+// imported DYNAMICALLY, and only after the cheap localStorage probe in
+// oidc-session says a session exists. This hook mounts on every public page, so
+// a static import here would put the library back in the entry chunk that
+// scripts/bundle-budget.mjs guards.
+//
 // SSR-safe: starts `false` and only flips true in a client effect, so the
 // pre-rendered/hydrated markup matches (the server has no session to read).
 export function useIsLoggedIn(): boolean {
@@ -28,13 +34,18 @@ export function useIsLoggedIn(): boolean {
       return;
     }
 
+    // Anonymous visitor: no persisted session, so never load the OIDC library.
+    if (!hasStoredOidcSession()) return;
+
     let alive = true;
-    // Asks the same question the request interceptor asks — "is there a usable
-    // token" — rather than re-reading the stored user, so a token that has merely
-    // expired gets refreshed here too. Reading `user.expired` directly meant the
-    // staff affordance vanished the moment the token lapsed, in step with the
-    // API quietly demoting the same visitor to anonymous.
-    getAccessToken()
+    // Behind the lazy import, ask the same question the request interceptor
+    // asks — "is there a usable token" — rather than re-reading the stored
+    // user, so a token that has merely expired gets refreshed here too (PR
+    // #360). Reading `user.expired` directly meant the staff affordance
+    // vanished the moment the token lapsed, in step with the API quietly
+    // demoting the same visitor to anonymous.
+    import("@/services/oidc")
+      .then((mod) => mod.getAccessToken())
       .then((token) => {
         if (alive && token) setLoggedIn(true);
       })

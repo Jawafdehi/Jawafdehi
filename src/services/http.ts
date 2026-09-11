@@ -17,7 +17,7 @@
 // username/password Django session (cookie + X-CSRFToken). Production is
 // SSO/OIDC-only — the dev-auth branch is inert without the flag.
 import axios, { type AxiosInstance } from "axios";
-import { getAccessToken } from "./oidc";
+import { getAccessToken } from "./oidc-session";
 import { DEV_AUTH_ENABLED, DEV_AUTH_CSRF_KEY } from "./dev-auth-constants";
 
 // Resolve the monolith origin. An explicit override wins; else same-origin.

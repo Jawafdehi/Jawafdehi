@@ -142,6 +142,9 @@ describe("DisqusComments", () => {
       act(() => {
         vi.advanceTimersByTime(150);
       });
+      // The embed module is dynamically imported (bundle-diet: disqus-react is
+      // deferred out of the entry chunk), so flush the import microtask too.
+      await act(async () => {});
 
       expect(screen.getByTestId("disqus-embed")).toBeTruthy();
     });
@@ -185,6 +188,8 @@ describe("DisqusComments", () => {
       act(() => {
         vi.advanceTimersByTime(150);
       });
+      // Flush the deferred disqus-react dynamic import (see the test above).
+      await act(async () => {});
 
       const disqusEmbed = screen.getByTestId("disqus-embed");
       expect(disqusEmbed.getAttribute("data-identifier")).toBe("case-123");
