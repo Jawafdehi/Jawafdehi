@@ -162,6 +162,79 @@ describe('caseStructuredData', () => {
     expect('about' in node).toBe(false);
     expect('keywords' in node).toBe(false);
   });
+
+  // These builders are exported, and the one production caller (utils/record-head)
+  // already sanitises what it passes. A mutation test proved that: removing the
+  // filter here broke nothing, because record-head's optional chaining catches it
+  // first. The guard stays anyway — this is an exported boundary and a future caller
+  // may hand it raw API data — but an untested safety net is worse than none,
+  // because it invites reliance it has never demonstrated. So it is tested directly.
+  describe('tolerates junk on its own, independent of the caller', () => {
+    it('drops null, primitive and array members of entities[]', () => {
+      const node = caseNode({
+        canonicalUrl: CANONICAL,
+        title: CASE_TITLE,
+        entities: [
+          null,
+          42,
+          'a string',
+          [],
+          { display_name: 'Real Party', nes_id: 'https://jawafdehi.org/entity/person/real' },
+        ] as never,
+      });
+
+      const about = node.about as Array<Record<string, unknown>>;
+      expect(about).toHaveLength(1);
+      expect(about[0].name).toBe('Real Party');
+    });
+
+    it('drops null and primitive members of authors[]', () => {
+      const node = caseNode({
+        canonicalUrl: CANONICAL,
+        title: CASE_TITLE,
+        authors: [null, 7, { display_name: 'Real Author' }] as never,
+      });
+
+      expect(node.author as unknown[]).toHaveLength(1);
+    });
+
+    it('ignores a tags value that is not an array of strings', () => {
+      expect(
+        'keywords' in caseNode({ canonicalUrl: CANONICAL, title: CASE_TITLE, tags: 'nope' as never }),
+      ).toBe(false);
+      expect(
+        caseNode({ canonicalUrl: CANONICAL, title: CASE_TITLE, tags: [null, 3, 'real'] as never })
+          .keywords,
+      ).toEqual(['real']);
+    });
+
+    it('ignores non-string scalars where a string is expected', () => {
+      const node = caseNode({
+        canonicalUrl: CANONICAL,
+        title: CASE_TITLE,
+        caseType: 42 as never,
+        datePublished: {} as never,
+        imageUrl: [] as never,
+      });
+
+      for (const key of ['genre', 'datePublished', 'image']) {
+        expect(key in node).toBe(false);
+      }
+    });
+
+    it('survives non-string aliases and sameAs on an entity', () => {
+      const page = entityStructuredData({
+        canonicalUrl: 'https://jawafdehi.org/entity/a/b',
+        name: 'Name',
+        aliases: [null, 5, 'Real Alias'] as never,
+        sameAs: [null, {}, 'https://example.invalid/'] as never,
+      })[0];
+      const entity = page.mainEntity as Record<string, unknown>;
+
+      expect(entity.alternateName).toEqual(['Real Alias']);
+      expect(entity.sameAs).toEqual(['https://example.invalid/']);
+    });
+  });
 });
 
 describe('entityStructuredData', () => {
