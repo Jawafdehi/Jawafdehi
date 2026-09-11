@@ -71,12 +71,34 @@ emits. **Adding a property means regenerating it**, which is deliberate: a new
 property should be looked up, not assumed. The validity test fails loudly on a
 property it does not know rather than skipping it.
 
-## Open question for maintainers
+## Open questions for maintainers
 
-**The CDN is telling the AI crawlers to go away.** `public/robots.txt` explicitly
-allows GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot and PerplexityBot. The file as
-**served** has a `# BEGIN Cloudflare Managed content` block prepended, which is not in
-this repo, setting:
+Two, and they are the same conversation.
+
+### 1. Is the data licence really CC0?
+
+`llms.txt` declares the data **CC0 1.0** with the licence URL, and the JSON-LD emits
+that as `license` on every case and entity. That is the machine-readable form of a
+claim the site already made — the previous `llms.txt` said "All data is in the public
+domain and free to use" — but nothing has ever *formally* adopted CC0. `LICENSING.md`
+covers the repositories only (Hippocratic License 3.0) and never mentions the dataset.
+
+So a prose sentence has become a specific licence URL that reusers will rely on.
+**That needs the board to confirm or correct it**, and two things follow from it:
+
+- **CC0 waives attribution.** If credit matters, CC0 is the wrong instrument and
+  **CC BY 4.0** is the one that requires it. The archive currently *asks* for credit
+  (see `creditText` and the "How to cite" section of `llms.txt`) because asking is all
+  CC0 permits.
+- Much of the underlying material is CIAA filings and court orders. It is worth
+  confirming the org has any copyright in it to waive or license, and that bare facts
+  — which are not copyrightable — are not being over-claimed in either direction.
+
+### 2. The CDN's managed robots.txt
+
+`public/robots.txt` allows GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot and
+PerplexityBot. The file as **served** has a `# BEGIN Cloudflare Managed content` block
+prepended, which is not in this repo, setting:
 
 ```
 Content-Signal: search=yes,ai-train=no,use=reference
@@ -86,15 +108,40 @@ User-agent: GPTBot
 Disallow: /
 ```
 
-…and the same for CCBot, Google-Extended, Amazonbot, Applebot-Extended, Bytespider
-and meta-externalagent.
+…and the same for CCBot, Google-Extended, Amazonbot, Applebot-Extended, Bytespider,
+meta-externalagent and CloudflareBrowserRenderingCrawler.
 
-Per RFC 9309 a crawler merges matching groups and the least restrictive rule wins at
-equal specificity, so a strict reader may still allow — but that is a thin thing to
-stake the goal on, and `ai-train=no` may be a deliberate choice. It is a Cloudflare
-dashboard setting (AI Crawl Control / Managed robots.txt), not a file here, so it
-cannot be resolved in a pull request. Decide it deliberately either way; `llms.txt`
-currently tells agents to honour the served file and to tell us if that looks wrong.
+What it actually costs, checked bot by bot: the list is **almost entirely training
+crawlers**. Google-Extended is not a Google Search ranking signal (Google says so),
+and Apple documents that Applebot-Extended rules are not considered in Search ranking.
+The retrieval crawlers that decide whether this archive gets **cited** in an AI answer
+— OAI-SearchBot, ChatGPT-User, PerplexityBot, Googlebot, Bingbot, Anthropic's
+retrieval agents — are all still allowed. `ClaudeBot` is the one genuinely dual-purpose
+entry.
+
+It is also only a *preference*: Cloudflare states robots.txt "does not prevent
+crawlers from accessing your content at a technical level", and every one of those
+user-agents currently gets HTTP 200 from a real case page. (That rules out UA-based
+blocking; verified-bot enforcement can only be confirmed in AI Crawl Control →
+Crawlers.)
+
+Three things to decide, and they are separable:
+
+1. **Training.** `ai-train=no` is an express reservation of copyright under EU DSM
+   Article 4, which directly contradicts CC0. Pick one.
+2. **`ai-input` is absent**, and per the Content Signals policy's own clause (c) an
+   omitted signal grants nothing and restricts nothing. `ai-input` is defined as
+   grounding and RAG — the single use this whole surface exists to serve. Saying
+   `ai-input=yes` is the clearest way to invite it.
+3. **The duplicate groups.** For GPTBot and ClaudeBot the served file now contains
+   both `Disallow: /` and `Allow: /`. RFC 9309 says merge and let the least
+   restrictive win, so it probably resolves to allow, but the file should not say two
+   things.
+
+The toggle is **Cloudflare dashboard → Security → Settings → filter "Bot traffic" →
+"Set your preference to block training in robots.txt"**, plus a "Display Content
+Signals Policy" checkbox under Control AI Crawlers on the zone Overview. Not a repo
+file, so it cannot be resolved in a pull request.
 
 ## Known gaps, in rough order of value
 

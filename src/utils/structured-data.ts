@@ -173,6 +173,26 @@ export interface CaseStructuredDataInput {
 }
 
 /**
+ * The credit line for a record: who to name when reusing it.
+ *
+ * schema.org `creditText` is "text that can be used to credit person(s) and/or
+ * organization(s) associated with a published Creative Work" — the machine-readable
+ * form of *cite me like this*, and the only attribution field a consumer can act on
+ * without parsing prose.
+ *
+ * It matters here because the archive's licence does NOT require attribution: CC0
+ * waives it. So credit has to be asked for in a form that is trivial to honour,
+ * rather than demanded in a form nothing enforces. Naming the caseworker as well as
+ * the organisation is deliberate — these are volunteers, and a citation that reaches
+ * the person who did the work is worth more to them than one that stops at a brand.
+ */
+export function creditLine(authorNames: string[] = []): string {
+  const org = `${SITE_NAME} (jawafdehi.org)`;
+  const people = authorNames.map((name) => name.trim()).filter(Boolean);
+  return people.length ? `${people.join(", ")}, ${org}` : org;
+}
+
+/**
  * The graph for a case page.
  *
  * `Report` rather than `Article`: it is a schema.org subclass of Article, so
@@ -245,6 +265,9 @@ export function caseStructuredData(
       publisher: organizationNode(),
       isPartOf: websiteRefNode(),
       license: LICENSE_URL,
+      // How to credit this record. The licence does not require it; this is the
+      // ask, in the one field a consumer can act on mechanically.
+      creditText: creditLine(authors.map((author) => String(author.name ?? ""))),
       isAccessibleForFree: true,
       mainEntityOfPage: input.canonicalUrl,
       // Where the machine-readable original lives, in the graph as well as in the
@@ -352,6 +375,9 @@ export function entityStructuredData(
       inLanguage: languageTag(input.language),
       isPartOf: websiteRefNode(),
       license: LICENSE_URL,
+      // The credit belongs to the RECORD, like the licence — the entity itself is
+      // not a work anyone published.
+      creditText: creditLine(),
       isAccessibleForFree: true,
       publisher: organizationNode(),
       mainEntity: entityNode,

@@ -53,6 +53,31 @@
         "URL"
       ]
     },
+    "copyrightHolder": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
+    "copyrightNotice": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "creditText": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
     "dateModified": {
       "domain": [
         "CreativeWork",
@@ -253,6 +278,15 @@
         "URL"
       ]
     },
+    "sdPublisher": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
     "subjectOf": {
       "domain": [
         "Thing"
@@ -267,6 +301,15 @@
         "Thing"
       ],
       "range": [
+        "URL"
+      ]
+    },
+    "usageInfo": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "CreativeWork",
         "URL"
       ]
     }

@@ -94,6 +94,14 @@ describe('llms.txt still describes the surface it is supposed to', () => {
     // Entities are absent from the sitemap; without this an agent infers they have
     // no pages.
     ['how to enumerate entities', 'not the sitemap'],
+    // Attribution. CC0 waives it, so it can only be asked for — and the ask is
+    // worthless unless the file says exactly how to honour it.
+    ['a how-to-cite section', 'How to cite'],
+    ['the machine-readable credit field', 'creditText'],
+    ['the requirement to include the canonical URL', 'include the canonical URL'],
+    // The code is Hippocratic 3.0 and the data is not; conflating them is the
+    // obvious mistake for a reuser to make.
+    ['the code-vs-data licence split', 'Hippocratic License 3.0'],
   ];
 
   it.each(REQUIRED)('mentions %s', (_label, needle) => {

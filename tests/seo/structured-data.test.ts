@@ -6,6 +6,7 @@ import {
   ORGANIZATION_ID,
   WEBSITE_ID,
   caseStructuredData,
+  creditLine,
   entityStructuredData,
 } from '../../src/utils/structured-data';
 
@@ -143,6 +144,50 @@ describe('caseStructuredData', () => {
     expect(authors).toHaveLength(2);
     expect(authors[0].url).toBe('https://jawafdehi.org/author/sambhav-koirala');
     expect(authors[1].url).toBeUndefined();
+  });
+
+  // The licence WAIVES attribution (CC0), so credit cannot be required — it has to
+  // be asked for in a form that is trivial to honour. creditText is the only
+  // attribution field a consumer can act on without parsing prose.
+  describe('credit line', () => {
+    it('names the caseworkers and then the organisation', () => {
+      const node = caseNode({
+        canonicalUrl: CANONICAL,
+        title: CASE_TITLE,
+        authors: [
+          { display_name: 'Sambhav Koirala', slug: 'sambhav-koirala', has_public_page: true },
+          { display_name: 'Second Author', slug: 'second', has_public_page: true },
+        ],
+      });
+
+      // Volunteers first: a citation that reaches the person who read the filings is
+      // worth more to them than one that stops at a brand.
+      expect(node.creditText).toBe(
+        'Sambhav Koirala, Second Author, Jawafdehi Initiative (jawafdehi.org)',
+      );
+    });
+
+    it('falls back to the organisation alone when a case has no credited author', () => {
+      expect(caseNode({ canonicalUrl: CANONICAL, title: CASE_TITLE }).creditText).toBe(
+        'Jawafdehi Initiative (jawafdehi.org)',
+      );
+    });
+
+    it('credits an author with no public page, since credit is not a link', () => {
+      const node = caseNode({
+        canonicalUrl: CANONICAL,
+        title: CASE_TITLE,
+        authors: [{ display_name: 'Unlisted Reviewer', slug: 'x', has_public_page: false }],
+      });
+
+      expect(node.creditText).toBe('Unlisted Reviewer, Jawafdehi Initiative (jawafdehi.org)');
+    });
+
+    it('is exposed as a reusable helper so the API can emit the same string', () => {
+      expect(creditLine(['A Person'])).toBe('A Person, Jawafdehi Initiative (jawafdehi.org)');
+      expect(creditLine([])).toBe('Jawafdehi Initiative (jawafdehi.org)');
+      expect(creditLine(['  ', 'Real'])).toBe('Real, Jawafdehi Initiative (jawafdehi.org)');
+    });
   });
 
   it('declares Nepali unless the reader is explicitly in English', () => {
@@ -344,6 +389,19 @@ describe('entityStructuredData', () => {
 
     expect(entity.sameAs).toBeUndefined();
     expect(entity.mainEntityOfPage).toBe(ENTITY_PAGE);
+  });
+
+  it('puts the credit line on the record page, not on the entity', () => {
+    const { page, entity } = entityGraph({
+      canonicalUrl: ENTITY_PAGE,
+      iri: ENTITY_IRI,
+      name: 'Department of Survey, Damak',
+    });
+
+    // Credit is for the archive's record about the entity. The entity is not a work
+    // anyone published, and creditText is a CreativeWork property besides.
+    expect(page.creditText).toBe('Jawafdehi Initiative (jawafdehi.org)');
+    expect('creditText' in entity).toBe(false);
   });
 
   it('omits url entirely when the entity has no site of its own', () => {
