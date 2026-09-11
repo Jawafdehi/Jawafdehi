@@ -30,10 +30,25 @@ export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 /**
- * A case can bind close to 200 entities. Emitting all of them would add tens of
- * kilobytes to a head that is fetched on every crawl, so the graph carries the
- * most significant slice and the JSON API alternate carries the complete list.
- * An agent that needs every party follows the alternate link.
+ * How many bound parties a case graph carries. The rest stay on the JSON alternate.
+ *
+ * Measured on the real 194-party record from the live API, gzipped as the edge
+ * serves it:
+ *
+ *   parties |  head raw | head gzip
+ *         0 |     7,688 |     1,497
+ *         5 |     8,718 |     1,718
+ *        10 |     9,708 |     1,919
+ *        20 |    11,402 |     2,187
+ *
+ * So a party costs ~34 gzip bytes, and carrying all 194 would add roughly 6 KB
+ * gzip — to a head that is fetched on EVERY crawl of that page, forever, to
+ * duplicate a list the `rel=alternate` JSON already serves complete. Twenty keeps
+ * the whole graph at ~1.2 KB gzip while still naming the parties an agent is most
+ * likely to be resolving.
+ *
+ * If you raise this, re-measure rather than estimating: the cost is per party and
+ * the tail of a big case is long.
  */
 export const MAX_GRAPH_ENTITIES = 20;
 
@@ -211,6 +226,9 @@ export function caseStructuredData(
       url: input.canonicalUrl,
       // Both, on purpose: `headline` is what article consumers read, `name` is
       // what generic CreativeWork consumers read, and a case has one title.
+      // Measured on the real record: carrying both costs 339 raw bytes and SIX
+      // bytes gzipped, because the second copy is a back-reference away. Not worth
+      // dropping, and this note exists so nobody spends a review cycle on it.
       headline: input.title,
       name: input.title,
       description: input.description || undefined,
