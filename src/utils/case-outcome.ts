@@ -14,11 +14,32 @@
 
 import type { EntityOutcome } from "@/types/jds";
 
+/**
+ * The outcome vocabulary this module can render, in verdict order.
+ *
+ * Exported so the admin editor's `OUTCOME_TYPES` can be pinned against it.
+ * The roster saves as a whole-list replace, so an outcome one side knows and
+ * the other does not is an outcome the next save deletes.
+ */
+export const CASE_OUTCOMES: readonly EntityOutcome[] = [
+  "charged",
+  "convicted",
+  "acquitted",
+  "abated",
+  "remanded",
+];
+
 const OUTCOME_LABELS: Record<EntityOutcome, { en: string; ne: string }> = {
   convicted: { en: "Convicted", ne: "दोषी ठहर" },
   acquitted: { en: "Acquitted", ne: "सफाइ" },
   charged: { en: "Charged", ne: "अभियोग" },
   abated: { en: "Abated", ne: "मुद्दा तामेली" },
+  // बदर गरी पुनः इन्साफ — an appeal court quashed the verdict and sent the
+  // case back for retrial. Non-terminal like `charged`, but it must never be
+  // collapsed into it: "charged" is suppressed, and a defendant whose
+  // conviction was quashed would then render identically to one never
+  // decided.
+  remanded: { en: "Remanded for retrial", ne: "बदर गरी पुनः इन्साफ" },
 };
 
 // Badge colours: convicted = red, acquitted = green (neutral-positive),
@@ -33,6 +54,10 @@ const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
     "border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong",
   abated:
     "border-transparent bg-muted text-muted-foreground",
+  // Its own colour: the case is live again, which is neither a verdict nor
+  // the ordinary pre-trial "charged".
+  remanded:
+    "border-transparent bg-info/10 text-info dark:bg-info/40 dark:text-info",
 };
 
 // Coerce any incoming value to a known outcome, defaulting to `charged`. Guards
@@ -40,7 +65,11 @@ const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
 // the admin enum) so they can never index the maps with `undefined`.
 function normalizeOutcome(outcome: string): EntityOutcome {
   const v = String(outcome).toLowerCase();
-  return v === "convicted" || v === "acquitted" || v === "abated" || v === "charged"
+  return v === "convicted" ||
+    v === "acquitted" ||
+    v === "abated" ||
+    v === "remanded" ||
+    v === "charged"
     ? (v as EntityOutcome)
     : "charged";
 }
@@ -59,8 +88,11 @@ export function outcomeRank(outcome: EntityOutcome | null | undefined): number {
       return 1;
     case "abated":
       return 2;
-    default:
+    // Not a verdict, but decided enough to outrank a bare charge.
+    case "remanded":
       return 3;
+    default:
+      return 4;
   }
 }
 

@@ -90,7 +90,17 @@ export const DocumentSourceTypeKeys: Record<DocumentSourceType, string> = {
 // Verdict outcome of a case<->entity relationship. Distinct from `type` (the
 // role): 'charged' is the default/undecided state; 'acquitted' is essential —
 // "not convicted" cannot distinguish acquitted from pending.
-export type EntityOutcome = "charged" | "convicted" | "acquitted" | "abated";
+/** `remanded` (बदर गरी पुनः इन्साफ) is NON-terminal: an appeal court quashed
+ * the verdict and sent the case back. It must be carried, not coerced — the
+ * API derives a case's lifecycle from it, and the editor saves the roster as
+ * a whole-list replace, so a value this union does not know is a value the
+ * next save deletes. */
+export type EntityOutcome =
+  | "charged"
+  | "convicted"
+  | "acquitted"
+  | "abated"
+  | "remanded";
 
 /** A case image, pre-rendered by the backend into a responsive width ladder.
  *

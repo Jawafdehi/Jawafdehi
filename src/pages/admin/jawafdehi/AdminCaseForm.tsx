@@ -218,6 +218,22 @@ function parseTimeline(c: Record<string, unknown>): TimelineEventRow[] {
 // it on the next save of any other field. The row renders with no type
 // selected and blocks save (stageRowError -> "unknownStage"), which puts the
 // choice in front of the caseworker instead of losing the record.
+// Whether the loaded payload carries a stage list AT ALL.
+//
+// Absent is not empty. The list is saved as a whole-list replace, so an API
+// that does not serve `dates` (a release behind, a cached payload) would have
+// the editor start empty on a case that has stages, and the first stage a
+// caseworker adds would delete every one of them with a 200 and no warning.
+// Same reasoning as keeping an unrecognised stage type instead of dropping it.
+function hasStageList(c: Record<string, unknown>): boolean {
+  const dates = c.dates;
+  return Boolean(
+    dates &&
+      typeof dates === "object" &&
+      Array.isArray((dates as Record<string, unknown>).stages),
+  );
+}
+
 function parseStages(c: Record<string, unknown>): CaseStageRow[] {
   const dates = c.dates;
   const list =
@@ -321,6 +337,9 @@ export default function AdminCaseForm() {
 
   const [form, setForm] = useState<CaseFormState>(EMPTY);
   const [original, setOriginal] = useState<CaseFormState>(EMPTY);
+  // See hasStageList: false means the payload had no `dates` key, so the
+  // editor must neither show rows nor emit a /dates op.
+  const [stagesAvailable, setStagesAvailable] = useState(true);
   const [caseState, setCaseState] = useState<string>("DRAFT");
   // Index of a just-added allegation row so its input can grab focus once it
   // mounts — otherwise a row appended below the fold reads as a no-op (cf. BB-27).
@@ -372,6 +391,7 @@ export default function AdminCaseForm() {
       const parsed = fromCase(c);
       setForm(parsed);
       setOriginal(parsed);
+      setStagesAvailable(hasStageList(c));
       setPreviews(previewsFromCase(c));
       setCaseState(str(c.state ?? c.status) || "DRAFT");
       setEtag(tok);
@@ -524,7 +544,9 @@ export default function AdminCaseForm() {
     // Only AD dates are stored; BS is derived from them at display time, so no
     // BS ops are emitted (those columns don't exist on the backend). The whole
     // stage list travels as one replace, like the other sub-resources.
-    if (changed(form.stages, original.stages))
+    // Never when the payload carried no stage list: a replace built from an
+    // editor that started blank would delete the stages the case really has.
+    if (stagesAvailable && changed(form.stages, original.stages))
       ops.push(buildStagesPatch(form.stages));
     return ops;
   };
@@ -578,6 +600,7 @@ export default function AdminCaseForm() {
         const parsed = fromCase(updated);
         setForm(parsed);
         setOriginal(parsed);
+        setStagesAvailable(hasStageList(updated));
         setPreviews(previewsFromCase(updated));
         setCaseState(str(updated.state ?? updated.status) || caseState);
         setEtag(tok);
@@ -1090,6 +1113,7 @@ export default function AdminCaseForm() {
             <CaseStagesEditor
               rows={form.stages}
               onChange={(rows) => set("stages", rows)}
+              unavailable={!stagesAvailable}
             />
             <EntityRelationshipsEditor
               rows={form.entities}

@@ -20,6 +20,10 @@ import { stageLabelKey } from "@/utils/case-stages";
 interface Props {
   rows: CaseStageRow[];
   onChange: (rows: CaseStageRow[]) => void;
+  /** The loaded payload carried no `dates` key at all — see hasStageList in
+   * AdminCaseForm. Absent is not empty, and the list saves as a whole-list
+   * replace, so editing from a blank start would delete the real stages. */
+  unavailable?: boolean;
 }
 
 // Explicit, so every message is greppable from its key.
@@ -49,7 +53,7 @@ const BLANK_ROW: CaseStageRow = {
 // values across 82 cases under a free-text schema.) It is a native <select> so
 // every option is in the document — the vocabulary is the control's whole
 // point, and a portal-rendered listbox per row would hide it.
-export default function CaseStagesEditor({ rows, onChange }: Props) {
+export default function CaseStagesEditor({ rows, onChange, unavailable }: Props) {
   const { t } = useTranslation();
   const idBase = useId();
 
@@ -80,6 +84,25 @@ export default function CaseStagesEditor({ rows, onChange }: Props) {
       {t("admin.caseForm.stageAdd")}
     </Button>
   );
+
+  // Withheld rather than shown blank: a blank editor over a case that HAS
+  // stages is the shape that deletes them. Says why, and offers no way to
+  // write — the one case where a read-only editor beats an editable one.
+  if (unavailable) {
+    return (
+      <div
+        className="space-y-2 rounded-md border bg-white p-4"
+        data-testid="case-stages-unavailable"
+      >
+        <Label className="text-sm font-semibold">
+          {t("admin.caseForm.stagesHeading")}
+        </Label>
+        <p className="text-sm text-muted-foreground">
+          {t("admin.caseForm.stagesUnavailable")}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 rounded-md border bg-white p-4">

@@ -567,7 +567,7 @@
       "review": "Review",
       "other": "Other"
     },
-    "stagePending": "Faisala pending",
+    "stagePending": "Decision pending",
     "byline": {
       "firstPublished": "First published {{date}}.",
       "editHistory_one": "{{count}} subsequent edit",
@@ -2013,6 +2013,7 @@
       "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order",
       "stagesHeading": "Case stages",
       "stagesHelp": "One row per pass of the case through a forum: the investigation, the first instance, each appeal, each review. Dates are AD (YYYY-MM-DD); Bikram Sambat is derived for display. A stage with no end date has not been decided.",
+      "stagesUnavailable": "Stage editing is unavailable: this case was loaded from an API response that carries no stage list, and saving from a blank editor would delete the stages the case already has. Reload once the API is up to date.",
       "stageAdd": "Add stage",
       "stageRemove": "Remove stage",
       "stageRowLabel": "Stage {{number}}",

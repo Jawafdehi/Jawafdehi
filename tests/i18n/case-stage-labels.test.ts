@@ -47,7 +47,10 @@ describe("case stage labels", () => {
 
   it("says a decision has not come for a pending stage, in both locales", () => {
     // NOT "no date" — the date is not missing, the decision is.
-    expect(at(en, "caseDetail.stagePending")).toBeTypeOf("string");
+    // Pinned by value, not just by type: this one shipped as the romanized
+    // placeholder "Faisala pending" beside properly translated siblings, and
+    // it renders on every undecided stage row AND inside date ranges.
+    expect(at(en, "caseDetail.stagePending")).toBe("Decision pending");
     expect(at(ne, "caseDetail.stagePending")).toBe("फैसला बाँकी");
   });
 

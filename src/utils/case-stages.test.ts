@@ -119,6 +119,73 @@ describe("soleInitialCourt", () => {
     ).toBeNull();
   });
 
+  it("names no court once a later court stage has CONCLUDED", () => {
+    // `outcome` is a per-defendant field with no forum of its own, and a
+    // terminal verdict is set from whatever primary court order was read --
+    // an appellate order included. A defendant acquitted at the Special
+    // Court and convicted on appeal would otherwise render as "Special
+    // Court: convicted", which is false about a named real person and
+    // strictly worse than the bare verdict it replaced.
+    expect(
+      soleInitialCourt(
+        dates([
+          {
+            stage: "initial",
+            courtcase_iri: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+            start: "2022-01-10",
+            end: "2024-05-22",
+          },
+          {
+            stage: "appeal",
+            courtcase_iri: "https://jawafdehi.org/courtcase/supreme/082-ne-0011",
+            start: "2024-06-20",
+            end: "2025-09-01",
+          },
+        ]),
+      ),
+    ).toBeNull();
+  });
+
+  it("still names it while the later stage is PENDING", () => {
+    // The 22 cases this wording exists for: a Special Court acquittal with a
+    // live CIAA appeal. An undecided appeal cannot have produced the
+    // verdict, so the first instance is the only forum it can have come
+    // from — and naming it is exactly the improvement over a bare label.
+    expect(
+      soleInitialCourt(
+        dates([
+          {
+            stage: "initial",
+            courtcase_iri: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+            start: "2022-01-10",
+            end: "2024-05-22",
+          },
+          {
+            stage: "appeal",
+            courtcase_iri: "https://jawafdehi.org/courtcase/supreme/082-ne-0011",
+            start: "2024-06-20",
+          },
+        ]),
+      ),
+    ).toBe("special");
+  });
+
+  it("ignores a concluded INVESTIGATION, which decides nothing", () => {
+    expect(
+      soleInitialCourt(
+        dates([
+          { stage: "investigation", start: "2021-03-14", end: "2022-01-09" },
+          {
+            stage: "initial",
+            courtcase_iri: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+            start: "2022-01-10",
+            end: "2024-05-22",
+          },
+        ]),
+      ),
+    ).toBe("special");
+  });
+
   it("names no court for a case with no first-instance stage (a Supreme Court writ)", () => {
     expect(
       soleInitialCourt(

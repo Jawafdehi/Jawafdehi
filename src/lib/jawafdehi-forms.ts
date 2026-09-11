@@ -89,11 +89,17 @@ export type RelationshipType = (typeof RELATIONSHIP_TYPES)[number];
 
 // Verdict outcome, orthogonal to the relationship role. CHARGED = undecided
 // default; the terminal values are set only from a primary court order.
+// The API's full outcome vocabulary. `REMANDED` (बदर गरी पुनः इन्साफ) is here
+// for the same reason an unrecognised stage type is kept rather than dropped:
+// the roster saves as a whole-list replace, so a value the editor cannot
+// represent is a value the next unrelated save silently deletes — rewriting a
+// named person's verdict.
 export const OUTCOME_TYPES = [
   "CHARGED",
   "CONVICTED",
   "ACQUITTED",
   "ABATED",
+  "REMANDED",
 ] as const;
 export type OutcomeType = (typeof OUTCOME_TYPES)[number];
 
@@ -206,13 +212,16 @@ export function isValidTimelineRow(row: TimelineEventRow): boolean {
  */
 export function stageRowError(row: CaseStageRow): StageRowError | null {
   if (!isCaseStageName(row.stage)) return "unknownStage";
-  if (!isValidDateField(row.start) || !isValidDateField(row.end)) return "invalidDate";
+  // Stricter than `isValidDateField`, deliberately: the API parses these with
+  // `date.fromisoformat`, which refuses an unpadded "2080-9-8". Accepting it
+  // here enables save and returns a 422 whose message this row cannot
+  // display -- and padding silently would also hide a BS date typed into an
+  // AD field, which is the likelier mistake.
+  if (!isPaddedIsoDate(row.start) || !isPaddedIsoDate(row.end)) return "invalidDate";
   const start = row.start.trim();
   const end = row.end.trim();
-  // ISO YYYY-MM-DD compares correctly as a string only when both are padded.
-  if (start && end && normalizeIsoDate(end) < normalizeIsoDate(start)) {
-    return "endBeforeStart";
-  }
+  // Padded ISO YYYY-MM-DD compares correctly as a plain string.
+  if (start && end && end < start) return "endBeforeStart";
   if (row.notes.trim().length > STAGE_NOTES_MAX) return "notesTooLong";
   return null;
 }
@@ -221,11 +230,12 @@ export function isValidStageRow(row: CaseStageRow): boolean {
   return stageRowError(row) === null;
 }
 
-// `isValidDateField` tolerates single-digit month/day ("2080-9-8"), which does
-// not sort as a string; pad before comparing.
-function normalizeIsoDate(value: string): string {
-  const [y, m, d] = value.split("-");
-  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+// An AD date exactly as `date.fromisoformat` accepts it, or empty. Distinct
+// from `isValidDateField`, which tolerates single-digit month/day for the
+// older editors that already emit it.
+function isPaddedIsoDate(value: string): boolean {
+  const v = value.trim();
+  return v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v);
 }
 
 // --- Patch builders (RFC-6902) -----------------------------------------------

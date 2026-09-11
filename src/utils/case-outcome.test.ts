@@ -3,6 +3,7 @@ import type { EntityOutcome } from "@/types/jds";
 import {
   outcomeBadgeClass,
   outcomeLabel,
+  outcomeRank,
   outcomeWithForumLabel,
   shouldShowOutcome,
 } from "./case-outcome";
@@ -63,5 +64,27 @@ describe("outcomeWithForumLabel", () => {
     expect(outcomeWithForumLabel("acquitted", null, "en")).toBe("Acquitted");
     expect(outcomeWithForumLabel("acquitted", "", "en")).toBe("Acquitted");
     expect(outcomeWithForumLabel("acquitted", undefined, "ne")).toBe("सफाइ");
+  });
+});
+
+describe("remanded", () => {
+  it("keeps its own label instead of collapsing into charged", () => {
+    expect(outcomeLabel("remanded", "en")).toBe("Remanded for retrial");
+    expect(outcomeLabel("remanded", "ne")).toBe("बदर गरी पुनः इन्साफ");
+  });
+
+  it("is shown, because a quashed conviction is not an undecided case", () => {
+    // Collapsing it into `charged` suppressed the badge entirely: a defendant
+    // whose conviction was quashed rendered identically to one never decided.
+    expect(shouldShowOutcome("remanded")).toBe(true);
+  });
+
+  it("sorts after the terminal verdicts but before the undecided", () => {
+    expect(outcomeRank("remanded")).toBeGreaterThan(outcomeRank("abated"));
+    expect(outcomeRank("remanded")).toBeLessThan(outcomeRank("charged"));
+  });
+
+  it("has a badge class of its own", () => {
+    expect(outcomeBadgeClass("remanded")).not.toBe(outcomeBadgeClass("charged"));
   });
 });

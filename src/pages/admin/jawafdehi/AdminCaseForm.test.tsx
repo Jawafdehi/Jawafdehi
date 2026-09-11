@@ -243,6 +243,34 @@ describe("AdminCaseForm — the stage editor replaces the single date pair", () 
     expect(container.textContent).not.toContain("admin.caseForm.caseEnd");
   });
 
+  it("refuses to edit stages at all when the payload carries no dates key", async () => {
+    // An API that does not serve `dates` is indistinguishable from a case
+    // with no stages, and the list saves as a WHOLE-LIST replace -- so the
+    // first stage a caseworker adds would silently delete every stage the
+    // case already has. Absent is not empty: the editor says so and offers
+    // no way to write.
+    loadCase("PUBLISHED", {});
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("case-stages-unavailable")).toBeTruthy(),
+    );
+    expect(screen.queryByText("admin.caseForm.stageAdd")).toBeNull();
+    expect(screen.queryAllByTestId("case-stage-editor-row")).toHaveLength(0);
+  });
+
+  it("edits normally when the payload carries an empty stage list", async () => {
+    // The other half of the rule: an explicit empty list IS a case with no
+    // stages, and must stay editable.
+    loadCase("PUBLISHED", { dates: { stages: [] } });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.stageAdd")).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("case-stages-unavailable")).toBeNull();
+  });
+
   it("blocks save while a stage ends before it starts", async () => {
     loadCase("PUBLISHED", {
       dates: { stages: [{ stage: "initial", start: "2023-06-09", end: "2023-01-01" }] },

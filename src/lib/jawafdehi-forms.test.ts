@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { CASE_OUTCOMES } from "@/utils/case-outcome";
 import {
   slugify,
   isValidSlug,
@@ -14,6 +15,7 @@ import {
   isValidStageRow,
   stageRowError,
   STAGE_NOTES_MAX,
+  OUTCOME_TYPES,
   replaceOp,
   type EntityRelationshipRow,
   type TimelineEventRow,
@@ -320,5 +322,44 @@ describe("buildStagesPatch", () => {
 
   it("sends an empty stage list rather than nothing, so a stage can be deleted", () => {
     expect(buildStagesPatch([]).value).toEqual({ stages: [] });
+  });
+});
+
+describe("stage dates are validated as strictly as the API validates them", () => {
+  const row = (over: Partial<CaseStageRow> = {}): CaseStageRow => ({
+    stage: "initial",
+    start: "",
+    end: "",
+    courtcase_iri: "",
+    body: "",
+    label: "",
+    notes: "",
+    ...over,
+  });
+
+  it("rejects an unpadded month or day", () => {
+    // The API parses with `date.fromisoformat`, which refuses "2080-9-8".
+    // Accepting it here enables save and returns a 422 carrying a server
+    // message the row-level FieldError has nowhere to show — on an editor
+    // whose whole point is saying WHICH of twelve stages is wrong.
+    expect(stageRowError(row({ start: "2080-9-8" }))).toBe("invalidDate");
+    expect(stageRowError(row({ end: "2080-11-3" }))).toBe("invalidDate");
+  });
+
+  it("accepts a padded date and an empty one", () => {
+    expect(stageRowError(row({ start: "2023-06-09" }))).toBeNull();
+    expect(stageRowError(row({ start: "", end: "" }))).toBeNull();
+  });
+});
+
+describe("the outcome vocabulary cannot drift from the renderer's", () => {
+  it("offers every outcome the public page can render", () => {
+    // The editor saves the roster as a whole-list replace. An outcome the
+    // dropdown has no entry for is coerced to CHARGED on load and written
+    // back as CHARGED on the next unrelated save — rewriting a named
+    // person's verdict with a 200 and no warning.
+    expect(OUTCOME_TYPES.map((o) => o.toLowerCase())).toEqual([
+      ...CASE_OUTCOMES,
+    ]);
   });
 });
