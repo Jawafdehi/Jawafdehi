@@ -183,6 +183,20 @@ describe("CaseEntityCards — which parties flip at all", () => {
     expect(screen.getByRole("link").className).not.toContain("text-left");
   });
 
+  // Centring only reads as centred if the note's own box is symmetric. A
+  // one-sided `pr-1` offsets it, and so does the scrollbar, which is laid out
+  // inside the padding box on the end side — hence a both-edges gutter as well
+  // as the symmetric padding. Reserving that gutter always also keeps the width
+  // fixed, so a note long enough to overflow does not shift its own text.
+  it("keeps the note's scroll box symmetric so the centred text sits on the card's axis", () => {
+    renderCards([party()]);
+
+    const scroller = screen.getByText(/embezzling/).parentElement;
+    expect(scroller?.className).toContain("px-1");
+    expect(scroller?.className).not.toContain("pr-1");
+    expect(scroller?.className).toContain("[scrollbar-gutter:stable_both-edges]");
+  });
+
   it("renders the decided verdict on the details face", () => {
     renderCards([party({ outcome: "acquitted" })]);
 

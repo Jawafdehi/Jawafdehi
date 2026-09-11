@@ -231,11 +231,21 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     <>
       <span className="sr-only">{names.primary}</span>
       {/* Centred while it fits; `my-auto` collapses to 0 once it overflows so
-          the top stays reachable. The scrollbar gutter is `px-1`, not `pr-1`:
-          padding on one side only would pull centred text off the card's axis. */}
+          the top stays reachable. Centred text only sits on the card's axis if
+          both insets match, which takes two things: `px-1` rather than `pr-1`
+          for the clearance, and a `stable both-edges` gutter. `px-1` alone is
+          not enough — the scrollbar is laid out inside the padding box on the
+          end side, so it still eats the right. Reserving the gutter on both
+          edges also holds the width steady, so a note growing long enough to
+          overflow no longer shifts its own text sideways. */}
       <div
         ref={scrollRef}
-        className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto px-1 [scrollbar-width:thin]", SETTLE, "delay-150")}
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-y-auto px-1",
+          "[scrollbar-width:thin] [scrollbar-gutter:stable_both-edges]",
+          SETTLE,
+          "delay-150",
+        )}
       >
         <p className="my-auto font-paragraph font-paragraph-compact text-primary/85">{notes}</p>
       </div>
