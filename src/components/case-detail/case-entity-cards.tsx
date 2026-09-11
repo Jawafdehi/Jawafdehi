@@ -231,18 +231,22 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     <>
       <span className="sr-only">{names.primary}</span>
       {/* Centred while it fits; `my-auto` collapses to 0 once it overflows so
-          the top stays reachable. */}
+          the top stays reachable. The scrollbar gutter is `px-1`, not `pr-1`:
+          padding on one side only would pull centred text off the card's axis. */}
       <div
         ref={scrollRef}
-        className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 [scrollbar-width:thin]", SETTLE, "delay-150")}
+        className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto px-1 [scrollbar-width:thin]", SETTLE, "delay-150")}
       >
         <p className="my-auto font-paragraph font-paragraph-compact text-primary/85">{notes}</p>
       </div>
     </>
   );
 
+  // `text-center` to match the front face. The two faces occupy the same box and
+  // swap on hover, so a left-aligned details face made the text jump to the edge
+  // the moment the card turned, while every neighbouring card stayed centred.
   const backClass = cn(
-    "absolute inset-0 flex flex-col gap-3 rounded-2xl p-4 text-left",
+    "absolute inset-0 flex flex-col gap-3 rounded-2xl p-4 text-center",
     href && "cursor-pointer focus-visible:outline-none",
     SURFACE,
     FLIP_BACK,

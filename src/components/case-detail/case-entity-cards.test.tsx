@@ -172,6 +172,17 @@ describe("CaseEntityCards — which parties flip at all", () => {
     expect(within(details).queryByText("Charged")).toBeNull();
   });
 
+  // The two faces share one box and swap on hover. When the details face was
+  // `text-left`, turning a card threw its text to the edge while every card
+  // beside it stayed centred — the mismatch read as a layout bug, not a reveal.
+  it("centres the details face the same way as the front", () => {
+    renderCards([party()]);
+
+    expect(screen.getByRole("button").className).toContain("text-center");
+    expect(screen.getByRole("link").className).toContain("text-center");
+    expect(screen.getByRole("link").className).not.toContain("text-left");
+  });
+
   it("renders the decided verdict on the details face", () => {
     renderCards([party({ outcome: "acquitted" })]);
 
