@@ -74,6 +74,18 @@ describe("Event postponed bar", () => {
     ).toBeNull();
   });
 
+  it("paints itself amber, never navy — the home hero is navy and swallowed it", () => {
+    const { container } = renderAt("2026-08-30T12:00:00Z");
+    const aside = container.querySelector("aside");
+
+    expect(
+      aside?.className,
+      "the strip sits on the full-bleed navy hero under a transparent navbar; " +
+        "a navy fill is invisible exactly where most visitors land.",
+    ).toContain("bg-alert");
+    expect(aside?.className).not.toContain("bg-primary");
+  });
+
   it("leaves no trace of the event announcement in the shipped translations", () => {
     for (const [locale, bundle] of Object.entries(LOCALES)) {
       expect(

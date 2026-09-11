@@ -4,6 +4,7 @@ import {
   courtStatusBadgeValue,
   courtTypeValue,
   formatCourtName,
+  formatCourtType,
 } from "@/utils/court-case-format";
 
 describe("formatCourtName", () => {
@@ -17,6 +18,34 @@ describe("formatCourtName", () => {
   it("formats the named national courts", () => {
     expect(formatCourtName("special")).toBe("Special Court");
     expect(formatCourtName("supreme", "ne")).toBe("सर्वोच्च अदालत");
+  });
+});
+
+describe("formatCourtType", () => {
+  // The four values `court_type` holds (JawafdehiAPI `ALL_COURT_TYPES`), which
+  // is what the search sidebar's "Court level" group is built from.
+  it.each([
+    ["district", "District Court", "जिल्ला अदालत"],
+    ["high", "High Court", "उच्च अदालत"],
+    ["special", "Special Court", "विशेष अदालत"],
+    ["supreme", "Supreme Court", "सर्वोच्च अदालत"],
+  ] as const)("names the %s tier in both languages", (tier, en, ne) => {
+    expect(formatCourtType(tier)).toBe(en);
+    expect(formatCourtType(tier, "en")).toBe(en);
+    expect(formatCourtType(tier, "ne")).toBe(ne);
+  });
+
+  // A TIER, not a court: "district" must not pick up a place name, and must not
+  // be confused with the identifiers formatCourtName handles.
+  it("is distinct from naming one court", () => {
+    expect(formatCourtType("district")).toBe("District Court");
+    expect(formatCourtName("kathmandudc")).toBe("Kathmandu District Court");
+  });
+
+  it("returns an empty label for nothing at all", () => {
+    expect(formatCourtType(null)).toBe("");
+    expect(formatCourtType(undefined)).toBe("");
+    expect(formatCourtType("  ")).toBe("");
   });
 });
 

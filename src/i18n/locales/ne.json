@@ -2041,6 +2041,11 @@
       "entityType": "संस्था प्रकार",
       "caseType": "मुद्दा प्रकार",
       "tags": "ट्यागहरू",
+      "courtType": "अदालत तह",
+      "court": "अदालत",
+      "district": "जिल्ला",
+      "province": "प्रदेश",
+      "provinceNational": "राष्ट्रिय क्षेत्राधिकार",
       "bigo": "बिगो (रकम)",
       "bigoRange": {
         "any": "जुनसुकै रकम",

@@ -236,7 +236,7 @@ export function CaseDetailBanner({
 
               <h1
                 className={cn(
-                  "mb-6 max-w-4xl break-words text-balance font-bold tracking-tight text-foreground",
+                  "mb-6 w-full break-words font-bold tracking-tight text-foreground",
                   titleSizeClass,
                 )}
               >
@@ -266,7 +266,7 @@ export function CaseDetailBanner({
                   Authored content, rendered as-is (like the title/description),
                   not run through the dynamic-text map. */}
               {caseData.short_description?.trim() ? (
-                <p className="mb-5 max-w-3xl text-base font-medium leading-relaxed text-primary/80 md:text-lg">
+                <p className="mb-5 w-full break-words text-base font-medium leading-relaxed text-primary/80 md:text-lg">
                   {caseData.short_description}
                 </p>
               ) : null}
