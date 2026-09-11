@@ -124,8 +124,9 @@ describe("caseCardPropsFromCaseDetail", () => {
     thumbnail: null,
     thumbnail_url: null,
     banner_url: null,
-    case_start_date: "2020-01-01",
-    case_end_date: null,
+    status: "ongoing",
+    proceedings_started_on: "2020-01-01",
+    proceedings_decided_on: null,
     entities: [
       { nes_id: "nes:5", display_name: "CGGC", type: "accused" },
       { nes_id: "nes:6", display_name: "Gorkha", type: "location" },
@@ -150,22 +151,47 @@ describe("caseCardPropsFromCaseDetail", () => {
     );
   });
 
-  it("infers the lifecycle from the date fields", () => {
-    const started = caseCardPropsFromCaseDetail(detail, searchResult(), "en");
-    expect(started.status).toBe("ongoing");
+  it("reads the lifecycle the API derived, instead of guessing from dates", () => {
+    // A case runs many dockets across many courts; there is no single end date
+    // to read a lifecycle off, so the server derives it and we render it.
+    expect(caseCardPropsFromCaseDetail(detail, searchResult(), "en").status).toBe(
+      "ongoing",
+    );
 
-    const ended = caseCardPropsFromCaseDetail(
-      { ...detail, case_end_date: "2023-01-01" } as CaseDetail,
+    const concluded = caseCardPropsFromCaseDetail(
+      { ...detail, status: "concluded" } as CaseDetail,
       searchResult(),
       "en",
     );
-    expect(ended.status).toBe("resolved");
+    expect(concluded.status).toBe("resolved");
 
-    const neither = caseCardPropsFromCaseDetail(
-      { ...detail, case_start_date: null } as unknown as CaseDetail,
+    const investigating = caseCardPropsFromCaseDetail(
+      { ...detail, status: "under_investigation" } as CaseDetail,
       searchResult(),
       "en",
     );
-    expect(neither.status).toBe("under-investigation");
+    expect(investigating.status).toBe("under-investigation");
+  });
+
+  it("keeps a withdrawn or dormant case out of the resolved (green) badge", () => {
+    // Nobody decided these; calling them "resolved" would be a claim.
+    for (const status of ["withdrawn", "dormant"] as const) {
+      const props = caseCardPropsFromCaseDetail(
+        { ...detail, status } as CaseDetail,
+        searchResult(),
+        "en",
+      );
+      expect(props.status).toBe(status);
+    }
+  });
+
+  it("falls back to under-investigation when the payload predates `status`", () => {
+    const stale = { ...detail } as Record<string, unknown>;
+    delete stale.status;
+
+    expect(
+      caseCardPropsFromCaseDetail(stale as unknown as CaseDetail, searchResult(), "en")
+        .status,
+    ).toBe("under-investigation");
   });
 });

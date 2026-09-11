@@ -125,7 +125,33 @@ const DIR = arg("dir", "dist/client");
 // pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 672_500;
+// 2026-09: 672_500 → 675_000 for case stages (PR #388). Measured, not
+// estimated: main (12ac8b5) builds to 672,169 bytes and this branch to
+// 673,853, so stages cost 1,684 bytes gzip — 0.25%, and 1,353 over the old
+// line. Local and CI agreed exactly this time (both 658.1 KB), so the ~3.6 KB
+// runner skew noted in the entry above did not apply; the line is still judged
+// against the CI number.
+//
+// EVERY chunk except the shell is byte-identical, i18n included — so the new
+// Nepali stage labels cost nothing initial, and the whole 1,684 is the shell:
+// the stage utils, the card badge logic and the forum-qualified verdict label
+// ("विशेष अदालत: सफाइ"), which every card and entity page renders on first
+// paint.
+//
+// Not deferrable. The stage rows land in the shell through CaseDetail, and
+// `/case/:id` is pre-rendered, so per the split policy in src/routes.tsx it
+// MUST stay eager — renderToString does not await Suspense, and a lazy
+// boundary here would serve the one page whose job is to be indexed as a
+// fallback with no Helmet meta. `court-case-format` was checked and was
+// already eager on main, so nothing was newly dragged in.
+//
+// So this is taken deliberately, like the two entries above. 675_000 leaves
+// 1,147 bytes over the measured build, matching their headroom. The real
+// headroom is still elsewhere and still not this PR's to spend:
+// `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
+// `markdown` another 98 KB (100,481 bytes, measured here) — either would pay
+// for this many times over.
+const MAX_INITIAL_JS_GZIP = 675_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

@@ -5,8 +5,10 @@
 import type {
   CaseType,
   CaseState,
+  CaseStageName,
   DocumentSourceType,
 } from "@/types/jds";
+import { CASE_STAGE_NAMES, isCaseStageName } from "@/utils/case-stages";
 import type { PatchOp } from "@/services/admin-api";
 import { isValidEntityIri } from "@/lib/datalake-forms";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
@@ -87,13 +89,27 @@ export type RelationshipType = (typeof RELATIONSHIP_TYPES)[number];
 
 // Verdict outcome, orthogonal to the relationship role. CHARGED = undecided
 // default; the terminal values are set only from a primary court order.
+// The API's full outcome vocabulary. `REMANDED` (बदर गरी पुनः इन्साफ) is here
+// for the same reason an unrecognised stage type is kept rather than dropped:
+// the roster saves as a whole-list replace, so a value the editor cannot
+// represent is a value the next unrelated save silently deletes — rewriting a
+// named person's verdict.
 export const OUTCOME_TYPES = [
   "CHARGED",
   "CONVICTED",
   "ACQUITTED",
   "ABATED",
+  "REMANDED",
 ] as const;
 export type OutcomeType = (typeof OUTCOME_TYPES)[number];
+
+// Stage vocabulary for the editor dropdown. Re-exported from the renderer's
+// list so the form and the public page cannot hold two different vocabularies:
+// a stage the form can save but the page cannot name is invisible to readers.
+export const STAGE_TYPES: readonly CaseStageName[] = CASE_STAGE_NAMES;
+
+/** The API caps a stage's PUBLIC note at 500 characters. */
+export const STAGE_NOTES_MAX = 500;
 
 // --- Row shapes for the sub-resource editors (match §3 patch value shapes) ----
 
@@ -125,6 +141,24 @@ export interface EvidenceRow {
   // patch — buildEvidencePatch only emits material_iri + additional_details.
   title?: string;
 }
+
+// One pass of the case through one forum. AD dates only (BS is derived for
+// display); every field but `stage` is optional.
+export interface CaseStageRow {
+  stage: CaseStageName;
+  start: string; // AD
+  end: string; // AD
+  courtcase_iri: string;
+  body: string;
+  label: string; // `other` stages only
+  notes: string; // PUBLIC
+}
+
+export type StageRowError =
+  | "unknownStage"
+  | "invalidDate"
+  | "endBeforeStart"
+  | "notesTooLong";
 
 // --- Validators --------------------------------------------------------------
 
@@ -166,6 +200,42 @@ export function isValidTimelineRow(row: TimelineEventRow): boolean {
     isValidDateField(row.date) &&
     isValidDateField(row.date_bs)
   );
+}
+
+/**
+ * What is wrong with one stage row, or null.
+ *
+ * Mirrors the API's PER-RECORD rule: `end` must not precede `start` (equal is
+ * allowed — a stage can open and close on the same day). There is deliberately
+ * NO rule between rows: after a remand a new first instance legitimately
+ * starts after an appeal ended.
+ */
+export function stageRowError(row: CaseStageRow): StageRowError | null {
+  if (!isCaseStageName(row.stage)) return "unknownStage";
+  // Stricter than `isValidDateField`, deliberately: the API parses these with
+  // `date.fromisoformat`, which refuses an unpadded "2080-9-8". Accepting it
+  // here enables save and returns a 422 whose message this row cannot
+  // display -- and padding silently would also hide a BS date typed into an
+  // AD field, which is the likelier mistake.
+  if (!isPaddedIsoDate(row.start) || !isPaddedIsoDate(row.end)) return "invalidDate";
+  const start = row.start.trim();
+  const end = row.end.trim();
+  // Padded ISO YYYY-MM-DD compares correctly as a plain string.
+  if (start && end && end < start) return "endBeforeStart";
+  if (row.notes.trim().length > STAGE_NOTES_MAX) return "notesTooLong";
+  return null;
+}
+
+export function isValidStageRow(row: CaseStageRow): boolean {
+  return stageRowError(row) === null;
+}
+
+// An AD date exactly as `date.fromisoformat` accepts it, or empty. Distinct
+// from `isValidDateField`, which tolerates single-digit month/day for the
+// older editors that already emit it.
+function isPaddedIsoDate(value: string): boolean {
+  const v = value.trim();
+  return v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v);
 }
 
 // --- Patch builders (RFC-6902) -----------------------------------------------
@@ -225,4 +295,26 @@ export function buildEvidencePatch(rows: EvidenceRow[]): PatchOp {
 export function buildStringListPatch(path: string, items: string[]): PatchOp {
   const value = items.map((s) => s.trim()).filter((s) => s !== "");
   return replaceOp(path, value);
+}
+
+// Case stages -> replace /dates. Whole-object replace, like the other
+// sub-resources: the list IS the value, so an emptied list must still be sent
+// or a deleted stage would silently survive. Empty optional fields are omitted
+// rather than sent as "", and `label` travels only on an `other` stage.
+export function buildStagesPatch(rows: CaseStageRow[]): PatchOp {
+  const stages = rows.map((row) => {
+    const stage: Record<string, unknown> = { stage: row.stage };
+    const put = (key: string, value: string) => {
+      const trimmed = value.trim();
+      if (trimmed) stage[key] = trimmed;
+    };
+    put("start", row.start);
+    put("end", row.end);
+    put("courtcase_iri", row.courtcase_iri);
+    put("body", row.body);
+    if (row.stage === "other") put("label", row.label);
+    put("notes", row.notes);
+    return stage;
+  });
+  return replaceOp("/dates", { stages });
 }

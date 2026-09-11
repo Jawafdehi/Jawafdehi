@@ -119,9 +119,12 @@ const EmbedCaseCard = () => {
   const status = stateMap[caseData.state] || stateMap.PUBLISHED;
   const primaryEntity = getPrimaryEntity(caseData.entities);
   const locationEntity = getLocationEntity(caseData.entities);
+  // One card, one line: the DERIVED span of the whole proceedings, not the
+  // per-stage list the case page renders. Read off the derived fields — the
+  // case_start_date/case_end_date aliases they replace are deprecated.
   const dateRange = formatCaseDateRange(
-    caseData.case_start_date,
-    caseData.case_end_date,
+    caseData.proceedings_started_on,
+    caseData.proceedings_decided_on,
     t("cases.status.ongoing")
   );
   const description =

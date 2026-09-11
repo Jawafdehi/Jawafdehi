@@ -560,7 +560,14 @@
     "severity": "Severity",
     "filed": "Filed",
     "location": "Location",
-    "period": "Case Date",
+    "stages": {
+      "investigation": "Investigation",
+      "initial": "First instance",
+      "appeal": "Appeal",
+      "review": "Review",
+      "other": "Other"
+    },
+    "stagePending": "Decision pending",
     "byline": {
       "firstPublished": "First published {{date}}.",
       "editHistory_one": "{{count}} subsequent edit",
@@ -626,7 +633,9 @@
       "ongoing": "Ongoing",
       "concluded": "Concluded",
       "resolved": "Resolved",
-      "underInvestigation": "Under Investigation"
+      "underInvestigation": "Under Investigation",
+      "withdrawn": "Withdrawn",
+      "dormant": "Dormant"
     },
     "comments": {
       "title": "Public Discussion",
@@ -1972,10 +1981,7 @@
       "labelCourtCases": "Court-case references",
       "courtCasesHelp": "Link related court cases by their canonical @id IRI.",
       "courtCaseInvalid": "Use the canonical court-case @id IRI.",
-      "caseStart": "Case start",
-      "caseEnd": "Case end",
-      "datesInvalid": "Dates must be YYYY-MM-DD.",
-      "subResourcesHint": "Entities, timeline, and evidence can be added after the DRAFT is created.",
+      "subResourcesHint": "Stages, entities, timeline, and evidence can be added after the DRAFT is created.",
       "timelineRowsInvalid": "Every timeline event needs a title and a valid date (YYYY-MM-DD).",
       "entityRowsInvalid": "Every entity row needs a valid entity IRI and a relationship type.",
       "saveChanges": "Save changes",
@@ -2004,7 +2010,28 @@
       "editHistoryRemove": "Remove entry",
       "editHistoryDateLabel": "Edit history date, row {{number}}",
       "editHistoryRemarksLabel": "Edit history remarks, row {{number}}",
-      "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order"
+      "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order",
+      "stagesHeading": "Case stages",
+      "stagesHelp": "One row per pass of the case through a forum: the investigation, the first instance, each appeal, each review. Dates are AD (YYYY-MM-DD); Bikram Sambat is derived for display. A stage with no end date has not been decided.",
+      "stagesUnavailable": "Stage editing is unavailable: this case was loaded from an API response that carries no stage list, and saving from a blank editor would delete the stages the case already has. Reload once the API is up to date.",
+      "stageAdd": "Add stage",
+      "stageRemove": "Remove stage",
+      "stageRowLabel": "Stage {{number}}",
+      "stageType": "Stage",
+      "stageLabel": "Label",
+      "stageLabelHelp": "Names an \"Other\" stage on the public page — an arbitration tribunal, a tribunal of inquiry.",
+      "stageBody": "Body / forum",
+      "stageCourtCase": "Court case (@id IRI)",
+      "stageNotes": "Public note",
+      "stageNotesHelp": "PUBLIC — shown on the case page. Nepali first. Say why a stage has no decision yet (e.g. मिसिल जलेको, bench not constituted). Up to 500 characters.",
+      "stageEndBeforeStart": "The end date must not be before the start date.",
+      "stageRowsInvalid": "Every stage needs a type, and no stage may end before it starts.",
+      "stageStart": "Stage start",
+      "stageEnd": "Stage end",
+      "stageNone": "No stages recorded yet.",
+      "stageNotesTooLong": "A public note is limited to 500 characters.",
+      "stageUnknownType": "Pick a stage type from the list.",
+      "stageDateInvalid": "Dates must be YYYY-MM-DD."
     },
     "stateControl": {
       "state": "State",

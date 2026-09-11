@@ -2,7 +2,7 @@
 // One ranked, typed, bilingual result set across entities, materials, court
 // cases, and PUBLISHED Jawafdehi cases. Served by GET /api/search/.
 
-import type { CaseImage } from "./jds";
+import type { CaseImage, CaseStage, CaseTrack } from "./jds";
 
 // The four indexed result domains. "all" is a UI-only sentinel (sent as "no type
 // filter"); it is never a value the backend returns on a result.
@@ -90,10 +90,26 @@ export interface CaseSearchCard {
   short_description: string | null;
   key_allegations: string[];
   tags: string[];
+  /** DEPRECATED alias of `offence_type`. */
   case_type: string | null;
+  /** The renamed `case_type`. Optional: a doc only gains it on reindex. */
+  offence_type?: string | null;
+  /** Which prosecution route the case took. Optional for the same reason. */
+  case_track?: CaseTrack | null;
+  /** DELIBERATELY the OLD three-value vocabulary: the indexer keeps writing it
+   * so deployed card badges do not break. The six-value lifecycle lives on the
+   * case API's own `status`. */
   status: "ongoing" | "closed" | "others";
-  case_start_date: string | null;
-  case_end_date: string | null;
+  /** Every pass of the case through a forum, denormalized at reindex time.
+   * Optional, not just nullable: docs indexed before this field existed carry
+   * no key at all and stay that way until their next reindex. */
+  stages?: CaseStage[];
+  /** Derived AD span of the whole case. Optional for the same reason. */
+  proceedings_started_on?: string | null;
+  proceedings_decided_on?: string | null;
+  /** DEPRECATED single range, superseded by `stages`. Do not read. */
+  case_start_date?: string | null;
+  case_end_date?: string | null;
   bigo: number | null;
   /** Card ladder, denormalized into the index doc at reindex time.
    *

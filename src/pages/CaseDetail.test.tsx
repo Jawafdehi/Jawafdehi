@@ -57,8 +57,8 @@ const makeCase = (slug: string | null): CaseDetailType => ({
   case_type: "CORRUPTION",
   state: "PUBLISHED",
   title: "Test case",
-  case_start_date: null,
-  case_end_date: null,
+  dates: { stages: [] },
+  status: "ongoing",
   entities: [],
   tags: [],
   key_allegations: [],
@@ -148,5 +148,57 @@ describe("CaseDetail canonical slug redirect (BB-38)", () => {
     await waitFor(() => expect(getCaseById).toHaveBeenCalledWith("42"));
     await Promise.resolve();
     expect(navigateSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("CaseDetail stage dates (banner and sidebar in step)", () => {
+  const withStages = (slug: string): CaseDetailType => ({
+    ...makeCase(slug),
+    dates: {
+      stages: [
+        { stage: "initial", start: "2021-10-02", end: "2023-06-09" },
+        { stage: "appeal", start: "2023-07-11", notes: "मिसिल जलेको" },
+      ],
+    },
+  });
+
+  it("renders the same labelled stage rows in the sidebar as the banner does", async () => {
+    // The banner is stubbed out in this suite, so every row found here comes
+    // from the page's own metadata block — the two used to carry separate
+    // copies of the date range and could drift.
+    getCaseById.mockResolvedValue(withStages("stage-case"));
+
+    const { container } = renderAt("stage-case");
+
+    await waitFor(() =>
+      expect(
+        container.querySelectorAll('[data-testid="case-stage-row"]').length,
+      ).toBe(2),
+    );
+    const rows = container.querySelectorAll('[data-testid="case-stage-row"]');
+    expect(rows[0].getAttribute("data-stage")).toBe("initial");
+    expect(rows[1].getAttribute("data-stage")).toBe("appeal");
+    expect(rows[1].getAttribute("data-pending")).toBe("true");
+  });
+
+  it("drops the single 'Case date' label from the sidebar too", async () => {
+    getCaseById.mockResolvedValue(withStages("stage-case"));
+
+    const { container } = renderAt("stage-case");
+
+    await waitFor(() =>
+      expect(container.textContent).toContain("caseDetail.stages.initial"),
+    );
+    expect(container.textContent).not.toContain("caseDetail.period");
+  });
+
+  it("explains a pending stage in the sidebar with its public note", async () => {
+    getCaseById.mockResolvedValue(withStages("stage-case"));
+
+    const { container } = renderAt("stage-case");
+
+    await waitFor(() =>
+      expect(container.textContent).toContain("मिसिल जलेको"),
+    );
   });
 });

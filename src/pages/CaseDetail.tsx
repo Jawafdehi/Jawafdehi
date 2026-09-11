@@ -21,6 +21,8 @@ import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-deta
 import { MissingDetailsSection } from "@/components/case-detail/missing-details-section";
 import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseByline } from "@/components/case-detail/case-byline";
+import { CaseStageDates } from "@/components/case-detail/case-stage-dates";
+import { caseStages, caseVerdictForum } from "@/utils/case-stages";
 import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
@@ -35,7 +37,6 @@ import { getEntityById } from "@/services/api";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { stripMarkdown } from "@/utils/markdown";
 import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
 import { getSubjectEntities } from "@/utils/case-entities";
@@ -597,31 +598,14 @@ const CaseDetail = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center text-muted-foreground">
-                      <span className="text-sm">
-                        {t("caseDetail.period")}:{" "}
-                        {(() => {
-                          const dateRange = formatCaseDateRangeForLanguage(
-                            caseData.case_start_date,
-                            caseData.case_end_date,
-                            t("cases.status.ongoing"),
-                            currentLang
-                          );
-
-                          return (
-                            <>
-                              {dateRange.primary}
-                              {dateRange.secondary && (
-                                <>
-                                  <br />
-                                  ({dateRange.secondary})
-                                </>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </span>
-                    </div>
+                    {/* Same component as the banner, so the on-screen and
+                        printed metadata cannot drift apart. */}
+                    <CaseStageDates
+                      stages={caseStages(caseData.dates)}
+                      language={currentLang}
+                      variant="compact"
+                      className="text-muted-foreground"
+                    />
 
                     {caseData.bigo != null && caseData.bigo > 0 && (
                       <div className="flex items-center text-muted-foreground">
@@ -669,6 +653,7 @@ const CaseDetail = () => {
                         language={currentLang}
                         resolvedEntities={resolvedEntities}
                         title={t("caseDetail.partiesInvolved")}
+                        forum={caseVerdictForum(caseData.dates, currentLang)}
                         translateRelation={(relationType) =>
                           t(`caseDetail.relationTypes.${relationType}`, {
                             defaultValue: t("caseDetail.relationTypes.unknown"),

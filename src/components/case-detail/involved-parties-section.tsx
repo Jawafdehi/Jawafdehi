@@ -53,6 +53,9 @@ interface InvolvedPartiesSectionProps {
   resolvedEntities: Record<string, Entity>;
   title: string;
   translateRelation: (relationType: string) => string;
+  /** Localized court the verdicts are attributed to; null when there is no
+   * single first instance to name. */
+  forum?: string | null;
 }
 
 export function InvolvedPartiesSection({
@@ -62,6 +65,7 @@ export function InvolvedPartiesSection({
   resolvedEntities,
   title,
   translateRelation,
+  forum,
 }: Readonly<InvolvedPartiesSectionProps>) {
   return (
     <section id="parties-involved" className={cn("mb-12 scroll-mt-28 max-w-4xl", className)}>
@@ -106,6 +110,7 @@ export function InvolvedPartiesSection({
                   resolvedEntities={resolvedEntities}
                   language={language}
                   initialLimit={INITIAL_PARTY_LIMIT}
+                  forum={forum}
                 />
               </Suspense>
               <p className="hidden print:block">

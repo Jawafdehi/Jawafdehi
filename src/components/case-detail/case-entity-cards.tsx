@@ -22,13 +22,25 @@ import { entityKindFor, getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
-import { outcomeBadgeClass, outcomeLabel, outcomeRank, shouldShowOutcome } from "@/utils/case-outcome";
+import {
+  outcomeBadgeClass,
+  outcomeRank,
+  outcomeWithForumLabel,
+  shouldShowOutcome,
+} from "@/utils/case-outcome";
 
 interface CaseEntityCardsProps {
   className?: string;
   entities: JawafEntity[];
   resolvedEntities: Record<string, Entity>;
   language: string;
+  /**
+   * The court that reached the verdicts on these cards, already localized —
+   * the case's single first instance. Null when the case has several (or
+   * none), in which case the verdict is shown without a forum rather than
+   * pinned on a guessed court.
+   */
+  forum?: string | null;
   /**
    * Cards shown before the "view more" toggle. Required, not defaulted: the
    * Suspense fallback in involved-parties-section reserves exactly this many
@@ -120,9 +132,10 @@ interface EntityCardProps {
   jawafEntity: JawafEntity;
   entity: Entity | null;
   language: string;
+  forum?: string | null;
 }
 
-function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>) {
+function EntityCard({ jawafEntity, entity, language, forum }: Readonly<EntityCardProps>) {
   // Three independent reasons a card shows its details, all in state so the
   // ARIA and the transform read from one value (`revealed`):
   //   flipped     — an explicit toggle: Enter/Space on the front button, or a tap
@@ -197,7 +210,7 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     <EntityIdentity kind={kind} src={imageUrl} layout="tile" name={names.primary} alternate={names.alternate}>
       {showOutcome && (
         <Badge variant="outline" className={cn("mt-3 text-sm", outcomeBadgeClass(jawafEntity.outcome))}>
-          {outcomeLabel(jawafEntity.outcome, language)}
+          {outcomeWithForumLabel(jawafEntity.outcome, forum, language)}
         </Badge>
       )}
     </EntityIdentity>
@@ -313,6 +326,7 @@ export function CaseEntityCards({
   resolvedEntities,
   language,
   initialLimit,
+  forum,
 }: Readonly<CaseEntityCardsProps>) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -335,7 +349,12 @@ export function CaseEntityCards({
           const key = jawafEntity.nes_id ?? `${jawafEntity.display_name ?? "entity"}-${index}`;
           return (
             <Reveal key={key} delayMs={(index % 3) * 60}>
-              <EntityCard jawafEntity={jawafEntity} entity={entity} language={language} />
+              <EntityCard
+                jawafEntity={jawafEntity}
+                entity={entity}
+                language={language}
+                forum={forum}
+              />
             </Reveal>
           );
         })}
