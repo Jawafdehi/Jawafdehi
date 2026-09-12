@@ -40,7 +40,7 @@ export type AnalyticsEvent =
   | {
       name: 'donate_click';
       params: {
-        method: 'nepal_bank' | 'paypal' | 'nav';
+        method: 'nepal_bank' | 'zeffy' | 'paypal' | 'nav';
         action:
           | 'copy_account'
           | 'outbound'

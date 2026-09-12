@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink, HeartHandshake } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/utils/analytics";
 
-// US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.).
+// US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
+// same entity; they differ only in what the donor sees at checkout.
+// PLACEHOLDER — replace with Jawafdehi's own Zeffy form URL before this merges.
+// The real one exists only inside the org's Zeffy account: it has never been in
+// this repo, on any branch, or in any PR body.
+const ZEFFY_DONATE_URL = "https://www.zeffy.com/";
 const PAYPAL_DONATE_URL =
   "https://www.paypal.com/us/fundraiser/charity/6001485";
 // Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
@@ -277,14 +282,78 @@ function NepalPanel() {
   );
 }
 
-// Outside Nepal — PayPal Giving Fund (the US 501(c)(3)) is the ONLY rail, and
-// deliberately so. Nepal's foreign-exchange rules do not permit donations from
-// abroad to be paid into the Nepal bank account: Jawafdehi Initiative, Inc.
-// (USA) holds the project approval that lets it fund the work in Nepal, so
-// every gift from outside the country is routed through it. An earlier revision
-// of this page offered a remittance-service path (Wise/Remitly/Western Union)
-// straight into the Nepal account — that was withdrawn as non-compliant, not
-// merely redundant. Do not reinstate it without a written legal sign-off.
+// One rail on the abroad panel: brand line, one line of detail, one outbound
+// link. Shared by both rails so they cannot drift apart — in particular the CTA
+// classes, which are load-bearing:
+//
+// `whitespace-normal` and `w-full` until `sm`, because each label is a sentence
+// in Nepali ("PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्").
+// `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then sizes
+// the button to that unbreakable line — 350px of min-content, which floors the
+// grid track and overflows a 320px phone. See
+// tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a wrapped
+// label no longer fits `size="sm"`'s 36px.
+function AbroadRail({
+  id,
+  href,
+  icon,
+  brandClassName,
+  variant,
+}: {
+  id: "zeffy" | "paypal";
+  href: string;
+  icon: ReactNode;
+  brandClassName: string;
+  variant: "primary" | "outline";
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="inline-flex items-center gap-1.5">
+        {icon}
+        <span className={`text-base font-bold ${brandClassName}`}>
+          {t(`donate.ways.us.${id}.title`)}
+        </span>
+      </span>
+      <p className="text-sm leading-5 text-card-foreground/70">
+        {t(`donate.ways.us.${id}.detail`)}
+      </p>
+      <Button
+        asChild
+        variant={variant}
+        size="sm"
+        className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
+      >
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() =>
+            trackEvent("donate_click", {
+              method: id,
+              action: "outbound",
+              link_url: href,
+            })
+          }
+        >
+          <span>{t(`donate.ways.us.${id}.cta`)}</span>
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </a>
+      </Button>
+    </div>
+  );
+}
+
+// Outside Nepal — two rails into the US 501(c)(3), Zeffy first and PayPal
+// Giving Fund second. Nothing else belongs here. Nepal's foreign-exchange rules
+// do not permit donations from abroad to be paid into the Nepal bank account:
+// Jawafdehi Initiative, Inc. (USA) holds the project approval that lets it fund
+// the work in Nepal, so every gift from outside the country is routed through
+// it. An earlier revision of this page offered a remittance-service path
+// (Wise/Remitly/Western Union) straight into the Nepal account — that was
+// withdrawn as non-compliant, not merely redundant. Do not reinstate it without
+// a written legal sign-off.
 function AbroadPanel() {
   const { t } = useTranslation();
 
@@ -297,48 +366,34 @@ function AbroadPanel() {
         {t("donate.ways.us.proceedsNote")}
       </p>
 
-      <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-5">
-        <span className="inline-flex items-center gap-1.5">
-          <SiPaypal
-            className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
-            aria-hidden="true"
-          />
-          <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
-            {t("donate.ways.us.paypal.title")}
-          </span>
-        </span>
-        <p className="text-sm leading-5 text-card-foreground/70">
-          {t("donate.ways.us.paypal.detail")}
-        </p>
-        {/* `whitespace-normal` and `w-full` until `sm`, because this label is a
-            sentence in Nepali: "PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्".
-            `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then
-            sizes the button to that unbreakable line — 350px of min-content, which
-            floors the grid track and overflows a 320px phone. See
-            tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a
-            wrapped label no longer fits `size="sm"`'s 36px. */}
-        <Button
-          asChild
+      {/* Two rails, one visual weight each: Zeffy carries the filled button and
+          PayPal the outlined one, so the order reads as a recommendation
+          without a second line of copy explaining it. */}
+      <div className="mt-5 flex flex-col gap-5 border-t border-border/60 pt-5">
+        <AbroadRail
+          id="zeffy"
+          href={ZEFFY_DONATE_URL}
+          icon={
+            <HeartHandshake
+              className="h-5 w-5 text-primary"
+              aria-hidden="true"
+            />
+          }
+          brandClassName="text-primary"
           variant="primary"
-          size="sm"
-          className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
-        >
-          <a
-            href={PAYPAL_DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackEvent("donate_click", {
-                method: "paypal",
-                action: "outbound",
-                link_url: PAYPAL_DONATE_URL,
-              })
-            }
-          >
-            <span>{t("donate.ways.us.paypal.cta")}</span>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </a>
-        </Button>
+        />
+        <AbroadRail
+          id="paypal"
+          href={PAYPAL_DONATE_URL}
+          icon={
+            <SiPaypal
+              className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
+              aria-hidden="true"
+            />
+          }
+          brandClassName="text-[#003087] dark:text-[#6cb2ff]"
+          variant="outline"
+        />
       </div>
 
       <div className="mt-5 border-t border-border/60 pt-4">
@@ -366,9 +421,9 @@ function guessRegion(): Region {
 
 /**
  * The payment card: one card, two regions. Giving from inside Nepal (QR
- * networks + bank transfer) is the default tab; giving from abroad (PayPal
- * Giving Fund → the US 501(c)(3)) is the other. Both panels stay mounted so
- * switching never re-fetches the QR images and never loses copy state.
+ * networks + bank transfer) is the default tab; giving from abroad (Zeffy or
+ * PayPal Giving Fund → the US 501(c)(3)) is the other. Both panels stay mounted
+ * so switching never re-fetches the QR images and never loses copy state.
  *
  * The tab auto-selects from the visitor's timezone after hydration, but only
  * until they touch it — a manual toggle always wins.

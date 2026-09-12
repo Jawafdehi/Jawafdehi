@@ -6,18 +6,25 @@ import { render } from '@testing-library/react';
 
 import { PayCard } from '@/components/donate/pay-card';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback?: unknown) =>
-      // Return the Nepali string for the one key this test is about, so the
-      // assertion is about a real localised label and not a short key name.
-      key === 'donate.ways.us.paypal.cta'
-        ? 'PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्'
-        : typeof fallback === 'string'
-          ? fallback
-          : key,
-  }),
-}));
+vi.mock('react-i18next', () => {
+  // The two Nepali CTA labels this test is about, so each assertion is about a
+  // real localised label and not a short key name. Declared inside the factory:
+  // `vi.mock` is hoisted above any module-level const, which would then be read
+  // before initialisation.
+  const NEPALI_CTA_LABELS: Record<string, string> = {
+    'donate.ways.us.zeffy.cta': 'Zeffy मार्फत आर्थिक सहयोग गर्नुहोस्',
+    'donate.ways.us.paypal.cta':
+      'PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्',
+  };
+
+  return {
+    useTranslation: () => ({
+      t: (key: string, fallback?: unknown) =>
+        NEPALI_CTA_LABELS[key] ??
+        (typeof fallback === 'string' ? fallback : key),
+    }),
+  };
+});
 
 // Two routes rendered wider than the phone they were on, and Chromium hid both by
 // scaling the page down and reporting the inflated innerWidth — so
@@ -45,14 +52,21 @@ function tsxFiles(dir: string): string[] {
   });
 }
 
-describe('the /donate CTA can wrap its Nepali label', () => {
+// Both rails on the "from abroad" panel, in the order they are shown. Each
+// carries a full Nepali sentence as its label, so each can floor the grid track.
+describe.each([
+  ['Zeffy', 'zeffy'],
+  ['PayPal', 'paypal'],
+])('the /donate %s CTA can wrap its Nepali label', (name, hrefFragment) => {
   it('renders whitespace-normal, and tailwind-merge drops the base nowrap', () => {
     const { container } = render(<PayCard />);
-    // The PayPal CTA lives on the "from abroad" panel; it stays mounted behind
-    // `hidden` while the Nepal tab is active, so it is queryable either way.
-    const cta = container.querySelector<HTMLAnchorElement>('a[href*="paypal"]');
+    // These CTAs live on the "from abroad" panel; it stays mounted behind
+    // `hidden` while the Nepal tab is active, so they are queryable either way.
+    const cta = container.querySelector<HTMLAnchorElement>(
+      `a[href*="${hrefFragment}"]`,
+    );
 
-    expect(cta, 'no PayPal CTA rendered').not.toBeNull();
+    expect(cta, `no ${name} CTA rendered`).not.toBeNull();
     const classes = (cta!.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
 
     // `whitespace-nowrap` lives in the buttonVariants BASE string, so this is the
