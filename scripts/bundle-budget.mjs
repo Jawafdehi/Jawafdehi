@@ -126,35 +126,38 @@ const DIR = arg("dir", "dist/client");
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
 //
-// 2026-09: 672_500 → 674_400 for schema.org structured data on case and entity
-// pages (src/utils/structured-data.ts). Measured locally: main 672,169 bytes,
-// this branch 673,333 — the feature costs 1,164 bytes gzip. 674_400 leaves
-// ~1,067 bytes over the measured build, the same headroom as the entries above.
+// 2026-09: 672_500 → 678_400 for the donate v2 page (feature/donate-v2).
+// /donate is pre-rendered, so its hero, pay card (region tabs, QR switch, bank
+// details, remittance expander) and journey board must stay eager (see
+// tests/ssr/prerendered-routes-eager.test.ts). The three.js globe is NOT in this
+// count — it loads through GlobeGate (client-only, idle-time, WebGL-gated) as a
+// deferred chunk. Measured: this branch merged with main builds to 673,756 bytes
+// locally; the CI runner's zlib packs ~3.6 KB larger (see the entry above), so
+// CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
+// matching the headroom the entries above leave.
 //
-// Why it is eager, and so why it is paid for here: CaseDetail and EntityProfile
-// are static imports in routes.tsx, so anything they touch is initial. The module
-// could be dropped from the pages and left only in worker.ts — which is where a
-// crawler actually reads it, since case pages are not pre-rendered — and that
-// would return every byte. It is not, because then the graph an agent reads and
-// the graph the app renders would be two separate implementations of the same
-// schema, which is exactly the drift the shared buildHeadTags list was introduced
-// to end (og:locale said ne_NP in the pages and en_US at the edge for 20 pages).
-// One builder, two renderers, 1.2 KB.
+// 2026-09: 678_400 → 681_300 for schema.org structured data on case and entity
+// pages (feature/agent-readiness), measured on the tree MERGED with donate v2 above
+// rather than on either branch alone — the two features stack, because both are eager
+// for the same reason: Donate, CaseDetail and EntityProfile are all static imports in
+// routes.tsx, so anything they touch is initial.
 //
-// The headroom to reclaim it from is unchanged and still not this branch's to
-// spend: `@sentry-internal/replay` is ~75 KB gzip of the initial payload.
+// Measured on the merged build: 676,679 bytes gzip locally. Per the donate entry above,
+// this runner's zlib packs ~3,594 bytes smaller than CI's, so CI is estimated at
+// ~680,273 and 681_300 leaves ~1,027 bytes over it — the same headroom convention this
+// file has kept throughout. Worth stating plainly because the first attempt at this
+// entry used 679_600, which passed locally and would have FAILED on CI by 673 bytes.
+// Local-only measurement is not sufficient here; add the CI delta before setting a line.
 //
-// 2026-09: 674_400 → 675_200 in the same change that collapsed the case and entity
-// head mappings into one shared src/utils/record-head.ts. Measured 674,164 bytes,
-// so 674_400 still passed — with only ~230 bytes of headroom, below the ~1,000 this
-// file has kept since the entries above, which would have failed the next trivial
-// commit for no reason. The 831 bytes over the previous line are what deduplicating
-// the two mappings costs eagerly: the module is reachable from CaseDetail and
-// EntityProfile, both static imports in routes.tsx. It replaced two hand-written
-// mappings that had already drifted four ways (description fallback, slug encoding,
-// an alternate href pointing at a path nothing serves, allegation truncation), so
-// the bytes buy an invariant rather than a feature.
-const MAX_INITIAL_JS_GZIP = 675_200;
+// The structured-data cost itself (src/utils/structured-data.ts + src/utils/record-head.ts)
+// is ~1,164 bytes gzip. It is eager because a crawler reads the graph the Worker injects
+// (case pages are not pre-rendered) while the app renders the same graph from ONE shared
+// builder rather than a second, drifting copy — the invariant the shared buildHeadTags
+// list exists to hold, after og:locale said ne_NP in the pages and en_US at the edge.
+//
+// Headroom to reclaim from is unchanged and still not this branch's to spend:
+// `@sentry-internal/replay` is ~75 KB gzip of the initial payload.
+const MAX_INITIAL_JS_GZIP = 681_300;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
