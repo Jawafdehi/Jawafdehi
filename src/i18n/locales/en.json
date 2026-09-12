@@ -2474,5 +2474,11 @@
       "website": "their website",
       "twitter": "X"
     }
+  },
+  "launchEvent": {
+    "barLabel": "Upcoming public launch",
+    "barSentence": "Join the public launch of Nepal's corruption database on Zoom — 23 Sept 6 PM Pacific · 24 Sept 6:45 AM Nepal.",
+    "barCta": "Learn more.",
+    "barDismiss": "Dismiss launch announcement"
   }
 }
