@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,6 +15,87 @@ import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { formatDateForLanguage, formatDate, convertToBS } from "@/utils/date";
 import { formatBSString } from "@/utils/bs-calendar";
 import { formatCourtName, courtStatusBadgeValue } from "@/utils/court-case-format";
+
+const INITIAL_VISIBLE_PARTIES = 3;
+
+type PartyRosterProps = {
+  names: string[];
+  emptyLabel: string;
+};
+
+function PartyRoster({ names, emptyLabel }: Readonly<PartyRosterProps>) {
+  const { t } = useTranslation();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const listId = useId();
+  const hasMore = names.length > INITIAL_VISIBLE_PARTIES;
+  const visibleNames = isExpanded ? names : names.slice(0, INITIAL_VISIBLE_PARTIES);
+  if (names.length === 0) {
+    return <span className="text-base font-normal text-muted-foreground">{emptyLabel}</span>;
+  }
+
+  return (
+    <div className="min-w-0">
+      <ul id={listId} className="text-base font-medium leading-relaxed text-foreground sm:text-lg">
+        {visibleNames.map((name, index) => (
+          <li key={`${name}-${index}`} className="inline break-words">
+            {index > 0 ? ", " : ""}
+            <span>{name}</span>
+          </li>
+        ))}
+      </ul>
+
+      {hasMore ? (
+        <button
+          type="button"
+          aria-controls={listId}
+          aria-expanded={isExpanded}
+          onClick={() => setIsExpanded((expanded) => !expanded)}
+          className="mt-2 inline-flex min-h-11 items-center rounded-md px-1 text-sm font-medium text-primary underline decoration-primary/35 underline-offset-4 transition-colors hover:text-primary/75 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {isExpanded
+            ? t("courtCaseProfile.showLess", "Show less")
+            : t("courtCaseProfile.showMore", {
+                count: names.length - INITIAL_VISIBLE_PARTIES,
+                defaultValue: `Show ${names.length - INITIAL_VISIBLE_PARTIES} more`,
+              })}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+type PartyPresentationProps = {
+  plaintiffs: string[];
+  defendants: string[];
+};
+
+function PartyPresentation({ plaintiffs, defendants }: Readonly<PartyPresentationProps>) {
+  const { t } = useTranslation();
+  const plaintiff = (
+    <div className="min-w-0">
+      <div className="mb-2 text-base font-medium text-muted-foreground sm:text-lg">
+        {t("courtCaseProfile.labels.plaintiff", "Plaintiff")}
+      </div>
+      <PartyRoster
+        names={plaintiffs}
+        emptyLabel={t("courtCaseProfile.noParties", "No party recorded")}
+      />
+    </div>
+  );
+  const defendant = (
+    <div className="min-w-0">
+      <div className="mb-2 text-base font-medium text-muted-foreground sm:text-lg">
+        {t("courtCaseProfile.labels.defendant", "Defendant")}
+      </div>
+      <PartyRoster
+        names={defendants}
+        emptyLabel={t("courtCaseProfile.noParties", "No party recorded")}
+      />
+    </div>
+  );
+
+  return <div className="space-y-7">{plaintiff}{defendant}</div>;
+}
 
 // ── Parties Helper ───────────────────────────────────────────────────────
 
@@ -44,15 +126,18 @@ function getParties(courtCase?: CourtCase) {
 
 // ── Activity Badge Helper ────────────────────────────────────────────────
 
-function getActivityBadgeText(hearing: CourtCaseHearing): string {
+function getActivityBadgeText(
+  hearing: CourtCaseHearing,
+  translate: (key: string, defaultValue: string) => string,
+): string {
   const dec = (hearing.decision_type || "").toLowerCase();
   const status = (hearing.case_status || "").toLowerCase();
 
   if (dec.includes("अन्तिम") || dec.includes("फैसला") || status.includes("फैसला")) {
-    return "FINAL ORDER";
+    return translate("courtCaseProfile.activity.finalOrder", "Final order");
   }
   if (dec.includes("धरौटी") || dec.includes("थुनछेक")) {
-    return "BAIL ORDER";
+    return translate("courtCaseProfile.activity.bailOrder", "Bail order");
   }
   if (
     dec.includes("स्थगित") ||
@@ -62,15 +147,15 @@ function getActivityBadgeText(hearing: CourtCaseHearing): string {
     dec.includes("हेर्न नमिल्ने") ||
     status.includes("हेर्न नमिल्ने")
   ) {
-    return "ADJOURNED";
+    return translate("courtCaseProfile.activity.adjourned", "Adjourned");
   }
   if (dec.includes("आदेश") || status.includes("आदेश")) {
-    return "ORDER";
+    return translate("courtCaseProfile.activity.order", "Order");
   }
   if (hearing.case_status?.trim()) {
     return hearing.case_status.toUpperCase();
   }
-  return "ORDER";
+  return translate("courtCaseProfile.activity.order", "Order");
 }
 
 // ── Component Props ──────────────────────────────────────────────────────
@@ -89,14 +174,14 @@ export function CourtCaseProfileView({
   isLoading,
 }: Readonly<CourtCaseProfileViewProps>) {
   // Ahead of the isLoading early return: a hook must not sit behind a branch.
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   if (isLoading) {
     return <CourtCaseProfileSkeleton />;
   }
 
   const language = typeof i18n.language === "string" ? i18n.language : "en";
-  const displayTitle = courtCase?.case_type || caseNumber || "Court case";
+  const displayTitle = courtCase?.case_type || caseNumber || t("courtCaseProfile.fallbackTitle", "Court case");
   // Language is required, not optional: `formatCourtName` defaults to "en", so
   // omitting it rendered "Kathmandu District Court" on the Nepali site instead
   // of "Kathmandu जिल्ला अदालत".
@@ -105,17 +190,14 @@ export function CourtCaseProfileView({
     language,
   );
 
-  // `formatDateForLanguage`, not `formatDateWithBS`: the latter always emits
-  // "AD | BS" in that order, which puts the Gregorian date first on a
-  // Nepali-first page. This returns the active language's calendar as
-  // `primary` with the other as `secondary`, matching how case-byline renders
-  // the same pair.
+  // Court records are Nepal-first regardless of the interface language. Passing
+  // "ne" makes the BS date primary and leaves AD as a parenthesised reference.
   const registered = courtCase?.registration_date_ad
     ? formatDateForLanguage(
         courtCase.registration_date_ad,
         "PP",
         courtCase.registration_date_bs,
-        language,
+        "ne",
       )
     : null;
 
@@ -124,7 +206,7 @@ export function CourtCaseProfileView({
         courtCase.verdict_date_ad,
         "PP",
         courtCase.verdict_date_bs,
-        language,
+        "ne",
       )
     : null;
 
@@ -145,142 +227,99 @@ export function CourtCaseProfileView({
 
   return (
     <article className="space-y-10 text-foreground">
-      {/* ── Top Header: Title + Status Pill ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <h1 className="font-page-title text-pretty">
-          {displayTitle}
-        </h1>
+      <section id="case-summary" aria-labelledby="case-summary-heading" className="scroll-mt-28">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <h1 id="case-summary-heading" className="font-page-title max-w-4xl text-pretty">
+            {displayTitle}
+          </h1>
 
-        {courtCase?.case_status ? (
-          <div className="shrink-0 pt-1">
-            <CaseStatusBadge status={courtStatusBadgeValue(courtCase.case_status)}>
-              {courtCase.case_status}
-            </CaseStatusBadge>
-          </div>
-        ) : null}
-      </div>
-
-      {/* ── Metadata Key-Value List ── */}
-      <div className="space-y-4 text-base">
-        {/* Case number */}
-        <div className="flex items-start gap-4">
-          <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-            <IdCard className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
-            <span>Case number</span>
-          </div>
-          <div className="text-base sm:text-lg font-semibold text-foreground min-w-0 break-words" translate="no">
-            {caseNumber}
-          </div>
+          {courtCase?.case_status ? (
+            <div className="shrink-0 pt-1">
+              <CaseStatusBadge status={courtStatusBadgeValue(courtCase.case_status)}>
+                {courtCase.case_status}
+              </CaseStatusBadge>
+            </div>
+          ) : null}
         </div>
 
-        {/* Court */}
-        <div className="flex items-start gap-4">
-          <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-            <Landmark className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
-            <span>Court</span>
-          </div>
-          <div className="text-base sm:text-lg font-medium text-foreground min-w-0 break-words">
-            {courtName}
-          </div>
-        </div>
-
-        {/* Registered */}
-        {registered && (
-          <div className="flex items-start gap-4">
-            <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-              <CalendarCheck className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
-              <span>Registered</span>
-            </div>
-            <div className="text-base sm:text-lg font-medium text-foreground min-w-0 break-words">
-              {registered.primary}
-              {registered.secondary ? ` (${registered.secondary})` : ""}
-            </div>
-          </div>
-        )}
-
-        {/* Decision date (if available) */}
-        {decision && (
-          <div className="flex items-start gap-4">
-            <div className="flex w-40 sm:w-48 items-center gap-2.5 text-muted-foreground shrink-0 pt-0.5 text-sm sm:text-base">
-              <CalendarDays className="h-[1.125rem] w-[1.125rem] text-muted-foreground/80 shrink-0" aria-hidden="true" />
-              <span>Decision date</span>
-            </div>
-            <div className="text-base sm:text-lg font-medium text-foreground min-w-0 break-words">
-              {decision.primary}
-              {decision.secondary ? ` (${decision.secondary})` : ""}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── PARTIES Section ── */}
-      <section aria-labelledby="parties-heading" className="pt-3">
-        <h2
-          id="parties-heading"
-          className="font-eyebrow font-eyebrow-display text-muted-foreground uppercase mb-4"
-        >
-          Parties
+        <h2 className="mt-10 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          {t("courtCaseProfile.summary", "Case summary")}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-6">
-          {/* Plaintiff */}
-          <div>
-            <div className="text-xs sm:text-sm font-medium text-muted-foreground mb-1.5">
-              Plaintiff
+        <div className="mt-7 space-y-4 text-base">
+          <div className="flex items-start gap-4">
+            <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+              <IdCard className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
+              <span>{t("courtCaseProfile.labels.caseNumber", "Case number")}</span>
             </div>
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground leading-snug break-words">
-              {plaintiffs.length > 0 ? (
-                plaintiffs.map((name, i) => (
-                  <div key={i} className={i > 0 ? "mt-1.5 text-base sm:text-lg font-medium" : ""}>
-                    {name}
-                  </div>
-                ))
-              ) : (
-                <span className="text-muted-foreground font-normal text-base">—</span>
-              )}
+            <div className="min-w-0 break-words text-base font-semibold text-foreground sm:text-lg" translate="no">
+              {caseNumber}
             </div>
           </div>
 
-          {/* VS Divider */}
-          <div className="flex justify-center my-1 md:my-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/80 text-xs font-semibold text-muted-foreground ring-1 ring-border/60">
-              VS
+          <div className="flex items-start gap-4">
+            <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+              <Landmark className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
+              <span>{t("courtCaseProfile.labels.court", "Court")}</span>
+            </div>
+            <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+              {courtName}
             </div>
           </div>
 
-          {/* Defendant */}
-          <div>
-            <div className="text-xs sm:text-sm font-medium text-muted-foreground mb-1.5">
-              Defendant
+          {registered ? (
+            <div className="flex items-start gap-4">
+              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+                <CalendarCheck className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
+                <span>{t("courtCaseProfile.labels.registered", "Registered")}</span>
+              </div>
+              <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+                {registered.primary}
+                {registered.secondary ? ` (${registered.secondary})` : ""}
+              </div>
             </div>
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground leading-snug break-words">
-              {defendants.length > 0 ? (
-                defendants.map((name, i) => (
-                  <div key={i} className={i > 0 ? "mt-1.5 text-base sm:text-lg font-medium" : ""}>
-                    {name}
-                  </div>
-                ))
-              ) : (
-                <span className="text-muted-foreground font-normal text-base">—</span>
-              )}
+          ) : null}
+
+          {decision ? (
+            <div className="flex items-start gap-4">
+              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+                <CalendarDays className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
+                <span>{t("courtCaseProfile.labels.decisionDate", "Decision date")}</span>
+              </div>
+              <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+                {decision.primary}
+                {decision.secondary ? ` (${decision.secondary})` : ""}
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </section>
 
-      {/* ── CASE ACTIVITY Section ── */}
-      <section aria-labelledby="activity-heading" className="pt-3">
+      <section id="parties" aria-labelledby="parties-heading" className="scroll-mt-28">
+        <h2
+          id="parties-heading"
+          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+        >
+          {t("courtCaseProfile.parties", "Parties")}
+        </h2>
+
+        <div className="mt-7">
+          <PartyPresentation plaintiffs={plaintiffs} defendants={defendants} />
+        </div>
+      </section>
+
+      <section id="activity" aria-labelledby="activity-heading" className="scroll-mt-28">
         <h2
           id="activity-heading"
-          className="font-eyebrow font-eyebrow-display text-muted-foreground uppercase mb-6"
+          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
         >
-          Case Activity
+          {t("courtCaseProfile.activity.heading", "Case activity")}
         </h2>
 
         {hearings.length > 0 ? (
-          <div className="relative pl-1">
+          <div className="relative mt-7 pl-1">
             {hearings.map((hearing, idx) => {
-              const badgeText = getActivityBadgeText(hearing);
+              const badgeText = getActivityBadgeText(hearing, t);
               const dateAd = hearing.hearing_date_ad
                 ? formatDate(hearing.hearing_date_ad, "PP")
                 : "—";
@@ -289,6 +328,8 @@ export function CourtCaseProfileView({
                 (hearing.hearing_date_ad
                   ? convertToBS(hearing.hearing_date_ad)?.formatted
                   : null);
+              const primaryDate = dateBs || dateAd;
+              const secondaryDate = dateBs ? dateAd : null;
               const isLast = idx === hearings.length - 1;
 
               return (
@@ -311,11 +352,11 @@ export function CourtCaseProfileView({
                     {/* Date Block */}
                     <div className="w-40 shrink-0">
                       <div className="text-base sm:text-lg font-semibold text-foreground">
-                        {dateAd}
+                        {primaryDate}
                       </div>
-                      {dateBs && (
+                      {secondaryDate && (
                         <div className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                          {dateBs}
+                          {secondaryDate}
                         </div>
                       )}
                     </div>
@@ -334,7 +375,7 @@ export function CourtCaseProfileView({
                       {hearing.judge_names && (
                         <div>
                           <div className="text-xs sm:text-sm font-medium text-muted-foreground">
-                            Judge
+                            {t("courtCaseProfile.activity.judge", "Judge")}
                           </div>
                           <div className="text-base sm:text-lg font-medium text-foreground mt-0.5 whitespace-pre-line leading-relaxed">
                             {hearing.judge_names}
@@ -345,7 +386,7 @@ export function CourtCaseProfileView({
                       {hearing.decision_type && (
                         <div>
                           <div className="text-xs sm:text-sm font-medium text-muted-foreground">
-                            Order
+                            {t("courtCaseProfile.activity.order", "Order")}
                           </div>
                           <div className="text-base sm:text-lg font-medium text-foreground mt-0.5 leading-relaxed">
                             {hearing.decision_type}
@@ -356,7 +397,7 @@ export function CourtCaseProfileView({
                       {hearing.remarks && (
                         <div>
                           <div className="text-xs sm:text-sm font-medium text-muted-foreground">
-                            Remarks
+                            {t("courtCaseProfile.activity.remarks", "Remarks")}
                           </div>
                           <div className="text-sm sm:text-base text-muted-foreground mt-0.5 leading-relaxed">
                             {hearing.remarks}
@@ -371,27 +412,26 @@ export function CourtCaseProfileView({
           </div>
         ) : (
           <p className="text-sm sm:text-base text-muted-foreground">
-            No hearings or activity recorded yet for this court case.
+            {t("courtCaseProfile.activity.empty", "No hearings or activity recorded yet for this court case.")}
           </p>
         )}
       </section>
 
-      {/* ── SOURCE Section ── */}
-      <section aria-labelledby="source-heading" className="pt-3">
+      <section id="source" aria-labelledby="source-heading" className="scroll-mt-28">
         <h2
           id="source-heading"
-          className="font-eyebrow font-eyebrow-display text-muted-foreground uppercase mb-3"
+          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
         >
-          Source
+          {t("courtCaseProfile.source.heading", "Source")}
         </h2>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+        <div className="flex flex-col gap-3 pt-7 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base sm:text-lg font-semibold text-foreground">
-              Jawafdehi Governance Archive
+              {t("courtCaseProfile.source.title", "Jawafdehi Governance Archive")}
             </h3>
             <p className="mt-1 max-w-lg text-sm sm:text-base leading-relaxed text-muted-foreground">
-              Court listings, hearings and orders harvested from Nepal&apos;s public court records.
+              {t("courtCaseProfile.source.description", "Court listings, hearings and orders harvested from Nepal's public court records.")}
             </p>
           </div>
 
@@ -400,7 +440,7 @@ export function CourtCaseProfileView({
               to={sourceUrl}
               className="inline-flex items-center gap-1.5 text-sm sm:text-base font-medium text-foreground hover:text-primary transition-colors shrink-0"
             >
-              <span>View source</span>
+              <span>{t("courtCaseProfile.source.view", "View source")}</span>
               <ExternalLink className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </Link>
           ) : null}

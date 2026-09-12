@@ -31,6 +31,11 @@ export function CaseSectionJumpNav({
 
     updateHeight();
 
+    // JSDOM and a few embedded browsers do not implement ResizeObserver. The
+    // measured default is still a usable sticky position there; skip only the
+    // enhancement that recalculates it after a resize.
+    if (typeof ResizeObserver === "undefined") return;
+
     const resizeObserver = new ResizeObserver(updateHeight);
     resizeObserver.observe(node);
 

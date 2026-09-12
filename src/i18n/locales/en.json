@@ -1209,6 +1209,42 @@
     "moreCases": "+{{count}} more",
     "viewCase": "View case"
   },
+  "courtCaseProfile": {
+    "fallbackTitle": "Court case",
+    "backToSearch": "Back to search",
+    "notFound": "This court case could not be found in the Jawafdehi governance archive.",
+    "contents": "Contents",
+    "summary": "Case summary",
+    "parties": "Parties",
+    "vs": "VS",
+    "noParties": "No party recorded",
+    "showMore": "Show {{count}} more",
+    "showLess": "Show less",
+    "labels": {
+      "caseNumber": "Case number",
+      "court": "Court",
+      "registered": "Registered",
+      "decisionDate": "Decision date",
+      "plaintiff": "Plaintiff",
+      "defendant": "Defendant"
+    },
+    "activity": {
+      "heading": "Case activity",
+      "finalOrder": "Final order",
+      "bailOrder": "Bail order",
+      "adjourned": "Adjourned",
+      "order": "Order",
+      "judge": "Judge",
+      "remarks": "Remarks",
+      "empty": "No hearings or activity recorded yet for this court case."
+    },
+    "source": {
+      "heading": "Source",
+      "title": "Jawafdehi Governance Archive",
+      "description": "Court listings, hearings and orders harvested from Nepal's public court records.",
+      "view": "View source"
+    }
+  },
   "research": {
     "corruption": {
       "meta": {

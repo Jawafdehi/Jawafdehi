@@ -1209,6 +1209,42 @@
     "moreCases": "+{{count}} थप",
     "viewCase": "मुद्दा हेर्नुहोस्"
   },
+  "courtCaseProfile": {
+    "fallbackTitle": "अदालती मुद्दा",
+    "backToSearch": "खोजमा फर्कनुहोस्",
+    "notFound": "यो अदालती मुद्दा जवाफदेही सुशासन अभिलेखमा फेला परेन।",
+    "contents": "विषयसूची",
+    "summary": "मुद्दा सारांश",
+    "parties": "पक्षहरू",
+    "vs": "बनाम",
+    "noParties": "कुनै पक्षको विवरण छैन",
+    "showMore": "थप {{count}} देखाउनुहोस्",
+    "showLess": "कम देखाउनुहोस्",
+    "labels": {
+      "caseNumber": "मुद्दा नं.",
+      "court": "अदालत",
+      "registered": "दर्ता मिति",
+      "decisionDate": "फैसला मिति",
+      "plaintiff": "वादी",
+      "defendant": "प्रतिवादी"
+    },
+    "activity": {
+      "heading": "मुद्दाको गतिविधि",
+      "finalOrder": "अन्तिम आदेश",
+      "bailOrder": "धरौटी आदेश",
+      "adjourned": "स्थगित",
+      "order": "आदेश",
+      "judge": "न्यायाधीश",
+      "remarks": "कैफियत",
+      "empty": "यस अदालती मुद्दाका लागि सुनुवाइ वा गतिविधि अभिलेखमा छैन।"
+    },
+    "source": {
+      "heading": "स्रोत",
+      "title": "जवाफदेही सुशासन अभिलेख",
+      "description": "नेपालका सार्वजनिक अदालती अभिलेखबाट सङ्कलन गरिएका मुद्दा सूची, सुनुवाइ र आदेशहरू।",
+      "view": "स्रोत हेर्नुहोस्"
+    }
+  },
   "research": {
     "corruption": {
       "meta": {
