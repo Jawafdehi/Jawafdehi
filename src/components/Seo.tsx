@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
 
-import { buildHeadTags, type HeadTagInput } from "@/utils/seo";
+import { buildHeadTags, serializeJsonLd, type HeadTagInput } from "@/utils/seo";
 
 interface SeoProps extends HeadTagInput {
   /**
@@ -19,7 +19,10 @@ interface SeoProps extends HeadTagInput {
  */
 export function Seo({ children, ...input }: SeoProps) {
   return (
-    <Helmet>
+    // htmlAttributes rather than a tag: this is the <html> element's own lang, and
+    // scripts/pre-render.ts reads it off helmet.htmlAttributes to rewrite the
+    // shell. See HeadTagInput.htmlLang for why a page ever overrides it.
+    <Helmet {...(input.htmlLang ? { htmlAttributes: { lang: input.htmlLang } } : {})}>
       {buildHeadTags(input).map((tag) => {
         if (tag.kind === "title") {
           return <title key="title">{tag.content}</title>;
@@ -31,6 +34,13 @@ export function Seo({ children, ...input }: SeoProps) {
             <meta key={key} property={tag.key} content={tag.content} />
           ) : (
             <meta key={key} name={tag.key} content={tag.content} />
+          );
+        }
+        if (tag.kind === "jsonld") {
+          return (
+            <script key={`jsonld:${tag.id}`} type="application/ld+json">
+              {serializeJsonLd(tag.data)}
+            </script>
           );
         }
         return (

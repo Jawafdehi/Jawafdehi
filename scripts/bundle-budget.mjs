@@ -135,7 +135,29 @@ const DIR = arg("dir", "dist/client");
 // locally; the CI runner's zlib packs ~3.6 KB larger (see the entry above), so
 // CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
 // matching the headroom the entries above leave.
-const MAX_INITIAL_JS_GZIP = 678_400;
+//
+// 2026-09: 678_400 → 681_300 for schema.org structured data on case and entity
+// pages (feature/agent-readiness), measured on the tree MERGED with donate v2 above
+// rather than on either branch alone — the two features stack, because both are eager
+// for the same reason: Donate, CaseDetail and EntityProfile are all static imports in
+// routes.tsx, so anything they touch is initial.
+//
+// Measured on the merged build: 676,679 bytes gzip locally. Per the donate entry above,
+// this runner's zlib packs ~3,594 bytes smaller than CI's, so CI is estimated at
+// ~680,273 and 681_300 leaves ~1,027 bytes over it — the same headroom convention this
+// file has kept throughout. Worth stating plainly because the first attempt at this
+// entry used 679_600, which passed locally and would have FAILED on CI by 673 bytes.
+// Local-only measurement is not sufficient here; add the CI delta before setting a line.
+//
+// The structured-data cost itself (src/utils/structured-data.ts + src/utils/record-head.ts)
+// is ~1,164 bytes gzip. It is eager because a crawler reads the graph the Worker injects
+// (case pages are not pre-rendered) while the app renders the same graph from ONE shared
+// builder rather than a second, drifting copy — the invariant the shared buildHeadTags
+// list exists to hold, after og:locale said ne_NP in the pages and en_US at the edge.
+//
+// Headroom to reclaim from is unchanged and still not this branch's to spend:
+// `@sentry-internal/replay` is ~75 KB gzip of the initial payload.
+const MAX_INITIAL_JS_GZIP = 681_300;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

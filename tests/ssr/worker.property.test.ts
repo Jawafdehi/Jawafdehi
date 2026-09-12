@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as fc from 'fast-check';
 import worker from '../../worker';
 import { isKnownRoute, isWorkerOwnedPath } from '../../src/data/route-patterns';
@@ -71,13 +71,65 @@ describe('Property 14: Worker returns a real 404 for unrouted paths', () => {
     );
   });
 
+  // These paths reach the SPA shell rather than a pre-rendered file. Two of them
+  // never touch the API; the /entity/* one does, so its fetch is stubbed.
+  //
+  // It has to be. Left unstubbed this test made a live call to
+  // api.jawafdehi.org and then disagreed with itself by environment:
+  //
+  //   - under jsdom (how this suite runs), `new AbortController().signal` is a
+  //     jsdom-realm object and Node's fetch rejects it with a TypeError, so
+  //     fetchWithTimeout threw, returned null, and the worker fell through to
+  //     the shell at 200 — the assertion passed for the wrong reason;
+  //   - on a CI runner the same call succeeded, got the API's real 404 for a
+  //     entity that does not exist, and the worker correctly answered 404.
+  //
+  // Since entity pages started answering a real 404 for a record the API denies,
+  // that difference is a status difference, so the test failed on CI and passed
+  // locally. Stubbing the lookup is what makes the assertion mean something.
   it('still returns 200 for a routed path that is not pre-rendered', async () => {
-    for (const path of ['/donate/success', '/entity/organization/np/tu', '/newsletter/unsubscribe/tok3n']) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ nes_id: 'organization/np/tu', name: 'Tribhuvan University' }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
+      ),
+    );
+
+    try {
+      for (const path of ['/donate/success', '/entity/organization/np/tu', '/newsletter/unsubscribe/tok3n']) {
+        const result = await worker.fetch(
+          new Request(`https://jawafdehi.org${path}`),
+          shellOnlyEnv('<html>shell</html>'),
+        );
+        expect({ path, status: result.status }).toEqual({ path, status: 200 });
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  // The other half of the same contract, pinned here so nobody "fixes" the test
+  // above by loosening the entity route back into a soft 404.
+  it('returns a real 404 for a routed entity path the API denies', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"detail":"Not found."}', { status: 404 })),
+    );
+
+    try {
       const result = await worker.fetch(
-        new Request(`https://jawafdehi.org${path}`),
+        new Request('https://jawafdehi.org/entity/organization/np/tu'),
         shellOnlyEnv('<html>shell</html>'),
       );
-      expect({ path, status: result.status }).toEqual({ path, status: 200 });
+
+      expect(result.status).toBe(404);
+      expect(result.headers.get('X-Robots-Tag')).toBe('noindex');
+    } finally {
+      vi.unstubAllGlobals();
     }
   });
 });

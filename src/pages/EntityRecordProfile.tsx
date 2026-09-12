@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
@@ -8,6 +7,8 @@ import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-reac
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
 import { entityImageUrl } from "@/lib/entity-jsonld";
+import { Seo } from "@/components/Seo";
+import { entityHeadInput } from "@/utils/record-head";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
@@ -16,7 +17,7 @@ import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
+import { entityKindFor } from "@/utils/entity-helpers";
 
 // Entity records are schema.org JSON-LD with a jawafdehi: extension namespace. We type
 // the spine we read explicitly and keep an index signature for the long tail of
@@ -227,7 +228,6 @@ export default function EntityRecordProfile() {
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName = name.en || name.ne || iriLabel(data?.["@id"]) || tail.split("/").pop() || "Entity";
   const rawType = data ? typeToken(data["@type"], data.additionalType) : undefined;
-  const typeLabel = humanizeEntityType(rawType);
   const kind = entityKindFor(rawType);
   const description = data ? bilingual(data.description) : { en: "", ne: "" };
   // Nepali-first: show the active language, falling back to the other only when
@@ -319,13 +319,11 @@ export default function EntityRecordProfile() {
 
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
-      <Helmet>
-        <title>{displayName} | Jawafdehi Entity Registry</title>
-        <meta
-          name="description"
-          content={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
-        />
-      </Helmet>
+      {/* Same mapper the Worker uses (utils/record-head), so the head an agent
+          reads at the edge and the head the app renders cannot drift apart. */}
+      {data ? (
+        <Seo {...entityHeadInput(data as unknown as Record<string, unknown>, tail.split("/"))} />
+      ) : null}
 
       <div className="layout-container">
         <div className="mb-6 flex items-center justify-between gap-2">

@@ -16,7 +16,7 @@ import {
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
-import { stripMarkdown } from './src/utils/markdown';
+import { MEDIA_BASE, caseHeadInput, entityHeadInput } from './src/utils/record-head';
 
 interface Env {
   ASSETS: {
@@ -26,10 +26,6 @@ interface Env {
 
 const JDS_API_BASE = 'https://api.jawafdehi.org/api';
 const CMS_API_BASE = `${JDS_API_BASE}/cms/v2`;
-// Uploaded media (case banners/thumbnails, CMS images) are served from the
-// portal origin, so relative media paths must resolve against it — not the
-// frontend origin — or shared links get broken Open Graph images.
-const MEDIA_BASE = 'https://portal.jawafdehi.org';
 // Bound upstream API calls made while injecting share metadata so a slow backend
 // can never hang the edge request; on timeout we fall through to the SPA shell.
 const META_FETCH_TIMEOUT_MS = 4000;
@@ -344,6 +340,12 @@ function buildMetaTags(input: {
   // When set (e.g. "noindex, nofollow"), emit a robots meta so crawlers keep
   // "unlisted" (non-PUBLISHED) records out of search — link-only, not indexed.
   robots?: string | null;
+  // Machine-readable twins of the page (JSON API record, oEmbed) and the
+  // schema.org graph describing it. These are emitted HERE and not only in the
+  // React tree because a case page is never pre-rendered (see
+  // scripts/pre-render.ts): this injected head is the only one an agent sees.
+  alternates?: Array<{ href: string; type?: string; title?: string; rel?: string }>;
+  jsonLd?: unknown[];
 }): string {
   // The tag list is shared with <Seo> so the head a scraper gets from the edge
   // matches the head the app renders — see buildHeadTags in src/utils/seo.
@@ -370,7 +372,25 @@ function stripOverriddenHeadTags(head: string): string {
     .replace(/<meta\b[^>]*\bname=["']twitter:(?!site\b)[^"']*["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']description["'][^>]*>/gi, () => '')
     .replace(/<meta\b[^>]*\bname=["']robots["'][^>]*>/gi, () => '')
-    .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
+    .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '')
+    // The shell is the pre-rendered HOMEPAGE, which carries the site-level
+    // WebSite node with its SearchAction. Riding along on a case or entity URL it
+    // is a second, irrelevant graph competing with the record's own — so it goes
+    // and the injected nodes take its place. Scoped to ld+json by the `type`
+    // attribute: the shell's other <script> tags are the module entry and the
+    // dehydrated query state, and dropping either would break the page.
+    //
+    // `\s*=\s*` because HTML allows whitespace around an attribute's equals sign.
+    // Helmet does not emit it, but a hand-edited index.html could, and a missed
+    // node means two competing graphs rather than a visible error.
+    //
+    // Alternates are deliberately NOT stripped: the shell has none, and
+    // rel="alternate" is also how hreflang pairs are expressed, so a blanket
+    // strip here would be a trap for whoever adds those.
+    .replace(
+      /<script\b[^>]*\btype\s*=\s*["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
+      () => '',
+    );
 }
 
 // Inject the record's share metadata into the SPA shell.
@@ -390,19 +410,30 @@ function stripOverriddenHeadTags(head: string): string {
 // what pre-render.ts substitutes into it), and filling it with the escaped
 // title as well left the record's name stranded as loose text in the head,
 // ahead of the real element.
-function injectHeadMeta(indexHtml: string, metaTags: string): string {
-  if (indexHtml.includes('<!--helmet-meta-->')) {
-    return indexHtml
+function injectHeadMeta(indexHtml: string, metaTags: string, htmlLang?: string): string {
+  // The shell declares lang="ne" because the site is Nepali-first. A record whose
+  // content is English (the entity registry is English-labelled — every bound
+  // entity name sampled from the live archive is Latin) must say so, or a screen
+  // reader pronounces Latin text with Nepali rules. scripts/pre-render.ts does the
+  // same rewrite from helmet's htmlAttributes; this is the edge's copy of it, and
+  // deliberately as narrow: only the lang attribute, so the template's
+  // translate="no" survives.
+  const withLang = htmlLang
+    ? indexHtml.replace(/<html lang="[^"]*"/, () => `<html lang="${escapeHtml(htmlLang)}"`)
+    : indexHtml;
+
+  if (withLang.includes('<!--helmet-meta-->')) {
+    return withLang
       .replace('<!--helmet-title-->', () => '')
       .replace('<!--helmet-meta-->', () => metaTags);
   }
-  const headEnd = indexHtml.indexOf('</head>');
+  const headEnd = withLang.indexOf('</head>');
   if (headEnd !== -1) {
-    const head = stripOverriddenHeadTags(indexHtml.slice(0, headEnd));
-    const rest = indexHtml.slice(headEnd);
+    const head = stripOverriddenHeadTags(withLang.slice(0, headEnd));
+    const rest = withLang.slice(headEnd);
     return `${head}${metaTags}\n${rest}`;
   }
-  return indexHtml;
+  return withLang;
 }
 
 // Fetches the built index.html to use as a shell. The request is constructed
@@ -460,39 +491,96 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     return null;
   }
 
-  const titleRaw = String(caseData.title || 'Jawafdehi Case');
-  const allegationText = Array.isArray(caseData.key_allegations)
-    ? caseData.key_allegations.slice(0, 2).map((item) => String(item ?? '').trim()).filter(Boolean).join('. ')
-    : '';
-  const description = truncateMeta(
-    stripMarkdown(stripHtml(typeof caseData.description === 'string' ? caseData.description : '')) ||
-    allegationText ||
-    `A verified corruption and misconduct case documented by ${SITE_NAME}.`,
-  );
-  const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
-  const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
-  const imageUrl =
-    previewImageUrl(caseData.banner_url as string | null | undefined, MEDIA_BASE) ||
-    previewImageUrl(caseData.thumbnail_url as string | null | undefined, MEDIA_BASE) ||
-    SOCIAL_IMAGE_URL;
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+
+  // One mapping, shared with pages/CaseDetail.tsx — see src/utils/record-head.ts
+  // for the drift this replaced. `language` is deliberately omitted: a crawler
+  // should see this Nepali-first site declare itself Nepali.
+  const metaTags = buildMetaTags(caseHeadInput(caseData, slug));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
+}
+
+// --------------------------------------------------------------------------
+// Entity record pages
+//
+// Entity pages are not pre-rendered either — pre-render.ts collects entity IDs
+// from `case.entities[].id`, a field the case serializer no longer returns (it
+// keys binds on `nes_id`), so that loop has quietly rendered nothing. The result
+// was that every /entity/<prefix>/<slug> URL served the SPA shell with the
+// HOMEPAGE's head: an agent asking about an official got the site's own title,
+// description and canonical, with no indication which entity the page was about.
+//
+// This is the same treatment cases get: fetch the record, inject its real head,
+// and advertise the JSON twin. The entity's canonical NES IRI becomes the
+// JSON-LD @id, so the identifier here is the same one that appears in every
+// case's `about` — which is what lets an agent join the two.
+// --------------------------------------------------------------------------
+
+// An entity IRI tail (`<prefix>/<slug>`), or null when the shape is not one.
+//
+// The tail is attacker-supplied and is interpolated into an upstream API path, so
+// it is validated rather than merely encoded. `encodeURIComponent` does NOT touch
+// dots, so a `..` segment would have survived into the upstream path; the slash
+// between segments has to stay a real slash for the record endpoint to resolve, so
+// there is no encoding that both works and is inherently safe. An allowlist is.
+//
+// Rejected: a `.`/`..` segment, an empty segment, anything outside the slug
+// alphabet (which excludes NUL and every other control character), more segments
+// than a real IRI tail has, and an absurd length. A rejected tail falls through to
+// the SPA, which renders its own not-found.
+const ENTITY_TAIL_SEGMENT = /^[A-Za-z0-9_.~-]+$/;
+const MAX_ENTITY_TAIL_SEGMENTS = 6;
+const MAX_ENTITY_TAIL_LENGTH = 200;
+
+function entityTailSegments(tail: string): string[] | null {
+  if (!tail || tail.length > MAX_ENTITY_TAIL_LENGTH) return null;
+  const segments = tail.split('/');
+  if (segments.length === 0 || segments.length > MAX_ENTITY_TAIL_SEGMENTS) return null;
+  for (const segment of segments) {
+    if (!ENTITY_TAIL_SEGMENT.test(segment)) return null;
+    if (segment === '.' || segment === '..') return null;
+  }
+  return segments;
+}
+
+async function handleEntityMetaFallback(
+  request: Request,
+  env: Env,
+  tail: string,
+): Promise<Response | null> {
+  // Validated, not merely encoded — see entityTailSegments. A tail that is not a
+  // plausible IRI tail cannot resolve, so it is a 404 rather than a fall-through:
+  // answering 200 with the homepage's head is the soft-404 this site already
+  // decided against for unrouted paths.
+  const segments = entityTailSegments(tail);
+  if (!segments) return notFoundShellResponse(request, env);
+  // The record endpoint takes the IRI tail as real path segments, so the slash
+  // between prefix and slug must survive; each segment is encoded individually.
+  const encodedTail = segments.map(encodeURIComponent).join('/');
+  const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/entities/${encodedTail}`);
+  // A timeout or a network failure is NOT a positive "no such entity": fall
+  // through to the shell rather than 404-ing a page that may well exist.
+  if (!apiResponse) return null;
+  if (apiResponse.status === 404) return notFoundShellResponse(request, env);
+  if (!apiResponse.ok) return null;
+
+  let record: Record<string, unknown>;
+  try {
+    record = (await apiResponse.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 
   const indexHtml = await fetchIndexHtml(request, env);
   if (!indexHtml) return null;
 
-  const metaTags = buildMetaTags({
-    title: `${titleRaw} | Jawafdehi`,
-    description,
-    canonicalUrl,
-    imageUrl,
-    imageAlt: titleRaw,
-    type: 'article',
-    publishedTime: typeof caseData.created_at === 'string' ? caseData.created_at : null,
-    modifiedTime: typeof caseData.updated_at === 'string' ? caseData.updated_at : null,
-    // IN_REVIEW cases are served by direct slug but are "unlisted": keep them
-    // out of search engines (only PUBLISHED is indexable). Share cards still work.
-    robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
-  });
-  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
+  // One mapping, shared with pages/EntityRecordProfile.tsx — see
+  // src/utils/record-head.ts. It also decides the document language from the
+  // record's own content rather than assuming the site default.
+  const headInput = entityHeadInput(record, segments);
+  const metaTags = buildMetaTags(headInput);
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags, headInput.htmlLang));
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.
@@ -814,6 +902,18 @@ export default {
       for (const [key, value] of Object.entries(secHeaders)) {
         response.headers.set(key, value);
       }
+      // The assets binding serves .txt as bare `text/plain` with no charset —
+      // /robots.txt happens to get one, /llms.txt does not. llms.txt is 11 KB of
+      // mixed English and Devanagari (the organisation's Nepali name, the numeral
+      // words), and `text/plain` with no charset is historically ISO-8859-1: a
+      // strict client renders the Nepali as mojibake. It is also the one file here
+      // written to be parsed by a machine, so leaving its encoding to sniffing is
+      // the wrong trade. Only added when absent, so an asset that declares its own
+      // charset keeps it.
+      const contentType = response.headers.get('Content-Type');
+      if (contentType?.startsWith('text/plain') && !contentType.includes('charset')) {
+        response.headers.set('Content-Type', 'text/plain; charset=utf-8');
+      }
       return response;
     }
 
@@ -830,17 +930,55 @@ export default {
     // routes out of it: /updates/preview is the Wagtail preview target, not an
     // article, and asking the CMS for an article named "preview" 404'd it.
     // Params come back percent-decoded.
-    if (matched?.path === '/case/:id' && matched.params.id) {
-      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
-      if (metaResponse) return metaResponse;
-    }
-    if (matched?.path === '/updates/:slug' && matched.params.slug) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
-      if (metaResponse) return metaResponse;
-    }
-    if (matched?.path === '/author/:slug' && matched.params.slug) {
-      const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
-      if (metaResponse) return metaResponse;
+    //
+    // The whole block is guarded, because everything in it is derived from a
+    // payload we do not control. Injecting share metadata is an ENHANCEMENT: if it
+    // fails for any reason, the right outcome is the plain SPA shell — a page that
+    // works with a generic preview — not a 500 that takes the page down. A single
+    // `null` inside a case's `entities[]` used to throw here and would have done
+    // exactly that to every case page. Each handler is defensive on its own now;
+    // this is the backstop for the next shape change nobody predicted.
+    try {
+      if (matched?.path === '/case/:id' && matched.params.id) {
+        const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
+        if (metaResponse) return metaResponse;
+      }
+      if (matched?.path === '/updates/:slug' && matched.params.slug) {
+        const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
+        if (metaResponse) return metaResponse;
+      }
+      if (matched?.path === '/author/:slug' && matched.params.slug) {
+        const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
+        if (metaResponse) return metaResponse;
+      }
+      // Entity pages. BOTH patterns go through one handler, keyed on whatever the
+      // URL carries after /entity/ — the IRI tail from the splat, or the single
+      // segment the sibling :id route matches.
+      //
+      // The two used to be treated differently, and the numeric route was left
+      // alone on the theory that nothing links to it. That produced a soft 404: the
+      // record endpoint answers 404 for EVERY single-segment ref (verified against
+      // the live API for numeric ids and for a bare prefix), so /entity/2104 was
+      // guaranteed to be a dead end — and it answered HTTP 200 carrying the
+      // HOMEPAGE's title, description and canonical. A crawler saw a duplicate of
+      // the front page at an /entity/ URL, and a link checker saw no broken link.
+      //
+      // Asking the API rather than assuming also means the day a single-segment ref
+      // does resolve, the page gets a real head instead of a 404.
+      //
+      // A bare /entity or /entity/ is included on purpose: there is no entity index
+      // page (the plural /entities redirects to search), so it is a dead URL, and an
+      // empty tail fails validation and comes back as a 404.
+      if (matched?.path === '/entity/*' || matched?.path === '/entity/:id') {
+        const metaResponse = await handleEntityMetaFallback(
+          request,
+          env,
+          matched.params['*'] ?? matched.params.id ?? '',
+        );
+        if (metaResponse) return metaResponse;
+      }
+    } catch {
+      // Fall through to the shell.
     }
 
     const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });
