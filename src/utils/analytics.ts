@@ -44,6 +44,10 @@ export type AnalyticsEvent =
         action:
           | 'copy_account'
           | 'outbound'
+          // Zeffy opens in a dialog, so its donors never fire `outbound` —
+          // separate tokens keep "opened the form" distinguishable from "left
+          // for PayPal" instead of merging them into one meaningless number.
+          | 'modal_open'
           | 'give_now'
           | 'contact';
         link_url?: string;

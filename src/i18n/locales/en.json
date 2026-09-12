@@ -460,7 +460,9 @@
         "zeffy": {
           "title": "Zeffy",
           "detail": "Card or bank — one-time or recurring, with an automatic receipt",
-          "cta": "Donate via Zeffy"
+          "cta": "Donate via Zeffy",
+          "dialogTitle": "Donate to Jawafdehi through Zeffy",
+          "dialogDescription": "A secure donation form hosted by Zeffy. Press Escape to close it."
         },
         "paypal": {
           "title": "PayPal",

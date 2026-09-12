@@ -4,14 +4,34 @@ import { Check, Copy, ExternalLink, HeartHandshake } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { trackEvent } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
 // same entity; they differ only in what the donor sees at checkout.
-// PLACEHOLDER — replace with Jawafdehi's own Zeffy form URL before this merges.
-// The real one exists only inside the org's Zeffy account: it has never been in
-// this repo, on any branch, or in any PR body.
-const ZEFFY_DONATE_URL = "https://www.zeffy.com/";
+//
+// Zeffy is offered in a dialog, so the donor never leaves the page. Two URLs,
+// because the dialog is an enhancement and the link underneath it has to work
+// on its own: ``FORM`` is the hosted page (the anchor's real href — no-JS,
+// middle-click, "open in new tab"), ``EMBED`` is the same form in the frameable
+// shape Zeffy serves for embedding.
+//
+// We do NOT ship Zeffy's own pop-up snippet, and the reasons are in its source
+// (2.1 KB, read before this was written): it binds on `DOMContentLoaded`, which
+// has already fired by the time a client-side route change reaches /donate — so
+// on an SPA the button would silently do nothing — and it appends a hidden,
+// eagerly-loading zeffy.com iframe for every `[zeffy-form-link]` on page load,
+// so every visitor to /donate would pay for a payment iframe they never open.
+// The dialog below mounts the iframe on click instead.
+const ZEFFY_FORM_URL =
+  "https://www.zeffy.com/donation-form/donate-to-change-lives-19421";
+const ZEFFY_EMBED_URL =
+  "https://www.zeffy.com/embed/donation-form/donate-to-change-lives-19421?modal=true";
 const PAYPAL_DONATE_URL =
   "https://www.paypal.com/us/fundraiser/charity/6001485";
 // Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
@@ -299,12 +319,17 @@ function AbroadRail({
   icon,
   brandClassName,
   variant,
+  onActivate,
 }: {
   id: "zeffy" | "paypal";
   href: string;
   icon: ReactNode;
   brandClassName: string;
   variant: "primary" | "outline";
+  // Called for a plain left-click only, and only when the rail wants to handle
+  // the click itself (Zeffy opens a dialog). Modified clicks are left alone so
+  // "open in new tab" keeps working on a link that is still a real link.
+  onActivate?: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -329,16 +354,37 @@ function AbroadRail({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() =>
+          onClick={(event) => {
+            const plainClick =
+              event.button === 0 &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.shiftKey &&
+              !event.altKey;
+            if (onActivate && plainClick) {
+              event.preventDefault();
+              onActivate();
+              trackEvent("donate_click", {
+                method: id,
+                action: "modal_open",
+                link_url: href,
+              });
+              return;
+            }
             trackEvent("donate_click", {
               method: id,
               action: "outbound",
               link_url: href,
-            })
-          }
+            });
+          }}
         >
           <span>{t(`donate.ways.us.${id}.cta`)}</span>
-          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          {/* The arrow means "this leaves the site", so it is not shown on a rail
+              that opens in a dialog — even though the href underneath it is a
+              real external link for a modified click or a no-JS reader. */}
+          {onActivate ? null : (
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          )}
         </a>
       </Button>
     </div>
@@ -356,6 +402,10 @@ function AbroadRail({
 // a written legal sign-off.
 function AbroadPanel() {
   const { t } = useTranslation();
+  const [zeffyOpen, setZeffyOpen] = useState(false);
+  // Mount the iframe on first open and leave it mounted, so closing and
+  // reopening does not throw away a part-filled form.
+  const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
     <div>
@@ -372,7 +422,7 @@ function AbroadPanel() {
       <div className="mt-5 flex flex-col gap-5 border-t border-border/60 pt-5">
         <AbroadRail
           id="zeffy"
-          href={ZEFFY_DONATE_URL}
+          href={ZEFFY_FORM_URL}
           icon={
             <HeartHandshake
               className="h-5 w-5 text-primary"
@@ -381,6 +431,10 @@ function AbroadPanel() {
           }
           brandClassName="text-primary"
           variant="primary"
+          onActivate={() => {
+            setZeffyLoaded(true);
+            setZeffyOpen(true);
+          }}
         />
         <AbroadRail
           id="paypal"
@@ -401,6 +455,32 @@ function AbroadPanel() {
           {t("donate.ways.us.capitalControlNote")}
         </p>
       </div>
+
+      {/* Zeffy's hosted form, framed. `allow="payment"` is what lets the Payment
+          Request API run inside a cross-origin frame — without it card wallets
+          (Apple Pay / Google Pay) are unavailable and the donor is dropped to
+          manual card entry. The CSP needs `frame-src https://www.zeffy.com`
+          (worker.ts) or the browser blocks this frame outright.
+          `p-0` because the form brings its own padding, and a tall viewport-
+          relative box because a donation form is a full page, not a prompt. */}
+      {zeffyLoaded ? (
+        <Dialog open={zeffyOpen} onOpenChange={setZeffyOpen}>
+          <DialogContent className="h-[92svh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-hidden p-0 sm:h-[86svh]">
+            <DialogTitle className="sr-only">
+              {t("donate.ways.us.zeffy.dialogTitle")}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {t("donate.ways.us.zeffy.dialogDescription")}
+            </DialogDescription>
+            <iframe
+              src={ZEFFY_EMBED_URL}
+              title={t("donate.ways.us.zeffy.dialogTitle")}
+              allow="payment"
+              className="h-full w-full border-0"
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   );
 }
