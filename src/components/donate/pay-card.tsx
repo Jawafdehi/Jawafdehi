@@ -392,8 +392,9 @@ function AbroadRail({
 }
 
 // Outside Nepal — two rails into the US 501(c)(3), Zeffy first and PayPal
-// Giving Fund second. Nothing else belongs here. Nepal's foreign-exchange rules
-// do not permit donations from abroad to be paid into the Nepal bank account:
+// Giving Fund second. Nothing else belongs here. Nepal's capital control
+// policies do not permit donations from abroad to be paid into the Nepal
+// bank account:
 // Jawafdehi Initiative, Inc. (USA) holds the project approval that lets it fund
 // the work in Nepal, so every gift from outside the country is routed through
 // it. An earlier revision of this page offered a remittance-service path
@@ -412,7 +413,19 @@ function AbroadPanel() {
       <p className="text-sm font-medium text-accent">
         {t("donate.ways.us.whoFor")}
       </p>
-      <p className="mt-2 text-xs font-medium leading-5 text-accent">
+      {/* Who actually receives the money, and under which EIN. It is a
+          disclosure, not a pitch, so it is grey rather than crimson — the
+          accent above it is the lead-in that says who this panel is for.
+          Crimson also failed AA here in dark mode (4.11:1 against the sunk
+          card at 12px, which needs 4.5). card-foreground/70 is 5.21:1 light
+          and 7.83:1 dark.
+
+          NOTE: this names PayPal Giving Fund but now sits above BOTH rails,
+          so as written it describes only one of the two routes below it.
+          Left as-is deliberately — the wording was asked to be preserved —
+          but it wants either scoping to the PayPal rail or rewording to
+          cover Zeffy too. */}
+      <p className="mt-2 text-xs font-medium leading-5 text-card-foreground/70">
         {t("donate.ways.us.proceedsNote")}
       </p>
 
@@ -451,7 +464,10 @@ function AbroadPanel() {
       </div>
 
       <div className="mt-5 border-t border-border/60 pt-4">
-        <p className="text-xs leading-5 text-card-foreground/60">
+        {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
+            in light mode, under the 4.5 AA floor. Same grey as the proceeds
+            note above, so the two disclosures read as one register. */}
+        <p className="text-xs leading-5 text-card-foreground/70">
           {t("donate.ways.us.capitalControlNote")}
         </p>
       </div>

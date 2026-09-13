@@ -42,7 +42,35 @@ import { useSyncExternalStore } from "react";
  * The registry of codes is management/events/2026-09-23-jawafdehi-launch/
  * link-tracking.md in the meta repo.
  */
+export const LAUNCH_EVENT_URL_SECTION = "https://jawafdehi.org/launch--main";
 export const LAUNCH_EVENT_URL_BAR = "https://jawafdehi.org/launch--banner";
+
+/**
+ * Shown as text beside the button, never as a link.
+ *
+ * Deliberately the bare slug: this is the one printed on the flyer and encoded
+ * in its QR code, so it is what a reader might type or say out loud. A tracked
+ * suffix on a label nobody clicks would only get transcribed wrong.
+ */
+export const LAUNCH_EVENT_URL_LABEL = "jawafdehi.org/launch";
+
+/**
+ * The flyer, as served from `public/`, cut from the 3375x4219 master in the
+ * meta repo at management/events/2026-09-23-jawafdehi-launch/.
+ *
+ * The card is capped at 260 CSS px, so it ships as a 260w file with a 520w
+ * companion behind `srcset`: a 1x screen pays 18 KB and only retina pays 45.
+ * The 1200w render is a click-through, never fetched with the page.
+ *
+ * These are cut from the flyer as it stands, which carries a summed बिगो
+ * ("1.90 kharba alleged damages") and a "Featuring" list that states charges
+ * as fact. Both are known and were accepted for this surface. If the flyer is
+ * re-cut to fix them, these three files have to be regenerated with it —
+ * nothing here reaches back to the master on its own.
+ */
+export const LAUNCH_EVENT_FLYER = "/assets/events/launch-flyer.webp";
+export const LAUNCH_EVENT_FLYER_CARD = "/assets/events/launch-flyer-card.webp";
+export const LAUNCH_EVENT_FLYER_CARD_2X = "/assets/events/launch-flyer-card@2x.webp";
 
 /**
  * When the announcement stops being an announcement: 6:00 PM Pacific on

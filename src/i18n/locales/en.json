@@ -455,7 +455,7 @@
       "us": {
         "whoFor": "If you are giving from anywhere outside Nepal",
         "proceedsNote": "Either option delivers your gift to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
-        "capitalControlNote": "Nepal's foreign-exchange rules do not allow donations from abroad to be paid into our Nepal bank account. Jawafdehi Initiative, Inc. holds the approval to fund the project in Nepal, so this is the one route for a gift from outside the country.",
+        "capitalControlNote": "Nepal's capital control policies do not allow donations from abroad to be paid into our Nepal bank account. Jawafdehi Initiative, Inc. holds the approval to fund the project in Nepal, so this is the one route for a gift from outside the country.",
         "title": "From outside Nepal",
         "zeffy": {
           "title": "Zeffy",
@@ -2486,6 +2486,16 @@
     "barLabel": "Upcoming public launch",
     "barSentence": "Join the public launch of Nepal's corruption database on Zoom — 23 Sept 6 PM Pacific · 24 Sept 6:45 AM Nepal.",
     "barCta": "Learn more.",
-    "barDismiss": "Dismiss launch announcement"
+    "barDismiss": "Dismiss launch announcement",
+    "eyebrow": "Public launch · Free · Open to everyone",
+    "title": "The public launch of Nepal's corruption database",
+    "description": "Built over the past year and open to everyone: a permanent, searchable public record of corruption cases, with the documents behind them. We will show you what is in it and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
+    "dateUs": "Wednesday 23 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
+    "dateNepal": "Thursday 24 September 2026 in Nepal, 6:45 AM (आश्विन ८)",
+    "formatZoom": "Zoom",
+    "formatFacebook": "live on Facebook",
+    "cta": "Learn more",
+    "viewFlyer": "View the full flyer",
+    "flyerAlt": "Launch flyer: Nepal's Permanent Corruption Database. 23 September, 6 PM Pacific; 24 September, 6:45 AM Nepal time. Register at jawafdehi.org/launch."
   }
 }
