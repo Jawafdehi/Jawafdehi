@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
+import { LaunchEvent } from "@/components/home/launch-event";
 import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/home/faq";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
@@ -110,6 +111,13 @@ const Index = () => {
           materials={getStatValue(stats?.materials?.total)}
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
+
+        {/* Placement A for the 23/24 September launch: a band directly under
+            the hero, carrying the flyer and both start times. Removes itself
+            once the session is over; the strip above the navbar (placement B,
+            LaunchEventBar) is the other half. Both have to come out after the
+            24th — see launch-event.ts. */}
+        <LaunchEvent />
 
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">

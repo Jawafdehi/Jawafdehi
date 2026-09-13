@@ -1,12 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink, HeartHandshake } from "lucide-react";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { trackEvent } from "@/utils/analytics";
 
-// US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.).
+// US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
+// same entity; they differ only in what the donor sees at checkout.
+//
+// Zeffy is offered in a dialog, so the donor never leaves the page. Two URLs,
+// because the dialog is an enhancement and the link underneath it has to work
+// on its own: ``FORM`` is the hosted page (the anchor's real href — no-JS,
+// middle-click, "open in new tab"), ``EMBED`` is the same form in the frameable
+// shape Zeffy serves for embedding.
+//
+// We do NOT ship Zeffy's own pop-up snippet, and the reasons are in its source
+// (2.1 KB, read before this was written): it binds on `DOMContentLoaded`, which
+// has already fired by the time a client-side route change reaches /donate — so
+// on an SPA the button would silently do nothing — and it appends a hidden,
+// eagerly-loading zeffy.com iframe for every `[zeffy-form-link]` on page load,
+// so every visitor to /donate would pay for a payment iframe they never open.
+// The dialog below mounts the iframe on click instead.
+const ZEFFY_FORM_URL =
+  "https://www.zeffy.com/donation-form/donate-to-change-lives-19421";
+const ZEFFY_EMBED_URL =
+  "https://www.zeffy.com/embed/donation-form/donate-to-change-lives-19421?modal=true";
 const PAYPAL_DONATE_URL =
   "https://www.paypal.com/us/fundraiser/charity/6001485";
 // Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
@@ -277,75 +302,201 @@ function NepalPanel() {
   );
 }
 
-// Outside Nepal — PayPal Giving Fund (the US 501(c)(3)) is the ONLY rail, and
-// deliberately so. Nepal's foreign-exchange rules do not permit donations from
-// abroad to be paid into the Nepal bank account: Jawafdehi Initiative, Inc.
-// (USA) holds the project approval that lets it fund the work in Nepal, so
-// every gift from outside the country is routed through it. An earlier revision
-// of this page offered a remittance-service path (Wise/Remitly/Western Union)
-// straight into the Nepal account — that was withdrawn as non-compliant, not
-// merely redundant. Do not reinstate it without a written legal sign-off.
+// One rail on the abroad panel: brand line, one line of detail, one outbound
+// link. Shared by both rails so they cannot drift apart — in particular the CTA
+// classes, which are load-bearing:
+//
+// `whitespace-normal` and `w-full` until `sm`, because each label is a sentence
+// in Nepali ("PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्").
+// `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then sizes
+// the button to that unbreakable line — 350px of min-content, which floors the
+// grid track and overflows a 320px phone. See
+// tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a wrapped
+// label no longer fits `size="sm"`'s 36px.
+function AbroadRail({
+  id,
+  href,
+  icon,
+  brandClassName,
+  variant,
+  onActivate,
+}: {
+  id: "zeffy" | "paypal";
+  href: string;
+  icon: ReactNode;
+  brandClassName: string;
+  variant: "primary" | "outline";
+  // Called for a plain left-click only, and only when the rail wants to handle
+  // the click itself (Zeffy opens a dialog). Modified clicks are left alone so
+  // "open in new tab" keeps working on a link that is still a real link.
+  onActivate?: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="inline-flex items-center gap-1.5">
+        {icon}
+        <span className={`text-base font-bold ${brandClassName}`}>
+          {t(`donate.ways.us.${id}.title`)}
+        </span>
+      </span>
+      <p className="text-sm leading-5 text-card-foreground/70">
+        {t(`donate.ways.us.${id}.detail`)}
+      </p>
+      <Button
+        asChild
+        variant={variant}
+        size="sm"
+        className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
+      >
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) => {
+            const plainClick =
+              event.button === 0 &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.shiftKey &&
+              !event.altKey;
+            if (onActivate && plainClick) {
+              event.preventDefault();
+              onActivate();
+              trackEvent("donate_click", {
+                method: id,
+                action: "modal_open",
+                link_url: href,
+              });
+              return;
+            }
+            trackEvent("donate_click", {
+              method: id,
+              action: "outbound",
+              link_url: href,
+            });
+          }}
+        >
+          <span>{t(`donate.ways.us.${id}.cta`)}</span>
+          {/* The arrow means "this leaves the site", so it is not shown on a rail
+              that opens in a dialog — even though the href underneath it is a
+              real external link for a modified click or a no-JS reader. */}
+          {onActivate ? null : (
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          )}
+        </a>
+      </Button>
+    </div>
+  );
+}
+
+// Outside Nepal — two rails into the US 501(c)(3), Zeffy first and PayPal
+// Giving Fund second. Nothing else belongs here. Nepal's capital control
+// policies do not permit donations from abroad to be paid into the Nepal
+// bank account:
+// Jawafdehi Initiative, Inc. (USA) holds the project approval that lets it fund
+// the work in Nepal, so every gift from outside the country is routed through
+// it. An earlier revision of this page offered a remittance-service path
+// (Wise/Remitly/Western Union) straight into the Nepal account — that was
+// withdrawn as non-compliant, not merely redundant. Do not reinstate it without
+// a written legal sign-off.
 function AbroadPanel() {
   const { t } = useTranslation();
+  const [zeffyOpen, setZeffyOpen] = useState(false);
+  // Mount the iframe on first open and leave it mounted, so closing and
+  // reopening does not throw away a part-filled form.
+  const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
     <div>
       <p className="text-sm font-medium text-accent">
         {t("donate.ways.us.whoFor")}
       </p>
-      <p className="mt-2 text-xs font-medium leading-5 text-accent">
+      {/* Who actually receives the money, and under which EIN. It is a
+          disclosure, not a pitch, so it is grey rather than crimson — the
+          accent above it is the lead-in that says who this panel is for.
+          Crimson also failed AA here in dark mode (4.11:1 against the sunk
+          card at 12px, which needs 4.5). card-foreground/70 is 5.21:1 light
+          and 7.83:1 dark.
+
+          NOTE: this names PayPal Giving Fund but now sits above BOTH rails,
+          so as written it describes only one of the two routes below it.
+          Left as-is deliberately — the wording was asked to be preserved —
+          but it wants either scoping to the PayPal rail or rewording to
+          cover Zeffy too. */}
+      <p className="mt-2 text-xs font-medium leading-5 text-card-foreground/70">
         {t("donate.ways.us.proceedsNote")}
       </p>
 
-      <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-5">
-        <span className="inline-flex items-center gap-1.5">
-          <SiPaypal
-            className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
-            aria-hidden="true"
-          />
-          <span className="text-base font-bold text-[#003087] dark:text-[#6cb2ff]">
-            {t("donate.ways.us.paypal.title")}
-          </span>
-        </span>
-        <p className="text-sm leading-5 text-card-foreground/70">
-          {t("donate.ways.us.paypal.detail")}
-        </p>
-        {/* `whitespace-normal` and `w-full` until `sm`, because this label is a
-            sentence in Nepali: "PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्".
-            `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then
-            sizes the button to that unbreakable line — 350px of min-content, which
-            floors the grid track and overflows a 320px phone. See
-            tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a
-            wrapped label no longer fits `size="sm"`'s 36px. */}
-        <Button
-          asChild
+      {/* Two rails, one visual weight each: Zeffy carries the filled button and
+          PayPal the outlined one, so the order reads as a recommendation
+          without a second line of copy explaining it. */}
+      <div className="mt-5 flex flex-col gap-5 border-t border-border/60 pt-5">
+        <AbroadRail
+          id="zeffy"
+          href={ZEFFY_FORM_URL}
+          icon={
+            <HeartHandshake
+              className="h-5 w-5 text-primary"
+              aria-hidden="true"
+            />
+          }
+          brandClassName="text-primary"
           variant="primary"
-          size="sm"
-          className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
-        >
-          <a
-            href={PAYPAL_DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackEvent("donate_click", {
-                method: "paypal",
-                action: "outbound",
-                link_url: PAYPAL_DONATE_URL,
-              })
-            }
-          >
-            <span>{t("donate.ways.us.paypal.cta")}</span>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </a>
-        </Button>
+          onActivate={() => {
+            setZeffyLoaded(true);
+            setZeffyOpen(true);
+          }}
+        />
+        <AbroadRail
+          id="paypal"
+          href={PAYPAL_DONATE_URL}
+          icon={
+            <SiPaypal
+              className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
+              aria-hidden="true"
+            />
+          }
+          brandClassName="text-[#003087] dark:text-[#6cb2ff]"
+          variant="outline"
+        />
       </div>
 
       <div className="mt-5 border-t border-border/60 pt-4">
-        <p className="text-xs leading-5 text-card-foreground/60">
+        {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
+            in light mode, under the 4.5 AA floor. Same grey as the proceeds
+            note above, so the two disclosures read as one register. */}
+        <p className="text-xs leading-5 text-card-foreground/70">
           {t("donate.ways.us.capitalControlNote")}
         </p>
       </div>
+
+      {/* Zeffy's hosted form, framed. `allow="payment"` is what lets the Payment
+          Request API run inside a cross-origin frame — without it card wallets
+          (Apple Pay / Google Pay) are unavailable and the donor is dropped to
+          manual card entry. The CSP needs `frame-src https://www.zeffy.com`
+          (worker.ts) or the browser blocks this frame outright.
+          `p-0` because the form brings its own padding, and a tall viewport-
+          relative box because a donation form is a full page, not a prompt. */}
+      {zeffyLoaded ? (
+        <Dialog open={zeffyOpen} onOpenChange={setZeffyOpen}>
+          <DialogContent className="h-[92svh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-hidden p-0 sm:h-[86svh]">
+            <DialogTitle className="sr-only">
+              {t("donate.ways.us.zeffy.dialogTitle")}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {t("donate.ways.us.zeffy.dialogDescription")}
+            </DialogDescription>
+            <iframe
+              src={ZEFFY_EMBED_URL}
+              title={t("donate.ways.us.zeffy.dialogTitle")}
+              allow="payment"
+              className="h-full w-full border-0"
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   );
 }
@@ -366,9 +517,9 @@ function guessRegion(): Region {
 
 /**
  * The payment card: one card, two regions. Giving from inside Nepal (QR
- * networks + bank transfer) is the default tab; giving from abroad (PayPal
- * Giving Fund → the US 501(c)(3)) is the other. Both panels stay mounted so
- * switching never re-fetches the QR images and never loses copy state.
+ * networks + bank transfer) is the default tab; giving from abroad (Zeffy or
+ * PayPal Giving Fund → the US 501(c)(3)) is the other. Both panels stay mounted
+ * so switching never re-fetches the QR images and never loses copy state.
  *
  * The tab auto-selects from the visitor's timezone after hydration, but only
  * until they touch it — a manual toggle always wins.
