@@ -13,7 +13,9 @@ import type {
   SearchFacetItem,
 } from "@/types/search";
 import { BigoRangeFilter } from "@/components/search/BigoRangeFilter";
+import { DateRangeFilter } from "@/components/search/DateRangeFilter";
 import type { BigoExtent } from "@/lib/bigo-range";
+import type { DateBounds } from "@/lib/date-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
 export type SidebarFilterName =
@@ -23,7 +25,8 @@ export type SidebarFilterName =
   | "court"
   | "court_type"
   | "district"
-  | "province";
+  | "province"
+  | "material_type";
 
 /**
  * How many options a group shows before collapsing behind "More", and the size
@@ -70,6 +73,11 @@ const FILTER_GROUPS: {
     title: "Court",
   },
   {
+    name: "material_type",
+    titleKey: "archiveSearch.filters.materialType",
+    title: "Document type",
+  },
+  {
     name: "case_type",
     titleKey: "archiveSearch.filters.caseType",
     title: "Case type",
@@ -90,6 +98,11 @@ type SearchFiltersProps = {
   bigoMax?: number;
   // Cases matching the current search, for the "what will this give me" count.
   onBigoCommit: (bounds: { min?: number; max?: number }) => void;
+  // Record-date bounds. Unlike बिगो there is no extent to fetch — a calendar is
+  // its own scale, so the control needs nothing from the API to render.
+  dateFrom?: string;
+  dateTo?: string;
+  onDateCommit: (bounds: DateBounds) => void;
 };
 
 export function SearchFilters({
@@ -102,6 +115,9 @@ export function SearchFilters({
   bigoMin,
   bigoMax,
   onBigoCommit,
+  dateFrom,
+  dateTo,
+  onDateCommit,
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
 
@@ -144,6 +160,29 @@ export function SearchFilters({
           onCommit={onBigoCommit}
         />
       ) : null}
+
+      {/*
+        Record date, scoped to the ONE tab whose records this narrows usefully.
+
+        The endpoint applies the bounds globally — that is the mechanism the बिगो
+        note above anticipated. But scope is not the same question as support:
+        entities carry no date at all, so a bound empties that tab outright, and
+        on `all` it would silently drop every entity from a mixed result set. The
+        case tab already opens with बिगो, and stacking a second range control
+        above the term facets is what pushed the tags group off-screen the last
+        time this column grew.
+
+        So: materials only, which is what was asked for and where the corpus
+        actually supports it — 93% of materials carry a date. Widening this to
+        court cases is a one-line change to this condition once someone wants it.
+      */}
+      {selectedType === "material" ? (
+        <DateRangeFilter
+          from={dateFrom}
+          onCommit={onDateCommit}
+          to={dateTo}
+        />
+      ) : null}
       {FILTER_GROUPS
         // "Entity type" only makes sense while browsing Entities — for every
         // other record type (or "all") its buckets are either irrelevant or,
@@ -161,6 +200,10 @@ export function SearchFilters({
           ) {
             return selectedType === "courtcase";
           }
+          // Document type is scoped the same way, and for the same reason: only
+          // materials carry one, so the buckets are empty everywhere else and a
+          // stale token would narrow another tab through an invisible control.
+          if (name === "material_type") return selectedType === "material";
           return true;
         })
         .map(({ name, titleKey, title }) => (
@@ -188,16 +231,17 @@ export function SearchFiltersSkeleton({
   //
   // Court-case browsing adds four location groups to the two term groups.
   // Entities fill only "Entity type" — the case_type and tags facets come back
-  // empty for them. Materials carry NO facet at all (their only non-empty
-  // bucket is entity_type, which this tab hides), so that tab reserves nothing
-  // rather than two blocks that never arrive on a /materials cold load.
+  // empty for them. Materials fill exactly one group, "Document type": 10 of the
+  // 12 tokens have documents, so reserve the collapsed height (8 rows) rather
+  // than the full vocabulary. Their case_type and tags buckets come back empty,
+  // like the entity tab's.
   const groupRowCounts =
     selectedType === "courtcase"
       ? [3, 3, 3, 3, 3, 3]
       : selectedType === "entity"
         ? [4]
         : selectedType === "material"
-          ? []
+          ? [8]
           : [4, 3];
 
   return (
@@ -232,6 +276,27 @@ export function SearchFiltersSkeleton({
           <Skeleton className="h-11 w-full rounded-md" />
           <Skeleton className="h-11 w-full rounded-md" />
           <Skeleton className="h-11 w-32 rounded-md" />
+        </div>
+      ) : null}
+
+      {/*
+        The date block, on the same terms: gated on the live control's own
+        condition, and reserving what it actually occupies — a legend, a row of
+        four preset pills, two fields and the coverage note. /materials is a
+        locked-type browse, so `material` is the cold-load case this matters for
+        most.
+      */}
+      {selectedType === "material" ? (
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <div className="flex gap-1.5">
+            <Skeleton className="h-7 w-16 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-3 w-full" />
         </div>
       ) : null}
 

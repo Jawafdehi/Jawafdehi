@@ -136,28 +136,78 @@ const DIR = arg("dir", "dist/client");
 // CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
 // matching the headroom the entries above leave.
 //
-// 2026-09: 678_400 → 681_300 for schema.org structured data on case and entity
-// pages (feature/agent-readiness), measured on the tree MERGED with donate v2 above
-// rather than on either branch alone — the two features stack, because both are eager
-// for the same reason: Donate, CaseDetail and EntityProfile are all static imports in
-// routes.tsx, so anything they touch is initial.
+// 2026-09: 678_400 → 680_300 for the materials tab's two filters
+// (feat/material-search-filters). Measured, and this time the local and CI
+// figures are the SAME number: main at b1da66c builds to 677,581 bytes gzip
+// (CI run 34727712170) and this branch merged with main to 679,225 (CI run
+// 34941177606, reproduced byte-for-byte locally), so the pair costs ~1,644
+// bytes gzip and lands 825 over the old line. Where they go: the document-type
+// facet group with its getFacetItemLabel branch and the ArchiveSearch
+// param/pill/clear wiring, the record-date control, lib/date-range's
+// parse/normalize/preset rules, and the new archiveSearch.filters keys in
+// en.json / ne.json.
 //
-// Measured on the merged build: 676,679 bytes gzip locally. Per the donate entry above,
-// this runner's zlib packs ~3,594 bytes smaller than CI's, so CI is estimated at
-// ~680,273 and 681_300 leaves ~1,027 bytes over it — the same headroom convention this
-// file has kept throughout. Worth stating plainly because the first attempt at this
-// entry used 679_600, which passed locally and would have FAILED on CI by 673 bytes.
-// Local-only measurement is not sufficient here; add the CI delta before setting a line.
+// Deferring DateRangeFilter was TRIED, MEASURED and REVERTED. It recovers 319
+// bytes — not the ~1,600 its source size suggests — against the 825 that had to
+// come off, so it cannot clear the gate on its own and would have bought a lazy
+// boundary, a chunk fetch on every switch to the materials tab, and a rewrite of
+// seven synchronous assertions, AND still needed this line moved. Two things eat
+// the difference: lib/date-range stays eager regardless, because
+// src/utils/archive-search-params.ts and ArchiveSearch both read
+// readDateBounds/describeDateRange on every render, so only the component moves;
+// and the dynamic-import stub, the local Suspense boundary and Vite's preload
+// entry hand part of it straight back.
 //
-// The structured-data cost itself (src/utils/structured-data.ts + src/utils/record-head.ts)
-// is ~1,164 bytes gzip. It is eager because a crawler reads the graph the Worker injects
-// (case pages are not pre-rendered) while the app renders the same graph from ONE shared
-// builder rather than a second, drifting copy — the invariant the shared buildHeadTags
-// list exists to hold, after og:locale said ne_NP in the pages and en_US at the edge.
+// Worth recording for whoever needs bytes next, because it is the biggest lever
+// measured here in a while: giving BigoRangeFilter the same treatment recovers a
+// further 4,031, which would put the payload at 674,875 and let this line
+// ratchet DOWN past where it started. It is NOT taken here — that control is not
+// this branch's code, it renders on the case tab rather than a type-gated one,
+// and it needs its own reserved skeleton and test pass. It is a change on its
+// own terms, not a rider on a filter PR.
+//
+// One correction for the next reader, so the arithmetic above is not misread as
+// this branch's doing: the ~1,050 the donate entry claims had ALREADY decayed to
+// 819 before this branch touched anything. #393 (launch surfaces, b1da66c) added
+// ~2,870 bytes gzip on top of #387 without moving this line — and the ~3.6 KB
+// runner-zlib delta that entry leans on did not hold either; local and CI agree
+// exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
+// over the measured build, matching the headroom the entries above leave.
+//
+// 2026-09: 680_300 → 682_300 for schema.org structured data on case and entity
+// pages (feature/agent-readiness), stacked on top of the materials filters above.
+// The two features are independent but both land in the INITIAL payload, so their
+// costs ADD: Donate, CaseDetail and EntityProfile are all static imports in
+// routes.tsx, and ArchiveSearch's filters are eager for the same reason.
+//
+// This branch's measured cost is 2,022 bytes gzip on top of main — the graph
+// builder (src/utils/structured-data.ts + src/utils/record-head.ts) plus the
+// shared-head plumbing in src/utils/seo.ts and src/components/Seo.tsx that the
+// case/entity pages call. It is eager because a crawler reads the graph the Worker
+// injects (case pages are not pre-rendered) while the app renders that same graph
+// from ONE shared builder rather than a second, drifting copy — the invariant the
+// shared buildHeadTags list exists to hold, after og:locale said ne_NP in the
+// pages and en_US at the edge.
+//
+// TWO CORRECTIONS to this branch's earlier draft of this entry, which the reader
+// should trust over anything above it:
+//   1. That draft leaned on a "~3.6 KB runner zlib delta" between local and CI and
+//      set 681_300 by extrapolating from a local figure. The materials-filters
+//      entry above MEASURED that assumption and found it does not hold — local and
+//      CI agree exactly on this runner now. No delta is added here.
+//   2. It put the cost at ~1,164 bytes. Measured against main at 42c0105 it is
+//      2,022. The draft's figure was taken against a tree without #393's launch
+//      surfaces and #389's filters, and it undercounted the shared-head plumbing.
+//
+// Measured on the merged tree: 681,247 bytes gzip (entry + the four modulepreload
+// chunks, level 9, exactly as this script counts them). 682_300 leaves 1,053 bytes
+// over it, matching the headroom convention this file keeps.
 //
 // Headroom to reclaim from is unchanged and still not this branch's to spend:
-// `@sentry-internal/replay` is ~75 KB gzip of the initial payload.
-const MAX_INITIAL_JS_GZIP = 681_300;
+// `@sentry-internal/replay` is ~75 KB gzip of the initial payload, and the
+// BigoRangeFilter lever the entry above measured (~4,031 bytes) is still on the
+// table for whoever needs bytes next.
+const MAX_INITIAL_JS_GZIP = 682_300;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
