@@ -135,7 +135,45 @@ const DIR = arg("dir", "dist/client");
 // locally; the CI runner's zlib packs ~3.6 KB larger (see the entry above), so
 // CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
 // matching the headroom the entries above leave.
-const MAX_INITIAL_JS_GZIP = 678_400;
+//
+// 2026-09: 678_400 → 680_300 for the materials tab's two filters
+// (feat/material-search-filters). Measured, and this time the local and CI
+// figures are the SAME number: main at b1da66c builds to 677,581 bytes gzip
+// (CI run 34727712170) and this branch merged with main to 679,225 (CI run
+// 34941177606, reproduced byte-for-byte locally), so the pair costs ~1,644
+// bytes gzip and lands 825 over the old line. Where they go: the document-type
+// facet group with its getFacetItemLabel branch and the ArchiveSearch
+// param/pill/clear wiring, the record-date control, lib/date-range's
+// parse/normalize/preset rules, and the new archiveSearch.filters keys in
+// en.json / ne.json.
+//
+// Deferring DateRangeFilter was TRIED, MEASURED and REVERTED. It recovers 319
+// bytes — not the ~1,600 its source size suggests — against the 825 that had to
+// come off, so it cannot clear the gate on its own and would have bought a lazy
+// boundary, a chunk fetch on every switch to the materials tab, and a rewrite of
+// seven synchronous assertions, AND still needed this line moved. Two things eat
+// the difference: lib/date-range stays eager regardless, because
+// src/utils/archive-search-params.ts and ArchiveSearch both read
+// readDateBounds/describeDateRange on every render, so only the component moves;
+// and the dynamic-import stub, the local Suspense boundary and Vite's preload
+// entry hand part of it straight back.
+//
+// Worth recording for whoever needs bytes next, because it is the biggest lever
+// measured here in a while: giving BigoRangeFilter the same treatment recovers a
+// further 4,031, which would put the payload at 674,875 and let this line
+// ratchet DOWN past where it started. It is NOT taken here — that control is not
+// this branch's code, it renders on the case tab rather than a type-gated one,
+// and it needs its own reserved skeleton and test pass. It is a change on its
+// own terms, not a rider on a filter PR.
+//
+// One correction for the next reader, so the arithmetic above is not misread as
+// this branch's doing: the ~1,050 the donate entry claims had ALREADY decayed to
+// 819 before this branch touched anything. #393 (launch surfaces, b1da66c) added
+// ~2,870 bytes gzip on top of #387 without moving this line — and the ~3.6 KB
+// runner-zlib delta that entry leans on did not hold either; local and CI agree
+// exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
+// over the measured build, matching the headroom the entries above leave.
+const MAX_INITIAL_JS_GZIP = 680_300;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
