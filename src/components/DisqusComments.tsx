@@ -1,10 +1,28 @@
-import { useEffect, useRef, useState } from "react";
-import { DiscussionEmbed } from "disqus-react";
+import { useEffect, useRef, useState, type ComponentProps, type FunctionComponent } from "react";
+import type { DiscussionEmbed as DiscussionEmbedType } from "disqus-react";
 import { useTranslation } from "react-i18next";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
+import { lazyChart } from "@/components/charts/lazy";
+
+// disqus-react, deferred out of the initial payload. The embed is already
+// double-gated at runtime (IntersectionObserver + an explicit "load comments"
+// click) and its markup is never in pre-rendered HTML — the gates start closed
+// and only open in client effects — so the module itself has no business in the
+// entry chunk. Same effect-loading pattern (and same no-Suspense rationale) as
+// charts/lazy.tsx; the skeleton placeholder matches the pre-load state.
+type DiscussionEmbedProps = ComponentProps<typeof DiscussionEmbedType>;
+const LazyDiscussionEmbed = lazyChart<DiscussionEmbedProps>(
+  () =>
+    import("disqus-react").then(
+      // A class component; React renders it the same way, so the cast to the
+      // FunctionComponent shape lazyChart expects is safe.
+      (m) => m.DiscussionEmbed as unknown as FunctionComponent<DiscussionEmbedProps>,
+    ),
+  () => <Skeleton className="h-32 w-full rounded-md" />,
+);
 
 interface DisqusCommentsProps {
   caseId: string;
@@ -131,7 +149,7 @@ export function DisqusComments({ caseId, caseTitle, caseUrl }: DisqusCommentsPro
       {shouldLoad && (
         // Disqus widget loaded
         <div className="rounded-xl border border-border/70 bg-background p-3 sm:p-4 shadow-inner">
-          <DiscussionEmbed
+          <LazyDiscussionEmbed
             shortname={disqusShortname}
             config={disqusConfig}
           />

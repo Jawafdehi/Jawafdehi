@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
@@ -65,9 +65,7 @@ export function InvolvedPartiesSection({
 }: Readonly<InvolvedPartiesSectionProps>) {
   return (
     <section id="parties-involved" className={cn("mb-12 scroll-mt-28 max-w-4xl", className)}>
-      <h2 className="mb-5 text-xl md:text-2xl font-semibold tracking-tight text-primary">
-        {title}
-      </h2>
+      <CaseSectionHeading className="mb-5">{title}</CaseSectionHeading>
 
       {/* 42.5rem matches the key-allegations content (numeral + 65ch prose),
           so the grid's right edge lines up with the text above it. */}
