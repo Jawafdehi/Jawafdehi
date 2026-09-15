@@ -1,31 +1,95 @@
-User-agent: Googlebot
-Allow: /
+# Jawafdehi crawl policy.
+#
+# Cloudflare PREPENDS its own managed AI-crawler block to this file before it is
+# served, so the policy a crawler reads is the union of the two. The file served
+# from https://jawafdehi.org/robots.txt is ~2.2 kB; this one is smaller.
+#
+# The two used to disagree. Cloudflare said `Disallow: /` for ClaudeBot and
+# GPTBot; this file said `Allow: /` for both. That was not a harmless ambiguity:
+# RFC 9309 §2.2.1 merges groups that share a user-agent, and §2.2.2 breaks a tie
+# between two equally-specific rules in favour of `Allow`. So this file was
+# quietly overriding Cloudflare's block for exactly the two crawlers it named.
+#
+# The policy, decided 2026-08-11: crawlers that send readers here are welcome;
+# crawlers that ingest the archive to answer in its place are not. Everything on
+# this site is public accountability data and being findable is the entire point
+# — but our own standard is that a factual claim carries a citation, and a model
+# trained on this corpus reproduces the claims without the sources.
+#
+# Keep this file self-sufficient. If Cloudflare's managed block is ever turned
+# off, the policy below must still stand on its own.
+#
+# One deliberate omission: there is no `User-agent: Googlebot / Allow: /` group
+# here, and adding one back would be a mistake. A crawler obeys only the single
+# most specific group that matches it and does NOT inherit the `*` group, so a
+# named `Allow: /` group silently exempts that crawler from every site-wide
+# Disallow below. The `*` group already welcomes search engines.
 
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
+# Crawlers that harvest for model training or for generating answers.
+#
+# Listed as one group with many user-agent lines, which RFC 9309 §2.2.1 permits.
+# `Disallow: /` applies to every token above it.
+User-agent: AI2Bot
+User-agent: Amazonbot
+User-agent: anthropic-ai
+User-agent: Applebot-Extended
+User-agent: Bytespider
+User-agent: CCBot
+# Not an AI trainer: this is Cloudflare's Browser Rendering API, i.e. some other
+# Cloudflare customer's headless browser pointed at us. Cloudflare blocks it by
+# default in the managed block, and there is no reason to re-admit it here.
+User-agent: CloudflareBrowserRenderingCrawler
+User-agent: Claude-Web
 User-agent: ClaudeBot
-Allow: /
-
+User-agent: cohere-ai
+User-agent: Diffbot
+User-agent: FacebookBot
+User-agent: Google-Extended
+User-agent: GPTBot
+User-agent: ImagesiftBot
+User-agent: meta-externalagent
+User-agent: Omgilibot
+User-agent: PanguBot
 User-agent: PerplexityBot
+User-agent: Timpibot
+User-agent: OAI-SearchBot
+User-agent: Webzio-Extended
+Disallow: /
+
+# Everything else: crawl and index freely, bar the surfaces below.
+#
+# This group is what search engines (Googlebot, Bingbot, DuckDuckBot, Applebot)
+# and link-preview fetchers (Twitterbot, facebookexternalhit, LinkedInBot,
+# WhatsApp, Slackbot, TelegramBot) match, and it is deliberately permissive:
+# a share of a case must render its card, and a search for a case must find it.
+#
+# ChatGPT-User also lands here on purpose. It is not a crawler — it fires when a
+# person pastes a link and asks about it, one URL at a time. Blocking it would
+# stop a reader reading, which is the opposite of the goal.
+#
+# Content-Signal states the same policy in machine-readable form (Cloudflare's
+# Content Signals Policy, https://contentsignals.org). Restrictions expressed
+# this way are an express reservation of rights under Article 4 of EU Directive
+# 2019/790 on copyright in the Digital Single Market.
+User-agent: *
+Content-Signal: search=yes,ai-train=no,use=reference
+# The auth-gated admin panel and its old /portal path. Nothing here is public.
+Disallow: /admin/
+Disallow: /portal/
+# Unsaved CMS drafts, reachable only from the Wagtail preview button.
+Disallow: /updates/preview
+# Viewer chrome around a document that is itself already indexed.
+Disallow: /document-viewer
+# oEmbed iframe bodies — the same case content as /case/<id>, so indexing these
+# competes with the canonical page.
+Disallow: /embed/
 Allow: /
 
-User-agent: *
-Allow: /
+# /search is deliberately NOT disallowed here. It should stay out of the index,
+# but robots.txt is the wrong tool for that: a disallowed URL cannot be crawled,
+# so the crawler never reads the `noindex` that would drop it, and the page is
+# also listed in sitemap.xml — which would leave Search Console reporting a
+# contradiction. Keeping it crawlable and marking it `noindex` on the page is the
+# combination that works.
 
 Sitemap: https://jawafdehi.org/sitemap.xml
