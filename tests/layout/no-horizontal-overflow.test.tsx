@@ -4,20 +4,27 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { render } from '@testing-library/react';
 
-import { DonationInfo } from '@/components/donate/info';
+import { PayCard } from '@/components/donate/pay-card';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback?: unknown) =>
-      // Return the Nepali string for the one key this test is about, so the
-      // assertion is about a real localised label and not a short key name.
-      key === 'donate.ways.us.paypal.cta'
-        ? 'PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्'
-        : typeof fallback === 'string'
-          ? fallback
-          : key,
-  }),
-}));
+vi.mock('react-i18next', () => {
+  // The two Nepali CTA labels this test is about, so each assertion is about a
+  // real localised label and not a short key name. Declared inside the factory:
+  // `vi.mock` is hoisted above any module-level const, which would then be read
+  // before initialisation.
+  const NEPALI_CTA_LABELS: Record<string, string> = {
+    'donate.ways.us.zeffy.cta': 'Zeffy मार्फत आर्थिक सहयोग गर्नुहोस्',
+    'donate.ways.us.paypal.cta':
+      'PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्',
+  };
+
+  return {
+    useTranslation: () => ({
+      t: (key: string, fallback?: unknown) =>
+        NEPALI_CTA_LABELS[key] ??
+        (typeof fallback === 'string' ? fallback : key),
+    }),
+  };
+});
 
 // Two routes rendered wider than the phone they were on, and Chromium hid both by
 // scaling the page down and reporting the inflated innerWidth — so
@@ -45,12 +52,21 @@ function tsxFiles(dir: string): string[] {
   });
 }
 
-describe('the /donate CTA can wrap its Nepali label', () => {
+// Both rails on the "from abroad" panel, in the order they are shown. Each
+// carries a full Nepali sentence as its label, so each can floor the grid track.
+describe.each([
+  ['Zeffy', 'zeffy'],
+  ['PayPal', 'paypal'],
+])('the /donate %s CTA can wrap its Nepali label', (name, hrefFragment) => {
   it('renders whitespace-normal, and tailwind-merge drops the base nowrap', () => {
-    const { container } = render(<DonationInfo />);
-    const cta = container.querySelector<HTMLAnchorElement>('a[href*="paypal"]');
+    const { container } = render(<PayCard />);
+    // These CTAs live on the "from abroad" panel; it stays mounted behind
+    // `hidden` while the Nepal tab is active, so they are queryable either way.
+    const cta = container.querySelector<HTMLAnchorElement>(
+      `a[href*="${hrefFragment}"]`,
+    );
 
-    expect(cta, 'no PayPal CTA rendered').not.toBeNull();
+    expect(cta, `no ${name} CTA rendered`).not.toBeNull();
     const classes = (cta!.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
 
     // `whitespace-nowrap` lives in the buttonVariants BASE string, so this is the
@@ -71,6 +87,35 @@ describe('the /donate CTA can wrap its Nepali label', () => {
     ).not.toContain('w-fit');
     expect(classes).toContain('w-full');
     expect(classes).toContain('sm:w-fit');
+  });
+});
+
+describe('the /donate headline can wrap its emphasised phrase', () => {
+  // Same failure mode as the CTA above, one element up. The hero <h1> splits into
+  // a lead-in, an amber-emphasised phrase, and a tail so the emphasis can sit
+  // mid-sentence in either language. The emphasis span carried
+  // `sm:whitespace-nowrap`, which was harmless while the phrase was two short
+  // words ("accountability archive") and broke the moment it was reworded to
+  // "permanent record of corruption": unable to break, the span ran past its grid
+  // column and the headline rendered clipped mid-word — "permanent record of
+  // corru…" — on a 1474px desktop, not just on phones.
+  //
+  // Pinned at source level because it is invisible in review and does not throw:
+  // the text is simply gone, and only in the locale whose phrase is long enough.
+  it('has no whitespace-nowrap on the hero headline emphasis', () => {
+    const source = readFileSync(
+      join(SRC, 'components/donate/hero.tsx'),
+      'utf8',
+    );
+    const headline = /<h1[\s\S]*?<\/h1>/.exec(source);
+
+    expect(headline, 'the donate hero no longer renders an <h1>').not.toBeNull();
+    expect(
+      headline![0],
+      'the donate headline pins its emphasis to one line. Any localisation ' +
+        'longer than the column then overflows and is clipped mid-word rather ' +
+        'than wrapping. Let the headline wrap at every breakpoint.',
+    ).not.toMatch(/(?:^|[\s"'])(?:[a-z-]+:)?whitespace-nowrap/);
   });
 });
 
