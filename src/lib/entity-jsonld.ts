@@ -77,6 +77,63 @@ export const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
 // prefix is one or more lowercase/_/digit segments joined by '/'.
 export const PREFIX_RE = /^[a-z0-9_]+(?:\/[a-z0-9_]+){0,3}$/;
 
+// --- Entity picture (schema.org `image`) -------------------------------------
+
+// The JSON-LD key the admin picture field owns. Named so the two forms and the
+// field itself agree without repeating the literal.
+export const ENTITY_IMAGE_KEY = "image";
+
+// The shape a picture is STORED in. Fixed by the NES→schema.org mapping the
+// importer already follows (docs/shared/research/nes-schema-org.md §5:
+// `pictures[]` → `image` (`ImageObject`) with contentUrl/width/height/caption),
+// so an admin upload and an imported record are the same shape and the reader
+// below needs no special case for ours.
+export interface EntityImageObject {
+  "@type": "ImageObject";
+  contentUrl: string;
+  width?: number;
+  height?: number;
+}
+
+export function entityImageObject(
+  contentUrl: string,
+  width?: number,
+  height?: number,
+): EntityImageObject {
+  return { "@type": "ImageObject", contentUrl, width, height };
+}
+
+// schema.org image/logo → ONE display URL, or undefined when there's nothing
+// usable. Accepts a plain string, an ImageObject via url/contentUrl, or an
+// array of either, because imported records carry all three forms.
+//
+// This lives here rather than beside either caller so the admin field's preview
+// and the public profile resolve the SAME url: if they disagreed, an editor
+// could upload a picture, see it in the preview, and have the profile keep
+// rendering the glyph (or an older array entry) with nothing to explain why.
+export function entityImageUrl(
+  rec: Record<string, unknown> | null | undefined,
+): string | undefined {
+  const pick = (v: unknown): string | undefined => {
+    if (typeof v === "string") return v.trim() || undefined;
+    if (Array.isArray(v)) {
+      for (const x of v) {
+        const u = pick(x);
+        if (u) return u;
+      }
+      return undefined;
+    }
+    if (v && typeof v === "object") {
+      const o = v as { url?: unknown; contentUrl?: unknown };
+      if (typeof o.url === "string" && o.url.trim()) return o.url.trim();
+      if (typeof o.contentUrl === "string" && o.contentUrl.trim())
+        return o.contentUrl.trim();
+    }
+    return undefined;
+  };
+  return pick(rec?.[ENTITY_IMAGE_KEY]) ?? pick(rec?.logo);
+}
+
 // A minimal RFC-6902 diff between two JSON documents, scoped to the top-level
 // object keys an editor touches. We intentionally emit whole-key replace/add/
 // remove ops (not deep array diffs) — simpler and unambiguous for the form,

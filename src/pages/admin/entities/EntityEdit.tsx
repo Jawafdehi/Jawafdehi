@@ -8,7 +8,8 @@ import {
   adminErrorMessage,
   type EntityRecord,
 } from "@/services/admin-api";
-import { diffToPatchOps } from "@/lib/entity-jsonld";
+import { diffToPatchOps, ENTITY_IMAGE_KEY } from "@/lib/entity-jsonld";
+import EntityImageField from "@/components/admin/entities/EntityImageField";
 import DeleteButton from "@/components/admin/DeleteButton";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,10 @@ export default function EntityEdit() {
 
   const [nameEn, setNameEn] = useState("");
   const [nameNe, setNameNe] = useState("");
+  // The `image` value, lifted out of the JSON box into its own field the way
+  // `name` is. `undefined` means the document has no image key.
+  const [image, setImage] = useState<unknown>(undefined);
+  const [imageUploading, setImageUploading] = useState(false);
   const [extraJson, setExtraJson] = useState("");
   const [changeDescription, setChangeDescription] = useState("");
   const [saving, setSaving] = useState(false);
@@ -55,9 +60,13 @@ export default function EntityEdit() {
   const hydrate = useCallback((d: EntityRecord) => {
     setNameEn(nameField(d.name, "en"));
     setNameNe(nameField(d.name, "ne"));
+    // `image` is lifted into the picture field, so it must ALSO be withheld
+    // from the JSON box: editable in both places, the two would diverge and
+    // whichever the `after` merge applied last would silently win.
+    setImage(ENTITY_IMAGE_KEY in d ? d[ENTITY_IMAGE_KEY] : undefined);
     const extra: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(d)) {
-      if (READONLY_KEYS.has(k) || k === "name") continue;
+      if (READONLY_KEYS.has(k) || k === "name" || k === ENTITY_IMAGE_KEY) continue;
       extra[k] = v;
     }
     setExtraJson(Object.keys(extra).length ? JSON.stringify(extra, null, 2) : "");
@@ -103,9 +112,10 @@ export default function EntityEdit() {
         err = "Extra properties must be valid JSON.";
       }
     }
-    // Guard: the JSON box must not smuggle in read-only keys.
+    // Guard: the JSON box must not smuggle in read-only keys, nor the keys
+    // lifted into their own fields above (name, image).
     for (const k of Object.keys(parsedExtra)) {
-      if (READONLY_KEYS.has(k) || k === "name") {
+      if (READONLY_KEYS.has(k) || k === "name" || k === ENTITY_IMAGE_KEY) {
         err = `"${k}" is managed separately and can't be set here.`;
       }
     }
@@ -119,8 +129,14 @@ export default function EntityEdit() {
     for (const k of READONLY_KEYS) if (k in doc) next[k] = doc[k];
     next.name = name;
     Object.assign(next, parsedExtra);
+    // After the extras, so the field is authoritative for its own key. Set the
+    // key only when there IS an image: leaving it out is what makes
+    // diffToPatchOps emit `remove /image` for a removed picture, where an
+    // explicit `undefined` would emit a `replace` writing a value no reader
+    // can use.
+    if (image !== undefined) next[ENTITY_IMAGE_KEY] = image;
     return { after: next, extraError: err };
-  }, [doc, nameEn, nameNe, extraJson]);
+  }, [doc, nameEn, nameNe, extraJson, image]);
 
   const patchOps = useMemo(() => {
     if (!doc || !after || extraError) return [];
@@ -129,7 +145,7 @@ export default function EntityEdit() {
 
   const nameValid = nameEn.trim() !== "" || nameNe.trim() !== "";
   const canSave =
-    !saving && !extraError && nameValid && patchOps.length > 0;
+    !saving && !extraError && !imageUploading && nameValid && patchOps.length > 0;
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,6 +232,13 @@ export default function EntityEdit() {
             !nameValid && "At least one of English / Nepali name is required."
           }
           className="-mt-3"
+        />
+
+        <EntityImageField
+          value={image}
+          onChange={setImage}
+          onUploadingChange={setImageUploading}
+          disabled={saving}
         />
 
         <div className="space-y-1">

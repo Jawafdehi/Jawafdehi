@@ -1,8 +1,7 @@
 import { Community } from "@/components/donate/community";
-// import { DonationDescription } from "@/components/donate/description";
 import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
-import { DonationInfo } from "@/components/donate/info";
+import { DonationJourney } from "@/components/donate/journey";
 import { Seo } from "@/components/Seo";
 import { SITE_URL } from "@/utils/seo";
 
@@ -16,9 +15,10 @@ const Donate = () => {
       />
 
       <section className="flex-1">
+        {/* Payment-first: the hero carries the payment card itself, so the
+            page opens on *how to give*. The journey below answers *why*. */}
         <DonateHero />
-        {/* <DonationDescription /> */}
-        <DonationInfo />
+        <DonationJourney />
         <Community />
         <DonationFaq />
       </section>

@@ -28,20 +28,16 @@ import {
   sourceFromMaterialUrl,
 } from "@/lib/materials-landing";
 import { SITE_URL } from "@/utils/seo";
-import type {
-  ArchiveSearchResult,
-  BilingualText,
-  CaseSearchCard,
-  CaseSearchCardEntity,
-} from "@/types/search";
-import type { CaseDetail } from "@/types/jds";
+import type { ArchiveSearchResult, BilingualText } from "@/types/search";
 import { getCaseById } from "@/services/jds-api";
 import { cn } from "@/lib/utils";
-import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import {
+  caseCardPropsFromCaseDetail,
+  caseCardPropsFromSearchResult,
+} from "@/lib/case-card-props";
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
-import { getSubjectEntities } from "@/utils/case-entities";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
-import { EntityAvatar } from "@/components/EntityAvatar";
+import { EntityIdentity } from "@/components/EntityIdentity";
 
 // Both the /search list and card views render the same components; `viewMode`
 // only decides whether the shared <CaseCard> lays out horizontally (list) or as
@@ -252,7 +248,7 @@ function CaseResultCard({
       <CaseCard
         viewMode={caseCardViewMode}
         onTagClick={handleTagClick}
-        {...caseCardPropsFromCard(indexedCard, result, i18n.language)}
+        {...caseCardPropsFromSearchResult(result, i18n.language)}
       />
     );
   }
@@ -261,7 +257,7 @@ function CaseResultCard({
       <CaseCard
         viewMode={caseCardViewMode}
         onTagClick={handleTagClick}
-        {...caseCardPropsFromDetail(caseDetail, result, i18n.language, caseSlug)}
+        {...caseCardPropsFromCaseDetail(caseDetail, result, i18n.language, caseSlug)}
       />
     );
   }
@@ -272,88 +268,6 @@ function CaseResultCard({
     return viewMode === "card" ? <CaseCardSkeleton /> : <SearchResultCardSkeleton showTags />;
   }
   return <GenericResultCard result={result} viewMode={viewMode} />;
-}
-
-// ---------------------------------------------------------------------------
-// Case → <CaseCard> prop mapping
-// ---------------------------------------------------------------------------
-
-type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
-
-const CASE_STATUS_BADGE: Record<CaseSearchCard["status"], CaseCardStatus> = {
-  ongoing: "ongoing",
-  closed: "resolved",
-  others: "under-investigation",
-};
-
-function entityNames(entities: readonly { display_name: string | null; nes_id: string | null }[]): string[] {
-  return entities.map((e) => e.display_name || e.nes_id || "").filter(Boolean);
-}
-
-function entityIds(entities: readonly { nes_id: string | null }[]): string[] {
-  return entities.map((e) => e.nes_id).filter((id): id is string => Boolean(id));
-}
-
-// Map the indexed case-card payload (the common path on new docs) onto <CaseCard>.
-// `language` localizes the unknown-entity/location fallbacks the same way /cases does.
-function caseCardPropsFromCard(card: CaseSearchCard, result: ArchiveSearchResult, language: string) {
-  const subject = getSubjectEntities<CaseSearchCardEntity>(card.entities, (e) => e.type);
-  const location = (card.entities || []).filter((e) => e.type === "location");
-  const names = entityNames(subject);
-  const locationList = entityNames(location);
-  return {
-    id: result.id,
-    slug: card.slug || caseSlugFromUrl(result.url) || null,
-    title: card.title || pickLang(result.title),
-    entity: names.join(", ") || translateDynamicText("Unknown Entity", language),
-    entityNames: names,
-    location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
-    status: CASE_STATUS_BADGE[card.status] ?? "under-investigation",
-    tags: card.tags || [],
-    entityIds: entityIds(subject),
-    locationIds: entityIds(location),
-    image: card.thumbnail ?? null,
-    thumbnailUrl: card.thumbnail_url || undefined,
-    bannerUrl: card.banner_url || undefined,
-    bigo: card.bigo,
-  };
-}
-
-// Fallback for older indexed docs with no card payload: derive from case detail.
-// Status is inferred from the case's date fields (same rule the cases list uses).
-function caseCardPropsFromDetail(
-  detail: CaseDetail,
-  result: ArchiveSearchResult,
-  language: string,
-  fallbackSlug?: string,
-) {
-  const entities = detail.entities || [];
-  const subject = getSubjectEntities(entities, (e) => e.type);
-  const location = entities.filter((e) => e.type === "location");
-  const names = entityNames(subject);
-  const locationList = entityNames(location);
-  const hasStart = Boolean(detail.case_start_date && detail.case_start_date.trim() !== "");
-  const hasEnd = Boolean(detail.case_end_date && detail.case_end_date.trim() !== "");
-  const status: CaseCardStatus = hasStart && !hasEnd ? "ongoing" : hasStart && hasEnd ? "resolved" : "under-investigation";
-  return {
-    id: result.id,
-    slug: detail.slug || fallbackSlug || null,
-    title: detail.title || pickLang(result.title),
-    entity: names.join(", ") || translateDynamicText("Unknown Entity", language),
-    entityNames: names,
-    location: locationList.join(", ") || translateDynamicText("Unknown Location", language),
-    status,
-    tags: detail.tags || [],
-    entityIds: entityIds(subject),
-    locationIds: entityIds(location),
-    image: detail.thumbnail ?? null,
-    thumbnailUrl: detail.thumbnail_url || undefined,
-    bannerUrl: detail.banner_url || undefined,
-    // Kept in step with the indexed-card path above: the two mappings feed the
-    // same <CaseCard>, so a field added to one must be added to both or a case
-    // silently loses it on older docs that fall back to the detail fetch.
-    bigo: detail.bigo,
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -477,7 +391,7 @@ function EntityResultCard({
   const supporting = [kindLabel, simpleMetadata(result)].filter(Boolean).join(" · ");
 
   return (
-    <div
+    <article
       className={cn(
         "group relative flex overflow-hidden transition-colors duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
         // The same tinted, borderless surface as the party cards on the case page.
@@ -486,16 +400,12 @@ function EntityResultCard({
           : "min-h-20 flex-row items-center gap-4 rounded-xl bg-card p-4 hover:bg-muted/35",
       )}
     >
-      <EntityAvatar kind={kind} size={isCard ? "lg" : "sm"} />
-      {/* In the tile the text must not stretch, or the avatar+text group sits
-          high and the air under the caption outweighs the air above the avatar. */}
-      <article className={cn("flex min-w-0 flex-col", !isCard && "flex-1")}>
-        <h3
-          className={cn(
-            "line-clamp-2 break-words text-base font-medium leading-snug text-primary",
-            isCard && "text-balance",
-          )}
-        >
+      <EntityIdentity
+        kind={kind}
+        layout={isCard ? "tile" : "row"}
+        nameAs="h3"
+        alternate={alternate}
+        name={
           <Link
             to={result.url}
             className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -503,13 +413,11 @@ function EntityResultCard({
             <span aria-hidden="true" className="absolute inset-0" />
             {title}
           </Link>
-        </h3>
-        {alternate ? (
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">{alternate}</p>
-        ) : null}
+        }
+      >
         <p className={cn("font-meta break-words", isCard ? "mt-2" : "mt-1")}>{supporting}</p>
-      </article>
-    </div>
+      </EntityIdentity>
+    </article>
   );
 }
 

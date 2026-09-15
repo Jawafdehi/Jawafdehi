@@ -125,7 +125,17 @@ const DIR = arg("dir", "dist/client");
 // pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 672_500;
+//
+// 2026-09: 672_500 → 678_400 for the donate v2 page (feature/donate-v2).
+// /donate is pre-rendered, so its hero, pay card (region tabs, QR switch, bank
+// details, remittance expander) and journey board must stay eager (see
+// tests/ssr/prerendered-routes-eager.test.ts). The three.js globe is NOT in this
+// count — it loads through GlobeGate (client-only, idle-time, WebGL-gated) as a
+// deferred chunk. Measured: this branch merged with main builds to 673,756 bytes
+// locally; the CI runner's zlib packs ~3.6 KB larger (see the entry above), so
+// CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
+// matching the headroom the entries above leave.
+const MAX_INITIAL_JS_GZIP = 678_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

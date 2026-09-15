@@ -37,6 +37,12 @@ export interface ArchiveSearchParams {
   tags?: string[];
   // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
   status?: string[];
+  // Court-case location facets. They are meaningful only for court records, so
+  // ArchiveSearch discards them for every other record type before a request.
+  court?: string[];
+  court_type?: string[];
+  district?: string[];
+  province?: string[];
   // बिगो (alleged embezzled amount, whole NPR) range bounds — the one refine
   // control that is not exact-match. Both inclusive. CASE-ONLY: no entity,
   // material or court-case document carries an amount, so either bound also
@@ -63,6 +69,10 @@ export interface ArchiveSearchFacets {
   case_type: SearchFacetItem[];
   tags: SearchFacetItem[];
   status: SearchFacetItem[];
+  court: SearchFacetItem[];
+  court_type: SearchFacetItem[];
+  district: SearchFacetItem[];
+  province: SearchFacetItem[];
 }
 
 export interface CaseSearchCardEntity {

@@ -56,6 +56,10 @@ const baseResponse: ArchiveSearchResponse = {
     case_type: [{ name: "CORRUPTION", count: 7 }],
     tags: [{ name: "CIAA", count: 6 }],
     status: [{ name: "ongoing", count: 5 }],
+    court: [],
+    court_type: [],
+    district: [],
+    province: [],
   },
   results: [
     {
@@ -69,6 +73,32 @@ const baseResponse: ArchiveSearchResponse = {
       matched_fields: [],
       score: 1,
       extra: { case_type: "CORRUPTION" },
+    },
+  ],
+};
+
+const courtFacetResponse: ArchiveSearchResponse = {
+  ...baseResponse,
+  count: 5_477,
+  counts: { courtcase: 5_477 },
+  facets: {
+    ...baseResponse.facets,
+    court: [{ name: "kathmandudc", count: 5_477 }],
+    court_type: [{ name: "district", count: 14_307 }],
+    district: [{ name: "Kathmandu", count: 5_477 }],
+    province: [{ name: "Bagmati", count: 7_617 }],
+  },
+  results: [
+    {
+      ...baseResponse.results[0],
+      type: "courtcase",
+      id: "https://jawafdehi.org/courtcase/kathmandudc/083-c1-1430",
+      title: { ne: null, en: "District Court Kathmandu 083-C1-1430" },
+      url: "/courtcase/kathmandudc/083-c1-1430",
+      extra: {
+        court: "kathmandudc",
+        court_type: "district",
+      },
     },
   ],
 };
@@ -419,6 +449,61 @@ describe("ArchiveSearch", () => {
 
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ entity_type: [], type: "case" }),
+    );
+  });
+
+  it("sends selected court filters and preserves them in the URL", async () => {
+    searchArchiveMock.mockResolvedValue(courtFacetResponse);
+    renderSearch("/search?type=courtcase");
+    await screen.findByText("Court level");
+
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: "District Court: 14307 results",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          court_type: ["district"],
+          type: "courtcase",
+        }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).toContain(
+      "court_type=district",
+    );
+  });
+
+  it("drops court filters when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(courtFacetResponse);
+    renderSearch("/search?type=courtcase&province=Bagmati");
+    await screen.findByText("Court level");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ province: ["Bagmati"], type: "courtcase" }),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ province: [], type: "case" }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "province",
+    );
+  });
+
+  it("ignores a court filter carried in by a non-court URL", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&court_type=district");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ court_type: [], type: "case" }),
     );
   });
 
