@@ -126,15 +126,81 @@ const DIR = arg("dir", "dist/client");
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
 //
-// PR #362 rides on top of the above: the generative case-thumbnail fallback
-// adds ~1 KB gzip of card + formatting logic that stays eager (case cards
-// render on pre-rendered routes, SSR constraint, so it cannot be lazy-loaded).
-// Re-measured on the merged tree (main #369/#370/#371 + #362): 657.9 KB gzip
-// locally (673,690 bytes). The runner's zlib packs ~3.7 KB larger than local
-// here — main alone was 652.8 KB local / 656.5 KB CI — so this maps to ~661.6 KB
-// (~677.4 KB… 677_400 bytes) in CI; 678_500 leaves ~1,100 bytes over that,
-// matching the headroom convention of the entries above.
-const MAX_INITIAL_JS_GZIP = 678_500;
+// 2026-09: 672_500 → 678_400 for the donate v2 page (feature/donate-v2).
+// /donate is pre-rendered, so its hero, pay card (region tabs, QR switch, bank
+// details, remittance expander) and journey board must stay eager (see
+// tests/ssr/prerendered-routes-eager.test.ts). The three.js globe is NOT in this
+// count — it loads through GlobeGate (client-only, idle-time, WebGL-gated) as a
+// deferred chunk. Measured: this branch merged with main builds to 673,756 bytes
+// locally; the CI runner's zlib packs ~3.6 KB larger (see the entry above), so
+// CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
+// matching the headroom the entries above leave.
+//
+// 2026-09: 678_400 → 680_300 for the materials tab's two filters
+// (feat/material-search-filters). Measured, and this time the local and CI
+// figures are the SAME number: main at b1da66c builds to 677,581 bytes gzip
+// (CI run 34727712170) and this branch merged with main to 679,225 (CI run
+// 34941177606, reproduced byte-for-byte locally), so the pair costs ~1,644
+// bytes gzip and lands 825 over the old line. Where they go: the document-type
+// facet group with its getFacetItemLabel branch and the ArchiveSearch
+// param/pill/clear wiring, the record-date control, lib/date-range's
+// parse/normalize/preset rules, and the new archiveSearch.filters keys in
+// en.json / ne.json.
+//
+// Deferring DateRangeFilter was TRIED, MEASURED and REVERTED. It recovers 319
+// bytes — not the ~1,600 its source size suggests — against the 825 that had to
+// come off, so it cannot clear the gate on its own and would have bought a lazy
+// boundary, a chunk fetch on every switch to the materials tab, and a rewrite of
+// seven synchronous assertions, AND still needed this line moved. Two things eat
+// the difference: lib/date-range stays eager regardless, because
+// src/utils/archive-search-params.ts and ArchiveSearch both read
+// readDateBounds/describeDateRange on every render, so only the component moves;
+// and the dynamic-import stub, the local Suspense boundary and Vite's preload
+// entry hand part of it straight back.
+//
+// Worth recording for whoever needs bytes next, because it is the biggest lever
+// measured here in a while: giving BigoRangeFilter the same treatment recovers a
+// further 4,031, which would put the payload at 674,875 and let this line
+// ratchet DOWN past where it started. It is NOT taken here — that control is not
+// this branch's code, it renders on the case tab rather than a type-gated one,
+// and it needs its own reserved skeleton and test pass. It is a change on its
+// own terms, not a rider on a filter PR.
+//
+// One correction for the next reader, so the arithmetic above is not misread as
+// this branch's doing: the ~1,050 the donate entry claims had ALREADY decayed to
+// 819 before this branch touched anything. #393 (launch surfaces, b1da66c) added
+// ~2,870 bytes gzip on top of #387 without moving this line — and the ~3.6 KB
+// runner-zlib delta that entry leans on did not hold either; local and CI agree
+// exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
+// over the measured build, matching the headroom the entries above leave.
+//
+// 2026-09: 680_300 → 682_200 for the generative case-thumbnail fallback
+// (feature/case-thumbnails, PR #384). Re-measured on the merge of main 42c0105
+// into the branch, because the figure this entry used to carry was taken against
+// a main that is now ten commits stale: main alone builds to 679,239 bytes gzip
+// and the merged tree to 681,144, so the fallback costs 1,905 bytes gzip and
+// lands 844 over the old line. 682_200 leaves 1,056 bytes over the measured
+// build, matching the headroom the entries above leave.
+//
+// Correcting this branch's own earlier claim, which the merge superseded: it
+// said "~1 KB gzip" and 678_500 against the pre-#387 tree. The cost is 1,905 —
+// roughly double — and the old number is below where main already sits, so it
+// would have read as a ratchet DOWN that nothing had earned. The previous entry
+// says it: measure the merged tree, do not extrapolate.
+//
+// Where the bytes go: CaseThumbnail's SVG data-portrait (src/components/
+// CaseThumbnail.tsx, 193 lines) plus the amount/accused/event derivation in
+// src/lib/case-thumbnail.ts, and the six generativeThumbnail keys in en.json
+// and ne.json. It stays eager for the usual reason — CaseCard is imported by
+// src/pages/Index.tsx and src/pages/Cases.tsx, and both `/` and `/cases` are in
+// PRE_RENDERED_STATIC_ROUTES, so a lazy boundary here would pre-render the two
+// highest-traffic pages as a fallback (see tests/ssr/prerendered-routes-eager.
+// test.ts, and the donate entry above for what that shipped last time).
+//
+// The BigoRangeFilter lever the entry above records is still unclaimed, still
+// worth ~4,031 bytes, and still not this branch's to spend — for exactly the
+// reason given there: it is a change on its own terms, not a rider on a merge.
+const MAX_INITIAL_JS_GZIP = 682_200;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

@@ -7,6 +7,7 @@ import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-reac
 
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath } from "@/lib/entity-links";
+import { entityImageUrl } from "@/lib/entity-jsonld";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
@@ -174,27 +175,11 @@ function scalar(v: unknown): string | null {
   return null;
 }
 
-// schema.org image/logo -> a single URL (a plain string, an ImageObject via url/contentUrl,
-// or an array of either). Returns undefined when there's nothing usable.
-function imageUrlOf(rec: EntityRecord | undefined): string | undefined {
-  const pick = (v: unknown): string | undefined => {
-    if (typeof v === "string") return v.trim() || undefined;
-    if (Array.isArray(v)) {
-      for (const x of v) {
-        const u = pick(x);
-        if (u) return u;
-      }
-      return undefined;
-    }
-    if (v && typeof v === "object") {
-      const o = v as { url?: unknown; contentUrl?: unknown };
-      if (typeof o.url === "string" && o.url.trim()) return o.url.trim();
-      if (typeof o.contentUrl === "string" && o.contentUrl.trim()) return o.contentUrl.trim();
-    }
-    return undefined;
-  };
-  return pick(rec?.image) ?? pick(rec?.logo);
-}
+// schema.org image/logo -> a single URL. The implementation lives in
+// lib/entity-jsonld so the admin picture field resolves the SAME url this page
+// renders; see entityImageUrl there for the shapes it accepts.
+const imageUrlOf = (rec: EntityRecord | undefined): string | undefined =>
+  entityImageUrl(rec as Record<string, unknown> | undefined);
 
 // One fact in the About panel: small caps label over the value.
 function Fact({ label, children }: Readonly<{ label: string; children: ReactNode }>) {

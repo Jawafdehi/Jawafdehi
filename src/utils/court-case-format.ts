@@ -6,9 +6,17 @@ const COURT_NAMES_EN: Record<string, string> = {
   appellate: "Appellate Court",
 };
 
+// The tier names here are the same words `formatCourtName` already appends to a
+// district/high identifier below ("… जिल्ला अदालत"), spelled once. They are
+// reached only by a BARE tier token — every one of the 96 courts the search
+// facet returns ends in `dc`/`hc` or is `special`/`supreme`, so no court
+// identifier resolves through this map.
 const COURT_NAMES_NE: Record<string, string> = {
   special: "विशेष अदालत",
   supreme: "सर्वोच्च अदालत",
+  high: "उच्च अदालत",
+  district: "जिल्ला अदालत",
+  appellate: "पुनरावेदन अदालत",
 };
 
 export type CourtStatusBadgeValue =
@@ -108,6 +116,30 @@ export function formatCourtName(court: string | null | undefined, lang = "en"): 
   return spaced
     .toLowerCase()
     .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+}
+
+/**
+ * Names a court TIER — the four values the search API's `court_type` facet
+ * holds (`ALL_COURT_TYPES`) — in either language.
+ *
+ * Distinct from `formatCourtName`, which names ONE court: "district" is the
+ * tier "District Court", where "kathmandudc" is "Kathmandu District Court".
+ * Kept here rather than at the call site so both spellings of "District Court"
+ * come from the same two maps and cannot drift apart between the facet sidebar
+ * and the court-case cards.
+ */
+export function formatCourtType(
+  courtType: string | null | undefined,
+  lang = "en",
+): string {
+  const value = courtType?.trim().toLowerCase();
+  if (!value) return "";
+  if (lang.startsWith("ne") && COURT_NAMES_NE[value]) {
+    return COURT_NAMES_NE[value];
+  }
+  // The vocabulary is closed, so the fallback is unreachable on live data; it
+  // humanizes rather than dropping a bucket the reader can see a count for.
+  return COURT_NAMES_EN[value] ?? formatCourtName(courtType, lang);
 }
 
 /**

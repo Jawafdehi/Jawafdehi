@@ -13,10 +13,20 @@ import type {
   SearchFacetItem,
 } from "@/types/search";
 import { BigoRangeFilter } from "@/components/search/BigoRangeFilter";
+import { DateRangeFilter } from "@/components/search/DateRangeFilter";
 import type { BigoExtent } from "@/lib/bigo-range";
+import type { DateBounds } from "@/lib/date-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
 
-export type SidebarFilterName = "entity_type" | "case_type" | "tags";
+export type SidebarFilterName =
+  | "entity_type"
+  | "case_type"
+  | "tags"
+  | "court"
+  | "court_type"
+  | "district"
+  | "province"
+  | "material_type";
 
 /**
  * How many options a group shows before collapsing behind "More", and the size
@@ -43,6 +53,31 @@ const FILTER_GROUPS: {
     title: "Entity type",
   },
   {
+    name: "court_type",
+    titleKey: "archiveSearch.filters.courtType",
+    title: "Court level",
+  },
+  {
+    name: "province",
+    titleKey: "archiveSearch.filters.province",
+    title: "Province",
+  },
+  {
+    name: "district",
+    titleKey: "archiveSearch.filters.district",
+    title: "District",
+  },
+  {
+    name: "court",
+    titleKey: "archiveSearch.filters.court",
+    title: "Court",
+  },
+  {
+    name: "material_type",
+    titleKey: "archiveSearch.filters.materialType",
+    title: "Document type",
+  },
+  {
     name: "case_type",
     titleKey: "archiveSearch.filters.caseType",
     title: "Case type",
@@ -63,6 +98,11 @@ type SearchFiltersProps = {
   bigoMax?: number;
   // Cases matching the current search, for the "what will this give me" count.
   onBigoCommit: (bounds: { min?: number; max?: number }) => void;
+  // Record-date bounds. Unlike बिगो there is no extent to fetch — a calendar is
+  // its own scale, so the control needs nothing from the API to render.
+  dateFrom?: string;
+  dateTo?: string;
+  onDateCommit: (bounds: DateBounds) => void;
 };
 
 export function SearchFilters({
@@ -75,6 +115,9 @@ export function SearchFilters({
   bigoMin,
   bigoMax,
   onBigoCommit,
+  dateFrom,
+  dateTo,
+  onDateCommit,
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
 
@@ -117,11 +160,52 @@ export function SearchFilters({
           onCommit={onBigoCommit}
         />
       ) : null}
+
+      {/*
+        Record date, scoped to the ONE tab whose records this narrows usefully.
+
+        The endpoint applies the bounds globally — that is the mechanism the बिगो
+        note above anticipated. But scope is not the same question as support:
+        entities carry no date at all, so a bound empties that tab outright, and
+        on `all` it would silently drop every entity from a mixed result set. The
+        case tab already opens with बिगो, and stacking a second range control
+        above the term facets is what pushed the tags group off-screen the last
+        time this column grew.
+
+        So: materials only, which is what was asked for and where the corpus
+        actually supports it — 93% of materials carry a date. Widening this to
+        court cases is a one-line change to this condition once someone wants it.
+      */}
+      {selectedType === "material" ? (
+        <DateRangeFilter
+          from={dateFrom}
+          onCommit={onDateCommit}
+          to={dateTo}
+        />
+      ) : null}
       {FILTER_GROUPS
         // "Entity type" only makes sense while browsing Entities — for every
         // other record type (or "all") its buckets are either irrelevant or,
         // as originally reported, collapse to a single confusing value.
-        .filter(({ name }) => name !== "entity_type" || selectedType === "entity")
+        .filter(({ name }) => {
+          if (name === "entity_type") return selectedType === "entity";
+          // Court facets are intentionally absent from the all-records view:
+          // applying one there hides unrelated entity/material/case results,
+          // while the control itself is only useful once Court cases is selected.
+          if (
+            name === "court" ||
+            name === "court_type" ||
+            name === "district" ||
+            name === "province"
+          ) {
+            return selectedType === "courtcase";
+          }
+          // Document type is scoped the same way, and for the same reason: only
+          // materials carry one, so the buckets are empty everywhere else and a
+          // stale token would narrow another tab through an invisible control.
+          if (name === "material_type") return selectedType === "material";
+          return true;
+        })
         .map(({ name, titleKey, title }) => (
           <FilterGroup
             items={facets[name]}
@@ -139,7 +223,26 @@ export function SearchFilters({
 export function SearchFiltersSkeleton({
   selectedType,
 }: Readonly<{ selectedType?: ArchiveSearchType }> = {}) {
-  const groupRowCounts = [4, 3, 3] as const;
+  // Reserve exactly the groups each tab can FILL — checked against what the API
+  // actually returns per type, not against the union of every group. Both
+  // directions are a jump: under-reserving pushes the sidebar down when data
+  // lands, and over-reserving collapses it on first paint, which is the same
+  // failure the बिगो block below is gated against.
+  //
+  // Court-case browsing adds four location groups to the two term groups.
+  // Entities fill only "Entity type" — the case_type and tags facets come back
+  // empty for them. Materials fill exactly one group, "Document type": 10 of the
+  // 12 tokens have documents, so reserve the collapsed height (8 rows) rather
+  // than the full vocabulary. Their case_type and tags buckets come back empty,
+  // like the entity tab's.
+  const groupRowCounts =
+    selectedType === "courtcase"
+      ? [3, 3, 3, 3, 3, 3]
+      : selectedType === "entity"
+        ? [4]
+        : selectedType === "material"
+          ? [8]
+          : [4, 3];
 
   return (
     <aside
@@ -173,6 +276,27 @@ export function SearchFiltersSkeleton({
           <Skeleton className="h-11 w-full rounded-md" />
           <Skeleton className="h-11 w-full rounded-md" />
           <Skeleton className="h-11 w-32 rounded-md" />
+        </div>
+      ) : null}
+
+      {/*
+        The date block, on the same terms: gated on the live control's own
+        condition, and reserving what it actually occupies — a legend, a row of
+        four preset pills, two fields and the coverage note. /materials is a
+        locked-type browse, so `material` is the cold-load case this matters for
+        most.
+      */}
+      {selectedType === "material" ? (
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <div className="flex gap-1.5">
+            <Skeleton className="h-7 w-16 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-3 w-full" />
         </div>
       ) : null}
 
@@ -214,7 +338,7 @@ function FilterGroup({
   selectedValues: string[];
   title: string;
 }>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const searchId = useId();
@@ -237,14 +361,15 @@ function FilterGroup({
   }, [items, selectedValues]);
 
   // Labels are resolved once: the search matches what the reader can SEE, not
-  // the raw facet token behind it.
+  // the raw facet token behind it. That includes the court names, which are
+  // Nepali under a Nepali UI — so the language is part of the dependency list.
   const labelled = useMemo(
     () =>
       displayItems.map((item) => ({
         item,
-        label: getFacetItemLabel(name, item, t),
+        label: getFacetItemLabel(name, item, t, i18n.language),
       })),
-    [displayItems, name, t],
+    [displayItems, name, t, i18n.language],
   );
 
   const needle = query.trim().toLocaleLowerCase();

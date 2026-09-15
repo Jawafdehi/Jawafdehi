@@ -1,0 +1,33 @@
+/* Independent columns: a second or third credit never stretches the fact rows. */
+.case-dossier {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  padding-top: 8px;
+}
+.case-dossier-main { display: grid; min-width: 0; gap: 24px; }
+.case-dossier-facts { display: grid; gap: 18px; }
+.case-dossier-facts > div { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+.case-dossier-facts > div > * { min-width: 0; overflow-wrap: anywhere; }
+.case-dossier-courts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 8px; }
+.case-dossier-sidebar {
+  min-width: 0;
+  padding: 20px;
+  border-radius: 20px;
+  background: hsl(var(--muted) / .45);
+  overflow-wrap: anywhere;
+}
+.case-dossier-sidebar:empty { display: none; }
+.case-dossier-sidebar [data-testid="author-card"] { background: transparent; padding: 8px 0; }
+.case-dossier-sidebar a[data-testid="author-card"]:hover { background: hsl(var(--primary) / .09); }
+.case-dossier-sidebar [data-testid="case-byline-authors"] { flex-direction: column; }
+.case-dossier-sidebar [data-testid="case-byline-published"] { font-size: 12px; line-height: 1.7; margin-bottom: 14px; }
+.case-dossier-sidebar [data-testid="case-byline-published"] span { display: block; }
+.case-dossier-sidebar .case-byline > .uppercase { text-transform: none; letter-spacing: normal; }
+@media (min-width: 901px) {
+  .case-dossier:has(.case-byline) { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
+}
+@media (max-width: 600px) {
+  .case-dossier-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
