@@ -173,7 +173,34 @@ const DIR = arg("dir", "dist/client");
 // runner-zlib delta that entry leans on did not hold either; local and CI agree
 // exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
 // over the measured build, matching the headroom the entries above leave.
-const MAX_INITIAL_JS_GZIP = 680_300;
+//
+// 2026-09: 680_300 → 682_200 for the generative case-thumbnail fallback
+// (feature/case-thumbnails, PR #384). Re-measured on the merge of main 42c0105
+// into the branch, because the figure this entry used to carry was taken against
+// a main that is now ten commits stale: main alone builds to 679,239 bytes gzip
+// and the merged tree to 681,144, so the fallback costs 1,905 bytes gzip and
+// lands 844 over the old line. 682_200 leaves 1,056 bytes over the measured
+// build, matching the headroom the entries above leave.
+//
+// Correcting this branch's own earlier claim, which the merge superseded: it
+// said "~1 KB gzip" and 678_500 against the pre-#387 tree. The cost is 1,905 —
+// roughly double — and the old number is below where main already sits, so it
+// would have read as a ratchet DOWN that nothing had earned. The previous entry
+// says it: measure the merged tree, do not extrapolate.
+//
+// Where the bytes go: CaseThumbnail's SVG data-portrait (src/components/
+// CaseThumbnail.tsx, 193 lines) plus the amount/accused/event derivation in
+// src/lib/case-thumbnail.ts, and the six generativeThumbnail keys in en.json
+// and ne.json. It stays eager for the usual reason — CaseCard is imported by
+// src/pages/Index.tsx and src/pages/Cases.tsx, and both `/` and `/cases` are in
+// PRE_RENDERED_STATIC_ROUTES, so a lazy boundary here would pre-render the two
+// highest-traffic pages as a fallback (see tests/ssr/prerendered-routes-eager.
+// test.ts, and the donate entry above for what that shipped last time).
+//
+// The BigoRangeFilter lever the entry above records is still unclaimed, still
+// worth ~4,031 bytes, and still not this branch's to spend — for exactly the
+// reason given there: it is a change on its own terms, not a rider on a merge.
+const MAX_INITIAL_JS_GZIP = 682_200;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
