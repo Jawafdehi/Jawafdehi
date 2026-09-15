@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
@@ -121,9 +122,30 @@ export function EntityRelatedCases({
       </div>
 
       {data.count === 0 ? (
-        <p className="mt-4 rounded-xl bg-muted/50 p-5 text-sm text-muted-foreground">
-          {t("entityDetail.noRelatedCases")}
-        </p>
+        <>
+          {/* An entity no published case cites is hidden from public entity
+              search (see `entities/search_visibility.py` in the API), and its
+              page carries nothing but registry fields — so keep the ~186k of
+              them out of the index too rather than publishing thin pages with
+              no case context. The sitemap is the positive half of this: it
+              lists exactly the cited entities.
+
+              Placed here, in the component that HAS the answer, rather than in
+              the page: the page would have to duplicate this query to know.
+              Emitted only on a loaded, genuinely empty result — the error path
+              above returns early, so a failed request never deindexes a page.
+
+              `follow` is deliberate: the case links on a cited entity's page
+              are worth crawling, and this branch renders none, but keeping the
+              directive consistent avoids implying the outbound links are
+              untrusted. */}
+          <Helmet>
+            <meta name="robots" content="noindex, follow" />
+          </Helmet>
+          <p className="mt-4 rounded-xl bg-muted/50 p-5 text-sm text-muted-foreground">
+            {t("entityDetail.noRelatedCases")}
+          </p>
+        </>
       ) : null}
 
       <ul className="mt-4 min-h-0 space-y-4 overflow-y-auto pr-1 [scrollbar-width:thin]">
