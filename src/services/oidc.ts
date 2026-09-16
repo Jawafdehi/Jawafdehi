@@ -1,23 +1,28 @@
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 
+import {
+  OIDC_AUTHORITY,
+  OIDC_CLIENT_ID,
+  OIDC_AUDIENCE,
+} from "./oidc-session";
+
 let userManager: UserManager | null = null;
 
 function createUserManager(): UserManager {
   if (userManager) return userManager;
 
   // OIDC config for the casework portal SPA. These are public values (they ship
-  // in the browser anyway), so they're baked in here with an env override for
-  // local/staging. NOTE: the audience scope URN below is the current provider's
-  // (Zitadel) format — revisit if the IdP changes.
-  const authority =
-    import.meta.env.VITE_OIDC_AUTHORITY || "https://auth.jawafdehi.org";
+  // in the browser anyway), so they're defined in ./oidc-session (with an env
+  // override for local/staging) and shared with the thin session probe there —
+  // the probe's localStorage key is derived from the same authority/client_id,
+  // so the two can never drift. NOTE: the audience scope URN below is the
+  // current provider's (Zitadel) format — revisit if the IdP changes.
+  const authority = OIDC_AUTHORITY;
   // The SPA client now lives in the gated Zitadel project (login is restricted to
   // staff via a project grant); tokens still request the public project's audience
   // scope below so the API sees the caller's roles.
-  const client_id =
-    import.meta.env.VITE_OIDC_CLIENT_ID || "383260434469224721";
-  const audience =
-    import.meta.env.VITE_OIDC_AUDIENCE || "377760393168159088";
+  const client_id = OIDC_CLIENT_ID;
+  const audience = OIDC_AUDIENCE;
   const origin = window.location.origin;
 
   // `offline_access` is what makes Zitadel issue a REFRESH TOKEN, which is the
