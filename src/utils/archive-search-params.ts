@@ -1,4 +1,5 @@
 import { readBigoBounds } from "@/lib/bigo-range";
+import { readDateBounds } from "@/lib/date-range";
 
 // `sort` is deliberately NOT here. A value listed in defaultValues is stripped
 // from the URL, and the default sort is no longer a constant — ArchiveSearch
@@ -64,6 +65,16 @@ export function normalizeArchiveSearchParams(current: URLSearchParams) {
   setOrDelete(next, "bigo_min", bigo.min);
   setOrDelete(next, "bigo_max", bigo.max);
 
+  // Record-date bounds (?date_from / ?date_to, Gregorian YYYY-MM-DD, inclusive),
+  // on exactly the same terms as बिगो above: the API 400s a malformed date or an
+  // inverted pair, and readDateBounds is the one place that rule lives.
+  //
+  // Dates need the calendar check too, not just the shape — "2026-02-31" passes
+  // any regex and is still a 400.
+  const dates = readDateBounds(next);
+  setOrDelete(next, "date_from", dates.from);
+  setOrDelete(next, "date_to", dates.to);
+
   return next;
 }
 
@@ -72,7 +83,7 @@ export function normalizeArchiveSearchParams(current: URLSearchParams) {
 function setOrDelete(
   params: URLSearchParams,
   name: string,
-  value: number | undefined,
+  value: number | string | undefined,
 ) {
   if (value === undefined) params.delete(name);
   else params.set(name, String(value));

@@ -5,6 +5,7 @@
 // prefer the accused entities, but fall back to any other *named* (non-location)
 // entity when there are none. Locations are never a subject.
 
+import { materialTypeKeyFor } from "@/lib/material-type-labels";
 import { formatCourtName, formatCourtType } from "@/utils/court-case-format";
 
 const LOCATION_ROLE = "location";
@@ -90,6 +91,22 @@ export function getFacetItemLabel(
     // Known type → localized label; unknown (e.g. scraped WRIT) → humanized raw
     // value, never a wrong default.
     return key ? translate(key) : humanize(item.name);
+  }
+  // Material document form. The tokens are lower_snake_case ("charge_sheet",
+  // "procurement_notice") and already carry bilingual labels under
+  // dataQuality.materialsByType.type.* — the same ones the /materials chart and
+  // the search result card read, so one thing gets one name across three
+  // surfaces. Without this branch the fallback humanizes them into English
+  // ("charge sheet") on a Nepali-first site.
+  //
+  // An unknown token resolves to "other", which would be a WRONG label rather
+  // than merely an ugly one, so it falls through to the humanized value — the
+  // same call `case_type` makes just above.
+  if (facetName === "material_type") {
+    const key = materialTypeKeyFor(item.name);
+    return key === "other"
+      ? humanize(item.name)
+      : translate(`dataQuality.materialsByType.type.${key}`);
   }
   // Court tier ("district") and court identifier ("kathmandudc") are different
   // vocabularies over the same names, so they take the two matching helpers.
