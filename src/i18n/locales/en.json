@@ -374,13 +374,17 @@
   },
   "donate": {
     "hero": {
-      "support": "Keep Nepal's",
-      "accountabilityArchive": "accountability archive",
-      "alive": "alive",
+      "titleLead": "Help keep the",
+      "titleHighlight": "permanent record of corruption",
+      "titleTail": "alive",
       "description": "Jawafdehi is run by volunteers and funded by people who believe corruption should never be forgotten. Your donation pays for the servers, document archiving, and tooling that keep this public record permanent and free for everyone.",
       "giveNow": "Ways to contribute",
       "contactUs": "Contact us",
-      "email": "Email us"
+      "email": "Email us",
+      "stats": {
+        "cases": "Cases documented",
+        "entities": "Entities tracked"
+      }
     },
     "impact": {
       "eyebrow": "Where your money goes",
@@ -405,6 +409,22 @@
         }
       ]
     },
+    "outcomes": {
+      "items": [
+        {
+          "title": "Cases published",
+          "desc": "Sourced, verified, and legally reviewed before anything goes public."
+        },
+        {
+          "title": "An archive that stays online",
+          "desc": "Independent and permanent — corruption records that cannot quietly disappear."
+        },
+        {
+          "title": "Free for every citizen",
+          "desc": "No paywalls, no ads. Every case, entity, and document open to read, search, and reuse."
+        }
+      ]
+    },
     "ways": {
       "title": "Two ways to give",
       "nepali": {
@@ -416,6 +436,8 @@
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
         "copyAria": "Copy Nepali bank account number",
+        "copyNameAria": "Copy account name",
+        "copyBankAria": "Copy bank name",
         "qrTitle": "Scan to pay",
         "qrDescription": "Scan with any mobile banking app or digital wallet on either Nepali QR network.",
         "walletSwitchAria": "Choose a QR network",
@@ -432,8 +454,16 @@
       },
       "us": {
         "whoFor": "If you are giving from anywhere outside Nepal",
-        "proceedsNote": "PayPal Giving Fund processes your gift and grants it to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
+        "proceedsNote": "Either option delivers your gift to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
+        "capitalControlNote": "Nepal's capital control policies do not allow donations from abroad to be paid into our Nepal bank account. Jawafdehi Initiative, Inc. holds the approval to fund the project in Nepal, so this is the one route for a gift from outside the country.",
         "title": "From outside Nepal",
+        "zeffy": {
+          "title": "Zeffy",
+          "detail": "Card or bank — one-time or recurring, with an automatic receipt",
+          "cta": "Donate via Zeffy",
+          "dialogTitle": "Donate to Jawafdehi through Zeffy",
+          "dialogDescription": "A secure donation form hosted by Zeffy. Press Escape to close it."
+        },
         "paypal": {
           "title": "PayPal",
           "detail": "Card, bank, or PayPal balance",
@@ -461,7 +491,7 @@
       "items": [
         {
           "q": "Can I give monthly instead of once?",
-          "a": "Yes. PayPal supports recurring gifts, so you can choose one-time or monthly support before confirming your donation."
+          "a": "Yes. Zeffy and PayPal both support recurring gifts, so you can choose one-time or monthly support before confirming your donation."
         },
         {
           "q": "Where exactly does the money go?",
@@ -474,8 +504,18 @@
         {
           "q": "Can I support Jawafdehi without donating money?",
           "a": "Yes. You can help with research, translation, design, engineering, documentation, outreach, or reviewing public records. Email us and tell us how you would like to contribute."
+        },
+        {
+          "q": "Will I get a receipt?",
+          "a": "If you give through **Zeffy** or **PayPal Giving Fund**, a receipt is emailed to you automatically. For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org** with your transfer details and we will confirm your contribution."
         }
       ]
+    },
+    "journey": {
+      "you": "Your donation",
+      "stageGive": "You give",
+      "stageAllocated": "It covers",
+      "stageBecomes": "It becomes"
     }
   },
   "products": {
@@ -2108,7 +2148,18 @@
       "bigoMinThumb": "Minimum amount",
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
-      "bigoNoMax": "No maximum"
+      "bigoNoMax": "No maximum",
+      "materialType": "Document type",
+      "date": "Record date",
+      "dateFromField": "From (AD)",
+      "dateToField": "To (AD)",
+      "dateNote": "Filtering by date includes only documents with a recorded date.",
+      "dateRange": {
+        "any": "Any date",
+        "between": "{{from}} – {{to}}",
+        "from": "{{from}} onwards",
+        "upTo": "Up to {{to}}"
+      }
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",
@@ -2414,7 +2465,7 @@
           {
             "id": "financial-support",
             "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **Zeffy** or **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
           },
           {
             "id": "help-without-donating",
@@ -2468,5 +2519,21 @@
       "website": "their website",
       "twitter": "X"
     }
+  },
+  "launchEvent": {
+    "barLabel": "Upcoming public launch",
+    "barSentence": "Join the public launch of Nepal's corruption database on Zoom — 23 Sept 6 PM Pacific · 24 Sept 6:45 AM Nepal.",
+    "barCta": "Learn more.",
+    "barDismiss": "Dismiss launch announcement",
+    "eyebrow": "Public launch · Free · Open to everyone",
+    "title": "The public launch of Nepal's corruption database",
+    "description": "Built over the past year and open to everyone: a permanent, searchable public record of corruption cases, with the documents behind them. We will show you what is in it and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
+    "dateUs": "Wednesday 23 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
+    "dateNepal": "Thursday 24 September 2026 in Nepal, 6:45 AM (आश्विन ८)",
+    "formatZoom": "Zoom",
+    "formatFacebook": "live on Facebook",
+    "cta": "Learn more",
+    "viewFlyer": "View the full flyer",
+    "flyerAlt": "Launch flyer: Nepal's Permanent Corruption Database. 23 September, 6 PM Pacific; 24 September, 6:45 AM Nepal time. Register at jawafdehi.org/launch."
   }
 }

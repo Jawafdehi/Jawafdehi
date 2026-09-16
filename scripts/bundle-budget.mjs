@@ -125,18 +125,72 @@ const DIR = arg("dir", "dist/client");
 // pre-rendered landing. CI measured the merged branch at 655.7 KB (671,437
 // bytes); 672_500 leaves ~1,060 bytes over that, matching the headroom the
 // entries above leave.
-// 2026-09: 672_500 → 675_000 for case stages (PR #388). Measured, not
-// estimated: main (12ac8b5) builds to 672,169 bytes and this branch to
-// 673,853, so stages cost 1,684 bytes gzip — 0.25%, and 1,353 over the old
-// line. Local and CI agreed exactly this time (both 658.1 KB), so the ~3.6 KB
-// runner skew noted in the entry above did not apply; the line is still judged
-// against the CI number.
 //
-// EVERY chunk except the shell is byte-identical, i18n included — so the new
-// Nepali stage labels cost nothing initial, and the whole 1,684 is the shell:
+// 2026-09: 672_500 → 678_400 for the donate v2 page (feature/donate-v2).
+// /donate is pre-rendered, so its hero, pay card (region tabs, QR switch, bank
+// details, remittance expander) and journey board must stay eager (see
+// tests/ssr/prerendered-routes-eager.test.ts). The three.js globe is NOT in this
+// count — it loads through GlobeGate (client-only, idle-time, WebGL-gated) as a
+// deferred chunk. Measured: this branch merged with main builds to 673,756 bytes
+// locally; the CI runner's zlib packs ~3.6 KB larger (see the entry above), so
+// CI is estimated at ~677,350. 678_400 leaves ~1,050 bytes over that estimate,
+// matching the headroom the entries above leave.
+//
+// 2026-09: 678_400 → 680_300 for the materials tab's two filters
+// (feat/material-search-filters). Measured, and this time the local and CI
+// figures are the SAME number: main at b1da66c builds to 677,581 bytes gzip
+// (CI run 34727712170) and this branch merged with main to 679,225 (CI run
+// 34941177606, reproduced byte-for-byte locally), so the pair costs ~1,644
+// bytes gzip and lands 825 over the old line. Where they go: the document-type
+// facet group with its getFacetItemLabel branch and the ArchiveSearch
+// param/pill/clear wiring, the record-date control, lib/date-range's
+// parse/normalize/preset rules, and the new archiveSearch.filters keys in
+// en.json / ne.json.
+//
+// Deferring DateRangeFilter was TRIED, MEASURED and REVERTED. It recovers 319
+// bytes — not the ~1,600 its source size suggests — against the 825 that had to
+// come off, so it cannot clear the gate on its own and would have bought a lazy
+// boundary, a chunk fetch on every switch to the materials tab, and a rewrite of
+// seven synchronous assertions, AND still needed this line moved. Two things eat
+// the difference: lib/date-range stays eager regardless, because
+// src/utils/archive-search-params.ts and ArchiveSearch both read
+// readDateBounds/describeDateRange on every render, so only the component moves;
+// and the dynamic-import stub, the local Suspense boundary and Vite's preload
+// entry hand part of it straight back.
+//
+// Worth recording for whoever needs bytes next, because it is the biggest lever
+// measured here in a while: giving BigoRangeFilter the same treatment recovers a
+// further 4,031, which would put the payload at 674,875 and let this line
+// ratchet DOWN past where it started. It is NOT taken here — that control is not
+// this branch's code, it renders on the case tab rather than a type-gated one,
+// and it needs its own reserved skeleton and test pass. It is a change on its
+// own terms, not a rider on a filter PR.
+//
+// One correction for the next reader, so the arithmetic above is not misread as
+// this branch's doing: the ~1,050 the donate entry claims had ALREADY decayed to
+// 819 before this branch touched anything. #393 (launch surfaces, b1da66c) added
+// ~2,870 bytes gzip on top of #387 without moving this line — and the ~3.6 KB
+// runner-zlib delta that entry leans on did not hold either; local and CI agree
+// exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
+// over the measured build, matching the headroom the entries above leave.
+//
+// 2026-09: 680_300 → 682_100 for case stages (PR #388). Re-measured after
+// merging main at 42c0105, because the figure this branch first carried
+// (675_000, against main at 12ac8b5) was measured before #387, #393 and #389
+// landed and is meaningless now. Local, same machine, same command for both
+// sides: main builds to 679,239 bytes gzip and main+stages to 681,048, so
+// stages cost 1,809 bytes — up from the 1,684 measured against the older main,
+// because the shell they join grew. Local and CI agree on this file's recent
+// history (the entry above reproduced byte-for-byte), and local main here is
+// within 14 bytes of the 679,225 CI recorded for 42c0105's branch, so the
+// local pair is trustworthy — but re-read the CI number before merging rather
+// than trusting this line.
+//
+// EVERY chunk except the shell is byte-identical — react-vendor, query, i18n
+// and markdown all match main to the byte, so the whole 1,809 is index-*.js:
 // the stage utils, the card badge logic and the forum-qualified verdict label
 // ("विशेष अदालत: सफाइ"), which every card and entity page renders on first
-// paint.
+// paint. The new Nepali stage labels cost nothing initial.
 //
 // Not deferrable. The stage rows land in the shell through CaseDetail, and
 // `/case/:id` is pre-rendered, so per the split policy in src/routes.tsx it
@@ -145,13 +199,14 @@ const DIR = arg("dir", "dist/client");
 // fallback with no Helmet meta. `court-case-format` was checked and was
 // already eager on main, so nothing was newly dragged in.
 //
-// So this is taken deliberately, like the two entries above. 675_000 leaves
-// 1,147 bytes over the measured build, matching their headroom. The real
+// So this is taken deliberately, like the three entries above. 682_100 leaves
+// ~1,052 bytes over the measured build, matching their headroom. The real
 // headroom is still elsewhere and still not this PR's to spend:
 // `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
 // `markdown` another 98 KB (100,481 bytes, measured here) — either would pay
-// for this many times over.
-const MAX_INITIAL_JS_GZIP = 675_000;
+// for this many times over. The BigoRangeFilter lever noted above (~4,031
+// bytes) is still unclaimed and still not this branch's to take.
+const MAX_INITIAL_JS_GZIP = 682_100;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
