@@ -6,6 +6,7 @@ import { stageIsPending, stageLabelKey } from "@/utils/case-stages";
 import { formatCaseDateRangeForLanguage } from "@/utils/date";
 import { formatCourtName } from "@/utils/court-case-format";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
+import "./case-dossier.css";
 
 // One labelled row per stage of a case, replacing the single "मुद्दा मिति /
 // Case date" range. That label read to the public as WHEN THE CORRUPTION
@@ -44,7 +45,11 @@ export function CaseStageDates({
 
   return (
     <div
-      className={cn(compact ? "space-y-1" : "space-y-3", className)}
+      // `case-stage-rows` is what the dossier grid keys on to lay each stage
+      // out as its own label-left / value-right fact row. Without it the
+      // wrapper is taken for ONE fact row and the stages tile across its two
+      // columns; the banner spacing lives there too, hence no `space-y` here.
+      className={cn("case-stage-rows", compact && "space-y-1", className)}
       data-testid="case-stage-dates"
     >
       {stages.map((stage, index) => {

@@ -598,6 +598,14 @@ const CaseDetail = () => {
                       </div>
                     </div>
 
+                    {caseData.bigo != null && caseData.bigo > 0 && (
+                      <div className="flex items-center text-muted-foreground">
+                        <span className="text-sm">
+                          {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo)}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Same component as the banner, so the on-screen and
                         printed metadata cannot drift apart. */}
                     <CaseStageDates
@@ -606,14 +614,6 @@ const CaseDetail = () => {
                       variant="compact"
                       className="text-muted-foreground"
                     />
-
-                    {caseData.bigo != null && caseData.bigo > 0 && (
-                      <div className="flex items-center text-muted-foreground">
-                        <span className="text-sm">
-                          {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo)}
-                        </span>
-                      </div>
-                    )}
 
                     {/* The public byline (authors + first-published date +
                         curated edit history, falling back to the deprecated

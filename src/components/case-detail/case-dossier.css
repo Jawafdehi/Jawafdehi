@@ -10,6 +10,15 @@
 .case-dossier-facts { display: grid; gap: 18px; }
 .case-dossier-facts > div { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
 .case-dossier-facts > div > * { min-width: 0; overflow-wrap: anywhere; }
+
+/* One fact row PER STAGE. The stages arrive under a single wrapper, which the
+   rule above otherwise treats as one fact row: a lone stage was squeezed into
+   the 190px label column with the value column left empty, and two or more
+   tiled ACROSS the two columns, so `First instance` landed in the label slot
+   and `Appeal` in the value slot and the pair read as one field. */
+.case-dossier-facts > .case-stage-rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.case-dossier-facts > .case-stage-rows > div { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+.case-dossier-facts > .case-stage-rows > div > * { min-width: 0; overflow-wrap: anywhere; }
 .case-dossier-courts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 8px; }
 .case-dossier-sidebar {
   min-width: 0;
@@ -29,5 +38,6 @@
   .case-dossier:has(.case-byline) { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
 }
 @media (max-width: 600px) {
-  .case-dossier-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .case-dossier-facts > div,
+  .case-dossier-facts > .case-stage-rows > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }

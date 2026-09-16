@@ -299,12 +299,6 @@ export function CaseDetailBanner({
                     </div>
                   </div>
 
-                  {/* One labelled row per stage. The single "मुद्दा मिति /
-                      Case date" range this replaces read to the public as when
-                      the corruption happened; these are court registration and
-                      verdict dates, and there is one pair per forum. */}
-                  <CaseStageDates stages={stages} language={currentLang} />
-
                   {caseData.bigo != null && caseData.bigo > 0 && (
                     <div>
                       <p className={metaTitleClass}>
@@ -315,6 +309,12 @@ export function CaseDetailBanner({
                       </p>
                     </div>
                   )}
+
+                  {/* One labelled row per stage. The single "मुद्दा मिति /
+                      Case date" range this replaces read to the public as when
+                      the corruption happened; these are court registration and
+                      verdict dates, and there is one pair per forum. */}
+                  <CaseStageDates stages={stages} language={currentLang} />
 
                   </div>
                   {formattedCourtCases.length > 0 && (
