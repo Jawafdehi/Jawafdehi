@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
@@ -14,7 +14,8 @@ const i18nState = vi.hoisted(() => ({ language: "en" }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    t: (key: string, fallback?: string | { defaultValue?: string }) =>
+      typeof fallback === "string" ? fallback : fallback?.defaultValue ?? key,
     i18n: { language: i18nState.language },
   }),
 }));
@@ -125,8 +126,12 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     // Back to search link
     expect(screen.getByText("Back to search")).toBeTruthy();
 
-    // Title: case type
+    // The record title sits above compact, inline metadata rows.
     expect(await screen.findByRole("heading", { level: 1, name: "सहकारी ठगी" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 }).closest("section")?.id).toBe("case-summary");
+    expect(screen.getByRole("heading", { level: 2, name: "Case summary" })).toBeTruthy();
+    expect(screen.getAllByRole("navigation", { name: "Jump to case section" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Case summary" })).toHaveLength(2);
 
     // Status badge: existing status pill
     expect(screen.getByText("चालु")).toBeTruthy();
@@ -146,12 +151,14 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(screen.getByRole("heading", { level: 2, name: /Parties/i })).toBeTruthy();
     expect(screen.getByText("Plaintiff")).toBeTruthy();
     expect(screen.getByText("Defendant")).toBeTruthy();
-    expect(screen.getByText("VS")).toBeTruthy();
+    expect(screen.queryByText("VS")).toBeNull();
     expect(screen.getByText("नारद अवस्थी")).toBeTruthy();
     expect(screen.getByText("कुन्ता भाट")).toBeTruthy();
+    expect(screen.getByText("कुन्ता भाट").closest("ul")?.className).toContain("font-medium");
+    expect(screen.getByText("Back to search").closest(".layout-container")?.className).not.toContain("max-w-4xl");
 
     // Case Activity section
-    const activityPill = screen.getByText(/BAIL ORDER|ORDER/);
+    const activityPill = screen.getByText("Bail order");
     expect(activityPill).toBeTruthy();
     expect(activityPill.className).toContain("text-accent");
     expect(activityPill.className).toContain("bg-accent/10");
@@ -184,14 +191,14 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(registeredRow?.textContent).toContain("२०८३ भाद्र ९ (Aug 25, 2026)");
   });
 
-  it("keeps the AD date first in English", async () => {
+  it("keeps the BS date first in English too", async () => {
     vi.mocked(getCourtCaseFull).mockResolvedValueOnce(mockCourtCase);
 
     renderPage();
 
     expect(await screen.findByText("Kanchanpur District Court")).toBeTruthy();
     const registeredRow = screen.getByText("Registered").closest("div")?.parentElement;
-    expect(registeredRow?.textContent).toContain("Aug 25, 2026 (२०८३ भाद्र ९)");
+    expect(registeredRow?.textContent).toContain("२०८३ भाद्र ९ (Aug 25, 2026)");
   });
 
   it("renders not-found alert when the API returns error", async () => {
@@ -204,5 +211,34 @@ describe("CourtCaseProfile (redesigned layout)", () => {
         "This court case could not be found in the Jawafdehi governance archive.",
       ),
     ).toBeTruthy();
+  });
+
+  it("reveals long party lists only when requested", async () => {
+    const manyDefendants = {
+      ...mockCourtCase,
+      entities: [
+        mockCourtCase.entities![0],
+        ...["प्रतिवादी १", "प्रतिवादी २", "प्रतिवादी ३", "प्रतिवादी ४", "प्रतिवादी ५", "प्रतिवादी ६"].map((name, index) => ({
+          id: index + 10,
+          case_number: mockCourtCase.case_number,
+          court_identifier: mockCourtCase.court_identifier,
+          side: "defendant",
+          name,
+          address: null,
+          nes_id: null,
+        })),
+      ],
+    };
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(manyDefendants);
+
+    renderPage();
+
+    expect(await screen.findByText("प्रतिवादी ३")).toBeTruthy();
+    expect(screen.queryByText("प्रतिवादी ४")).toBeNull();
+    expect(screen.getByText("प्रतिवादी १").closest("ul")?.textContent).toContain("प्रतिवादी १, प्रतिवादी २, प्रतिवादी ३");
+    fireEvent.click(screen.getByRole("button", { name: "Show 3 more" }));
+    expect(screen.getByText("प्रतिवादी ४")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Show less" }));
+    expect(screen.queryByText("प्रतिवादी ४")).toBeNull();
   });
 });
