@@ -310,13 +310,20 @@ export function CaseDetailBanner({
                     </div>
                   )}
 
-                  {/* One labelled row per stage. The single "मुद्दा मिति /
-                      Case date" range this replaces read to the public as when
-                      the corruption happened; these are court registration and
-                      verdict dates, and there is one pair per forum. */}
-                  <CaseStageDates stages={stages} language={currentLang} />
-
                   </div>
+
+                  {/* The stages, drawn as a horizontal rail. They live OUTSIDE
+                      `case-dossier-facts` because that grid would squeeze the
+                      whole timeline into its 190px label column; out here the
+                      rail gets the full main column — the same width the
+                      Related Court Cases panel below it spans — and scrolls
+                      sideways past it. The single "मुद्दा मिति / Case date"
+                      range this replaces read to the public as when the
+                      corruption happened; these are court registration and
+                      verdict dates, one pair per forum. */}
+                  {stages.length > 0 && (
+                    <CaseStageDates stages={stages} language={currentLang} />
+                  )}
                   {formattedCourtCases.length > 0 && (
                     <div className="min-w-0">
                       <p className={metaTitleClass}>

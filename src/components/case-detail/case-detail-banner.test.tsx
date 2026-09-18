@@ -207,6 +207,37 @@ describe("CaseDetailBanner case stages", () => {
     expect(screen.queryByTestId("case-stage-dates")).toBeNull();
     expect(screen.queryAllByTestId("case-stage-row")).toHaveLength(0);
   });
+
+  it("keeps the timeline OUT of the fact grid, so it gets the full column", () => {
+    // `.case-dossier-facts > div` is a 190px label column beside the value.
+    // The rail rendered inside it was squeezed into that 190px track with the
+    // value column left empty. Out here it spans the main column instead —
+    // the same width the Related Court Cases panel below it gets.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    const timeline = screen.getByTestId("case-stage-dates");
+    expect(timeline.closest(".case-dossier-facts")).toBeNull();
+    expect(timeline.closest('[data-testid="case-dossier-main"]')).not.toBeNull();
+  });
+
+  it("orders the stages left to right as one list, not a set of loose rows", () => {
+    // The order IS the information — investigation, then first instance, then
+    // appeal — so it is marked up as an ordered list, and a screen reader
+    // announces "3 items" rather than three unrelated paragraphs.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    const list = screen.getByRole("list");
+    expect(list.tagName).toBe("OL");
+    expect(list.querySelectorAll('[data-testid="case-stage-row"]')).toHaveLength(3);
+  });
+
+  it("lets a keyboard reach the scrolling rail", () => {
+    // A horizontally scrolling region that only answers to a mouse strands
+    // keyboard users at whatever stage happens to fit on screen.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    expect(screen.getByTestId("case-stage-dates").getAttribute("tabindex")).toBe("0");
+  });
 });
 
 describe("CaseDetailBanner status chip", () => {

@@ -20,6 +20,20 @@ const renderStages = (stages: CaseStage[], language = "en") =>
 const rows = () => screen.queryAllByTestId("case-stage-row");
 
 describe("CaseStageDates — one labelled row per stage", () => {
+  it("uses unnumbered dots and connects only to the next recorded stage", () => {
+    renderStages([
+      { stage: "initial", start: "2021-10-02", end: "2023-06-09" },
+      { stage: "appeal", start: "2023-07-11" },
+    ]);
+
+    expect(rows().map((row) => row.querySelector(".case-stage-dot") != null))
+      .toEqual([true, true]);
+    expect(rows().map((row) => row.querySelector(".case-stage-step")?.textContent))
+      .toEqual(["", ""]);
+    expect(rows()[0].querySelector(".case-stage-connector")).not.toBeNull();
+    expect(rows()[1].querySelector(".case-stage-connector")).toBeNull();
+  });
+
   it("renders a row per stage, each under its own label, in the served order", () => {
     // The single 'मुद्दा मिति / Case date' range it replaces could not describe
     // this: three passes through three forums, one of them still running.

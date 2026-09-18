@@ -608,6 +608,7 @@
       "other": "अन्य"
     },
     "stagePending": "फैसला बाँकी",
+    "caseTimeline": "मुद्दाको समयरेखा",
     "byline": {
       "firstPublished": "पहिलो पटक {{date}} मा प्रकाशित।",
       "editHistory_one": "{{count}} पछिल्लो सम्पादन",

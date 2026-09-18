@@ -608,6 +608,7 @@
       "other": "Other"
     },
     "stagePending": "Decision pending",
+    "caseTimeline": "Case Timeline",
     "byline": {
       "firstPublished": "First published {{date}}.",
       "editHistory_one": "{{count}} subsequent edit",
