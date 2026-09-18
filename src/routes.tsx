@@ -52,11 +52,18 @@ import Donate from "./pages/Donate";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import DocumentPreviewPage from "./pages/DocumentPreviewPage";
+// /entity/* became a PRE-RENDERED route when scripts/pre-render.ts started
+// emitting a page per case-cited entity, so the policy above makes it eager.
+// It was lazy() when that change was written and pre-rendered to exactly what
+// the policy predicts — 1,544 pages of Suspense fallback with an empty <title>,
+// the same failure /donate shipped in August. The build cannot catch this on its
+// own: renderToString does not throw on an unresolved boundary, it just returns
+// the fallback, so pre-render.ts writes the stub and exits 0.
+import EntityRecordProfile from "./pages/EntityRecordProfile";
 
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
 const DataQuality = lazy(() => import("./pages/DataQuality"));
-const EntityRecordProfile = lazy(() => import("./pages/EntityRecordProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));

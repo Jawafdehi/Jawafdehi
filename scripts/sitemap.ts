@@ -65,12 +65,18 @@ function urlEntry(loc: string, lastmod?: string): string {
   return `  <url>\n    <loc>${loc}</loc>${lastmodLine}\n  </url>`;
 }
 
-// Prerendered static routes are served from <path>/index.html, so the edge 307s
-// the slashless form. Advertising the redirecting URL in the sitemap — and in
+// Prerendered routes are served from <path>/index.html, so the edge 307s the
+// slashless form. Advertising the redirecting URL in the sitemap — and in
 // rel=canonical — asks crawlers to index a redirect. Slug routes (/case/*,
-// /updates/*) and /entity/* are not prerendered and answer 200 without a
-// slash, so they are deliberately left alone. Measured against production
-// 2026-08-11: 17 of 90 sitemap URLs were 307ing, all of them static routes.
+// /updates/*) are not prerendered and answer 200 without a slash, so they are
+// deliberately left alone. Measured against production 2026-08-11: 17 of 90
+// sitemap URLs were 307ing, all of them static routes.
+//
+// /entity/* USED to be in that left-alone group and no longer is: pre-render.ts
+// now writes dist/entity/<prefix>/<slug>/index.html for every case-cited entity,
+// which makes it prerendered by the rule above. Emitting those 1,544 slashless
+// would have been the single biggest source of sitemap redirects we have ever
+// shipped — an order of magnitude past the 17 this function was written to fix.
 function withTrailingSlash(path: string): string {
   return path === '/' || path.endsWith('/') ? path : `${path}/`;
 }
@@ -173,7 +179,7 @@ async function main() {
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
       )),
     ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.slug || c.id}`, toYMD(c.updated_at))),
-    ...entityPaths.map(path => urlEntry(`${CANONICAL}${path}`)),
+    ...entityPaths.map(path => urlEntry(`${CANONICAL}${withTrailingSlash(path)}`)),
   ];
 
   const xml = [

@@ -299,21 +299,29 @@ function caseToSearchEntry(
   };
 }
 
-function entityToSearchEntry(path: string, name: string | null | undefined, html: string): SearchIndexEntry {
+// Entities carry no `lines`, for the same reason cases do not (above). An entity
+// page renders its identity rail and then fetches the record client-side, so the
+// only text in the pre-rendered HTML is the chrome every page shares — nav,
+// footer, the event banner. Attaching it multiplied dist/search-index.json by
+// ~21x (441 KB -> 9.4 MB, 54 KB -> 180 KB gzip) across 1,544 entities and filled
+// the command palette with entries whose searchable body was the site header.
+// Title and keywords come from the case bind, which is where they came from
+// anyway, so nothing is lost by dropping the lines.
+function entityToSearchEntry(path: string, name: string | null | undefined): SearchIndexEntry {
   // The `<prefix>/<slug>` tail is the only human-readable handle left once the
   // numeric id is gone, so it stands in for the title when a bind carries no
   // display_name.
   const tail = path.replace('/entity/', '');
   const title = stripHtml(name) || tail;
 
-  return withSearchLines({
+  return {
     path,
     title,
     descriptionKey: 'searchCommand.descriptions.entityDetail',
     keywords: ['entity', 'person', 'organization', 'official', tail, title],
     icon: 'Building2',
     group: 'entities',
-  }, html);
+  };
 }
 
 async function main() {
@@ -472,7 +480,7 @@ async function main() {
         const html = injectIntoTemplate(template, result);
         await writeHtml(outFile, html);
         notePrefetch(path, result);
-        searchEntries.push(entityToSearchEntry(path, entityNames.get(path), result.html));
+        searchEntries.push(entityToSearchEntry(path, entityNames.get(path)));
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
         console.warn(`[pre-render] WARNING: Skipping entity ${path}:`, err);
