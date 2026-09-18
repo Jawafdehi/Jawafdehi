@@ -104,42 +104,52 @@ function renderFilters(
   );
 }
 
+// Async because the control is code-split: SearchFilters renders
+// LazyBigoRangeFilter, and the chunk resolves a tick after mount with the
+// reserved skeleton standing in the DOM until it does. Every assertion about the
+// REAL control therefore has to wait for it.
+//
+// The absence assertions below stay synchronous on purpose, and that is worth
+// keeping that way — LazyBigoRangeFilter decides "no control here" from
+// `hasUsableRails` BEFORE the boundary, so a corpus with no usable extent
+// renders nothing at all rather than a skeleton that resolves to nothing.
 const bigoGroup = () =>
-  screen.getByRole("group", { name: /Embezzled amount/ });
+  screen.findByRole("group", { name: /Embezzled amount/ });
 
 const dateGroup = () => screen.getByRole("group", { name: /Record date/ });
 
 describe("SearchFilters — बिगो range control", () => {
-  it("renders a two-thumb range slider and both amount fields", () => {
+  it("renders a two-thumb range slider and both amount fields", async () => {
     renderFilters("case");
-    const group = bigoGroup();
+    const group = await bigoGroup();
     expect(within(group).getAllByRole("slider")).toHaveLength(2);
     expect(within(group).getByLabelText("Min (Rs)")).toBeTruthy();
     expect(within(group).getByLabelText("Max (Rs)")).toBeTruthy();
   });
 
-  it("stays under five blocks — this shares a column with four other groups", () => {
+  it("stays under five blocks — this shares a column with four other groups", async () => {
     // The panel reached nine blocks once (readout, chart, axis, three lines of
     // help text, two fields, a preset, a count) and read as the heaviest thing in
     // the sidebar. Track, axis, fields and one status line is the budget.
     renderFilters("case");
-    expect(bigoGroup().children.length).toBeLessThanOrEqual(5);
+    expect((await bigoGroup()).children.length).toBeLessThanOrEqual(5);
   });
 
-  it("carries no instructional copy", () => {
+  it("carries no instructional copy", async () => {
     // A control that needs explaining is the wrong control. A range slider with
     // text inputs beneath it is the pattern every price filter uses.
     renderFilters("case");
-    expect(within(bigoGroup()).queryByText(/Shift/i)).toBeNull();
-    expect(within(bigoGroup()).queryByText(/Select a bar/i)).toBeNull();
-    expect(within(bigoGroup()).queryByTestId("bigo-histogram")).toBeNull();
+    const group = await bigoGroup();
+    expect(within(group).queryByText(/Shift/i)).toBeNull();
+    expect(within(group).queryByText(/Select a bar/i)).toBeNull();
+    expect(within(group).queryByTestId("bigo-histogram")).toBeNull();
   });
 
-  it("names each thumb, and spells the amount out for a screen reader", () => {
+  it("names each thumb, and spells the amount out for a screen reader", async () => {
     // aria-valuenow is necessarily a ladder INDEX; "7 of 20" tells a listener
     // nothing about money, so each thumb carries the formatted amount instead.
     renderFilters("case", { min: 10_000_000 });
-    const [low, high] = within(bigoGroup()).getAllByRole("slider");
+    const [low, high] = within(await bigoGroup()).getAllByRole("slider");
     expect(low.getAttribute("aria-label")).toBe("Minimum amount");
     expect(low.getAttribute("aria-valuetext")).toBe("Rs 1.00 Crore");
     expect(high.getAttribute("aria-label")).toBe("Maximum amount");
@@ -147,7 +157,7 @@ describe("SearchFilters — बिगो range control", () => {
     expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
   });
 
-  it("announces a bound that snaps to a ladder END, rather than 'No minimum'", () => {
+  it("announces a bound that snaps to a ladder END, rather than 'No minimum'", async () => {
     // Regression. aria-valuetext was derived from the thumb's ladder POSITION,
     // and `indexToBound` returns undefined at either end because an end-parked
     // thumb means "no bound". But a literal bound can snap to an end and still
@@ -158,26 +168,26 @@ describe("SearchFilters — बिगो range control", () => {
     // The position is a rendering detail; the announcement is a claim about the
     // filter, so at rest it reports the COMMITTED bound.
     renderFilters("case", { min: 25_000 });
-    const [low] = within(bigoGroup()).getAllByRole("slider");
+    const [low] = within(await bigoGroup()).getAllByRole("slider");
     expect(low.getAttribute("aria-valuetext")).toBe("Rs 25,000");
   });
 
-  it("announces an upper bound snapped to the ladder ceiling", () => {
+  it("announces an upper bound snapped to the ladder ceiling", async () => {
     // The same failure on the other end: the ladder tops out at रु 1.00 Kharab,
     // so anything from ~रु 75 अरब up parks the thumb on the last index.
     renderFilters("case", { max: 80_000_000_000 });
-    const [, high] = within(bigoGroup()).getAllByRole("slider");
+    const [, high] = within(await bigoGroup()).getAllByRole("slider");
     expect(high.getAttribute("aria-valuetext")).toBe("Rs 80.00 Arab");
   });
 
-  it("still says 'No minimum'/'No maximum' when a side genuinely has no bound", () => {
+  it("still says 'No minimum'/'No maximum' when a side genuinely has no bound", async () => {
     renderFilters("case");
-    const [low, high] = within(bigoGroup()).getAllByRole("slider");
+    const [low, high] = within(await bigoGroup()).getAllByRole("slider");
     expect(low.getAttribute("aria-valuetext")).toBe("No minimum");
     expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
   });
 
-  it("opens the sidebar, above the term facets", () => {
+  it("opens the sidebar, above the term facets", async () => {
     // It used to render last. The tags group runs to 50 checkboxes, so anything
     // after it is off-screen on every viewport. It used to sit second, under the
     // record-type radios — those are now the tabs above the results, so nothing
@@ -201,6 +211,7 @@ describe("SearchFilters — बिगो range control", () => {
         selectedType="case"
       />,
     );
+    await bigoGroup();
     const legends = Array.from(document.querySelectorAll("legend")).map(
       (legend) => legend.textContent,
     );
@@ -222,53 +233,62 @@ describe("SearchFilters — बिगो range control", () => {
   it("renders no control at all when the corpus has no usable extent", () => {
     // An older cached response predating the extent agg, or a corpus where
     // nothing records an amount. An empty track above two fields is furniture.
-    renderFilters("case", { extent: undefined });
+    //
+    // Synchronous, and that is the assertion. Now that the control is code-split,
+    // "no usable extent" must resolve to nothing WITHOUT crossing the Suspense
+    // boundary — LazyBigoRangeFilter runs `hasUsableRails` before it, precisely
+    // so this case does not reserve ~296px of skeleton and then collapse it when
+    // the chunk lands on a control that was never going to render. If this ever
+    // needs an `await` to pass, that regression is back.
+    const { container } = renderFilters("case", { extent: undefined });
     expect(
         screen.queryByRole("group", { name: /Embezzled amount/ }),
       ).toBeNull();
+    expect(container.querySelector(".animate-pulse")).toBeNull();
   });
 
-  it("commits a typed minimum on blur", () => {
+  it("commits a typed minimum on blur", async () => {
     const onCommit = vi.fn();
     renderFilters("case", { onCommit });
-    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
+    const field = within(await bigoGroup()).getByLabelText("Min (Rs)");
     fireEvent.change(field, { target: { value: "10000000" } });
     fireEvent.blur(field);
     expect(onCommit).toHaveBeenCalledWith({ min: 10_000_000, max: undefined });
   });
 
-  it("drops the other side rather than sending an inverted pair", () => {
+  it("drops the other side rather than sending an inverted pair", async () => {
     // The API 400s on bigo_min > bigo_max, and this page renders a 400 as its
     // red "could not be loaded" alert — an outage, for a typo.
     const onCommit = vi.fn();
     renderFilters("case", { max: 1_000_000, onCommit });
-    const field = within(bigoGroup()).getByLabelText("Min (Rs)");
+    const field = within(await bigoGroup()).getByLabelText("Min (Rs)");
     fireEvent.change(field, { target: { value: "90000000" } });
     fireEvent.blur(field);
     expect(onCommit).toHaveBeenCalledWith({ min: 90_000_000 });
   });
 
-  it("shows no range readout — the pill and the fields already carry it", () => {
+  it("shows no range readout — the pill and the fields already carry it", async () => {
     // A "<range> · N cases" line used to sit at the bottom. It restated what the
     // removable pill, the two fields and the result header all already said, in
     // a column shared with four other filter groups.
     renderFilters("case", { min: 10_000_000 });
-    expect(within(bigoGroup()).queryByText(/cases$/)).toBeNull();
-    expect(within(bigoGroup()).queryByText(/Rs 1\.00 Crore and above/)).toBeNull();
+    const group = await bigoGroup();
+    expect(within(group).queryByText(/cases$/)).toBeNull();
+    expect(within(group).queryByText(/Rs 1\.00 Crore and above/)).toBeNull();
   });
 
-  it("drops the coverage caveat once a bound is set", () => {
+  it("drops the coverage caveat once a bound is set", async () => {
     renderFilters("case", { min: 10_000_000 });
-    expect(within(bigoGroup()).queryByText(/recorded amount/)).toBeNull();
+    expect(within(await bigoGroup()).queryByText(/recorded amount/)).toBeNull();
   });
 
-  it("says what the filter can reach at all when unfiltered", () => {
+  it("says what the filter can reach at all when unfiltered", async () => {
     // ~9% of cases record no amount and are excluded by ANY bound, since a range
     // clause cannot match an absent field. With no distribution on screen, this
     // line is the only warning before a reader narrows into an empty page.
     renderFilters("case");
     expect(
-      within(bigoGroup()).getByText(
+      within(await bigoGroup()).getByText(
         "Filtering by amount includes only the 75 cases with a recorded amount.",
       ),
     ).toBeTruthy();
