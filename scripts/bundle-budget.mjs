@@ -206,7 +206,72 @@ const DIR = arg("dir", "dist/client");
 // `markdown` another 98 KB (100,481 bytes, measured here) — either would pay
 // for this many times over. The BigoRangeFilter lever noted above (~4,031
 // bytes) is still unclaimed and still not this branch's to take.
-const MAX_INITIAL_JS_GZIP = 682_100;
+//
+// 2026-09: 682_100 → 679_400. Ratcheted DOWN, per the rule at the top, in the
+// commit that takes the bytes out. The BigoRangeFilter lever above is claimed:
+// routing it through src/components/search/LazyBigoRangeFilter.tsx recovered
+// 3,799 bytes gzip, 682,134 → 678,335 as built. That is 232 short of the 4,031
+// this file estimated, which is the boundary's own cost — a lazy stub, a local
+// Suspense node and Vite's preload entry, the same hand-back the DateRangeFilter
+// attempt recorded.
+//
+// This also clears the 34-byte breach at fe5727d, where main was over 682_100
+// outright: #382 and #388 merged 46 seconds apart and #388 had set that line
+// against a main without #382 in it. Fixing that by moving the line up is PR
+// #395; this fixes it by removing the bytes instead, which is the direction this
+// file's policy actually asks for, and lands 900 below where the line stood
+// before #388 raised it at all.
+//
+// WHY THIS ONE WORKED AND DateRangeFilter DID NOT — the reason is not component
+// size and it is worth writing down, because the entry above draws the wrong
+// lesson from a sample of one. `BigoRangeFilter` is the sole consumer of
+// `@radix-ui/react-slider` in the tree: src/components/ui/slider.tsx is that
+// package's only importer, and the filter is slider.tsx's only importer. So the
+// boundary moves a whole third-party package off the critical path, and that —
+// not the ~500 lines of component source — is most of the 3,799. DateRangeFilter
+// had no such unique dependency; it imports `cn` and lib/date-range, and
+// lib/date-range stays eager regardless because archive-search-params and
+// ArchiveSearch both read its helpers on every render. That is why it returned
+// 319 of an estimated ~1,600. lib/bigo-range stays eager here for exactly the
+// same reason, and that is fine: the slider is the prize and the slider has
+// nowhere else to be.
+//
+// The blocker this file recorded — "that control is not this branch's code, it
+// renders on the case tab rather than a type-gated one" — does not hold, and
+// nothing was given up to work around it. The control renders only under
+// `selectedType === "case"`, and /search defaults to type=all (an absent or
+// unknown type is rewritten to `all` in utils/archive-search-params, so a fresh
+// search is not scoped to one under-populated type) while /materials and
+// /court-cases pin a non-case type. So no cold load fetches the chunk; the tab
+// click does, which is the LazyQRCode case exactly. Pre-rendering is untouched
+// for the same reason — /search and /courtcases ARE pre-rendered, but the
+// pre-renderer passes no query string, so this subtree never renders into the
+// published HTML and the split policy in src/routes.tsx does not bite.
+//
+// One thing it DID need, and the reason it is a change on its own terms rather
+// than a rider: the rails check is hoisted OUT of the boundary. BigoRangeFilter
+// returns null when the extent has no usable rails, which is routine — an older
+// cached response, or a corpus where nothing records an amount. Left inside, it
+// becomes ~296px of skeleton that resolves to nothing and drops every facet
+// below it. LazyBigoRangeFilter therefore runs `hasUsableRails` before the
+// Suspense boundary (free — lib/bigo-range is eager anyway), and the reserved
+// skeleton is now one shared component so the cold-load sidebar and the chunk
+// fallback cannot drift apart. tests/search/SearchFilters.test.tsx keeps the
+// no-extent assertion SYNCHRONOUS on purpose: if it ever needs an await, the
+// flash is back.
+//
+// 679_400 leaves 1,065 bytes over the measured 678,335, matching the headroom
+// the entries above leave. The real headroom is still elsewhere, and two of the
+// three signposts this file keeps repeating are wrong, so: `markdown` is NOT
+// eager because its routes are pre-rendered — /case/:id has not been
+// pre-rendered since #297 — and `@sentry-internal/replay` is ~39 KB gzip, not
+// the ~75 KB recorded above. The largest lever is one this file has never
+// mentioned: en.json and ne.json are both statically bundled into index-*.js
+// (~43 KB and ~55 KB gzip, essentially no cross-compression), while fallbackLng
+// is `ne`, the pre-renderer is hard-coded to `ne`, and English is opt-in and
+// already applied asynchronously. Deferring the English bundle is the biggest
+// low-risk win available and nobody has taken it.
+const MAX_INITIAL_JS_GZIP = 679_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
