@@ -10,6 +10,134 @@
 .case-dossier-facts { display: grid; gap: 18px; }
 .case-dossier-facts > div { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
 .case-dossier-facts > div > * { min-width: 0; overflow-wrap: anywhere; }
+
+/* The timeline occupies the dossier column. Steps start at its left edge;
+   connectors appear only between stages that actually exist. */
+/* The fades live on a wrapper, not on the scroll container: a pseudo-element
+   on the scroller is positioned against the scrolled content and would slide
+   away with it instead of staying pinned to the edge. */
+.case-stage-timeline-wrap { position: relative; min-width: 0; }
+.case-stage-timeline-wrap::before,
+.case-stage-timeline-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  /* Clears the scrollbar gutter, so the fade never sits over the track. */
+  bottom: 8px;
+  width: 52px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+.case-stage-timeline-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, hsl(var(--background)) 15%, hsl(var(--background) / 0));
+}
+.case-stage-timeline-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, hsl(var(--background)) 15%, hsl(var(--background) / 0));
+}
+/* Driven by `useScrollEdges`, so a case whose stages all fit gets neither
+   fade and does not advertise a scroll that cannot happen. */
+.case-stage-timeline-wrap[data-overflow-start="true"]::before { opacity: 1; }
+.case-stage-timeline-wrap[data-overflow-end="true"]::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .case-stage-timeline-wrap::before,
+  .case-stage-timeline-wrap::after { transition: none; }
+}
+
+.case-stage-timeline {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 0 0 8px;
+}
+.case-stage-timeline:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.case-stage-track {
+  display: flex;
+  width: max-content;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.case-stage-timeline-wrap[data-single="true"] .case-stage-track { width: min(100%, 22rem); }
+.case-stage-node { flex: 0 0 270px; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.case-stage-timeline-wrap[data-single="true"] .case-stage-node { flex: 1 0 0; }
+.case-stage-node > p { margin-right: 16px; }
+.case-stage-step { display: flex; align-items: center; height: 18px; margin-bottom: 10px; }
+.case-stage-dot {
+  flex: 0 0 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+}
+.case-stage-connector {
+  flex: 1;
+  height: 4px;
+  margin: 0 5px;
+  background: hsl(var(--primary));
+}
+.case-stage-node[data-pending="true"] .case-stage-dot,
+.case-stage-node[data-pending="true"] .case-stage-connector {
+  background: hsl(var(--info));
+}
+
+/* The type scale inside a node. ONE dominant line, and it is the date: the
+   stage names are repeating vocabulary a reader skims past, while the date is
+   what actually differs node to node. Setting stage, forum and date in the
+   same weight left nothing to scan by, so the stage name is demoted to an
+   eyebrow and the forum and BS date sit under the date as supporting rank. */
+.case-stage-eyebrow {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: hsl(var(--muted-foreground));
+}
+
+.case-stage-date {
+  margin: 5px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: hsl(var(--primary));
+}
+/* The same fact in the other calendar, so it sits directly under its AD line
+   and recedes rather than reading as a second date. */
+.case-stage-date-alt {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: hsl(var(--primary) / .7);
+}
+.case-stage-forum {
+  margin: 7px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: hsl(var(--primary) / .75);
+}
+.case-stage-timeline .case-stage-note {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+@media (min-width: 768px) {
+  .case-stage-date,
+  .case-stage-forum { font-size: 16px; }
+  .case-stage-date-alt,
+  .case-stage-timeline .case-stage-note { font-size: 14px; }
+}
+
+/* Print keeps the stacked label-left / value-right rows (see CaseStageDates'
+   `compact` variant): a rail that scrolls has no meaning on paper. */
 .case-dossier-courts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 8px; }
 .case-dossier-sidebar {
   min-width: 0;
@@ -30,4 +158,5 @@
 }
 @media (max-width: 600px) {
   .case-dossier-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .case-stage-node { flex-basis: 230px; }
 }

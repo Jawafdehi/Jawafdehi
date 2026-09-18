@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 //
-// The notice's expiry is a hydration problem, not a timer problem, and these
+// The bar's expiry is a hydration problem, not a timer problem, and these
 // gates are about the difference. A shape that resolves the clock in an effect
 // still passes "the bar is gone after the cutoff" — it just paints the bar
 // first and removes it on the next frame, which is a visible flash on every
-// hard load past the cutoff.
+// hard load past the cutoff. Carried over from the postponement notice this
+// replaces, where that flash was found in production.
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 
-import {
-  EVENT_POSTPONED_NOTICE_ENDS_AT,
-  useEventPostponedNoticePast,
-} from "@/lib/event-postponed";
+import { LAUNCH_EVENT_ENDS_AT, useLaunchEventPast } from "@/lib/launch-event";
 
 /** Records the hook's value on every render pass, in order. */
 function Probe({ passes }: { passes: boolean[] }) {
-  passes.push(useEventPostponedNoticePast());
+  passes.push(useLaunchEventPast());
   return null;
 }
 
@@ -28,7 +26,7 @@ function renderAt(when: string) {
   return passes;
 }
 
-describe("useEventPostponedNoticePast", () => {
+describe("useLaunchEventPast", () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
@@ -38,12 +36,12 @@ describe("useEventPostponedNoticePast", () => {
     cleanup();
   });
 
-  it("knows the cutoff is past on its very first render pass", () => {
-    const passes = renderAt("2026-09-03T01:00:01Z");
+  it("knows the session is over on its very first render pass", () => {
+    const passes = renderAt("2026-09-24T02:30:01Z");
 
     expect(
       passes[0],
-      "the first client render must already know the notice has expired. If " +
+      "the first client render must already know the session has finished. If " +
         "this is false the value arrives from an effect, which runs after " +
         "paint — the browser shows the stale bar for a frame before it is " +
         "removed, on every hard load, for every visitor.",
@@ -51,7 +49,7 @@ describe("useEventPostponedNoticePast", () => {
   });
 
   it("settles without a second render pass", () => {
-    const passes = renderAt("2026-09-03T01:00:01Z");
+    const passes = renderAt("2026-09-24T02:30:01Z");
 
     expect(
       new Set(passes).size,
@@ -60,11 +58,11 @@ describe("useEventPostponedNoticePast", () => {
     ).toBe(1);
   });
 
-  it("still reports the notice live before the cutoff", () => {
-    expect(renderAt("2026-08-30T12:00:00Z")[0]).toBe(false);
+  it("still reports the launch upcoming before the cutoff", () => {
+    expect(renderAt("2026-09-15T12:00:00Z")[0]).toBe(false);
   });
 
-  it("renders the notice live on the server, whatever the build clock says", () => {
+  it("renders the bar live on the server, whatever the build clock says", () => {
     // The home route is prerendered. Baking a clock reading into the static
     // HTML would contradict the visitor's own clock at hydration, so the
     // server snapshot is unconditionally "live" and the client corrects it.
@@ -75,7 +73,10 @@ describe("useEventPostponedNoticePast", () => {
     expect(passes[0]).toBe(false);
   });
 
-  it("expires at 6:45 AM Nepal time on 3 September, when the session would have started", () => {
-    expect(EVENT_POSTPONED_NOTICE_ENDS_AT).toBe(Date.parse("2026-09-03T01:00:00Z"));
+  it("expires when the session ends, 90 minutes after it starts", () => {
+    expect(LAUNCH_EVENT_ENDS_AT).toBe(Date.parse("2026-09-24T02:30:00Z"));
+
+    const start = Date.parse("2026-09-24T01:00:00Z");
+    expect(LAUNCH_EVENT_ENDS_AT - start).toBe(90 * 60 * 1000);
   });
 });
