@@ -141,7 +141,8 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
     return;
   }
 
-  // Entity profile page
+  // Entity profile page — LEGACY numeric route (/entity/<id>). Must stay ahead of
+  // the IRI branch below, which would otherwise swallow it.
   const entityMatch = url.match(/^\/entity\/(\d+)/);
   if (entityMatch) {
     const entityId = parseInt(entityMatch[1]);
@@ -149,6 +150,30 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
       queryKey: ['jds-entity', entityId],
       queryFn: async () => {
         const res = await http.get<JawafEntity>(`/api/entities/${entityId}/`);
+        return res.data;
+      },
+    });
+    return;
+  }
+
+  // Entity record page, IRI-keyed (/entity/<prefix>/<slug>). The query key mirrors
+  // EntityRecordProfile's useQuery (['entity-record', tail]) so the client hydrates
+  // from the dehydrated cache instead of refetching.
+  //
+  // This branch is what makes pre-rendering these pages worth anything. Without
+  // it the route still renders — it just renders with an empty cache, so the
+  // crawler gets a skeleton whose <title> is the URL slug and whose body is
+  // loading state, and the noindex in EntityRelatedCases never fires because it
+  // is keyed on a LOADED, genuinely empty result. It is also why the build could
+  // not catch that: reportPrefetch only reports on prefetches a branch actually
+  // asked for, so a route with no branch here has nothing to fail.
+  const entityRecordMatch = url.match(/^\/entity\/(.+?)\/?(?:[?#]|$)/);
+  if (entityRecordMatch) {
+    const tail = decodeURIComponent(entityRecordMatch[1]);
+    await queryClient.prefetchQuery({
+      queryKey: ['entity-record', tail],
+      queryFn: async () => {
+        const res = await http.get(`/api/entities/${tail}`);
         return res.data;
       },
     });
