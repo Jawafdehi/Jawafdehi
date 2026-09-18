@@ -12,8 +12,9 @@ import type {
   ArchiveSearchType,
   SearchFacetItem,
 } from "@/types/search";
-import { BigoRangeFilter } from "@/components/search/BigoRangeFilter";
+import { BigoRangeFilterSkeleton } from "@/components/search/BigoRangeFilterSkeleton";
 import { DateRangeFilter } from "@/components/search/DateRangeFilter";
+import { LazyBigoRangeFilter } from "@/components/search/LazyBigoRangeFilter";
 import type { BigoExtent } from "@/lib/bigo-range";
 import type { DateBounds } from "@/lib/date-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
@@ -153,7 +154,7 @@ export function SearchFilters({
         "Entity type" group below.
       */}
       {selectedType === "case" ? (
-        <BigoRangeFilter
+        <LazyBigoRangeFilter
           extent={bigoExtent}
           max={bigoMax}
           min={bigoMin}
@@ -266,18 +267,11 @@ export function SearchFiltersSkeleton({
         most cold loads the block was reserved and then never filled —
         ~296px collapsing on first paint. `selectedType` is read synchronously
         off the URL, so it is known long before the first response.
+
+        Shared with the Suspense fallback the live control now sits behind, so
+        the two cannot drift — see BigoRangeFilterSkeleton.
       */}
-      {selectedType === "case" ? (
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-14 w-full rounded-sm" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-11 w-full rounded-md" />
-          <Skeleton className="h-11 w-full rounded-md" />
-          <Skeleton className="h-11 w-32 rounded-md" />
-        </div>
-      ) : null}
+      {selectedType === "case" ? <BigoRangeFilterSkeleton /> : null}
 
       {/*
         The date block, on the same terms: gated on the live control's own

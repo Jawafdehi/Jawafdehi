@@ -174,40 +174,158 @@ const DIR = arg("dir", "dist/client");
 // exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
 // over the measured build, matching the headroom the entries above leave.
 //
-// 2026-09: 680_300 → 682_300 for schema.org structured data on case and entity
-// pages (feature/agent-readiness), stacked on top of the materials filters above.
-// The two features are independent but both land in the INITIAL payload, so their
-// costs ADD: Donate, CaseDetail and EntityProfile are all static imports in
-// routes.tsx, and ArchiveSearch's filters are eager for the same reason.
+// 2026-09: 680_300 → 682_100 for case stages (PR #388). Re-measured after
+// merging main at 42c0105, because the figure this branch first carried
+// (675_000, against main at 12ac8b5) was measured before #387, #393 and #389
+// landed and is meaningless now. Local, same machine, same command for both
+// sides: main builds to 679,239 bytes gzip and main+stages to 681,048, so
+// stages cost 1,809 bytes — up from the 1,684 measured against the older main,
+// because the shell they join grew. Local and CI agree on this file's recent
+// history (the entry above reproduced byte-for-byte), and local main here is
+// within 14 bytes of the 679,225 CI recorded for 42c0105's branch, so the
+// local pair is trustworthy — but re-read the CI number before merging rather
+// than trusting this line.
 //
-// This branch's measured cost is 2,022 bytes gzip on top of main — the graph
-// builder (src/utils/structured-data.ts + src/utils/record-head.ts) plus the
-// shared-head plumbing in src/utils/seo.ts and src/components/Seo.tsx that the
-// case/entity pages call. It is eager because a crawler reads the graph the Worker
-// injects (case pages are not pre-rendered) while the app renders that same graph
-// from ONE shared builder rather than a second, drifting copy — the invariant the
-// shared buildHeadTags list exists to hold, after og:locale said ne_NP in the
-// pages and en_US at the edge.
+// EVERY chunk except the shell is byte-identical — react-vendor, query, i18n
+// and markdown all match main to the byte, so the whole 1,809 is index-*.js:
+// the stage utils, the card badge logic and the forum-qualified verdict label
+// ("विशेष अदालत: सफाइ"), which every card and entity page renders on first
+// paint. The new Nepali stage labels cost nothing initial.
 //
-// TWO CORRECTIONS to this branch's earlier draft of this entry, which the reader
-// should trust over anything above it:
-//   1. That draft leaned on a "~3.6 KB runner zlib delta" between local and CI and
-//      set 681_300 by extrapolating from a local figure. The materials-filters
-//      entry above MEASURED that assumption and found it does not hold — local and
-//      CI agree exactly on this runner now. No delta is added here.
-//   2. It put the cost at ~1,164 bytes. Measured against main at 42c0105 it is
-//      2,022. The draft's figure was taken against a tree without #393's launch
-//      surfaces and #389's filters, and it undercounted the shared-head plumbing.
+// Not deferrable. The stage rows land in the shell through CaseDetail, and
+// `/case/:id` is pre-rendered, so per the split policy in src/routes.tsx it
+// MUST stay eager — renderToString does not await Suspense, and a lazy
+// boundary here would serve the one page whose job is to be indexed as a
+// fallback with no Helmet meta. `court-case-format` was checked and was
+// already eager on main, so nothing was newly dragged in.
 //
-// Measured on the merged tree: 681,247 bytes gzip (entry + the four modulepreload
-// chunks, level 9, exactly as this script counts them). 682_300 leaves 1,053 bytes
-// over it, matching the headroom convention this file keeps.
+// So this is taken deliberately, like the three entries above. 682_100 leaves
+// ~1,052 bytes over the measured build, matching their headroom. The real
+// headroom is still elsewhere and still not this PR's to spend:
+// `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
+// `markdown` another 98 KB (100,481 bytes, measured here) — either would pay
+// for this many times over. The BigoRangeFilter lever noted above (~4,031
+// bytes) is still unclaimed and still not this branch's to take.
 //
-// Headroom to reclaim from is unchanged and still not this branch's to spend:
-// `@sentry-internal/replay` is ~75 KB gzip of the initial payload, and the
-// BigoRangeFilter lever the entry above measured (~4,031 bytes) is still on the
-// table for whoever needs bytes next.
-const MAX_INITIAL_JS_GZIP = 682_300;
+// 2026-09: 682_100 → 683_200. NOT a feature's cost. Two PRs merged 46 seconds
+// apart, and the second had measured this line against a main that did not yet
+// contain the first. main itself came out RED by 34 bytes at fe5727d. Measured
+// locally, one method and one machine, for all four commits in merge order:
+//
+//   42c0105  #389 materials filters     679,239   limit 680_300   09-15
+//   6c863bf  #392 case party cards      679,226   limit 680_300   09-16    −13
+//   0b909ad  #382 court case profile    679,903   limit 680_300   03:14:33  +677
+//   fe5727d  #388 case stages           682,134   limit 682_100   03:15:19  RED
+//
+// Note where the line moved and where it did not: #389, #392 and #382 all fit
+// UNDER 680_300 and never touched it, so they spent the shared headroom silently
+// — #382 took 677 of it and left 397. Only #388 moved the line, and it set
+// 682_100 from its own pre-merge pair: main at 42c0105 (679,239) and main+stages
+// (681,048), a cost of 1,809 with ~1,052 of headroom over it. Forty-six seconds
+// earlier main had become 0b909ad, 664 bytes heavier, and the same stages diff
+// lands on that heavier shell for 2,231 rather than 1,809. The extra 422 is
+// gzip's cross-term, not new code: the stage labels and the verdict strings
+// compress worse against a shell that already carries #382's. So 664 + 422 =
+// 1,086 bytes of stacking arrived against 1,052 of headroom, and main came out
+// 34 over. (#392 is in the table only to close the arithmetic — it SHRANK the
+// payload by 13 bytes and is not part of the breach.)
+//
+// Every chunk except index-*.js is byte-identical across all four commits
+// (markdown 100,481, react-vendor 53,747, query 31,639, i18n 20,448), so the
+// whole movement is the shell, exactly as #388's entry says.
+//
+// 683_200 leaves 1,066 bytes over the measured 682,134, matching the headroom
+// the entries above leave. Nothing is trimmed here and nothing should be: no
+// feature is added by this commit, and the 34 bytes are not attributable to any
+// one PR — each of the three was honestly measured and individually green.
+//
+// #388's entry ends "re-read the CI number before merging rather than trusting
+// this line". That is the step that was skipped, and asking people to remember
+// it is not a fix: a per-PR number measured against a fork point cannot catch
+// this at all. The check must run against the main a branch will actually merge
+// into. Make `Bundle budget` a required status check with the strict
+// (up-to-date-with-base) policy — today only `test-and-lint` is required, so
+// three branches measured against three different mains were all mergeable
+// without ever being rebuilt together.
+//
+// The real headroom is unchanged and still not this commit's to spend, but the
+// biggest lever now has a reason as well as a number, and it is not the reason
+// recorded above: BigoRangeFilter is the ONLY consumer of @radix-ui/react-slider
+// in the tree (src/components/ui/slider.tsx is its only importer, and that file
+// has exactly one importer in turn), so deferring it moves a whole third-party
+// package off the critical path rather than component source alone. That is the
+// structural difference from the DateRangeFilter attempt, which returned 319 of
+// an estimated ~1,600 precisely because lib/date-range stayed eager regardless.
+// The blocker recorded above — "it renders on the case tab rather than a
+// type-gated one" — does not hold either: the control sits behind
+// `selectedType === "case"` and the pre-renderer passes no query string, so it
+// is in no pre-rendered HTML. It is still a change on its own terms: it needs a
+// reserved skeleton and a pass over the synchronous assertions in the filter
+// tests. Taken cleanly on its own branch it should let this line ratchet DOWN
+// past where it started.
+//
+// 2026-09: 683_200 → 679_400. Ratcheted DOWN, per the rule at the top, in the
+// commit that takes the bytes out — and the entry above was right that it would
+// go past where it started: this is 900 below the 680_300 that stood before #388
+// raised it, and the first downward move since the QR encoder came off in #364.
+//
+// The BigoRangeFilter lever is claimed. Routing it through
+// src/components/search/LazyBigoRangeFilter.tsx recovered 3,799 bytes gzip,
+// 682,134 → 678,335 as built. That is 232 short of the 4,031 estimated above,
+// and the shortfall is the boundary's own cost — a lazy stub, a local Suspense
+// node and Vite's preload entry, the same hand-back the DateRangeFilter attempt
+// recorded. Measured on the same machine and method as every figure in the entry
+// above.
+//
+// WHY THIS ONE WORKED AND DateRangeFilter DID NOT, stated plainly because the
+// materials-filters entry draws the wrong lesson from a sample of one: it is not
+// about component size. `BigoRangeFilter` is the sole consumer of
+// `@radix-ui/react-slider` in the tree — src/components/ui/slider.tsx is that
+// package's only importer, and the filter is slider.tsx's only importer — so the
+// boundary moves a whole third-party package off the critical path, and that,
+// not the component source, is most of the 3,799. DateRangeFilter had no unique
+// dependency: it imports `cn` and lib/date-range, and lib/date-range stays eager
+// regardless because archive-search-params and ArchiveSearch both read its
+// helpers on every render, so only the component moved. lib/bigo-range stays
+// eager here for exactly the same reason and it does not matter — the slider is
+// the prize and the slider has nowhere else to be.
+//
+// Not a waterfall, which is the question worth asking of any deferral: the
+// control renders only under `selectedType === "case"`, and /search defaults to
+// type=all (utils/archive-search-params rewrites an absent or unknown type to
+// `all`, so a fresh search is not scoped to one under-populated type) while
+// /materials and /court-cases pin a non-case type. No cold load fetches the
+// chunk; the tab click does, which is the LazyQRCode case exactly. Pre-rendering
+// is untouched for the same reason — /search and /courtcases ARE pre-rendered,
+// but the pre-renderer passes no query string, so this subtree never renders
+// into the published HTML and the split policy in src/routes.tsx does not bite.
+//
+// One thing it needed, and the reason the entry above was right to call it a
+// change on its own terms: the rails check is hoisted OUT of the boundary.
+// BigoRangeFilter returns null on an extent with no usable rails, which is
+// routine — an older cached response predating the extent agg, or a corpus where
+// nothing records an amount. Left inside, that becomes ~296px of skeleton that
+// resolves to nothing and drops every facet below it. LazyBigoRangeFilter
+// therefore runs `hasUsableRails` before the Suspense boundary (free —
+// lib/bigo-range is eager anyway), and the reserved skeleton is now one shared
+// component so the cold-load sidebar and the chunk fallback cannot drift apart.
+// tests/search/SearchFilters.test.tsx keeps the no-extent assertion SYNCHRONOUS
+// on purpose: if it ever needs an await, the flash is back.
+//
+// 679_400 leaves 1,065 bytes over the measured 678,335, matching the headroom
+// the entries above leave.
+//
+// The real headroom is still elsewhere, and two of the three signposts this file
+// keeps repeating are wrong, so for whoever needs bytes next: `markdown` is NOT
+// eager because its routes are pre-rendered — /case/:id has not been pre-rendered
+// since #297 — and `@sentry-internal/replay` is ~39 KB gzip, not the ~75 KB
+// recorded above. The largest lever is one this file has never mentioned: en.json
+// and ne.json are both statically bundled into index-*.js (~43 KB and ~55 KB
+// gzip, essentially no cross-compression), while fallbackLng is `ne`, the
+// pre-renderer is hard-coded to `ne`, and English is opt-in and already applied
+// asynchronously. Deferring the English bundle is the biggest low-risk win
+// available and nobody has taken it.
+const MAX_INITIAL_JS_GZIP = 679_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
