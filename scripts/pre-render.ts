@@ -18,6 +18,7 @@ import {
   type PrefetchReport,
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
+import { entityPath } from '../src/lib/entity-links.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -58,7 +59,9 @@ interface PaginatedCaseList {
     title?: string | null;
     description?: string | null;
     updated_at: string;
-    entities: Array<{ id: number; nes_id: string | null; display_name?: string | null }>;
+    // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
+    // canonical NES `@id` IRI and the case serializer stopped emitting one.
+    entities: Array<{ nes_id: string | null; display_name?: string | null }>;
   }>;
 }
 
@@ -296,14 +299,18 @@ function caseToSearchEntry(
   };
 }
 
-function entityToSearchEntry(entityId: number, name: string | null | undefined, html: string): SearchIndexEntry {
-  const title = stripHtml(name) || `Entity ${entityId}`;
+function entityToSearchEntry(path: string, name: string | null | undefined, html: string): SearchIndexEntry {
+  // The `<prefix>/<slug>` tail is the only human-readable handle left once the
+  // numeric id is gone, so it stands in for the title when a bind carries no
+  // display_name.
+  const tail = path.replace('/entity/', '');
+  const title = stripHtml(name) || tail;
 
   return withSearchLines({
-    path: `/entity/${entityId}`,
+    path,
     title,
     descriptionKey: 'searchCommand.descriptions.entityDetail',
-    keywords: ['entity', 'person', 'organization', 'official', String(entityId), title],
+    keywords: ['entity', 'person', 'organization', 'official', tail, title],
     icon: 'Building2',
     group: 'entities',
   }, html);
@@ -365,11 +372,18 @@ async function main() {
     apiReachable = false;
   }
 
-  // Collect unique entity IDs — use numeric JDS entity IDs for /entity/:id routes
-  const entityIds = apiReachable
+  // Entity pages worth pre-rendering are exactly the ones a published case
+  // cites — the same rule the public entity search applies (`case_count >= 1`,
+  // see `entities/search_visibility.py` in the API). `cases` is the published
+  // set, so its binds give that rule for free.
+  //
+  // This block used to map `e.id`, a numeric field the IRI remodel deleted, so
+  // it resolved to [] and NO entity page was pre-rendered or listed.
+  const entityPaths = apiReachable
     ? [...new Set(
         cases
-          .flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
+          .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
+          .filter((path): path is string => path != null)
       )]
     : [];
 
@@ -438,28 +452,30 @@ async function main() {
       searchEntries.push(caseToSearchEntry(caseItem, slug));
     }
 
-    const entityNames = new Map<number, string | null | undefined>();
+    const entityNames = new Map<string, string | null | undefined>();
     for (const caseItem of cases) {
       for (const entity of caseItem.entities) {
-        if (!entityNames.has(entity.id)) {
-          entityNames.set(entity.id, entity.display_name);
+        const path = entityPath(entity.nes_id);
+        if (path && !entityNames.has(path)) {
+          entityNames.set(path, entity.display_name);
         }
       }
     }
 
-    // Render entity routes
-    await withConcurrency(entityIds, CONCURRENCY, async (entityId) => {
-      const path = `/entity/${entityId}`;
-      const outFile = join(ROOT, 'dist', 'entity', String(entityId), 'index.html');
+    // Render entity routes. The output directory mirrors the multi-segment
+    // `<prefix>/<slug>` tail (e.g. dist/entity/person/ram-shah/index.html), the
+    // same shape the `/entity/*` splat route resolves at runtime.
+    await withConcurrency(entityPaths, CONCURRENCY, async (path) => {
+      const outFile = join(ROOT, 'dist', ...path.split('/').filter(Boolean), 'index.html');
       try {
         const result = await render(path);
         const html = injectIntoTemplate(template, result);
         await writeHtml(outFile, html);
         notePrefetch(path, result);
-        searchEntries.push(entityToSearchEntry(entityId, entityNames.get(entityId), result.html));
+        searchEntries.push(entityToSearchEntry(path, entityNames.get(path), result.html));
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
-        console.warn(`[pre-render] WARNING: Skipping entity ${entityId}:`, err);
+        console.warn(`[pre-render] WARNING: Skipping entity ${path}:`, err);
         if (err instanceof Error) console.error(err.stack);
       }
     });
