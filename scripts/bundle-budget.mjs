@@ -206,7 +206,64 @@ const DIR = arg("dir", "dist/client");
 // `markdown` another 98 KB (100,481 bytes, measured here) — either would pay
 // for this many times over. The BigoRangeFilter lever noted above (~4,031
 // bytes) is still unclaimed and still not this branch's to take.
-const MAX_INITIAL_JS_GZIP = 682_100;
+//
+// 2026-09: 682_100 → 683_200. NOT a feature's cost. Two PRs merged 46 seconds
+// apart, and the second had measured this line against a main that did not yet
+// contain the first. main itself came out RED by 34 bytes at fe5727d. Measured
+// locally, one method and one machine, for all four commits in merge order:
+//
+//   42c0105  #389 materials filters     679,239   limit 680_300   09-15
+//   6c863bf  #392 case party cards      679,226   limit 680_300   09-16    −13
+//   0b909ad  #382 court case profile    679,903   limit 680_300   03:14:33  +677
+//   fe5727d  #388 case stages           682,134   limit 682_100   03:15:19  RED
+//
+// Note where the line moved and where it did not: #389, #392 and #382 all fit
+// UNDER 680_300 and never touched it, so they spent the shared headroom silently
+// — #382 took 677 of it and left 397. Only #388 moved the line, and it set
+// 682_100 from its own pre-merge pair: main at 42c0105 (679,239) and main+stages
+// (681,048), a cost of 1,809 with ~1,052 of headroom over it. Forty-six seconds
+// earlier main had become 0b909ad, 664 bytes heavier, and the same stages diff
+// lands on that heavier shell for 2,231 rather than 1,809. The extra 422 is
+// gzip's cross-term, not new code: the stage labels and the verdict strings
+// compress worse against a shell that already carries #382's. So 664 + 422 =
+// 1,086 bytes of stacking arrived against 1,052 of headroom, and main came out
+// 34 over. (#392 is in the table only to close the arithmetic — it SHRANK the
+// payload by 13 bytes and is not part of the breach.)
+//
+// Every chunk except index-*.js is byte-identical across all four commits
+// (markdown 100,481, react-vendor 53,747, query 31,639, i18n 20,448), so the
+// whole movement is the shell, exactly as #388's entry says.
+//
+// 683_200 leaves 1,066 bytes over the measured 682,134, matching the headroom
+// the entries above leave. Nothing is trimmed here and nothing should be: no
+// feature is added by this commit, and the 34 bytes are not attributable to any
+// one PR — each of the three was honestly measured and individually green.
+//
+// #388's entry ends "re-read the CI number before merging rather than trusting
+// this line". That is the step that was skipped, and asking people to remember
+// it is not a fix: a per-PR number measured against a fork point cannot catch
+// this at all. The check must run against the main a branch will actually merge
+// into. Make `Bundle budget` a required status check with the strict
+// (up-to-date-with-base) policy — today only `test-and-lint` is required, so
+// three branches measured against three different mains were all mergeable
+// without ever being rebuilt together.
+//
+// The real headroom is unchanged and still not this commit's to spend, but the
+// biggest lever now has a reason as well as a number, and it is not the reason
+// recorded above: BigoRangeFilter is the ONLY consumer of @radix-ui/react-slider
+// in the tree (src/components/ui/slider.tsx is its only importer, and that file
+// has exactly one importer in turn), so deferring it moves a whole third-party
+// package off the critical path rather than component source alone. That is the
+// structural difference from the DateRangeFilter attempt, which returned 319 of
+// an estimated ~1,600 precisely because lib/date-range stayed eager regardless.
+// The blocker recorded above — "it renders on the case tab rather than a
+// type-gated one" — does not hold either: the control sits behind
+// `selectedType === "case"` and the pre-renderer passes no query string, so it
+// is in no pre-rendered HTML. It is still a change on its own terms: it needs a
+// reserved skeleton and a pass over the synchronous assertions in the filter
+// tests. Taken cleanly on its own branch it should let this line ratchet DOWN
+// past where it started.
+const MAX_INITIAL_JS_GZIP = 683_200;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
