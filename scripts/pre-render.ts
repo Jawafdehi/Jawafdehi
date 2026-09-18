@@ -111,7 +111,38 @@ async function withConcurrency<T>(
   await Promise.all(workers);
 }
 
+// renderToString does not throw when it hits an unresolved Suspense boundary — it
+// returns the fallback and a <template data-msg="The server did not finish this
+// Suspense boundary..."> marker, and the build happily writes that to disk and
+// exits 0. That is how /donate shipped blank in August and how /entity/* shipped
+// 1,544 empty-titled stubs in this branch, both past a green CI.
+//
+// So assert on the OUTPUT rather than on a list of routes that must stay eager.
+// A list has to be kept in step with this file by hand and silently stops
+// covering whatever someone adds next; this cannot drift, because it reads what
+// was actually produced. tests/ssr/prerendered-routes-eager.test.ts still checks
+// the same rule at unit-test speed — this is the backstop for the case the test
+// cannot see.
+const SUSPENSE_STUB_MARKER = 'did not finish this Suspense boundary';
+
+// Its own type because the per-route loops below are deliberately tolerant — one
+// unrenderable update or entity warns and is skipped rather than failing a
+// deploy. A lazy page is the opposite kind of problem: it fails EVERY route in
+// that family identically, so "skip and carry on" would quietly publish a site
+// with no entity pages at all while the sitemap still advertised 1,579 of them.
+// Those loops rethrow this one.
+class SuspenseStubError extends Error {
+  override readonly name = 'SuspenseStubError';
+}
+
 async function writeHtml(outFile: string, content: string): Promise<void> {
+  if (content.includes(SUSPENSE_STUB_MARKER)) {
+    throw new SuspenseStubError(
+      `refusing to write ${outFile}: it pre-rendered as a Suspense fallback, not a page. ` +
+        `The route's page component is lazy() and every pre-rendered route must be an ` +
+        `eager import — see the split policy in src/routes.tsx.`,
+    );
+  }
   await mkdir(dirname(outFile), { recursive: true });
   await writeFile(outFile, content, 'utf-8');
 }
@@ -426,6 +457,7 @@ async function main() {
       searchEntries.push(withSearchLines(updateRouteToSearchEntry(update), result.html));
       console.log(`[pre-render] ✓ ${path}`);
     } catch (err) {
+      if (err instanceof SuspenseStubError) throw err;
       console.warn(`[pre-render] WARNING: Skipping update ${update.id}:`, err);
       if (err instanceof Error) console.error(err.stack);
     }
@@ -483,6 +515,7 @@ async function main() {
         searchEntries.push(entityToSearchEntry(path, entityNames.get(path)));
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
+        if (err instanceof SuspenseStubError) throw err;
         console.warn(`[pre-render] WARNING: Skipping entity ${path}:`, err);
         if (err instanceof Error) console.error(err.stack);
       }
