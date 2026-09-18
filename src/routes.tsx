@@ -12,9 +12,19 @@ import { SITE_ROUTES, type RouteChrome, type RoutePath } from "@/data/site-route
 // lazily-imported page would pre-render as the "Loading…" fallback, shipping
 // empty HTML + wrong Helmet meta for that route. Therefore every PRE-RENDERED
 // route (see PRE_RENDERED_STATIC_ROUTES in src/data/site-routes.ts, plus the
-// dynamic /case/:id, /entity/:id and /updates/:slug routes) MUST stay eager.
+// dynamic /updates/:slug and /entity/* routes) MUST stay eager.
 // Routes NOT pre-rendered are client-rendered regardless, so they are lazy()
 // below to keep them out of the public entry chunk.
+//
+// This list used to name /case/:id and /entity/:id too. Neither is pre-rendered:
+// scripts/pre-render.ts main() walks the static routes, the update slugs and the
+// IRI entity paths, and nothing else — cases are listed in the sitemap but
+// rendered on the client, and /entity/:id is the legacy numeric route the IRI
+// remodel superseded. /entity/:id is lazy() below accordingly; /case/:id stays
+// eager on first-paint grounds rather than pre-render ones, since it is the most
+// directly-linked page on the site.
+// tests/ssr/prerendered-routes-eager.test.ts enforces the eager half of this,
+// for the dynamic routes as well as the static ones.
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import About from "./pages/About";
@@ -26,7 +36,6 @@ import OurProducts from "./pages/OurProducts";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
 import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
-import EntityProfile from "./pages/EntityProfile";
 import AuthorProfile from "./pages/AuthorProfile";
 import Feedback from "./pages/Feedback";
 import ReportCase from "./pages/ReportCase";
@@ -63,6 +72,11 @@ import EntityRecordProfile from "./pages/EntityRecordProfile";
 
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
+// The LEGACY numeric entity route. Not pre-rendered (pre-render.ts derives entity
+// paths from nes_id IRIs, never numeric ids), so the policy above does not pin it
+// eager — and the IRI page it was superseded by is now eager in its place, which
+// this pays for: measured 671.7 -> 664.7 KB gzip initial JS, back under budget.
+const EntityProfile = lazy(() => import("./pages/EntityProfile"));
 const DataQuality = lazy(() => import("./pages/DataQuality"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
