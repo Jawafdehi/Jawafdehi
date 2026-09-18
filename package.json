@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts",
+    "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts && node scripts/check-built-shell.mjs",
     "build:dev": "vite build --mode development",
     "analyze": "ANALYZE=true vite build && echo 'Bundle treemap written to dist/stats.html'",
     "lint": "eslint .",
