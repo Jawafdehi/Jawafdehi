@@ -379,7 +379,7 @@ const CaseDetail = () => {
           because a case page is not pre-rendered and the edge copy is the only one a
           crawler reads — two hand-written mappings had already drifted on the
           description fallback, slug encoding, and the alternate href. */}
-      <Seo {...caseHeadInput(caseData as unknown as Record<string, unknown>, id ?? "", { language: i18n.language })} />
+      <Seo {...caseHeadInput(caseData as unknown as Record<string, unknown>, id ?? "")} />
 
       <CaseDetailBanner
         caseData={caseData}

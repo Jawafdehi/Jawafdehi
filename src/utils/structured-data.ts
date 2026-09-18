@@ -146,8 +146,19 @@ export interface CaseEntityInput {
   display_name?: string | null;
   nes_id?: string | null;
   entity_type?: string | null;
-  /** "accused" | "related" | … — the bind's role, not a schema.org value. */
-  type?: string | null;
+  // Deliberately NOT carrying the bind's role ("accused" | "witness" |
+  // "respondent" | …) or its `outcome` ("charged" | "convicted" | "acquitted").
+  //
+  // A `type` field used to be declared here and populated by record-head.ts, with
+  // no reader anywhere — so `about` flattened every party into an identical node
+  // while the graph looked like it distinguished them. Carrying the role properly
+  // means schema.org `Role` nodes (`about: { "@type": "Role", roleName, about: … }`),
+  // which is a real modelling change and a real byte cost on a 194-party record;
+  // carrying `outcome` is more sensitive still, because "acquitted" rendered as
+  // undifferentiated involvement is the one error this archive must not make.
+  //
+  // So the field is gone rather than dormant, and llms.txt now states the shortfall
+  // instead of implying the party cap is the only one. Follow-up, not a silent gap.
 }
 
 export interface CaseAuthorInput {

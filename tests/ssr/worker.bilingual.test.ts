@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
@@ -158,15 +159,38 @@ describe('a case page stays Nepali-first, which is what the data is', () => {
     expect(r.head).toContain('४१.६२');
   });
 
-  it('does so for the real API record too', async () => {
-    let record: Record<string, unknown>;
-    try {
-      record = JSON.parse(
-        readFileSync('/home/uakarki/.kiro/crew/workspace/review-tools/fx/case.json', 'utf8'),
-      ) as Record<string, unknown>;
-    } catch {
-      return; // review fixture, not committed
-    }
+  it('takes no reader-language argument either, so the edge and the page agree', () => {
+    // The drift this closes: the page called caseHeadInput with
+    // `{ language: i18n.language }` and worker.ts called it without, so one URL
+    // carried ne_NP from the edge and en_US after hydration, plus a SECOND JSON-LD
+    // node with the same @id and inLanguage "en".
+    //
+    // worker.head-drift.test.ts is structurally unable to catch that: it builds its
+    // `expected` by calling caseHeadInput itself, so it compares the Worker to the
+    // mapper, never the Worker to the PAGE. This asserts the mapper's own contract
+    // instead — the third argument cannot change the answer — which is what makes
+    // the two call sites agree no matter what either one passes.
+    const record = { title: 'दमक प्रकरण', slug: 'damak', description: 'विवरण' };
+
+    const plain = caseHeadInput(record, 'damak');
+    // `as` because CaseHeadOptions.language is `never`: a caller writing this in
+    // application code is a type error now, which is the real fix. The cast is here
+    // only to prove the runtime agrees with the type.
+    const asEnglishReader = caseHeadInput(record, 'damak', {
+      language: 'en',
+    } as unknown as Parameters<typeof caseHeadInput>[2]);
+
+    expect(plain.language).toBe('ne');
+    expect(asEnglishReader.language).toBe('ne');
+    expect(JSON.stringify(asEnglishReader.jsonLd)).toBe(JSON.stringify(plain.jsonLd));
+  });
+
+  it('does so for the real API record too', () => {
+    // Committed fixture, read without a try/catch — see worker.head-drift.test.ts
+    // for why the old absolute-path-plus-`catch { return }` form made this a no-op.
+    const record = JSON.parse(
+      readFileSync(resolve(__dirname, '../fixtures/case-live-record.json'), 'utf8'),
+    ) as Record<string, unknown>;
 
     const head = caseHeadInput(record, String(record.slug));
     const graph = (head.jsonLd as Array<Record<string, unknown>>)[0];

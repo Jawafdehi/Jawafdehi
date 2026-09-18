@@ -65,10 +65,29 @@ function allegationSummary(value: unknown, limit = 2): string {
     .join(". ");
 }
 
+/**
+ * The language a case head declares, for `og:locale` and JSON-LD `inLanguage`.
+ *
+ * Fixed rather than negotiated: a case's `title` and `description` arrive from the
+ * API as plain strings that do not vary by reader (verified — the record is
+ * byte-identical under `Accept-Language: en` and `ne`, and case titles are
+ * Devanagari), so the head's bytes are Nepali for either reader.
+ */
+const CASE_CONTENT_LANGUAGE = "ne";
+
 export interface CaseHeadOptions {
-  /** The reader's active language, for the og:locale pair and `inLanguage`. Omit
-   *  at the edge, where the Nepali-first default is what a crawler should see. */
-  language?: string;
+  /**
+   * Deliberately absent, for the same reason as EntityHeadOptions.language: this
+   * head describes the language of the CONTENT it carries, not the reader's toggle.
+   *
+   * This used to be `language?: string`, and the page passed `i18n.language` while
+   * the edge omitted it. The edge therefore shipped `og:locale ne_NP` and
+   * `inLanguage: "ne"`, and hydration for an English reader appended `en_US` plus a
+   * SECOND JSON-LD node carrying the same `@id` with `inLanguage: "en"` — two
+   * contradictory claims about one record, on one URL. Removing the option makes
+   * that drift unrepresentable rather than merely tested.
+   */
+  language?: never;
 }
 
 /**
@@ -80,7 +99,7 @@ export interface CaseHeadOptions {
 export function caseHeadInput(
   record: Record<string, unknown>,
   slugFromUrl: string,
-  options: CaseHeadOptions = {},
+  _options: CaseHeadOptions = {},
 ): HeadTagInput {
   const title = text(record.title) || "Jawafdehi Case";
   const description = truncateMeta(
@@ -118,7 +137,11 @@ export function caseHeadInput(
     type: "article",
     imageUrl,
     imageAlt: title,
-    language: options.language,
+    // The content this head carries is Nepali (see CaseHeadOptions), and it says so
+    // identically at the edge and after hydration. Stated rather than left to the
+    // Nepali-first default, because an implicit default is what let the two sides
+    // disagree in the first place.
+    language: CASE_CONTENT_LANGUAGE,
     publishedTime: text(record.created_at) || null,
     modifiedTime: text(record.updated_at) || null,
     tags,
@@ -135,14 +158,13 @@ export function caseHeadInput(
       // timestamp and can predate publication by months.
       datePublished: text(record.case_publish_date) || text(record.created_at) || null,
       dateModified: text(record.updated_at) || null,
-      language: options.language,
+      language: CASE_CONTENT_LANGUAGE,
       tags,
       entities: Array.isArray(record.entities)
         ? (record.entities as Array<Record<string, unknown>>).map((entity) => ({
             display_name: text(entity?.display_name) || null,
             nes_id: text(entity?.nes_id) || null,
             entity_type: text(entity?.entity_type) || null,
-            type: text(entity?.type) || null,
           }))
         : undefined,
       authors: Array.isArray(record.authors)

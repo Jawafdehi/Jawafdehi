@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import worker from '../../worker';
@@ -213,22 +211,8 @@ describe('og:type describes what the page is actually about', () => {
   });
 });
 
-describe('the real built shell is shaped the way these tests assume', () => {
-  // If the build starts emitting a head this fixture no longer resembles, the
-  // assertions above stop meaning anything. This is the tripwire.
-  it('has helmet attributes, one ld+json node, and a module entry', () => {
-    let built: string;
-    try {
-      built = readFileSync('dist/index.html', 'utf8');
-    } catch {
-      // dist/ is a build artifact and is not present in a fresh checkout.
-      return;
-    }
-    const head = built.slice(0, built.indexOf('</head>'));
-
-    expect(head).toContain('data-rh="true"');
-    expect(occurrences(head, /application\/ld\+json/g)).toBe(1);
-    expect(occurrences(head, /<script type="module"/g)).toBe(1);
-    expect(built).toContain('__REACT_QUERY_STATE__');
-  });
-});
+// The tripwire that checks the SHELL constant above still resembles the real
+// built head is NOT here: it needs `dist/index.html`, and CI runs `bun run test`
+// before `bun run build`, so in this suite it could only ever be wrapped in a
+// try/catch and skipped — a test that cannot fail. It now runs as a post-build
+// gate instead: scripts/check-built-shell.mjs, wired into the `build` script.

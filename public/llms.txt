@@ -62,9 +62,12 @@ A case record carries `title`, `short_description`, `description`, `key_allegati
 
 ### Entities (officials, organisations, places)
 
-- List / search entities: https://api.jawafdehi.org/api/entities?query={name}
+- Search entities by name: https://api.jawafdehi.org/api/search/?q={name}&type=entity
+- Enumerate every entity: https://api.jawafdehi.org/api/entities?limit=100&offset=0
 - Entity record: https://api.jawafdehi.org/api/entities/{prefix}/{slug}
 - Version history for an entity: https://api.jawafdehi.org/api/entities/{prefix}/{slug}/versions/
+
+**`/api/entities?query=` is not a name search.** It matches the beginning of an entity's IRI slug, so it answers a lookup and not a question about names — and because it answers `200` with a `total`, an agent that mistakes it for search gets a confident wrong number rather than an error. Measured on the live archive: `?query=poudel` returns `total: 1` while `/api/search/?q=poudel&type=entity` returns `count: 1117`, and `?query=sebon` returns `total: 0` for an entity that plainly exists. Use `/api/search/` for names. Use `?query=` only when you already hold a slug or its leading segment.
 
 Entity records are returned **as schema.org JSON-LD** with a `jawafdehi:` extension namespace, so no reshaping is needed to merge them into a knowledge graph.
 
@@ -137,7 +140,7 @@ Trailing slashes are not decoration here: the site's own canonical for a listing
 - An author's profile and their cases: https://jawafdehi.org/author/{slug}
 - Sitemap: https://jawafdehi.org/sitemap.xml
 
-Every case and entity page carries schema.org JSON-LD (`Report` for a case; for an entity, a `WebPage` whose `mainEntity` is the entity itself, so the licence attaches to the record rather than to the person) plus a `<link rel="alternate" type="application/json">` pointing at the API record behind it. Prefer the JSON: it is complete, whereas the JSON-LD in the page caps the list of involved parties.
+Every case and entity page carries schema.org JSON-LD (`Report` for a case; for an entity, a `WebPage` whose `mainEntity` is the entity itself, so the licence attaches to the record rather than to the person) plus a `<link rel="alternate" type="application/json">` pointing at the API record behind it. **Prefer the JSON.** The graph is a summary and falls short of it in two ways, both of which matter: it caps the list of involved parties, and it does not carry each party's ROLE or OUTCOME — every entity appears in `about` as undifferentiated involvement, so an accused party, a witness and a petitioner are indistinguishable there, and a party the court **acquitted** is not marked as such. Never infer culpability from a case graph's `about`; read `entities[]` on the API record, where each bind carries its `type` and its `outcome`.
 
 Both carry `creditText` — the assembled credit line for that record — and `license`. If you take one field from the graph for attribution, take `creditText`.
 

@@ -45,6 +45,43 @@ const DOCUMENTED_AS_DENIED = ['/api/case-update-proposals/', '/api/cases/{slug}/
 // Hosts we do not own; their availability is not ours to assert.
 const SKIP_HOSTS = ['creativecommons.org'];
 
+// Claims a status code cannot check.
+//
+// The status-only loop below has a blind spot that a review found the hard way:
+// llms.txt advertised `/api/entities?query={name}` as entity search, and that
+// endpoint answers `200` with a `total` — so the probe passed while an agent
+// following the file was told the archive holds ONE person named Poudel. It
+// matches the start of an entity's IRI slug, not names, and `/api/search/` returns
+// 1117 for the same word.
+//
+// So a promise about what an endpoint MEANS needs an assertion about its body. Each
+// check names the promise in llms.txt it is holding to account; `assert` returns a
+// failure string, or null when the claim holds.
+const SEMANTIC_CHECKS = [
+  {
+    promise: 'entity search finds an entity by NAME, not by the start of its slug',
+    url: 'https://api.jawafdehi.org/api/search/?q=sebon&type=entity',
+    assert: (json) =>
+      (json?.count ?? 0) > 0
+        ? null
+        : `count is ${json?.count}. "sebon" names an entity whose slug does not start ` +
+          `with it, which is exactly the case a slug-prefix lookup misses — if the ` +
+          `endpoint llms.txt advertises for names cannot find it, the file is pointing ` +
+          `agents at a lookup and calling it search.`,
+  },
+  {
+    promise: 'the slug-prefix lookup is documented as a lookup, because it answers 200 either way',
+    url: 'https://api.jawafdehi.org/api/entities?query=sebon',
+    assert: (json) =>
+      (json?.total ?? -1) === 0
+        ? null
+        : `total is ${json?.total}, not 0. This check exists to keep llms.txt's warning ` +
+          `truthful: it tells agents ?query= is a slug-prefix lookup and cites sebon as ` +
+          `the miss. If the endpoint has since learned to match names, delete the ` +
+          `warning rather than leaving a stale one.`,
+  },
+];
+
 function urlsIn(text) {
   const found = text.match(/https?:\/\/[^\s<>()[\]`,"|]+/g) ?? [];
   return [...new Set(found.map((u) => u.replace(/[.,]+$/, '')))].sort();
@@ -60,9 +97,19 @@ async function probe(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(url, { redirect: 'follow', signal: controller.signal });
+    // `manual`, not `follow`. Following meant a 301 to a login page reported as
+    // `ok 200` — which is how llms.txt came to advertise a Swagger URL that
+    // redirects anonymous callers to sign in. An agent does not necessarily follow,
+    // and even when it does, the URL it was GIVEN should be the canonical one. A
+    // redirect is therefore a finding, with its target named so the fix is obvious.
+    const res = await fetch(url, { redirect: 'manual', signal: controller.signal });
     const body = await res.arrayBuffer();
-    return { status: res.status, bytes: body.byteLength };
+    return {
+      status: res.status,
+      bytes: body.byteLength,
+      location: res.headers.get('location') ?? undefined,
+      body,
+    };
   } catch (error) {
     return { status: 0, bytes: 0, error: error instanceof Error ? error.message : String(error) };
   } finally {
@@ -86,22 +133,43 @@ for (const claimed of urlsIn(text)) {
     continue;
   }
 
-  const { status, bytes, error } = await probe(url);
+  const { status, bytes, error, location } = await probe(url);
   probed += 1;
   const ok = (status >= 200 && status < 300) || (mayBeDenied && [401, 403, 404].includes(status));
-  if (!ok) problems.push({ claimed, url, status, error });
+  if (!ok) problems.push({ claimed, url, status, error, location });
 
   const size = String(bytes).padStart(9);
-  console.log(`${ok ? 'ok ' : 'BAD'} ${String(status).padEnd(3)} ${size}  ${url}${error ? `  (${error})` : ''}`);
+  const note = error ? `  (${error})` : location ? `  → ${location}` : '';
+  console.log(`${ok ? 'ok ' : 'BAD'} ${String(status).padEnd(3)} ${size}  ${url}${note}`);
 }
 
 console.log(`\n--- probed ${probed} URL(s) from public/llms.txt`);
 
+console.log(`\n--- ${SEMANTIC_CHECKS.length} claim(s) about what the answers MEAN`);
+for (const { promise, url, assert } of SEMANTIC_CHECKS) {
+  const { status, error, body } = await probe(url);
+  if (status < 200 || status >= 300) {
+    problems.push({ claimed: url, url, status, error: error ?? `semantic check could not run` });
+    console.log(`BAD ${String(status).padEnd(3)}  ${promise}\n          ${url}`);
+    continue;
+  }
+  let failure;
+  try {
+    failure = assert(JSON.parse(new TextDecoder().decode(body)));
+  } catch (parseError) {
+    failure = `response was not JSON: ${parseError instanceof Error ? parseError.message : parseError}`;
+  }
+  if (failure) problems.push({ claimed: promise, url, status, error: failure });
+  console.log(`${failure ? 'BAD' : 'ok '} ${String(status).padEnd(3)}  ${promise}`);
+  if (failure) console.log(`          ${failure}`);
+}
+
 if (problems.length > 0) {
   console.log(`\n### ${problems.length} claim(s) do not hold:\n`);
-  for (const { claimed, url, status, error } of problems) {
+  for (const { claimed, url, status, error, location } of problems) {
     console.log(`  ${String(status)}  ${claimed}`);
     if (url !== claimed) console.log(`        probed as: ${url}`);
+    if (location) console.log(`        redirects to: ${location}  (put the target in llms.txt instead)`);
     if (error) console.log(`        ${error}`);
   }
   console.log('\nFix public/llms.txt (or the API) — an agent follows these literally.');

@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
@@ -71,14 +72,16 @@ async function servedHead(path: string): Promise<string> {
 
 // The real case record from the live API, so this runs against the shape the
 // backend actually returns — 194 bound entities, Devanagari title, real dates.
-const REAL_CASE_PATH = '/home/uakarki/.kiro/crew/workspace/review-tools/fx/case.json';
+//
+// COMMITTED, and read without a try/catch, on purpose. This fixture used to live
+// at an absolute path in one developer's home directory behind a `catch { return
+// null }`, which meant the test passed everywhere — CI included — having executed
+// no `expect()` at all. A test that cannot fail is worse than no test, because it
+// reports the invariant as held. If the fixture is missing now, the suite says so.
+const REAL_CASE_PATH = resolve(__dirname, '../fixtures/case-live-record.json');
 
-function realCase(): Record<string, unknown> | null {
-  try {
-    return JSON.parse(readFileSync(REAL_CASE_PATH, 'utf8')) as Record<string, unknown>;
-  } catch {
-    return null; // Fixture is a review artifact, not committed.
-  }
+function realCase(): Record<string, unknown> {
+  return JSON.parse(readFileSync(REAL_CASE_PATH, 'utf8')) as Record<string, unknown>;
 }
 
 describe('the head the Worker serves is the head the mapper builds', () => {
@@ -137,7 +140,6 @@ describe('the head the Worker serves is the head the mapper builds', () => {
 
   it('for the real API record, not just a fixture', async () => {
     const record = realCase();
-    if (!record) return;
 
     stubApi(record);
     const slug = String(record.slug);
