@@ -10,6 +10,7 @@ import { entityPath } from "@/lib/entity-links";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { CaseImage } from "@/types/jds";
+import type { CaseCardStatus } from "@/lib/case-card-props";
 import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 import { summarizeNames } from "@/utils/name-summary";
@@ -21,7 +22,9 @@ interface CaseCardProps {
   entity: string;
   entityNames?: string[];
   location: string;
-  status: "ongoing" | "resolved" | "under-investigation";
+  // `withdrawn` / `dormant` are lifecycles the API derives; neither is
+  // "resolved", so they carry their own label and the muted pill.
+  status: CaseCardStatus;
   tags?: string[];
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)

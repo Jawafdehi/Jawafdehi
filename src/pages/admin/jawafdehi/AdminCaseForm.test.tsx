@@ -208,3 +208,110 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
     expect(hint?.className).toContain("sr-only");
   });
 });
+
+// The case's dates are a LIST of stages now. The two single date inputs are
+// gone in the same change that adds the editor — a half-migrated admin, where
+// a caseworker can see dates but not edit them, is worse than either shape.
+describe("AdminCaseForm — the stage editor replaces the single date pair", () => {
+  const withStages = () =>
+    loadCase("PUBLISHED", {
+      dates: {
+        stages: [
+          { stage: "initial", start: "2021-10-02", end: "2023-06-09" },
+          { stage: "appeal", start: "2023-07-11", notes: "इजलास गठन नभएको" },
+        ],
+      },
+    });
+
+  it("loads every stage the case carries into its own row", async () => {
+    withStages();
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId("case-stage-editor-row")).toHaveLength(2),
+    );
+  });
+
+  it("no longer renders the single case start / case end pair", async () => {
+    withStages();
+    const { container } = render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId("case-stage-editor-row").length).toBeGreaterThan(0),
+    );
+    expect(container.textContent).not.toContain("admin.caseForm.caseStart");
+    expect(container.textContent).not.toContain("admin.caseForm.caseEnd");
+  });
+
+  it("refuses to edit stages at all when the payload carries no dates key", async () => {
+    // An API that does not serve `dates` is indistinguishable from a case
+    // with no stages, and the list saves as a WHOLE-LIST replace -- so the
+    // first stage a caseworker adds would silently delete every stage the
+    // case already has. Absent is not empty: the editor says so and offers
+    // no way to write.
+    loadCase("PUBLISHED", {});
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("case-stages-unavailable")).toBeTruthy(),
+    );
+    expect(screen.queryByText("admin.caseForm.stageAdd")).toBeNull();
+    expect(screen.queryAllByTestId("case-stage-editor-row")).toHaveLength(0);
+  });
+
+  it("edits normally when the payload carries an empty stage list", async () => {
+    // The other half of the rule: an explicit empty list IS a case with no
+    // stages, and must stay editable.
+    loadCase("PUBLISHED", { dates: { stages: [] } });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByText("admin.caseForm.stageAdd")).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("case-stages-unavailable")).toBeNull();
+  });
+
+  it("blocks save while a stage ends before it starts", async () => {
+    loadCase("PUBLISHED", {
+      dates: { stages: [{ stage: "initial", start: "2023-06-09", end: "2023-01-01" }] },
+    });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId("case-stage-editor-row")).toHaveLength(1),
+    );
+    const save = screen.getByRole("button", { name: /admin.caseForm.saveChanges/ });
+    expect(save.hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText("admin.caseForm.stageRowsInvalid")).toBeTruthy();
+  });
+
+  it("keeps a stage whose type it does not recognise, and blocks save on it", async () => {
+    // Dropping it on load would DELETE it on the next save — the stage list is
+    // sent as a whole-list replace. Better to show the row, refuse to save,
+    // and make the caseworker pick a type from the list.
+    loadCase("PUBLISHED", {
+      dates: { stages: [{ stage: "first_instance", start: "2021-10-02" }] },
+    });
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId("case-stage-editor-row")).toHaveLength(1),
+    );
+    expect(
+      screen.getByRole("button", { name: /admin.caseForm.saveChanges/ }).hasAttribute("disabled"),
+    ).toBe(true);
+    expect(screen.getByText("admin.caseForm.stageUnknownType")).toBeTruthy();
+  });
+
+  it("allows save when every stage is self-consistent", async () => {
+    withStages();
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId("case-stage-editor-row")).toHaveLength(2),
+    );
+    const save = screen.getByRole("button", { name: /admin.caseForm.saveChanges/ });
+    expect(save.hasAttribute("disabled")).toBe(false);
+    expect(screen.queryByText("admin.caseForm.stageRowsInvalid")).toBeNull();
+  });
+});

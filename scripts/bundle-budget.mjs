@@ -173,7 +173,40 @@ const DIR = arg("dir", "dist/client");
 // runner-zlib delta that entry leans on did not hold either; local and CI agree
 // exactly here. Measure in CI, do not extrapolate. 680_300 leaves ~1,075 bytes
 // over the measured build, matching the headroom the entries above leave.
-const MAX_INITIAL_JS_GZIP = 680_300;
+//
+// 2026-09: 680_300 → 682_100 for case stages (PR #388). Re-measured after
+// merging main at 42c0105, because the figure this branch first carried
+// (675_000, against main at 12ac8b5) was measured before #387, #393 and #389
+// landed and is meaningless now. Local, same machine, same command for both
+// sides: main builds to 679,239 bytes gzip and main+stages to 681,048, so
+// stages cost 1,809 bytes — up from the 1,684 measured against the older main,
+// because the shell they join grew. Local and CI agree on this file's recent
+// history (the entry above reproduced byte-for-byte), and local main here is
+// within 14 bytes of the 679,225 CI recorded for 42c0105's branch, so the
+// local pair is trustworthy — but re-read the CI number before merging rather
+// than trusting this line.
+//
+// EVERY chunk except the shell is byte-identical — react-vendor, query, i18n
+// and markdown all match main to the byte, so the whole 1,809 is index-*.js:
+// the stage utils, the card badge logic and the forum-qualified verdict label
+// ("विशेष अदालत: सफाइ"), which every card and entity page renders on first
+// paint. The new Nepali stage labels cost nothing initial.
+//
+// Not deferrable. The stage rows land in the shell through CaseDetail, and
+// `/case/:id` is pre-rendered, so per the split policy in src/routes.tsx it
+// MUST stay eager — renderToString does not await Suspense, and a lazy
+// boundary here would serve the one page whose job is to be indexed as a
+// fallback with no Helmet meta. `court-case-format` was checked and was
+// already eager on main, so nothing was newly dragged in.
+//
+// So this is taken deliberately, like the three entries above. 682_100 leaves
+// ~1,052 bytes over the measured build, matching their headroom. The real
+// headroom is still elsewhere and still not this PR's to spend:
+// `@sentry-internal/replay` is ~75 KB gzip of the initial payload and
+// `markdown` another 98 KB (100,481 bytes, measured here) — either would pay
+// for this many times over. The BigoRangeFilter lever noted above (~4,031
+// bytes) is still unclaimed and still not this branch's to take.
+const MAX_INITIAL_JS_GZIP = 682_100;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

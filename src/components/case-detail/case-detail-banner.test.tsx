@@ -24,8 +24,8 @@ const makeCase = (overrides: Partial<CaseDetail> = {}): CaseDetail => ({
   state: "PUBLISHED",
   title: "Test case title",
   short_description: SHORT_DESC,
-  case_start_date: null,
-  case_end_date: null,
+  dates: { stages: [] },
+  status: "ongoing",
   entities: [],
   tags: [],
   key_allegations: [],
@@ -155,5 +155,111 @@ describe("CaseDetailBanner breadcrumb defaults", () => {
     expect(nav.textContent).toContain("Jawafdehi");
     expect(nav.textContent).toContain("Cases");
     expect(nav.textContent).not.toContain("nav.cases");
+  });
+});
+
+describe("CaseDetailBanner case stages", () => {
+  const STAGES: CaseDetail["dates"] = {
+    stages: [
+      { stage: "investigation", start: "2021-03-01", end: "2021-09-14" },
+      {
+        stage: "initial",
+        start: "2021-10-02",
+        end: "2023-06-09",
+        courtcase_iri: "https://jawafdehi.org/courtcase/special/080-cr-0044",
+      },
+      { stage: "appeal", start: "2023-07-11", notes: "बेन्च गठन भएको छैन" },
+    ],
+  };
+
+  it("renders one labelled row per stage instead of one 'Case date' range", () => {
+    // "मुद्दा मिति / Case date" read to the public as when the corruption
+    // happened. These are court registration and verdict dates, and there are
+    // as many of them as there are forums.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    const rows = screen.getAllByTestId("case-stage-row");
+    expect(rows).toHaveLength(3);
+    expect(rows.map((row) => row.getAttribute("data-stage"))).toEqual([
+      "investigation",
+      "initial",
+      "appeal",
+    ]);
+  });
+
+  it("drops the single 'Case date' label the stage rows replace", () => {
+    const { container } = renderBanner(makeCase({ dates: STAGES }));
+
+    expect(container.textContent).not.toContain("caseDetail.period");
+  });
+
+  it("shows a pending stage's note, so the reader learns why it has no end", () => {
+    renderBanner(makeCase({ dates: STAGES }));
+
+    expect(screen.getByTestId("case-stage-note").textContent).toContain(
+      "बेन्च गठन भएको छैन",
+    );
+  });
+
+  it("renders no date block at all for a case with no stages", () => {
+    renderBanner(makeCase({ dates: { stages: [] } }));
+
+    expect(screen.queryByTestId("case-stage-dates")).toBeNull();
+    expect(screen.queryAllByTestId("case-stage-row")).toHaveLength(0);
+  });
+
+  it("keeps the timeline OUT of the fact grid, so it gets the full column", () => {
+    // `.case-dossier-facts > div` is a 190px label column beside the value.
+    // The rail rendered inside it was squeezed into that 190px track with the
+    // value column left empty. Out here it spans the main column instead —
+    // the same width the Related Court Cases panel below it gets.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    const timeline = screen.getByTestId("case-stage-dates");
+    expect(timeline.closest(".case-dossier-facts")).toBeNull();
+    expect(timeline.closest('[data-testid="case-dossier-main"]')).not.toBeNull();
+  });
+
+  it("orders the stages left to right as one list, not a set of loose rows", () => {
+    // The order IS the information — investigation, then first instance, then
+    // appeal — so it is marked up as an ordered list, and a screen reader
+    // announces "3 items" rather than three unrelated paragraphs.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    const list = screen.getByRole("list");
+    expect(list.tagName).toBe("OL");
+    expect(list.querySelectorAll('[data-testid="case-stage-row"]')).toHaveLength(3);
+  });
+
+  it("lets a keyboard reach the scrolling rail", () => {
+    // A horizontally scrolling region that only answers to a mouse strands
+    // keyboard users at whatever stage happens to fit on screen.
+    renderBanner(makeCase({ dates: STAGES }));
+
+    expect(screen.getByTestId("case-stage-dates").getAttribute("tabindex")).toBe("0");
+  });
+});
+
+describe("CaseDetailBanner status chip", () => {
+  it("reads the lifecycle off the API rather than deriving it from a date", () => {
+    // The server derives `status` from the stages; the client cannot, and used
+    // to guess "concluded" from the presence of an end date.
+    renderBanner(makeCase({ state: "PUBLISHED", status: "concluded" }));
+
+    expect(screen.getByText("caseDetail.status.concluded")).toBeTruthy();
+  });
+
+  it("keeps the reviewer-facing workflow chip for a draft", () => {
+    renderBanner(makeCase({ state: "DRAFT", status: "concluded" }));
+
+    expect(screen.getByText("caseDetail.status.underInvestigation")).toBeTruthy();
+  });
+
+  it("reads the renamed offence_type in preference to the deprecated case_type", () => {
+    renderBanner(
+      makeCase({ case_type: "CORRUPTION", offence_type: "MONEY_LAUNDERING" }),
+    );
+
+    expect(screen.getByText("cases.type.moneyLaundering")).toBeTruthy();
   });
 });
