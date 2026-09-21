@@ -36,7 +36,6 @@ import OurProducts from "./pages/OurProducts";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
 import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
-import AuthorProfile from "./pages/AuthorProfile";
 import Feedback from "./pages/Feedback";
 import ReportCase from "./pages/ReportCase";
 import Updates from "./pages/Updates";
@@ -78,6 +77,11 @@ import EntityRecordProfile from "./pages/EntityRecordProfile";
 // this pays for: measured 671.7 -> 664.7 KB gzip initial JS, back under budget.
 const EntityProfile = lazy(() => import("./pages/EntityProfile"));
 const DataQuality = lazy(() => import("./pages/DataQuality"));
+// /author/:slug is NOT pre-rendered (scripts/pre-render.ts emits the static
+// routes, the update slugs and the IRI entity paths — no author pages), so per
+// the split policy above it is safe and free to lazy-load. It was eager by
+// association with the other detail pages.
+const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
