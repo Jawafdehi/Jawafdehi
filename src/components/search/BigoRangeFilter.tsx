@@ -5,7 +5,6 @@ import { Slider } from "@/components/ui/slider";
 import {
   boundToIndex,
   buildBigoLadder,
-  describeBigoRange,
   hasUsableRails,
   indexToBound,
   parseBigoBound,
@@ -34,7 +33,7 @@ type BigoRangeFilterProps = {
  *
  * The shape every price filter uses, and deliberately so — a reader already
  * knows how to work it, which is worth more here than any novelty. Track, its
- * endpoints, two fields, and (only while unfiltered) the coverage caveat.
+ * live bounds, two fields, and (only while unfiltered) the coverage caveat.
  *
  * ## Why a log scale is not optional
  *
@@ -119,6 +118,12 @@ export function BigoRangeFilter({
   const announcedMax = dragging
     ? indexToBound(ladder, position[1], "max")
     : max;
+  const minValueText = announcedMin === undefined
+    ? t("archiveSearch.filters.bigoNoMin", "No minimum")
+    : formatBigo(announcedMin);
+  const maxValueText = announcedMax === undefined
+    ? t("archiveSearch.filters.bigoNoMax", "No maximum")
+    : formatBigo(announcedMax);
 
   const commitDraft = (which: "min" | "max", raw: string) => {
     const digits = stripAmountFormatting(raw);
@@ -189,7 +194,13 @@ export function BigoRangeFilter({
         max={lastIndex}
         min={0}
         minStepsBetweenThumbs={0}
-        onValueChange={([low, high]) => setDragging([low, high])}
+        onValueChange={([low, high]) => {
+          setDragging([low, high]);
+          const nextMin = indexToBound(ladder, low, "min");
+          const nextMax = indexToBound(ladder, high, "max");
+          setDraftMin(nextMin === undefined ? "" : formatAmountInput(String(nextMin)));
+          setDraftMax(nextMax === undefined ? "" : formatAmountInput(String(nextMax)));
+        }}
         onValueCommit={([low, high]) =>
           onCommit({
             min: indexToBound(ladder, low, "min"),
@@ -202,29 +213,20 @@ export function BigoRangeFilter({
             "aria-label": t("archiveSearch.filters.bigoMinThumb", "Minimum amount"),
             // The thumb's aria-valuenow is necessarily a ladder index; "7 of 20"
             // tells a listener nothing about money, so the amount is spelled out.
-            "aria-valuetext":
-              announcedMin === undefined
-                ? t("archiveSearch.filters.bigoNoMin", "No minimum")
-                : formatBigo(announcedMin),
+            "aria-valuetext": minValueText,
           },
           {
             "aria-label": t("archiveSearch.filters.bigoMaxThumb", "Maximum amount"),
-            "aria-valuetext":
-              announcedMax === undefined
-                ? t("archiveSearch.filters.bigoNoMax", "No maximum")
-                : formatBigo(announcedMax),
+            "aria-valuetext": maxValueText,
           },
         ]}
         value={position}
       />
 
-      {/*
-        The track's endpoints, so the scale is legible at a glance and a thumb
-        parked at either end visibly means "no bound".
-      */}
-      <div className="mt-2 flex justify-between text-xs tabular-nums text-muted-foreground">
-        <span>{formatBigo(ladder[0])}</span>
-        <span>{formatBigo(ladder[lastIndex])}</span>
+      {/* Preview the selected bounds immediately; filtering still waits for release. */}
+      <div className="mt-2 flex justify-between gap-2 text-xs tabular-nums text-foreground">
+        <span>{minValueText}</span>
+        <span className="text-right">{maxValueText}</span>
       </div>
 
       {/*
