@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { getStoredDevUser } from "@/services/dev-auth";
-import { getUserManager } from "@/services/oidc";
+import { getAccessToken } from "@/services/oidc";
 
 // Is there an active login session? PUBLIC pages (CaseDetail et al.) render
 // OUTSIDE the admin OIDC / CaseworkAuth providers — those live only in AdminApp,
@@ -29,10 +29,14 @@ export function useIsLoggedIn(): boolean {
     }
 
     let alive = true;
-    getUserManager()
-      .getUser()
-      .then((user) => {
-        if (alive && user && !user.expired) setLoggedIn(true);
+    // Asks the same question the request interceptor asks — "is there a usable
+    // token" — rather than re-reading the stored user, so a token that has merely
+    // expired gets refreshed here too. Reading `user.expired` directly meant the
+    // staff affordance vanished the moment the token lapsed, in step with the
+    // API quietly demoting the same visitor to anonymous.
+    getAccessToken()
+      .then((token) => {
+        if (alive && token) setLoggedIn(true);
       })
       .catch(() => {
         // No session, or storage unavailable → stay logged-out.

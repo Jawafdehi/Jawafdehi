@@ -126,10 +126,13 @@ describe('AnimatedCount', () => {
     ).not.toBe('82');
   });
 
-  // The animation is checked ONCE, at mount. Triggering it on a later scroll would
-  // send a figure the reader has already read backwards to 0, because countup.js
-  // prints `startVal` from its constructor — a glitch, not an effect.
-  it('does not animate a figure that was off screen at mount, even once scrolled to', () => {
+  // The trigger fires as the figure ENTERS the viewport (rootMargin -8% bottom),
+  // i.e. before the reader has dwelt on the static text — so countup.js printing
+  // its startVal (0) reads as the animation starting, not as a known number
+  // jumping backwards. With the full-bleed stage hero the stat band is below the
+  // fold everywhere, so "only animate if visible at mount" would mean the numbers
+  // never spin at all.
+  it('animates a below-the-fold figure once it scrolls into view', () => {
     const io = stubObserver(false);
     const { container } = render(<AnimatedCount end={82} display="82" />);
     expect(container.textContent).toBe('82');
@@ -138,9 +141,38 @@ describe('AnimatedCount', () => {
 
     expect(
       container.textContent,
-      'scrolling to the figure started an animation from 0, so a number the reader ' +
-        'had already read jumped backwards.',
-    ).toBe('82');
+      'scrolling the figure into view did not start the count-up — with the stat ' +
+        'band below the fold, that means the numbers never animate.',
+    ).not.toBe('82');
+  });
+
+  it('never animates under prefers-reduced-motion, even when scrolled into view', () => {
+    const io = stubObserver(false);
+    const matchMedia = vi.fn().mockReturnValue({ matches: true });
+    (window as unknown as Record<string, unknown>).matchMedia = matchMedia;
+    try {
+      const { container } = render(<AnimatedCount end={82} display="82" />);
+      io.scrollIntoView();
+
+      expect(matchMedia).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)');
+      expect(
+        container.textContent,
+        'a count-up ran under prefers-reduced-motion',
+      ).toBe('82');
+    } finally {
+      delete (window as unknown as Record<string, unknown>).matchMedia;
+    }
+  });
+
+  // The hero's currency tile ("Rs 1.91 Kharab") animates only its number; the
+  // constant text around it must survive the hand-over to CountUp.
+  it('keeps prefix and suffix around the animated figure', () => {
+    stubObserver(true);
+    const { container } = render(
+      <AnimatedCount end={1.91} display="Rs 1.91 Kharab" decimals={2} prefix="Rs " suffix=" Kharab" />,
+    );
+
+    expect(container.textContent).toMatch(/^Rs .* Kharab$/);
   });
 
   // `separator` is a public prop, so the static text has to honour it or the two

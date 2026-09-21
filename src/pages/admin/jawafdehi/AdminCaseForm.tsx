@@ -17,8 +17,8 @@ import {
   CASE_TYPES,
   RELATIONSHIP_TYPES,
   isValidSlug,
-  isValidDateField,
   isValidCourtCaseRef,
+  isValidStageRow,
   isValidTimelineRow,
   isValidEntityRow,
   slugify,
@@ -27,10 +27,12 @@ import {
   buildEntitiesPatch,
   buildTimelinePatch,
   buildEvidencePatch,
+  buildStagesPatch,
   OUTCOME_TYPES,
   type EntityRelationshipRow,
   type TimelineEventRow,
   type EvidenceRow,
+  type CaseStageRow,
   type RelationshipType,
   type OutcomeType,
 } from "@/lib/jawafdehi-forms";
@@ -40,8 +42,11 @@ import { formatAmountInput, stripAmountFormatting } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import EntityRelationshipsEditor from "@/components/admin/case/EntityRelationshipsEditor";
 import TimelineEditor from "@/components/admin/case/TimelineEditor";
+import CaseStagesEditor from "@/components/admin/case/CaseStagesEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
+import CaseImageField from "@/components/admin/case/CaseImageField";
+import type { CaseImage } from "@/types/jds";
 import CaseBylineEditor, {
   type AuthorRow,
   type EditHistoryRow,
@@ -49,7 +54,6 @@ import CaseBylineEditor, {
 import CaseStateControl from "@/components/admin/case/CaseStateControl";
 import CaseReviewScoreBadge from "@/components/admin/case/CaseReviewScoreBadge";
 import CaseHistoryPanel from "@/components/admin/case/CaseHistoryPanel";
-import DatePairInput from "@/components/admin/DatePairInput";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +69,10 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Trash2 } from "lucide-react";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
+// An image-library id read back off a loaded case. Null for "no image", which is
+// distinct from 0 — hence the explicit Number.isFinite rather than `v || null`.
+const num = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
 
 // The mutable editor state. Sub-resource lists (entities/timeline/evidence) are
 // edited by the F3/F4/F5 child editors; F6 field editors extend this shape.
@@ -92,15 +100,23 @@ interface CaseFormState {
   evidence: EvidenceRow[];
   // F6 first-class field editors.
   bigo: string; // kept as string in the input; sent as number|null
+  // The two case images, as ids into the shared image library. The preview
+  // payloads that go with them are NOT form state — they are display-only and
+  // never patched, so they live in their own state beside the form (see
+  // `previews` below) rather than polluting the dirty-check.
+  thumbnail_image_id: number | null;
+  banner_image_id: number | null;
+  // DEPRECATED free-text URLs, superseded by the ids above. Kept editable only
+  // so the cases that predate the upload flow can be corrected and cleared.
   thumbnail_url: string;
   banner_url: string;
   tags: string[];
   court_cases: string[];
-  // AD (Gregorian) is the single source of truth. Bikram Sambat is DERIVED from
-  // the AD date at display time (public pages and the admin BS picker), never
+  // Every pass of the case through a forum, replacing the single start/end
+  // pair. AD (Gregorian) is the single source of truth; Bikram Sambat is
+  // DERIVED at display time (public pages and the admin BS picker), never
   // stored — the backend has no BS columns.
-  case_start_date: string; // AD
-  case_end_date: string; // AD
+  stages: CaseStageRow[];
 }
 
 const EMPTY: CaseFormState = {
@@ -120,12 +136,13 @@ const EMPTY: CaseFormState = {
   timeline: [],
   evidence: [],
   bigo: "",
+  thumbnail_image_id: null,
+  banner_image_id: null,
   thumbnail_url: "",
   banner_url: "",
   tags: [],
   court_cases: [],
-  case_start_date: "",
-  case_end_date: "",
+  stages: [],
 };
 
 // Coerce a loaded relationship_type into the known enum (default ACCUSED).
@@ -194,6 +211,46 @@ function parseTimeline(c: Record<string, unknown>): TimelineEventRow[] {
   }));
 }
 
+// Parse a loaded case's `dates.stages` into editor rows.
+//
+// A stage whose type is outside the closed vocabulary is KEPT, not dropped:
+// the list is saved as a whole-list replace, so dropping it here would delete
+// it on the next save of any other field. The row renders with no type
+// selected and blocks save (stageRowError -> "unknownStage"), which puts the
+// choice in front of the caseworker instead of losing the record.
+// Whether the loaded payload carries a stage list AT ALL.
+//
+// Absent is not empty. The list is saved as a whole-list replace, so an API
+// that does not serve `dates` (a release behind, a cached payload) would have
+// the editor start empty on a case that has stages, and the first stage a
+// caseworker adds would delete every one of them with a 200 and no warning.
+// Same reasoning as keeping an unrecognised stage type instead of dropping it.
+function hasStageList(c: Record<string, unknown>): boolean {
+  const dates = c.dates;
+  return Boolean(
+    dates &&
+      typeof dates === "object" &&
+      Array.isArray((dates as Record<string, unknown>).stages),
+  );
+}
+
+function parseStages(c: Record<string, unknown>): CaseStageRow[] {
+  const dates = c.dates;
+  const list =
+    dates && typeof dates === "object" && Array.isArray((dates as Record<string, unknown>).stages)
+      ? ((dates as Record<string, unknown>).stages as Record<string, unknown>[])
+      : [];
+  return list.map((stage) => ({
+    stage: str(stage?.stage) as CaseStageRow["stage"],
+    start: str(stage?.start),
+    end: str(stage?.end),
+    courtcase_iri: str(stage?.courtcase_iri),
+    body: str(stage?.body),
+    label: str(stage?.label),
+    notes: str(stage?.notes),
+  }));
+}
+
 function parseEvidence(c: Record<string, unknown>): EvidenceRow[] {
   const list = Array.isArray(c.evidence) ? (c.evidence as Record<string, unknown>[]) : [];
   return list
@@ -220,6 +277,14 @@ function parseEvidence(c: Record<string, unknown>): EvidenceRow[] {
     .filter((e) => e.material_iri.trim());
 }
 
+// The two rendition payloads off a loaded case, for the image previews.
+// Separate from fromCase because these are display-only and never patched.
+function previewsFromCase(c: Record<string, unknown>) {
+  const image = (v: unknown): CaseImage | null =>
+    v && typeof v === "object" && "srcset" in v ? (v as CaseImage) : null;
+  return { thumbnail: image(c.thumbnail), banner: image(c.banner) };
+}
+
 // Parse a loaded case (loose read-plane shape) into the editor state.
 function fromCase(c: Record<string, unknown>): CaseFormState {
   const allegations = Array.isArray(c.key_allegations)
@@ -244,13 +309,14 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     timeline: parseTimeline(c),
     evidence: parseEvidence(c),
     bigo: c.bigo == null ? "" : str(c.bigo),
+    thumbnail_image_id: num(c.thumbnail_image_id),
+    banner_image_id: num(c.banner_image_id),
     thumbnail_url: str(c.thumbnail_url),
     banner_url: str(c.banner_url),
     tags: strList(c.tags),
     // Canonical @id IRIs — the only court-case reference format.
     court_cases: strList(c.court_cases),
-    case_start_date: str(c.case_start_date),
-    case_end_date: str(c.case_end_date),
+    stages: parseStages(c),
   };
 }
 
@@ -271,6 +337,9 @@ export default function AdminCaseForm() {
 
   const [form, setForm] = useState<CaseFormState>(EMPTY);
   const [original, setOriginal] = useState<CaseFormState>(EMPTY);
+  // See hasStageList: false means the payload had no `dates` key, so the
+  // editor must neither show rows nor emit a /dates op.
+  const [stagesAvailable, setStagesAvailable] = useState(true);
   const [caseState, setCaseState] = useState<string>("DRAFT");
   // Index of a just-added allegation row so its input can grab focus once it
   // mounts — otherwise a row appended below the fold reads as a no-op (cf. BB-27).
@@ -292,6 +361,20 @@ export default function AdminCaseForm() {
   const [conflict, setConflict] = useState(false);
   // Bumped to force the history panel to refetch (after a transition/save).
   const [historyKey, setHistoryKey] = useState(0);
+  // Rendition payloads for the two image controls. Display-only, and NOT part of
+  // CaseFormState: they are derived from the image ids, never patched, and
+  // putting them in the form state would make the dirty-check compare URLs.
+  const [previews, setPreviews] = useState<{
+    thumbnail: CaseImage | null;
+    banner: CaseImage | null;
+  }>({ thumbnail: null, banner: null });
+  // Which image slots have an upload still in flight. CaseImageField only calls
+  // onChange once its upload RESOLVES, so without this the form is submittable
+  // in the window between picking a file and the id reaching form state: a
+  // create would omit the image and an edit would save without it, leaving the
+  // uploaded image orphaned in the library with no case pointing at it.
+  const [uploading, setUploading] = useState({ thumbnail: false, banner: false });
+  const imageUploadPending = uploading.thumbnail || uploading.banner;
 
   const set = <K extends keyof CaseFormState>(k: K, v: CaseFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -308,6 +391,8 @@ export default function AdminCaseForm() {
       const parsed = fromCase(c);
       setForm(parsed);
       setOriginal(parsed);
+      setStagesAvailable(hasStageList(c));
+      setPreviews(previewsFromCase(c));
       setCaseState(str(c.state ?? c.status) || "DRAFT");
       setEtag(tok);
       // A fresh load resolves any prior conflict and refreshes the history.
@@ -371,11 +456,10 @@ export default function AdminCaseForm() {
 
   const slugValid = effectiveSlug === "" || isValidSlug(effectiveSlug);
   const bigoValid = form.bigo.trim() === "" || Number.isFinite(Number(form.bigo));
-  // AD is the stored source of truth (BS is derived for display only), so
-  // validate the AD fields.
-  const datesValid =
-    isValidDateField(form.case_start_date) &&
-    isValidDateField(form.case_end_date);
+  // Mirrors the API's PER-RECORD rule: a stage must not end before it starts
+  // (equal is allowed). Deliberately no rule BETWEEN stages — after a remand a
+  // new first instance legitimately starts after an appeal ended.
+  const stageRowsValid = form.stages.every(isValidStageRow);
   // A partially-filled timeline row (title without a date, etc.) would serialize into the /timeline replace and 422 the whole PATCH, so block save until every *populated* timeline row is complete — a fully-blank trailing timeline add-row is fine, the patch builder drops it.
   const timelineRowsValid = form.timeline.every(
     (r) =>
@@ -390,11 +474,13 @@ export default function AdminCaseForm() {
   );
   const canSave =
     !saving &&
+    // An in-flight image upload has not reached form state yet — see `uploading`.
+    !imageUploadPending &&
     form.title.trim() !== "" &&
     form.case_type.trim() !== "" &&
     slugValid &&
     bigoValid &&
-    datesValid &&
+    stageRowsValid &&
     timelineRowsValid &&
     entityRowsValid &&
     courtCaseRowsValid;
@@ -441,6 +527,12 @@ export default function AdminCaseForm() {
       const n = form.bigo.trim() === "" ? null : Number(form.bigo);
       ops.push(replaceOp("/bigo", n));
     }
+    // The image ids are already number|null, so send them as-is — a `|| null`
+    // here would be wrong the day an id is 0, and pointless otherwise.
+    if (form.thumbnail_image_id !== original.thumbnail_image_id)
+      ops.push(replaceOp("/thumbnail_image_id", form.thumbnail_image_id));
+    if (form.banner_image_id !== original.banner_image_id)
+      ops.push(replaceOp("/banner_image_id", form.banner_image_id));
     if (form.thumbnail_url !== original.thumbnail_url)
       ops.push(replaceOp("/thumbnail_url", form.thumbnail_url || null));
     if (form.banner_url !== original.banner_url)
@@ -450,11 +542,12 @@ export default function AdminCaseForm() {
     if (changed(form.court_cases, original.court_cases))
       ops.push(buildStringListPatch("/court_cases", form.court_cases));
     // Only AD dates are stored; BS is derived from them at display time, so no
-    // /case_*_date_bs ops are emitted (those columns don't exist on the backend).
-    if (form.case_start_date !== original.case_start_date)
-      ops.push(replaceOp("/case_start_date", form.case_start_date || null));
-    if (form.case_end_date !== original.case_end_date)
-      ops.push(replaceOp("/case_end_date", form.case_end_date || null));
+    // BS ops are emitted (those columns don't exist on the backend). The whole
+    // stage list travels as one replace, like the other sub-resources.
+    // Never when the payload carried no stage list: a replace built from an
+    // editor that started blank would delete the stages the case really has.
+    if (stagesAvailable && changed(form.stages, original.stages))
+      ops.push(buildStagesPatch(form.stages));
     return ops;
   };
 
@@ -475,12 +568,13 @@ export default function AdminCaseForm() {
       form.missing_details.trim() !== "" ||
       cleanedAllegations.length > 0 ||
       form.bigo.trim() !== "" ||
+      form.thumbnail_image_id !== null ||
+      form.banner_image_id !== null ||
       form.thumbnail_url.trim() !== "" ||
       form.banner_url.trim() !== "" ||
       form.tags.length > 0 ||
       form.court_cases.length > 0 ||
-      form.case_start_date.trim() !== "" ||
-      form.case_end_date.trim() !== "";
+      form.stages.length > 0;
   const { confirmDiscard } = useUnsavedChanges(dirty);
 
   const onCancel = () => {
@@ -506,6 +600,8 @@ export default function AdminCaseForm() {
         const parsed = fromCase(updated);
         setForm(parsed);
         setOriginal(parsed);
+        setStagesAvailable(hasStageList(updated));
+        setPreviews(previewsFromCase(updated));
         setCaseState(str(updated.state ?? updated.status) || caseState);
         setEtag(tok);
         toast({ title: t("admin.caseForm.updated") });
@@ -528,6 +624,11 @@ export default function AdminCaseForm() {
           key_allegations: cleanedAllegations.length
             ? cleanedAllegations
             : undefined,
+          // Carried through create so an image uploaded before the first save
+          // isn't orphaned. `undefined` (omit the key) rather than `null`, to
+          // match how every other optional field here is handled.
+          thumbnail_image_id: form.thumbnail_image_id ?? undefined,
+          banner_image_id: form.banner_image_id ?? undefined,
         };
         if (effectiveSlug) payload.slug = effectiveSlug;
         const created = await createCase<Record<string, unknown>>(payload);
@@ -911,30 +1012,84 @@ export default function AdminCaseForm() {
           />
         </div>
 
+        {/* The two case images. Upload once each; the backend generates every
+            display size, so there is nothing here to get the dimensions of
+            right. */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="thumbnail_url">
-              {t("admin.caseForm.labelThumbnail")}
-            </Label>
-            <Input
-              id="thumbnail_url"
-              value={form.thumbnail_url}
-              onChange={(e) => set("thumbnail_url", e.target.value)}
-              className="text-xs"
-              placeholder="https://…"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="banner_url">{t("admin.caseForm.labelBanner")}</Label>
-            <Input
-              id="banner_url"
-              value={form.banner_url}
-              onChange={(e) => set("banner_url", e.target.value)}
-              className="text-xs"
-              placeholder="https://…"
-            />
-          </div>
+          <CaseImageField
+            variant="card"
+            testId="case-thumbnail-field"
+            label={t("admin.caseForm.labelThumbnail")}
+            help={t("admin.caseForm.thumbnailHelp")}
+            imageId={form.thumbnail_image_id}
+            preview={previews.thumbnail}
+            disabled={saving}
+            onUploadingChange={(pending) =>
+              setUploading((u) => ({ ...u, thumbnail: pending }))
+            }
+            onChange={(id, preview) => {
+              set("thumbnail_image_id", id);
+              setPreviews((p) => ({ ...p, thumbnail: preview }));
+            }}
+          />
+          <CaseImageField
+            variant="hero"
+            testId="case-banner-field"
+            label={t("admin.caseForm.labelBanner")}
+            help={t("admin.caseForm.bannerHelp")}
+            imageId={form.banner_image_id}
+            preview={previews.banner}
+            disabled={saving}
+            onUploadingChange={(pending) =>
+              setUploading((u) => ({ ...u, banner: pending }))
+            }
+            onChange={(id, preview) => {
+              set("banner_image_id", id);
+              setPreviews((p) => ({ ...p, banner: preview }));
+            }}
+          />
         </div>
+
+        {/* The DEPRECATED free-text image URLs. Shown only when a case still
+            carries one, so a caseworker can see what the legacy link was while
+            uploading a replacement, then clear it. Hidden on every other case
+            so nothing new gets written here — same treatment as public_notes. */}
+        {(form.thumbnail_url.trim() !== "" || form.banner_url.trim() !== "") && (
+          <div className="grid gap-4 rounded-md border border-dashed p-4 sm:grid-cols-2">
+            <div className="space-y-1 sm:col-span-2">
+              <Label className="text-sm font-semibold">
+                {t("admin.caseForm.legacyImageUrls")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("admin.caseForm.legacyImageUrlsHelp")}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="thumbnail_url">
+                {t("admin.caseForm.labelThumbnail")}
+              </Label>
+              <Input
+                id="thumbnail_url"
+                value={form.thumbnail_url}
+                onChange={(e) => set("thumbnail_url", e.target.value)}
+                className="text-xs"
+                placeholder="https://…"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="banner_url">
+                {t("admin.caseForm.labelBanner")}
+              </Label>
+              <Input
+                id="banner_url"
+                value={form.banner_url}
+                onChange={(e) => set("banner_url", e.target.value)}
+                className="text-xs"
+                placeholder="https://…"
+              />
+            </div>
+          </div>
+        )}
 
         <ChipListEditor
           label={t("admin.caseForm.labelCourtCases")}
@@ -946,30 +1101,20 @@ export default function AdminCaseForm() {
           invalidHint={t("admin.caseForm.courtCaseInvalid")}
         />
 
-        {/* BS is derived from AD for display and never stored (the backend has
-            no BS columns). Authors may still pick in the Nepali calendar — that
-            selection sets the AD date, and the shown BS re-derives from it. */}
-        <DatePairInput
-          label={t("admin.caseForm.caseStart")}
-          idBase="case-start"
-          deriveBs
-          adValue={form.case_start_date}
-          onAdChange={(ad) => set("case_start_date", ad)}
-        />
-        <DatePairInput
-          label={t("admin.caseForm.caseEnd")}
-          idBase="case-end"
-          deriveBs
-          adValue={form.case_end_date}
-          onAdChange={(ad) => set("case_end_date", ad)}
-        />
-        <FieldError message={!datesValid && t("admin.caseForm.datesInvalid")} />
-
-        {/* Sub-resource editors (F3/F4/F5). Shown only in edit mode: a case
-            must exist (have a slug) before entities/evidence can be linked. On
-            create, the user saves the DRAFT first, then lands on this edit page. */}
+        {/* Sub-resource editors. Shown only in edit mode: a case must exist
+            (have a slug) before stages/entities/evidence can be linked. On
+            create, the user saves the DRAFT first, then lands on this edit page.
+            The stage list belongs here rather than above for a second reason:
+            the create payload cannot carry it, so a stage typed on the create
+            form would be silently discarded — which is what happened to the
+            single start/end pair this replaces. */}
         {editing ? (
           <div className="space-y-4">
+            <CaseStagesEditor
+              rows={form.stages}
+              onChange={(rows) => set("stages", rows)}
+              unavailable={!stagesAvailable}
+            />
             <EntityRelationshipsEditor
               rows={form.entities}
               onChange={(rows) => set("entities", rows)}
@@ -989,6 +1134,11 @@ export default function AdminCaseForm() {
           </p>
         )}
 
+        <FieldError
+          message={
+            editing && !stageRowsValid && t("admin.caseForm.stageRowsInvalid")
+          }
+        />
         <FieldError
           message={
             editing &&

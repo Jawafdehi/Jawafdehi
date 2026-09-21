@@ -133,6 +133,13 @@ export function Navbar() {
   const pillKey = hoveredKey ?? activeKey;
   const showPill = isScrolled && Boolean(pillKey);
 
+  // The home hero is a full-bleed navy stage, and at rest the header is
+  // transparent directly on top of it — where the navy logo and nav text
+  // would vanish. Every other page opens on a light surface. So the at-rest
+  // header is light-on-dark on "/" only, and snaps back to the normal navy-on-
+  // light treatment the moment it gains its opaque background (isScrolled).
+  const overDarkHero = !isScrolled && location.pathname === "/";
+
   useIsomorphicLayoutEffect(() => {
     if (!showPill || !pillKey) {
       setPillStyle((current) => ({ ...current, opacity: 0 }));
@@ -247,17 +254,24 @@ export function Navbar() {
           >
             {/* The wordmark in logo.svg is navy and disappears on the dark
                 page. logo-dark.svg is the light-on-dark cut the Footer already
-                uses over its navy panel. */}
+                uses over its navy panel — and the one the transparent header
+                needs while it sits on the navy home hero. */}
             <img
               src="/assets/logo.svg"
               alt="Jawafdehi"
-              className="block h-8 w-auto object-contain dark:hidden"
+              className={cn(
+                "block h-8 w-auto object-contain dark:hidden",
+                overDarkHero && "hidden",
+              )}
             />
             <img
               src="/assets/logo-dark.svg"
               alt=""
               aria-hidden="true"
-              className="hidden h-8 w-auto object-contain dark:block"
+              className={cn(
+                "hidden h-8 w-auto object-contain dark:block",
+                overDarkHero && "block",
+              )}
             />
           </Link>
 
@@ -291,6 +305,8 @@ export function Navbar() {
                     "relative z-10 inline-flex h-10 items-center justify-center rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     desktopNavWidthClass[homeNavItem.key],
                     isActive && "font-medium text-foreground/82",
+                    overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                    overDarkHero && isActive && "text-primary-foreground",
                   )
                 }
               >
@@ -306,6 +322,8 @@ export function Navbar() {
                   "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   desktopNavWidthClass.about,
                   (activeKey === "about" || aboutOpen) && "text-foreground/82",
+                  overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                  overDarkHero && (activeKey === "about" || aboutOpen) && "text-primary-foreground",
                 )}
               >
                 {t("nav.about")}
@@ -340,6 +358,8 @@ export function Navbar() {
                     "relative z-10 inline-flex h-10 items-center justify-center rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     desktopNavWidthClass[item.key],
                     isActive && "font-medium text-foreground/82",
+                    overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                    overDarkHero && isActive && "text-primary-foreground",
                   )
                 }
               >
@@ -355,6 +375,8 @@ export function Navbar() {
                   "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   desktopNavWidthClass.archive,
                   (activeKey === "archive" || archiveOpen) && "text-foreground/82",
+                  overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                  overDarkHero && (activeKey === "archive" || archiveOpen) && "text-primary-foreground",
                 )}
               >
                 {t("nav.archive", "Archive")}
@@ -379,7 +401,7 @@ export function Navbar() {
           </nav>
 
           <div className="hidden items-center justify-end gap-2 justify-self-end xl:flex">
-            <LanguageToggle quiet={!isScrolled} />
+            <LanguageToggle quiet={!isScrolled} onDark={overDarkHero} />
 
             <div
               className={cn(
@@ -400,6 +422,7 @@ export function Navbar() {
                   isScrolled
                     ? "border-border/70 bg-white/70 dark:border-border/70 dark:bg-background/70"
                     : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
+                  overDarkHero && "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground",
                 )}
               >
                 <Search className="h-4 w-4" />
@@ -427,6 +450,10 @@ export function Navbar() {
               className={cn(
                 "min-w-[12rem] whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-0.5",
                 isScrolled ? "shadow-md shadow-primary-surface/15" : "shadow-none",
+                // bg-primary-surface is the same navy as the home hero — the
+                // button vanishes into the stage without the glass treatment.
+                overDarkHero &&
+                  "bg-primary-foreground/10 text-primary-foreground ring-1 ring-inset ring-primary-foreground/25 hover:bg-primary-foreground/15",
               )}
             >
               <a href="https://chat.jawafdehi.org" target="_blank" rel="noreferrer">
@@ -437,7 +464,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 justify-self-end xl:hidden">
-            <LanguageToggle quiet={!isScrolled} />
+            <LanguageToggle quiet={!isScrolled} onDark={overDarkHero} />
             <Button
               variant="navIcon"
               size="navMenuIcon"
@@ -449,6 +476,7 @@ export function Navbar() {
                 isScrolled
                   ? "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
                   : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
+                  overDarkHero && "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground",
               )}
             >
               <Search className="h-5 w-5" />
@@ -462,6 +490,7 @@ export function Navbar() {
                     isScrolled
                       ? "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
                       : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
+                  overDarkHero && "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground",
                   )}
                 >
                   <Menu className="h-5 w-5" />

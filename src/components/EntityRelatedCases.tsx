@@ -12,9 +12,10 @@ import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
   outcomeBadgeClass,
-  outcomeLabel,
+  outcomeWithForumLabel,
   shouldShowOutcome,
 } from "@/utils/case-outcome";
+import { caseVerdictForum } from "@/utils/case-stages";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -31,8 +32,10 @@ const ROLE_LABEL_KEY: Record<string, string> = {
   location: "entityDetail.relationTypeLocation",
 };
 
-// First page only — the corpus is small and an entity rarely spans many cases.
-const PAGE_SIZE = 20;
+// One page holds the lot: the corpus is small (the busiest entity has ~20
+// cases) and the list scrolls inside its column, so nothing is left behind a
+// "+N more" line short of an entity with over fifty citations.
+const PAGE_SIZE = 50;
 
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
@@ -42,7 +45,7 @@ function isAccusedTier(role: string): boolean {
 // The date a card is ordered by — the same one it displays. Falls back to the
 // record's creation time only when the case has no start date of its own.
 function sortDateOf(caseItem: Case): string {
-  return caseItem.case_start_date || caseItem.created_at || "";
+  return caseItem.proceedings_started_on || caseItem.created_at || "";
 }
 
 // This entity's role/verdict on a given case, read from the case's own entity
@@ -71,7 +74,10 @@ function hasSupremeAppeal(caseItem: Case): boolean {
  * everything else reverse-chronologically below. Renders nothing when the entity
  * has no published citations (or on error), so it can be dropped in unconditionally.
  */
-export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
+export function EntityRelatedCases({
+  entityIri,
+  className,
+}: Readonly<{ entityIri: string; className?: string }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language === "ne" ? "ne" : "en";
 
@@ -93,13 +99,13 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
     );
   }
 
-  // Hide the whole section when there are no published citations (or on error).
-  if (isError || !data || data.count === 0) return null;
+  // Nothing to say on error; an empty result keeps the heading and says so.
+  if (isError || !data) return null;
 
   // accused/alleged first, then newest case first within each tier.
   //
-  // Sort on the SAME date the card shows (`case_start_date`, i.e. when the case
-  // began) rather than `created_at` (when we happened to author the record).
+  // Sort on the SAME date the card shows (`proceedings_started_on`, i.e. when
+  // the case began) rather than `created_at` (when we happened to author the record).
   // Those orders are unrelated: this entity's five cases were authored in the
   // reverse of their real chronology, so ordering by `created_at` rendered the
   // dates on screen as an apparently random sequence.
@@ -113,18 +119,25 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
   const remaining = data.count - cases.length;
 
   return (
-    <section aria-labelledby="related-cases-heading" className="space-y-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2
-          id="related-cases-heading"
-          className="text-xl font-semibold tracking-tight text-primary"
-        >
+    // A flex column so a height-constrained parent makes the LIST scroll while
+    // the heading and the "more" line stay put.
+    <section aria-labelledby="related-cases-heading" className={cn("flex min-h-0 flex-col", className)}>
+      <div className="flex shrink-0 items-baseline justify-between gap-3">
+        <h2 id="related-cases-heading" className="text-lg font-semibold text-foreground">
           {t("entityDetail.relatedCases")}
         </h2>
-        <span className="text-sm font-medium text-muted-foreground">{data.count}</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          {data.count} {t(data.count === 1 ? "entityDetail.caseOne" : "entityDetail.cases").toLowerCase()}
+        </span>
       </div>
 
-      <ul className="space-y-3">
+      {data.count === 0 ? (
+        <p className="mt-4 rounded-xl bg-muted/50 p-5 text-sm text-muted-foreground">
+          {t("entityDetail.noRelatedCases")}
+        </p>
+      ) : null}
+
+      <ul className="mt-4 min-h-0 space-y-4 overflow-y-auto pr-1 [scrollbar-width:thin]">
         {cases.map((c) => {
           const { role, outcome } = roleFor(c, entityIri);
           const accused = isAccusedTier(role);
@@ -132,11 +145,19 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
           // Both dates carry AD and BS, the way court-sourced dates are shown
-          // everywhere else on the site.
-          const filedDate = formatDateWithBS(c.case_start_date || c.created_at);
-          const verdictDate = c.case_end_date ? formatDateWithBS(c.case_end_date) : null;
-          const typeKey = getCaseTypeLabelKey(c.case_type);
-          const typeLabel = typeKey ? t(typeKey) : c.case_type;
+          // everywhere else on the site. One card has room for one span, so
+          // these are the DERIVED proceedings dates, not the per-stage list the
+          // case page draws — and never the deprecated
+          // `case_start_date`/`case_end_date` aliases they replaced.
+          const filedDate = formatDateWithBS(
+            c.proceedings_started_on || c.created_at,
+          );
+          const verdictDate = c.proceedings_decided_on
+            ? formatDateWithBS(c.proceedings_decided_on)
+            : null;
+          const offenceType = c.offence_type || c.case_type;
+          const typeKey = getCaseTypeLabelKey(offenceType);
+          const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
           // A conviction supersedes the accusation: showing "अभियुक्त" next to
           // "दोषी ठहर" states the weaker fact twice. An acquittal keeps its role
@@ -147,13 +168,13 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
           const row = (
             <div
               className={cn(
-                "group flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40",
+                "group flex items-start gap-3 rounded-xl border bg-card p-5 transition-colors hover:bg-muted/40",
                 accused && "border-l-4 border-l-accent",
               )}
             >
               {/* Title leads: it is what a reader scans for. The role/verdict
                   badges and the type · date · amount meta sit under it. */}
-              <div className="min-w-0 flex-1 space-y-2">
+              <div className="min-w-0 flex-1 space-y-3">
                 <h3 className="line-clamp-2 text-base font-semibold leading-snug text-primary group-hover:underline">
                   {c.title}
                 </h3>
@@ -171,7 +192,11 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   ) : null}
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
-                      {outcomeLabel(outcome, language)}
+                      {outcomeWithForumLabel(
+                        outcome,
+                        caseVerdictForum(c.dates, language),
+                        language,
+                      )}
                     </Badge>
                   ) : null}
                   {appealed ? (
@@ -235,7 +260,7 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
       </ul>
 
       {remaining > 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-4 shrink-0 text-sm text-muted-foreground">
           {t("entityDetail.moreCases", { count: remaining })}
         </p>
       ) : null}

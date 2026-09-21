@@ -12,8 +12,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ArchiveSearch from "@/pages/ArchiveSearch";
 import type { ArchiveSearchResponse } from "@/types/search";
 
-const { getCaseByIdMock, searchArchiveMock } = vi.hoisted(() => ({
+import "../support/resize-observer";
+
+const { getCaseByIdMock, getMaterialMock, searchArchiveMock } = vi.hoisted(() => ({
   getCaseByIdMock: vi.fn(),
+  getMaterialMock: vi.fn(),
   searchArchiveMock: vi.fn(),
 }));
 
@@ -24,6 +27,16 @@ vi.mock("@/services/search-api", () => ({
 vi.mock("@/services/jds-api", () => ({
   getCaseById: getCaseByIdMock,
 }));
+
+// Material rows hydrate their download/source buttons from the detail API;
+// keep the rest of the module (materialTail etc.) real.
+vi.mock("@/services/datalake-api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/services/datalake-api")>();
+  return {
+    ...actual,
+    getMaterial: (...args: unknown[]) => getMaterialMock(...args),
+  };
+});
 
 const baseResponse: ArchiveSearchResponse = {
   query: "",
@@ -43,6 +56,11 @@ const baseResponse: ArchiveSearchResponse = {
     case_type: [{ name: "CORRUPTION", count: 7 }],
     tags: [{ name: "CIAA", count: 6 }],
     status: [{ name: "ongoing", count: 5 }],
+    court: [],
+    court_type: [],
+    district: [],
+    province: [],
+    material_type: [],
   },
   results: [
     {
@@ -56,6 +74,32 @@ const baseResponse: ArchiveSearchResponse = {
       matched_fields: [],
       score: 1,
       extra: { case_type: "CORRUPTION" },
+    },
+  ],
+};
+
+const courtFacetResponse: ArchiveSearchResponse = {
+  ...baseResponse,
+  count: 5_477,
+  counts: { courtcase: 5_477 },
+  facets: {
+    ...baseResponse.facets,
+    court: [{ name: "kathmandudc", count: 5_477 }],
+    court_type: [{ name: "district", count: 14_307 }],
+    district: [{ name: "Kathmandu", count: 5_477 }],
+    province: [{ name: "Bagmati", count: 7_617 }],
+  },
+  results: [
+    {
+      ...baseResponse.results[0],
+      type: "courtcase",
+      id: "https://jawafdehi.org/courtcase/kathmandudc/083-c1-1430",
+      title: { ne: null, en: "District Court Kathmandu 083-C1-1430" },
+      url: "/courtcase/kathmandudc/083-c1-1430",
+      extra: {
+        court: "kathmandudc",
+        court_type: "district",
+      },
     },
   ],
 };
@@ -102,10 +146,28 @@ function deferred<T>() {
   return { promise, reject, resolve };
 }
 
+/**
+ * The value of one labelled metadata row on a material card. Rows render as
+ * `<dt>Series:</dt><dd>…</dd>`, so the value is read through its label rather
+ * than by matching a whole meta line as one string.
+ */
+function metaValue(label: string): string | undefined {
+  const term = screen.getByText(`${label}:`);
+  return term.parentElement?.querySelector("dd")?.textContent ?? undefined;
+}
+
 function LocationState() {
   const location = useLocation();
   return <output data-testid="location-search">{location.search}</output>;
 }
+
+// The corpus extent the बिगो control needs to render at all. Absent from
+// `baseResponse` on purpose, so every other test keeps exercising the
+// no-extent path (an older cached response, or a corpus before the reindex).
+const withBigoExtent: ArchiveSearchResponse = {
+  ...baseResponse,
+  extents: { bigo: { min: 45_220, max: 66_000_000_000, count: 75 } },
+};
 
 function renderSearch(initialEntry = "/search") {
   const queryClient = new QueryClient({
@@ -148,6 +210,7 @@ describe("ArchiveSearch", () => {
       entities: [],
     });
     searchArchiveMock.mockReset();
+    getMaterialMock.mockReset();
   });
 
   it("shows filter, count, and result skeletons on the initial load", () => {
@@ -179,6 +242,16 @@ describe("ArchiveSearch", () => {
     expect(screen.getByTestId("location-search").textContent).toBe(
       "?type=all",
     );
+  });
+
+  it("uses the matching court-case skeleton while that tab loads", () => {
+    searchArchiveMock.mockReturnValue(new Promise(() => undefined));
+
+    renderSearch("/search?type=courtcase");
+
+    expect(
+      document.querySelectorAll("[data-court-case-card-skeleton]").length,
+    ).toBe(12);
   });
 
   it("keeps filters stable but replaces results during a refresh", async () => {
@@ -242,15 +315,15 @@ describe("ArchiveSearch", () => {
     // Default selection is "All records" (the full unified corpus).
     expect(
       screen
-        .getByRole("radio", { name: "All records" })
-        .getAttribute("data-state"),
-    ).toBe("checked");
+        .getByRole("tab", { name: "All records" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
     // "all" sends no type filter to the API.
     expect(searchArchiveMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: undefined }),
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(screen.getByTestId("location-search").textContent).toContain(
@@ -259,12 +332,58 @@ describe("ArchiveSearch", () => {
     });
     expect(
       screen
-        .getByRole("radio", { name: "Cases: 8 results" })
-        .getAttribute("data-state"),
-    ).toBe("checked");
+        .getByRole("tab", { name: "Cases" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ type: "case" }),
     );
+  });
+
+  it("puts the tabs in the results column, not in a row above the whole grid", async () => {
+    // The tabs scope the CARDS, so they belong over the cards. As a full-width
+    // row above the grid their underline also ran across the filter sidebar,
+    // implying it scoped the facets too, and it pushed the sidebar a whole tab
+    // row down the page.
+    //
+    // jsdom has no layout engine, so this asserts the two things that PRODUCE
+    // the layout: the tablist is a sibling of the results section inside the
+    // grid (not an earlier element outside it), and it is placed in column 2 /
+    // row 1 with the sidebar spanning both rows so it starts level with them.
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch();
+    await screen.findByText("Original result");
+
+    const tablist = screen.getByRole("tablist");
+    const results = screen.getByRole("region", {
+      name: "Archive search results",
+    });
+    const grid = tablist.parentElement!.parentElement!;
+
+    expect(results.parentElement).toBe(grid);
+    expect(grid.className).toContain("lg:grid-cols-[250px_minmax(0,1fr)]");
+    expect(tablist.parentElement!.className).toContain("lg:col-start-2");
+    expect(tablist.parentElement!.className).toContain("lg:row-start-1");
+    expect(results.className).toContain("lg:row-start-2");
+    // The sidebar spans both rows, which is what lifts it to the tab row.
+    const sidebarCell = screen.getByRole("complementary", {
+      name: "Archive search filters",
+    }).parentElement!;
+    expect(sidebarCell.className).toContain("lg:row-span-2");
+    // ...and the row template is what stops that span from inflating row 1.
+    // Two implicit `auto` rows let the sidebar push half its surplus height
+    // into the tab row: on /search (All records) that was 745px of row for a
+    // 45px tab bar, i.e. ~700px of blank space before the first card. Row 2
+    // must stay FLEXIBLE — that is what makes the sizing algorithm skip row 1
+    // when distributing the spanning sidebar. `auto auto` would not fix it.
+    expect(grid.className).toContain("lg:grid-rows-[auto_minmax(0,1fr)]");
+    // Still ahead of the mobile Filters disclosure in DOM order, so the
+    // single-column layout below `lg` keeps the tabs above it.
+    const filtersToggle = screen.getByRole("button", { name: /^Filters/ });
+    expect(
+      tablist.compareDocumentPosition(filtersToggle) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("shows the Entity type filter only while browsing Entities", async () => {
@@ -278,7 +397,7 @@ describe("ArchiveSearch", () => {
     expect(screen.queryByText("Entity type")).toBeNull();
 
     fireEvent.click(
-      screen.getByRole("radio", { name: "Entities: 3 results" }),
+      screen.getByRole("tab", { name: "Entities" }),
     );
 
     await waitFor(() => {
@@ -288,7 +407,7 @@ describe("ArchiveSearch", () => {
       screen.getByRole("checkbox", { name: "Person: 4 results" }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(screen.queryByText("Entity type")).toBeNull();
@@ -312,7 +431,7 @@ describe("ArchiveSearch", () => {
 
     // Switching record type must not leave the (now hidden) Entity type facet
     // filtering the results behind the user's back.
-    fireEvent.click(screen.getByRole("radio", { name: "Cases: 8 results" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -331,6 +450,147 @@ describe("ArchiveSearch", () => {
 
     expect(searchArchiveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ entity_type: [], type: "case" }),
+    );
+  });
+
+  it("sends selected court filters and preserves them in the URL", async () => {
+    searchArchiveMock.mockResolvedValue(courtFacetResponse);
+    renderSearch("/search?type=courtcase");
+    await screen.findByText("Court level");
+
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: "District Court: 14307 results",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          court_type: ["district"],
+          type: "courtcase",
+        }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).toContain(
+      "court_type=district",
+    );
+  });
+
+  it("drops court filters when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(courtFacetResponse);
+    renderSearch("/search?type=courtcase&province=Bagmati");
+    await screen.findByText("Court level");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ province: ["Bagmati"], type: "courtcase" }),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ province: [], type: "case" }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "province",
+    );
+  });
+
+  it("ignores a court filter carried in by a non-court URL", async () => {
+    searchArchiveMock.mockResolvedValue(baseResponse);
+    renderSearch("/search?type=case&court_type=district");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ court_type: [], type: "case" }),
+    );
+  });
+
+  // ── बिगो range ───────────────────────────────────────────────────────────────
+  //
+  // The same three gates as Entity type above, for the same reason: only cases
+  // carry an amount, so a bound left in place under another record type empties
+  // the results with the control that set it no longer on screen. These run at
+  // page level because that is where the gate lives — the unit tests around
+  // readBigoBounds cannot see `readParams`, `updateRecordType` or the pill.
+
+  it("drops the बिगो range when switching to another record type", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: 10_000_000, type: "case" }),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Entities" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ bigo_min: undefined, type: "entity" }),
+      );
+    });
+    // ...and it leaves the URL, so a shared or bookmarked link stays honest
+    // about what is actually applied.
+    expect(screen.getByTestId("location-search").textContent).not.toContain(
+      "bigo_min",
+    );
+  });
+
+  it("ignores a बिगो bound carried in by a non-case URL", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=material&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: undefined, type: "material" }),
+    );
+  });
+
+  it("never sends an inverted बिगो pair, even on the first render", async () => {
+    // URL normalization repairs an inverted pair, but only from an effect — a
+    // tick AFTER this first request would already have gone out. The API answers
+    // min > max with a 400, which this page renders as its red "could not be
+    // loaded" alert, so a stale bookmark would read as a search outage.
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=100000000&bigo_max=10000000");
+    await screen.findByText("Original result");
+
+    expect(searchArchiveMock).toHaveBeenCalledWith(
+      expect.objectContaining({ bigo_min: undefined, bigo_max: undefined }),
+    );
+  });
+
+  it("shows the active बिगो range as one removable pill", async () => {
+    searchArchiveMock.mockResolvedValue(withBigoExtent);
+    renderSearch("/search?type=case&bigo_min=10000000");
+    await screen.findByText("Original result");
+
+    // A range is never applied invisibly, and it is ONE pill rather than one per
+    // bound, because it is a single removable refinement.
+    //
+    // Asserted on the pill's identity and behaviour, not its wording: this suite
+    // does not initialise i18next, so `t` hands back the raw default with
+    // `{{min}}` uninterpolated. The formatted label is covered where a `t` that
+    // interpolates exists — describeBigoRange's unit tests and
+    // SearchFilters.test.tsx.
+    const pills = await screen.findByLabelText("Selected filters");
+    const bigoPill = Array.from(pills.querySelectorAll("button")).filter(
+      (button) => button.textContent?.includes("above"),
+    );
+    expect(bigoPill).toHaveLength(1);
+
+    fireEvent.click(bigoPill[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location-search").textContent).not.toContain(
+        "bigo_min",
+      );
+    });
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ bigo_min: undefined, bigo_max: undefined }),
     );
   });
 
@@ -478,6 +738,8 @@ describe("ArchiveSearch", () => {
             court: "SPECIAL_COURT",
             case_number: "081-CR-0060",
             case_status: "SUB_JUDICE",
+            date: "2025-01-10",
+            date_bs: "2081-09-26",
           },
         },
       ],
@@ -486,25 +748,23 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Special Court 081-CR-0060");
 
-    // The metadata line used to be `truncate`d to one line in card view while the
-    // list row wrapped it in full, hiding the court and status. That regression is
-    // CSS-only, and jsdom has no layout — asserting the text is present would pass
-    // against the broken code too. So compare the classes that decide how much of
-    // each field is shown, not just that the field exists.
+    // Court cases use the dedicated reusable card in both view modes. The field
+    // set stays the same while the shell becomes more compact in list view.
     const renderedFields = () => ({
-      badge: screen.getByText("Court case").textContent,
+      status: screen.getByText("Sub Judice").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
-      description: screen.getByText("Charge sheet filed against the accused")
-        .textContent,
-      metadata: screen.getByText("special court · 081-CR-0060 · sub judice")
-        .textContent,
-      cta: screen.getByText("View").textContent,
-      // Description and metadata are clamped identically in both modes; only the
-      // title scales with the shell, so its classes are compared separately below.
-      descriptionClamp: screen.getByText("Charge sheet filed against the accused")
-        .className,
-      metadataClamp: screen.getByText("special court · 081-CR-0060 · sub judice")
-        .className,
+      caseNumber: screen.getByText("081-CR-0060").textContent,
+      // Nepali court name and BS date: this suite runs the real i18n, which has
+      // not resolved a language here, and `normalizeLanguage` defaults to `ne`
+      // to match the app (`lng`/`fallbackLng` are both `ne`, as is the SSR
+      // prerender) — so the card takes `date_bs` over `date`, as it should for a
+      // Nepali reader. The labels stay English because an unresolved i18next
+      // returns each `t()` call's default value. What this assertion is for is
+      // that the field appears identically in both views, which is
+      // language-independent either way.
+      court: screen.getByText("विशेष अदालत").textContent,
+      registered: screen.getByText("Registered: 2081-09-26").textContent,
+      cta: screen.getByText("View case").textContent,
     });
 
     const cardView = renderedFields();
@@ -512,17 +772,147 @@ describe("ArchiveSearch", () => {
     const listView = renderedFields();
 
     expect(listView).toEqual(cardView);
-    // Neither mode may truncate a field to a single line.
-    expect(cardView.metadataClamp).not.toContain("truncate");
-    expect(cardView.descriptionClamp).not.toContain("truncate");
-    // The title clamps to the same number of lines in both, at different sizes,
-    // and sits at the same heading level as <CaseCard>'s title (h3) rather than
-    // the h2 the list row used to render.
+    // The title keeps the same semantic level and clamp in both shells.
     const heading = () =>
       screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" });
     expect(heading().className).toContain("line-clamp-2");
     fireEvent.click(screen.getByRole("button", { name: "Card view" }));
-    expect(heading().className).toContain("line-clamp-2");
+    expect(heading().className).toContain("line-clamp-3");
+  });
+
+  it("renders materials as shared document rows, fed only by the index", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/ciaa_press_release/1701",
+          source_app: "ngm",
+          title: { ne: null, en: "Charge sheet filed against nine officials" },
+          snippet: { ne: null, en: "Filed at the <em>Special Court</em> today" },
+          url: "/material/ciaa_press_release/1701",
+          api_url: null,
+          matched_fields: ["body"],
+          score: 1,
+          // The BS-in-AD data-lake quirk: 2082 cannot be an AD document year,
+          // so the card must show it resolved (EN locale → the AD pair), not raw.
+          extra: { date: "2082-11-27", type: "CreativeWork" },
+        },
+      ],
+    });
+    renderSearch("/search?type=material");
+    await screen.findByText("Charge sheet filed against nine officials");
+
+    // Materials have one canonical presentation (the /materials series row),
+    // so the card/list toggle is hidden on this tab.
+    expect(
+      screen.getByRole("group", { name: "View mode" }).className,
+    ).toContain("hidden");
+
+    const title = screen.getByRole("link", {
+      name: "Charge sheet filed against nine officials",
+    });
+    expect(title.getAttribute("href")).toBe("/material/ciaa_press_release/1701");
+    // Catalogue-style labelled rows. Series is the curated registry name (not
+    // the raw token or a schema.org class); Source is the publishing office, a
+    // separate axis; Date resolves the BS-in-AD quirk to the AD pair for EN.
+    expect(metaValue("Series")).toBe("CIAA press releases");
+    expect(metaValue("Date")).toBe("2026-03-11");
+    // Office names live in the i18n catalogue, which no instance loads here,
+    // so the value degrades to the raw source token.
+    expect(metaValue("Source")).toBe("ciaa_press_release");
+    // The API pre-marks the snippet's matches with <em>; those render as
+    // highlights, so the text is split across nodes rather than one string.
+    const snippetMark = document.querySelector("p > mark");
+    expect(snippetMark?.textContent).toBe("Special Court");
+    expect(snippetMark?.parentElement?.textContent).toBe(
+      "Filed at the Special Court today",
+    );
+
+    // No download/source buttons and NO detail fetch: the index carries no
+    // media, and hydrating it would cost a GET per hit on a 346k-record browse
+    // surface. Share is the only action; the downloads live on the document.
+    // No i18n instance in this suite and ShareButton's aria-label has no
+    // fallback, so its accessible name is the raw catalogue key.
+    expect(screen.getByRole("button", { name: "share.share" })).toBeTruthy();
+    expect(screen.queryByText(/^\.[A-Z]+$/)).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Open original source" }),
+    ).toBeNull();
+    expect(getMaterialMock).not.toHaveBeenCalled();
+  });
+
+  it("names a series for a material outside the curated registry", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/court_order/special.081-cr-0111",
+          source_app: "ngm",
+          title: { ne: null, en: "Special Court verdict 081-CR-0111" },
+          snippet: { ne: null, en: null },
+          url: "/material/court_order/special.081-cr-0111",
+          api_url: null,
+          matched_fields: [],
+          score: 1,
+          extra: { date: "2025-12-29", type: "Manuscript,DigitalDocument" },
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material");
+    await screen.findByText("Special Court verdict 081-CR-0111");
+
+    // `court_order` is not in the curated registry, so its series name comes
+    // from the source's document type instead. Every material gets one.
+    //
+    // The type's display string lives in the i18n catalogue ("Court orders"),
+    // which no instance loads here, so it degrades to the plain-read token.
+    expect(metaValue("Series")).toBe("court order");
+    expect(metaValue("Source")).toBe("court_order");
+    expect(metaValue("Date")).toBe("2025-12-29");
+  });
+
+  it("highlights the query in a material title and its series row", async () => {
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      results: [
+        {
+          type: "material",
+          id: "https://jawafdehi.org/material/court_order/special.081-cr-0111",
+          source_app: "ngm",
+          title: { ne: null, en: "Special Court verdict on the order" },
+          snippet: { ne: null, en: null },
+          url: "/material/court_order/special.081-cr-0111",
+          api_url: null,
+          matched_fields: ["title_en"],
+          score: 1,
+          extra: { date: "2025-12-29", type: "Manuscript,DigitalDocument" },
+        },
+      ],
+    });
+
+    renderSearch("/search?type=material&q=order");
+    await screen.findByRole("link", {
+      name: "Special Court verdict on the order",
+    });
+
+    // The API leaves `title` unmarked, so the query's terms are matched here —
+    // in the title and in the labelled rows alike. Asserted per field rather
+    // than as a document-wide count, since which rows contain the term depends
+    // on the catalogue copy.
+    const title = screen.getByRole("link", {
+      name: "Special Court verdict on the order",
+    });
+    expect(title.querySelector("mark")?.textContent).toBe("order");
+    const seriesRow = screen.getByText("Series:").parentElement;
+    expect(seriesRow?.querySelector("mark")?.textContent).toBe("order");
+    // Highlighting must not change what the fields say. The title keeps its
+    // accessible name (asserted by the getByRole above) and the row its value.
+    expect(metaValue("Series")).toBe("court order");
+    // A term shorter than two characters would speckle Devanagari with marks.
+    expect(document.querySelectorAll("mark").length).toBeGreaterThan(0);
   });
 
   it("does not show an empty state after an initial request failure", async () => {
@@ -617,7 +1007,7 @@ describe("ArchiveSearch", () => {
           .length,
       ).toBe(1);
       expect(screen.getAllByRole("checkbox").length).toBe(2);
-      expect(screen.getAllByRole("radio").length).toBe(5);
+      expect(screen.getAllByRole("tab").length).toBe(5);
       expect(document.querySelectorAll("details").length).toBe(0);
     });
 
@@ -666,6 +1056,130 @@ describe("ArchiveSearch", () => {
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
       });
+    });
+  });
+});
+
+// The materials tab's two controls — document type and a date range — end to
+// end: URL in, request out, pill on screen, and back out again.
+//
+// Both are MATERIAL-SCOPED, and for a sharper reason than the court facets are:
+// `material_type` is a closed vocabulary on the API side, so a token carried
+// onto another tab is a 400, which this page renders as the red "could not be
+// loaded" alert. The gating is what keeps a stale bookmark from reading as an
+// outage.
+describe("ArchiveSearch — materials tab filters", () => {
+  beforeEach(() => {
+    searchArchiveMock.mockReset();
+    getMaterialMock.mockReset();
+    searchArchiveMock.mockResolvedValue({
+      ...baseResponse,
+      counts: { material: 3 },
+      facets: {
+        ...baseResponse.facets,
+        material_type: [
+          { name: "procurement_notice", count: 205_826 },
+          { name: "charge_sheet", count: 99_783 },
+        ],
+      },
+    });
+  });
+
+  const lastRequest = () =>
+    searchArchiveMock.mock.calls[searchArchiveMock.mock.calls.length - 1][0];
+
+  it("sends both filters when the materials tab carries them", async () => {
+    renderSearch(
+      "/search?type=material&material_type=charge_sheet&date_from=2020-01-01&date_to=2024-12-31",
+    );
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest()).toMatchObject({
+      type: "material",
+      material_type: ["charge_sheet"],
+      date_from: "2020-01-01",
+      date_to: "2024-12-31",
+    });
+  });
+
+  it("repeats material_type for a reader who ticks two boxes", async () => {
+    renderSearch(
+      "/search?type=material&material_type=charge_sheet&material_type=press_release",
+    );
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().material_type).toEqual([
+      "charge_sheet",
+      "press_release",
+    ]);
+  });
+
+  it("refuses to send a stale material_type from another tab", async () => {
+    // The 400 path. A hand-edited or bookmarked URL can carry the token
+    // anywhere; sending it on ?type=case would surface as a search outage.
+    renderSearch("/search?type=case&material_type=charge_sheet");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().material_type).toEqual([]);
+  });
+
+  it("refuses to send stale date bounds from another tab", async () => {
+    renderSearch("/search?type=entity&date_from=2020-01-01&date_to=2024-12-31");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().date_from).toBeUndefined();
+    expect(lastRequest().date_to).toBeUndefined();
+  });
+
+  it("never sends an inverted date pair, not even on the first render", async () => {
+    // Normalization only rewrites the URL an effect LATER, so a request builder
+    // doing its own parsing would fire the 400 before the URL healed itself.
+    // Both halves have to drop at read time.
+    renderSearch("/search?type=material&date_from=2024-12-31&date_to=2020-01-01");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(searchArchiveMock.mock.calls[0][0].date_from).toBeUndefined();
+    expect(searchArchiveMock.mock.calls[0][0].date_to).toBeUndefined();
+  });
+
+  it("shows the date range as ONE removable pill, and clears both bounds", async () => {
+    renderSearch("/search?type=material&date_from=2020-01-01&date_to=2024-12-31");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+
+    // One pill rather than one per bound, because it is a single removable
+    // refinement — same call as the बिगो range above.
+    //
+    // Asserted on identity and behaviour, not wording: this suite does not
+    // initialise i18next, so `t` hands back the raw default with `{{from}}`
+    // uninterpolated. The formatted label is covered where a `t` that
+    // interpolates exists — describeDateRange's unit tests and
+    // SearchFilters.test.tsx.
+    const pills = await screen.findByLabelText("Selected filters");
+    const datePills = Array.from(pills.querySelectorAll("button")).filter(
+      (button) => button.textContent?.includes("{{from}}"),
+    );
+    expect(datePills).toHaveLength(1);
+
+    fireEvent.click(datePills[0]);
+
+    await waitFor(() => {
+      const search = screen.getByTestId("location-search").textContent ?? "";
+      expect(search).not.toContain("date_from");
+      expect(search).not.toContain("date_to");
+    });
+    expect(searchArchiveMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ date_from: undefined, date_to: undefined }),
+    );
+  });
+
+  it("strips both filters from the URL when the reader leaves the tab", async () => {
+    // readParams already declines to SEND them, but leaving them in the URL
+    // makes a shared or bookmarked link claim a filter that is not applied.
+    renderSearch(
+      "/search?type=material&material_type=charge_sheet&date_from=2020-01-01",
+    );
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    fireEvent.click(await screen.findByRole("tab", { name: "Cases" }));
+    await waitFor(() => {
+      const search = screen.getByTestId("location-search").textContent ?? "";
+      expect(search).toContain("type=case");
+      expect(search).not.toContain("material_type");
+      expect(search).not.toContain("date_from");
     });
   });
 });
