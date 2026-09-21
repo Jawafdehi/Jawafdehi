@@ -1,0 +1,679 @@
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+
+import {
+  SearchFilters,
+  SearchFiltersSkeleton,
+} from "@/components/search/SearchFilters";
+import type { BigoExtent } from "@/lib/bigo-range";
+import type { ArchiveSearchType } from "@/types/search";
+
+import "../support/resize-observer";
+
+// Mutable so a test can render the sidebar under a Nepali UI. Court names are
+// language-dependent, and the component reads the language off `useTranslation`.
+const mockI18n = vi.hoisted(() => ({ language: "en" }));
+
+// Passthrough translations so assertions don't depend on i18n resources. Plural
+// resolution is mirrored rather than skipped: `_one` vs `_other` is the whole
+// point of the count-bearing strings, so a mock that always took defaultValue
+// would let "1 cases" pass forever.
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, fallback?: string | Record<string, unknown>) => {
+      if (typeof fallback === "string") return fallback;
+      const options = fallback as Record<string, unknown> | undefined;
+      const singular = options?.count === 1 ? options?.defaultValue_one : undefined;
+      const template = String(singular ?? options?.defaultValue ?? key);
+      return template.replace(/{{(\w+)}}/g, (_m, name) =>
+        String(options?.[name]),
+      );
+    },
+    i18n: mockI18n,
+  }),
+}));
+
+afterEach(() => {
+  mockI18n.language = "en";
+});
+
+const emptyFacets = {
+  entity_type: [],
+  case_type: [],
+  tags: [],
+  status: [],
+  court: [],
+  court_type: [],
+  district: [],
+  province: [],
+  material_type: [],
+};
+
+// The document-type facet as the API emits it, in count order. Ten of the twelve
+// tokens have documents; `court_case` and `manuscript` are in the closed
+// vocabulary with no rows, so they never arrive as buckets.
+const MATERIAL_TYPE_FACET = [
+  { name: "procurement_notice", count: 205_826 },
+  { name: "charge_sheet", count: 99_783 },
+  { name: "court_order", count: 23_397 },
+  { name: "precedent", count: 10_554 },
+  { name: "press_release", count: 3_628 },
+  { name: "document", count: 2_416 },
+  { name: "news", count: 225 },
+  { name: "official_report", count: 154 },
+  { name: "legal_corpus", count: 13 },
+  { name: "social_media", count: 10 },
+];
+
+// The live corpus extent, as the API emits it.
+const CORPUS: BigoExtent = { min: 45_220, max: 66_000_000_000, count: 75 };
+
+function renderFilters(
+  selectedType: ArchiveSearchType,
+  extra: {
+    extent?: BigoExtent;
+    min?: number;
+    max?: number;
+    onCommit?: (bounds: { min?: number; max?: number }) => void;
+    facets?: typeof emptyFacets;
+    selectedMaterialTypes?: string[];
+    dateFrom?: string;
+    dateTo?: string;
+    onDateCommit?: (bounds: { from?: string; to?: string }) => void;
+    onToggle?: (name: string, value: string) => void;
+  } = {},
+) {
+  return render(
+    <SearchFilters
+      bigoExtent={"extent" in extra ? extra.extent : CORPUS}
+      bigoMax={extra.max}
+      bigoMin={extra.min}
+      dateFrom={extra.dateFrom}
+      dateTo={extra.dateTo}
+      facets={extra.facets ?? emptyFacets}
+      onBigoCommit={extra.onCommit ?? vi.fn()}
+      onClear={vi.fn()}
+      onDateCommit={extra.onDateCommit ?? vi.fn()}
+      onToggle={extra.onToggle ?? vi.fn()}
+      selected={{
+        entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        material_type: extra.selectedMaterialTypes ?? [],
+      }}
+      selectedType={selectedType}
+    />,
+  );
+}
+
+// Async because the control is code-split: SearchFilters renders
+// LazyBigoRangeFilter, and the chunk resolves a tick after mount with the
+// reserved skeleton standing in the DOM until it does. Every assertion about the
+// REAL control therefore has to wait for it.
+//
+// The absence assertions below stay synchronous on purpose, and that is worth
+// keeping that way — LazyBigoRangeFilter decides "no control here" from
+// `hasUsableRails` BEFORE the boundary, so a corpus with no usable extent
+// renders nothing at all rather than a skeleton that resolves to nothing.
+const bigoGroup = () =>
+  screen.findByRole("group", { name: /Embezzled amount/ });
+
+const dateGroup = () => screen.getByRole("group", { name: /Record date/ });
+
+describe("SearchFilters — बिगो range control", () => {
+  it("renders a two-thumb range slider and both amount fields", async () => {
+    renderFilters("case");
+    const group = await bigoGroup();
+    expect(within(group).getAllByRole("slider")).toHaveLength(2);
+    expect(within(group).getByLabelText("Min (Rs)")).toBeTruthy();
+    expect(within(group).getByLabelText("Max (Rs)")).toBeTruthy();
+  });
+
+  it("stays under five blocks — this shares a column with four other groups", async () => {
+    // The panel reached nine blocks once (readout, chart, axis, three lines of
+    // help text, two fields, a preset, a count) and read as the heaviest thing in
+    // the sidebar. Track, axis, fields and one status line is the budget.
+    renderFilters("case");
+    expect((await bigoGroup()).children.length).toBeLessThanOrEqual(5);
+  });
+
+  it("carries no instructional copy", async () => {
+    // A control that needs explaining is the wrong control. A range slider with
+    // text inputs beneath it is the pattern every price filter uses.
+    renderFilters("case");
+    const group = await bigoGroup();
+    expect(within(group).queryByText(/Shift/i)).toBeNull();
+    expect(within(group).queryByText(/Select a bar/i)).toBeNull();
+    expect(within(group).queryByTestId("bigo-histogram")).toBeNull();
+  });
+
+  it("names each thumb, and spells the amount out for a screen reader", async () => {
+    // aria-valuenow is necessarily a ladder INDEX; "7 of 20" tells a listener
+    // nothing about money, so each thumb carries the formatted amount instead.
+    renderFilters("case", { min: 10_000_000 });
+    const [low, high] = within(await bigoGroup()).getAllByRole("slider");
+    expect(low.getAttribute("aria-label")).toBe("Minimum amount");
+    expect(low.getAttribute("aria-valuetext")).toBe("Rs 1.00 Crore");
+    expect(high.getAttribute("aria-label")).toBe("Maximum amount");
+    // No upper bound set, so that thumb sits on the bracketing edge.
+    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+  });
+
+  it("announces a bound that snaps to a ladder END, rather than 'No minimum'", async () => {
+    // Regression. aria-valuetext was derived from the thumb's ladder POSITION,
+    // and `indexToBound` returns undefined at either end because an end-parked
+    // thumb means "no bound". But a literal bound can snap to an end and still
+    // be in force: the live ladder floor is रु 20,000, so ?bigo_min=25000 lands
+    // the thumb on index 0 while the filter, the URL and the pill all carry
+    // रु 25,000. A screen reader was told "No minimum" about an applied minimum.
+    //
+    // The position is a rendering detail; the announcement is a claim about the
+    // filter, so at rest it reports the COMMITTED bound.
+    renderFilters("case", { min: 25_000 });
+    const [low] = within(await bigoGroup()).getAllByRole("slider");
+    expect(low.getAttribute("aria-valuetext")).toBe("Rs 25,000");
+  });
+
+  it("announces an upper bound snapped to the ladder ceiling", async () => {
+    // The same failure on the other end: the ladder tops out at रु 1.00 Kharab,
+    // so anything from ~रु 75 अरब up parks the thumb on the last index.
+    renderFilters("case", { max: 80_000_000_000 });
+    const [, high] = within(await bigoGroup()).getAllByRole("slider");
+    expect(high.getAttribute("aria-valuetext")).toBe("Rs 80.00 Arab");
+  });
+
+  it("still says 'No minimum'/'No maximum' when a side genuinely has no bound", async () => {
+    renderFilters("case");
+    const [low, high] = within(await bigoGroup()).getAllByRole("slider");
+    expect(low.getAttribute("aria-valuetext")).toBe("No minimum");
+    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+  });
+
+  it("opens the sidebar, above the term facets", async () => {
+    // It used to render last. The tags group runs to 50 checkboxes, so anything
+    // after it is off-screen on every viewport. It used to sit second, under the
+    // record-type radios — those are now the tabs above the results, so nothing
+    // precedes it in this column.
+    render(
+      <SearchFilters
+        bigoExtent={CORPUS}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          case_type: [{ name: "CORRUPTION", count: 9 }],
+          tags: [{ name: "CIAA", count: 4 }],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="case"
+      />,
+    );
+    await bigoGroup();
+    const legends = Array.from(document.querySelectorAll("legend")).map(
+      (legend) => legend.textContent,
+    );
+    expect(legends).toEqual(["Embezzled amount", "Case type", "Tags"]);
+  });
+
+  it("is hidden for every other record type, and for All records", () => {
+    // Only cases carry an amount, so a bound applied anywhere else empties the
+    // results with no visible cause — the same failure "Entity type" had.
+    (["all", "entity", "material", "courtcase"] as const).forEach((type) => {
+      const { unmount } = renderFilters(type);
+      expect(
+        screen.queryByRole("group", { name: /Embezzled amount/ }),
+      ).toBeNull();
+      unmount();
+    });
+  });
+
+  it("renders no control at all when the corpus has no usable extent", () => {
+    // An older cached response predating the extent agg, or a corpus where
+    // nothing records an amount. An empty track above two fields is furniture.
+    //
+    // Synchronous, and that is the assertion. Now that the control is code-split,
+    // "no usable extent" must resolve to nothing WITHOUT crossing the Suspense
+    // boundary — LazyBigoRangeFilter runs `hasUsableRails` before it, precisely
+    // so this case does not reserve ~296px of skeleton and then collapse it when
+    // the chunk lands on a control that was never going to render. If this ever
+    // needs an `await` to pass, that regression is back.
+    const { container } = renderFilters("case", { extent: undefined });
+    expect(
+        screen.queryByRole("group", { name: /Embezzled amount/ }),
+      ).toBeNull();
+    expect(container.querySelector(".animate-pulse")).toBeNull();
+  });
+
+  it("commits a typed minimum on blur", async () => {
+    const onCommit = vi.fn();
+    renderFilters("case", { onCommit });
+    const field = within(await bigoGroup()).getByLabelText("Min (Rs)");
+    fireEvent.change(field, { target: { value: "10000000" } });
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledWith({ min: 10_000_000, max: undefined });
+  });
+
+  it("drops the other side rather than sending an inverted pair", async () => {
+    // The API 400s on bigo_min > bigo_max, and this page renders a 400 as its
+    // red "could not be loaded" alert — an outage, for a typo.
+    const onCommit = vi.fn();
+    renderFilters("case", { max: 1_000_000, onCommit });
+    const field = within(await bigoGroup()).getByLabelText("Min (Rs)");
+    fireEvent.change(field, { target: { value: "90000000" } });
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledWith({ min: 90_000_000 });
+  });
+
+  it("shows no range readout — the pill and the fields already carry it", async () => {
+    // A "<range> · N cases" line used to sit at the bottom. It restated what the
+    // removable pill, the two fields and the result header all already said, in
+    // a column shared with four other filter groups.
+    renderFilters("case", { min: 10_000_000 });
+    const group = await bigoGroup();
+    expect(within(group).queryByText(/cases$/)).toBeNull();
+    expect(within(group).queryByText(/Rs 1\.00 Crore and above/)).toBeNull();
+  });
+
+  it("drops the coverage caveat once a bound is set", async () => {
+    renderFilters("case", { min: 10_000_000 });
+    expect(within(await bigoGroup()).queryByText(/recorded amount/)).toBeNull();
+  });
+
+  it("says what the filter can reach at all when unfiltered", async () => {
+    // ~9% of cases record no amount and are excluded by ANY bound, since a range
+    // clause cannot match an absent field. With no distribution on screen, this
+    // line is the only warning before a reader narrows into an empty page.
+    renderFilters("case");
+    expect(
+      within(await bigoGroup()).getByText(
+        "Filtering by amount includes only the 75 cases with a recorded amount.",
+      ),
+    ).toBeTruthy();
+  });
+});
+
+describe("SearchFiltersSkeleton", () => {
+  it("reserves the बिगो block in the slot the real control occupies", () => {
+    // Untested until now, and it renders on every cold load of /search. The
+    // बिगो control is first and tall (chart + two fields + a button), so a
+    // skeleton that omits it drops every facet below it down the page the
+    // moment the real sidebar lands — a jump that is now above the fold.
+    const { container } = render(<SearchFiltersSkeleton selectedType="case" />);
+    const aside = container.querySelector("aside");
+    expect(aside).toBeTruthy();
+
+    // Header + bigo block + case type and tags. The record-type group is gone
+    // from this column — it is a row of tabs above the results now.
+    const blocks = Array.from(aside!.children);
+    expect(blocks).toHaveLength(4);
+
+    // The बिगो placeholder is the one carrying the histogram-height bar.
+    expect(blocks[1].querySelector(".h-14")).toBeTruthy();
+    // ...and the facet groups after it do not.
+    expect(blocks[2].querySelector(".h-14")).toBeNull();
+    expect(blocks[3].querySelector(".h-14")).toBeNull();
+  });
+
+  it("omits the बिगो block for every record type that cannot show it", () => {
+    // Regression, and the mirror image of the test above. The real control is
+    // gated to `selectedType === "case"`, but the skeleton reserved its ~296px
+    // unconditionally — so the DEFAULT /search (type=all), /materials and
+    // /court-cases all painted a block that then vanished on first paint,
+    // dragging every facet below it upward. The old justification ("no way to
+    // know whether the case index is in scope") was wrong: the type is read
+    // synchronously off the URL, well before the first response.
+    // Block counts are the header plus the groups that tab can actually fill:
+    // "all" shows case type + tags, entities fill only their own type facet,
+    // and materials get the date control plus Document type (see below).
+    const expectedBlocks = { all: 3, entity: 2, material: 3 } as const;
+    for (const type of ["all", "entity", "material"] as const) {
+      const { container, unmount } = render(
+        <SearchFiltersSkeleton selectedType={type} />,
+      );
+      const blocks = Array.from(container.querySelector("aside")!.children);
+      expect(blocks).toHaveLength(expectedBlocks[type]);
+      expect(container.querySelector(".h-14")).toBeNull();
+      unmount();
+    }
+  });
+
+  // Same failure as the बिगो block above, one level down. /materials is a
+  // locked-type landing route, so its cold load is the one this matters for
+  // most, and until JawafdehiAPI#483 the API returned NO facet for a material at
+  // all — case_type, tags and every court bucket came back empty. It now returns
+  // material_type, so this tab reserves exactly what it fills: the date control
+  // and ONE facet group. Not the generic case_type + tags pair, which are still
+  // empty here.
+  it("reserves the date block and one facet group on the materials tab", () => {
+    const { container } = render(
+      <SearchFiltersSkeleton selectedType="material" />,
+    );
+    const blocks = Array.from(container.querySelector("aside")!.children);
+    // Header, date block, Document type.
+    expect(blocks).toHaveLength(3);
+    // Four preset pills' worth of rounded chips, which is what distinguishes the
+    // date block from a facet group at this level.
+    expect(container.querySelectorAll(".rounded-full").length).toBeGreaterThan(0);
+  });
+
+  it("reserves every court-case facet group", () => {
+    const { container } = render(<SearchFiltersSkeleton selectedType="courtcase" />);
+    // Header + case type/tags + court level/court/district/province.
+    expect(container.querySelector("aside")!.children).toHaveLength(7);
+  });
+});
+
+describe("SearchFilters — court-case facets", () => {
+  it("renders the court-only filters with readable court labels", () => {
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          court: [{ name: "kathmandudc", count: 5_477 }],
+          court_type: [{ name: "district", count: 14_307 }],
+          district: [{ name: "Kathmandu", count: 5_477 }],
+          province: [{ name: "Bagmati", count: 7_617 }],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="courtcase"
+      />,
+    );
+
+    expect(screen.getByText("Court level")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "District Court: 14307 results" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Kathmandu District Court: 5477 results" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Kathmandu: 5477 results" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Bagmati: 7617 results" })).toBeTruthy();
+
+    // Court browsing narrows from broad structural choices to a specific court,
+    // then to subject matter. A wall of tags must not bury the primary path.
+    expect(Array.from(document.querySelectorAll("legend")).map((legend) => legend.textContent)).toEqual([
+      "Court level",
+      "Province",
+      "District",
+      "Court",
+    ]);
+  });
+
+  // `NATIONAL` is the API's sentinel for the two country-wide courts (supreme +
+  // special), not an eighth province — and it is the biggest bucket in the
+  // group, so a label that merely title-cased it to "National" would file a
+  // sentinel among Bagmati and Koshi as though it were one of them.
+  it("labels the NATIONAL province sentinel by what it selects", () => {
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          province: [
+            { name: "NATIONAL", count: 12_076 },
+            { name: "Bagmati", count: 7_617 },
+          ],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="courtcase"
+      />,
+    );
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: "National jurisdiction: 12076 results",
+      }),
+    ).toBeTruthy();
+    expect(screen.queryByText("National")).toBeNull();
+    // The real province names pass through untouched.
+    expect(
+      screen.getByRole("checkbox", { name: "Bagmati: 7617 results" }),
+    ).toBeTruthy();
+  });
+
+  // The sidebar is the one place a court is named next to the result set it
+  // filters, so it has to speak the same language as the cards it filters to.
+  it("names courts in Nepali under a Nepali UI", () => {
+    mockI18n.language = "ne";
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{
+          ...emptyFacets,
+          court: [
+            { name: "kathmandudc", count: 5_477 },
+            { name: "supreme", count: 9_100 },
+          ],
+          court_type: [
+            { name: "district", count: 14_307 },
+            { name: "high", count: 1_100 },
+          ],
+        }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        }}
+        selectedType="courtcase"
+      />,
+    );
+
+    // Tiers are wholly Nepali; a named court keeps its place name, exactly as
+    // <CourtCaseCard> renders it, because both go through court-case-format.
+    expect(
+      screen.getByRole("checkbox", { name: "जिल्ला अदालत: 14307 results" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", { name: "उच्च अदालत: 1100 results" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", { name: "सर्वोच्च अदालत: 9100 results" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", {
+        name: "Kathmandu जिल्ला अदालत: 5477 results",
+      }),
+    ).toBeTruthy();
+  });
+
+  it("keeps court filters off every non-court tab", () => {
+    render(
+      <SearchFilters
+        bigoExtent={undefined}
+        bigoMax={undefined}
+        bigoMin={undefined}
+        facets={{ ...emptyFacets, court: [{ name: "kathmandudc", count: 1 }] }}
+        onBigoCommit={vi.fn()}
+        onClear={vi.fn()}
+        onDateCommit={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{
+          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+          material_type: [],
+        }}
+        selectedType="case"
+      />,
+    );
+
+    expect(screen.queryByText("Court")).toBeNull();
+  });
+});
+
+describe("SearchFilters — document type facet", () => {
+  const facets = { ...emptyFacets, material_type: MATERIAL_TYPE_FACET };
+
+  it("labels each bucket through the shared type vocabulary, not the raw token", () => {
+    // The buckets arrive as lower_snake_case tokens. Left to the humanizing
+    // fallback they would read "procurement notice" / "charge sheet" — English,
+    // on a Nepali-first site, and different wording from the same document's
+    // label on its own result card. `getFacetItemLabel` routes them through the
+    // dataQuality.materialsByType.type.* keys instead, which is what this
+    // asserts; that those keys EXIST in both bundles is pinned separately, in
+    // material-type-facet-labels.test.ts.
+    renderFilters("material", { facets });
+    const group = screen.getByRole("group", { name: /Document type/ });
+    const labels = within(group)
+      .getAllByRole("checkbox")
+      .map((box) => box.getAttribute("aria-label") ?? "");
+    expect(labels).toHaveLength(8); // collapsed to the first 8 of 10
+    expect(labels[0]).toContain("materialsByType.type.procurementNotice");
+    expect(labels[0]).toContain("205826");
+    // Never the bare token, which is the failure this branch exists to prevent.
+    expect(labels.some((label) => label.startsWith("procurement_notice"))).toBe(
+      false,
+    );
+  });
+
+  it("keeps the rarest types reachable behind More", () => {
+    // social_media has 10 documents and legal_corpus 13, against
+    // procurement_notice's 205,826. They sit past the 8-row collapse, so the
+    // group must offer a way to them — otherwise the long tail of the corpus is
+    // unfilterable.
+    renderFilters("material", { facets });
+    const group = screen.getByRole("group", { name: /Document type/ });
+    expect(within(group).getAllByRole("checkbox")).toHaveLength(8);
+    fireEvent.click(within(group).getByRole("button", { name: /More/i }));
+    const labels = within(group)
+      .getAllByRole("checkbox")
+      .map((box) => box.getAttribute("aria-label") ?? "");
+    expect(labels).toHaveLength(MATERIAL_TYPE_FACET.length);
+    expect(labels.some((label) => label.includes("socialMedia"))).toBe(true);
+  });
+
+  it("is absent on every tab but Materials", () => {
+    // Only materials carry a document type, and the token is CLOSED on the API
+    // side — a stale one is a 400, not merely an empty page. So the control is
+    // scoped exactly like the court facets.
+    for (const type of ["all", "case", "entity", "courtcase"] as const) {
+      const { unmount } = renderFilters(type, { facets });
+      expect(screen.queryByText("Document type")).toBeNull();
+      unmount();
+    }
+  });
+});
+
+describe("SearchFilters — record date control", () => {
+  it("offers the presets and both exact fields", () => {
+    renderFilters("material");
+    const group = dateGroup();
+    expect(within(group).getByLabelText("From (AD)")).toBeTruthy();
+    expect(within(group).getByLabelText("To (AD)")).toBeTruthy();
+    expect(
+      within(group).getByRole("button", { name: "Last 30 days" }),
+    ).toBeTruthy();
+  });
+
+  it("commits a lower bound only when a preset is tapped", () => {
+    // A preset means "the last N, up to whatever is newest". Pinning an upper
+    // bound at today would drop a document published with a future date, and the
+    // corpus has them — a notice dated for its own deadline.
+    const onDateCommit = vi.fn();
+    renderFilters("material", { onDateCommit });
+    fireEvent.click(
+      within(dateGroup()).getByRole("button", { name: "Last 30 days" }),
+    );
+    expect(onDateCommit).toHaveBeenCalledTimes(1);
+    const committed = onDateCommit.mock.calls[0][0];
+    expect(committed.to).toBeUndefined();
+    expect(committed.from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("clears both bounds on All time", () => {
+    const onDateCommit = vi.fn();
+    renderFilters("material", {
+      dateFrom: "2020-01-01",
+      dateTo: "2024-12-31",
+      onDateCommit,
+    });
+    fireEvent.click(
+      within(dateGroup()).getByRole("button", { name: "All time" }),
+    );
+    expect(onDateCommit).toHaveBeenCalledWith({});
+  });
+
+  it("marks All time pressed while unfiltered, and nothing pressed on a custom range", () => {
+    // The pressed pill is DERIVED from the bounds, not stored: the URL is the
+    // only state, so a shared link and the back button have to light the right
+    // one with nothing else to consult.
+    const { unmount } = renderFilters("material");
+    expect(
+      within(dateGroup())
+        .getByRole("button", { name: "All time" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    unmount();
+
+    renderFilters("material", { dateFrom: "2020-01-01", dateTo: "2024-12-31" });
+    for (const name of ["All time", "Last 30 days", "Last 6 months", "Last year"]) {
+      expect(
+        within(dateGroup())
+          .getByRole("button", { name })
+          .getAttribute("aria-pressed"),
+      ).toBe("false");
+    }
+  });
+
+  it("drops the other side rather than committing an inverted pair", () => {
+    // Typing a From after the existing To is the reader mid-thought, not an
+    // error worth shouting about — and sending it would be a 400, which this
+    // page renders as the red "could not be loaded" alert.
+    const onDateCommit = vi.fn();
+    renderFilters("material", { dateTo: "2020-01-01", onDateCommit });
+    fireEvent.change(within(dateGroup()).getByLabelText("From (AD)"), {
+      target: { value: "2024-06-01" },
+    });
+    expect(onDateCommit).toHaveBeenCalledWith({ from: "2024-06-01" });
+  });
+
+  it("constrains each field by the other, so the picker cannot invert it", () => {
+    renderFilters("material", { dateFrom: "2020-01-01", dateTo: "2024-12-31" });
+    const group = dateGroup();
+    expect(
+      within(group).getByLabelText("From (AD)").getAttribute("max"),
+    ).toBe("2024-12-31");
+    expect(within(group).getByLabelText("To (AD)").getAttribute("min")).toBe(
+      "2020-01-01",
+    );
+  });
+
+  it("states the coverage caveat only while unfiltered", () => {
+    // A range clause cannot match a document with no date, so any bound silently
+    // drops them. Nothing else on the page says so, and without it their
+    // disappearance reads as "there are none" rather than "this filter cannot
+    // see them". Once a bound IS set the note is spent, and the column is shared.
+    const { unmount } = renderFilters("material");
+    expect(within(dateGroup()).getByText(/recorded date/)).toBeTruthy();
+    unmount();
+
+    renderFilters("material", { dateFrom: "2020-01-01" });
+    expect(within(dateGroup()).queryByText(/recorded date/)).toBeNull();
+  });
+
+  it("is absent on every tab but Materials", () => {
+    // Entities carry no date at all, so a bound empties that tab outright; on
+    // `all` it would silently drop every entity from a mixed result set. The
+    // case tab already opens with the बिगो range.
+    for (const type of ["all", "case", "entity", "courtcase"] as const) {
+      const { unmount } = renderFilters(type);
+      expect(screen.queryByText("Record date")).toBeNull();
+      unmount();
+    }
+  });
+});

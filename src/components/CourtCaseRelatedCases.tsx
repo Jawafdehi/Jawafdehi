@@ -61,9 +61,10 @@ export function CourtCaseRelatedCases({ courtCaseIri }: { courtCaseIri: string }
 
       <ul className="space-y-3">
         {data.results.map((c) => {
-          const date = formatDate(c.case_start_date || c.created_at);
-          const typeKey = getCaseTypeLabelKey(c.case_type);
-          const typeLabel = typeKey ? t(typeKey) : c.case_type;
+          const date = formatDate(c.proceedings_started_on || c.created_at);
+          const offenceType = c.offence_type || c.case_type;
+          const typeKey = getCaseTypeLabelKey(offenceType);
+          const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
 
           const row = (
