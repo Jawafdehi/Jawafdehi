@@ -99,7 +99,9 @@ function toCaseCardViewModel(result: ArchiveSearchResult): CaseCardViewModel {
     bigo: card?.bigo ?? null,
     // Generative-thumbnail (tier 3) inputs. Accused only — the subject-entity
     // fallback would count non-accused parties into an "accused" glyph.
-    caseType: card?.case_type ?? null,
+    // `offence_type` is `case_type` renamed; both are served this release, so
+    // read the new name first or a freshly reindexed doc loses its label.
+    caseType: card?.offence_type || card?.case_type || null,
     accusedCount: (card?.entities ?? []).filter((entity) => entity.type === "accused").length,
     timelineCount: card?.timeline?.length ?? 0,
     subjectEntities: subjectEntities(card?.entities),

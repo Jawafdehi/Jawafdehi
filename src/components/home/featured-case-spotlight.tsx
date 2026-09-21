@@ -16,6 +16,7 @@ import {
 } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import { summarizeNames } from "@/utils/name-summary";
+import type { CaseCardStatus } from "@/lib/case-card-props";
 
 type FeaturedCaseSpotlightProps = {
   slug?: string | null;
@@ -24,7 +25,7 @@ type FeaturedCaseSpotlightProps = {
   /** Structured subject names; summarized the way <CaseCard> summarizes them. */
   entityNames?: string[];
   location: string;
-  status: "ongoing" | "resolved" | "under-investigation";
+  status: CaseCardStatus;
   tags?: string[];
   thumbnailUrl?: string;
   bannerUrl?: string;

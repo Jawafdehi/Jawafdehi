@@ -54,8 +54,8 @@ const makeCase = (overrides: Partial<Case> = {}) =>
     timeline: [],
     evidence: [],
     bigo: null,
-    case_start_date: null,
-    case_end_date: null,
+    proceedings_started_on: null,
+    proceedings_decided_on: null,
     ...overrides,
   }) as unknown as Case;
 
@@ -134,5 +134,35 @@ describe("EmbedCaseCard image fallback", () => {
     await waitFor(() => expect(getCaseById).toHaveBeenCalled());
     await waitFor(() => expect(container.textContent).toContain("A case"));
     expect(container.querySelector("img")).toBeNull();
+  });
+});
+
+// The embed is one small card with room for one span, so it shows the DERIVED
+// proceedings dates rather than the whole stage list — but it must read them
+// off the derived fields, not the deprecated case_start_date/case_end_date.
+describe("EmbedCaseCard dates", () => {
+  it("shows the derived proceedings span", async () => {
+    getCaseById.mockResolvedValue(
+      makeCase({
+        proceedings_started_on: "2021-10-02",
+        proceedings_decided_on: "2023-06-09",
+      }),
+    );
+
+    const { container } = renderEmbed();
+
+    await waitFor(() => expect(container.textContent).toContain("Oct 2, 2021"));
+    expect(container.textContent).toContain("Jun 9, 2023");
+  });
+
+  it("says the case is ongoing when the proceedings have no decision date", async () => {
+    getCaseById.mockResolvedValue(
+      makeCase({ proceedings_started_on: "2021-10-02", proceedings_decided_on: null }),
+    );
+
+    const { container } = renderEmbed();
+
+    await waitFor(() => expect(container.textContent).toContain("Oct 2, 2021"));
+    expect(container.textContent).toContain("cases.status.ongoing");
   });
 });

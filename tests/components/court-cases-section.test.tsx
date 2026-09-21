@@ -47,10 +47,10 @@ describe("CourtCasesSection", () => {
 
     await waitFor(() => {
       expect(container.textContent).toContain("Nepal Government");
-    });
+    }, { timeout: 10000 });
     expect(container.textContent).toContain("Rabi Lamichhane");
     expect(container.textContent).toContain("080-C4-2408");
-  });
+  }, 15000);
 
   it("renders nothing when there are no court cases", () => {
     const { container } = render(

@@ -25,7 +25,11 @@ const party = (over: Partial<JawafEntity> = {}): JawafEntity => ({
   ...over,
 });
 
-function renderCards(entities: JawafEntity[], initialLimit = 9) {
+function renderCards(
+  entities: JawafEntity[],
+  initialLimit = 9,
+  forum: string | null = null,
+) {
   return render(
     <MemoryRouter>
       <CaseEntityCards
@@ -33,6 +37,7 @@ function renderCards(entities: JawafEntity[], initialLimit = 9) {
         resolvedEntities={{}}
         language="en"
         initialLimit={initialLimit}
+        forum={forum}
       />
     </MemoryRouter>,
   );
@@ -172,6 +177,31 @@ describe("CaseEntityCards — which parties flip at all", () => {
     expect(within(details).queryByText("Charged")).toBeNull();
   });
 
+  // The two faces share one box and swap on hover. When the details face was
+  // `text-left`, turning a card threw its text to the edge while every card
+  // beside it stayed centred — the mismatch read as a layout bug, not a reveal.
+  it("centres the details face the same way as the front", () => {
+    renderCards([party()]);
+
+    expect(screen.getByRole("button").className).toContain("text-center");
+    expect(screen.getByRole("link").className).toContain("text-center");
+    expect(screen.getByRole("link").className).not.toContain("text-left");
+  });
+
+  // Centring only reads as centred if the note's own box is symmetric. A
+  // one-sided `pr-1` offsets it, and so does the scrollbar, which is laid out
+  // inside the padding box on the end side — hence a both-edges gutter as well
+  // as the symmetric padding. Reserving that gutter always also keeps the width
+  // fixed, so a note long enough to overflow does not shift its own text.
+  it("keeps the note's scroll box symmetric so the centred text sits on the card's axis", () => {
+    renderCards([party()]);
+
+    const scroller = screen.getByText(/embezzling/).parentElement;
+    expect(scroller?.className).toContain("px-1");
+    expect(scroller?.className).not.toContain("pr-1");
+    expect(scroller?.className).toContain("[scrollbar-gutter:stable_both-edges]");
+  });
+
   it("renders the decided verdict on the details face", () => {
     renderCards([party({ outcome: "acquitted" })]);
 
@@ -214,5 +244,34 @@ describe("CaseEntityCards — the view-more toggle", () => {
     fireEvent.click(toggle);
     expect(screen.getAllByRole("link")).toHaveLength(12);
     expect(screen.queryByText("caseDetail.showLessParties")).not.toBeNull();
+  });
+});
+
+// The verdict names the forum and asserts nothing about finality. 22 published
+// cases carry a Special Court acquittal with a live CIAA appeal at the Supreme
+// Court, and the CIAA appeals only some defendants, so "appeal pending" would
+// be false for the rest. "Special Court: acquitted" is true for everyone.
+describe("CaseEntityCards — the verdict names its forum", () => {
+  it("prefixes the verdict with the court that reached it", () => {
+    renderCards([party({ outcome: "acquitted", notes: "" })], 9, "Special Court");
+
+    expect(screen.getByText("Special Court: acquitted")).toBeTruthy();
+    expect(screen.queryByText("Acquitted")).toBeNull();
+  });
+
+  it("claims nothing about an appeal, in either direction", () => {
+    const { container } = renderCards(
+      [party({ outcome: "acquitted", notes: "" })],
+      9,
+      "Special Court",
+    );
+
+    expect(container.textContent).not.toMatch(/pending|final|upheld/i);
+  });
+
+  it("shows the bare verdict when the case has no single first instance", () => {
+    renderCards([party({ outcome: "convicted", notes: "" })], 9, null);
+
+    expect(screen.getByText("Convicted")).toBeTruthy();
   });
 });

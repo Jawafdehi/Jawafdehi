@@ -22,13 +22,25 @@ import { entityKindFor, getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 import { cn } from "@/lib/utils";
 import { entityPath } from "@/lib/entity-links";
-import { outcomeBadgeClass, outcomeLabel, outcomeRank, shouldShowOutcome } from "@/utils/case-outcome";
+import {
+  outcomeBadgeClass,
+  outcomeRank,
+  outcomeWithForumLabel,
+  shouldShowOutcome,
+} from "@/utils/case-outcome";
 
 interface CaseEntityCardsProps {
   className?: string;
   entities: JawafEntity[];
   resolvedEntities: Record<string, Entity>;
   language: string;
+  /**
+   * The court that reached the verdicts on these cards, already localized —
+   * the case's single first instance. Null when the case has several (or
+   * none), in which case the verdict is shown without a forum rather than
+   * pinned on a guessed court.
+   */
+  forum?: string | null;
   /**
    * Cards shown before the "view more" toggle. Required, not defaulted: the
    * Suspense fallback in involved-parties-section reserves exactly this many
@@ -120,9 +132,10 @@ interface EntityCardProps {
   jawafEntity: JawafEntity;
   entity: Entity | null;
   language: string;
+  forum?: string | null;
 }
 
-function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>) {
+function EntityCard({ jawafEntity, entity, language, forum }: Readonly<EntityCardProps>) {
   // Three independent reasons a card shows its details, all in state so the
   // ARIA and the transform read from one value (`revealed`):
   //   flipped     — an explicit toggle: Enter/Space on the front button, or a tap
@@ -197,7 +210,7 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     <EntityIdentity kind={kind} src={imageUrl} layout="tile" name={names.primary} alternate={names.alternate}>
       {showOutcome && (
         <Badge variant="outline" className={cn("mt-3 text-sm", outcomeBadgeClass(jawafEntity.outcome))}>
-          {outcomeLabel(jawafEntity.outcome, language)}
+          {outcomeWithForumLabel(jawafEntity.outcome, forum, language)}
         </Badge>
       )}
     </EntityIdentity>
@@ -231,18 +244,32 @@ function EntityCard({ jawafEntity, entity, language }: Readonly<EntityCardProps>
     <>
       <span className="sr-only">{names.primary}</span>
       {/* Centred while it fits; `my-auto` collapses to 0 once it overflows so
-          the top stays reachable. */}
+          the top stays reachable. Centred text only sits on the card's axis if
+          both insets match, which takes two things: `px-1` rather than `pr-1`
+          for the clearance, and a `stable both-edges` gutter. `px-1` alone is
+          not enough — the scrollbar is laid out inside the padding box on the
+          end side, so it still eats the right. Reserving the gutter on both
+          edges also holds the width steady, so a note growing long enough to
+          overflow no longer shifts its own text sideways. */}
       <div
         ref={scrollRef}
-        className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 [scrollbar-width:thin]", SETTLE, "delay-150")}
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-y-auto px-1",
+          "[scrollbar-width:thin] [scrollbar-gutter:stable_both-edges]",
+          SETTLE,
+          "delay-150",
+        )}
       >
         <p className="my-auto font-paragraph font-paragraph-compact text-primary/85">{notes}</p>
       </div>
     </>
   );
 
+  // `text-center` to match the front face. The two faces occupy the same box and
+  // swap on hover, so a left-aligned details face made the text jump to the edge
+  // the moment the card turned, while every neighbouring card stayed centred.
   const backClass = cn(
-    "absolute inset-0 flex flex-col gap-3 rounded-2xl p-4 text-left",
+    "absolute inset-0 flex flex-col gap-3 rounded-2xl p-4 text-center",
     href && "cursor-pointer focus-visible:outline-none",
     SURFACE,
     FLIP_BACK,
@@ -313,6 +340,7 @@ export function CaseEntityCards({
   resolvedEntities,
   language,
   initialLimit,
+  forum,
 }: Readonly<CaseEntityCardsProps>) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -335,7 +363,12 @@ export function CaseEntityCards({
           const key = jawafEntity.nes_id ?? `${jawafEntity.display_name ?? "entity"}-${index}`;
           return (
             <Reveal key={key} delayMs={(index % 3) * 60}>
-              <EntityCard jawafEntity={jawafEntity} entity={entity} language={language} />
+              <EntityCard
+                jawafEntity={jawafEntity}
+                entity={entity}
+                language={language}
+                forum={forum}
+              />
             </Reveal>
           );
         })}

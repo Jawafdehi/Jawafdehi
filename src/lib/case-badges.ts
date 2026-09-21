@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import type { CaseStatus } from "@/types/jds";
 
 export type CaseBadgeKind = "status" | "case-type" | "tag";
 
@@ -7,12 +8,11 @@ export type CaseStatusValue =
   | "IN_REVIEW"
   | "PUBLISHED"
   | "CLOSED"
-  | "ongoing"
-  | "concluded"
+  | CaseStatus
+  // Legacy spellings still served by the search index and older payloads.
   | "resolved"
   | "under-investigation"
   | "closed"
-  | "others"
   | string
   | null
   | undefined;
@@ -34,6 +34,10 @@ const statusPillClassNames: Record<string, string> = {
   "under-investigation": "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
   UNDER_INVESTIGATION: "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
   others: "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
+  // Neither a win nor a loss: a case nobody decided must not wear the green
+  // "resolved" pill.
+  withdrawn: "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
+  dormant: "border-border/70 bg-muted text-muted-foreground hover:bg-muted/80",
 };
 
 const caseTypePillClassNames: Record<string, string> = {
@@ -52,6 +56,8 @@ const CASE_STATUS_LABEL_KEYS: Record<string, string> = {
   "under-investigation": "caseDetail.status.underInvestigation",
   UNDER_INVESTIGATION: "caseDetail.status.underInvestigation",
   others: "caseDetail.status.underInvestigation",
+  withdrawn: "caseDetail.status.withdrawn",
+  dormant: "caseDetail.status.dormant",
 };
 
 function normalizedLookupKeys(value: string | null | undefined) {
@@ -113,15 +119,17 @@ export function getCaseStatusLabelKey(status: CaseStatusValue) {
 }
 
 /**
- * Derive the status shown on a public case chip from the case's workflow state
- * and its recorded end date, rather than assuming every published case is
- * "ongoing". A published case that carries a `case_end_date` has concluded, so
- * it must not read "Ongoing". Draft/in-review cases keep their workflow state so
- * the reviewer-facing chip is unchanged; an explicit CLOSED state also wins.
+ * The status shown on a public case chip.
+ *
+ * The lifecycle itself is DERIVED SERVER-SIDE and served as `status` — the
+ * client cannot derive it, because a case has no single end date to read: one
+ * published case runs twelve dockets across eight courts. Our own workflow
+ * states still win, because that chip is reviewer-facing and describes our
+ * publication rather than the proceedings.
  */
 export function deriveCaseStatus(
   state: string | null | undefined,
-  caseEndDate?: string | null,
+  status?: CaseStatus | string | null,
 ): CaseStatusValue {
   // Normalize case and separators so a lowercase/mixed-case API value
   // ("draft", "in-review", "closed") is compared the same as its canonical form.
@@ -130,7 +138,8 @@ export function deriveCaseStatus(
   if (normalizedState === "DRAFT" || normalizedState === "IN_REVIEW") return normalizedState;
   if (normalizedState === "CLOSED") return "CLOSED";
 
-  if (caseEndDate && caseEndDate.trim() !== "") return "concluded";
+  const served = status?.trim();
+  if (served) return served;
 
   return normalizedState || "PUBLISHED";
 }
