@@ -7,7 +7,7 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { formatDateForLanguage } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
@@ -139,7 +139,15 @@ export function EntityRelatedCases({
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.proceedings_started_on || c.created_at);
+          // Bikram Sambat leads for Nepali readers, the way court-sourced dates
+          // read everywhere else. In English `.primary` is the Gregorian string
+          // `formatDate` already returned, so nothing changes for `en`.
+          const date = formatDateForLanguage(
+            c.proceedings_started_on || c.created_at,
+            "PP",
+            null,
+            language,
+          ).primary;
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
