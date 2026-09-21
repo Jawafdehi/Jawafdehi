@@ -23,6 +23,11 @@ import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
 import type { JawafEntity } from './types/jds';
 
+// Just the part of an NES entity record this module needs: the canonical IRI that
+// keys the related-cases query. Deliberately not the full EntityRecord shape —
+// nothing here renders the record, it only forwards its identity.
+type EntityRecordHead = { '@id'?: string };
+
 // SSR/pre-render runs in Node, where the shared `http` client's same-origin
 // default won't resolve — set VITE_JAWAFDEHI_API_BASE_URL (the monolith origin)
 // for the SSR build so `http` carries an absolute baseURL. Every plane now lives
@@ -141,8 +146,14 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
     return;
   }
 
-  // Entity profile page
-  const entityMatch = url.match(/^\/entity\/(\d+)/);
+  // Entity profile page — LEGACY numeric route (/entity/<id>). Must stay ahead of
+  // the IRI branch below, which would otherwise swallow it.
+  // Anchored to a SINGLE all-digit segment, which is what the legacy route is —
+  // an IRI is always prefix/slug, so it never has one. Unanchored, this read
+  // /entity/2070-b-s/foo as legacy entity 2070 and prefetched the wrong record
+  // under the wrong key: NES prefixes may legally start with digits
+  // (jawafdehi_shared/entities/ids.py allows [a-z0-9_]+).
+  const entityMatch = url.match(/^\/entity\/(\d+)(?:[?#]|$)/);
   if (entityMatch) {
     const entityId = parseInt(entityMatch[1]);
     await queryClient.prefetchQuery({
@@ -152,6 +163,46 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
         return res.data;
       },
     });
+    return;
+  }
+
+  // Entity record page, IRI-keyed (/entity/<prefix>/<slug>). The query key mirrors
+  // EntityRecordProfile's useQuery (['entity-record', tail]) so the client hydrates
+  // from the dehydrated cache instead of refetching.
+  //
+  // This branch is what makes pre-rendering these pages worth anything. Without
+  // it the route still renders — it just renders with an empty cache, so the
+  // crawler gets a skeleton whose <title> is the URL slug and whose body is
+  // loading state, and the noindex in EntityRelatedCases never fires because it
+  // is keyed on a LOADED, genuinely empty result. It is also why the build could
+  // not catch that: reportPrefetch only reports on prefetches a branch actually
+  // asked for, so a route with no branch here has nothing to fail.
+  const entityRecordMatch = url.match(/^\/entity\/(.+?)\/?(?:[?#]|$)/);
+  if (entityRecordMatch) {
+    const tail = decodeURIComponent(entityRecordMatch[1]);
+    await queryClient.prefetchQuery({
+      queryKey: ['entity-record', tail],
+      queryFn: async () => {
+        const res = await http.get<EntityRecordHead>(`/api/entities/${tail}`);
+        return res.data;
+      },
+      ...TRANSIENT_RETRY,
+    });
+
+    // NOT prefetched here: EntityRelatedCases' own query, keyed on the record's
+    // `@id`. So the related-cases column of a pre-rendered entity page is still
+    // its aria-busy skeleton — measured over a full build, 1,579 entity pages
+    // contained the skeleton and none contained a single href="/case/". The
+    // identity, title, description and facts are real; the case list is not.
+    //
+    // Fetching it per entity was tried and does not work: it doubles the build to
+    // ~3,158 upstream calls and api.jawafdehi.org answers 429. The fix is to
+    // SEED it rather than fetch it — pre-render.ts already holds every published
+    // case with its binds, so the citing set for an IRI is derivable in-process
+    // for zero extra calls, and the component sorts client-side so server order
+    // does not matter. That needs the list payload confirmed field-identical to
+    // /api/cases/?entity=, and a seed threaded through render(); deliberately
+    // left out of this PR rather than done hastily inside it.
     return;
   }
 
@@ -195,6 +246,35 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
     return;
   }
 }
+
+// A prefetch that comes back failed fails the BUILD (pre-render.ts refuses to
+// publish a skeleton), and entity pages took the pre-rendered route count from a
+// handful to ~1,579. One transient upstream blip in any of them now costs a whole
+// deploy — a real build lost three to 503s. These two queries retry so that the
+// guard keeps meaning "the API is broken" rather than "the API hiccuped once".
+//
+// Applied per-query, NOT as a client default: the default stays retry: 0 because
+// the other prefetches are a handful of one-off calls whose failure should be
+// reported immediately, and tests/ssr/prefetch-report.test.tsx pins exactly that.
+//
+// Bounded hard: at most two extra attempts, ~1s then ~2s, on top of the per-call
+// timeout in services/http. Only for failures that can plausibly succeed on a
+// retry — a 404 on an entity IRI is a data problem more attempts cannot fix, and
+// retrying it would just triple the time the build takes to say so.
+const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+function retryTransient(failureCount: number, error: unknown): boolean {
+  if (failureCount >= 3) return false;
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  // No response at all: a timeout, a socket hangup, DNS. Worth another go.
+  if (status === undefined) return true;
+  return RETRYABLE_STATUSES.has(status);
+}
+
+const TRANSIENT_RETRY = {
+  retry: retryTransient,
+  retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 4000),
+} as const;
 
 export async function render(url: string): Promise<RenderResult> {
   const helmetContext: { helmet?: HelmetServerState } = {};

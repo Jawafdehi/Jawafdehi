@@ -18,6 +18,7 @@ import {
   type PrefetchReport,
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
+import { entityPath } from '../src/lib/entity-links.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -58,7 +59,9 @@ interface PaginatedCaseList {
     title?: string | null;
     description?: string | null;
     updated_at: string;
-    entities: Array<{ id: number; nes_id: string | null; display_name?: string | null }>;
+    // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
+    // canonical NES `@id` IRI and the case serializer stopped emitting one.
+    entities: Array<{ nes_id: string | null; display_name?: string | null }>;
   }>;
 }
 
@@ -108,7 +111,38 @@ async function withConcurrency<T>(
   await Promise.all(workers);
 }
 
+// renderToString does not throw when it hits an unresolved Suspense boundary — it
+// returns the fallback and a <template data-msg="The server did not finish this
+// Suspense boundary..."> marker, and the build happily writes that to disk and
+// exits 0. That is how /donate shipped blank in August and how /entity/* shipped
+// 1,544 empty-titled stubs in this branch, both past a green CI.
+//
+// So assert on the OUTPUT rather than on a list of routes that must stay eager.
+// A list has to be kept in step with this file by hand and silently stops
+// covering whatever someone adds next; this cannot drift, because it reads what
+// was actually produced. tests/ssr/prerendered-routes-eager.test.ts still checks
+// the same rule at unit-test speed — this is the backstop for the case the test
+// cannot see.
+const SUSPENSE_STUB_MARKER = 'did not finish this Suspense boundary';
+
+// Its own type because the per-route loops below are deliberately tolerant — one
+// unrenderable update or entity warns and is skipped rather than failing a
+// deploy. A lazy page is the opposite kind of problem: it fails EVERY route in
+// that family identically, so "skip and carry on" would quietly publish a site
+// with no entity pages at all while the sitemap still advertised 1,579 of them.
+// Those loops rethrow this one.
+class SuspenseStubError extends Error {
+  override readonly name = 'SuspenseStubError';
+}
+
 async function writeHtml(outFile: string, content: string): Promise<void> {
+  if (content.includes(SUSPENSE_STUB_MARKER)) {
+    throw new SuspenseStubError(
+      `refusing to write ${outFile}: it pre-rendered as a Suspense fallback, not a page. ` +
+        `The route's page component is lazy() and every pre-rendered route must be an ` +
+        `eager import — see the split policy in src/routes.tsx.`,
+    );
+  }
   await mkdir(dirname(outFile), { recursive: true });
   await writeFile(outFile, content, 'utf-8');
 }
@@ -296,17 +330,29 @@ function caseToSearchEntry(
   };
 }
 
-function entityToSearchEntry(entityId: number, name: string | null | undefined, html: string): SearchIndexEntry {
-  const title = stripHtml(name) || `Entity ${entityId}`;
+// Entities carry no `lines`, for the same reason cases do not (above). An entity
+// page renders its identity rail and then fetches the record client-side, so the
+// only text in the pre-rendered HTML is the chrome every page shares — nav,
+// footer, the event banner. Attaching it multiplied dist/search-index.json by
+// ~21x (441 KB -> 9.4 MB, 54 KB -> 180 KB gzip) across 1,544 entities and filled
+// the command palette with entries whose searchable body was the site header.
+// Title and keywords come from the case bind, which is where they came from
+// anyway, so nothing is lost by dropping the lines.
+function entityToSearchEntry(path: string, name: string | null | undefined): SearchIndexEntry {
+  // The `<prefix>/<slug>` tail is the only human-readable handle left once the
+  // numeric id is gone, so it stands in for the title when a bind carries no
+  // display_name.
+  const tail = path.replace('/entity/', '');
+  const title = stripHtml(name) || tail;
 
-  return withSearchLines({
-    path: `/entity/${entityId}`,
+  return {
+    path,
     title,
     descriptionKey: 'searchCommand.descriptions.entityDetail',
-    keywords: ['entity', 'person', 'organization', 'official', String(entityId), title],
+    keywords: ['entity', 'person', 'organization', 'official', tail, title],
     icon: 'Building2',
     group: 'entities',
-  }, html);
+  };
 }
 
 async function main() {
@@ -365,11 +411,18 @@ async function main() {
     apiReachable = false;
   }
 
-  // Collect unique entity IDs — use numeric JDS entity IDs for /entity/:id routes
-  const entityIds = apiReachable
+  // Entity pages worth pre-rendering are exactly the ones a published case
+  // cites — the same rule the public entity search applies (`case_count >= 1`,
+  // see `entities/search_visibility.py` in the API). `cases` is the published
+  // set, so its binds give that rule for free.
+  //
+  // This block used to map `e.id`, a numeric field the IRI remodel deleted, so
+  // it resolved to [] and NO entity page was pre-rendered or listed.
+  const entityPaths = apiReachable
     ? [...new Set(
         cases
-          .flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
+          .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
+          .filter((path): path is string => path != null)
       )]
     : [];
 
@@ -404,6 +457,7 @@ async function main() {
       searchEntries.push(withSearchLines(updateRouteToSearchEntry(update), result.html));
       console.log(`[pre-render] ✓ ${path}`);
     } catch (err) {
+      if (err instanceof SuspenseStubError) throw err;
       console.warn(`[pre-render] WARNING: Skipping update ${update.id}:`, err);
       if (err instanceof Error) console.error(err.stack);
     }
@@ -438,28 +492,31 @@ async function main() {
       searchEntries.push(caseToSearchEntry(caseItem, slug));
     }
 
-    const entityNames = new Map<number, string | null | undefined>();
+    const entityNames = new Map<string, string | null | undefined>();
     for (const caseItem of cases) {
       for (const entity of caseItem.entities) {
-        if (!entityNames.has(entity.id)) {
-          entityNames.set(entity.id, entity.display_name);
+        const path = entityPath(entity.nes_id);
+        if (path && !entityNames.has(path)) {
+          entityNames.set(path, entity.display_name);
         }
       }
     }
 
-    // Render entity routes
-    await withConcurrency(entityIds, CONCURRENCY, async (entityId) => {
-      const path = `/entity/${entityId}`;
-      const outFile = join(ROOT, 'dist', 'entity', String(entityId), 'index.html');
+    // Render entity routes. The output directory mirrors the multi-segment
+    // `<prefix>/<slug>` tail (e.g. dist/entity/person/ram-shah/index.html), the
+    // same shape the `/entity/*` splat route resolves at runtime.
+    await withConcurrency(entityPaths, CONCURRENCY, async (path) => {
+      const outFile = join(ROOT, 'dist', ...path.split('/').filter(Boolean), 'index.html');
       try {
         const result = await render(path);
         const html = injectIntoTemplate(template, result);
         await writeHtml(outFile, html);
         notePrefetch(path, result);
-        searchEntries.push(entityToSearchEntry(entityId, entityNames.get(entityId), result.html));
+        searchEntries.push(entityToSearchEntry(path, entityNames.get(path)));
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
-        console.warn(`[pre-render] WARNING: Skipping entity ${entityId}:`, err);
+        if (err instanceof SuspenseStubError) throw err;
+        console.warn(`[pre-render] WARNING: Skipping entity ${path}:`, err);
         if (err instanceof Error) console.error(err.stack);
       }
     });
