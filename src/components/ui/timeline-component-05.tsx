@@ -12,8 +12,6 @@ export interface Release {
 
 interface ChangelogContentProps {
   className?: string;
-  description?: string;
-  heading?: string;
   releases: Release[];
 }
 
@@ -54,27 +52,16 @@ function TimelineDatePill({ date, version }: Pick<Release, "date" | "version">) 
   );
 }
 
-const ChangelogContent = ({
-  className,
-  description = "Discover what has been added, changed, fixed, improved, and updated in this release.",
-  heading = "Changelog Origin Update",
-  releases,
-}: ChangelogContentProps) => {
+/**
+ * The grouped timeline list only — the section heading belongs to the caller,
+ * so the case page can render the shared `CaseSectionHeading` (editorial serif
+ * + crimson rule) like every other case-detail section.
+ */
+const ChangelogContent = ({ className, releases }: ChangelogContentProps) => {
   const groupedReleases = groupReleases(releases);
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="mb-8 space-y-4 text-left ">
-        <h2 className=" font-semibold tracking-tight text-primary text-xl md:text-2xl">
-          {heading}
-        </h2>
-        {description ? (
-          <p className="max-w-3xl text-lg leading-8 text-primary/75">
-            {description}
-          </p>
-        ) : null}
-      </div>
-
       <div className="space-y-9">
         {groupedReleases.map((group, groupIndex) => (
           <section
