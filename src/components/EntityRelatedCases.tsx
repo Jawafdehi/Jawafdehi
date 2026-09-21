@@ -12,9 +12,10 @@ import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
   outcomeBadgeClass,
-  outcomeLabel,
+  outcomeWithForumLabel,
   shouldShowOutcome,
 } from "@/utils/case-outcome";
+import { caseVerdictForum } from "@/utils/case-stages";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -44,7 +45,7 @@ function isAccusedTier(role: string): boolean {
 // The date a card is ordered by — the same one it displays. Falls back to the
 // record's creation time only when the case has no start date of its own.
 function sortDateOf(caseItem: Case): string {
-  return caseItem.case_start_date || caseItem.created_at || "";
+  return caseItem.proceedings_started_on || caseItem.created_at || "";
 }
 
 // This entity's role/verdict on a given case, read from the case's own entity
@@ -93,8 +94,8 @@ export function EntityRelatedCases({
 
   // accused/alleged first, then newest case first within each tier.
   //
-  // Sort on the SAME date the card shows (`case_start_date`, i.e. when the case
-  // began) rather than `created_at` (when we happened to author the record).
+  // Sort on the SAME date the card shows (`proceedings_started_on`, i.e. when
+  // the case began) rather than `created_at` (when we happened to author the record).
   // Those orders are unrelated: this entity's five cases were authored in the
   // reverse of their real chronology, so ordering by `created_at` rendered the
   // dates on screen as an apparently random sequence.
@@ -133,9 +134,10 @@ export function EntityRelatedCases({
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.case_start_date || c.created_at);
-          const typeKey = getCaseTypeLabelKey(c.case_type);
-          const typeLabel = typeKey ? t(typeKey) : c.case_type;
+          const date = formatDate(c.proceedings_started_on || c.created_at);
+          const offenceType = c.offence_type || c.case_type;
+          const typeKey = getCaseTypeLabelKey(offenceType);
+          const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
 
           const row = (
@@ -163,7 +165,11 @@ export function EntityRelatedCases({
                   </Badge>
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
-                      {outcomeLabel(outcome, language)}
+                      {outcomeWithForumLabel(
+                        outcome,
+                        caseVerdictForum(c.dates, language),
+                        language,
+                      )}
                     </Badge>
                   ) : null}
                   <span className="text-xs text-muted-foreground">
