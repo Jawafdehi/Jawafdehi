@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
+import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
-import { SeptemberEvent } from "@/components/home/september-event";
+import { LaunchEvent } from "@/components/home/launch-event";
+import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/home/faq";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { ShareOurVision } from "@/components/home/share-our-vision";
@@ -11,78 +13,16 @@ import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
-import { featuredCasesQuery, FEATURED_CASE_COUNT } from "@/queries/home";
+import {
+  featuredCasesQuery,
+  FEATURED_CASE_COUNT,
+  FEATURED_CASE_GRID_COUNT,
+} from "@/queries/home";
 import { formatBigo } from "@/utils/number";
 import { useMemo } from "react";
-
-import type { ArchiveSearchResult, BilingualText, CaseSearchCardEntity } from "@/types/search";
-import { translateDynamicText } from "@/lib/translate-dynamic-content";
-import { getSubjectEntities } from "@/utils/case-entities";
+import { caseCardPropsFromSearchResult } from "@/lib/case-card-props";
 import { useTranslation } from "react-i18next";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_NEPALI, SITE_URL } from "@/utils/seo";
-
-type CaseCardStatus = "ongoing" | "resolved" | "under-investigation";
-
-function stripTags(value: string): string {
-  return value.replace(/<[^>]*>/g, "");
-}
-
-function pickText(text: BilingualText | undefined): string {
-  return stripTags(text?.en || text?.ne || "");
-}
-
-function caseSlugFromUrl(url: string): string | null {
-  const match = /\/case\/([^/?#]+)/.exec(url);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-function mapCaseStatus(status: string | null | undefined): CaseCardStatus {
-  if (status === "ongoing") return "ongoing";
-  if (status === "closed") return "resolved";
-  return "under-investigation";
-}
-
-function entityNames(
-  entities: readonly CaseSearchCardEntity[],
-  fallback: string,
-): string[] {
-  return entities.map((entity) => entity.display_name || entity.nes_id || fallback);
-}
-
-function entityIds(entities: readonly CaseSearchCardEntity[]): string[] {
-  return entities
-    .map((entity) => entity.nes_id)
-    .filter((id): id is string => Boolean(id));
-}
-
-function recentCaseToCard(result: ArchiveSearchResult, currentLang: string) {
-  const card = result.card;
-  const entities = card?.entities ?? [];
-  const subjectEntities = getSubjectEntities<CaseSearchCardEntity>(
-    entities,
-    (entity) => entity.type,
-  );
-  const locationEntities = entities.filter((entity) => entity.type === "location");
-  const unknownEntity = translateDynamicText("Unknown Entity", currentLang);
-  const unknownLocation = translateDynamicText("Unknown Location", currentLang);
-  const names = entityNames(subjectEntities, unknownEntity);
-  const locations = entityNames(locationEntities, unknownLocation);
-
-  return {
-    id: result.id,
-    slug: card?.slug || caseSlugFromUrl(result.url),
-    title: card?.title || pickText(result.title) || result.id,
-    entity: names[0] || unknownEntity,
-    entityNames: names,
-    location: locations.join(", ") || unknownLocation,
-    status: mapCaseStatus(card?.status || result.extra.case_status),
-    thumbnailUrl: card?.thumbnail_url || undefined,
-    bannerUrl: card?.banner_url || undefined,
-    tags: card?.tags || [],
-    entityIds: entityIds(subjectEntities),
-    locationIds: entityIds(locationEntities),
-  };
-}
 
 const Index = () => {
   const { t, i18n } = useTranslation();
@@ -122,7 +62,7 @@ const Index = () => {
     if (!casesData?.results) return [];
     return casesData.results
       .slice(0, FEATURED_CASE_COUNT)
-      .map((result) => recentCaseToCard(result, currentLang));
+      .map((result) => caseCardPropsFromSearchResult(result, currentLang));
   }, [casesData, currentLang]);
 
   return (
@@ -172,8 +112,12 @@ const Index = () => {
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
 
-        {/* ── 2 September public event ── */}
-        <SeptemberEvent />
+        {/* Placement A for the 23/24 September launch: a band directly under
+            the hero, carrying the flyer and both start times. Removes itself
+            once the session is over; the strip above the navbar (placement B,
+            LaunchEventBar) is the other half. Both have to come out after the
+            24th — see launch-event.ts. */}
+        <LaunchEvent />
 
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">
@@ -195,42 +139,65 @@ const Index = () => {
             but external links to jawafdehi.org/#recent-cases would break. */}
         <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
           <div className="layout-container">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  {t("home.featuredCases.heading", "Featured Cases")}
-                </h2>
-                <p className="text-muted-foreground mt-1">
-                  {t(
-                    "home.featuredCases.subtitle",
-                    "Recent high-impact corruption cases under public scrutiny",
-                  )}
-                </p>
+            <Reveal>
+              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+                <div>
+                  {/* Same subtitle treatment and no one-off underline as the
+                      other sections (PR #359 visual review, item 5). One step
+                      down from FaqSection's heading scale, matching the CTA
+                      sections — the cards below carry this section, not the
+                      heading. */}
+                  <h2 className="text-3xl font-bold leading-tight tracking-normal text-primary md:text-4xl">
+                    {t("home.featuredCases.heading", "Featured Cases")}
+                  </h2>
+                  <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
+                    {t(
+                      "home.featuredCases.subtitle",
+                      "Recent high-impact corruption cases under public scrutiny",
+                    )}
+                  </p>
+                </div>
               </div>
-            </div>
+            </Reveal>
 
             {featuredCases.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {featuredCases.map((caseItem) => (
-                  <CaseCard key={caseItem.id} {...caseItem} />
-                ))}
-              </div>
+              <>
+                {/* The lead case gets the navy spotlight treatment; the rest
+                    stay on the standard card. Order comes from the editorial
+                    `weight` ranking in the search source. */}
+                <Reveal>
+                  <FeaturedCaseSpotlight {...featuredCases[0]} />
+                </Reveal>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
+                  {featuredCases.slice(1).map((caseItem, index) => (
+                    <Reveal key={caseItem.id} className="h-full" delayMs={(index % 3) * 90}>
+                      <CaseCard {...caseItem} />
+                    </Reveal>
+                  ))}
+                </div>
+              </>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {Array.from({ length: FEATURED_CASE_COUNT }, (_, i) => (
-                  <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
-                ))}
-              </div>
+              <>
+                <div className="h-72 rounded-3xl bg-muted animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
+                  {Array.from({ length: FEATURED_CASE_GRID_COUNT }, (_, i) => (
+                    <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              </>
             )}
 
-            <div className="text-center mt-10 mb-4 flex justify-center">
-              <Button variant="primary" size="xl" asChild>
-                <Link to="/search?type=case">
-                  {t("home.featuredCases.viewAll", "View all cases")}{" "}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
+            <Reveal>
+              <div className="text-center mt-10 mb-4 flex justify-center">
+                <Button variant="primary" size="xl" asChild className="group">
+                  <Link to="/search?type=case">
+                    {t("home.featuredCases.viewAll", "View all cases")}{" "}
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
+                  </Link>
+                </Button>
+              </div>
+            </Reveal>
           </div>
         </section>
 

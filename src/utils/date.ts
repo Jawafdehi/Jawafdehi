@@ -84,7 +84,7 @@ export function formatPublicationDate(value: string | null | undefined): string 
 // ── BS conversion ────────────────────────────────────────────────────────
 
 /** Convert an ISO date string → BS date (year, month, date, formatted). */
-function convertToBS(dateString: string | null | undefined) {
+export function convertToBS(dateString: string | null | undefined) {
   if (!dateString) return null;
   try {
     const d = parse(dateString);

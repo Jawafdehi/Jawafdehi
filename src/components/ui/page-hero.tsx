@@ -69,7 +69,13 @@ export function PageHero({
   );
 }
 
-function PageHeroBackdrop() {
+/**
+ * The site's hero backdrop — the blurred accent blobs and dot grid behind
+ * /about, /team etc. Exported for heroes with bespoke layouts (the /materials
+ * landing) so every page glows the same way. Host section needs
+ * `relative isolate overflow-hidden`; content sits at z-10.
+ */
+export function PageHeroBackdrop() {
   return (
     <>
       <div

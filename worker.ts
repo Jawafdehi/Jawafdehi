@@ -63,10 +63,15 @@ function securityHeaders(): Record<string, string> {
   //   connect-src — *.ingest.de.sentry.io (Sentry envelopes), googletagmanager +
   //                 *.google-analytics.com / *.analytics.google.com (GA4 collect),
   //                 cloudflareinsights.com (RUM /cdn-cgi/rum POST)
+  //   frame-src   — zeffy.com, the /donate donation form (components/donate/pay-card).
+  //                 There was no frame-src at all, so it fell through to
+  //                 `default-src 'self'` and the donation dialog would have opened
+  //                 on a blocked frame. Scoped to that one host: nothing else on
+  //                 this site frames a third party.
   // Without these the SPA loads gtag/Sentry/RUM but the browser blocks every
   // request, so analytics silently record nothing and prod errors never reach Sentry.
   return {
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.jawafdehi.org https://portal.jawafdehi.org https://jawafdehi.org https://nes.jawafdehi.org https://auth.jawafdehi.org https://*.ingest.de.sentry.io https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://cloudflareinsights.com; worker-src 'self' blob:;",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://www.zeffy.com; connect-src 'self' https://api.jawafdehi.org https://portal.jawafdehi.org https://jawafdehi.org https://nes.jawafdehi.org https://auth.jawafdehi.org https://*.ingest.de.sentry.io https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://cloudflareinsights.com; worker-src 'self' blob:;",
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',

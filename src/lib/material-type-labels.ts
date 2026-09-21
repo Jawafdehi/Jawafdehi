@@ -12,6 +12,9 @@
 /** i18n key suffix under dataQuality.materialsByType.type.* */
 export function materialTypeKeyFor(type: string): string {
   const map: Record<string, string> = {
+    // bolpatra's procurement notices are ~60% of the corpus; without this they
+    // fell through to "other".
+    procurement_notice: "procurementNotice",
     charge_sheet: "chargeSheet",
     precedent: "precedent",
     court_order: "courtOrder",

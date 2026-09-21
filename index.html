@@ -5,27 +5,13 @@
   <meta charset="UTF-8" />
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Both light and dark are designed and token-backed (see :root and .dark in
-       src/index.css). #279 set `only light`, correct while the app shipped a
-       single light theme; with a real dark theme it must become `light dark`.
-       Declaring it keeps UA widgets in step and still stops browsers
-       auto-inverting a theme we own. -->
-  <meta name="color-scheme" content="light dark" />
-
-  <!-- Applies the theme class before first paint. ThemeProvider intentionally
-       mounts only after hydration, so next-themes' own blocking script never
-       runs; without this a dark-preference visitor gets a full light page and
-       then an abrupt flip. Reads the same localStorage key next-themes uses. -->
-  <script>
-    (function () {
-      try {
-        var t = localStorage.getItem("theme");
-        var dark = t === "dark" || ((!t || t === "system") &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.classList.toggle("dark", dark);
-      } catch (e) {}
-    })();
-  </script>
+  <!-- The app ships a single light design system. #283 added a `.dark` token
+       block and `dark:` variants, but shipped no way to reach them: its theme
+       toggle was unmounted before merge, so `light dark` plus the pre-paint
+       script handed every OS-dark visitor a dark site with no way back.
+       Until a toggle ships, stay light-only: `only` also opts out of Chrome's
+       Auto Dark Theme, so browsers can't auto-invert our colours either. -->
+  <meta name="color-scheme" content="only light" />
   <!-- The in-app EN/NE language switcher is the single source of truth for language; suppress browser/Google page auto-translation so it can't compete with or re-translate curated content. -->
   <meta name="google" content="notranslate" />
   <!-- Icons. None of these were declared before, so /apple-touch-icon.png and
@@ -37,6 +23,13 @@
   <link rel="manifest" href="/site.webmanifest" />
   <!-- Must match the hex documented on --primary in src/index.css. -->
   <meta name="theme-color" content="#0E1F3B" />
+  <!-- The hero H1 renders in Vesper Libre Bold on every page's first paint.
+       Without a preload the font is only discovered after CSS parse, so the
+       headline sits ~2s in the Georgia fallback and then reflows — a swap
+       that alone eats most of the CLS budget on Slow 4G (PR #359 review).
+       `crossorigin` is required even same-origin: font fetches are CORS-mode,
+       and a mismatch makes the browser fetch the file twice. -->
+  <link rel="preload" href="/font/Vesper_Libre/VesperLibre-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <!-- Site-wide, so it lives here rather than in all 19 per-page Helmets. -->
   <meta name="twitter:site" content="@jawafdehi" />
   <!--helmet-title-->

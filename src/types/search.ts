@@ -2,6 +2,8 @@
 // One ranked, typed, bilingual result set across entities, materials, court
 // cases, and PUBLISHED Jawafdehi cases. Served by GET /api/search/.
 
+import type { CaseImage, CaseStage, CaseTrack } from "./jds";
+
 // The four indexed result domains. "all" is a UI-only sentinel (sent as "no type
 // filter"); it is never a value the backend returns on a result.
 export type ArchiveSearchResultType =
@@ -35,6 +37,29 @@ export interface ArchiveSearchParams {
   tags?: string[];
   // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
   status?: string[];
+  // Court-case location facets. They are meaningful only for court records, so
+  // ArchiveSearch discards them for every other record type before a request.
+  court?: string[];
+  court_type?: string[];
+  district?: string[];
+  province?: string[];
+  // What KIND of document a material is — the closed MaterialType vocabulary.
+  // MATERIAL-ONLY, and closed on the API side: an unlisted token is a 400, not an
+  // empty page, so ArchiveSearch discards it for every other record type.
+  material_type?: string[];
+  // Record-date bounds, Gregorian YYYY-MM-DD, both inclusive. The shared indexed
+  // `date`, so unlike the बिगो bounds these are meaningful for cases, materials
+  // and court cases alike — but entities carry no date, and a document with none
+  // cannot match a range clause, so any bound narrows to dated records only.
+  date_from?: string;
+  date_to?: string;
+  // बिगो (alleged embezzled amount, whole NPR) range bounds — the one refine
+  // control that is not exact-match. Both inclusive. CASE-ONLY: no entity,
+  // material or court-case document carries an amount, so either bound also
+  // excludes every non-case result and must be paired with `type: "case"`.
+  // Cases with no recorded amount (~9% of the corpus) are excluded by any bound.
+  bigo_min?: number;
+  bigo_max?: number;
   sort?: ArchiveSearchSort;
   page?: number;
   page_size?: number;
@@ -54,6 +79,11 @@ export interface ArchiveSearchFacets {
   case_type: SearchFacetItem[];
   tags: SearchFacetItem[];
   status: SearchFacetItem[];
+  court: SearchFacetItem[];
+  court_type: SearchFacetItem[];
+  district: SearchFacetItem[];
+  province: SearchFacetItem[];
+  material_type: SearchFacetItem[];
 }
 
 export interface CaseSearchCardEntity {
@@ -71,15 +101,59 @@ export interface CaseSearchCard {
   short_description: string | null;
   key_allegations: string[];
   tags: string[];
+  /** DEPRECATED alias of `offence_type`. */
   case_type: string | null;
+  /** The renamed `case_type`. Optional: a doc only gains it on reindex. */
+  offence_type?: string | null;
+  /** Which prosecution route the case took. Optional for the same reason. */
+  case_track?: CaseTrack | null;
+  /** DELIBERATELY the OLD three-value vocabulary: the indexer keeps writing it
+   * so deployed card badges do not break. The six-value lifecycle lives on the
+   * case API's own `status`. */
   status: "ongoing" | "closed" | "others";
-  case_start_date: string | null;
-  case_end_date: string | null;
+  /** Every pass of the case through a forum, denormalized at reindex time.
+   * Optional, not just nullable: docs indexed before this field existed carry
+   * no key at all and stay that way until their next reindex. */
+  stages?: CaseStage[];
+  /** Derived AD span of the whole case. Optional for the same reason. */
+  proceedings_started_on?: string | null;
+  proceedings_decided_on?: string | null;
+  /** DEPRECATED single range, superseded by `stages`. Do not read. */
+  case_start_date?: string | null;
+  case_end_date?: string | null;
   bigo: number | null;
+  /** Card ladder, denormalized into the index doc at reindex time.
+   *
+   * Optional, not just nullable: docs indexed before this field existed carry
+   * no `thumbnail` key at all, and they stay that way until their next reindex.
+   */
+  thumbnail?: CaseImage | null;
+  /** DEPRECATED bare URLs; the fallback for cases with no uploaded image. */
   thumbnail_url: string | null;
   banner_url: string | null;
   timeline: Array<Record<string, unknown>>;
   entities: CaseSearchCardEntity[];
+}
+
+// One side of a court case, as the search index stores it.
+//
+// `names` is CAPPED by the indexer (JawafdehiAPI `PARTY_NAME_CAP`, 5 today) and
+// `total` is not, so the two disagree on a case with many parties — and that is
+// the point: `total` is what a "+N others" affordance has to count from, or it
+// silently stops at the cap. It can also be 0 with an empty `names`, for a side
+// the record simply never named.
+export interface SearchResultPartySide {
+  names: string[];
+  total: number;
+}
+
+// Party names for a court-case hit, attributed to a side. Both keys are written
+// together, but each is optional here: a side the API could not attribute is
+// dropped rather than guessed at, since a wrong party on a court record is
+// worse than a missing one.
+export interface SearchResultParties {
+  plaintiff?: SearchResultPartySide;
+  defendant?: SearchResultPartySide;
 }
 
 // Type-specific metadata the service surfaces in the `extra` blob (all optional).
@@ -90,7 +164,16 @@ export interface SearchResultExtra {
   case_type?: string;
   case_status?: string;
   court?: string;
+  // Court tier: "district" | "high" | "special" | "supreme". Typed wide
+  // because it is promoted from a top-level index field and so is absent on
+  // documents indexed before that field existed — see `courtTypeValue`.
+  court_type?: string;
   case_number?: string;
+  // Optional for a stronger reason than the rest of this blob: unlike `court`,
+  // which every court-case document has ever carried, `parties` was added to
+  // the indexer later, so a document only gains it on reindex. Until the index
+  // is rebuilt this key is simply absent — the cards must render without it.
+  parties?: SearchResultParties;
 }
 
 // One result hit — the common envelope every type shares. Rich per-result
@@ -124,6 +207,18 @@ export interface ArchiveSearchCounts {
   case: number;
 }
 
+// Corpus extent of a range-filterable field — the SCALE a range control needs,
+// as distinct from the term buckets in `facets`. Keyed by request-param prefix:
+// `bigo` covers `bigo_min`/`bigo_max`. Computed by a `global` aggregation, so it
+// is a fixed property of the corpus and does NOT narrow with the active range —
+// otherwise dragging a thumb inward would pull the track in behind it.
+export interface SearchRangeExtent {
+  min: number;
+  max: number;
+  /** Documents carrying a recorded value at all — the rest any bound excludes. */
+  count: number;
+}
+
 export interface ArchiveSearchResponse {
   query: string;
   lang: string;
@@ -133,8 +228,37 @@ export interface ArchiveSearchResponse {
   count: number;
   counts: Partial<ArchiveSearchCounts>;
   facets: ArchiveSearchFacets;
+  // Optional: older cached responses and test fixtures predate it.
+  extents?: Partial<Record<"bigo", SearchRangeExtent>>;
   results: ArchiveSearchResult[];
   next_cursor: string | null;
+  // A single suggested spelling for the query, or null when there is nothing to
+  // suggest. The backend offers one on either of two conditions: the search
+  // returned nothing, OR it returned only fuzzy matches — meaning no result
+  // matched the query as typed, so the hits have no exactly-matching anchor. A
+  // correctly spelled query that found real records never carries one.
+  //
+  // So it is NOT only an empty-state affordance: `?q=coruption` returns 199 real
+  // records AND a suggestion of "corruption". Render it in both cases.
+  //
+  // EXPECT IT TO COME AND GO, and do not treat that as a bug. The second
+  // condition is judged from the returned page — the backend reads which of its
+  // two recall routes matched each hit — so it is only asked on the FIRST page of
+  // a RELEVANCE-sorted search, the one place where "the exact matches come first"
+  // makes a page speak for the whole result set. Page 2, or a switch to
+  // `newest`/`oldest`/`title`/`featured`, therefore returns null for a query that
+  // carried a suggestion on page 1. That is deliberate: the backend declines to
+  // argue with results it cannot verify. The first condition (no results at all)
+  // reads the total, so it is unaffected by page or sort.
+  //
+  // This matches how the page requests search anyway — a typed query defaults to
+  // `relevance` (see `parseParams`) — so the common path is unaffected.
+  //
+  // Never apply it automatically. Silently rewriting a search for a person's name
+  // in an accountability archive would show the reader records about someone they
+  // did not ask about, with no indication it happened. It is an offer the reader
+  // accepts. Optional in the type because older cached responses / mocks omit it.
+  did_you_mean?: string | null;
   // Ephemeral per-response id (not a user/session id). Echoed back on a result
   // click (POST /api/search/click) to join query → clicked result server-side.
   // Optional: older cached responses / mocks may omit it.

@@ -5,11 +5,16 @@ import { MemoryRouter } from "react-router-dom";
 import { CaseCard } from "@/components/CaseCard";
 import { CASE_PLACEHOLDER_IMAGE } from "@/lib/case-images";
 
-// Passthrough translations so assertions don't depend on i18n resources.
+// Passthrough translations so assertions don't depend on i18n resources, with
+// one interpolating branch standing in for en.json's "X with N others" (see the
+// entity-summary suite at the bottom).
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string | Record<string, unknown>) =>
-      typeof fallback === "string" ? fallback : key,
+    t: (key: string, fallback?: string | Record<string, unknown>) => {
+      if (typeof fallback === "string") return fallback;
+      if (fallback && "name" in fallback) return `${fallback.name} +${fallback.count}`;
+      return key;
+    },
     i18n: { language: "en" },
   }),
 }));
@@ -163,5 +168,126 @@ describe("CaseCard image fallback", () => {
     // already failed, which would loop the error handler forever.
     fireEvent.error(image);
     expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
+  });
+});
+
+describe("CaseCard uploaded image", () => {
+  const uploaded = {
+    src: "https://s3.jawafdehi.org/case_uploads/abc.width-1200.format-webp.webp",
+    srcset:
+      "https://s3.jawafdehi.org/case_uploads/abc.width-400.format-webp.webp 400w, " +
+      "https://s3.jawafdehi.org/case_uploads/abc.width-1200.format-webp.webp 1200w",
+    width: 1200,
+    height: 800,
+    alt: "",
+  };
+
+  it("renders the rendition ladder with a sizes hint", () => {
+    const { image } = renderCard({ image: uploaded });
+
+    expect(image.getAttribute("src")).toBe(uploaded.src);
+    expect(image.getAttribute("srcset")).toBe(uploaded.srcset);
+    // Without `sizes` the browser assumes 100vw and picks the widest tier on
+    // every card, which is most of what the ladder exists to avoid.
+    expect(image.getAttribute("sizes")).toBeTruthy();
+    // No width/height: CSS sizes this image in both dimensions, so the
+    // attributes' only effect (the UA aspect-ratio hint) would not apply, and
+    // the fixed-height container already reserves the box.
+    expect(image.getAttribute("width")).toBeNull();
+    expect(image.getAttribute("height")).toBeNull();
+  });
+
+  it("prefers the uploaded image over a legacy URL on the same case", () => {
+    const { image } = renderCard({
+      image: uploaded,
+      thumbnailUrl: "https://cdn.example.org/legacy.jpg",
+    });
+
+    expect(image.getAttribute("src")).toBe(uploaded.src);
+  });
+
+  it("drops the srcset when a load error falls back past the ladder", () => {
+    const { image } = renderCard({
+      image: uploaded,
+      thumbnailUrl: "https://cdn.example.org/legacy.jpg",
+    });
+
+    fireEvent.error(image);
+
+    // The legacy URL has no renditions. Leaving the old srcset attached would
+    // have the browser keep fetching the tier that just failed and never reach
+    // the fallback at all.
+    expect(image.getAttribute("src")).toBe("https://cdn.example.org/legacy.jpg");
+    expect(image.getAttribute("srcset")).toBeNull();
+  });
+
+  it("falls through to the placeholder when the uploaded image fails and nothing else is set", () => {
+    const { image } = renderCard({ image: uploaded });
+
+    fireEvent.error(image);
+
+    expect(image.getAttribute("src")).toBe(CASE_PLACEHOLDER_IMAGE);
+    expect(image.getAttribute("srcset")).toBeNull();
+    expect(image.getAttribute("alt")).toBe("");
+  });
+});
+
+// The entity summary moved out to the shared `summarizeNames` in the
+// court-case-parties change, and nothing in the repo pinned it — so a refactor
+// of the util could quietly change what every case card shows. These are the
+// behaviours the move was supposed to preserve.
+describe("CaseCard entity summary", () => {
+  const summaryOf = (props: Partial<React.ComponentProps<typeof CaseCard>>) => {
+    const { container } = render(
+      <MemoryRouter>
+        <CaseCard {...baseProps} {...props} />
+      </MemoryRouter>,
+    );
+    // The entity row is the first line of the meta block; its `title` carries
+    // the full unabbreviated list, which is how the row is identified here.
+    const row = container.querySelector(`[title="${props.entity ?? baseProps.entity}"]`);
+    return row?.textContent ?? "";
+  };
+
+  it("shows a lone entity name with no count", () => {
+    expect(summaryOf({ entity: "Nepal Telecom", entityNames: ["Nepal Telecom"] })).toBe(
+      "Nepal Telecom",
+    );
+  });
+
+  it("names the first entity and counts the rest", () => {
+    expect(
+      summaryOf({
+        entity: "Nepal Telecom, Ncell, Smart Cell",
+        entityNames: ["Nepal Telecom", "Ncell", "Smart Cell"],
+      }),
+    ).toBe("Nepal Telecom +2");
+  });
+
+  it("falls back to splitting the joined entity string when there is no list", () => {
+    // Older callers pass only `entity`. The split has to survive the move to
+    // the shared util, including the whitespace after each comma.
+    expect(summaryOf({ entity: "Nepal Telecom, Ncell" })).toBe("Nepal Telecom +1");
+  });
+
+  it("trims the names it is handed", () => {
+    // A behaviour CHANGE from before the shared util, recorded deliberately:
+    // entity names used to render with their surrounding whitespace intact.
+    expect(summaryOf({ entity: "  Nepal Telecom  ", entityNames: ["  Nepal Telecom  "] })).toBe(
+      "Nepal Telecom",
+    );
+  });
+
+  it("keeps an entity name that carries its own समेत, without adding a count", () => {
+    // Also a behaviour change from before the shared util: the marker rule
+    // written for court-case parties applies to case entities too, since both
+    // cards now go through one summary.
+    expect(
+      summaryOf({ entity: "क समेत, ख", entityNames: ["क समेत", "ख"] }),
+    ).toBe("क समेत");
+  });
+
+  it("falls back to the raw entity string when the list is unusable", () => {
+    expect(summaryOf({ entity: "Unknown Entity", entityNames: ["   "] })).toBe("Unknown Entity");
   });
 });

@@ -2,8 +2,16 @@ import { searchArchive } from "@/services/search-api";
 
 import type { ArchiveSearchResponse } from "@/types/search";
 
-/** How many case cards the homepage "Featured Cases" grid shows. */
-export const FEATURED_CASE_COUNT = 6;
+/** How many case cards the homepage "Featured Cases" grid shows below the lead. */
+export const FEATURED_CASE_GRID_COUNT = 6;
+
+/**
+ * How many cases the homepage fetches: the spotlight lead plus the grid below
+ * it. Kept derived — the section renders `results[0]` as the spotlight and the
+ * rest as the grid, so a bare count here reads as the grid size and lands one
+ * card short.
+ */
+export const FEATURED_CASE_COUNT = FEATURED_CASE_GRID_COUNT + 1;
 
 /**
  * The one definition of the homepage featured-cases query, shared by the client

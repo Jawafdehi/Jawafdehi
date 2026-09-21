@@ -7,14 +7,15 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDateForLanguage } from "@/utils/date";
+import { formatDate } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
   outcomeBadgeClass,
-  outcomeLabel,
+  outcomeWithForumLabel,
   shouldShowOutcome,
 } from "@/utils/case-outcome";
+import { caseVerdictForum } from "@/utils/case-stages";
 import {
   judicialStatusBadgeClass,
   judicialStatusLabel,
@@ -36,22 +37,10 @@ const ROLE_LABEL_KEY: Record<string, string> = {
   location: "entityDetail.relationTypeLocation",
 };
 
-// First page only — the corpus is small and an entity rarely spans many cases.
-const PAGE_SIZE = 20;
-
-// Which court handed down the verdict, for the outcome chip.
-//
-// "Convicted" on its own does not say who convicted them, which matters most on
-// exactly the cases where it is contested — a Special Court conviction under
-// appeal is not the same claim as a settled one. Only qualify when the case
-// actually cites a Special Court proceeding; the archive also holds Revenue
-// Tribunal and writ matters, where "विशेष अदालतबाट" would be false.
-const SPECIAL_COURT_IRI = /\/courtcase\/special\//i;
-
-const SPECIAL_COURT_OUTCOME_KEY: Record<string, string> = {
-  convicted: "entityDetail.outcomeConvictedSpecial",
-  acquitted: "entityDetail.outcomeAcquittedSpecial",
-};
+// One page holds the lot: the corpus is small (the busiest entity has ~20
+// cases) and the list scrolls inside its column, so nothing is left behind a
+// "+N more" line short of an entity with over fifty citations.
+const PAGE_SIZE = 50;
 
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
@@ -61,7 +50,7 @@ function isAccusedTier(role: string): boolean {
 // The date a card is ordered by — the same one it displays. Falls back to the
 // record's creation time only when the case has no start date of its own.
 function sortDateOf(caseItem: Case): string {
-  return caseItem.case_start_date || caseItem.created_at || "";
+  return caseItem.proceedings_started_on || caseItem.created_at || "";
 }
 
 // This entity's role/verdict on a given case, read from the case's own entity
@@ -80,7 +69,10 @@ function roleFor(caseItem: Case, entityIri: string) {
  * everything else reverse-chronologically below. Renders nothing when the entity
  * has no published citations (or on error), so it can be dropped in unconditionally.
  */
-export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
+export function EntityRelatedCases({
+  entityIri,
+  className,
+}: Readonly<{ entityIri: string; className?: string }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language === "ne" ? "ne" : "en";
 
@@ -102,13 +94,13 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
     );
   }
 
-  // Hide the whole section when there are no published citations (or on error).
-  if (isError || !data || data.count === 0) return null;
+  // Nothing to say on error; an empty result keeps the heading and says so.
+  if (isError || !data) return null;
 
   // accused/alleged first, then newest case first within each tier.
   //
-  // Sort on the SAME date the card shows (`case_start_date`, i.e. when the case
-  // began) rather than `created_at` (when we happened to author the record).
+  // Sort on the SAME date the card shows (`proceedings_started_on`, i.e. when
+  // the case began) rather than `created_at` (when we happened to author the record).
   // Those orders are unrelated: this entity's five cases were authored in the
   // reverse of their real chronology, so ordering by `created_at` rendered the
   // dates on screen as an apparently random sequence.
@@ -122,66 +114,48 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
   const remaining = data.count - cases.length;
 
   return (
-    <section aria-labelledby="related-cases-heading" className="space-y-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2
-          id="related-cases-heading"
-          className="text-xl font-semibold tracking-tight text-primary"
-        >
+    // A flex column so a height-constrained parent makes the LIST scroll while
+    // the heading and the "more" line stay put.
+    <section aria-labelledby="related-cases-heading" className={cn("flex min-h-0 flex-col", className)}>
+      <div className="flex shrink-0 items-baseline justify-between gap-3">
+        <h2 id="related-cases-heading" className="text-lg font-semibold text-foreground">
           {t("entityDetail.relatedCases")}
         </h2>
-        <span className="text-sm font-medium text-muted-foreground">{data.count}</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          {data.count} {t(data.count === 1 ? "entityDetail.caseOne" : "entityDetail.cases").toLowerCase()}
+        </span>
       </div>
 
-      <ul className="space-y-3">
+      {data.count === 0 ? (
+        <p className="mt-4 rounded-xl bg-muted/50 p-5 text-sm text-muted-foreground">
+          {t("entityDetail.noRelatedCases")}
+        </p>
+      ) : null}
+
+      <ul className="mt-4 min-h-0 space-y-4 overflow-y-auto pr-1 [scrollbar-width:thin]">
         {cases.map((c) => {
           const { role, outcome } = roleFor(c, entityIri);
           const accused = isAccusedTier(role);
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          // Label the dates rather than printing a bare one. `case_start_date`
-          // is when the case was filed and `case_end_date` when it was decided —
-          // an unlabelled date left the reader guessing which they were seeing,
-          // and on a decided case the filing date alone reads as stale.
-          //
-          // `created_at` is when WE authored the record, not a fact about the
-          // case, so it is no longer used as a fallback: an authoring timestamp
-          // presented as a case date is simply wrong. A case with no filing date
-          // shows no date at all.
-          // Bikram Sambat leads in the Nepali UI, Gregorian in the English one —
-          // `formatDateForLanguage` is the shared helper the case surfaces
-          // already use for this. The other calendar comes back as `secondary`
-          // and is carried in `title`, so the Gregorian date stays available on
-          // hover without a second date cluttering every row.
-          //
-          // These cases carry no curated BS override (only timeline entries have
-          // `date_bs`), so the BS date is converted from the Gregorian one.
-          const filed = c.case_start_date
-            ? formatDateForLanguage(c.case_start_date, "PP", null, i18n.language)
-            : null;
-          const decided = c.case_end_date
-            ? formatDateForLanguage(c.case_end_date, "PP", null, i18n.language)
-            : null;
-          const typeKey = getCaseTypeLabelKey(c.case_type);
-          const typeLabel = typeKey ? t(typeKey) : c.case_type;
+          const date = formatDate(c.proceedings_started_on || c.created_at);
+          const offenceType = c.offence_type || c.case_type;
+          const typeKey = getCaseTypeLabelKey(offenceType);
+          const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
           const status = judicialStatusOf(c, outcome);
-          const inSpecialCourt = (c.court_cases ?? []).some((iri) =>
-            SPECIAL_COURT_IRI.test(iri ?? ""),
-          );
-          const outcomeKey = String(outcome ?? "").toLowerCase();
 
           const row = (
             <div
               className={cn(
-                "group flex items-start gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-border hover:bg-muted/50",
+                "group flex items-start gap-3 rounded-xl border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-border hover:bg-muted/40",
                 accused && "border-l-4 border-l-accent",
               )}
             >
               {/* Title leads: it is what a reader scans for. The role/verdict
                   badges and the type · date · amount meta sit under it. */}
-              <div className="min-w-0 flex-1 space-y-2">
+              <div className="min-w-0 flex-1 space-y-3">
                 <h3 className="line-clamp-2 text-base font-semibold leading-snug text-primary group-hover:underline">
                   {c.title}
                 </h3>
@@ -197,9 +171,11 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                   </Badge>
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
-                      {inSpecialCourt && SPECIAL_COURT_OUTCOME_KEY[outcomeKey]
-                        ? t(SPECIAL_COURT_OUTCOME_KEY[outcomeKey])
-                        : outcomeLabel(outcome, language)}
+                      {outcomeWithForumLabel(
+                        outcome,
+                        caseVerdictForum(c.dates, language),
+                        language,
+                      )}
                     </Badge>
                   ) : null}
                   {/* Where the case itself has got to, as opposed to what
@@ -208,57 +184,22 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
                     {judicialStatusLabel(status, language)}
                   </Badge>
                 </div>
-
-                <dl className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-                  <div className="flex items-baseline gap-1.5">
-                    <dt className="text-muted-foreground">{typeLabel}</dt>
-                  </div>
-                  {filed ? (
-                    <div className="flex items-baseline gap-1.5">
-                      <dt className="text-muted-foreground">
-                        {t("entityDetail.relatedCaseFiled")}:
-                      </dt>
-                      <dd
-                        className="font-medium text-foreground"
-                        title={filed.secondary ?? undefined}
-                      >
-                        {filed.primary}
-                      </dd>
-                    </div>
-                  ) : null}
-                  {decided ? (
-                    <div className="flex items-baseline gap-1.5">
-                      <dt className="text-muted-foreground">
-                        {t("entityDetail.relatedCaseDecided")}:
-                      </dt>
-                      <dd
-                        className="font-medium text-foreground"
-                        title={decided.secondary ?? undefined}
-                      >
-                        {decided.primary}
-                      </dd>
-                    </div>
-                  ) : null}
-                </dl>
-
-                {/* The bigo line renders on EVERY card so the figure is always
-                    in the same place and its absence is legible as a gap in the
-                    record rather than an oversight.
-                    `formatBigo(0)` is the literal "Rs 0", so a falsy bigo is
-                    reported as unrecorded — a missing amount is not a
-                    zero-rupee case. */}
-                <p className="text-sm">
-                  <span className="text-muted-foreground">{t("caseCard.bigo")}: </span>
-                  {c.bigo ? (
-                    <span className="font-semibold tabular-nums text-accent">
+                {/* Its own line now that the badge row carries three chips, and
+                    at text-sm/foregroundish rather than text-xs/muted — against
+                    a muted card the old meta line read as disabled text. */}
+                <div className="text-sm text-foreground/70">
+                  {[typeLabel, date].filter(Boolean).join(" · ")}
+                </div>
+                {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
+                    amount — a missing bigo is not a zero-rupee case. */}
+                {c.bigo ? (
+                  <p className="text-sm text-foreground/70">
+                    <span>{t("caseCard.bigo")}: </span>
+                    <span className="font-semibold tabular-nums text-foreground">
                       {formatBigo(c.bigo)}
                     </span>
-                  ) : (
-                    <span className="italic text-muted-foreground">
-                      {t("entityDetail.relatedCaseBigoUnknown")}
-                    </span>
-                  )}
-                </p>
+                  </p>
+                ) : null}
               </div>
               {href ? (
                 <ArrowRight
@@ -287,7 +228,7 @@ export function EntityRelatedCases({ entityIri }: { entityIri: string }) {
       </ul>
 
       {remaining > 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-4 shrink-0 text-sm text-muted-foreground">
           {t("entityDetail.moreCases", { count: remaining })}
         </p>
       ) : null}

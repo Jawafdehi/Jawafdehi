@@ -42,9 +42,22 @@ describe("sourceKeyFor", () => {
     expect(sourceKeyFor("social_media")).toBe("socialMedia");
   });
 
+  it("folds outlet-named news tokens into the news row", () => {
+    expect(sourceKeyFor("news_setopati")).toBe("news");
+    expect(sourceKeyFor("news_shilaptra")).toBe("news");
+  });
+
   it("leaves generic mixed-provenance uploads under other", () => {
     // `document` has no single issuing office, so it falls through to "other".
     expect(sourceKeyFor("document")).toBe("other");
+  });
+
+  it("names procurement feeds after the PPMO", () => {
+    // bolpatra.gov.np is operated by the PPMO — the records themselves carry
+    // publisher "Public Procurement Monitoring Office". At ~206k notices it is
+    // the single largest source and must not fall through to "other".
+    expect(sourceKeyFor("bolpatra")).toBe("ppmo");
+    expect(sourceKeyFor("ppmo")).toBe("ppmo");
   });
 
   it("still maps the smaller known feeds", () => {

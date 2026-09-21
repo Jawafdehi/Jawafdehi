@@ -51,6 +51,18 @@ describe("judicialStatusOf", () => {
     ).toBe("special_decided");
   });
 
+  it("reads the derived end date, not just the deprecated alias", () => {
+    // `proceedings_decided_on` is what the API now serves; `case_end_date` is
+    // the deprecated alias it replaced, so a payload carrying only the new
+    // field must still read as decided.
+    expect(
+      judicialStatusOf({
+        court_cases: [SPECIAL],
+        proceedings_decided_on: "2024-05-07",
+      }),
+    ).toBe("special_decided");
+  });
+
   it("treats a recorded verdict as decided even without an end date", () => {
     expect(
       judicialStatusOf({ court_cases: [SPECIAL], case_end_date: null }, "acquitted"),

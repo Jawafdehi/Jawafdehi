@@ -103,6 +103,54 @@ describe('the sticky header is opaque once scrolled', () => {
   });
 });
 
+describe('the header is light-on-dark over the home hero', () => {
+  // The home hero became a full-bleed navy stage. The at-rest header is
+  // transparent directly on top of it, where the navy wordmark (logo.svg)
+  // and navy nav text would be invisible. So on "/" only, the at-rest header
+  // swaps to the light logo cut and light text, and snaps back to the normal
+  // treatment the moment the opaque background arrives (isScrolled).
+  afterEach(cleanup);
+
+  function renderAt(path: string) {
+    const { container } = render(
+      <MemoryRouter initialEntries={[path]}>
+        <Navbar />
+      </MemoryRouter>,
+    );
+    return container;
+  }
+
+  function logoTokens(container: HTMLElement) {
+    const darkLogo = container.querySelector('img[src="/assets/logo-dark.svg"]');
+    expect(darkLogo, 'the light logo cut is no longer rendered').not.toBeNull();
+    return (darkLogo as HTMLElement).className.split(/\s+/).filter(Boolean);
+  }
+
+  it('shows the light logo cut at the top of the home page', () => {
+    const tokens = logoTokens(renderAt('/'));
+
+    expect(
+      tokens,
+      'at rest over the navy home hero the light logo must be visible — the navy wordmark vanishes',
+    ).toContain('block');
+    expect(tokens).not.toContain('hidden');
+  });
+
+  it('returns to the navy logo once scrolled onto the opaque light band', () => {
+    const container = renderAt('/');
+    scrollTo(240);
+
+    expect(
+      logoTokens(container),
+      'scrolled, the header is an opaque light band — the light logo would vanish on it',
+    ).toContain('hidden');
+  });
+
+  it('keeps the navy logo on pages that open on a light surface', () => {
+    expect(logoTokens(renderAt('/about'))).toContain('hidden');
+  });
+});
+
 describe('the skip link clears the sticky header', () => {
   // Same root cause, different symptom: 76px of sticky chrome that in-page jumps
   // do not know about. Without a scroll-margin the "skip to content" link — the

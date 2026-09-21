@@ -77,17 +77,22 @@ const DECIDED_OUTCOMES = new Set(["convicted", "acquitted", "abated"]);
  * Precedence is deliberate: an appeal outranks the verdict below it, because the
  * Special Court's decision is no longer the final word once it has been appealed.
  *
- * `case_end_date` is the primary signal for a decided case — it is the date the
- * case concluded. `outcome` is a secondary signal for the same thing: a case can
- * carry a recorded verdict for this entity while its end date is still blank, and
+ * The case's end date is the primary signal for a decided case — it is the date
+ * the case concluded. Read it off `proceedings_decided_on`, the server-derived
+ * span over `dates.stages`; `case_end_date` is the DEPRECATED alias it replaced
+ * and is kept only as a fallback for payloads that still carry the old field.
+ * `outcome` is a secondary signal for the same thing: a case can carry a
+ * recorded verdict for this entity while its end date is still blank, and
  * showing "hearing ongoing" next to "Convicted" would contradict itself.
  */
 export function judicialStatusOf(
-  caseItem: Pick<Case, "court_cases" | "case_end_date">,
+  caseItem: Pick<Case, "court_cases" | "case_end_date" | "proceedings_decided_on">,
   outcome?: string | null,
 ): JudicialStatus {
   if (hasSupremeAppeal(caseItem.court_cases)) return "supreme_appeal";
-  if (caseItem.case_end_date) return "special_decided";
+  if (caseItem.proceedings_decided_on || caseItem.case_end_date) {
+    return "special_decided";
+  }
   if (outcome && DECIDED_OUTCOMES.has(String(outcome).toLowerCase())) {
     return "special_decided";
   }

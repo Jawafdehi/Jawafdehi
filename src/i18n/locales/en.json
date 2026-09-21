@@ -146,11 +146,13 @@
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover"
+      "coverageLink": "See what we cover",
+      "scrollCue": "Scroll"
     },
     "featuredCases": {
       "heading": "Featured Cases",
       "subtitle": "Recent high-impact corruption cases under public scrutiny",
+      "spotlightLabel": "Featured case",
       "viewAll": "View all cases"
     },
     "mission": {
@@ -179,23 +181,6 @@
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
     }
-  },
-  "septemberEvent": {
-    "eyebrow": "Public event · Free · Open to everyone",
-    "title": "Building Nepal's online corruption database",
-    "description": "We will go through the archive in the open: where the records come from, and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
-    "dateUs": "Wednesday 2 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
-    "dateNepal": "Thursday 3 September 2026 in Nepal, 6:45 AM (भदौ १८)",
-    "formatZoom": "Zoom",
-    "formatFacebook": "live on Facebook",
-    "cta": "Register free",
-    "viewFlyer": "View the full flyer",
-    "flyerAlt": "Event flyer: Building Nepal's Online Corruption Database. 2 September, 6 PM Pacific; 3 September, 6:45 AM Nepal time. Register at jawafdehi.org/september-2.",
-    "barLabel": "Upcoming public event",
-    "barTitle": "Public event",
-    "barWhenParts": ["2 September, 6 PM Pacific", "3 September, 6:45 AM in Nepal"],
-    "barCta": "Register free",
-    "barDismiss": "Dismiss event announcement"
   },
   "ourProcess": {
     "hero": {
@@ -389,13 +374,17 @@
   },
   "donate": {
     "hero": {
-      "support": "Keep Nepal's",
-      "accountabilityArchive": "accountability archive",
-      "alive": "alive",
+      "titleLead": "Help keep the",
+      "titleHighlight": "permanent record of corruption",
+      "titleTail": "alive",
       "description": "Jawafdehi is run by volunteers and funded by people who believe corruption should never be forgotten. Your donation pays for the servers, document archiving, and tooling that keep this public record permanent and free for everyone.",
       "giveNow": "Ways to contribute",
       "contactUs": "Contact us",
-      "email": "Email us"
+      "email": "Email us",
+      "stats": {
+        "cases": "Cases documented",
+        "entities": "Entities tracked"
+      }
     },
     "impact": {
       "eyebrow": "Where your money goes",
@@ -420,6 +409,22 @@
         }
       ]
     },
+    "outcomes": {
+      "items": [
+        {
+          "title": "Cases published",
+          "desc": "Sourced, verified, and legally reviewed before anything goes public."
+        },
+        {
+          "title": "An archive that stays online",
+          "desc": "Independent and permanent — corruption records that cannot quietly disappear."
+        },
+        {
+          "title": "Free for every citizen",
+          "desc": "No paywalls, no ads. Every case, entity, and document open to read, search, and reuse."
+        }
+      ]
+    },
     "ways": {
       "title": "Two ways to give",
       "nepali": {
@@ -431,6 +436,8 @@
         "bankName": "Prime Commercial Bank",
         "branchName": "Pushpalal Chowk, Biratnagar",
         "copyAria": "Copy Nepali bank account number",
+        "copyNameAria": "Copy account name",
+        "copyBankAria": "Copy bank name",
         "qrTitle": "Scan to pay",
         "qrDescription": "Scan with any mobile banking app or digital wallet on either Nepali QR network.",
         "walletSwitchAria": "Choose a QR network",
@@ -447,8 +454,16 @@
       },
       "us": {
         "whoFor": "If you are giving from anywhere outside Nepal",
-        "proceedsNote": "PayPal Giving Fund processes your gift and grants it to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
+        "proceedsNote": "Either option delivers your gift to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
+        "capitalControlNote": "Nepal's capital control policies do not allow donations from abroad to be paid into our Nepal bank account. Jawafdehi Initiative, Inc. holds the approval to fund the project in Nepal, so this is the one route for a gift from outside the country.",
         "title": "From outside Nepal",
+        "zeffy": {
+          "title": "Zeffy",
+          "detail": "Card or bank — one-time or recurring, with an automatic receipt",
+          "cta": "Donate via Zeffy",
+          "dialogTitle": "Donate to Jawafdehi through Zeffy",
+          "dialogDescription": "A secure donation form hosted by Zeffy. Press Escape to close it."
+        },
         "paypal": {
           "title": "PayPal",
           "detail": "Card, bank, or PayPal balance",
@@ -476,7 +491,7 @@
       "items": [
         {
           "q": "Can I give monthly instead of once?",
-          "a": "Yes. PayPal supports recurring gifts, so you can choose one-time or monthly support before confirming your donation."
+          "a": "Yes. Zeffy and PayPal both support recurring gifts, so you can choose one-time or monthly support before confirming your donation."
         },
         {
           "q": "Where exactly does the money go?",
@@ -489,8 +504,18 @@
         {
           "q": "Can I support Jawafdehi without donating money?",
           "a": "Yes. You can help with research, translation, design, engineering, documentation, outreach, or reviewing public records. Email us and tell us how you would like to contribute."
+        },
+        {
+          "q": "Will I get a receipt?",
+          "a": "If you give through **Zeffy** or **PayPal Giving Fund**, a receipt is emailed to you automatically. For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org** with your transfer details and we will confirm your contribution."
         }
       ]
+    },
+    "journey": {
+      "you": "Your donation",
+      "stageGive": "You give",
+      "stageAllocated": "It covers",
+      "stageBecomes": "It becomes"
     }
   },
   "products": {
@@ -575,7 +600,15 @@
     "severity": "Severity",
     "filed": "Filed",
     "location": "Location",
-    "period": "Case Date",
+    "stages": {
+      "investigation": "Investigation",
+      "initial": "First instance",
+      "appeal": "Appeal",
+      "review": "Review",
+      "other": "Other"
+    },
+    "stagePending": "Decision pending",
+    "caseTimeline": "Case Timeline",
     "byline": {
       "firstPublished": "First published {{date}}.",
       "editHistory_one": "{{count}} subsequent edit",
@@ -599,6 +632,8 @@
       "unknown": "Other Related Parties"
     },
     "andMoreAccused": "and {{count}} more",
+    "showMoreParties": "View {{count}} more",
+    "showLessParties": "View less",
     "evidence": "Evidence & Sources",
     "missingDetails": "Missing Details",
     "notes": "Notes",
@@ -639,7 +674,9 @@
       "ongoing": "Ongoing",
       "concluded": "Concluded",
       "resolved": "Resolved",
-      "underInvestigation": "Under Investigation"
+      "underInvestigation": "Under Investigation",
+      "withdrawn": "Withdrawn",
+      "dormant": "Dormant"
     },
     "comments": {
       "title": "Public Discussion",
@@ -990,7 +1027,11 @@
     "loading": "Loading…",
     "notAvailable": "N/A",
     "view": "View",
-    "viewDetails": "View Details →"
+    "viewDetails": "View Details →",
+    "nameSummary": {
+      "withOthers_one": "{{name}} with {{count}} other",
+      "withOthers_other": "{{name}} with {{count}} others"
+    }
   },
   "themeToggle": {
     "toggleTheme": "Toggle theme",
@@ -1010,12 +1051,6 @@
       "medium": "Medium",
       "high": "High",
       "critical": "Critical"
-    },
-    "entitySummary": {
-      "withOthers_one": "{{name}} with {{count}} other",
-      "withOthers_other": "{{name}} with {{count}} others",
-      "withOthersNepali_one": "{{name}} with {{countLabel}} other",
-      "withOthersNepali_other": "{{name}} with {{countLabel}} others"
     }
   },
   "entityCard": {
@@ -1039,7 +1074,7 @@
     "allegedCases": "Accused Cases",
     "relatedCases": "Related Cases",
     "noAllegedCases": "No accused cases found.",
-    "noRelatedCases": "No related cases found.",
+    "noRelatedCases": "No related cases yet.",
     "moreCases": "+{{count}} more",
     "loading": "Loading entity details...",
     "activeCases": "Active Cases",
@@ -1108,6 +1143,7 @@
     "constituency": "Constituency",
     "totalAllegations": "Total Accusations",
     "cases": "Cases",
+    "caseOne": "Case",
     "entityDetails": "Entity Details",
     "noNesDataAlert": "This entity does not have detailed profile information available yet. Only basic information from case records is shown.",
     "allegedCasesDescription": "Cases where this entity is accused of involvement",
@@ -1179,7 +1215,12 @@
     "shareOnViber": "Share on Viber",
     "shareOnReddit": "Share on Reddit",
     "shareOnMessenger": "Share on Messenger",
-    "shareOnThreads": "Share on Threads"
+    "shareOnThreads": "Share on Threads",
+    "shareOnInstagram": "Share on Instagram",
+    "shareOnTikTok": "Share on TikTok",
+    "appOnlyHandoff": "Link copied. {{platform}} only accepts posts made in the app — paste it there.",
+    "appOnlyHandoffNoCopy": "{{platform}} only accepts posts made in the app. Copy this page's link and paste it there.",
+    "printLetterheadTagline": "Corruption case record"
   },
   "courts": {
     "supreme": "Supreme Court",
@@ -1187,7 +1228,44 @@
   },
   "courtCaseDetail": {
     "relatedCases": "Related Jawafdehi Cases",
-    "moreCases": "+{{count}} more"
+    "moreCases": "+{{count}} more",
+    "viewCase": "View case"
+  },
+  "courtCaseProfile": {
+    "fallbackTitle": "Court case",
+    "backToSearch": "Back to search",
+    "notFound": "This court case could not be found in the Jawafdehi governance archive.",
+    "contents": "Contents",
+    "summary": "Case summary",
+    "parties": "Parties",
+    "vs": "VS",
+    "noParties": "No party recorded",
+    "showMore": "Show {{count}} more",
+    "showLess": "Show less",
+    "labels": {
+      "caseNumber": "Case number",
+      "court": "Court",
+      "registered": "Registered",
+      "decisionDate": "Decision date",
+      "plaintiff": "Plaintiff",
+      "defendant": "Defendant"
+    },
+    "activity": {
+      "heading": "Case activity",
+      "finalOrder": "Final order",
+      "bailOrder": "Bail order",
+      "adjourned": "Adjourned",
+      "order": "Order",
+      "judge": "Judge",
+      "remarks": "Remarks",
+      "empty": "No hearings or activity recorded yet for this court case."
+    },
+    "source": {
+      "heading": "Source",
+      "title": "Jawafdehi Governance Archive",
+      "description": "Court listings, hearings and orders harvested from Nepal's public court records.",
+      "view": "View source"
+    }
   },
   "research": {
     "corruption": {
@@ -1679,6 +1757,7 @@
       "description": "The same {{total}} materials, grouped by the kind of document they are.",
       "tooltip": "Materials",
       "type": {
+        "procurementNotice": "Procurement notices",
         "chargeSheet": "Charge sheets",
         "precedent": "Court order precedents",
         "courtOrder": "Court orders",
@@ -1968,15 +2047,23 @@
       "bigoInvalid": "Must be a number.",
       "labelTags": "Tags",
       "tagsPlaceholder": "Add a tag and press Enter",
-      "labelThumbnail": "Thumbnail URL",
-      "labelBanner": "Banner URL",
+      "labelThumbnail": "Card image",
+      "thumbnailHelp": "Shown on the home page and in search results. Any size — the platform generates the rest.",
+      "labelBanner": "Hero image",
+      "bannerHelp": "Shown full-width at the top of the case page. Use a wide image; the middle stays visible when it crops.",
+      "imageUpload": "Upload an image",
+      "imageReplace": "Replace",
+      "imageClear": "Remove",
+      "imageNone": "No image",
+      "imageUploaded": "Image uploaded",
+      "imageUploadFailed": "Upload failed",
+      "imageTooLarge": "Image exceeds the 10MB limit.",
+      "legacyImageUrls": "Legacy image links",
+      "legacyImageUrlsHelp": "This case still points at externally hosted images, which load at full size on every view. Upload replacements above, then clear these.",
       "labelCourtCases": "Court-case references",
       "courtCasesHelp": "Link related court cases by their canonical @id IRI.",
       "courtCaseInvalid": "Use the canonical court-case @id IRI.",
-      "caseStart": "Case start",
-      "caseEnd": "Case end",
-      "datesInvalid": "Dates must be YYYY-MM-DD.",
-      "subResourcesHint": "Entities, timeline, and evidence can be added after the DRAFT is created.",
+      "subResourcesHint": "Stages, entities, timeline, and evidence can be added after the DRAFT is created.",
       "timelineRowsInvalid": "Every timeline event needs a title and a valid date (YYYY-MM-DD).",
       "entityRowsInvalid": "Every entity row needs a valid entity IRI and a relationship type.",
       "saveChanges": "Save changes",
@@ -2005,7 +2092,28 @@
       "editHistoryRemove": "Remove entry",
       "editHistoryDateLabel": "Edit history date, row {{number}}",
       "editHistoryRemarksLabel": "Edit history remarks, row {{number}}",
-      "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order"
+      "editHistoryRemarksPlaceholder": "e.g. Corrected the bigo figure after the Special Court order",
+      "stagesHeading": "Case stages",
+      "stagesHelp": "One row per pass of the case through a forum: the investigation, the first instance, each appeal, each review. Dates are AD (YYYY-MM-DD); Bikram Sambat is derived for display. A stage with no end date has not been decided.",
+      "stagesUnavailable": "Stage editing is unavailable: this case was loaded from an API response that carries no stage list, and saving from a blank editor would delete the stages the case already has. Reload once the API is up to date.",
+      "stageAdd": "Add stage",
+      "stageRemove": "Remove stage",
+      "stageRowLabel": "Stage {{number}}",
+      "stageType": "Stage",
+      "stageLabel": "Label",
+      "stageLabelHelp": "Names an \"Other\" stage on the public page — an arbitration tribunal, a tribunal of inquiry.",
+      "stageBody": "Body / forum",
+      "stageCourtCase": "Court case (@id IRI)",
+      "stageNotes": "Public note",
+      "stageNotesHelp": "PUBLIC — shown on the case page. Nepali first. Say why a stage has no decision yet (e.g. मिसिल जलेको, bench not constituted). Up to 500 characters.",
+      "stageEndBeforeStart": "The end date must not be before the start date.",
+      "stageRowsInvalid": "Every stage needs a type, and no stage may end before it starts.",
+      "stageStart": "Stage start",
+      "stageEnd": "Stage end",
+      "stageNone": "No stages recorded yet.",
+      "stageNotesTooLong": "A public note is limited to 500 characters.",
+      "stageUnknownType": "Pick a stage type from the list.",
+      "stageDateInvalid": "Dates must be YYYY-MM-DD."
     },
     "stateControl": {
       "state": "State",
@@ -2056,17 +2164,137 @@
     "cardView": "Card view",
     "results_one": "{{count}} result",
     "results_other": "{{count}} results",
+    "didYouMean": "Did you mean",
+    "didYouMeanPunctuation": "?",
     "sort": "Sort",
     "filters": {
       "entityType": "Entity type",
       "caseType": "Case type",
-      "tags": "Tags"
-    }
+      "tags": "Tags",
+      "courtType": "Court level",
+      "court": "Court",
+      "district": "District",
+      "province": "Province",
+      "provinceNational": "National jurisdiction",
+      "bigo": "Embezzled amount",
+      "bigoRange": {
+        "any": "Any amount",
+        "between": "{{min}} – {{max}}",
+        "from": "{{min}} and above",
+        "upTo": "Up to {{max}}"
+      },
+      "bigoMinField": "Min (Rs)",
+      "bigoMaxField": "Max (Rs)",
+      "bigoNote_one": "Filtering by amount includes only the {{count}} case with a recorded amount.",
+      "bigoNote_other": "Filtering by amount includes only the {{count}} cases with a recorded amount.",
+      "bigoMinThumb": "Minimum amount",
+      "bigoMaxThumb": "Maximum amount",
+      "bigoNoMin": "No minimum",
+      "bigoNoMax": "No maximum",
+      "materialType": "Document type",
+      "date": "Record date",
+      "dateFromField": "From (AD)",
+      "dateToField": "To (AD)",
+      "dateNote": "Filtering by date includes only documents with a recorded date.",
+      "dateRange": {
+        "any": "Any date",
+        "between": "{{from}} – {{to}}",
+        "from": "{{from}} onwards",
+        "upTo": "Up to {{to}}"
+      }
+    },
+    "materialSeries": "Series",
+    "filterSearch": "Search {{filter}}",
+    "filterMore": "More",
+    "filterLess": "Less",
+    "filterNoMatch": "No matches",
+    "materialSource": "Source",
+    "materialDate": "Date"
   },
   "materialsPage": {
     "heading": "Documents & other materials",
     "description": "Browse public government records and documents in the Jawafdehi archive — development projects, agency publications, and official materials.",
     "placeholder": "Search documents & other materials"
+  },
+  "materialsLanding": {
+    "title": "Documents & other materials — Nepal's public records",
+    "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
+    "heroTitle": "Nepal's public records. One archive.",
+    "heroLede": "Documents collected from government bodies — searchable, citable, always open.",
+    "ctaBrowse": "Browse the archive",
+    "ctaAsk": "Ask the AI assistant",
+    "grid": {
+      "title": "Browse by series",
+      "documents": "documents",
+      "browseAll": "Browse all series"
+    },
+    "capabilities": {
+      "title": "The archive works for you",
+      "lede": "Read it, question it, or take all of it — the records stay public either way.",
+      "downloadTitle": "Download everything",
+      "downloadLine": "Open any series and follow every document to its source file.",
+      "askTitle": "Ask the AI assistant",
+      "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
+      "analyzeTitle": "Analyze in bulk",
+      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub."
+    },
+    "recent": {
+      "title": "Recently added",
+      "untitled": "Untitled document",
+      "previous": "Previous documents",
+      "next": "Next documents"
+    },
+    "sourceDescriptions": {
+      "ag": "Charge sheets filed by the Office of the Attorney General.",
+      "nkp": "Precedents published in the Nepal Kanun Patrika.",
+      "courts": "Orders and verdicts from Nepal's courts.",
+      "ciaa": "Publications of the Commission for the Investigation of Abuse of Authority.",
+      "dfmis": "Development-finance records from DFMIS.",
+      "jawafdehi": "Original documents collected by Jawafdehi.",
+      "koshi": "Official records from Koshi Province.",
+      "ppmo": "Blacklist and debarment records from the PPMO.",
+      "auditorGeneral": "Audit reports from the Office of the Auditor General.",
+      "lawsOfNepal": "Nepali statutes, regulations and bills.",
+      "news": "News coverage archived as evidence.",
+      "socialMedia": "Public social-media posts archived as evidence.",
+      "other": "A document from the Jawafdehi archive."
+    },
+    "series": {
+      "searchPlaceholder": "Search inside this series…",
+      "searchSubmit": "Search this series",
+      "sortLabel": "Sort",
+      "sortLatest": "Latest first",
+      "sortOldest": "Oldest first",
+      "showingLoaded": "Showing {{shown}} of {{loaded}} loaded",
+      "loadMore": "Load more",
+      "loading": "Loading…",
+      "empty": "No documents are visible in this series right now.",
+      "unknown": "This series does not exist. Browse the archive instead:",
+      "backToArchive": "Back to the archive",
+      "undated": "Undated",
+      "openSource": "Open original source",
+      "download": "Download {{format}}"
+    },
+    "filters": {
+      "title": "Filter",
+      "description": "Filter the loaded documents",
+      "active": "{{count}} active",
+      "none": "No filters applied",
+      "clear": "Clear filters",
+      "dateRange": "Filter by date range",
+      "customRange": "Custom date range",
+      "startDate": "From date (AD)",
+      "endDate": "To date (AD)",
+      "invalidRange": "The from date must be before the to date.",
+      "noMatches": "No loaded documents match these filters.",
+      "loadMoreHint": "Load more documents to extend the filtered results.",
+      "presets": {
+        "all": "All time",
+        "30-days": "Last 30 days",
+        "6-months": "Last 6 months",
+        "1-year": "Last year"
+      }
+    }
   },
   "courtCasesPage": {
     "heading": "Court cases",
@@ -2279,7 +2507,7 @@
           {
             "id": "financial-support",
             "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **Zeffy** or **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
           },
           {
             "id": "help-without-donating",
@@ -2333,5 +2561,21 @@
       "website": "their website",
       "twitter": "X"
     }
+  },
+  "launchEvent": {
+    "barLabel": "Upcoming public launch",
+    "barSentence": "Join the public launch of Nepal's corruption database on Zoom — 23 Sept 6 PM Pacific · 24 Sept 6:45 AM Nepal.",
+    "barCta": "Learn more.",
+    "barDismiss": "Dismiss launch announcement",
+    "eyebrow": "Public launch · Free · Open to everyone",
+    "title": "The public launch of Nepal's corruption database",
+    "description": "Built over the past year and open to everyone: a permanent, searchable public record of corruption cases, with the documents behind them. We will show you what is in it and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
+    "dateUs": "Wednesday 23 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
+    "dateNepal": "Thursday 24 September 2026 in Nepal, 6:45 AM (आश्विन ८)",
+    "formatZoom": "Zoom",
+    "formatFacebook": "live on Facebook",
+    "cta": "Learn more",
+    "viewFlyer": "View the full flyer",
+    "flyerAlt": "Launch flyer: Nepal's Permanent Corruption Database. 23 September, 6 PM Pacific; 24 September, 6:45 AM Nepal time. Register at jawafdehi.org/launch."
   }
 }

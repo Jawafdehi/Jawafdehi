@@ -7,10 +7,12 @@ import {
 } from "@/services/admin-api";
 import {
   ALL_ENTITY_TYPES,
+  ENTITY_IMAGE_KEY,
   PREFIX_RE,
   SLUG_RE,
   slugify,
 } from "@/lib/entity-jsonld";
+import EntityImageField from "@/components/admin/entities/EntityImageField";
 import FormPageShell from "@/components/admin/FormPageShell";
 import AdminFormActions from "@/components/admin/AdminFormActions";
 import { FieldError } from "@/components/admin/FormError";
@@ -41,6 +43,14 @@ export default function EntityCreate() {
   const [changeDescription, setChangeDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The picture, already uploaded to the image library and waiting to be sent
+  // with the create. `undefined` means "no image key at all".
+  const [image, setImage] = useState<unknown>(undefined);
+  // Bytes in flight. The upload resolves into `image` asynchronously, so
+  // without this the form is submittable in the gap and the entity would be
+  // created with no picture while the uploaded file sits orphaned in the
+  // library — the same gate AdminCaseForm puts on CaseImageField.
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Auto-derive the slug from the English name until the user edits it.
   const onNameEn = (v: string) => {
@@ -65,6 +75,9 @@ export default function EntityCreate() {
     "entity_prefix",
     "slug",
     "name",
+    // The picture field owns `image`; if the JSON box also set it, whichever
+    // the spread happened to apply last would win silently.
+    ENTITY_IMAGE_KEY,
     "change_description",
   ]);
 
@@ -96,6 +109,7 @@ export default function EntityCreate() {
     slugValid &&
     nameValid &&
     !extraError &&
+    !imageUploading &&
     !submitting;
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -114,6 +128,11 @@ export default function EntityCreate() {
       type,
       name,
       ...parsedExtra,
+      // After the spread, so a stray `image` in the JSON box can't beat the
+      // field — belt and braces alongside RESERVED_EXTRA_KEYS. Spread
+      // conditionally: writing `image: undefined` would put the key in the
+      // payload with a null-ish value rather than leaving it out.
+      ...(image !== undefined ? { [ENTITY_IMAGE_KEY]: image } : {}),
       change_description: changeDescription.trim() || "Created via admin panel",
     };
 
@@ -216,6 +235,13 @@ export default function EntityCreate() {
             !nameValid && "At least one of English / Nepali name is required."
           }
           className="-mt-3"
+        />
+
+        <EntityImageField
+          value={image}
+          onChange={setImage}
+          onUploadingChange={setImageUploading}
+          disabled={submitting}
         />
 
         <div className="space-y-1">
