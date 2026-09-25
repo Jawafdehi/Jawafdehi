@@ -325,7 +325,35 @@ const DIR = arg("dir", "dist/client");
 // pre-renderer is hard-coded to `ne`, and English is opt-in and already applied
 // asynchronously. Deferring the English bundle is the biggest low-risk win
 // available and nobody has taken it.
-const MAX_INITIAL_JS_GZIP = 679_400;
+//
+// 2026-09: 679_400 → 681_400 for the agent-readiness layer (structured-data.ts
+// and record-head.ts). Re-measured after merging main at f530f50, local, same
+// machine, same command for both sides: main builds to 678,335 bytes gzip and
+// main+branch to 680,297, so the layer costs 1,962 bytes. Trust the pair: main
+// here reproduces the 678,335 the entry above recorded for f530f50 EXACTLY, to
+// the byte, so this machine and that measurement agree — but re-read the CI
+// number before merging rather than trusting this line.
+//
+// All 1,962 bytes are the shell. The other four initial chunks are byte-identical
+// across the pair — markdown, react-vendor, query and i18n keep the same content
+// hashes on both sides, which is a stronger check than comparing sizes — so the
+// whole delta is index-*.js: the JSON-LD graph builders, the schema.org @type
+// sanitiser, the og:type mapper and the two head mappers the Worker and the pages
+// share.
+//
+// Not deferrable WITHOUT giving up what the layer is for. The builders reach the
+// shell through CaseDetail (record-head) and EntityProfile (structured-data),
+// both eager in src/routes.tsx. Note this is NOT the pre-render argument an entry
+// above makes: /case/:id has not been pre-rendered since #297, so eagerness there
+// is a standing routing choice, not a constraint this branch inherits. The real
+// blocker is head parity. The edge Worker and the hydrated page run the SAME
+// mapper so an agent and a reader cannot be told different things about one
+// record, and tests/ssr/worker.head-drift.test.ts pins it; a lazy boundary around
+// the mapper would reintroduce exactly the divergence this branch removed. Paying
+// ~1.9 KB for the whole machine-readability layer is the trade, and it is a good
+// one — but if bytes get tight, the en.json lever above is worth 20x this and is
+// still untaken.
+const MAX_INITIAL_JS_GZIP = 681_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
