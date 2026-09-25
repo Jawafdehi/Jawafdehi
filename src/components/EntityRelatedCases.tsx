@@ -8,7 +8,7 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { formatDateWithBS } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
@@ -57,6 +57,16 @@ function roleFor(caseItem: Case, entityIri: string) {
   const binds = (caseItem.entities ?? []).filter((e) => e.nes_id === entityIri);
   const bind = binds.find((b) => isAccusedTier(b.type ?? "")) ?? binds[0];
   return { role: bind?.type ?? "related", outcome: bind?.outcome ?? null };
+}
+
+// Whether a Supreme Court criminal appeal is on record for this case. Driven by
+// a linked `courtcase/supreme/...-cr-...` reference, which is the only positive
+// evidence we hold: the Supreme registry publishes no party names for criminal
+// appeals, so an unlinked case means "not recorded", never "not appealed".
+function hasSupremeAppeal(caseItem: Case): boolean {
+  return (caseItem.court_cases ?? []).some(
+    (iri) => iri.includes("/courtcase/supreme/") && /-cr-/i.test(iri),
+  );
 }
 
 /**
@@ -156,11 +166,26 @@ export function EntityRelatedCases({
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.proceedings_started_on || c.created_at);
+          // Both dates carry AD and BS, the way court-sourced dates are shown
+          // everywhere else on the site. One card has room for one span, so
+          // these are the DERIVED proceedings dates, not the per-stage list the
+          // case page draws — and never the deprecated
+          // `case_start_date`/`case_end_date` aliases they replaced.
+          const filedDate = formatDateWithBS(
+            c.proceedings_started_on || c.created_at,
+          );
+          const verdictDate = c.proceedings_decided_on
+            ? formatDateWithBS(c.proceedings_decided_on)
+            : null;
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
+          // A conviction supersedes the accusation: showing "अभियुक्त" next to
+          // "दोषी ठहर" states the weaker fact twice. An acquittal keeps its role
+          // chip, where "accused, then cleared" is the point.
+          const showRole = outcome !== "convicted";
+          const appealed = hasSupremeAppeal(c);
 
           const row = (
             <div
@@ -176,15 +201,17 @@ export function EntityRelatedCases({
                   {c.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                  <Badge
-                    variant={accused ? undefined : "secondary"}
-                    className={cn(
-                      "shrink-0",
-                      accused && "border-transparent bg-accent text-accent-foreground",
-                    )}
-                  >
-                    {roleLabel}
-                  </Badge>
+                  {showRole ? (
+                    <Badge
+                      variant={accused ? undefined : "secondary"}
+                      className={cn(
+                        "shrink-0",
+                        accused && "border-transparent bg-accent text-accent-foreground",
+                      )}
+                    >
+                      {roleLabel}
+                    </Badge>
+                  ) : null}
                   {accused && shouldShowOutcome(outcome) ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
                       {outcomeWithForumLabel(
@@ -194,10 +221,29 @@ export function EntityRelatedCases({
                       )}
                     </Badge>
                   ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    {[typeLabel, date].filter(Boolean).join(" · ")}
-                  </span>
+                  {appealed ? (
+                    <Badge
+                      variant="outline"
+                      className="border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong"
+                    >
+                      {t("entityDetail.supremeAppealRegistered")}
+                    </Badge>
+                  ) : null}
+                  <span className="text-xs text-muted-foreground">{typeLabel}</span>
                 </div>
+
+                <dl className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-baseline gap-x-1.5">
+                    <dt>{t("caseDetail.courtRegistered")}:</dt>
+                    <dd className="font-medium text-foreground">{filedDate}</dd>
+                  </div>
+                  {verdictDate ? (
+                    <div className="flex flex-wrap items-baseline gap-x-1.5">
+                      <dt>{t("caseDetail.courtVerdictDate")}:</dt>
+                      <dd className="font-medium text-foreground">{verdictDate}</dd>
+                    </div>
+                  ) : null}
+                </dl>
                 {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
                     amount — a missing bigo is not a zero-rupee case. */}
                 {c.bigo ? (
