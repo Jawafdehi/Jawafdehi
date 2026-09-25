@@ -325,6 +325,41 @@ const DIR = arg("dir", "dist/client");
 // pre-renderer is hard-coded to `ne`, and English is opt-in and already applied
 // asynchronously. Deferring the English bundle is the biggest low-risk win
 // available and nobody has taken it.
+//
+// 2026-09-21, merging main into feature/case-thumbnails (PR #384, the
+// generative case-thumbnail fallback). THE NUMBER IS DELIBERATELY NOT MOVED BY
+// THIS MERGE, and the branch's own entry is dropped rather than reconciled,
+// because every figure in it was measured against a main that no longer exists.
+// What it claimed, kept here so nobody re-derives it: against main at 42c0105
+// (679,239 bytes gzip) the merged tree built to 681,144 — a cost of 1,905 bytes
+// for CaseThumbnail's SVG data-portrait (src/components/CaseThumbnail.tsx), the
+// amount/accused/event derivation in src/lib/case-thumbnail.ts, and the six
+// generativeThumbnail keys in en.json and ne.json — and it proposed 682_200.
+//
+// That proposal is now meaningless in BOTH directions. Main has since taken the
+// BigoRangeFilter lever (entry above) and ratcheted DOWN to 679_400 against a
+// measured 678,335, so 682_200 would silently hand back 3,865 bytes of a
+// reduction this branch did not earn and had nothing to do with — exactly the
+// unearned-ratchet mistake the #388 entry warns about, only upwards. And the
+// 1,905 itself will not reproduce: it was measured against a shell that still
+// carried @radix-ui/react-slider, and gzip's cross-term moves a diff's cost when
+// the shell around it changes (the #388/#382 stacking above moved by 422 bytes
+// for precisely this reason). So do not add 1,905 to 679_400 either.
+//
+// Expect `Bundle budget` to come out RED on this merge, by very roughly 1.5-2 KB
+// — that is the feature's real cost landing against a line that no longer has
+// room for it, not a regression introduced by the resolution. RE-MEASURE the
+// merged tree in CI and ratchet this line in a follow-up commit that states the
+// built number, the way every entry above does. Do not extrapolate, and do not
+// split the difference between 682_200 and 679_400: neither was measured on the
+// tree that now exists.
+//
+// The thumbnail stays eager, and that part of the branch's reasoning still
+// holds: CaseCard is imported by src/pages/Index.tsx and src/pages/Cases.tsx,
+// and both `/` and `/cases` are in PRE_RENDERED_STATIC_ROUTES, so a lazy
+// boundary here would pre-render the two highest-traffic pages as a fallback
+// (see tests/ssr/prerendered-routes-eager.test.ts). If bytes are needed, the
+// English-locale lever recorded just above is the one to take.
 const MAX_INITIAL_JS_GZIP = 679_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
