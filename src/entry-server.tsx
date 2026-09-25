@@ -41,13 +41,36 @@ export interface RenderResult {
   prefetch: PrefetchReport;
 }
 
+/**
+ * Data the caller already holds, seeded into the cache instead of re-fetched.
+ *
+ * `scripts/pre-render.ts` renders one page per entity a published case cites —
+ * ~2,500 of them. Fetching each record here cost one upstream call per page and
+ * blew the API's 1000/hour anonymous throttle, which is what turned a green
+ * build into a coin flip. The same records come back 25 at a time from
+ * `/api/entities?ids=`, so the caller batches them and hands the record down.
+ *
+ * A seeded record must be byte-identical to what the per-page fetch would have
+ * returned, or the pre-rendered HTML silently diverges from the live page. It
+ * is: both endpoints return a bare `EntityRepository().get_entity(iri)` with no
+ * extra serialization on either path.
+ */
+export interface RenderSeed {
+  /** The `['entity-record', tail]` payload for an `/entity/<prefix>/<slug>` URL. */
+  entityRecord?: unknown;
+}
+
 // Nothing here reports whether it worked: prefetchQuery swallows its own errors,
 // so a route whose every fetch failed is indistinguishable from one that had
 // nothing to fetch. render() reads the outcome off the cache instead, and
 // scripts/pre-render.ts fails the build on it — which is how a prefetch that
 // silently returned nothing for months (see getAccessToken in services/oidc.ts)
 // stops being a thing that can ship.
-async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
+async function prefetch(
+  url: string,
+  queryClient: QueryClient,
+  seed?: RenderSeed,
+): Promise<void> {
   // Home page: prefetch stats + the same featured-case search the client renders.
   // featuredCasesQuery() is the SHARED definition (queries/home.ts) — the key and
   // params must match pages/Index.tsx exactly or this prefetch fills a cache entry
@@ -180,6 +203,20 @@ async function prefetch(url: string, queryClient: QueryClient): Promise<void> {
   const entityRecordMatch = url.match(/^\/entity\/(.+?)\/?(?:[?#]|$)/);
   if (entityRecordMatch) {
     const tail = decodeURIComponent(entityRecordMatch[1]);
+
+    // Seeded by the caller from a batch lookup — see RenderSeed. setQueryData
+    // leaves the query in `success`, which is exactly what reportPrefetch reads,
+    // so a seeded page is counted as fulfilled and the empty-cache guard in
+    // pre-render.ts keeps covering these routes.
+    //
+    // Falling through when there is no seed is deliberate: a record the batch
+    // could not resolve is fetched individually and, if that fails too, shows up
+    // as a prefetch failure exactly as before. Slower, never wrong.
+    if (seed?.entityRecord !== undefined) {
+      queryClient.setQueryData(['entity-record', tail], seed.entityRecord);
+      return;
+    }
+
     await queryClient.prefetchQuery({
       queryKey: ['entity-record', tail],
       queryFn: async () => {
@@ -276,13 +313,13 @@ const TRANSIENT_RETRY = {
   retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 4000),
 } as const;
 
-export async function render(url: string): Promise<RenderResult> {
+export async function render(url: string, seed?: RenderSeed): Promise<RenderResult> {
   const helmetContext: { helmet?: HelmetServerState } = {};
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 0 } },
   });
 
-  await prefetch(url, queryClient);
+  await prefetch(url, queryClient, seed);
   // Before the render, not after: see reportPrefetch.
   const prefetchReport = reportPrefetch(queryClient);
 

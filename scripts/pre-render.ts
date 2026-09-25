@@ -68,27 +68,46 @@ interface PaginatedCaseList {
 const API_BASE = 'https://api.jawafdehi.org/api';
 const CONCURRENCY = 5;
 
+// Mirrors MAX_BATCH_SIZE in the API's entities/views.py. Over it the endpoint
+// 400s with BATCH_SIZE_EXCEEDED, so raising this needs the server raised first.
+const ENTITY_BATCH_SIZE = 25;
+
 const FETCH_TIMEOUT_MS = 10_000;
+
+/** `GET /api/entities?ids=` — the batch form of the per-entity detail endpoint. */
+interface EntityBatchResponse {
+  entities: unknown[];
+  total: number;
+  requested: number;
+  /** Refs that resolved to nothing. Absent when empty. */
+  not_found?: string[];
+  /** requested IRI → survivor IRI, for merge tombstones. Absent when empty. */
+  redirected?: Record<string, string>;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
+  return (await res.json()) as T;
+}
 
 async function fetchAllCases(): Promise<PaginatedCaseList['results']> {
   const all: PaginatedCaseList['results'] = [];
   let url: string | null = `${API_BASE}/cases/`;
   while (url) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    let res: Response;
-    try {
-      res = await fetch(url, { signal: controller.signal });
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
-      }
-      throw err;
-    } finally {
-      clearTimeout(timer);
-    }
-    if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
-    const data: PaginatedCaseList = await res.json();
+    const data: PaginatedCaseList = await fetchJson<PaginatedCaseList>(url);
     all.push(...data.results);
     url = data.next;
   }
@@ -109,6 +128,64 @@ async function withConcurrency<T>(
     }
   });
   await Promise.all(workers);
+}
+
+/**
+ * Entity records for `iris`, keyed by the IRI that was REQUESTED.
+ *
+ * One upstream call per entity page is what made this build a coin flip: ~2,500
+ * pages, one `/api/entities/<tail>` each, against the API's 1000/hour anonymous
+ * throttle (`THROTTLE_RATE_ANON`). Past the cap the records come back 429, the
+ * pages render against an empty cache, and the guard at the end of this script
+ * correctly refuses to publish them. The same records come back 25 at a time
+ * from `/api/entities?ids=`, which is ~100 calls instead of ~2,500.
+ *
+ * ENTITY_BATCH_SIZE mirrors the API's own cap (`MAX_BATCH_SIZE` in
+ * `entities/views.py`); over it the endpoint 400s with BATCH_SIZE_EXCEEDED.
+ *
+ * Keyed by the REQUESTED IRI rather than each document's own `@id`, because the
+ * two differ for a merge tombstone: it resolves to its survivor. The detail
+ * endpoint hides that behind a 301 the HTTP client follows, while the batch
+ * reports it in `redirected` and returns the survivor's document. Keying on
+ * `@id` would leave every tombstoned entity unseeded.
+ *
+ * Anything unresolved is simply absent from the map, and the caller falls back
+ * to a per-page fetch — slower, never wrong.
+ */
+async function fetchEntityRecords(iris: string[]): Promise<Map<string, unknown>> {
+  const chunks: string[][] = [];
+  for (let i = 0; i < iris.length; i += ENTITY_BATCH_SIZE) {
+    chunks.push(iris.slice(i, i + ENTITY_BATCH_SIZE));
+  }
+
+  const byRequestedIri = new Map<string, unknown>();
+  await withConcurrency(chunks, CONCURRENCY, async (chunk) => {
+    const params = new URLSearchParams({ ids: chunk.join(',') });
+    let body: EntityBatchResponse;
+    try {
+      body = await fetchJson<EntityBatchResponse>(`${API_BASE}/entities?${params}`);
+    } catch (err) {
+      // Deliberately not fatal: each entity in this chunk falls back to its own
+      // fetch, so a flaky batch costs speed rather than correctness.
+      console.warn(
+        `[pre-render] WARNING: entity batch of ${chunk.length} failed; ` +
+        `those records fall back to per-page fetches:`, err,
+      );
+      return;
+    }
+
+    const byId = new Map<string, unknown>();
+    for (const doc of body.entities ?? []) {
+      const id = (doc as { '@id'?: unknown })?.['@id'];
+      if (typeof id === 'string') byId.set(id, doc);
+    }
+    for (const iri of chunk) {
+      const doc = byId.get(body.redirected?.[iri] ?? iri);
+      if (doc !== undefined) byRequestedIri.set(iri, doc);
+    }
+  });
+
+  return byRequestedIri;
 }
 
 // renderToString does not throw when it hits an unresolved Suspense boundary — it
@@ -374,7 +451,7 @@ async function main() {
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
   // @ts-expect-error: module only exists after `vite build --ssr`
   const { render } = await import('../dist/server/entry-server.js') as {
-    render: (url: string) => Promise<RenderResult>;
+    render: (url: string, seed?: { entityRecord?: unknown }) => Promise<RenderResult>;
   };
 
   const staticRoutes: RouteConfig[] = PRE_RENDERED_STATIC_ROUTES.map((route) => ({
@@ -418,13 +495,23 @@ async function main() {
   //
   // This block used to map `e.id`, a numeric field the IRI remodel deleted, so
   // it resolved to [] and NO entity page was pre-rendered or listed.
-  const entityPaths = apiReachable
-    ? [...new Set(
-        cases
-          .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
-          .filter((path): path is string => path != null)
-      )]
-    : [];
+  //
+  // Keyed by page path but retaining the IRI, because the batch lookup below
+  // addresses entities by IRI while everything downstream addresses them by
+  // path. Insertion order is first-appearance order, matching the Set-based
+  // dedupe this replaced, so the emitted page order is unchanged.
+  const iriByPath = new Map<string, string>();
+  if (apiReachable) {
+    for (const caseItem of cases) {
+      for (const entity of caseItem.entities) {
+        const path = entityPath(entity.nes_id);
+        if (path && entity.nes_id && !iriByPath.has(path)) {
+          iriByPath.set(path, entity.nes_id);
+        }
+      }
+    }
+  }
+  const entityPaths = [...iriByPath.keys()];
 
   // Render static routes
   for (const route of staticRoutes) {
@@ -502,13 +589,26 @@ async function main() {
       }
     }
 
+    // Every entity record up front, ~25 per call, so rendering a page costs no
+    // upstream request at all. See fetchEntityRecords for why this is not one
+    // fetch per page any more.
+    const entityRecords = await fetchEntityRecords([...iriByPath.values()]);
+    const unseeded = entityPaths.length - entityRecords.size;
+    console.log(
+      `[pre-render] Fetched ${entityRecords.size} entity records in ` +
+      `${Math.ceil(entityPaths.length / ENTITY_BATCH_SIZE)} batched calls` +
+      (unseeded > 0 ? ` (${unseeded} unresolved, falling back to per-page fetches)` : ''),
+    );
+
     // Render entity routes. The output directory mirrors the multi-segment
     // `<prefix>/<slug>` tail (e.g. dist/entity/person/ram-shah/index.html), the
     // same shape the `/entity/*` splat route resolves at runtime.
     await withConcurrency(entityPaths, CONCURRENCY, async (path) => {
       const outFile = join(ROOT, 'dist', ...path.split('/').filter(Boolean), 'index.html');
+      const iri = iriByPath.get(path);
+      const entityRecord = iri === undefined ? undefined : entityRecords.get(iri);
       try {
-        const result = await render(path);
+        const result = await render(path, { entityRecord });
         const html = injectIntoTemplate(template, result);
         await writeHtml(outFile, html);
         notePrefetch(path, result);
