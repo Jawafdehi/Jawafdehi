@@ -224,6 +224,15 @@ export const SITE_ROUTES = [
     sitemapTitle: "Products — Jawafdehi",
   },
   {
+    path: "/openhouse",
+    chrome: "app",
+    titleKey: "nav.openHouse",
+    descriptionKey: "searchCommand.descriptions.openHouse",
+    keywords: ["open house", "discussion", "zoom", "session", "join", "meet"],
+    icon: "MessagesSquare",
+    sitemapTitle: "Jawafdehi Open House — Jawafdehi",
+  },
+  {
     path: "/saptahik",
     chrome: "app",
     titleKey: "nav.weeklySeries",

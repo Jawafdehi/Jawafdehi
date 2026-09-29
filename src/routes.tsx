@@ -34,6 +34,7 @@ import OurTeam from "./pages/OurTeam";
 import Volunteer from "./pages/Volunteer";
 import OurProducts from "./pages/OurProducts";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
+import OpenHouse from "./pages/OpenHouse";
 import FaqPage from "./pages/FaqPage";
 import CaseDetail from "./pages/CaseDetail";
 import Feedback from "./pages/Feedback";
@@ -139,6 +140,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/courtcase/*": <CourtCaseProfile />,
   "/feedback": <Feedback />,
   "/report": <ReportCase />,
+  "/openhouse": <OpenHouse />,
   "/updates": <Updates />,
   "/updates/preview": <UpdatePreview />,
   "/updates/:slug": <UpdateDetail />,

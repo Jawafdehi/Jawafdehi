@@ -10,6 +10,7 @@
     "ourProcess": "हाम्रो प्रक्रिया",
     "volunteer": "स्वयंसेवा",
     "weeklySeries": "साप्ताहिक श्रृंखला",
+    "openHouse": "Open House",
     "donate": "आर्थिक सहयोग",
     "ourCommitment": "हाम्रो प्रतिबद्धता",
     "skipToContent": "मुख्य सामग्रीमा जानुहोस्",
@@ -39,6 +40,51 @@
       "description": "विगतका सत्रहरू हाम्रो YouTube च्यानलमा हेर्नुहोस् र श्रृंखलालाई फलो गर्नुहोस्।",
       "cta": "YouTube च्यानल खोल्नुहोस्",
       "playlistTitle": "साप्ताहिक भ्रष्टाचार श्रृंखला प्लेलिस्ट"
+    }
+  },
+  "openHouse": {
+    "hero": {
+      "eyebrow": "Open to everyone",
+      "title": "Jawafdehi Open House",
+      "description": "A small, informal online session with the team behind Nepal's permanent corruption case archive. Come with questions, with ideas, or just to listen.",
+      "join": "Join on Zoom"
+    },
+    "when": {
+      "title": "When is the next one?",
+      "description": "We run these regularly, and we'll tell you when there's one for your region. The time moves from week to week so that people in Nepal, the Gulf, Asia, Europe, Africa, Australia and the Americas each get a slot that works for them.",
+      "waitingRoom": "Sessions are small, usually ten to fifteen people. The Join button above is always live: if a session is running you'll arrive in the waiting room and the host will let you in. If nothing is running, Zoom will tell you the host hasn't started the meeting yet."
+    },
+    "topics": {
+      "eyebrow": "What we talk about",
+      "title": "Three things, most weeks",
+      "accountability": {
+        "title": "Nepal's accountability infrastructure",
+        "desc": "What it takes to document corruption cases in a structured, permanent way: who did what, and when."
+      },
+      "tech": {
+        "title": "Using AI and tech for good",
+        "desc": "How the archive gets built, and where technology genuinely helps hold power to account."
+      },
+      "givingBack": {
+        "title": "Giving back to our home country",
+        "desc": "Practical ways people in Nepal and across the diaspora contribute to a corruption-free Nepal."
+      }
+    },
+    "nextSteps": {
+      "title": "Three ways to take part",
+      "description": "Whether or not you make it to a session, these are open to you.",
+      "donate": {
+        "label": "Donate",
+        "desc": "Fund the archive and help keep it independent."
+      },
+      "volunteer": {
+        "label": "Volunteer",
+        "desc": "Research, engineering, outreach and translation."
+      },
+      "report": {
+        "label": "Report",
+        "desc": "Submit an allegation or a public-interest corruption lead."
+      }
     }
   },
   "header": {
@@ -82,6 +128,7 @@
       "team": "जवाफदेही टोलीलाई चिन्नुहोस्।",
       "products": "जवाफदेहीका उपकरण र उत्पादनहरू हेर्नुहोस्।",
       "weeklySeries": "साप्ताहिक भ्रष्टाचार श्रृंखला हाल विश्राममा छ; विगतका प्रस्तुतिहरू YouTube मा हेर्नुहोस्।",
+      "openHouse": "Join a small, informal online session with the Jawafdehi team.",
       "updates": "हालका प्लेटफर्म अपडेटहरू पढ्नुहोस्।",
       "report": "भ्रष्टाचारको मुद्दाबारे जानकारी पठाउनुहोस् — फारम, इमेल वा WhatsApp मार्फत।",
       "feedback": "बग, सुविधा सुझाव, सुधार वा सामान्य प्रतिक्रिया पठाउनुहोस्।",
