@@ -21,6 +21,18 @@ export const JAWAFDEHI_SOCIALS = {
   linktree: "https://linktr.ee/jawafdehi",
 };
 
+// The Open House is a recurring Zoom meeting set to "No Fixed Time", so this
+// link is permanent: the session time moves every week to suit whichever
+// audience is coming, and the link never changes with it. Do not replace this
+// with a per-session scheduled meeting — in Zoom the link IS the meeting ID, so
+// a new meeting each week would break every printed flyer and saved link.
+// The waiting room is on; the host admits people.
+export const JAWAFDEHI_OPEN_HOUSE = {
+  zoomUrl:
+    "https://us06web.zoom.us/j/86403973104?pwd=Q1tJrWM86AZqCFQS8jaTaImmw2sa3I.1",
+  zoomMeetingId: "864 0397 3104",
+};
+
 export const JAWAFDEHI_WEEKLY_SERIES = {
   zoomUrl:
     "https://harvard.zoom.us/j/97798419283?pwd=sOSmM8Nuqp29j9NIhqe0yWJGLgokPI.1",
