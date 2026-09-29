@@ -19,6 +19,17 @@ import { PageHero } from "@/components/ui/page-hero";
 import { JAWAFDEHI_OPEN_HOUSE } from "@/config/constants";
 import { SITE_URL } from "@/utils/seo";
 
+// 🚨 index.html declares <base href="/" />, and a fragment-only URL resolves
+// against the document BASE, not the current page. So href="#signup" navigates
+// to https://jawafdehi.org/#signup — the home page — rather than scrolling down
+// this one. In-page anchors here must carry the full path.
+//
+// Not hypothetical and not only ours: /materials ships href="#series" and
+// /research/corruption ships href="#methodology", both of which land on the
+// home page in production today, as does the skip-to-content link in Navbar.
+const OPEN_HOUSE_PATH = "/openhouse/";
+const SIGNUP_ANCHOR = `${OPEN_HOUSE_PATH}#signup`;
+
 type Topic = {
   icon: LucideIcon;
   titleKey: string;
@@ -81,7 +92,7 @@ const OpenHouse = () => {
       <Seo
         title="Jawafdehi Open House — Jawafdehi"
         description="Join a small, informal online session with the Jawafdehi team. We talk about Nepal's accountability infrastructure, using AI and tech for good, and giving back to our home country."
-        canonicalUrl={`${SITE_URL}/openhouse/`}
+        canonicalUrl={`${SITE_URL}${OPEN_HOUSE_PATH}`}
         // The campaign flyer, recomposed to 1200x630 so the link previews as
         // the artwork people are being shown elsewhere rather than the generic
         // site card. This page is shared directly with prospects, so the
@@ -108,7 +119,7 @@ const OpenHouse = () => {
                   for their region. A plain in-page anchor, so it works before
                   hydration and is a real link for keyboard and screen readers. */}
               <Button asChild size="lg" className="font-semibold">
-                <a href="#signup">
+                <a href={SIGNUP_ANCHOR}>
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
                   {t("openHouse.hero.register")}
                 </a>
