@@ -7,6 +7,7 @@ export type SearchIconName =
   | "Home"
   | "Info"
   | "MessageCircle"
+  | "MessagesSquare"
   | "Newspaper"
   | "Search"
   | "ShieldCheck"
