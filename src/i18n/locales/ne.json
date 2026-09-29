@@ -67,6 +67,7 @@
       "regionHelp": "We've guessed from your device. Change it if it's wrong.",
       "whatsapp": "WhatsApp number (optional)",
       "whatsappHelp": "So we can send you the join link shortly before the session. Include your country code.",
+      "whatsappInvalid": "Please use digits, spaces, brackets or hyphens, with an optional leading +.",
       "forOrganisation": "I'm asking on behalf of an organisation",
       "organisationName": "Organisation name",
       "consent": "Yes, email me about Open House sessions. I'll also receive the occasional Jawafdehi newsletter, and I can unsubscribe at any time. See our",
@@ -76,7 +77,8 @@
       "submitting": "Sending…",
       "successTitle": "You're on the list.",
       "successMessage": "We'll email you when there's a session for your region. Check your inbox for a note about what to expect.",
-      "errorAlreadyOnList": "That address is already on our list, or was unsubscribed before. Email inquiry@jawafdehi.org and we'll sort it out.",
+      "errorAlreadyOnList": "You may already be on our list — or you unsubscribed before, in which case we won't add you back automatically. Email inquiry@jawafdehi.org with your region and we'll make sure you hear about the next session.",
+      "errorInvalid": "Please check the highlighted fields and try again.",
       "errorThrottled": "Too many attempts just now. Please try again in a little while.",
       "errorGeneric": "Something went wrong. Please try again, or email inquiry@jawafdehi.org."
     },

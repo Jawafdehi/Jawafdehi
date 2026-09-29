@@ -54,12 +54,47 @@ const GULF_MIDDLE_EAST_ZONES = new Set([
 ]);
 
 /**
- * Where the Americas split. Pacific time sits at -480/-420 depending on DST, so
- * anything at or west of -420 is treated as the western slot. Mountain time
+ * Where North America splits. Pacific time sits at -480/-420 depending on DST,
+ * so anything at or west of -420 is treated as the western slot. Mountain time
  * straddles it across the year — which is fine, because this only pre-fills a
  * dropdown the visitor can correct in one click.
  */
 const AMERICAS_WEST_MAX_OFFSET_MINUTES = -420;
+
+/**
+ * `America/*` covers the whole hemisphere, so it cannot decide the North
+ * America slots on its own — `America/Sao_Paulo` is not North America — East.
+ * There is no region for Latin America, and inventing one of the two North
+ * American answers would be exactly the confident wrong guess this module
+ * avoids elsewhere, so those visitors get an empty dropdown and pick for
+ * themselves. Listed by country rather than by offset because offset alone
+ * cannot tell Toronto from Bogotá.
+ */
+const NORTH_AMERICA_ZONES = new Set([
+  "America/Adak",
+  "America/Anchorage",
+  "America/Chicago",
+  "America/Denver",
+  "America/Detroit",
+  "America/Edmonton",
+  "America/Halifax",
+  "America/Indiana/Indianapolis",
+  "America/Juneau",
+  "America/Kentucky/Louisville",
+  "America/Los_Angeles",
+  "America/Mexico_City",
+  "America/Moncton",
+  "America/Monterrey",
+  "America/Montreal",
+  "America/New_York",
+  "America/Phoenix",
+  "America/Regina",
+  "America/St_Johns",
+  "America/Tijuana",
+  "America/Toronto",
+  "America/Vancouver",
+  "America/Winnipeg",
+]);
 
 /**
  * Best guess at the visitor's region from their browser timezone.
@@ -103,7 +138,7 @@ export function detectRegion(
     // Australia/NZ side; the rest are closer to the US west coast.
     return offset > 0 ? "australia-nz" : "north-america-west";
   }
-  if (area === "America" || area === "Canada" || area === "US") {
+  if (NORTH_AMERICA_ZONES.has(zone) || area === "Canada" || area === "US") {
     return offset <= AMERICAS_WEST_MAX_OFFSET_MINUTES
       ? "north-america-west"
       : "north-america-east";

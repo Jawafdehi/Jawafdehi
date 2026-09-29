@@ -8,6 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NEWSLETTER_PRIVACY_VERSION } from "@/config/newsletter";
+import { setNewsletterPromptState } from "@/lib/newsletter";
+import {
+  EMAIL_PATTERN,
+  WHATSAPP_PATTERN,
+  whatsappDigitCount,
+} from "@/lib/contact-validation";
 import { JDSApiError, subscribeToNewsletter } from "@/services/jds-api";
 import { cn } from "@/lib/utils";
 import { OPEN_HOUSE_REGIONS, detectRegion, type OpenHouseRegion } from "./regions";
@@ -19,11 +25,38 @@ import { OPEN_HOUSE_REGIONS, detectRegion, type OpenHouseRegion } from "./region
  */
 const CONSENT_SOURCE = "openhouse_page";
 
-type SubmitStatus = "idle" | "submitting" | "success";
-type FieldErrors = { firstName: boolean; email: boolean; consent: boolean };
+/** Maps a failed submit to the most specific message we can honestly give. */
+function errorMessageFor(err: unknown, t: (key: string) => string): string {
+  if (!(err instanceof JDSApiError)) return t("openHouse.signup.errorGeneric");
+  switch (err.statusCode) {
+    case 400:
+      return t("openHouse.signup.errorInvalid");
+    case 409:
+      return t("openHouse.signup.errorAlreadyOnList");
+    case 429:
+      return t("openHouse.signup.errorThrottled");
+    default:
+      return t("openHouse.signup.errorGeneric");
+  }
+}
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMPTY_FIELD_ERRORS: FieldErrors = { firstName: false, email: false, consent: false };
+type SubmitStatus = "idle" | "submitting" | "success";
+type FieldErrors = {
+  firstName: boolean;
+  email: boolean;
+  whatsapp: boolean;
+  consent: boolean;
+};
+
+const EMPTY_FIELD_ERRORS: FieldErrors = {
+  firstName: false,
+  email: false,
+  whatsapp: false,
+  consent: false,
+};
+
+/** Minimum digits the API accepts once separators are stripped. */
+const MIN_WHATSAPP_DIGITS = 5;
 
 export function OpenHouseSignupForm({ className }: Readonly<{ className?: string }>) {
   const { i18n, t } = useTranslation();
@@ -67,9 +100,17 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const typedWhatsapp = whatsapp.trim();
     const nextFieldErrors: FieldErrors = {
       firstName: !firstName.trim(),
       email: !EMAIL_PATTERN.test(email.trim()),
+      // Checked here as well as on the server so a number the API would reject
+      // is named at the field instead of surfacing as a generic failure the
+      // visitor can only respond to by retrying into the rate limit.
+      whatsapp:
+        typedWhatsapp !== "" &&
+        (!WHATSAPP_PATTERN.test(typedWhatsapp) ||
+          whatsappDigitCount(typedWhatsapp) < MIN_WHATSAPP_DIGITS),
       consent: !consented,
     };
     setFieldErrors(nextFieldErrors);
@@ -87,18 +128,24 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
         privacyVersion: NEWSLETTER_PRIVACY_VERSION,
         locale: i18n.resolvedLanguage ?? i18n.language,
         region: region || undefined,
-        whatsapp: whatsapp.trim() || undefined,
+        whatsapp: typedWhatsapp || undefined,
         organisation: forOrganisation ? organisation.trim() || undefined : undefined,
       });
+      // Stops the site-wide newsletter modal asking someone who just signed up
+      // to sign up. One shared list, so one shared "already done" flag.
+      setNewsletterPromptState("subscribed");
       setStatus("success");
     } catch (err) {
-      let message = t("openHouse.signup.errorGeneric");
-      if (err instanceof JDSApiError && err.statusCode === 409) {
-        message = t("openHouse.signup.errorAlreadyOnList");
-      } else if (err instanceof JDSApiError && err.statusCode === 429) {
-        message = t("openHouse.signup.errorThrottled");
+      setFormError(errorMessageFor(err, t));
+      if (err instanceof JDSApiError && err.statusCode === 400) {
+        const details = err.validationErrors ?? {};
+        setFieldErrors({
+          firstName: "firstName" in details,
+          email: "email" in details,
+          whatsapp: "whatsapp" in details,
+          consent: "consentAccepted" in details,
+        });
       }
-      setFormError(message);
       setStatus("idle");
     }
   };
@@ -127,10 +174,19 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
           aria-describedby={fieldErrors.firstName ? `${fieldId}-first-name-error` : undefined}
           className={inputClass(fieldErrors.firstName)}
           value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          onChange={(e) => {
+            setFirstName(e.target.value);
+            if (fieldErrors.firstName) {
+              setFieldErrors((prev) => ({ ...prev, firstName: false }));
+            }
+          }}
         />
         {fieldErrors.firstName && (
-          <p id={`${fieldId}-first-name-error`} className="text-sm font-medium text-destructive">
+          <p
+            id={`${fieldId}-first-name-error`}
+            role="alert"
+            className="text-sm font-medium text-destructive"
+          >
             {t("openHouse.signup.nameRequired")}
           </p>
         )}
@@ -151,10 +207,19 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
           aria-describedby={fieldErrors.email ? `${fieldId}-email-error` : undefined}
           className={inputClass(fieldErrors.email)}
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (fieldErrors.email) {
+              setFieldErrors((prev) => ({ ...prev, email: false }));
+            }
+          }}
         />
         {fieldErrors.email && (
-          <p id={`${fieldId}-email-error`} className="text-sm font-medium text-destructive">
+          <p
+            id={`${fieldId}-email-error`}
+            role="alert"
+            className="text-sm font-medium text-destructive"
+          >
             {t("openHouse.signup.emailInvalid")}
           </p>
         )}
@@ -188,13 +253,32 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
           inputMode="tel"
           autoComplete="tel"
           placeholder="+977 98…"
-          aria-describedby={`${fieldId}-whatsapp-help`}
+          aria-invalid={fieldErrors.whatsapp}
+          aria-describedby={
+            fieldErrors.whatsapp ? `${fieldId}-whatsapp-error` : `${fieldId}-whatsapp-help`
+          }
+          className={inputClass(fieldErrors.whatsapp)}
           value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
+          onChange={(e) => {
+            setWhatsapp(e.target.value);
+            if (fieldErrors.whatsapp) {
+              setFieldErrors((prev) => ({ ...prev, whatsapp: false }));
+            }
+          }}
         />
-        <p id={`${fieldId}-whatsapp-help`} className="text-sm text-muted-foreground">
-          {t("openHouse.signup.whatsappHelp")}
-        </p>
+        {fieldErrors.whatsapp ? (
+          <p
+            id={`${fieldId}-whatsapp-error`}
+            role="alert"
+            className="text-sm font-medium text-destructive"
+          >
+            {t("openHouse.signup.whatsappInvalid")}
+          </p>
+        ) : (
+          <p id={`${fieldId}-whatsapp-help`} className="text-sm text-muted-foreground">
+            {t("openHouse.signup.whatsappHelp")}
+          </p>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -226,7 +310,13 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
           id={`${fieldId}-consent`}
           checked={consented}
           aria-invalid={fieldErrors.consent}
-          onCheckedChange={(checked) => setConsented(checked === true)}
+          aria-describedby={fieldErrors.consent ? `${fieldId}-consent-error` : undefined}
+          onCheckedChange={(checked) => {
+            setConsented(checked === true);
+            if (fieldErrors.consent) {
+              setFieldErrors((prev) => ({ ...prev, consent: false }));
+            }
+          }}
         />
         <Label htmlFor={`${fieldId}-consent`} className="text-sm font-normal leading-6">
           {/* Says plainly that this also subscribes them to the newsletter. One
@@ -239,7 +329,11 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
         </Label>
       </div>
       {fieldErrors.consent && (
-        <p className="text-sm font-medium text-destructive">
+        <p
+          id={`${fieldId}-consent-error`}
+          role="alert"
+          className="text-sm font-medium text-destructive"
+        >
           {t("openHouse.signup.consentRequired")}
         </p>
       )}
