@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Seo } from "@/components/Seo";
+import { OpenHouseSignupForm } from "@/components/open-house/signup-form";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/ui/page-hero";
 import { JAWAFDEHI_OPEN_HOUSE } from "@/config/constants";
@@ -122,8 +123,30 @@ const OpenHouse = () => {
           </div>
         </section>
 
+        {/* Express interest. Paired with the always-live Join button above:
+            the page serves both someone arriving mid-session and someone who
+            wants to be told about the next one for their region. */}
+        <section id="signup" className="py-12 md:py-14">
+          <div className="layout-container">
+            <div className="mx-auto max-w-xl">
+              <div className="text-center">
+                <p className="font-eyebrow mb-3">{t("openHouse.signup.eyebrow")}</p>
+                <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+                  {t("openHouse.signup.title")}
+                </h2>
+                <p className="mt-4 text-base leading-7 text-foreground/70">
+                  {t("openHouse.signup.description")}
+                </p>
+              </div>
+              <div className="mt-8 rounded-lg border border-border bg-card p-6 md:p-8">
+                <OpenHouseSignupForm />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* What we talk about */}
-        <section id="topics" className="py-12 md:py-14">
+        <section id="topics" className="bg-muted/10 py-12 md:py-14">
           <div className="layout-container">
             <div className="mx-auto max-w-2xl text-center">
               <p className="font-eyebrow mb-3">{t("openHouse.topics.eyebrow")}</p>
@@ -154,7 +177,7 @@ const OpenHouse = () => {
         </section>
 
         {/* Donate / volunteer / report */}
-        <section id="next-steps" className="bg-muted/10 py-12 md:py-14">
+        <section id="next-steps" className="py-12 md:py-14">
           <div className="layout-container">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold text-foreground md:text-4xl">
