@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { cleanup, createEvent, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
@@ -19,14 +19,16 @@ vi.mock("@/services/jds-api", async () => {
 
 import OpenHouse from "@/pages/OpenHouse";
 
-const renderPage = () =>
+const renderPage = (path = "/openhouse/") =>
   render(
     <HelmetProvider>
-      <MemoryRouter initialEntries={["/openhouse/"]}>
+      <MemoryRouter initialEntries={[path]}>
         <OpenHouse />
       </MemoryRouter>
     </HelmetProvider>,
   );
+
+const registerLink = () => screen.getByRole("link", { name: /openHouse\.hero\.register/ });
 
 beforeEach(() => {
   // Radix's Checkbox in the signup form measures itself on mount.
@@ -35,6 +37,18 @@ beforeEach(() => {
     unobserve() {}
     disconnect() {}
   } as unknown as typeof ResizeObserver;
+
+  // Reset per test: the reduced-motion case replaces this, and a leaked
+  // "matches: true" would silently turn the smooth-scroll assertion green
+  // for the wrong reason.
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  })) as unknown as typeof window.matchMedia;
+
+  Element.prototype.scrollIntoView = () => {};
 });
 
 describe("OpenHouse hero actions", () => {
@@ -46,11 +60,25 @@ describe("OpenHouse hero actions", () => {
   // target exists, and every test passed.
   it("points Register at this page's own path, never a bare fragment", () => {
     renderPage();
-    const register = screen.getByRole("link", { name: /openHouse\.hero\.register/ });
 
-    expect(register.getAttribute("href")).toBe("/openhouse/#signup");
+    expect(registerLink().getAttribute("href")).toBe("/openhouse/#signup");
     // The whole point: a bare "#signup" would leave the page.
-    expect(register.getAttribute("href")).not.toBe("#signup");
+    expect(registerLink().getAttribute("href")).not.toBe("#signup");
+  });
+
+  // ⚠️ The page is reachable BOTH ways: "/openhouse" when React Router handles
+  // it from the nav menu, and "/openhouse/" on a direct hit. The href must be
+  // stable across the two, because the pre-render emits the unslashed form and
+  // the browser hydrates on the slashed one — echoing the pathname verbatim
+  // would change the attribute during hydration.
+  it("emits the same href whichever way the page was reached", () => {
+    renderPage("/openhouse");
+    expect(registerLink().getAttribute("href")).toBe("/openhouse/#signup");
+
+    cleanup();
+
+    renderPage("/openhouse/");
+    expect(registerLink().getAttribute("href")).toBe("/openhouse/#signup");
   });
 
   it("keeps the Zoom room reachable alongside Register", () => {
@@ -64,6 +92,47 @@ describe("OpenHouse hero actions", () => {
     expect(join.getAttribute("href")).toContain("zoom.us");
     expect(join.getAttribute("target")).toBe("_blank");
     expect(join.getAttribute("rel")).toContain("noopener");
+  });
+
+  it("smooth-scrolls to the form instead of navigating", () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderPage();
+
+    const event = createEvent.click(registerLink());
+    fireEvent(registerLink(), event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+  });
+
+  it("jumps rather than animating when the reader prefers reduced motion", () => {
+    // A scroll this long is a vestibular trigger, so the animation is opt-out.
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("prefers-reduced-motion"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+
+    renderPage();
+    fireEvent.click(registerLink());
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "start" });
+  });
+
+  it("leaves a ctrl/cmd-click alone so it can open in a new tab", () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderPage();
+
+    const event = createEvent.click(registerLink(), { ctrlKey: true });
+    fireEvent(registerLink(), event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it("renders the section Register scrolls to", () => {

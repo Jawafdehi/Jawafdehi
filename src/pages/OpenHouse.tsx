@@ -1,5 +1,6 @@
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Clock,
   FileWarning,
@@ -28,7 +29,27 @@ import { SITE_URL } from "@/utils/seo";
 // /research/corruption ships href="#methodology", both of which land on the
 // home page in production today, as does the skip-to-content link in Navbar.
 const OPEN_HOUSE_PATH = "/openhouse/";
-const SIGNUP_ANCHOR = `${OPEN_HOUSE_PATH}#signup`;
+
+const SIGNUP_ID = "signup";
+
+// ⚠️ Two different pathnames reach this page — "/openhouse" when React Router
+// handles it from the nav menu, and "/openhouse/" on a direct hit — and a
+// fragment link only scrolls when everything BEFORE the "#" matches the current
+// document exactly. Get that wrong and the browser does a full cross-document
+// navigation instead, which is what "it opens a new tab" turned out to be.
+//
+// Normalised to the trailing slash rather than echoing the pathname verbatim,
+// because that is the one form a no-JS reader can actually be at: the edge
+// redirects bare "/openhouse" to "/openhouse/", so the served document is
+// always the slashed one. It also keeps the pre-rendered href identical to the
+// hydrated one — the pre-render renders the route as "/openhouse", so echoing
+// the pathname would emit "/openhouse#signup" into static HTML and then change
+// it on hydration, which is exactly the attribute mismatch React complains
+// about. A client-side arrival at "/openhouse" is covered by the click handler.
+function signupHref(pathname: string): string {
+  const base = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  return `${base}#${SIGNUP_ID}`;
+}
 
 type Topic = {
   icon: LucideIcon;
@@ -86,6 +107,44 @@ const nextSteps: NextStep[] = [
 
 const OpenHouse = () => {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+
+  // Smooth-scrolls instead of jumping, while staying a real link: the href is
+  // still correct, so middle-click, right-click → open in new tab, and a
+  // no-JS render all behave normally. Only a plain left-click is intercepted.
+  const scrollToSignup = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const target = document.getElementById(SIGNUP_ID);
+    // No target means something changed; let the browser follow the href
+    // rather than swallowing the click and going nowhere.
+    if (!target) return;
+
+    event.preventDefault();
+
+    // Honour prefers-reduced-motion. A long smooth scroll is a vestibular
+    // trigger, and this one crosses most of the viewport.
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+
+    // A fragment link is supposed to move focus, not just the viewport —
+    // otherwise a keyboard user tabs on from the hero, not the form. Smooth
+    // scrolling suppresses the browser's own focus handling, so do it here.
+    target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+
+    // Keep the URL shareable without pushing a history entry, so Back leaves
+    // the page rather than silently undoing a scroll.
+    window.history.replaceState(null, "", signupHref(pathname));
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -119,7 +178,7 @@ const OpenHouse = () => {
                   for their region. A plain in-page anchor, so it works before
                   hydration and is a real link for keyboard and screen readers. */}
               <Button asChild size="lg" className="font-semibold">
-                <a href={SIGNUP_ANCHOR}>
+                <a href={signupHref(pathname)} onClick={scrollToSignup}>
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
                   {t("openHouse.hero.register")}
                 </a>
