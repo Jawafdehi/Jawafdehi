@@ -6,6 +6,7 @@ import {
   HandHeart,
   HeartHandshake,
   MessagesSquare,
+  UserPlus,
   Users,
   Video,
   type LucideIcon,
@@ -81,6 +82,16 @@ const OpenHouse = () => {
         title="Jawafdehi Open House — Jawafdehi"
         description="Join a small, informal online session with the Jawafdehi team. We talk about Nepal's accountability infrastructure, using AI and tech for good, and giving back to our home country."
         canonicalUrl={`${SITE_URL}/openhouse/`}
+        // The campaign flyer, recomposed to 1200x630 so the link previews as
+        // the artwork people are being shown elsewhere rather than the generic
+        // site card. This page is shared directly with prospects, so the
+        // preview is often the whole first impression. The card carries
+        // jawafdehi.org/openhouse in it, which survives platforms that strip
+        // the link text and show only the image.
+        imageUrl={`${SITE_URL}/assets/openhouse-preview.png`}
+        imageAlt="Jawafdehi Open House — join us online via Zoom at jawafdehi.org/openhouse"
+        imageWidth={1200}
+        imageHeight={630}
       />
 
       <main id="main-content" className="flex-1">
@@ -91,16 +102,32 @@ const OpenHouse = () => {
           description={t("openHouse.hero.description")}
           actionsClassName="flex flex-col items-center justify-center gap-3 sm:flex-row"
           actions={
-            <Button asChild size="lg" className="font-semibold">
-              <a
-                href={JAWAFDEHI_OPEN_HOUSE.zoomUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Video className="h-5 w-5" aria-hidden="true" />
-                {t("openHouse.hero.join")}
-              </a>
-            </Button>
+            <>
+              {/* Register leads, because most arrivals are between sessions and
+                  the useful thing for them is getting told about the next one
+                  for their region. A plain in-page anchor, so it works before
+                  hydration and is a real link for keyboard and screen readers. */}
+              <Button asChild size="lg" className="font-semibold">
+                <a href="#signup">
+                  <UserPlus className="h-5 w-5" aria-hidden="true" />
+                  {t("openHouse.hero.register")}
+                </a>
+              </Button>
+              {/* Demoted, never removed. The room is a "No Fixed Time" meeting
+                  whose link is permanent, so this stays reachable at all times:
+                  someone arriving mid-session needs it, and between sessions
+                  Zoom itself says the host has not started the meeting. */}
+              <Button asChild size="lg" variant="secondary" className="font-semibold">
+                <a
+                  href={JAWAFDEHI_OPEN_HOUSE.zoomUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Video className="h-5 w-5" aria-hidden="true" />
+                  {t("openHouse.hero.join")}
+                </a>
+              </Button>
+            </>
           }
         />
 
@@ -126,7 +153,9 @@ const OpenHouse = () => {
         {/* Express interest. Paired with the always-live Join button above:
             the page serves both someone arriving mid-session and someone who
             wants to be told about the next one for their region. */}
-        <section id="signup" className="py-12 md:py-14">
+        {/* scroll-mt clears the sticky navbar, which would otherwise cover the
+            eyebrow and heading when the hero's Register button jumps here. */}
+        <section id="signup" className="scroll-mt-24 py-12 md:py-14">
           <div className="layout-container">
             <div className="mx-auto max-w-xl">
               <div className="text-center">
