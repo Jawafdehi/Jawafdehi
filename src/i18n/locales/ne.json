@@ -47,7 +47,8 @@
       "eyebrow": "Open to everyone",
       "title": "Jawafdehi Open House",
       "description": "A small, informal online session with the team behind Nepal's permanent corruption case archive. Come with questions, with ideas, or just to listen.",
-      "join": "Join on Zoom"
+      "join": "Join on Zoom",
+      "register": "Register"
     },
     "when": {
       "title": "When is the next one?",
@@ -55,7 +56,7 @@
       "waitingRoom": "Sessions are small, usually ten to fifteen people. The Join button above is always live: if a session is running you'll arrive in the waiting room and the host will let you in. If nothing is running, Zoom will tell you the host hasn't started the meeting yet."
     },
     "signup": {
-      "eyebrow": "Can't make this one?",
+      "eyebrow": "Register your interest",
       "title": "Tell us where you are",
       "description": "Sessions are arranged around whoever is coming, so we'll email you when there's one at a time that works for your part of the world.",
       "name": "Name",
