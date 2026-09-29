@@ -34,7 +34,7 @@ import { KeyAllegationsSection } from "@/components/case-detail/key-allegations-
 import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
 import { API_BASE_URL } from "@/services/http";
 import { getCourtCase } from "@/services/datalake-api";
-import { getEntityById } from "@/services/api";
+import { ENTITY_BATCH_SIZE, getEntityRecordsBatch } from "@/services/api";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -124,14 +124,36 @@ const CaseDetail = () => {
   const visibleAccusedEntities = collapsedAccused ? bannerEntities.slice(0, BANNER_ACCUSED_LIMIT) : bannerEntities;
   const hiddenAccusedCount = accusedCount - visibleAccusedEntities.length;
 
-  const uniqueNesIds = caseData
-    ? [...new Set(caseData.entities.filter((e) => e.nes_id).map((e) => e.nes_id!))]
-    : [];
+  const uniqueNesIds = useMemo(
+    () =>
+      caseData
+        ? [...new Set(caseData.entities.filter((e) => e.nes_id).map((e) => e.nes_id!))]
+        : [],
+    [caseData],
+  );
+
+  // One request per party, all fired on mount, is fine for the median case (5
+  // parties) and ruinous for the tail: the worst published case cites 255, and
+  // the API serves 64 concurrent requests cluster-wide before it starts
+  // shedding them with a 503. One reader opening that page exhausted the whole
+  // budget and took everyone else's requests down with it — see the 2026-09-25
+  // incident. The batch endpoint returns the same records 25 at a time, so the
+  // same page costs 11 requests instead of 256.
+  const entityBatches = useMemo(() => {
+    const chunks: string[][] = [];
+    for (let i = 0; i < uniqueNesIds.length; i += ENTITY_BATCH_SIZE) {
+      chunks.push(uniqueNesIds.slice(i, i + ENTITY_BATCH_SIZE));
+    }
+    return chunks;
+  }, [uniqueNesIds]);
 
   const entityQueries = useQueries({
-    queries: uniqueNesIds.map((nesId) => ({
-      queryKey: ["entity-record", nesId],
-      queryFn: () => getEntityById(nesId),
+    queries: entityBatches.map((chunk) => ({
+      // Keyed on the chunk itself, not the case: two cases sharing a party
+      // still share the cache entry whenever they chunk the same way, and the
+      // key changes if the case's entity list does.
+      queryKey: ["entity-records", chunk],
+      queryFn: () => getEntityRecordsBatch(chunk),
       staleTime: 10 * 60 * 1000,
       retry: false,
     })),
@@ -168,11 +190,13 @@ const CaseDetail = () => {
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, caseData?.slug, isError]);
 
+  // Batches resolve independently and a failed one is simply absent, exactly as
+  // a failed per-entity fetch was: every consumer falls back to the bind's own
+  // display_name, so the row still renders without its canonical name or avatar.
   const resolvedEntities: Record<string, Entity> = {};
-  uniqueNesIds.forEach((nesId, i) => {
-    const data = entityQueries[i]?.data;
-    if (data) resolvedEntities[nesId] = data;
-  });
+  for (const query of entityQueries) {
+    if (query.data) Object.assign(resolvedEntities, query.data);
+  }
 
   const groupedEntities = caseData ? getGroupedEntities(caseData.entities) : {};
 

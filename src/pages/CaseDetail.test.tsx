@@ -15,7 +15,10 @@ vi.mock("react-router-dom", async (importOriginal) => {
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    // i18next's second argument is either a string fallback or an options bag
+    // ({ count }, { defaultValue }). Returning it blindly hands React an object
+    // to render, which throws — so only a string fallback is honoured.
+    t: (key: string, fallback?: unknown) => (typeof fallback === "string" ? fallback : key),
     i18n: { language: "en" },
   }),
 }));
@@ -27,7 +30,14 @@ vi.mock("@/services/jds-api", () => ({
   getCaseByCourtRef: (...args: unknown[]) => getCaseByCourtRef(...args),
 }));
 
-vi.mock("@/services/api", () => ({ getEntityById: vi.fn() }));
+// ENTITY_BATCH_SIZE must be a real value here, not a bare vi.fn() module: the
+// page chunks its entity list with it, and an undefined stride silently
+// collapses the chunking to a single empty batch that asserts nothing.
+const getEntityRecordsBatch = vi.fn();
+vi.mock("@/services/api", () => ({
+  ENTITY_BATCH_SIZE: 25,
+  getEntityRecordsBatch: (...args: unknown[]) => getEntityRecordsBatch(...args),
+}));
 vi.mock("@/services/datalake-api", () => ({ getCourtCase: vi.fn() }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => false }));
 
@@ -98,6 +108,59 @@ beforeEach(() => {
   navigateSpy.mockReset();
   getCaseById.mockReset();
   getCaseByCourtRef.mockReset();
+  getEntityRecordsBatch.mockReset();
+  getEntityRecordsBatch.mockResolvedValue({});
+});
+
+const makeEntities = (count: number): CaseDetailType["entities"] =>
+  Array.from({ length: count }, (_, i) => ({
+    nes_id: `https://jawafdehi.org/entity/person/party-${i}`,
+    display_name: `Party ${i}`,
+    entity_type: "Person",
+    type: "accused",
+    outcome: null,
+    notes: "",
+  })) as CaseDetailType["entities"];
+
+describe("CaseDetail entity resolution is batched", () => {
+  // A case page used to fetch one /api/entities record per party, in parallel,
+  // on mount. The median case cites 5 parties so it never showed; the worst
+  // published case cites 255, against an API that sheds load past 64 concurrent
+  // requests cluster-wide. These lock in the batch form.
+  it("chunks the party list into ENTITY_BATCH_SIZE requests instead of one per party", async () => {
+    getCaseById.mockResolvedValue({ ...makeCase("current-slug"), entities: makeEntities(60) });
+
+    renderAt("current-slug");
+
+    await waitFor(() => expect(getEntityRecordsBatch).toHaveBeenCalledTimes(3));
+    const chunks = getEntityRecordsBatch.mock.calls.map(([chunk]) => chunk as string[]);
+    expect(chunks.map((c) => c.length)).toEqual([25, 25, 10]);
+    // Every party is still resolved — batching must not drop the tail.
+    expect(chunks.flat()).toHaveLength(60);
+    expect(new Set(chunks.flat()).size).toBe(60);
+  });
+
+  it("deduplicates parties bound to the same entity more than once", async () => {
+    const entities = makeEntities(2);
+    getCaseById.mockResolvedValue({
+      ...makeCase("current-slug"),
+      entities: [...entities, ...entities],
+    });
+
+    renderAt("current-slug");
+
+    await waitFor(() => expect(getEntityRecordsBatch).toHaveBeenCalledTimes(1));
+    expect(getEntityRecordsBatch.mock.calls[0][0]).toHaveLength(2);
+  });
+
+  it("issues no entity request for a case with no parties", async () => {
+    getCaseById.mockResolvedValue(makeCase("current-slug"));
+
+    renderAt("current-slug");
+
+    await waitFor(() => expect(getCaseById).toHaveBeenCalled());
+    expect(getEntityRecordsBatch).not.toHaveBeenCalled();
+  });
 });
 
 describe("CaseDetail canonical slug redirect (BB-38)", () => {

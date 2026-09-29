@@ -232,6 +232,73 @@ export async function getEntityBySlug(slug: string): Promise<Entity> {
 }
 
 /**
+ * Mirrors MAX_BATCH_SIZE in the API's `entities/views.py`, and
+ * ENTITY_BATCH_SIZE in `scripts/pre-render.ts`. Over it the endpoint 400s with
+ * BATCH_SIZE_EXCEEDED, so raising this needs the server raised first.
+ */
+export const ENTITY_BATCH_SIZE = 25;
+
+/** `GET /api/entities?ids=` — the batch form of the per-entity detail endpoint. */
+interface EntityBatchResponse {
+  entities: unknown[];
+  total: number;
+  requested: number;
+  /** Refs that resolved to nothing. Absent when empty. */
+  not_found?: string[];
+  /** requested IRI → survivor IRI, for merge tombstones. Absent when empty. */
+  redirected?: Record<string, string>;
+}
+
+/**
+ * Resolve up to ENTITY_BATCH_SIZE entity records in one call.
+ *
+ * The case detail page binds one NES record per party and used to fetch each
+ * one separately, in parallel, on mount. Most cases have a handful of parties
+ * so that was invisible; the corpus tail is not — the worst published case
+ * cites 255, and firing 255 concurrent reads at an API whose whole budget is 64
+ * in-flight requests took the page down along with everyone else's browsing.
+ *
+ * Keyed by the REQUESTED IRI rather than each document's own `@id`, because the
+ * two differ for a merge tombstone: it resolves to its survivor. The detail
+ * endpoint hides that behind a 301 the HTTP client follows, while the batch
+ * reports it in `redirected` and returns the survivor's document. Keying on
+ * `@id` would drop every tombstoned entity from the result.
+ *
+ * Anything unresolved is simply absent from the map. Callers already fall back
+ * to the bind's own `display_name`, so a missing record costs the canonical
+ * bilingual name and the avatar, never the row itself.
+ */
+export async function getEntityRecordsBatch(iris: string[]): Promise<Record<string, Entity>> {
+  if (iris.length === 0) return {};
+
+  const params = new URLSearchParams({ ids: iris.join(',') });
+  let body: EntityBatchResponse;
+  try {
+    const response = await http.get<EntityBatchResponse>(`/api/entities?${params}`, {
+      timeout: 30000,
+    });
+    body = response.data;
+  } catch (error) {
+    handleApiError(error, `/api/entities?ids=(${iris.length} refs)`);
+  }
+
+  // The batch returns the same bare documents as the detail endpoint, so they
+  // need the same JSON-LD adaptation before consumers can read names[]/pictures[].
+  const byId = new Map<string, unknown>();
+  for (const doc of body.entities ?? []) {
+    const id = (doc as { '@id'?: unknown })?.['@id'];
+    if (typeof id === 'string') byId.set(id, doc);
+  }
+
+  const byRequestedIri: Record<string, Entity> = {};
+  for (const iri of iris) {
+    const doc = byId.get(body.redirected?.[iri] ?? iri);
+    if (doc !== undefined) byRequestedIri[iri] = jsonLdToEntity(doc);
+  }
+  return byRequestedIri;
+}
+
+/**
  * Get version history for an entity
  *
  * Backend endpoint: GET /entities/{id}/versions
