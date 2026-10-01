@@ -212,6 +212,28 @@ describe("MaterialSeriesBrowse", () => {
     await waitFor(() => expect(lastParams().page).toBe(2));
   });
 
+  it("ignores an unrecognised date preset instead of filtering to today", async () => {
+    // Regression: these values became URL-supplied in this change, and an unknown
+    // one matched no branch in presetStartDate and so returned TODAY — silently
+    // emptying the series with nothing to indicate the URL caused it.
+    searchArchive.mockResolvedValue(response([hit("1", "One", "2020-01-02")]));
+    renderPage("/materials/?series=charge-sheets&when=garbage");
+
+    await waitFor(() => expect(searchArchive).toHaveBeenCalled());
+    expect(lastParams().date_from).toBeUndefined();
+  });
+
+  it("drops a malformed date bound rather than forwarding it", async () => {
+    // A bound the API cannot parse is a 400, which the reader would see as an
+    // unexplained empty page.
+    searchArchive.mockResolvedValue(response([]));
+    renderPage("/materials/?series=charge-sheets&from=not-a-date&to=2024-13-99");
+
+    await waitFor(() => expect(searchArchive).toHaveBeenCalled());
+    expect(lastParams().date_from).toBeUndefined();
+    expect(lastParams().date_to).toBeUndefined();
+  });
+
   it("offers to clear the filters when a search matches nothing", async () => {
     searchArchive.mockResolvedValue(response([]));
     renderPage("/materials/?series=charge-sheets&q=nothingmatchesthis");

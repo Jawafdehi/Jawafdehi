@@ -58,6 +58,45 @@ function localIsoDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+const PRESETS: readonly MaterialDatePreset[] = [
+  "all",
+  "30-days",
+  "6-months",
+  "1-year",
+  "custom",
+];
+
+/**
+ * Read a preset off the query string, falling back to "all".
+ *
+ * These values are URL-supplied now, so they are untrusted in a way they were
+ * not while the control lived in component state. An unrecognised one must NOT
+ * reach `presetStartDate`: it matches none of the branches there and returns
+ * TODAY, which silently filters the series down to nothing with no indication
+ * that the URL was the cause.
+ */
+function readPreset(raw: string | null): MaterialDatePreset {
+  return PRESETS.includes(raw as MaterialDatePreset)
+    ? (raw as MaterialDatePreset)
+    : "all";
+}
+
+/**
+ * `YYYY-MM-DD`, the only shape the API's date bounds accept — anything else is
+ * dropped rather than forwarded, since a malformed bound 400s the request and the
+ * reader would see an unexplained empty page.
+ *
+ * The round-trip is doing real work: the pattern alone accepts `2024-13-99` and
+ * `2023-02-29`, which are well-formed and not dates. Re-serializing the parsed
+ * value and requiring it to equal the input rejects both.
+ */
+function readIsoDate(raw: string | null): string {
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "";
+  const parsed = new Date(`${raw}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10) === raw ? raw : "";
+}
+
 function presetStartDate(preset: MaterialDatePreset): string {
   if (preset === "all" || preset === "custom") return "";
   const start = new Date();
@@ -107,9 +146,9 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
   const sortOrder: MaterialSortOrder =
     searchParams.get(PARAM.sort) === "oldest" ? "oldest" : "newest";
   const filters: MaterialFilters = {
-    preset: (searchParams.get(PARAM.preset) as MaterialDatePreset) || "all",
-    startDate: searchParams.get(PARAM.start) ?? "",
-    endDate: searchParams.get(PARAM.end) ?? "",
+    preset: readPreset(searchParams.get(PARAM.preset)),
+    startDate: readIsoDate(searchParams.get(PARAM.start)),
+    endDate: readIsoDate(searchParams.get(PARAM.end)),
     query,
   };
 
