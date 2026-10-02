@@ -84,6 +84,20 @@ function securityHeadersAllowFrame(): Record<string, string> {
   return headers;
 }
 
+// SPA routes served with X-Robots-Tag: noindex, nofollow. Keyed by the matched
+// route PATTERN from SITE_ROUTES, not the raw pathname, so `/admin/*` covers
+// every page under the portal without a prefix test of its own.
+//
+// /updates/preview is absent on purpose — it gets the same header via
+// previewSecurityHeaders(), which also has to relax framing for the CMS admin.
+const NOINDEX_ROUTES = new Set([
+  '/admin/*',
+  '/portal/*',
+  '/document-viewer',
+  '/moderation',
+  '/embed/case/:id',
+]);
+
 const CMS_ADMIN_ORIGIN = 'https://api.jawafdehi.org';
 
 // Headers for the Wagtail headless preview route. Unlike the embed widget
@@ -722,6 +736,22 @@ export default {
       : isEmbedRoute
         ? securityHeadersAllowFrame()
         : securityHeaders();
+
+    // Routes that must never rank. Every one of them answers with the same SPA
+    // shell as a real page — same <title>, same description, no content of its
+    // own — so to a crawler they are indistinguishable from the homepage.
+    //
+    // robots.txt disallows the three operator surfaces, but a Disallow only
+    // stops the FETCH; a URL already in the index stays there, because the
+    // crawler can no longer fetch it to discover it should be dropped. This
+    // header is what actually removes them, and it keeps working if robots.txt
+    // is ever missed. /embed/case/:id is the opposite case and is deliberately
+    // left crawlable in robots.txt: it has to stay fetchable for third-party
+    // embeds and unfurlers, so noindex is the only tool available to stop it
+    // competing with the real case page.
+    if (NOINDEX_ROUTES.has(matched?.path ?? '')) {
+      secHeaders['X-Robots-Tag'] = 'noindex, nofollow';
+    }
 
     // The social card used to ship under two names. /og-favicon.png was the
     // original, kept byte-identical to /assets/social-preview.png purely so

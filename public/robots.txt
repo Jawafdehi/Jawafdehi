@@ -17,21 +17,51 @@
 # everything the zone serves, so it would block Meta again and cannot be
 # overridden per host. It is pinned off in terraform/cloudflare/zone.tf.
 
+# ⚠️ A crawler obeys exactly ONE group — the most specific `User-agent` that
+# matches it — and ignores every other group, including `*`. So a rule added
+# only to the `*` group at the bottom does NOT apply to Googlebot, Bingbot or
+# any other crawler named in this file. Anything that must apply to everyone
+# has to be repeated in each group. That is why the allowed crawlers are listed
+# as two multi-agent groups below rather than one group each: it keeps the
+# shared `Disallow` block down to two copies instead of eight.
+
+# ⚠️ The `Disallow` lines must come BEFORE `Allow: /`, not after it. Google
+# resolves a conflict by the LONGEST matching rule, so either order works for
+# Google — but many smaller crawlers (anything built on Python's
+# urllib.robotparser, for one) resolve it by the FIRST match in file order and
+# read a leading `Allow: /` as permission for everything under it, silently
+# voiding every Disallow below. Disallow-first is the only ordering both agree
+# on. tests/ssr/worker.noindex-routes.test.ts enforces it, because the file
+# still parses and Google still behaves when it is wrong.
+
+# --- Not public: disallowed for everyone -------------------------------------
+#
+# The casework portal (/admin; /portal and /moderation redirect into it) and
+# the document viewer are operator surfaces. They are not secret — access
+# control lives in the app — but they carry no public content: the SPA answers
+# them with the same shell HTML as every other route, so a crawler gets a login
+# screen with the site-wide title and nothing to index.
+#
+# Googlebot spent 442 of its ~630 successful fetches of jawafdehi.org on
+# /admin in the week to 2026-10-02, against 2 fetches of /sitemap.xml and one
+# single case/entity page. These paths are disallowed so that stops.
+#
+# A Disallow only stops the fetch. Anything already indexed is dropped by the
+# `X-Robots-Tag: noindex, nofollow` worker.ts serves on the same routes.
+#
+# Keep this block in step across all three groups that carry it.
+
 # --- Search and social: allowed, these are how people find the archive -------
 
 User-agent: Googlebot
-Allow: /
-
 User-agent: Bingbot
-Allow: /
-
 User-agent: Twitterbot
-Allow: /
-
 User-agent: facebookexternalhit
-Allow: /
-
 User-agent: meta-externalagent
+Disallow: /admin
+Disallow: /portal
+Disallow: /document-viewer
+Disallow: /moderation
 Allow: /
 
 # --- Answer engines: allowed on purpose --------------------------------------
@@ -42,12 +72,12 @@ Allow: /
 # this is a deliberate line, not an oversight.
 
 User-agent: ChatGPT-User
-Allow: /
-
 User-agent: OAI-SearchBot
-Allow: /
-
 User-agent: PerplexityBot
+Disallow: /admin
+Disallow: /portal
+Disallow: /document-viewer
+Disallow: /moderation
 Allow: /
 
 # --- Training crawlers: disallowed -------------------------------------------
@@ -86,6 +116,17 @@ Disallow: /
 
 User-agent: *
 Content-Signal: search=yes, ai-train=no
+Disallow: /admin
+Disallow: /portal
+Disallow: /document-viewer
+Disallow: /moderation
 Allow: /
+
+# /embed/case/:id is deliberately NOT disallowed. It is the public embed widget,
+# so third-party sites and link unfurlers must be able to fetch it; it is kept
+# out of the index with an X-Robots-Tag: noindex header from worker.ts instead,
+# which suppresses the duplicate-content copy of a case without blocking the
+# fetch. Disallow is for paths nobody should fetch; noindex is for paths that
+# must stay fetchable but must not rank.
 
 Sitemap: https://jawafdehi.org/sitemap.xml
