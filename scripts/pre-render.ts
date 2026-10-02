@@ -28,6 +28,34 @@ const ROOT = join(__dirname, '..');
 // anything a visitor or a crawler will see. Not set in CI, deliberately.
 const ALLOW_EMPTY_PREFETCH = process.env.PRERENDER_ALLOW_EMPTY_PREFETCH === '1';
 
+// How much of the archive to pre-render. `full` renders a page per case-cited
+// entity — ~2,700 of them, and growing with the corpus; `static` renders only
+// the fixed top-level routes and the update articles.
+//
+// Why this exists: the entity corpus is the expensive part of the build, and it
+// is only worth paying for on something a crawler will read. Until now every
+// build rendered all of it — the PR check, the Cloudflare preview build for each
+// branch, and the production deploy alike — against the live production API,
+// anonymously. Two of those run on the same push and drain the same anonymous
+// throttle bucket (1000/hour, THROTTLE_RATE_ANON), so whichever finished second
+// took a wall of 429s and failed the build. Batching the entity lookups bought
+// headroom and did not fix it, because the contention is between builds.
+//
+// ⚠️ The default is `full`, and that direction is deliberate. A build that
+// should have been cheap and was expensive wastes a few minutes; a production
+// deploy that should have been full and was static silently publishes the site
+// with ~2,700 pages missing, which is invisible until search traffic dies weeks
+// later. Opt OUT explicitly, where the build is known to be disposable; never
+// opt in from the deploy side.
+const SCOPE = process.env.PRERENDER_SCOPE ?? 'full';
+if (SCOPE !== 'full' && SCOPE !== 'static') {
+  console.error(
+    `[pre-render] ERROR: PRERENDER_SCOPE must be "full" or "static", got ${JSON.stringify(SCOPE)}.`,
+  );
+  process.exit(1);
+}
+const RENDER_ENTITY_PAGES = SCOPE === 'full';
+
 interface RouteConfig {
   path: string;
   outFile: string;
@@ -501,7 +529,7 @@ async function main() {
   // path. Insertion order is first-appearance order, matching the Set-based
   // dedupe this replaced, so the emitted page order is unchanged.
   const iriByPath = new Map<string, string>();
-  if (apiReachable) {
+  if (apiReachable && RENDER_ENTITY_PAGES) {
     for (const caseItem of cases) {
       for (const entity of caseItem.entities) {
         const path = entityPath(entity.nes_id);
@@ -512,6 +540,18 @@ async function main() {
     }
   }
   const entityPaths = [...iriByPath.keys()];
+
+  // Said once, loudly, and at the top rather than buried in the page log: a
+  // static-scope build is NOT the site. It is missing every entity page, and the
+  // sitemap it ships still advertises them, because `scripts/sitemap.ts` derives
+  // from the API rather than from what was rendered.
+  if (!RENDER_ENTITY_PAGES) {
+    console.warn(
+      '[pre-render] PRERENDER_SCOPE=static — entity pages are NOT being rendered.\n' +
+      '  This build is for a PR check or a branch preview. Do NOT publish it to\n' +
+      '  production: the archive would go live with every entity page missing.',
+    );
+  }
 
   // Render static routes
   for (const route of staticRoutes) {

@@ -43,8 +43,19 @@ jobs:
       - name: Run tests
         run: bun run test
       
+      # `build:preview`, not `build`: this check exists to prove the branch
+      # compiles and renders, not to produce something publishable. The full
+      # build also pre-renders a page per case-cited entity — ~2,700 anonymous
+      # requests to the production API — and the Cloudflare preview build for
+      # the same push does it again, against the same 1000/hour throttle bucket.
+      # Whichever lands second gets a wall of 429s, and the PR shows two red
+      # checks for a diff that never touched the data layer.
+      #
+      # The static scope still renders every fixed route and update article, so
+      # a prefetch this branch broke still fails here. Entity rendering is
+      # covered where it matters, on the production deploy.
       - name: Build project
-        run: bun run build
+        run: bun run build:preview
         env:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
