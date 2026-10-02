@@ -175,7 +175,9 @@ export function RecentMaterialsCarousel({
         {materials.map(({ result, date }) => {
           const source = sourceFromMaterialUrl(result.url);
           const sourceKey = sourceKeyFor(source ?? "");
-          const series = source ? seriesBySource(source) : undefined;
+          const series = source
+            ? seriesBySource(source, result.extra?.dataset_bucket)
+            : undefined;
           const seriesLabel = series
             ? pickLocalized(series.name, language)
             : t(`dataQuality.materialsBySource.source.${sourceKey}`, source ?? "—");
