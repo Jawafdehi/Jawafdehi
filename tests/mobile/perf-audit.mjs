@@ -14,6 +14,7 @@
 import { chromium, devices as pw } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -71,10 +72,14 @@ const typeOf = (url, ct) => {
 
 async function measure(browser, profile, route, slug, runIdx) {
   const dev = pw["Galaxy S9+"];
-  const ctx = await browser.newContext({
+  // Telemetry is blocked here too, which costs a little interception latency on
+  // every request. That is on purpose: the beacon is itself a script fetch plus
+  // a POST, so excluding it measures OUR page weight rather than Cloudflare's.
+  // Keep it, so these numbers stay comparable with the other drivers'.
+  const ctx = await newSyntheticContext(browser, {
+    base: BASE,
     viewport: { width: 360, height: 640 }, userAgent: dev.userAgent,
     deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "ne-NP",
-    storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
   });
   const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);

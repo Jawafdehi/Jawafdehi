@@ -87,6 +87,22 @@ Other flags — supported only where they mean something: `--out`, `--device <id
 `--route <slug>`, `--shots 0`, `--interact 0`, `--runs N`. Device ids match the
 `mobile-*` project names.
 
-All of them set `locale: "ne-NP"` and pre-deny analytics consent
-(`jawafdehi_analytics_consent=denied`, per `src/lib/consent.ts`) so the banner
-never masks the fold and no beacon is sent while auditing.
+All of them build their browser context through `newSyntheticContext` in
+`synthetic.mjs` rather than calling `browser.newContext` directly. That sets
+`locale: "ne-NP"`, pre-denies analytics consent (`jawafdehi_analytics_consent=
+denied`, per `src/lib/consent.ts`) so the banner never masks the fold, blocks the
+telemetry endpoints, and appends a marker to the emulated user agent. **Use it
+for any new driver that points at a real origin.**
+
+Denying consent alone is not enough, which is why the helper exists. It stops
+gtag.js, but Cloudflare Web Analytics injects its beacon at the EDGE — there is
+no app code to gate and no consent flag it honours — so an unblocked audit run
+is counted as real visitors. Through September 2026 the nightly suite roughly
+quadrupled the apparent pageload count while real arrivals were falling by three
+quarters, which read as growth. The marker is the other half: suppression is
+invisible, and the edge logs keep the requests regardless, so the user agent is
+what lets someone reading them later tell our robot from a visitor.
+
+The matching exclusion for staff traffic is a Cloudflare Web Analytics rule in
+the infra repo (`terraform/cloudflare/web-analytics.tf`), paired with the GA4
+exclusion in `src/config/analytics-config.ts`.
