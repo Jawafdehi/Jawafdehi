@@ -34,7 +34,7 @@ import { KeyAllegationsSection } from "@/components/case-detail/key-allegations-
 import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
 import { API_BASE_URL } from "@/services/http";
 import { getCourtCase } from "@/services/datalake-api";
-import { getEntityById } from "@/services/api";
+import { caseBindToEntity } from "@/services/entity-adapters";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -124,19 +124,6 @@ const CaseDetail = () => {
   const visibleAccusedEntities = collapsedAccused ? bannerEntities.slice(0, BANNER_ACCUSED_LIMIT) : bannerEntities;
   const hiddenAccusedCount = accusedCount - visibleAccusedEntities.length;
 
-  const uniqueNesIds = caseData
-    ? [...new Set(caseData.entities.filter((e) => e.nes_id).map((e) => e.nes_id!))]
-    : [];
-
-  const entityQueries = useQueries({
-    queries: uniqueNesIds.map((nesId) => ({
-      queryKey: ["entity-record", nesId],
-      queryFn: () => getEntityById(nesId),
-      staleTime: 10 * 60 * 1000,
-      retry: false,
-    })),
-  });
-
   const courtCaseQueries = useQueries({
     queries: (caseData?.court_cases ?? []).map((courtCaseId) => ({
       queryKey: ["court-case", courtCaseId],
@@ -168,11 +155,23 @@ const CaseDetail = () => {
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, caseData?.slug, isError]);
 
-  const resolvedEntities: Record<string, Entity> = {};
-  uniqueNesIds.forEach((nesId, i) => {
-    const data = entityQueries[i]?.data;
-    if (data) resolvedEntities[nesId] = data;
-  });
+  // Party identity comes from the case payload itself. This used to be one
+  // `GET /api/entities/<iri>` per party — 255 of them on the widest case, each
+  // opening its own Postgres connection against a ceiling of 100, which is what
+  // exhausted it and served intermittent 500s for nine days (COE 2026-09-29).
+  // The detail payload now carries `name`/`image` on every bind.
+  //
+  // Memoized on the binds, not on `caseData`: this object is a prop to the party
+  // cards and the banner, so rebuilding it every render would hand them a new
+  // reference each time.
+  const resolvedEntities = useMemo<Record<string, Entity>>(() => {
+    const out: Record<string, Entity> = {};
+    for (const bind of caseData?.entities ?? []) {
+      const entity = caseBindToEntity(bind);
+      if (entity && bind.nes_id) out[bind.nes_id] = entity;
+    }
+    return out;
+  }, [caseData?.entities]);
 
   const groupedEntities = caseData ? getGroupedEntities(caseData.entities) : {};
 
