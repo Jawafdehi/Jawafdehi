@@ -10,6 +10,7 @@
 import { chromium, devices as pw } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -92,10 +93,10 @@ const MEASURE = () => {
 const main = async () => {
   await fs.mkdir(OUT, { recursive: true });
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({
+  const ctx = await newSyntheticContext(browser, {
+    base: BASE,
     viewport: { width: W, height: H }, userAgent: pw["Galaxy S9+"].userAgent,
     deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "ne-NP",
-    storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
   });
   const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);

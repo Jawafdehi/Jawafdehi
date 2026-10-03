@@ -5,6 +5,7 @@ import { Seo } from "@/components/Seo";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Reveal } from "@/components/ui/reveal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -33,7 +34,7 @@ import { KeyAllegationsSection } from "@/components/case-detail/key-allegations-
 import { getCaseById, getCaseByCourtRef } from "@/services/jds-api";
 import { API_BASE_URL } from "@/services/http";
 import { getCourtCase } from "@/services/datalake-api";
-import { getEntityById } from "@/services/api";
+import { caseBindToEntity } from "@/services/entity-adapters";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -123,19 +124,6 @@ const CaseDetail = () => {
   const visibleAccusedEntities = collapsedAccused ? bannerEntities.slice(0, BANNER_ACCUSED_LIMIT) : bannerEntities;
   const hiddenAccusedCount = accusedCount - visibleAccusedEntities.length;
 
-  const uniqueNesIds = caseData
-    ? [...new Set(caseData.entities.filter((e) => e.nes_id).map((e) => e.nes_id!))]
-    : [];
-
-  const entityQueries = useQueries({
-    queries: uniqueNesIds.map((nesId) => ({
-      queryKey: ["entity-record", nesId],
-      queryFn: () => getEntityById(nesId),
-      staleTime: 10 * 60 * 1000,
-      retry: false,
-    })),
-  });
-
   const courtCaseQueries = useQueries({
     queries: (caseData?.court_cases ?? []).map((courtCaseId) => ({
       queryKey: ["court-case", courtCaseId],
@@ -167,11 +155,23 @@ const CaseDetail = () => {
     trackedCaseIdRef.current = loadedCaseId;
   }, [id, caseData?.id, caseData?.slug, isError]);
 
-  const resolvedEntities: Record<string, Entity> = {};
-  uniqueNesIds.forEach((nesId, i) => {
-    const data = entityQueries[i]?.data;
-    if (data) resolvedEntities[nesId] = data;
-  });
+  // Party identity comes from the case payload itself. This used to be one
+  // `GET /api/entities/<iri>` per party — 255 of them on the widest case, each
+  // opening its own Postgres connection against a ceiling of 100, which is what
+  // exhausted it and served intermittent 500s for nine days (COE 2026-09-29).
+  // The detail payload now carries `name`/`image` on every bind.
+  //
+  // Memoized on the binds, not on `caseData`: this object is a prop to the party
+  // cards and the banner, so rebuilding it every render would hand them a new
+  // reference each time.
+  const resolvedEntities = useMemo<Record<string, Entity>>(() => {
+    const out: Record<string, Entity> = {};
+    for (const bind of caseData?.entities ?? []) {
+      const entity = caseBindToEntity(bind);
+      if (entity && bind.nes_id) out[bind.nes_id] = entity;
+    }
+    return out;
+  }, [caseData?.entities]);
 
   const groupedEntities = caseData ? getGroupedEntities(caseData.entities) : {};
 
@@ -641,76 +641,99 @@ const CaseDetail = () => {
                   </aside>
 
                   <div className="min-w-0 w-full max-w-6xl lg:col-start-2 lg:pl-8 xl:pl-24">
-                    <KeyAllegationsSection
-                      allegations={caseData.key_allegations || []}
-                      emptyLabel={t("common.notAvailable")}
-                      title={t("caseDetail.allegations")}
-                    />
+                    {/* Reveal entrances, one per section: fades + lifts as each
+                        enters the viewport. Inert during pre-render/no-JS/
+                        prefers-reduced-motion (content simply renders visible),
+                        and the group class lets each CaseSectionHeading's
+                        crimson rule draw in off the same trigger. */}
+                    <Reveal className="group">
+                      <KeyAllegationsSection
+                        allegations={caseData.key_allegations || []}
+                        emptyLabel={t("common.notAvailable")}
+                        title={t("caseDetail.allegations")}
+                      />
+                    </Reveal>
 
                     {hasInvolvedParties && (
-                      <InvolvedPartiesSection
-                        groupedEntities={groupedEntities}
-                        language={currentLang}
-                        resolvedEntities={resolvedEntities}
-                        title={t("caseDetail.partiesInvolved")}
-                        forum={caseVerdictForum(caseData.dates, currentLang)}
-                        translateRelation={(relationType) =>
-                          t(`caseDetail.relationTypes.${relationType}`, {
-                            defaultValue: t("caseDetail.relationTypes.unknown"),
-                          })
-                        }
-                      />
+                      <Reveal className="group">
+                        <InvolvedPartiesSection
+                          groupedEntities={groupedEntities}
+                          language={currentLang}
+                          resolvedEntities={resolvedEntities}
+                          title={t("caseDetail.partiesInvolved")}
+                          forum={caseVerdictForum(caseData.dates, currentLang)}
+                          translateRelation={(relationType) =>
+                            t(`caseDetail.relationTypes.${relationType}`, {
+                              defaultValue: t("caseDetail.relationTypes.unknown"),
+                            })
+                          }
+                        />
+                      </Reveal>
                     )}
 
                     {hasTimeline && (
-                      <CaseTimelineSection
-                        className="mb-12 print:static print:mb-8"
-                        language={currentLang}
-                        timeline={caseData.timeline || []}
-                        title={t("caseDetail.timeline")}
-                      />
+                      <Reveal className="group">
+                        <CaseTimelineSection
+                          className="mb-12 print:static print:mb-8"
+                          language={currentLang}
+                          timeline={caseData.timeline || []}
+                          title={t("caseDetail.timeline")}
+                        />
+                      </Reveal>
                     )}
 
-                    <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />
+                    <Reveal className="group">
+                      <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />
+                    </Reveal>
 
-                    <CourtCasesSection
-                      courtCases={(caseData.court_cases ?? []).map((courtCaseId, index) => {
-                        const query = courtCaseQueries[index];
+                    <Reveal className="group">
+                      <CourtCasesSection
+                        courtCases={(caseData.court_cases ?? []).map((courtCaseId, index) => {
+                          const query = courtCaseQueries[index];
 
-                        return {
-                          courtCase: query?.data as CourtCase | undefined,
-                          id: courtCaseId,
-                          isLoading: query?.isLoading ?? false,
-                        };
-                      })}
-                      title={t("caseDetail.courtUpdates", "Court updates")}
-                    />
+                          return {
+                            courtCase: query?.data as CourtCase | undefined,
+                            id: courtCaseId,
+                            isLoading: query?.isLoading ?? false,
+                          };
+                        })}
+                        title={t("caseDetail.courtUpdates", "Court updates")}
+                      />
+                    </Reveal>
 
-                    <EvidenceSection
-                      evidence={caseData.evidence}
-                      title={t("caseDetail.evidence")}
-                    />
+                    <Reveal className="group">
+                      <EvidenceSection
+                        evidence={caseData.evidence}
+                        title={t("caseDetail.evidence")}
+                      />
+                    </Reveal>
 
-                    <MissingDetailsSection
-                      html={caseData.missing_details}
-                      title={t("caseDetail.missingDetails")}
-                    />
+                    <Reveal>
+                      <MissingDetailsSection
+                        html={caseData.missing_details}
+                        title={t("caseDetail.missingDetails")}
+                      />
+                    </Reveal>
 
-                    <NotesSection
-                      html={caseData.notes}
-                      title={t("caseDetail.notes")}
-                    />
+                    <Reveal>
+                      <NotesSection
+                        html={caseData.notes}
+                        title={t("caseDetail.notes")}
+                      />
+                    </Reveal>
                   </div>
                 </div>
               </div>
 
-              <CaseContactStrip
-                email={JAWAFDEHI_EMAIL}
-                whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
-                emailLabel={t("caseDetail.emailLabel")}
-                whatsappLabel={t("caseDetail.whatsappLabel")}
-                title={t("caseDetail.contact")}
-              />
+              <Reveal>
+                <CaseContactStrip
+                  email={JAWAFDEHI_EMAIL}
+                  whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
+                  emailLabel={t("caseDetail.emailLabel")}
+                  whatsappLabel={t("caseDetail.whatsappLabel")}
+                  title={t("caseDetail.contact")}
+                />
+              </Reveal>
 
               <DisqusComments caseId={id || ""} caseTitle={caseData.title} caseUrl={canonicalUrl} />
             </div>

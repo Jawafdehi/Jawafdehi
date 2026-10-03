@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Filter } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import Seo from "@/components/Seo";
 import { MaterialListCard } from "@/components/materials/MaterialListCard";
@@ -31,33 +31,70 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySlug } from "@/data/material-series";
-import {
-  formatArchiveCount,
-  pickLocalized,
-  resolveMaterialDate,
-} from "@/lib/materials-landing";
-import {
-  cursorFromNextUrl,
-  listMaterialsBySource,
-} from "@/services/datalake-api";
+import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
+import { searchArchive } from "@/services/search-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 import type { Material } from "@/services/datalake-api";
+import type { ArchiveSearchResult } from "@/types/search";
 
-type MaterialSortOrder = "latest" | "oldest";
+type MaterialSortOrder = "newest" | "oldest";
 
-const EMPTY_FILTERS: MaterialFilters = {
-  preset: "all",
-  startDate: "",
-  endDate: "",
-  query: "",
-};
+const PAGE_SIZE = 50;
+
+/** URL params this view owns. Everything else on the query string is left alone. */
+const PARAM = {
+  query: "q",
+  sort: "sort",
+  preset: "when",
+  start: "from",
+  end: "to",
+} as const;
 
 function localIsoDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+const PRESETS: readonly MaterialDatePreset[] = [
+  "all",
+  "30-days",
+  "6-months",
+  "1-year",
+  "custom",
+];
+
+/**
+ * Read a preset off the query string, falling back to "all".
+ *
+ * These values are URL-supplied now, so they are untrusted in a way they were
+ * not while the control lived in component state. An unrecognised one must NOT
+ * reach `presetStartDate`: it matches none of the branches there and returns
+ * TODAY, which silently filters the series down to nothing with no indication
+ * that the URL was the cause.
+ */
+function readPreset(raw: string | null): MaterialDatePreset {
+  return PRESETS.includes(raw as MaterialDatePreset)
+    ? (raw as MaterialDatePreset)
+    : "all";
+}
+
+/**
+ * `YYYY-MM-DD`, the only shape the API's date bounds accept — anything else is
+ * dropped rather than forwarded, since a malformed bound 400s the request and the
+ * reader would see an unexplained empty page.
+ *
+ * The round-trip is doing real work: the pattern alone accepts `2024-13-99` and
+ * `2023-02-29`, which are well-formed and not dates. Re-serializing the parsed
+ * value and requiring it to equal the input rejects both.
+ */
+function readIsoDate(raw: string | null): string {
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "";
+  const parsed = new Date(`${raw}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10) === raw ? raw : "";
 }
 
 function presetStartDate(preset: MaterialDatePreset): string {
@@ -69,121 +106,127 @@ function presetStartDate(preset: MaterialDatePreset): string {
   return localIsoDate(start);
 }
 
-function searchableMaterialText(material: Material): string {
-  const bilingual = (value: Material["name"] | Material["description"]): string => {
-    if (typeof value === "string") return value;
-    return `${value?.ne ?? ""} ${value?.en ?? ""}`;
-  };
-  return [
-    bilingual(material.name),
-    bilingual(material.description),
-    material.identifier,
-    typeof material.additionalType === "string" ? material.additionalType : "",
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLocaleLowerCase();
+/**
+ * A search hit rendered through the existing material card.
+ *
+ * The index carries the title and the Gregorian date, which is everything the
+ * card's header and meta line need; the rest of the JSON-LD stays on the
+ * material's own page. Written as an adapter rather than by teaching the card a
+ * second shape, so the series browse and the archive landing keep rendering the
+ * identical component.
+ */
+function hitAsMaterial(hit: ArchiveSearchResult): Material {
+  return {
+    "@id": hit.id,
+    name: { ne: hit.title.ne ?? undefined, en: hit.title.en ?? undefined },
+    datePublished: hit.extra?.date,
+  } as Material;
 }
 
 /**
- * One series of the archive: documents from the public per-source list
- * (`/api/materials/?source=…`), newest-ingested first and cursor-paginated
- * behind a "load more".
+ * One series of the archive: a scoped search over `/api/search/`, restricted to
+ * the series' data-lake source token.
  *
- * The backend offers no date or text filters on this source list yet. The
- * sidebar therefore filters the cursor pages already loaded in the browser,
- * labels that scope plainly, and keeps "load more" available to expand it.
+ * This used to page `/api/materials/?source=…` and then search, filter and sort
+ * IN THE BROWSER over whatever had been fetched — so every control silently meant
+ * "of the ~50 documents loaded so far", and the list arrived in ingest order
+ * rather than by date. Both are now the server's job: the search API scopes to one
+ * source, orders by the indexed date (undated records last) and reports the true
+ * total.
+ *
+ * The controls live in the URL, so a filtered view is a link someone can send.
  */
 export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const series = seriesBySlug(slug);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const query = searchParams.get(PARAM.query) ?? "";
+  const sortOrder: MaterialSortOrder =
+    searchParams.get(PARAM.sort) === "oldest" ? "oldest" : "newest";
+  const filters: MaterialFilters = {
+    preset: readPreset(searchParams.get(PARAM.preset)),
+    startDate: readIsoDate(searchParams.get(PARAM.start)),
+    endDate: readIsoDate(searchParams.get(PARAM.end)),
+    query,
+  };
+
+  const invalidDateRange = Boolean(
+    filters.startDate && filters.endDate && filters.startDate > filters.endDate,
+  );
+  const dateFrom = filters.startDate || presetStartDate(filters.preset);
+  const dateTo = filters.endDate;
+
+  /** Replace (never push) so filtering does not bury the back button. */
+  const updateParams = (changes: Record<string, string>) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(changes).forEach(([key, value]) => {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    });
+    setSearchParams(next, { replace: true });
+  };
 
   const documentsQuery = useInfiniteQuery({
-    queryKey: ["materials-by-source", series?.source ?? slug],
+    queryKey: [
+      "material-series-search",
+      series?.source ?? slug,
+      query,
+      sortOrder,
+      dateFrom,
+      dateTo,
+    ],
     queryFn: ({ pageParam }) =>
-      listMaterialsBySource(series?.source ?? "", pageParam || undefined),
-    initialPageParam: "",
-    getNextPageParam: (page) => cursorFromNextUrl(page.next),
-    enabled: Boolean(series),
+      searchArchive({
+        q: query,
+        type: "material",
+        source: [series?.source ?? ""],
+        sort: sortOrder,
+        page: pageParam,
+        page_size: PAGE_SIZE,
+        ...(dateFrom ? { date_from: dateFrom } : {}),
+        ...(dateTo ? { date_to: dateTo } : {}),
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) =>
+      pages.flatMap((page) => page.results).length < last.count
+        ? pages.length + 1
+        : undefined,
+    enabled: Boolean(series) && !invalidDateRange,
     staleTime: 5 * 60 * 1000,
   });
 
-  const [filters, setFilters] = useState<MaterialFilters>(EMPTY_FILTERS);
-  const [sortOrder, setSortOrder] = useState<MaterialSortOrder>("latest");
-  const deferredQuery = useDeferredValue(filters.query.trim().toLocaleLowerCase());
   const documents = useMemo(
     () => documentsQuery.data?.pages.flatMap((page) => page.results) ?? [],
     [documentsQuery.data],
   );
-  const invalidDateRange = Boolean(
-    filters.startDate && filters.endDate && filters.startDate > filters.endDate,
-  );
-  // Each document's AD date is resolved ONCE per page load, not per comparison:
-  // resolveMaterialDate runs a bikram-sambat conversion, and a comparator that
-  // called it would run two of them per compare — O(n log n) conversions over a
-  // list that grows with every "load more".
-  const datedDocuments = useMemo(
-    () =>
-      documents.map((material) => ({
-        material,
-        ad: resolveMaterialDate({ date: material.datePublished || material.dateCreated }).ad,
-      })),
-    [documents],
-  );
-  const filteredDocuments = useMemo(() => {
-    if (invalidDateRange) return [];
-    const startDate = filters.startDate || presetStartDate(filters.preset);
-    const endDate = filters.endDate;
-
-    return datedDocuments
-      .filter(({ material, ad }) => {
-        if (deferredQuery && !searchableMaterialText(material).includes(deferredQuery)) {
-          return false;
-        }
-        if (!startDate && !endDate) return true;
-        if (!ad) return false;
-        if (startDate && ad < startDate) return false;
-        if (endDate && ad > endDate) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        if (!a.ad && !b.ad) return 0;
-        if (!a.ad) return 1;
-        if (!b.ad) return -1;
-        return sortOrder === "latest"
-          ? b.ad.localeCompare(a.ad)
-          : a.ad.localeCompare(b.ad);
-      })
-      .map(({ material }) => material);
-  }, [
-    datedDocuments,
-    deferredQuery,
-    filters.endDate,
-    filters.preset,
-    filters.startDate,
-    invalidDateRange,
-    sortOrder,
-  ]);
+  // The true corpus total, not "how many have been fetched" — the old label
+  // counted the latter and called it the former.
+  const total = documentsQuery.data?.pages[0]?.count ?? 0;
   const activeDateFilterCount =
     filters.preset !== "all" || filters.startDate || filters.endDate ? 1 : 0;
 
-  const changePreset = (preset: MaterialDatePreset) => {
-    setFilters((current) => ({ ...current, preset, startDate: "", endDate: "" }));
-  };
-  const changeStartDate = (startDate: string) => {
-    setFilters((current) => ({ ...current, preset: "custom", startDate }));
-  };
-  const changeEndDate = (endDate: string) => {
-    setFilters((current) => ({ ...current, preset: "custom", endDate }));
-  };
-  const changeQuery = (query: string) => {
-    setFilters((current) => ({ ...current, query }));
-  };
-  const clearDateFilters = () => {
-    setFilters((current) => ({ ...current, preset: "all", startDate: "", endDate: "" }));
-  };
-  const clearAllFilters = () => setFilters(EMPTY_FILTERS);
+  const changePreset = (preset: MaterialDatePreset) =>
+    updateParams({
+      [PARAM.preset]: preset === "all" ? "" : preset,
+      [PARAM.start]: "",
+      [PARAM.end]: "",
+    });
+  const changeStartDate = (startDate: string) =>
+    updateParams({ [PARAM.preset]: "custom", [PARAM.start]: startDate });
+  const changeEndDate = (endDate: string) =>
+    updateParams({ [PARAM.preset]: "custom", [PARAM.end]: endDate });
+  const changeQuery = (value: string) => updateParams({ [PARAM.query]: value });
+  const clearDateFilters = () =>
+    updateParams({ [PARAM.preset]: "", [PARAM.start]: "", [PARAM.end]: "" });
+  const clearAllFilters = () =>
+    updateParams({
+      [PARAM.query]: "",
+      [PARAM.preset]: "",
+      [PARAM.start]: "",
+      [PARAM.end]: "",
+    });
 
   if (!series) {
     return (
@@ -235,11 +278,19 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
       </header>
 
       <div className="mt-8 grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
-        <form role="search" onSubmit={(event) => event.preventDefault()}>
+        <form
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const input = new FormData(event.currentTarget).get(PARAM.query);
+            changeQuery(typeof input === "string" ? input : "");
+          }}
+        >
           <SearchBar
             type="search"
-            value={filters.query}
-            onChange={(event) => changeQuery(event.target.value)}
+            name={PARAM.query}
+            defaultValue={query}
+            key={query}
             placeholder={t(
               "materialsLanding.series.searchPlaceholder",
               "Search inside this series…",
@@ -249,9 +300,9 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
           />
         </form>
         <p className="whitespace-nowrap text-sm text-muted-foreground">
-          {t("materialsLanding.series.showingLoaded", "Showing {{shown}} of {{loaded}} loaded", {
-            shown: formatArchiveCount(filteredDocuments.length, language),
-            loaded: formatArchiveCount(documents.length, language),
+          {t("materialsLanding.series.showingTotal", "{{shown}} of {{total}}", {
+            shown: formatArchiveCount(documents.length, language),
+            total: formatArchiveCount(total, language),
           })}
         </p>
         <div className="flex items-center gap-3 md:justify-end">
@@ -260,7 +311,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
           </span>
           <Select
             value={sortOrder}
-            onValueChange={(value) => setSortOrder(value as MaterialSortOrder)}
+            onValueChange={(value) => updateParams({ [PARAM.sort]: value })}
           >
             <SelectTrigger
               aria-label={t("materialsLanding.series.sortLabel", "Sort")}
@@ -269,7 +320,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="latest">
+              <SelectItem value="newest">
                 {t("materialsLanding.series.sortLatest", "Latest first")}
               </SelectItem>
               <SelectItem value="oldest">
@@ -297,7 +348,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
             <SheetHeader className="sr-only">
               <SheetTitle>{t("materialsLanding.filters.title", "Filter")}</SheetTitle>
               <SheetDescription>
-                {t("materialsLanding.filters.description", "Filter the loaded documents")}
+                {t("materialsLanding.filters.description", "Filter the documents")}
               </SheetDescription>
             </SheetHeader>
             <MaterialFilterPanel
@@ -353,28 +404,24 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
           {!documentsQuery.isLoading && documents.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface-2/50 px-6 py-12 text-center">
               <p className="font-page-lede">
-                {t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
+                {query || activeDateFilterCount
+                  ? t("materialsLanding.filters.noMatches", "No documents match these filters.")
+                  : t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
               </p>
+              {query || activeDateFilterCount ? (
+                <Button variant="outline" className="mt-5" onClick={clearAllFilters}>
+                  {t("materialsLanding.filters.clear", "Clear filters")}
+                </Button>
+              ) : null}
             </div>
           ) : null}
 
-          {!documentsQuery.isLoading && documents.length > 0 && filteredDocuments.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-surface-2/50 px-6 py-12 text-center">
-              <p className="font-page-lede">
-                {t("materialsLanding.filters.noMatches", "No loaded documents match these filters.")}
-              </p>
-              <Button variant="outline" className="mt-5" onClick={clearAllFilters}>
-                {t("materialsLanding.filters.clear", "Clear filters")}
-              </Button>
-            </div>
-          ) : null}
-
-          {filteredDocuments.length > 0 ? (
+          {documents.length > 0 ? (
             <ul className="list-none space-y-3">
-              {filteredDocuments.map((material) => (
+              {documents.map((hit) => (
                 <MaterialListCard
-                  key={material["@id"]}
-                  material={material}
+                  key={hit.id}
+                  material={hitAsMaterial(hit)}
                   series={series}
                 />
               ))}
@@ -382,7 +429,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
           ) : null}
 
           {documentsQuery.hasNextPage ? (
-            <div className="mt-8 flex flex-col items-center gap-2">
+            <div className="mt-8 flex justify-center">
               <Button
                 variant="outline"
                 onClick={() => documentsQuery.fetchNextPage()}
@@ -392,11 +439,6 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
                   ? t("materialsLanding.series.loading", "Loading…")
                   : t("materialsLanding.series.loadMore", "Load more")}
               </Button>
-              {activeDateFilterCount || filters.query.trim() ? (
-                <p className="text-center text-xs text-muted-foreground">
-                  {t("materialsLanding.filters.loadMoreHint", "Load more documents to extend the filtered results.")}
-                </p>
-              ) : null}
             </div>
           ) : null}
         </section>

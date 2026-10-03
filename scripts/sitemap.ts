@@ -5,6 +5,7 @@ import {
   PRE_RENDERED_STATIC_ROUTES,
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
+import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -15,7 +16,10 @@ const CMS_BASE = `${API_BASE}/cms/v2`;
 const FETCH_TIMEOUT_MS = 10_000;
 
 interface EntitySummary {
-  id: number;
+  // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
+  // canonical NES `@id` IRI and the case serializer stopped emitting one. This
+  // file used to map `e.id`, which is now always undefined — so the filter
+  // below evaluated to [] and the sitemap shipped ZERO entity URLs.
   nes_id: string | null;
   display_name: string | null;
 }
@@ -61,12 +65,18 @@ function urlEntry(loc: string, lastmod?: string): string {
   return `  <url>\n    <loc>${loc}</loc>${lastmodLine}\n  </url>`;
 }
 
-// Prerendered static routes are served from <path>/index.html, so the edge 307s
-// the slashless form. Advertising the redirecting URL in the sitemap — and in
+// Prerendered routes are served from <path>/index.html, so the edge 307s the
+// slashless form. Advertising the redirecting URL in the sitemap — and in
 // rel=canonical — asks crawlers to index a redirect. Slug routes (/case/*,
-// /updates/*) and /entity/* are not prerendered and answer 200 without a
-// slash, so they are deliberately left alone. Measured against production
-// 2026-08-11: 17 of 90 sitemap URLs were 307ing, all of them static routes.
+// /updates/*) are not prerendered and answer 200 without a slash, so they are
+// deliberately left alone. Measured against production 2026-08-11: 17 of 90
+// sitemap URLs were 307ing, all of them static routes.
+//
+// /entity/* USED to be in that left-alone group and no longer is: pre-render.ts
+// now writes dist/entity/<prefix>/<slug>/index.html for every case-cited entity,
+// which makes it prerendered by the rule above. Emitting those 1,544 slashless
+// would have been the single biggest source of sitemap redirects we have ever
+// shipped — an order of magnitude past the 17 this function was written to fix.
 function withTrailingSlash(path: string): string {
   return path === '/' || path.endsWith('/') ? path : `${path}/`;
 }
@@ -147,8 +157,15 @@ async function main() {
     process.exit(1);
   }
 
-  const entityIds = [...new Set(
-    cases.flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
+  // Entity pages worth listing are exactly the ones a published case cites —
+  // the same rule the public entity search applies (`case_count >= 1`, see
+  // `entities/search_visibility.py` in the API). `cases` here is the published
+  // set, so deriving from its binds gives that rule for free; the ~186k
+  // registry records no case names stay out, which is the point.
+  const entityPaths = [...new Set(
+    cases
+      .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
+      .filter((path): path is string => path != null)
   )];
 
   const entries: string[] = [
@@ -162,7 +179,7 @@ async function main() {
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
       )),
     ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.slug || c.id}`, toYMD(c.updated_at))),
-    ...entityIds.map(id => urlEntry(`${CANONICAL}/entity/${id}`)),
+    ...entityPaths.map(path => urlEntry(`${CANONICAL}${withTrailingSlash(path)}`)),
   ];
 
   const xml = [

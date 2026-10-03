@@ -9,6 +9,7 @@
  */
 
 import type { Entity, Attribution, Name, EntityType, EntityPicture } from '@/types/entity';
+import type { JawafEntity } from '@/types/jds';
 
 // ============================================================================
 // schema.org JSON-LD -> Entity adapter
@@ -132,6 +133,44 @@ export function jsonLdToEntity(input: unknown): Entity {
       id: '',
     },
   };
+}
+
+/**
+ * The same adapter, fed from a case bind instead of an entity fetch.
+ *
+ * A case detail page used to resolve every party with its own
+ * `GET /api/entities/<iri>` — up to 255 on one case. The API opens a Postgres
+ * connection per request against a ceiling of 100, so a wide case page could
+ * exhaust it and take unrelated requests down with it; it served intermittent
+ * 500s for nine days, invisibly, because the card falls back to `display_name`
+ * and the page still looks right. `GET /api/cases/<slug>/` now carries the two
+ * fields those requests existed to fetch, so there is nothing left to fetch.
+ *
+ * This routes through `jsonLdToEntity` rather than building an `Entity` by hand
+ * so the two sources cannot drift — the backend already mirrors that function's
+ * rules (notably: a bare-string `name` is English with no Nepali).
+ *
+ * Returns null when the bind carries no identity at all, which reproduces the
+ * old `entity === null` state exactly. That covers three real cases: a case
+ * object that came from the LIST payload (which omits these fields by design),
+ * an id NES cannot resolve, and an entity that has been merged away — the API
+ * gates identity on the entity still being live, so a retired party keeps
+ * falling back to `display_name` and the kind glyph, as it does today.
+ */
+export function caseBindToEntity(bind: JawafEntity): Entity | null {
+  if (!bind.nes_id) return null;
+  const en = bind.name?.en ?? undefined;
+  const ne = bind.name?.ne ?? undefined;
+  const image = bind.image ?? undefined;
+  if (!en && !ne && !image) return null;
+  return jsonLdToEntity({
+    '@id': bind.nes_id,
+    // The curated schema.org value. `entityTypeFromJsonLd` prefers the IRI path
+    // and only falls back to this, which is the same precedence the cards use.
+    '@type': bind.entity_type ?? '',
+    name: { en, ne },
+    image,
+  });
 }
 
 // ============================================================================

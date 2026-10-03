@@ -99,9 +99,14 @@ export function Navbar() {
     [t],
   );
 
+  // Feeds BOTH the desktop "हाम्रो बारेमा" dropdown and the mobile sheet, which
+  // maps this same list — so an entry added here appears in both.
   const aboutNavItems = useMemo<NavItem[]>(
     () => [
       { key: "about", label: t("nav.about"), to: "/about", exact: true },
+      // Placed second rather than last: it is the only item in this group with
+      // a live action behind it, and the one being shared with prospects.
+      { key: "openhouse", label: t("nav.openHouse"), to: "/openhouse" },
       { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
       { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
       { key: "team", label: t("nav.team"), to: "/team" },
@@ -114,7 +119,10 @@ export function Navbar() {
   const activeKey = useMemo(() => {
     const path = location.pathname;
 
-    if (["/about", "/our-process", "/commitment", "/team", "/products", "/faq"].includes(path)) {
+    // Derived from aboutNavItems rather than a second hardcoded list of the
+    // same paths: the two had to be edited together, so they would eventually
+    // drift and the group's pill would go dark on a page inside it.
+    if (aboutNavItems.some((item) => item.to === path)) {
       return "about";
     }
     if (
@@ -128,7 +136,7 @@ export function Navbar() {
     }
 
     return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
-  }, [location.pathname, navItems]);
+  }, [location.pathname, navItems, aboutNavItems]);
 
   const pillKey = hoveredKey ?? activeKey;
   const showPill = isScrolled && Boolean(pillKey);

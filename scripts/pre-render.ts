@@ -18,6 +18,7 @@ import {
   type PrefetchReport,
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
+import { entityPath } from '../src/lib/entity-links.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -26,6 +27,34 @@ const ROOT = join(__dirname, '..');
 // React Query cache, which is fine for a local `bun run build` and never fine for
 // anything a visitor or a crawler will see. Not set in CI, deliberately.
 const ALLOW_EMPTY_PREFETCH = process.env.PRERENDER_ALLOW_EMPTY_PREFETCH === '1';
+
+// How much of the archive to pre-render. `full` renders a page per case-cited
+// entity — ~2,700 of them, and growing with the corpus; `static` renders only
+// the fixed top-level routes and the update articles.
+//
+// Why this exists: the entity corpus is the expensive part of the build, and it
+// is only worth paying for on something a crawler will read. Until now every
+// build rendered all of it — the PR check, the Cloudflare preview build for each
+// branch, and the production deploy alike — against the live production API,
+// anonymously. Two of those run on the same push and drain the same anonymous
+// throttle bucket (1000/hour, THROTTLE_RATE_ANON), so whichever finished second
+// took a wall of 429s and failed the build. Batching the entity lookups bought
+// headroom and did not fix it, because the contention is between builds.
+//
+// ⚠️ The default is `full`, and that direction is deliberate. A build that
+// should have been cheap and was expensive wastes a few minutes; a production
+// deploy that should have been full and was static silently publishes the site
+// with ~2,700 pages missing, which is invisible until search traffic dies weeks
+// later. Opt OUT explicitly, where the build is known to be disposable; never
+// opt in from the deploy side.
+const SCOPE = process.env.PRERENDER_SCOPE ?? 'full';
+if (SCOPE !== 'full' && SCOPE !== 'static') {
+  console.error(
+    `[pre-render] ERROR: PRERENDER_SCOPE must be "full" or "static", got ${JSON.stringify(SCOPE)}.`,
+  );
+  process.exit(1);
+}
+const RENDER_ENTITY_PAGES = SCOPE === 'full';
 
 interface RouteConfig {
   path: string;
@@ -58,34 +87,55 @@ interface PaginatedCaseList {
     title?: string | null;
     description?: string | null;
     updated_at: string;
-    entities: Array<{ id: number; nes_id: string | null; display_name?: string | null }>;
+    // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
+    // canonical NES `@id` IRI and the case serializer stopped emitting one.
+    entities: Array<{ nes_id: string | null; display_name?: string | null }>;
   }>;
 }
 
 const API_BASE = 'https://api.jawafdehi.org/api';
 const CONCURRENCY = 5;
 
+// Mirrors MAX_BATCH_SIZE in the API's entities/views.py. Over it the endpoint
+// 400s with BATCH_SIZE_EXCEEDED, so raising this needs the server raised first.
+const ENTITY_BATCH_SIZE = 25;
+
 const FETCH_TIMEOUT_MS = 10_000;
+
+/** `GET /api/entities?ids=` — the batch form of the per-entity detail endpoint. */
+interface EntityBatchResponse {
+  entities: unknown[];
+  total: number;
+  requested: number;
+  /** Refs that resolved to nothing. Absent when empty. */
+  not_found?: string[];
+  /** requested IRI → survivor IRI, for merge tombstones. Absent when empty. */
+  redirected?: Record<string, string>;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
+  return (await res.json()) as T;
+}
 
 async function fetchAllCases(): Promise<PaginatedCaseList['results']> {
   const all: PaginatedCaseList['results'] = [];
   let url: string | null = `${API_BASE}/cases/`;
   while (url) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    let res: Response;
-    try {
-      res = await fetch(url, { signal: controller.signal });
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
-      }
-      throw err;
-    } finally {
-      clearTimeout(timer);
-    }
-    if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
-    const data: PaginatedCaseList = await res.json();
+    const data: PaginatedCaseList = await fetchJson<PaginatedCaseList>(url);
     all.push(...data.results);
     url = data.next;
   }
@@ -108,7 +158,96 @@ async function withConcurrency<T>(
   await Promise.all(workers);
 }
 
+/**
+ * Entity records for `iris`, keyed by the IRI that was REQUESTED.
+ *
+ * One upstream call per entity page is what made this build a coin flip: ~2,500
+ * pages, one `/api/entities/<tail>` each, against the API's 1000/hour anonymous
+ * throttle (`THROTTLE_RATE_ANON`). Past the cap the records come back 429, the
+ * pages render against an empty cache, and the guard at the end of this script
+ * correctly refuses to publish them. The same records come back 25 at a time
+ * from `/api/entities?ids=`, which is ~100 calls instead of ~2,500.
+ *
+ * ENTITY_BATCH_SIZE mirrors the API's own cap (`MAX_BATCH_SIZE` in
+ * `entities/views.py`); over it the endpoint 400s with BATCH_SIZE_EXCEEDED.
+ *
+ * Keyed by the REQUESTED IRI rather than each document's own `@id`, because the
+ * two differ for a merge tombstone: it resolves to its survivor. The detail
+ * endpoint hides that behind a 301 the HTTP client follows, while the batch
+ * reports it in `redirected` and returns the survivor's document. Keying on
+ * `@id` would leave every tombstoned entity unseeded.
+ *
+ * Anything unresolved is simply absent from the map, and the caller falls back
+ * to a per-page fetch — slower, never wrong.
+ */
+async function fetchEntityRecords(iris: string[]): Promise<Map<string, unknown>> {
+  const chunks: string[][] = [];
+  for (let i = 0; i < iris.length; i += ENTITY_BATCH_SIZE) {
+    chunks.push(iris.slice(i, i + ENTITY_BATCH_SIZE));
+  }
+
+  const byRequestedIri = new Map<string, unknown>();
+  await withConcurrency(chunks, CONCURRENCY, async (chunk) => {
+    const params = new URLSearchParams({ ids: chunk.join(',') });
+    let body: EntityBatchResponse;
+    try {
+      body = await fetchJson<EntityBatchResponse>(`${API_BASE}/entities?${params}`);
+    } catch (err) {
+      // Deliberately not fatal: each entity in this chunk falls back to its own
+      // fetch, so a flaky batch costs speed rather than correctness.
+      console.warn(
+        `[pre-render] WARNING: entity batch of ${chunk.length} failed; ` +
+        `those records fall back to per-page fetches:`, err,
+      );
+      return;
+    }
+
+    const byId = new Map<string, unknown>();
+    for (const doc of body.entities ?? []) {
+      const id = (doc as { '@id'?: unknown })?.['@id'];
+      if (typeof id === 'string') byId.set(id, doc);
+    }
+    for (const iri of chunk) {
+      const doc = byId.get(body.redirected?.[iri] ?? iri);
+      if (doc !== undefined) byRequestedIri.set(iri, doc);
+    }
+  });
+
+  return byRequestedIri;
+}
+
+// renderToString does not throw when it hits an unresolved Suspense boundary — it
+// returns the fallback and a <template data-msg="The server did not finish this
+// Suspense boundary..."> marker, and the build happily writes that to disk and
+// exits 0. That is how /donate shipped blank in August and how /entity/* shipped
+// 1,544 empty-titled stubs in this branch, both past a green CI.
+//
+// So assert on the OUTPUT rather than on a list of routes that must stay eager.
+// A list has to be kept in step with this file by hand and silently stops
+// covering whatever someone adds next; this cannot drift, because it reads what
+// was actually produced. tests/ssr/prerendered-routes-eager.test.ts still checks
+// the same rule at unit-test speed — this is the backstop for the case the test
+// cannot see.
+const SUSPENSE_STUB_MARKER = 'did not finish this Suspense boundary';
+
+// Its own type because the per-route loops below are deliberately tolerant — one
+// unrenderable update or entity warns and is skipped rather than failing a
+// deploy. A lazy page is the opposite kind of problem: it fails EVERY route in
+// that family identically, so "skip and carry on" would quietly publish a site
+// with no entity pages at all while the sitemap still advertised 1,579 of them.
+// Those loops rethrow this one.
+class SuspenseStubError extends Error {
+  override readonly name = 'SuspenseStubError';
+}
+
 async function writeHtml(outFile: string, content: string): Promise<void> {
+  if (content.includes(SUSPENSE_STUB_MARKER)) {
+    throw new SuspenseStubError(
+      `refusing to write ${outFile}: it pre-rendered as a Suspense fallback, not a page. ` +
+        `The route's page component is lazy() and every pre-rendered route must be an ` +
+        `eager import — see the split policy in src/routes.tsx.`,
+    );
+  }
   await mkdir(dirname(outFile), { recursive: true });
   await writeFile(outFile, content, 'utf-8');
 }
@@ -296,17 +435,29 @@ function caseToSearchEntry(
   };
 }
 
-function entityToSearchEntry(entityId: number, name: string | null | undefined, html: string): SearchIndexEntry {
-  const title = stripHtml(name) || `Entity ${entityId}`;
+// Entities carry no `lines`, for the same reason cases do not (above). An entity
+// page renders its identity rail and then fetches the record client-side, so the
+// only text in the pre-rendered HTML is the chrome every page shares — nav,
+// footer, the event banner. Attaching it multiplied dist/search-index.json by
+// ~21x (441 KB -> 9.4 MB, 54 KB -> 180 KB gzip) across 1,544 entities and filled
+// the command palette with entries whose searchable body was the site header.
+// Title and keywords come from the case bind, which is where they came from
+// anyway, so nothing is lost by dropping the lines.
+function entityToSearchEntry(path: string, name: string | null | undefined): SearchIndexEntry {
+  // The `<prefix>/<slug>` tail is the only human-readable handle left once the
+  // numeric id is gone, so it stands in for the title when a bind carries no
+  // display_name.
+  const tail = path.replace('/entity/', '');
+  const title = stripHtml(name) || tail;
 
-  return withSearchLines({
-    path: `/entity/${entityId}`,
+  return {
+    path,
     title,
     descriptionKey: 'searchCommand.descriptions.entityDetail',
-    keywords: ['entity', 'person', 'organization', 'official', String(entityId), title],
+    keywords: ['entity', 'person', 'organization', 'official', tail, title],
     icon: 'Building2',
     group: 'entities',
-  }, html);
+  };
 }
 
 async function main() {
@@ -328,7 +479,7 @@ async function main() {
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
   // @ts-expect-error: module only exists after `vite build --ssr`
   const { render } = await import('../dist/server/entry-server.js') as {
-    render: (url: string) => Promise<RenderResult>;
+    render: (url: string, seed?: { entityRecord?: unknown }) => Promise<RenderResult>;
   };
 
   const staticRoutes: RouteConfig[] = PRE_RENDERED_STATIC_ROUTES.map((route) => ({
@@ -365,13 +516,42 @@ async function main() {
     apiReachable = false;
   }
 
-  // Collect unique entity IDs — use numeric JDS entity IDs for /entity/:id routes
-  const entityIds = apiReachable
-    ? [...new Set(
-        cases
-          .flatMap(c => c.entities.map(e => e.id).filter((id): id is number => id != null))
-      )]
-    : [];
+  // Entity pages worth pre-rendering are exactly the ones a published case
+  // cites — the same rule the public entity search applies (`case_count >= 1`,
+  // see `entities/search_visibility.py` in the API). `cases` is the published
+  // set, so its binds give that rule for free.
+  //
+  // This block used to map `e.id`, a numeric field the IRI remodel deleted, so
+  // it resolved to [] and NO entity page was pre-rendered or listed.
+  //
+  // Keyed by page path but retaining the IRI, because the batch lookup below
+  // addresses entities by IRI while everything downstream addresses them by
+  // path. Insertion order is first-appearance order, matching the Set-based
+  // dedupe this replaced, so the emitted page order is unchanged.
+  const iriByPath = new Map<string, string>();
+  if (apiReachable && RENDER_ENTITY_PAGES) {
+    for (const caseItem of cases) {
+      for (const entity of caseItem.entities) {
+        const path = entityPath(entity.nes_id);
+        if (path && entity.nes_id && !iriByPath.has(path)) {
+          iriByPath.set(path, entity.nes_id);
+        }
+      }
+    }
+  }
+  const entityPaths = [...iriByPath.keys()];
+
+  // Said once, loudly, and at the top rather than buried in the page log: a
+  // static-scope build is NOT the site. It is missing every entity page, and the
+  // sitemap it ships still advertises them, because `scripts/sitemap.ts` derives
+  // from the API rather than from what was rendered.
+  if (!RENDER_ENTITY_PAGES) {
+    console.warn(
+      '[pre-render] PRERENDER_SCOPE=static — entity pages are NOT being rendered.\n' +
+      '  This build is for a PR check or a branch preview. Do NOT publish it to\n' +
+      '  production: the archive would go live with every entity page missing.',
+    );
+  }
 
   // Render static routes
   for (const route of staticRoutes) {
@@ -404,6 +584,7 @@ async function main() {
       searchEntries.push(withSearchLines(updateRouteToSearchEntry(update), result.html));
       console.log(`[pre-render] ✓ ${path}`);
     } catch (err) {
+      if (err instanceof SuspenseStubError) throw err;
       console.warn(`[pre-render] WARNING: Skipping update ${update.id}:`, err);
       if (err instanceof Error) console.error(err.stack);
     }
@@ -438,28 +619,44 @@ async function main() {
       searchEntries.push(caseToSearchEntry(caseItem, slug));
     }
 
-    const entityNames = new Map<number, string | null | undefined>();
+    const entityNames = new Map<string, string | null | undefined>();
     for (const caseItem of cases) {
       for (const entity of caseItem.entities) {
-        if (!entityNames.has(entity.id)) {
-          entityNames.set(entity.id, entity.display_name);
+        const path = entityPath(entity.nes_id);
+        if (path && !entityNames.has(path)) {
+          entityNames.set(path, entity.display_name);
         }
       }
     }
 
-    // Render entity routes
-    await withConcurrency(entityIds, CONCURRENCY, async (entityId) => {
-      const path = `/entity/${entityId}`;
-      const outFile = join(ROOT, 'dist', 'entity', String(entityId), 'index.html');
+    // Every entity record up front, ~25 per call, so rendering a page costs no
+    // upstream request at all. See fetchEntityRecords for why this is not one
+    // fetch per page any more.
+    const entityRecords = await fetchEntityRecords([...iriByPath.values()]);
+    const unseeded = entityPaths.length - entityRecords.size;
+    console.log(
+      `[pre-render] Fetched ${entityRecords.size} entity records in ` +
+      `${Math.ceil(entityPaths.length / ENTITY_BATCH_SIZE)} batched calls` +
+      (unseeded > 0 ? ` (${unseeded} unresolved, falling back to per-page fetches)` : ''),
+    );
+
+    // Render entity routes. The output directory mirrors the multi-segment
+    // `<prefix>/<slug>` tail (e.g. dist/entity/person/ram-shah/index.html), the
+    // same shape the `/entity/*` splat route resolves at runtime.
+    await withConcurrency(entityPaths, CONCURRENCY, async (path) => {
+      const outFile = join(ROOT, 'dist', ...path.split('/').filter(Boolean), 'index.html');
+      const iri = iriByPath.get(path);
+      const entityRecord = iri === undefined ? undefined : entityRecords.get(iri);
       try {
-        const result = await render(path);
+        const result = await render(path, { entityRecord });
         const html = injectIntoTemplate(template, result);
         await writeHtml(outFile, html);
         notePrefetch(path, result);
-        searchEntries.push(entityToSearchEntry(entityId, entityNames.get(entityId), result.html));
+        searchEntries.push(entityToSearchEntry(path, entityNames.get(path)));
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
-        console.warn(`[pre-render] WARNING: Skipping entity ${entityId}:`, err);
+        if (err instanceof SuspenseStubError) throw err;
+        console.warn(`[pre-render] WARNING: Skipping entity ${path}:`, err);
         if (err instanceof Error) console.error(err.stack);
       }
     });
