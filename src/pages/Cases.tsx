@@ -292,13 +292,19 @@ const Cases = () => {
 
           <div className="mb-6">
             <p className="text-sm text-muted-foreground">
+              {/* An empty result has no range to state. Rendering it anyway gave
+                  "Showing 1–0 of 0 cases" — `from` is derived from the page
+                  number, which is 1 regardless, so it inverted against a `to` of
+                  0 and sat directly above the "no cases found" message. */}
               {isInitialLoading
                 ? t("cases.loading")
-                : t("cases.showingRange", {
-                    from: (requestedPage - 1) * CASES_PAGE_SIZE + 1,
-                    to: (requestedPage - 1) * CASES_PAGE_SIZE + cases.length,
-                    total: totalCount,
-                  })}
+                : cases.length === 0
+                  ? null
+                  : t("cases.showingRange", {
+                      from: (requestedPage - 1) * CASES_PAGE_SIZE + 1,
+                      to: (requestedPage - 1) * CASES_PAGE_SIZE + cases.length,
+                      total: totalCount,
+                    })}
             </p>
           </div>
 

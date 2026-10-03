@@ -5,7 +5,7 @@ import {
   PRE_RENDERED_STATIC_ROUTES,
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
-import { casesPagePaths } from '../src/lib/cases-pagination.ts';
+import { caseBrowsePagePaths } from './case-browse-pages.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
@@ -184,7 +184,7 @@ async function main() {
   // they are how a crawler that has only ever seen the home page finds its way
   // to the 444 case pages nothing else links to, and advertising them makes that
   // path discoverable on the first fetch instead of the fourth.
-  const casePageEntries = casesPagePaths(cases.length)
+  const casePageEntries = (await caseBrowsePagePaths(API_BASE))
     .slice(1)
     .map(path => urlEntry(`${CANONICAL}${path}`));
 

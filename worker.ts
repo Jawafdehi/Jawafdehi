@@ -1,6 +1,7 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
 import { matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
+import { casesPageCount } from './src/lib/cases-pagination';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
   AUTHOR_CARD_HEIGHT,
@@ -296,6 +297,60 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
 
 // Fetch with a hard timeout. Resolves to null (rather than throwing) on timeout,
 // network error, or non-OK status, so callers cleanly fall through to the SPA.
+/** Edge-cache key for the archive's page count. Not a real route; never served. */
+const CASE_PAGE_COUNT_CACHE_KEY = `${SITE_URL}/__internal/case-page-count`;
+// Five minutes. Long enough that a burst of bogus /cases/page/ requests costs
+// one upstream call rather than thousands, short enough that a newly published
+// page stops 404ing well before anyone notices.
+const CASE_PAGE_COUNT_TTL_SECONDS = 300;
+
+/**
+ * Is this `/cases/page/:page` number past the end of the archive?
+ *
+ * Fails OPEN — an unreachable or slow API returns `false`, so the page is served
+ * as a 200 rather than 404'd. That is the same call `fetchWithTimeout` documents
+ * below and `handleCaseMetaFallback` makes: turning a live page into a 404 over a
+ * backend blip is worse than the soft 404 this is replacing, because a 404 is
+ * what actually removes a URL from the index.
+ */
+async function isCasePageOutOfRange(raw: string | undefined): Promise<boolean> {
+  // Page 1 is `/cases`, so `/cases/page/1` is a second name for it and never
+  // valid. Non-numeric, zero, negative and padded forms are not pages at all —
+  // and none of them need the API to say so, which keeps `/cases/page/abc`
+  // floods off the upstream entirely.
+  if (!raw || !/^[1-9]\d*$/.test(raw)) return true;
+  const page = Number(raw);
+  if (page < 2) return true;
+
+  const cache = caches.default;
+  const key = new Request(CASE_PAGE_COUNT_CACHE_KEY);
+  let totalPages: number | null = null;
+
+  const cached = await cache.match(key);
+  if (cached) {
+    const parsed = Number(await cached.text());
+    totalPages = Number.isFinite(parsed) ? parsed : null;
+  } else {
+    const res = await fetchWithTimeout(`${JDS_API_BASE}/search/?type=case&page_size=1`);
+    if (!res?.ok) return false;
+    try {
+      const data = (await res.json()) as { count?: unknown };
+      if (typeof data.count !== 'number') return false;
+      totalPages = casesPageCount(data.count);
+    } catch {
+      return false;
+    }
+    await cache.put(
+      key,
+      new Response(String(totalPages), {
+        headers: { 'Cache-Control': `public, max-age=${CASE_PAGE_COUNT_TTL_SECONDS}` },
+      }),
+    );
+  }
+
+  return totalPages !== null && page > totalPages;
+}
+
 async function fetchWithTimeout(url: string): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), META_FETCH_TIMEOUT_MS);
@@ -867,14 +922,20 @@ export default {
     // shell so React Router renders the styled NotFound page — only the status
     // line changes, which is the part crawlers read.
     //
-    // `/cases/page/:page` is the exception to "matched means real". Every page
-    // that exists is pre-rendered to a file, so reaching the SPA fallback on
-    // that route means the number is past the end of the archive — /cases/page/40
-    // of 39, or /cases/page/9999. The route matches, so the rule above called it
-    // a 200 and the SPA then rendered NotFound into it: a soft 404, which is the
-    // one thing worse than a 404, because a crawler keeps the URL and keeps
-    // coming back. Measured on production right after the #414 deploy.
-    const outOfRangeCasePage = matched?.path === '/cases/page/:page';
+    // `/cases/page/:page` is the exception to "matched means real": the route
+    // pattern matches any number, so /cases/page/9999 used to be a 200 with the
+    // SPA's NotFound rendered into it. A soft 404 is worse than a 404 — the
+    // crawler keeps the URL and keeps coming back.
+    //
+    // ⚠️ "No pre-rendered file" is NOT the same as "out of range", and treating
+    // it that way is a real bug rather than a pedantic one. Publishing enough
+    // cases to add a page makes that page live immediately: /cases/page/39
+    // hydrates against the live count, sees 40 pages, and renders a Next link to
+    // a page the last build never wrote. So the range has to come from the same
+    // count the browse page itself uses.
+    const outOfRangeCasePage =
+      matched?.path === '/cases/page/:page' &&
+      (await isCasePageOutOfRange(matched.params.page));
     const status = matched && !outOfRangeCasePage ? 200 : 404;
     const spaResponse = new Response(indexResponse.body, {
       status,

@@ -13,7 +13,7 @@ import {
   type SearchIndexFile,
   type SearchIndexLine,
 } from '../src/data/site-routes.ts';
-import { CASES_PAGE_SIZE, casesPagePaths } from '../src/lib/cases-pagination.ts';
+import { CASES_PAGE_SIZE, caseBrowsePagePaths } from './case-browse-pages.ts';
 import {
   summarisePrefetchFailures,
   type PrefetchReport,
@@ -601,7 +601,7 @@ async function main() {
   // The count comes from `cases`, already fetched above, so deriving the page
   // list costs nothing extra.
   if (apiReachable) {
-    const casePagePaths = casesPagePaths(cases.length).slice(1);
+    const casePagePaths = (await caseBrowsePagePaths(API_BASE)).slice(1);
     for (const path of casePagePaths) {
       const outFile = join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
       try {
