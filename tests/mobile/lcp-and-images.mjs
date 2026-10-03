@@ -5,6 +5,7 @@
 // common avoidable mobile byte cost.
 import { chromium, devices as pw } from "playwright";
 import fs from "node:fs/promises";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -15,10 +16,10 @@ const main = async () => {
   const browser = await chromium.launch();
   const out = [];
   for (const [route, slug] of ROUTES) {
-    const ctx = await browser.newContext({
+    const ctx = await newSyntheticContext(browser, {
+      base: BASE,
       viewport: { width: 360, height: 640 }, userAgent: pw["Galaxy S9+"].userAgent,
       deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "ne-NP",
-      storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
     });
     const page = await ctx.newPage();
     const cdp = await ctx.newCDPSession(page);

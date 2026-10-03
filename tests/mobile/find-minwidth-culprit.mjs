@@ -3,6 +3,7 @@
 // whose min-content width sets the floor. On a grid/flex item `min-width: auto`
 // means "at least min-content", so ONE unbreakable child widens the whole track.
 import { chromium, devices as pw } from "playwright";
+import { newSyntheticContext } from "./synthetic.mjs";
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
 const BASE = (arg("base", process.env.BASE || "https://jawafdehi.org") || "").replace(/\/$/, "");
@@ -42,8 +43,7 @@ const WALK = () => {
 };
 const b = await chromium.launch();
 for (const route of ["/donate","/report"]) {
-  const ctx = await b.newContext({ viewport:{width:360,height:640}, userAgent: pw["Galaxy S9+"].userAgent, deviceScaleFactor:3, isMobile:true, hasTouch:true, locale:"ne-NP",
-    storageState:{cookies:[],origins:[{origin:BASE,localStorage:[{name:"jawafdehi_analytics_consent",value:"denied"}]}]} });
+  const ctx = await newSyntheticContext(b, { base: BASE, viewport:{width:360,height:640}, userAgent: pw["Galaxy S9+"].userAgent, deviceScaleFactor:3, isMobile:true, hasTouch:true, locale:"ne-NP" });
   const p = await ctx.newPage();
   await p.goto(BASE+route,{waitUntil:"domcontentloaded",timeout:60000});
   await p.waitForLoadState("networkidle",{timeout:30000}).catch(()=>{});

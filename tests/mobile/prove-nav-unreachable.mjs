@@ -13,6 +13,7 @@
 // ever becomes visible and tappable. A finding survives only if all of them
 // fail.
 import { chromium, devices as pw } from "playwright";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -48,10 +49,10 @@ const record = (name, s, note = "") => {
 
 const main = async () => {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({
+  const ctx = await newSyntheticContext(browser, {
+    base: BASE,
     viewport: { width: 360, height: 640 }, userAgent: pw["Galaxy S9+"].userAgent,
     deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "ne-NP",
-    storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
   });
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
@@ -134,7 +135,7 @@ const main = async () => {
 
   // 7. control: does the SAME menu work on a tall viewport? If yes, the defect
   //    is height-dependent, which is what makes it invisible to desktop CI.
-  const tall = await browser.newContext({ viewport: { width: 360, height: 1000 }, userAgent: pw["Galaxy S9+"].userAgent, isMobile: true, hasTouch: true, locale: "ne-NP", storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] } });
+  const tall = await newSyntheticContext(browser, { base: BASE, viewport: { width: 360, height: 1000 }, userAgent: pw["Galaxy S9+"].userAgent, isMobile: true, hasTouch: true, locale: "ne-NP" });
   const p2 = await tall.newPage();
   await p2.goto(BASE + "/", { waitUntil: "domcontentloaded" });
   await p2.waitForLoadState("networkidle", { timeout: 25000 }).catch(() => {});

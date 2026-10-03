@@ -10,6 +10,7 @@ import { chromium, devices as pw } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { PROBE } from "./probe.mjs";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -138,13 +139,11 @@ async function main() {
   const routes = ONLY_ROUTE ? ROUTES.filter((r) => r[1] === ONLY_ROUTE) : ROUTES;
 
   for (const dev of devs) {
-    const ctx = await browser.newContext({
+    const ctx = await newSyntheticContext(browser, {
+      base: BASE,
       viewport: dev.viewport, userAgent: dev.userAgent,
       deviceScaleFactor: dev.deviceScaleFactor, isMobile: dev.isMobile, hasTouch: dev.hasTouch,
       locale: "ne-NP",
-      // DENY analytics up front (key/values from src/lib/consent.ts) so the
-      // banner never masks the fold and no beacon is sent to their analytics.
-      storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
     });
     for (const [route, slug] of routes) {
       const url = BASE + route;

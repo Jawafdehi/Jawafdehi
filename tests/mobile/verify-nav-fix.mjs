@@ -9,6 +9,7 @@
 //
 // A fix that cannot be shown to change the outcome is a guess.
 import { chromium, devices as pw } from "playwright";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -29,10 +30,10 @@ const probe = (page) => page.evaluate(() => {
 });
 
 const run = async (browser, withFix) => {
-  const ctx = await browser.newContext({
+  const ctx = await newSyntheticContext(browser, {
+    base: BASE,
     viewport: { width: 360, height: 640 }, userAgent: pw["Galaxy S9+"].userAgent,
     deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "ne-NP",
-    storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
   });
   const page = await ctx.newPage();
   if (withFix) {
