@@ -480,7 +480,12 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
       : null,
   });
   const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
-  const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
+  // Trailing slash: case pages are pre-rendered to /case/<slug>/index.html, so
+  // the slashless form 307s. This branch serves the cases published since the
+  // last build, which answer 200 either way — but it must still name the URL the
+  // pre-rendered copy lives at, or the same case advertises two canonicals
+  // depending on which path served it.
+  const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}/`;
   const imageUrl =
     previewImageUrl(caseData.banner_url as string | null | undefined, MEDIA_BASE) ||
     previewImageUrl(caseData.thumbnail_url as string | null | undefined, MEDIA_BASE) ||
@@ -861,7 +866,16 @@ export default {
     // link checkers the site had no broken links at all. The body is still the
     // shell so React Router renders the styled NotFound page — only the status
     // line changes, which is the part crawlers read.
-    const status = matched ? 200 : 404;
+    //
+    // `/cases/page/:page` is the exception to "matched means real". Every page
+    // that exists is pre-rendered to a file, so reaching the SPA fallback on
+    // that route means the number is past the end of the archive — /cases/page/40
+    // of 39, or /cases/page/9999. The route matches, so the rule above called it
+    // a 200 and the SPA then rendered NotFound into it: a soft 404, which is the
+    // one thing worse than a 404, because a crawler keeps the URL and keeps
+    // coming back. Measured on production right after the #414 deploy.
+    const outOfRangeCasePage = matched?.path === '/cases/page/:page';
+    const status = matched && !outOfRangeCasePage ? 200 : 404;
     const spaResponse = new Response(indexResponse.body, {
       status,
       headers: indexResponse.headers,
