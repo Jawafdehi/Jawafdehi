@@ -5,7 +5,7 @@ import {
   PRE_RENDERED_STATIC_ROUTES,
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
-import { casesPagePaths } from '../src/lib/cases-pagination.ts';
+import { caseBrowsePagePaths } from './case-browse-pages.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
@@ -68,10 +68,18 @@ function urlEntry(loc: string, lastmod?: string): string {
 
 // Prerendered routes are served from <path>/index.html, so the edge 307s the
 // slashless form. Advertising the redirecting URL in the sitemap — and in
-// rel=canonical — asks crawlers to index a redirect. Slug routes (/case/*,
-// /updates/*) are not prerendered and answer 200 without a slash, so they are
-// deliberately left alone. Measured against production 2026-08-11: 17 of 90
-// sitemap URLs were 307ing, all of them static routes.
+// rel=canonical — asks crawlers to index a redirect. /updates/* is not
+// prerendered and answers 200 without a slash, so it is deliberately left
+// alone. Measured against production 2026-08-11: 17 of 90 sitemap URLs were
+// 307ing, all of them static routes.
+//
+// ⚠️ /case/* LEFT that group on 2026-10-02 and this comment is the only warning
+// that the two facts are coupled. #415 started pre-rendering case pages, which
+// moved every one of them to /case/<slug>/index.html — so all 463 slashless
+// sitemap URLs and all 463 slashless rel=canonical values began pointing at a
+// 307. Verified against production immediately after that deploy. Whenever a
+// route starts being pre-rendered, its sitemap and canonical forms have to move
+// with it, or the sitemap advertises redirects for the whole family.
 //
 // /entity/* USED to be in that left-alone group and no longer is: pre-render.ts
 // now writes dist/entity/<prefix>/<slug>/index.html for every case-cited entity,
@@ -176,7 +184,7 @@ async function main() {
   // they are how a crawler that has only ever seen the home page finds its way
   // to the 444 case pages nothing else links to, and advertising them makes that
   // path discoverable on the first fetch instead of the fourth.
-  const casePageEntries = casesPagePaths(cases.length)
+  const casePageEntries = (await caseBrowsePagePaths(API_BASE))
     .slice(1)
     .map(path => urlEntry(`${CANONICAL}${path}`));
 
@@ -191,7 +199,10 @@ async function main() {
         `${CANONICAL}/updates/${a.meta.slug}`,
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
       )),
-    ...cases.map(c => urlEntry(`${CANONICAL}/case/${c.slug || c.id}`, toYMD(c.updated_at))),
+    ...cases.map(c => urlEntry(
+      `${CANONICAL}${withTrailingSlash(`/case/${c.slug || c.id}`)}`,
+      toYMD(c.updated_at),
+    )),
     ...entityPaths.map(path => urlEntry(`${CANONICAL}${withTrailingSlash(path)}`)),
   ];
 

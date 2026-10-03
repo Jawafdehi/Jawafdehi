@@ -366,7 +366,11 @@ const CaseDetail = () => {
   }
 
   const canonicalCaseSlug = caseData.slug || id;
-  const canonicalUrl = `${SITE_URL}/case/${canonicalCaseSlug}`;
+  // Trailing slash, because #415 made this page pre-rendered: it is written to
+  // /case/<slug>/index.html and the edge 307s the slashless form, so naming the
+  // slashless URL here pointed rel=canonical at a redirect on all 463 pages.
+  // Kept in step with worker.ts, which renders this same head at the edge.
+  const canonicalUrl = `${SITE_URL}/case/${canonicalCaseSlug}/`;
   // Shared with worker.ts, which serves this page's metadata for any case
   // published since the last build — the two chains used to end differently, so
   // the same case got a description or not depending on build timing.
