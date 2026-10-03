@@ -129,6 +129,10 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
 
   "/": <Index />,
   "/cases": <Cases />,
+  // Page 2..N of the case browse. Page 1 is /cases — see casesPagePath, which
+  // is the single definition of this URL shape that the page, the pre-render
+  // script and the sitemap all read.
+  "/cases/page/:page": <Cases />,
   "/case/:id": <CaseDetail />,
   "/search": <ArchiveSearch />,
   "/materials": <Materials />,

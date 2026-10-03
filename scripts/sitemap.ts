@@ -5,6 +5,7 @@ import {
   PRE_RENDERED_STATIC_ROUTES,
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
+import { casesPagePaths } from '../src/lib/cases-pagination.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
@@ -168,10 +169,22 @@ async function main() {
       .filter((path): path is string => path != null)
   )];
 
+  // Pages 2..N of the case browse. `/cases/` itself comes from the static route
+  // list above, so drop the first path here rather than emitting it twice.
+  //
+  // Listing pages belong in the sitemap even though they are reachable by link:
+  // they are how a crawler that has only ever seen the home page finds its way
+  // to the 444 case pages nothing else links to, and advertising them makes that
+  // path discoverable on the first fetch instead of the fourth.
+  const casePageEntries = casesPagePaths(cases.length)
+    .slice(1)
+    .map(path => urlEntry(`${CANONICAL}${path}`));
+
   const entries: string[] = [
     ...PRE_RENDERED_STATIC_ROUTES
       .filter(shouldIncludeStaticRouteInSitemap)
       .map(r => urlEntry(`${CANONICAL}${withTrailingSlash(r.path)}`)),
+    ...casePageEntries,
     ...articles
       .filter(a => a.meta.slug)
       .map(a => urlEntry(

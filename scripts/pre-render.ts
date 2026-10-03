@@ -13,6 +13,7 @@ import {
   type SearchIndexFile,
   type SearchIndexLine,
 } from '../src/data/site-routes.ts';
+import { CASES_PAGE_SIZE, casesPagePaths } from '../src/lib/cases-pagination.ts';
 import {
   summarisePrefetchFailures,
   type PrefetchReport,
@@ -570,6 +571,43 @@ async function main() {
       if (err instanceof Error) console.error(err.stack);
       process.exit(1);
     }
+  }
+
+  // Render pages 2..N of the case browse. Page 1 is `/cases`, already rendered
+  // above as a static route.
+  //
+  // These are the crawl path into the archive, and they are the reason this
+  // block is NOT gated on RENDER_ENTITY_PAGES. The whole set is one render and
+  // one search call per page — 38 of each against 463 cases, next to the ~179
+  // batched calls entity rendering costs — so a static-scope PR check can afford
+  // them, and it should: pagination that silently stopped emitting pages is
+  // exactly the regression that would otherwise reach production unnoticed and
+  // re-orphan 444 case pages.
+  //
+  // The count comes from `cases`, already fetched above, so deriving the page
+  // list costs nothing extra.
+  if (apiReachable) {
+    const casePagePaths = casesPagePaths(cases.length).slice(1);
+    for (const path of casePagePaths) {
+      const outFile = join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
+      try {
+        const result = await render(path);
+        await writeHtml(outFile, injectIntoTemplate(template, result));
+        notePrefetch(path, result);
+        console.log(`[pre-render] ✓ ${path}`);
+      } catch (err) {
+        if (err instanceof SuspenseStubError) throw err;
+        // Unlike an update or an entity, a missing listing page breaks the chain
+        // that reaches every page after it, so this is fatal rather than skipped.
+        console.error(`[pre-render] ERROR rendering ${path}:`, err);
+        if (err instanceof Error) console.error(err.stack);
+        process.exit(1);
+      }
+    }
+    console.log(
+      `[pre-render] Case browse: ${casePagePaths.length + 1} pages for ${cases.length} cases ` +
+      `(${CASES_PAGE_SIZE} per page)`,
+    );
   }
 
   // Render update detail routes (static data — IDs are known at build time)

@@ -15,6 +15,7 @@ import {
   archiveStatisticsQuery,
   recentMaterialsQuery,
 } from './queries/materials-landing';
+import { CASES_PAGE_SIZE } from './lib/cases-pagination';
 import { pickRecentMaterials } from './lib/materials-landing';
 import { getMaterial, materialTail } from './services/datalake-api';
 import type { ArchiveSearchResponse } from './types/search';
@@ -121,11 +122,21 @@ async function prefetch(
   }
 
   // Cases list page: OpenSearch-backed case browse, via Django /api/search proxy.
-  if (url === '/cases') {
-    await queryClient.prefetchInfiniteQuery({
-      queryKey: ['cases-search', { search: '', status: 'all' }],
-      queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: 12 }),
-      initialPageParam: '',
+  //
+  // `/cases` is page one and `/cases/page/N` is the rest. Prefetching the page
+  // actually being rendered is the whole point of pre-rendering these: without
+  // it every page in the sequence would ship the same empty cache, so a crawler
+  // would see 39 URLs whose bodies are identical chrome and conclude — correctly
+  // — that 38 of them are duplicates.
+  //
+  // The key must match the one Cases.tsx builds, `page` included, or the client
+  // hydrates nothing and refetches on mount.
+  const casesMatch = url.match(/^\/cases(?:\/page\/(\d+))?\/?(?:[?#]|$)/);
+  if (casesMatch) {
+    const page = casesMatch[1] ? Number(casesMatch[1]) : 1;
+    await queryClient.prefetchQuery({
+      queryKey: ['cases-search', { search: '', status: 'all', page }],
+      queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: CASES_PAGE_SIZE, page }),
     });
     return;
   }

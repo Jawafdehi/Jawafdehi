@@ -113,6 +113,16 @@ export const SITE_ROUTES = [
     sitemapTitle: "Cases — Jawafdehi",
   },
   {
+    // Pages 2..N of the case browse; page 1 is "/cases" above. Carries no
+    // StaticPageMeta on purpose, which is what keeps it out of
+    // PRE_RENDERED_STATIC_ROUTES and out of the search index: the page count
+    // depends on how many cases exist, so the URL list cannot be a constant.
+    // scripts/pre-render.ts renders these from the live count and
+    // scripts/sitemap.ts lists them, both via casesPagePaths.
+    path: "/cases/page/:page",
+    chrome: "app",
+  },
+  {
     path: "/search",
     chrome: "app",
     titleKey: "searchCommand.pageTitles.archiveSearch",
