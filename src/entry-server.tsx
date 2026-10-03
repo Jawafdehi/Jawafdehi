@@ -159,12 +159,18 @@ async function prefetch(
   }
 
   // Case detail page (slug-only API; slug is everything after /case/ up to /?#)
+  //
+  // Retried, unlike the embed branch below, because this one is pre-rendered 463
+  // times in a single build. At that volume a 10s timeout stops being a
+  // hypothetical: one case timed out on the first full build that rendered them
+  // all. Retrying a timeout is cheap next to re-running a 3-minute deploy.
   const caseMatch = url.match(/^\/case\/([^/?#]+)/);
   if (caseMatch) {
     const slug = decodeURIComponent(caseMatch[1]);
     await queryClient.prefetchQuery({
       queryKey: ['case', slug],
       queryFn: () => getCaseById(slug),
+      ...TRANSIENT_RETRY,
     });
     return;
   }

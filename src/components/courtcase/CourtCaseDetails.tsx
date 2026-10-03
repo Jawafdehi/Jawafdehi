@@ -124,7 +124,7 @@ function getLatestCourtUpdate(courtCase: CourtCase) {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-interface CourtCaseDetailsProps {
+export interface CourtCaseDetailsProps {
   courtCaseId: string;
   courtCase?: CourtCase;
   isLoading: boolean;

@@ -1,19 +1,31 @@
-import { Suspense, lazy } from "react";
 import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
+import { lazyChart } from "@/components/charts/lazy";
+import type { CaseEntityCardsProps } from "@/components/case-detail/case-entity-cards";
 import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
-// Lazy for the same reason CourtCasesSection is: the case-detail route is
+// Deferred for the same reason CourtCasesSection is: the case-detail route is
 // eager, so a static import would put the flip-card grid in the initial payload
 // of every page — including /search, which never renders it. The section sits
-// below the fold; the fallback keeps the tiles' footprint so nothing shifts.
-const CaseEntityCards = lazy(() =>
-  import("@/components/case-detail/case-entity-cards").then((m) => ({
-    default: m.CaseEntityCards,
-  })),
+// below the fold; the placeholder keeps the tiles' footprint so nothing shifts.
+//
+// 🛑 `lazyChart`, NOT `lazy()` + `<Suspense>`, and the difference is load-bearing
+// now that this route is pre-rendered. React 18's `renderToString` does not
+// support Suspense: it emits the fallback wrapped in a FAILED-boundary marker
+// preceded by a <template> whose stack carries ABSOLUTE BUILD-MACHINE PATHS, and
+// it tells React at hydration to throw the server markup away and re-render.
+// Measured on this page before the switch: 3 failed boundaries and 45 instances
+// of a local filesystem path, in a file meant to be served to the public.
+//
+// `lazyChart` is not chart-specific despite the name — DisqusComments uses it
+// too. See its own comment for why loading in an effect makes this unreachable
+// by construction instead of by remembering to gate a boundary.
+const CaseEntityCards = lazyChart<CaseEntityCardsProps>(
+  () => import("@/components/case-detail/case-entity-cards").then((m) => m.CaseEntityCards),
+  ({ entities }) => <CardsFallback count={entities.length} />,
 );
 
 // Parties shown before the "view more" toggle — three rows of the 3-up grid.
@@ -101,16 +113,14 @@ export function InvolvedPartiesSection({
                 </h3>
 
               </div>
-              <Suspense fallback={<CardsFallback count={entities.length} />}>
-                <CaseEntityCards
-                  className="print:hidden"
-                  entities={entities}
-                  resolvedEntities={resolvedEntities}
-                  language={language}
-                  initialLimit={INITIAL_PARTY_LIMIT}
-                  forum={forum}
-                />
-              </Suspense>
+              <CaseEntityCards
+                className="print:hidden"
+                entities={entities}
+                resolvedEntities={resolvedEntities}
+                language={language}
+                initialLimit={INITIAL_PARTY_LIMIT}
+                forum={forum}
+              />
               <p className="hidden print:block">
                 <strong>{translateRelation(type)}:</strong> {names.join(", ")}
               </p>

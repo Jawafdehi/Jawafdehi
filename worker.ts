@@ -10,13 +10,13 @@ import {
   SOCIAL_IMAGE_URL,
   authorCardUrl,
   buildHeadTags,
+  caseMetaDescription,
   escapeHtml,
   previewImageUrl,
   renderHeadTagsToHtml,
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
-import { stripMarkdown } from './src/utils/markdown';
 
 interface Env {
   ASSETS: {
@@ -466,14 +466,19 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
   }
 
   const titleRaw = String(caseData.title || 'Jawafdehi Case');
-  const allegationText = Array.isArray(caseData.key_allegations)
-    ? caseData.key_allegations.slice(0, 2).map((item) => String(item ?? '').trim()).filter(Boolean).join('. ')
-    : '';
-  const description = truncateMeta(
-    stripMarkdown(stripHtml(typeof caseData.description === 'string' ? caseData.description : '')) ||
-    allegationText ||
-    `A verified corruption and misconduct case documented by ${SITE_NAME}.`,
-  );
+  // Shared with CaseDetail.tsx so a case served from here and the same case
+  // served from its pre-rendered file carry the same description. Note this is
+  // where `short_description` entered the chain: 379 of 463 published cases have
+  // neither `description` nor `key_allegations`, so the old ending gave all of
+  // them the identical generic sentence.
+  const description = caseMetaDescription({
+    description: typeof caseData.description === 'string' ? caseData.description : null,
+    short_description:
+      typeof caseData.short_description === 'string' ? caseData.short_description : null,
+    key_allegations: Array.isArray(caseData.key_allegations)
+      ? caseData.key_allegations.map((item) => String(item ?? ''))
+      : null,
+  });
   const canonicalSlug = typeof caseData.slug === 'string' && caseData.slug.trim() ? caseData.slug : slug;
   const canonicalUrl = `${SITE_URL}/case/${encodeURIComponent(canonicalSlug)}`;
   const imageUrl =
