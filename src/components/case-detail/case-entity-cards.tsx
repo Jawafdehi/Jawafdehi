@@ -29,7 +29,7 @@ import {
   shouldShowOutcome,
 } from "@/utils/case-outcome";
 
-interface CaseEntityCardsProps {
+export interface CaseEntityCardsProps {
   className?: string;
   entities: JawafEntity[];
   resolvedEntities: Record<string, Entity>;

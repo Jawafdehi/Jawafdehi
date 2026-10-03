@@ -38,8 +38,7 @@ import { caseBindToEntity } from "@/services/entity-adapters";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { stripMarkdown } from "@/utils/markdown";
-import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, stripHtml, truncateMeta } from "@/utils/seo";
+import { caseMetaDescription, previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL } from "@/utils/seo";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -287,7 +286,7 @@ const CaseDetail = () => {
 
     const shareData = {
       title: caseData.title,
-      text: plainDescription,
+      text: metaDescription,
       url: canonicalUrl,
     };
 
@@ -368,9 +367,15 @@ const CaseDetail = () => {
 
   const canonicalCaseSlug = caseData.slug || id;
   const canonicalUrl = `${SITE_URL}/case/${canonicalCaseSlug}`;
-  const plainDescription = truncateMeta(stripMarkdown(stripHtml(caseData.description)));
-  const allegationDescription = truncateMeta(caseData.key_allegations?.slice(0, 2).join(". "));
-  const metaDescription = plainDescription || allegationDescription || "";
+  // Shared with worker.ts, which serves this page's metadata for any case
+  // published since the last build — the two chains used to end differently, so
+  // the same case got a description or not depending on build timing.
+  //
+  // Also what the three share surfaces below send. They used to take a variant
+  // that stopped at the full description, so for the 379 cases that have none
+  // the native share sheet, the sidebar and the mobile expander all offered an
+  // empty string.
+  const metaDescription = caseMetaDescription(caseData);
   const metaTitle = `${caseData.title} | Jawafdehi`;
   const ogImage =
     previewImageUrl(caseData.banner_url, "https://portal.jawafdehi.org") ||
@@ -470,7 +475,7 @@ const CaseDetail = () => {
               <FloatingShareSidebar
                 url={canonicalUrl}
                 title={caseData.title}
-                description={plainDescription}
+                description={metaDescription}
                 open={isShareOpen}
                 onOpenChange={setIsShareOpen}
               />
@@ -747,7 +752,7 @@ const CaseDetail = () => {
           <MobileShareExpander
             url={canonicalUrl}
             title={caseData.title}
-            description={plainDescription}
+            description={metaDescription}
           />
         </div>
       )}

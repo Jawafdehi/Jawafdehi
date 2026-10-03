@@ -56,6 +56,20 @@ if (SCOPE !== 'full' && SCOPE !== 'static') {
 }
 const RENDER_ENTITY_PAGES = SCOPE === 'full';
 
+// Case pages cost one upstream call each — the detail endpoint is per-slug and
+// has no batch form, unlike entities — so a full build spends ~463 of them here.
+// That is affordable only because it happens alone: on a push to `main` GitHub
+// runs `build:preview` (static) while Cloudflare's "Deploy default branch"
+// trigger runs the full build, so the two are not competing for the same
+// 1000/hour anonymous bucket. Keep it that way; two concurrent full builds put
+// this back over the cap.
+const RENDER_CASE_PAGES = SCOPE === 'full';
+
+// Share of case pages that may fail to render before the build gives up. One
+// timed-out request is noise and the edge fallback covers it; a tenth of the
+// archive missing is a broken API wearing the same costume.
+const CASE_SKIP_TOLERANCE = 0.02;
+
 interface RouteConfig {
   path: string;
   outFile: string;
@@ -591,22 +605,41 @@ async function main() {
   }
 
   if (apiReachable) {
-    // Case pages are deliberately NOT pre-rendered.
+    // Case pages, one file per slug at dist/case/<slug>/index.html.
     //
-    // They used to be, one file per numeric id at dist/case/<id>/index.html. All
-    // 67 were empty: the case detail API is keyed on slug, so SSR fetched nothing
-    // and every file was the same chrome-only shell — no case text, an empty
-    // <title>, and no Open Graph, Twitter or canonical tags. The URLs were dead
-    // in the browser too, since /case/<numeric> only resolves for the 28 ids in
-    // LEGACY_CASE_MAP and none of the 67 were in it.
+    // ⚠️ This block used to emit nothing, and the reason it did is worth keeping
+    // in view, because re-introducing it would be worse than never having
+    // pre-rendered at all. The first attempt wrote one file per NUMERIC id. The
+    // case detail API is keyed on slug, so SSR fetched nothing and all 67 files
+    // were the same chrome-only shell — no case text, empty <title>, no Open
+    // Graph or canonical. A static asset wins over the SPA fallback, so those
+    // blank files SHADOWED worker.ts's handleCaseMetaFallback, which fetches the
+    // case at the edge and injects real metadata. Emitting nothing was strictly
+    // better than emitting that.
     //
-    // Writing those files was actively harmful: a static asset wins over the SPA
-    // fallback, so the blank page shadowed worker.ts's handleCaseMetaFallback,
-    // which fetches the case at the edge and injects a real title, description,
-    // canonical and share card. Emitting nothing lets the working path serve.
+    // What changed is that the pages now have content. `/case/:id` has had a
+    // slug-keyed prefetch branch in entry-server.tsx since, so render() returns
+    // the real case, and CaseDetail's <Seo> emits a superset of what the Worker
+    // fallback does — same title, description, canonical, share image, article
+    // times and the `noindex` for non-PUBLISHED records, plus two <link
+    // rel=alternate> tags the fallback has no way to produce. The fallback still
+    // covers every case published since the last build, because ASSETS 404s for
+    // those and the request falls through to it.
     //
-    // Cases stay in the search index — their title and description come from the
-    // API, unchanged — but pointed at /case/<slug>, the URL that resolves.
+    // Why it is worth 463 upstream calls: measured against production on
+    // 2026-10-02, every case page served a body byte-identical to the home
+    // page's — 8 sampled at random gave 8 distinct <title> values and ONE
+    // distinct body, sha 75dce34c, 5,251 characters, the same bytes the home
+    // page serves. The case text existed only after JS ran. To a crawl
+    // scheduler that is 463 copies of the home page, and it is the other half of
+    // why they sit in "Discovered - currently not indexed".
+    //
+    // ⚠️ A case UNPUBLISHED or re-slugged after a build leaves a stale file that
+    // shadows the fallback until the next deploy, where before it would 404
+    // correctly. That is the cost of serving these statically; it is bounded by
+    // deploy cadence, and the API only lists PUBLISHED cases so nothing
+    // unpublished is written in the first place.
+    const renderableCases: Array<{ caseItem: PaginatedCaseList['results'][number]; slug: string }> = [];
     for (const caseItem of cases) {
       const slug = caseItem.slug?.trim();
       if (!slug) {
@@ -616,7 +649,80 @@ async function main() {
         );
         continue;
       }
+      // Cases carry no `lines` even now that there is rendered HTML to mine:
+      // search-index.json is downloaded by every visitor, and 463 case bodies
+      // would dwarf the rest of it. Title and description come from the API.
       searchEntries.push(caseToSearchEntry(caseItem, slug));
+      renderableCases.push({ caseItem, slug });
+    }
+
+    if (RENDER_CASE_PAGES) {
+      // ⚠️ Cases do NOT go through `notePrefetch`, and that is the one thing in
+      // this block most likely to look like an oversight. The shared guard fails
+      // the whole build when a pre-rendered route came back with an empty cache,
+      // which is right for a static route or an entity page: there is no other
+      // way to serve those, so publishing a skeleton is the only alternative and
+      // it is worse than failing.
+      //
+      // A case has another way to be served. If no file is written the URL falls
+      // through to worker.ts's handleCaseMetaFallback, which fetches the record
+      // at the edge and injects real metadata — the path that served every case
+      // before this block existed. So for a case the right response to "the data
+      // did not arrive" is to write NOTHING, not to fail the deploy and not to
+      // write the file anyway.
+      //
+      // Writing it anyway is specifically the old bug: a static asset beats the
+      // SPA fallback, so a shell with an empty cache would SHADOW the working
+      // edge path and serve a blank page where a correct one used to be.
+      //
+      // Measured on the first full build that rendered all 463: exactly one case
+      // timed out at 10s. One transient timeout should not stop a deploy.
+      let skipped = 0;
+      await withConcurrency(renderableCases, CONCURRENCY, async ({ slug }) => {
+        const path = `/case/${slug}`;
+        const outFile = join(ROOT, 'dist', 'case', slug, 'index.html');
+        try {
+          const result = await render(path);
+          if (result.prefetch.failed.length > 0) {
+            skipped += 1;
+            const why = result.prefetch.failed.map((f) => f.reason).join('; ');
+            console.warn(
+              `[pre-render] WARNING: ${path} rendered with no case data (${why}); ` +
+              `writing no file so the edge metadata fallback serves it.`,
+            );
+            return;
+          }
+          await writeHtml(outFile, injectIntoTemplate(template, result));
+          console.log(`[pre-render] ✓ ${path}`);
+        } catch (err) {
+          if (err instanceof SuspenseStubError) throw err;
+          skipped += 1;
+          console.warn(`[pre-render] WARNING: Skipping case ${slug}:`, err);
+          if (err instanceof Error) console.error(err.stack);
+        }
+      });
+
+      const rendered = renderableCases.length - skipped;
+      console.log(`[pre-render] Rendered ${rendered} case pages, ${skipped} left to the edge fallback`);
+
+      // Tolerating one timeout is not the same as tolerating a broken API. Past
+      // this share something is wrong with the data layer rather than with the
+      // network, and shipping a build where most of the archive quietly reverted
+      // to the fallback would hide it for as long as nobody looked.
+      const skipLimit = Math.ceil(renderableCases.length * CASE_SKIP_TOLERANCE);
+      if (skipped > skipLimit) {
+        console.error(
+          `[pre-render] ERROR: ${skipped} of ${renderableCases.length} case pages could not be\n` +
+          `  rendered, over the ${Math.round(CASE_SKIP_TOLERANCE * 100)}% tolerance (${skipLimit}).\n` +
+          `  That is a data-layer problem, not a flaky request. Refusing to publish.`,
+        );
+        process.exit(1);
+      }
+    } else {
+      console.log(
+        `[pre-render] PRERENDER_SCOPE=static — ${renderableCases.length} case pages NOT rendered; ` +
+        `they fall through to worker.ts's edge metadata fallback.`,
+      );
     }
 
     const entityNames = new Map<string, string | null | undefined>();

@@ -1,3 +1,5 @@
+import { stripMarkdown } from "./markdown";
+
 export const SITE_URL = "https://jawafdehi.org";
 
 // The organisation's name, settled 2026-08-11: **Jawafdehi Initiative**, on
@@ -106,6 +108,49 @@ export function truncateMeta(value: string | null | undefined, maxLength = 160):
 
 export function stripHtml(value: string | null | undefined): string {
   return (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/** The fields a case can offer a meta description, in the order they are tried. */
+export interface CaseDescriptionSource {
+  description?: string | null;
+  short_description?: string | null;
+  key_allegations?: readonly string[] | null;
+}
+
+/**
+ * The meta description for a case, from whichever field actually has one.
+ *
+ * Shared because the two renderers disagreed. `CaseDetail.tsx` ended its chain
+ * at `""` while `worker.ts` ended at a generic sentence, so the same case got a
+ * description or not depending on whether the build had reached it yet. That was
+ * survivable while case pages were never pre-rendered — the worker always
+ * answered — and stopped being survivable the moment a static file started
+ * shadowing it.
+ *
+ * ⚠️ `short_description` is in this chain because without it most of the archive
+ * has no description at all. Measured against production on 2026-10-02: of 463
+ * published cases, **379 have neither `description` nor `key_allegations`**, and
+ * 452 have a `short_description`. Ending the chain early left 379 pages with an
+ * empty `<meta name="description">`, and ending it at the generic sentence gave
+ * 379 pages the SAME description — which is its own duplicate-content signal, on
+ * exactly the pages that need to look distinct.
+ *
+ * It is tried AFTER the long fields rather than first, so no case that already
+ * had a description gets a different one.
+ */
+export function caseMetaDescription(caseData: CaseDescriptionSource): string {
+  const body = truncateMeta(stripMarkdown(stripHtml(caseData.description ?? "")));
+  if (body) return body;
+
+  const allegations = truncateMeta(
+    (caseData.key_allegations ?? []).slice(0, 2).map((item) => String(item ?? "").trim()).filter(Boolean).join(". "),
+  );
+  if (allegations) return allegations;
+
+  const summary = truncateMeta(stripMarkdown(stripHtml(caseData.short_description ?? "")));
+  if (summary) return summary;
+
+  return `A verified corruption and misconduct case documented by ${SITE_NAME}.`;
 }
 
 // The social card's intrinsic size. Emitted as og:image:width/height so scrapers
