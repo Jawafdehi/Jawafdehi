@@ -24,6 +24,13 @@ import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
 import type { JawafEntity } from './types/jds';
 
+// Re-exported so `scripts/pre-render.ts` can install the build's bearer token on
+// THIS bundle. The script imports the compiled `dist/server/entry-server.js`,
+// which carries its own copy of the axios client — reaching for the TypeScript
+// source instead would configure a different module instance and silently leave
+// every outgoing request anonymous. See services/prerender-auth.ts.
+export { setPrerenderToken } from './services/prerender-auth';
+
 // Just the part of an NES entity record this module needs: the canonical IRI that
 // keys the related-cases query. Deliberately not the full EntityRecord shape —
 // nothing here renders the record, it only forwards its identity.

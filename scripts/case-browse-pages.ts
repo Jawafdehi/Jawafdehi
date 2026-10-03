@@ -20,6 +20,7 @@
 // disagree by construction.
 
 import { CASES_PAGE_SIZE, casesPageCount, casesPagePath } from '../src/lib/cases-pagination.ts';
+import { buildAuthHeaders } from './build-auth.ts';
 
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -35,11 +36,15 @@ interface CaseSearchCount {
  * caller is already in a context where a failed API read is fatal.
  */
 export async function caseBrowsePagePaths(apiBase: string): Promise<string[]> {
+  const headers = await buildAuthHeaders();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(`${apiBase}/search/?type=case&page_size=1`, { signal: controller.signal });
+    res = await fetch(`${apiBase}/search/?type=case&page_size=1`, {
+      signal: controller.signal,
+      headers,
+    });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error(`Timed out after ${FETCH_TIMEOUT_MS}ms counting cases for the browse pages`);

@@ -20,6 +20,7 @@ import {
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
+import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -70,6 +71,22 @@ const RENDER_CASE_PAGES = SCOPE === 'full';
 // timed-out request is noise and the edge fallback covers it; a tenth of the
 // archive missing is a broken API wearing the same costume.
 const CASE_SKIP_TOLERANCE = 0.02;
+
+// A `full` build must authenticate. It reads the whole archive — thousands of
+// requests in a few minutes — and the anonymous cap is 1000/hour, so running one
+// anonymously no longer fits: the production build on 2026-10-03 spent ~1,010
+// and passed only on the synced throttle's approximate accounting.
+//
+// Fail BEFORE the work rather than after. Without this the symptom of a dropped
+// CI secret is eight minutes of rendering followed by a wall of 429s and a
+// refusal to publish, which reads like an API outage rather than a missing
+// variable. `static` builds are untouched: they make a few dozen calls and have
+// no reason to hold a credential.
+//
+// `PRERENDER_ANONYMOUS=1` opts out, for a local `bun run build` by someone who
+// has no credentials and does not need them. Not set in CI, deliberately — the
+// same arrangement as PRERENDER_ALLOW_EMPTY_PREFETCH above.
+const ALLOW_ANONYMOUS_FULL_BUILD = process.env.PRERENDER_ANONYMOUS === '1';
 
 interface RouteConfig {
   path: string;
@@ -129,11 +146,16 @@ interface EntityBatchResponse {
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
+  // Authenticated when the build has credentials. These calls (the case list and
+  // the entity batches) go out from this script rather than through the SSR
+  // bundle's axios client, so they need the header attached here too — the
+  // bundle's own requests get it from setPrerenderToken in main().
+  const headers = await buildAuthHeaders();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(url, { signal: controller.signal });
+    res = await fetch(url, { signal: controller.signal, headers });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
@@ -476,6 +498,18 @@ function entityToSearchEntry(path: string, name: string | null | undefined): Sea
 }
 
 async function main() {
+  if (SCOPE === 'full' && !hasBuildCredentials() && !ALLOW_ANONYMOUS_FULL_BUILD) {
+    console.error(
+      '[pre-render] ERROR: a full build needs API credentials.\n' +
+        '  Set PRERENDER_CLIENT_ID and PRERENDER_CLIENT_SECRET (the sa-prerender machine\n' +
+        '  user; credentials are in OpenBao at kv/jawafdehi/private/prerender/creds).\n' +
+        '  Rendering the whole archive anonymously exceeds the 1000/hour anonymous cap.\n' +
+        '  To build locally without them anyway: PRERENDER_ANONYMOUS=1, or the cheaper\n' +
+        '  `bun run build:preview`.',
+    );
+    process.exit(1);
+  }
+
   // Copy client assets (JS/CSS/etc.) from dist/client/ into dist/ so they're
   // reachable at the same absolute paths referenced in index.html (e.g. /assets/index-[hash].js)
   await cp(join(ROOT, 'dist/client'), join(ROOT, 'dist'), { recursive: true });
@@ -493,9 +527,24 @@ async function main() {
 
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
   // @ts-expect-error: module only exists after `vite build --ssr`
-  const { render } = await import('../dist/server/entry-server.js') as {
+  const serverEntry = await import('../dist/server/entry-server.js') as {
     render: (url: string, seed?: { entityRecord?: unknown }) => Promise<RenderResult>;
+    setPrerenderToken: (token: string | null) => void;
   };
+  const { render } = serverEntry;
+
+  // Install the build's token on THIS module instance. The bundle carries its
+  // own copy of the shared axios client, so configuring the TypeScript source
+  // from here would reach a different instance and leave every prefetch
+  // anonymous — the same aliasing that made an interceptor added here silently
+  // do nothing. See src/services/prerender-auth.ts.
+  const token = await buildAuthToken();
+  serverEntry.setPrerenderToken(token);
+  console.log(
+    token
+      ? '[pre-render] Authenticated as the prerender service account.'
+      : '[pre-render] No build credentials — fetching anonymously.',
+  );
 
   const staticRoutes: RouteConfig[] = PRE_RENDERED_STATIC_ROUTES.map((route) => ({
     path: route.path,
