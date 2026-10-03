@@ -6,7 +6,10 @@ export interface Contact {
 }
 
 export interface TeamMember {
-  displayName: { en: string; ne: string };
+  // `ne` is optional: a member may join before anyone has confirmed the
+  // spelling of their name in Devanagari. The team page falls back to `en`
+  // rather than rendering a blank card in Nepali.
+  displayName: { en: string; ne?: string };
   thumb?: string;
   description: string;
   tags?: string[];
@@ -120,14 +123,6 @@ export const members: TeamMember[] = [
     ],
   },
   {
-    displayName: { en: "Rujit Kafle", ne: "रुजित काफ्ले" },
-    thumb: "/assets/teammembers/rujit.webp",
-    description: "Caseworker",
-    contacts: [
-      { type: "email", value: "rujitkafle77@gmail.com" },
-    ],
-  },
-  {
     displayName: { en: "Sambhav Koirala", ne: "सम्भव कोइराला" },
     thumb: "/assets/teammembers/sambhav.webp",
     description: "Caseworker",
@@ -151,6 +146,16 @@ export const members: TeamMember[] = [
       { type: "email", value: "kandelsubodh46@gmail.com" },
       { type: "instagram", value: "https://www.instagram.com/subodh_kandel" },
     ],
+  },
+  {
+    displayName: { en: "Santosh Pokharel", ne: "सन्तोष पोखरेल" },
+    description: "",
+    contacts: [],
+  },
+  {
+    displayName: { en: "Sujesh Sah" },
+    description: "",
+    contacts: [],
   },
 ];
 
@@ -217,6 +222,14 @@ export const pastMembers: TeamMember[] = [
     description: "CEO, Proma.ai; Volunteer",
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/sbashyal/" },
+    ],
+  },
+  {
+    displayName: { en: "Rujit Kafle", ne: "रुजित काफ्ले" },
+    thumb: "/assets/teammembers/rujit.webp",
+    description: "Caseworker",
+    contacts: [
+      { type: "email", value: "rujitkafle77@gmail.com" },
     ],
   },
 ];

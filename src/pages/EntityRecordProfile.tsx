@@ -212,7 +212,13 @@ export default function EntityRecordProfile() {
   const params = useParams();
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language || "ne").startsWith("en") ? "en" : "ne";
-  const tail = params["*"] || "";
+  // Trailing slash stripped so the key matches whichever form the visitor
+  // arrived on. These pages are pre-rendered to <tail>/index.html and the
+  // sitemap advertises the slashed URL, while entityPath() links to the
+  // slashless one — without this the two forms build different query keys, and
+  // the slashed one misses the dehydrated cache and refetches
+  // /api/entities/<tail>/ on hydration.
+  const tail = (params["*"] || "").replace(/\/+$/, "");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["entity-record", tail],
     queryFn: async () => {

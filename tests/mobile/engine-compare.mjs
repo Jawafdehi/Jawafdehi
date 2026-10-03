@@ -15,6 +15,7 @@
 import { chromium, webkit, firefox, devices as pw } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { newSyntheticContext } from "./synthetic.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -66,15 +67,18 @@ async function main() {
   for (const [name, type] of ENGINES) {
     let browser;
     try { browser = await type.launch(); } catch (e) { console.log(`${name}: launch failed — ${String(e).slice(0, 100)}`); continue; }
-    const ctx = await browser.newContext({
+    const ctx = await newSyntheticContext(browser, {
+      base: BASE,
       // 390x664 = the real iPhone 12-15 viewport (844 is the screen). The
       // 2026-08-16 audit ran this at 390x844; the figures in that report are
       // for 844 and will differ slightly from a fresh run here.
       viewport: { width: 390, height: 664 },
       userAgent: name === "webkit" ? pw["iPhone 14"].userAgent : pw["Galaxy S9+"].userAgent,
       deviceScaleFactor: 2, isMobile: name !== "firefox", hasTouch: name !== "firefox", locale: "ne-NP",
-      storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: "jawafdehi_analytics_consent", value: "denied" }] }] },
-    }).catch(async () => browser.newContext({ viewport: { width: 390, height: 664 }, locale: "ne-NP" }));
+      // The fallback drops the device emulation Firefox/WebKit may reject, but
+      // must stay a SYNTHETIC context — a plain newContext here would quietly
+      // restore the beacon for whichever engine took the fallback path.
+    }).catch(async () => newSyntheticContext(browser, { base: BASE, viewport: { width: 390, height: 664 }, locale: "ne-NP" }));
     for (const [route, slug] of ROUTES) {
       const page = await ctx.newPage();
       let row = { engine: name, route, slug, ok: false };

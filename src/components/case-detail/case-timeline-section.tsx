@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { CollapsibleCaseContent } from "@/components/case-detail/collapsible-case-content";
 import { buildYearGroupHeadings } from "@/components/case-detail/case-timeline-headings";
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 
 interface CaseTimelineSectionProps {
   className?: string;
@@ -103,11 +104,15 @@ export function CaseTimelineSection({
       className={cn("scroll-mt-28 no-page-break max-w-4xl", className)}
       aria-label={title}
     >
+      {/* Heading sits outside the collapsible: it is the section's label, not
+          collapsible content, so it never counts against the clamp height. */}
+      <CaseSectionHeading>{title}</CaseSectionHeading>
+
       <CollapsibleCaseContent
         readMoreLabel={t("caseDetail.readMore")}
         showLessLabel={t("caseDetail.showLess")}
       >
-        <ChangelogContent description="" heading={title} releases={releases} />
+        <ChangelogContent releases={releases} />
       </CollapsibleCaseContent>
     </section>
   );

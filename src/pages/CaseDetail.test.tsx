@@ -27,7 +27,11 @@ vi.mock("@/services/jds-api", () => ({
   getCaseByCourtRef: (...args: unknown[]) => getCaseByCourtRef(...args),
 }));
 
-vi.mock("@/services/api", () => ({ getEntityById: vi.fn() }));
+// Kept as a spy specifically so the fan-out regression test below can assert it
+// is never called. The page no longer imports it; if it ever does again, that
+// test fails rather than the page quietly reopening 255 connections per view.
+const getEntityById = vi.fn();
+vi.mock("@/services/api", () => ({ getEntityById: (...args: unknown[]) => getEntityById(...args) }));
 vi.mock("@/services/datalake-api", () => ({ getCourtCase: vi.fn() }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => false }));
 
@@ -98,6 +102,54 @@ beforeEach(() => {
   navigateSpy.mockReset();
   getCaseById.mockReset();
   getCaseByCourtRef.mockReset();
+  getEntityById.mockReset();
+});
+
+describe("CaseDetail party identity (no per-entity fan-out)", () => {
+  // The widest published case binds 255 parties. Each used to be its own
+  // `GET /api/entities/<iri>`, and the API opens a Postgres connection per
+  // request against a ceiling of 100 — that is what exhausted it and served
+  // intermittent 500s for nine days (COE 2026-09-29). The detail payload now
+  // carries `name`/`image`, so the page must not issue any of those requests.
+  const withParties = (count: number): CaseDetailType => ({
+    ...makeCase("wide-case"),
+    entities: Array.from({ length: count }, (_, i) => ({
+      nes_id: `https://jawafdehi.org/entity/person/party-${i}`,
+      display_name: `Party ${i}`,
+      entity_type: "Person",
+      type: "accused",
+      outcome: null,
+      notes: "",
+      name: { en: `Party ${i}`, ne: `पक्ष ${i}` },
+      image: null,
+    })),
+  });
+
+  it("issues no entity requests, however many parties the case binds", async () => {
+    getCaseById.mockResolvedValue(withParties(255));
+
+    renderAt("wide-case");
+
+    await waitFor(() => expect(getCaseById).toHaveBeenCalled());
+    expect(getEntityById).not.toHaveBeenCalled();
+  });
+
+  it("still issues none when the payload omits the identity fields", async () => {
+    // A case object with no `name`/`image` — the list payload's shape, and what
+    // a stale cache would hold. The page must degrade to `display_name` rather
+    // than fall back to fetching, which would restore the fan-out exactly where
+    // the data is thinnest.
+    const noIdentity = withParties(40);
+    noIdentity.entities = noIdentity.entities.map(
+      ({ name: _name, image: _image, ...bind }) => bind,
+    );
+    getCaseById.mockResolvedValue(noIdentity);
+
+    renderAt("wide-case");
+
+    await waitFor(() => expect(getCaseById).toHaveBeenCalled());
+    expect(getEntityById).not.toHaveBeenCalled();
+  });
 });
 
 describe("CaseDetail canonical slug redirect (BB-38)", () => {

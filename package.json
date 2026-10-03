@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts",
+    "build:preview": "PRERENDER_SCOPE=static bun run build",
     "build:dev": "vite build --mode development",
     "analyze": "ANALYZE=true vite build && echo 'Bundle treemap written to dist/stats.html'",
     "lint": "eslint .",
