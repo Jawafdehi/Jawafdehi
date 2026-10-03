@@ -646,7 +646,7 @@
     "allTypes": "All Types",
     "clearFilters": "Clear Filters",
     "loading": "Loading...",
-    "showing": "Showing {{count}} of {{total}} cases",
+    "showingRange": "Showing {{from}}–{{to}} of {{total}} cases",
     "noCasesFound": "No cases found matching your criteria",
     "unableToLoad": "Unable to load cases at this time",
     "tryAgain": "Try Again",
@@ -654,8 +654,6 @@
     "retry": "Retry",
     "tooManyRequests": "Too many requests. Please wait a moment and try again.",
     "failedToLoad": "Failed to load cases. Please try again.",
-    "loadingMore": "Loading...",
-    "loadMore": "Load More",
     "status": {
       "ongoing": "Ongoing",
       "underInvestigation": "Under Investigation",

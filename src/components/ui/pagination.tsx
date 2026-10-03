@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { Button, ButtonProps, buttonVariants } from "@/components/ui/button";
@@ -77,11 +78,88 @@ const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span"
 );
 PaginationEllipsis.displayName = "PaginationEllipsis";
 
+type PageControlProps = {
+  targetPage: number;
+  hrefFor?: (page: number) => string;
+  onPageChange: (page: number) => void;
+  disabled?: boolean;
+  current?: boolean;
+  label: string;
+  className?: string;
+  variant?: ButtonProps["variant"];
+  children: React.ReactNode;
+};
+
+/**
+ * One page control, as a `<Link>` when the caller supplied `hrefFor` and a
+ * `<button>` otherwise.
+ *
+ * Disabled controls stay buttons even in link mode. An `<a>` has no disabled
+ * state, and the two obvious substitutes are both worse than a button: a link
+ * to the page you are already on is a self-referential URL for a crawler to
+ * queue, and a link with no href is a button wearing the wrong element.
+ */
+const PageControl = ({
+  targetPage,
+  hrefFor,
+  onPageChange,
+  disabled,
+  current,
+  label,
+  className,
+  variant,
+  children,
+}: PageControlProps) => {
+  if (hrefFor && !disabled) {
+    return (
+      <Button asChild className={className} variant={variant}>
+        <Link
+          aria-current={current ? "page" : undefined}
+          aria-label={label}
+          onClick={() => onPageChange(targetPage)}
+          to={hrefFor(targetPage)}
+        >
+          {children}
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      aria-current={current ? "page" : undefined}
+      aria-label={label}
+      className={className}
+      disabled={disabled}
+      onClick={() => onPageChange(targetPage)}
+      type="button"
+      variant={variant}
+    >
+      {children}
+    </Button>
+  );
+};
+
 type PaginationControlsProps = {
   page: number;
   pageSize: number;
   totalItems: number;
   onPageChange: (page: number) => void;
+  /**
+   * Builds the URL for a page number. Supplying it turns every page control
+   * into a real `<Link>`, which is the difference between a listing a crawler
+   * can walk and one it cannot: an `onClick` handler is invisible to Googlebot,
+   * so a button-paged listing exposes only the rows on page one and orphans the
+   * rest. Omit it where the view's state does not live in the URL — paging a
+   * filtered result set by href would advertise a URL that does not reproduce
+   * what the user is looking at, and invite the crawler into an unbounded space
+   * of filter combinations.
+   *
+   * `onPageChange` still fires on click, so callers keep whatever scroll or
+   * focus handling they had; the href is what the crawler and a middle-click
+   * follow.
+   */
+  hrefFor?: (page: number) => string;
   className?: string;
 };
 
@@ -90,6 +168,7 @@ const PaginationControls = ({
   pageSize,
   totalItems,
   onPageChange,
+  hrefFor,
   className,
 }: PaginationControlsProps) => {
   const { t } = useTranslation();
@@ -108,17 +187,18 @@ const PaginationControls = ({
     <Pagination className={cn("mt-8", className)}>
       <PaginationContent className="w-full justify-between gap-2 sm:w-auto sm:justify-center sm:gap-1">
         <PaginationItem>
-          <Button
-            aria-label={t("pagination.goToPrevPage")}
+          <PageControl
             className="h-10 rounded-full px-4"
             disabled={safePage <= 1}
-            onClick={() => onPageChange(safePage - 1)}
-            type="button"
+            hrefFor={hrefFor}
+            label={t("pagination.goToPrevPage")}
+            onPageChange={onPageChange}
+            targetPage={safePage - 1}
             variant="outline"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline">{t("pagination.previous")}</span>
-          </Button>
+          </PageControl>
         </PaginationItem>
 
         <div className="hidden items-center gap-1 sm:flex">
@@ -127,19 +207,24 @@ const PaginationControls = ({
               {item === "ellipsis" ? (
                 <PaginationEllipsis />
               ) : (
-                <Button
-                  aria-current={item === safePage ? "page" : undefined}
-                  aria-label={t("pagination.goToPage", { page: item })}
+                <PageControl
                   className={cn(
                     "h-10 w-10 rounded-full p-0",
                     item === safePage && "pointer-events-none",
                   )}
-                  onClick={() => onPageChange(item)}
-                  type="button"
+                  current={item === safePage}
+                  // The current page links to itself in link mode. That is the
+                  // one self-link worth keeping: it is what `aria-current` is
+                  // attached to, and crawlers fold it into the page they are
+                  // already on rather than queueing it again.
+                  hrefFor={hrefFor}
+                  label={t("pagination.goToPage", { page: item })}
+                  onPageChange={onPageChange}
+                  targetPage={item}
                   variant={item === safePage ? "default" : "ghost"}
                 >
                   {item}
-                </Button>
+                </PageControl>
               )}
             </PaginationItem>
           ))}
@@ -152,17 +237,18 @@ const PaginationControls = ({
         </PaginationItem>
 
         <PaginationItem>
-          <Button
-            aria-label={t("pagination.goToNextPage")}
+          <PageControl
             className="h-10 rounded-full px-4"
             disabled={safePage >= totalPages}
-            onClick={() => onPageChange(safePage + 1)}
-            type="button"
+            hrefFor={hrefFor}
+            label={t("pagination.goToNextPage")}
+            onPageChange={onPageChange}
+            targetPage={safePage + 1}
             variant="outline"
           >
             <span className="hidden sm:inline">{t("pagination.next")}</span>
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </PageControl>
         </PaginationItem>
       </PaginationContent>
     </Pagination>
