@@ -10,6 +10,7 @@
     "ourProcess": "Our Process",
     "volunteer": "Volunteer",
     "weeklySeries": "Weekly Series",
+    "openHouse": "Open House",
     "donate": "Donate",
     "ourCommitment": "Our Commitment",
     "skipToContent": "Skip to content",
@@ -39,6 +40,89 @@
       "description": "Catch up on past sessions and follow the series on our YouTube channel.",
       "cta": "Open YouTube channel",
       "playlistTitle": "Weekly Corruption Series playlist"
+    }
+  },
+  "openHouse": {
+    "hero": {
+      "eyebrow": "Open to everyone",
+      "title": "Jawafdehi Open House",
+      "description": "A small, informal online session with the team behind Nepal's permanent corruption case archive. Come with questions, with ideas, or just to listen.",
+      "join": "Join on Zoom",
+      "register": "Register"
+    },
+    "when": {
+      "title": "When is the next one?",
+      "description": "We run these regularly, and we'll tell you when there's one for your region. The time moves from week to week so that people in Nepal, the Gulf, Asia, Europe, Africa, Australia and the Americas each get a slot that works for them.",
+      "waitingRoom": "Sessions are small, usually ten to fifteen people. The Join button above is always live: if a session is running you'll arrive in the waiting room and the host will let you in. If nothing is running, Zoom will tell you the host hasn't started the meeting yet."
+    },
+    "signup": {
+      "eyebrow": "Register your interest",
+      "title": "Tell us where you are",
+      "description": "Sessions are arranged around whoever is coming, so we'll email you when there's one at a time that works for your part of the world.",
+      "name": "Name",
+      "nameRequired": "Please tell us your name.",
+      "email": "Email",
+      "emailInvalid": "Please enter a valid email address.",
+      "region": "Where are you?",
+      "regionUnset": "Select your region",
+      "regionHelp": "We've guessed from your device. Change it if it's wrong.",
+      "whatsapp": "WhatsApp number (optional)",
+      "whatsappHelp": "So we can send you the join link shortly before the session. Include your country code.",
+      "whatsappInvalid": "Please use digits, spaces, brackets or hyphens, with an optional leading +.",
+      "forOrganisation": "I'm asking on behalf of an organisation",
+      "organisationName": "Organisation name",
+      "consent": "Yes, email me about Open House sessions. I'll also receive the occasional Jawafdehi newsletter, and I can unsubscribe at any time. See our",
+      "consentPrivacyLink": "privacy policy",
+      "consentRequired": "Please tick the box so we know we may email you.",
+      "submit": "Keep me posted",
+      "submitting": "Sending…",
+      "successTitle": "You're on the list.",
+      "successMessage": "We'll email you when there's a session for your region. Check your inbox for a note about what to expect.",
+      "errorAlreadyOnList": "You may already be on our list — or you unsubscribed before, in which case we won't add you back automatically. Email inquiry@jawafdehi.org with your region and we'll make sure you hear about the next session.",
+      "errorInvalid": "Please check the highlighted fields and try again.",
+      "errorThrottled": "Too many attempts just now. Please try again in a little while.",
+      "errorGeneric": "Something went wrong. Please try again, or email inquiry@jawafdehi.org."
+    },
+    "regions": {
+      "nepal-south-asia": "Nepal & South Asia",
+      "gulf-middle-east": "Gulf & Middle East",
+      "east-southeast-asia": "East & Southeast Asia",
+      "europe-africa": "Europe & Africa",
+      "australia-nz": "Australia & New Zealand",
+      "north-america-east": "North America — East",
+      "north-america-west": "North America — West"
+    },
+    "topics": {
+      "eyebrow": "What we talk about",
+      "title": "Three things, most weeks",
+      "accountability": {
+        "title": "Nepal's accountability infrastructure",
+        "desc": "What it takes to document corruption cases in a structured, permanent way: who did what, and when."
+      },
+      "tech": {
+        "title": "Using AI and tech for good",
+        "desc": "How the archive gets built, and where technology genuinely helps hold power to account."
+      },
+      "givingBack": {
+        "title": "Giving back to our home country",
+        "desc": "Practical ways people in Nepal and across the diaspora contribute to a corruption-free Nepal."
+      }
+    },
+    "nextSteps": {
+      "title": "Three ways to take part",
+      "description": "Whether or not you make it to a session, these are open to you.",
+      "donate": {
+        "label": "Donate",
+        "desc": "Fund the archive and help keep it independent."
+      },
+      "volunteer": {
+        "label": "Volunteer",
+        "desc": "Research, engineering, outreach and translation."
+      },
+      "report": {
+        "label": "Report",
+        "desc": "Submit an allegation or a public-interest corruption lead."
+      }
     }
   },
   "header": {
@@ -82,6 +166,7 @@
       "team": "Meet the people behind Jawafdehi.",
       "products": "Explore Jawafdehi tools and products.",
       "weeklySeries": "The weekly corruption series is on pause; watch past presentations on YouTube.",
+      "openHouse": "Join a small, informal online session with the Jawafdehi team.",
       "updates": "Read recent platform updates.",
       "report": "Send us information about a corruption case — by form, email, or WhatsApp.",
       "feedback": "Send bugs, feature ideas, corrections, or general feedback.",
@@ -140,6 +225,7 @@
       "searchLabel": "Search the Jawafdehi archive",
       "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
       "searchSubmit": "Search Jawafdehi",
+      "suggestionsLabel": "Case suggestions",
       "stats": {
         "casesDocumented": "Cases documented",
         "totalBigo": "Total embezzled amount",
@@ -2561,21 +2647,5 @@
       "website": "their website",
       "twitter": "X"
     }
-  },
-  "launchEvent": {
-    "barLabel": "Upcoming public launch",
-    "barSentence": "Join the public launch of Nepal's corruption database on Zoom — 23 Sept 6 PM Pacific · 24 Sept 6:45 AM Nepal.",
-    "barCta": "Learn more.",
-    "barDismiss": "Dismiss launch announcement",
-    "eyebrow": "Public launch · Free · Open to everyone",
-    "title": "The public launch of Nepal's corruption database",
-    "description": "Built over the past year and open to everyone: a permanent, searchable public record of corruption cases, with the documents behind them. We will show you what is in it and what has to happen to a case before it goes public. After that the floor is yours. You do not need a background in law or technology to follow it.",
-    "dateUs": "Wednesday 23 September 2026, 6:00 PM Pacific · 8:00 PM Central · 9:00 PM Eastern",
-    "dateNepal": "Thursday 24 September 2026 in Nepal, 6:45 AM (आश्विन ८)",
-    "formatZoom": "Zoom",
-    "formatFacebook": "live on Facebook",
-    "cta": "Learn more",
-    "viewFlyer": "View the full flyer",
-    "flyerAlt": "Launch flyer: Nepal's Permanent Corruption Database. 23 September, 6 PM Pacific; 24 September, 6:45 AM Nepal time. Register at jawafdehi.org/launch."
   }
 }

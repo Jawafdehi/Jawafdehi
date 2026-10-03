@@ -104,7 +104,7 @@ const OurTeam = () => {
 
                     {/* Name */}
                     <h3 className="text-lg font-bold text-foreground mb-0.5">
-                      {member.displayName[lang]}
+                      {member.displayName[lang] ?? member.displayName.en}
                     </h3>
                     {lang === "en" && member.displayName.ne && (
                       <p className="text-sm text-muted-foreground/60 mb-3">{member.displayName.ne}</p>

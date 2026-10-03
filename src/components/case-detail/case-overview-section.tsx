@@ -1,3 +1,4 @@
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -18,10 +19,7 @@ export function CaseOverviewSection({
 
   return (
     <section id="overview" className="mb-12 w-full max-w-4xl min-w-0 scroll-mt-28">
-      <h2 className="font-section-title mb-6 flex items-center">
-
-        {title}
-      </h2>
+      <CaseSectionHeading>{title}</CaseSectionHeading>
 
       <CollapsibleCaseContent
         readMoreLabel={t("caseDetail.readMore")}

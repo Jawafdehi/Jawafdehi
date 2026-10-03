@@ -133,6 +133,19 @@ export interface JawafEntity {
   outcome?: EntityOutcome | null; // Verdict — only on 'accused'; null for every other role
   notes?: string; // Additional notes about the relationship
   related_cases?: EntityCaseRelationship[]; // Unified case links with relation metadata
+  /**
+   * The party's name in both scripts. DETAIL PAYLOAD ONLY — `GET /api/cases/`
+   * (the list) omits it deliberately, so treat it as absent rather than empty
+   * anywhere a case could have come from the list. Either side may be null when
+   * the record carries only one script, and both are null for an entity that has
+   * been merged away (the API gates these on the entity still being live).
+   *
+   * Prefer this over `display_name`, which is whichever single language the
+   * backend found first and cannot tell you which one it was.
+   */
+  name?: { en: string | null; ne: string | null };
+  /** Picture URL, detail payload only. Null for most parties — the kind glyph is the common case. */
+  image?: string | null;
 }
 
 export interface EntityCaseRelationship {

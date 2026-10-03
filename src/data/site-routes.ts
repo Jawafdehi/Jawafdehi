@@ -7,6 +7,7 @@ export type SearchIconName =
   | "Home"
   | "Info"
   | "MessageCircle"
+  | "MessagesSquare"
   | "Newspaper"
   | "Search"
   | "ShieldCheck"
@@ -222,6 +223,15 @@ export const SITE_ROUTES = [
     keywords: ["products", "tools", "platforms"],
     icon: "FileText",
     sitemapTitle: "Products — Jawafdehi",
+  },
+  {
+    path: "/openhouse",
+    chrome: "app",
+    titleKey: "nav.openHouse",
+    descriptionKey: "searchCommand.descriptions.openHouse",
+    keywords: ["open house", "discussion", "zoom", "session", "join", "meet"],
+    icon: "MessagesSquare",
+    sitemapTitle: "Jawafdehi Open House — Jawafdehi",
   },
   {
     path: "/saptahik",

@@ -72,6 +72,16 @@ export interface NewsletterSubscription {
   consentSource: string;
   privacyVersion: string;
   locale?: string;
+  /**
+   * Open House fields. Optional everywhere — the newsletter forms omit them,
+   * and an Open House signup only has to supply a name and an email.
+   *
+   * `region` must be one of the API's `OPEN_HOUSE_REGIONS`; see
+   * `@/components/open-house/regions`, which mirrors that closed list.
+   */
+  region?: string;
+  whatsapp?: string;
+  organisation?: string;
 }
 
 export interface NewsletterSubscriptionResponse {

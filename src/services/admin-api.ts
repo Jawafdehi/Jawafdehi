@@ -114,6 +114,16 @@ async function searchEntitiesUnified(
       lang: "both",
       page_size: String(SEARCH_MAX_PAGE_SIZE),
       page: String(page),
+      // The picker needs the WHOLE registry, not the ~1.5k slice a published
+      // case cites, which is what /api/search/ serves by default. Binding an
+      // entity to a case is precisely how an entity STOPS being unreferenced,
+      // so gating the picker would deadlock: no hit, no bind, no visibility.
+      //
+      // Honoured only for the Caseworker role, and ignored (not rejected) for
+      // anyone else — so sending it unconditionally is safe, and an admin page
+      // loaded by a signed-out user degrades to the public corpus instead of
+      // erroring.
+      include_unreferenced: "true",
     });
     if (params.entity_type) search.set("entity_type", params.entity_type);
     const { data } = await client.get<ArchiveSearchResponse>(

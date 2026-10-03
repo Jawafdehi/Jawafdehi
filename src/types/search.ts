@@ -31,6 +31,13 @@ export interface BilingualText {
 export interface ArchiveSearchParams {
   q?: string;
   type?: ArchiveSearchResultType;
+  // CORPUS SCOPE, not a refine facet: restrict to one material publishing source
+  // (the `/material/<source>/<ident>` IRI segment). This is the token the curated
+  // series registry in `data/material-series.ts` is keyed on, so one series is one
+  // value. Unlike a facet it also narrows the facet counts, and the API never
+  // returns the list of sources — the column mixes publishers with document forms,
+  // so it is scoped against but never offered as options. Material-only.
+  source?: string[];
   // Exact-match refine facets (each a repeatable query param).
   entity_type?: string[];
   case_type?: string[];

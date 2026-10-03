@@ -52,4 +52,36 @@ describe('pre-rendered routes must be eagerly imported', () => {
       ).toBe(false);
     },
   );
+
+  // The static list above is not the whole of what gets pre-rendered, and the
+  // gap is not theoretical: scripts/pre-render.ts also walks routes whose paths
+  // come from the API at build time, so they can never appear in
+  // PRE_RENDERED_STATIC_ROUTES. /entity/* was made pre-rendered while still
+  // lazy() and shipped 1,544 empty-titled Suspense stubs past a green run of
+  // this very file, because this file only knew about the static half.
+  //
+  // Keep in step with the route blocks in scripts/pre-render.ts main(): a route
+  // belongs here once that script writes an index.html for it. /case/* is
+  // deliberately absent — cases are listed in the sitemap but not pre-rendered.
+  const DYNAMIC_PRE_RENDERED_ROUTES = ['/entity/*', '/updates/:slug'] as const;
+
+  it.each(DYNAMIC_PRE_RENDERED_ROUTES)(
+    '%s (pre-rendered from API-derived paths) renders an eager component',
+    (path) => {
+      const element = ROUTE_ELEMENTS[path as keyof typeof ROUTE_ELEMENTS];
+
+      expect(
+        element,
+        `no element for ${path} in ROUTE_ELEMENTS — either the route key changed ` +
+          `or this list has drifted from scripts/pre-render.ts.`,
+      ).toBeDefined();
+      expect(
+        isLazyElement(element),
+        `${path} renders a lazy() component but scripts/pre-render.ts writes ` +
+          `HTML for it, so every one of those pages ships as the Suspense ` +
+          `fallback: empty <title>, no og: tags, no content. Make the page an ` +
+          `eager import in src/routes.tsx.`,
+      ).toBe(false);
+    },
+  );
 });
