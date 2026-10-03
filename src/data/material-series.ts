@@ -80,12 +80,24 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
     slug: "auditor-general-reports",
     source: "official_report",
     tint: 4,
-    name: { ne: "महालेखा परीक्षकका वार्षिक प्रतिवेदन", en: "Auditor General annual reports" },
-    description: {
-      ne: "महालेखा परीक्षकको कार्यालयका वार्षिक लेखापरीक्षण प्रतिवेदनहरू।",
-      en: "Annual audit reports from the Office of the Auditor General.",
+    // The slug stays `auditor-general-reports` — it is a published identity and
+    // changing it breaks links. Only the wording moves. The shelf holds every
+    // document published by the Office of the Auditor General, of which the
+    // annual reports are a small part (18 of 228 at the time of writing): the
+    // rest are province audit reports, the audit journal, audit bulletins,
+    // right-to-information reports and more. Calling the whole shelf "annual
+    // reports" made a claim about 210 documents that was not true. Splitting it
+    // into one shelf per kind needs a document-kind scope the search index does
+    // not carry yet — see docs/2026-10-02-oag-series-split/PLAN.md.
+    name: {
+      ne: "महालेखा परीक्षकका प्रतिवेदन र प्रकाशन",
+      en: "Auditor General reports and publications",
     },
-    typeLabel: { ne: "लेखापरीक्षण प्रतिवेदन", en: "Audit reports" },
+    description: {
+      ne: "महालेखा परीक्षकको कार्यालयका वार्षिक प्रतिवेदन, प्रदेश लेखापरीक्षण प्रतिवेदन, लेखापरीक्षण पत्रिका र अन्य प्रकाशनहरू।",
+      en: "Annual reports, province audit reports, the audit journal and other publications from the Office of the Auditor General.",
+    },
+    typeLabel: { ne: "प्रतिवेदन र प्रकाशन", en: "Reports and publications" },
   },
 ];
 
