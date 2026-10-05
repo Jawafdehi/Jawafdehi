@@ -4,13 +4,14 @@ import { useSearchParams } from "react-router-dom";
 
 import ArchiveSearch from "./ArchiveSearch";
 import MaterialsLanding from "./MaterialsLanding";
+import { lazyChunk } from "@/lib/chunk-reload";
 
 // The landing view is what /materials pre-renders; ?series= is client-rendered
 // only, and it is the one variant with code of its own (filter panel, sheet,
 // select). Behind a dynamic import that is ~4 KB gzip off the entry chunk.
 // ArchiveSearch stays a static import: routes.tsx already imports it eagerly
 // for /search, so a dynamic one here would defer nothing and only cost a frame.
-const MaterialSeriesBrowse = lazy(() => import("./MaterialSeriesBrowse"));
+const MaterialSeriesBrowse = lazy(lazyChunk(() => import("./MaterialSeriesBrowse"), (m) => m.default));
 
 /**
  * /materials is three views behind one URL, decided by the query string:

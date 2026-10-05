@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 // Type-only, so the viewer (react-markdown, the PDF renderer) stays out of the
 // article bundle; the component itself is pulled in on first preview below.
 import type { PreviewDocument } from "@/components/DocumentPreviewDialog";
+import { lazyChunk } from "@/lib/chunk-reload";
 import type {
   StreamBlock,
   StreamCaseValue,
@@ -28,11 +29,7 @@ const headingId = (text: string) =>
 // Most articles carry no document at all, and the viewer is heavy (markdown
 // renderer + PDF engine), so it is fetched on the first preview rather than
 // shipped with every article body.
-const DocumentPreviewDialog = lazy(() =>
-  import("@/components/DocumentPreviewDialog").then((module) => ({
-    default: module.DocumentPreviewDialog,
-  })),
-);
+const DocumentPreviewDialog = lazy(lazyChunk(() => import("@/components/DocumentPreviewDialog"), (m) => m.DocumentPreviewDialog));
 
 const DOCUMENT_CARD_CLASS =
   "not-prose my-4 flex w-full items-start gap-3 rounded-lg border border-border/70 bg-background p-3 text-left no-underline transition-colors hover:border-primary/20 hover:bg-primary-surface/[0.03]";
