@@ -6,6 +6,7 @@ import {
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
 import { caseBrowsePagePaths } from './case-browse-pages.ts';
+import { buildAuthHeaders } from './build-auth.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
@@ -43,10 +44,14 @@ function toYMD(isoDate: string): string {
 }
 
 async function fetchWithTimeout(url: string): Promise<Response> {
+  // Authenticated when the build has credentials. This step walks the whole case
+  // list again in its own process, so it is a second helping of the same
+  // request budget the pre-render spends — see scripts/build-auth.ts.
+  const headers = await buildAuthHeaders();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, { signal: controller.signal, headers });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);

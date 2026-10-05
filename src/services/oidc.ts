@@ -150,8 +150,13 @@ export async function getAccessToken(): Promise<string | null> {
   //
   // Returning null (rather than making a UserManager work server-side) is also
   // the correct posture: pre-rendered HTML is served to everyone, so it must only
-  // ever contain data fetched anonymously. A bearer token here would bake one
-  // staff member's authorized view into a public static file.
+  // ever contain data everyone may see. A staff member's token here would bake
+  // one person's authorized view into a public static file.
+  //
+  // The BUILD does send a bearer token, but it never arrives through this
+  // function — `http.ts` reads `./oidc-session`, whose own SSR guard resolves
+  // first and never dynamically imports this module on the server. That guard is
+  // where the build's token enters, and the reasoning lives there.
   if (typeof window === "undefined") return null;
 
   const um = getUserManager();
