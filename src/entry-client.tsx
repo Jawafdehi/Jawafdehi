@@ -8,27 +8,17 @@ import { hydrate } from '@tanstack/react-query';
 import App from './App';
 import { ThemeProvider } from './components/ThemeProvider';
 import { initSentry } from './lib/sentry';
+import { installChunkReloadGuard } from './lib/chunk-reload';
 import './index.css';
 import './i18n/config';
 
 initSentry();
 
-// A Cloudflare Workers Builds deploy swaps every hashed asset atomically, so a
-// tab still running a previous build 404s when it lazy-loads a route chunk whose
-// hash no longer exists — the edge serves index.html in its place, which trips
-// "Failed to fetch dynamically imported module" and drops the user on the error
-// boundary (e.g. opening /data-quality after a deploy). Vite fires
-// `vite:preloadError` for exactly this; reload once to pull the fresh index.html
-// and its current chunk names. The sessionStorage cooldown stops a reload loop
-// when the failure is genuine (offline, real 5xx) rather than a stale build.
-window.addEventListener('vite:preloadError', (event) => {
-  const RELOAD_KEY = 'jds:chunk-reload-at';
-  const lastReload = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
-  if (Date.now() - lastReload < 10_000) return;
-  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
-  event.preventDefault();
-  window.location.reload();
-});
+// Survive a deploy that lands while someone is reading: a tab on the previous
+// build 404s any chunk whose hash is gone. The handler and the matching
+// `lazyChunk` loader live together in lib/chunk-reload — they are two halves of
+// one mechanism and drifted apart last time they were not.
+installChunkReloadGuard();
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 1 } },
