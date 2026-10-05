@@ -4,13 +4,12 @@ import { fyLabel, type ChargeMixYear } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { Switch } from "@/components/ui/switch";
 import { SERIES, type MixKey } from "./charge-mix-series";
+import { lazyChunk } from "@/lib/chunk-reload";
 
 // Only the recharts subtree is deferred; everything this component renders
 // before mount — the toggle, the legend, and the data-bearing aria-label — stays
 // eager, so the pre-rendered HTML is unchanged. See ChargeMixByYearBars.tsx.
-const ChargeMixByYearBars = lazy(() =>
-  import("./ChargeMixByYearBars").then((m) => ({ default: m.ChargeMixByYearBars })),
-);
+const ChargeMixByYearBars = lazy(lazyChunk(() => import("./ChargeMixByYearBars"), (m) => m.ChargeMixByYearBars));
 
 /**
  * Charge mix by fiscal filing year — a stacked bar per year over the

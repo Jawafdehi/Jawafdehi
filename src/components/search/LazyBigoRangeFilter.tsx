@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 
 import { BigoRangeFilterSkeleton } from "@/components/search/BigoRangeFilterSkeleton";
 import { hasUsableRails, type BigoBounds, type BigoExtent } from "@/lib/bigo-range";
+import { lazyChunk } from "@/lib/chunk-reload";
 
 /**
  * `BigoRangeFilter`, kept off the critical path.
@@ -38,11 +39,7 @@ import { hasUsableRails, type BigoBounds, type BigoExtent } from "@/lib/bigo-ran
  * `src/routes.tsx` — renderToString does not await Suspense, so a lazy boundary
  * inside pre-rendered output would publish a fallback — therefore does not bite.
  */
-const BigoRangeFilter = lazy(() =>
-  import("@/components/search/BigoRangeFilter").then((m) => ({
-    default: m.BigoRangeFilter,
-  })),
-);
+const BigoRangeFilter = lazy(lazyChunk(() => import("@/components/search/BigoRangeFilter"), (m) => m.BigoRangeFilter));
 
 export type { BigoBounds };
 

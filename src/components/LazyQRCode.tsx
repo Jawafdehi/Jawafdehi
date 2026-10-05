@@ -13,10 +13,9 @@
 // See docs/testing/bundle-and-code-splitting.md — only a dynamic import moves
 // bytes off the critical path; a manualChunks split just renames them.
 import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazyChunk } from "@/lib/chunk-reload";
 
-const QRCodeSVGLazy = lazy(() =>
-  import("qrcode.react").then((m) => ({ default: m.QRCodeSVG })),
-);
+const QRCodeSVGLazy = lazy(lazyChunk(() => import("qrcode.react"), (m) => m.QRCodeSVG));
 
 export interface LazyQRCodeProps {
   /** Kept for the download-as-PNG handlers, which read the SVG back by id. */

@@ -18,8 +18,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { heroSceneAffordable, readConnectionSignals } from "./hero-connection-gate";
+import { lazyChunk } from "@/lib/chunk-reload";
 
-const HeroScene = lazy(() => import("./hero-scene"));
+const HeroScene = lazy(lazyChunk(() => import("./hero-scene"), (m) => m.default));
 
 type HeroSceneGateProps = {
   mapSrc: string;

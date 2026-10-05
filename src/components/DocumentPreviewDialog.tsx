@@ -22,12 +22,9 @@ import {
 } from "@/components/ui/dialog";
 import { ClientOnly } from "@/components/ClientOnly";
 import { getDocumentProxyUrl, getDocumentViewerUrl } from "@/utils/document-preview-url";
+import { lazyChunk } from "@/lib/chunk-reload";
 
-const PdfDocumentPreview = lazy(() =>
-  import("@/components/PdfDocumentPreview").then((module) => ({
-    default: module.PdfDocumentPreview,
-  })),
-);
+const PdfDocumentPreview = lazy(lazyChunk(() => import("@/components/PdfDocumentPreview"), (m) => m.PdfDocumentPreview));
 
 export type PreviewDocument = {
   title: string;
