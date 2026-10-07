@@ -10,7 +10,7 @@ function ColourSwatch({
   label,
 }: Readonly<{ hex: string; swatch: string; label: string }>) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   // Clear on unmount so a copy just before navigation can't set state on a
@@ -18,16 +18,22 @@ function ColourSwatch({
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const copy = useCallback(async () => {
+    // Clipboard access is unavailable over plain HTTP and in some locked-down
+    // browsers. Say so rather than appearing to do nothing — the hex is on
+    // screen, so selecting it by hand still works.
+    let next: "copied" | "failed" = "copied";
     try {
       await navigator.clipboard.writeText(hex);
-      setCopied(true);
-      clearTimeout(timer.current);
-      timer.current = setTimeout(() => setCopied(false), 1600);
     } catch {
-      // Clipboard is unavailable over plain HTTP and in some locked-down
-      // browsers. The hex is visible as text, so copying by hand still works.
+      next = "failed";
     }
+    setStatus(next);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setStatus("idle"), next === "copied" ? 1600 : 4000);
   }, [hex]);
+
+  const copied = status === "copied";
+  const failed = status === "failed";
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background">
@@ -55,13 +61,18 @@ function ColourSwatch({
           {copied ? (
             <Check className="h-4 w-4 text-accent" />
           ) : (
-            <Copy className="h-4 w-4" />
+            <Copy className={failed ? "h-4 w-4 text-accent" : "h-4 w-4"} />
           )}
         </button>
       </div>
 
+      {failed ? (
+        <p className="px-3 pb-3 text-xs text-accent">{t("pressKit.colours.copyFailed")}</p>
+      ) : null}
+
       <span aria-live="polite" className="sr-only">
         {copied ? t("pressKit.colours.copied") : ""}
+        {failed ? t("pressKit.colours.copyFailed") : ""}
       </span>
     </div>
   );

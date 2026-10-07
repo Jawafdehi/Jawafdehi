@@ -16,9 +16,20 @@ function LogoCard({ src, alt, label, use, dark, downloads }: Readonly<LogoCardPr
   return (
     <figure className="flex flex-col overflow-hidden rounded-lg border border-border bg-background">
       <div
+        // Both preview fields must hold their lightness in BOTH themes: each one
+        // demonstrates a wordmark that disappears against the opposite field, so
+        // a token that flips would reproduce the exact failure this page warns
+        // newsrooms about.
+        //
+        // Dark: --primary-surface, the *fill* role, which stays navy in .dark.
+        // NOT --primary, which becomes light ink there (see Footer.tsx).
+        //
+        // Light: a literal. --background and --card both alias --base-paper,
+        // which .dark redefines to 217 42% 6% — near-black. There is no
+        // always-light token, and #FAFAF7 is the documented page background.
         className={
           dark
-            ? "flex min-h-[150px] flex-1 items-center justify-center bg-primary p-8"
+            ? "flex min-h-[150px] flex-1 items-center justify-center bg-primary-surface p-8"
             : "flex min-h-[150px] flex-1 items-center justify-center bg-[#FAFAF7] p-8"
         }
       >

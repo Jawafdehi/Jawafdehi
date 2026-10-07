@@ -2710,7 +2710,8 @@
       "background": "Background — warm white",
       "foreground": "Body text",
       "note": "Crimson is never set as text on navy — the contrast is only 2.6:1. Use the lighter accent there instead. Our background is a warm white, never pure #FFFFFF.",
-      "copied": "Copied"
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy — select the hex above instead"
     },
     "type": {
       "title": "Typography",
