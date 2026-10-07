@@ -168,6 +168,15 @@ export const SITE_ROUTES = [
     sitemapTitle: "Our Commitment — Jawafdehi",
   },
   {
+    path: "/press-kit",
+    chrome: "app",
+    titleKey: "footer.pressKit",
+    descriptionKey: "searchCommand.descriptions.pressKit",
+    keywords: ["press", "kit", "media", "logo", "brand", "assets", "journalist"],
+    icon: "Newspaper",
+    sitemapTitle: "Press Kit — Jawafdehi",
+  },
+  {
     path: "/volunteer",
     chrome: "app",
     titleKey: "nav.volunteer",

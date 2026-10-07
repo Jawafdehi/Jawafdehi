@@ -29,6 +29,8 @@ import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import About from "./pages/About";
 import Commitment from "./pages/Commitment";
+// Pre-rendered, so it must stay eager — see the split policy above.
+import PressKit from "./pages/PressKit";
 import OurProcess from "./pages/OurProcess";
 import OurTeam from "./pages/OurTeam";
 import Volunteer from "./pages/Volunteer";
@@ -151,6 +153,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/faq": <FaqPage />,
   "/about": <About />,
   "/commitment": <Commitment />,
+  "/press-kit": <PressKit />,
   "/data-quality": <DataQuality />,
   "/research/corruption-accountability": <ResearchCorruption />,
   "/our-process": <OurProcess />,
