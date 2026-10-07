@@ -112,6 +112,125 @@ export async function getMaterial(iriOrTail: string): Promise<Material> {
   }
 }
 
+// ─── extracted tables + charts ──────────────────────────────────────────────
+//
+// A material's *structure*, recovered from inside the source document and served
+// alongside the JSON-LD. Two endpoints, because one report's table markdown runs
+// to hundreds of KiB: the manifest carries figures in full and tables as stubs,
+// and a table's markdown is fetched when a reader opens it.
+
+/** One datum of one chart. */
+export interface ExtractionPoint {
+  point_index: number;
+  label: string;
+  series: string;
+  /** Null where the chart names a category but prints no value for it. */
+  value: number | null;
+  /**
+   * True when this value was read off the chart image rather than a printed
+   * figure. A weaker claim than an exact read, and the UI must say so — a single
+   * chart routinely mixes both, which is why the flag is per point.
+   */
+  estimated: boolean;
+}
+
+export interface ExtractionFigure {
+  /** Document order, for display. Recomputed on every ingest — never address by it. */
+  ordinal: number;
+  /** Stable handle (`p0018-f1`). Safe to put in a URL fragment or a React key. */
+  key: string;
+  uid: string;
+  page_no: number;
+  title: string;
+  chart_type: string;
+  unit: string;
+  x_axis: string;
+  y_axis: string;
+  notes: string;
+  verify_note: string;
+  /** Null means "not checked", which is a different claim from "checked and failed". */
+  verified: boolean | null;
+  points: ExtractionPoint[];
+}
+
+/** A table as the manifest lists it — everything but the markdown. */
+export interface ExtractionTableStub {
+  ordinal: number;
+  /** Stable handle (`p0018-t1`); this is what `getMaterialExtractionTable` takes. */
+  key: string;
+  uid: string;
+  page_no: number;
+  caption: string;
+  header: string[];
+  n_rows: number;
+  n_cols: number;
+  fidelity: string;
+}
+
+export interface ExtractionTable extends ExtractionTableStub {
+  markdown: string;
+}
+
+export interface MaterialExtraction {
+  material: string;
+  provenance: {
+    dataset: string;
+    dataset_revision: string;
+    doc_id: string;
+    page_count: number;
+    text_source: string;
+    transcript_verdict: string;
+    figures_verdict: string;
+    ingested_at: string;
+  };
+  counts: { tables: number; figures: number; points: number };
+  tables: ExtractionTableStub[];
+  figures: ExtractionFigure[];
+}
+
+/**
+ * A material's extracted tables and charts, or `null` when it has none.
+ *
+ * Most materials are a single scraped page with nothing to extract, so the API
+ * answers 404 for them. That is the normal case, not an error — it is resolved
+ * to `null` here so a caller can simply not render the tab. Any other failure
+ * still throws.
+ */
+export async function getMaterialExtraction(
+  iriOrTail: string,
+): Promise<MaterialExtraction | null> {
+  const tail = encodeTail(materialTail(iriOrTail));
+  const endpoint = `/api/materials/${tail}/extraction`;
+  try {
+    const response = await http.get<MaterialExtraction>(endpoint);
+    return response.data;
+  } catch (error) {
+    if ((error as { response?: { status?: number } })?.response?.status === 404) {
+      return null;
+    }
+    handleDataLakeError(error, endpoint);
+  }
+}
+
+/**
+ * One extracted table, markdown included. `key` is the stub's `key` (`p0018-t1`),
+ * NOT its `ordinal`: ordinals are recomputed on every ingest, so addressing by
+ * one would eventually resolve to a different table.
+ */
+export async function getMaterialExtractionTable(
+  iriOrTail: string,
+  key: string,
+): Promise<ExtractionTable> {
+  const tail = encodeTail(materialTail(iriOrTail));
+  const endpoint = `/api/materials/${tail}/extraction/tables/${encodeURIComponent(key)}`;
+  try {
+    const response = await http.get<ExtractionTable>(endpoint);
+    return response.data;
+  } catch (error) {
+    handleDataLakeError(error, endpoint);
+  }
+}
+
 /**
  * Parse a court-case lookup id into its composite key. Ids are the canonical
  * @id IRI (`https://<host>/courtcase/special/081-cr-0060`, the only form
