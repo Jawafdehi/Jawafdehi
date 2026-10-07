@@ -89,7 +89,6 @@ function reachesSeo(file: string, depth = 0): boolean {
 // for a record page that has to describe the record.
 const AWAITING_SEO: Record<string, string> = {
   DataQuality: 'public page, needs a card and a description of its own',
-  EntityRecordProfile: 'per-record metadata — the entity name, type and image',
   MaterialProfile: 'per-record metadata — the document title and source',
   CourtCaseProfile: 'per-record metadata — the case number, court and parties',
   PaymentSuccess: 'transactional; pre-rendered, so it needs noindex not a card',

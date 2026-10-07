@@ -152,6 +152,9 @@ describe("CaseDetail party identity (no per-entity fan-out)", () => {
   });
 });
 
+// The target is slash-terminated throughout: the page is pre-rendered to
+// /case/<slug>/index.html, so the slashless form 307s, and the canonical the
+// page emits names the slashed one. The address bar has to agree with both.
 describe("CaseDetail canonical slug redirect (BB-38)", () => {
   it("replaces the URL with the canonical slug when the route slug is stale", async () => {
     // The API 301-redirects the old slug and fetch follows it, so the case that
@@ -161,7 +164,7 @@ describe("CaseDetail canonical slug redirect (BB-38)", () => {
     renderAt("old-slug");
 
     await waitFor(() =>
-      expect(navigateSpy).toHaveBeenCalledWith("/case/current-slug", { replace: true }),
+      expect(navigateSpy).toHaveBeenCalledWith("/case/current-slug/", { replace: true }),
     );
     expect(getCaseById).toHaveBeenCalledWith("old-slug");
   });
@@ -175,7 +178,7 @@ describe("CaseDetail canonical slug redirect (BB-38)", () => {
     renderAt("081-CR-0116");
 
     await waitFor(() =>
-      expect(navigateSpy).toHaveBeenCalledWith("/case/current-slug", { replace: true }),
+      expect(navigateSpy).toHaveBeenCalledWith("/case/current-slug/", { replace: true }),
     );
     expect(getCaseByCourtRef).toHaveBeenCalledWith("081-CR-0116");
     expect(getCaseById).not.toHaveBeenCalled();
