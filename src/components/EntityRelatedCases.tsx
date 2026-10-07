@@ -8,7 +8,7 @@ import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { formatDateForLanguage } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import {
@@ -17,6 +17,11 @@ import {
   shouldShowOutcome,
 } from "@/utils/case-outcome";
 import { caseVerdictForum } from "@/utils/case-stages";
+import {
+  judicialStatusBadgeClass,
+  judicialStatusLabel,
+  judicialStatusOf,
+} from "@/utils/case-judicial-status";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -156,16 +161,25 @@ export function EntityRelatedCases({
           const roleLabel = t(
             ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
           );
-          const date = formatDate(c.proceedings_started_on || c.created_at);
+          // Bikram Sambat leads for Nepali readers, the way court-sourced dates
+          // read everywhere else. In English `.primary` is the Gregorian string
+          // `formatDate` already returned, so nothing changes for `en`.
+          const date = formatDateForLanguage(
+            c.proceedings_started_on || c.created_at,
+            "PP",
+            null,
+            language,
+          ).primary;
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
+          const status = judicialStatusOf(c, outcome);
 
           const row = (
             <div
               className={cn(
-                "group flex items-start gap-3 rounded-xl border bg-card p-5 transition-colors hover:bg-muted/40",
+                "group flex items-start gap-3 rounded-xl border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-border hover:bg-muted/40",
                 accused && "border-l-4 border-l-accent",
               )}
             >
@@ -194,16 +208,24 @@ export function EntityRelatedCases({
                       )}
                     </Badge>
                   ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    {[typeLabel, date].filter(Boolean).join(" · ")}
-                  </span>
+                  {/* Where the case itself has got to, as opposed to what
+                      happened to this person in it. */}
+                  <Badge variant="outline" className={judicialStatusBadgeClass(status)}>
+                    {judicialStatusLabel(status, language)}
+                  </Badge>
+                </div>
+                {/* Its own line now that the badge row carries three chips, and
+                    at text-sm/foregroundish rather than text-xs/muted — against
+                    a muted card the old meta line read as disabled text. */}
+                <div className="text-sm text-foreground/70">
+                  {[typeLabel, date].filter(Boolean).join(" · ")}
                 </div>
                 {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
                     amount — a missing bigo is not a zero-rupee case. */}
                 {c.bigo ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-foreground/70">
                     <span>{t("caseCard.bigo")}: </span>
-                    <span className="font-medium tabular-nums text-foreground">
+                    <span className="font-semibold tabular-nums text-foreground">
                       {formatBigo(c.bigo)}
                     </span>
                   </p>
