@@ -313,10 +313,10 @@ export const SITE_ROUTES = [
   { path: "/case/:id", chrome: "app" },
   // Public author profile. Client-rendered like the other detail pages.
   { path: "/author/:slug", chrome: "app" },
-  { path: "/entity/:id", chrome: "app" },
-  // Entity record by IRI tail (multi-segment, e.g. organization/.../tu). React
-  // Router prefers the more specific :id route for single-segment numeric ids,
-  // so this splat only catches the hierarchical entity IRIs.
+  // Entity record by IRI tail (multi-segment, e.g. organization/.../tu). The
+  // legacy numeric sibling route `/entity/:id` was removed in 2026-10 along with
+  // the records behind it; isEntityRecordTail in route-patterns.ts is what now
+  // keeps a single-segment tail from falling into this splat.
   { path: "/entity/*", chrome: "app" },
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },

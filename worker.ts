@@ -845,6 +845,12 @@ export default {
     }
 
     // Handle legacy numeric case redirects (301)
+    //
+    // Target carries the trailing slash the pre-rendered page is published at,
+    // for the same reason /research above does: without it this 301 lands on a
+    // URL that immediately 307s, so /case/212 cost two hops and the middle one
+    // named a redirecting URL as its canonical. Search Console counted that as
+    // "Duplicate, Google chose different canonical than user" on 16 URLs.
     const caseMatch = path.match(/^\/case\/(\d+)\/?$/);
     if (caseMatch) {
       const legacyId = caseMatch[1];
@@ -853,7 +859,7 @@ export default {
         return new Response(null, {
           status: 301,
           headers: {
-            'Location': `/case/${targetSlug}`,
+            'Location': `/case/${targetSlug}/`,
             'Cache-Control': 'public, max-age=3600',
             ...secHeaders,
           },
@@ -862,6 +868,7 @@ export default {
     }
 
     // Court-case-ref case URLs: /case/081-CR-0116 → canonical slug (301)
+    // Slash-terminated for the same reason as the numeric redirect above.
     const courtRefMatch = path.match(/^\/case\/(\d+-[A-Za-z]+-\d+)\/?$/);
     if (courtRefMatch) {
       const targetSlug = await resolveCourtRefSlug(courtRefMatch[1]);
@@ -869,7 +876,7 @@ export default {
         return new Response(null, {
           status: 301,
           headers: {
-            'Location': `/case/${targetSlug}`,
+            'Location': `/case/${targetSlug}/`,
             'Cache-Control': 'public, max-age=3600',
             ...secHeaders,
           },

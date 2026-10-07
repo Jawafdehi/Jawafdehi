@@ -107,10 +107,15 @@ const CaseDetail = () => {
   // URL — replace the URL so the user lands on /case/<current-slug> without
   // adding a history entry. Guarded to only fire when the slug is truthy and
   // actually different, which prevents redirect loops once the URL is canonical.
+  //
+  // Slash-terminated to match canonicalUrl below and the edge's own 301s: the
+  // page is pre-rendered to /case/<slug>/index.html, so the slashless form 307s.
+  // The loop guard still holds — the route param is the slug either way, so the
+  // next run compares equal.
   useEffect(() => {
     const canonicalSlug = caseData?.slug;
     if (canonicalSlug && canonicalSlug !== id) {
-      navigate(`/case/${canonicalSlug}`, { replace: true });
+      navigate(`/case/${canonicalSlug}/`, { replace: true });
     }
   }, [caseData?.slug, id, navigate]);
 
@@ -311,7 +316,7 @@ const CaseDetail = () => {
   // Legacy /case/<numeric> URLs: replace with the canonical slug. This must
   // happen after all hooks have run so we don't violate rules-of-hooks.
   if (legacyTargetSlug) {
-    return <Navigate to={`/case/${legacyTargetSlug}`} replace />;
+    return <Navigate to={`/case/${legacyTargetSlug}/`} replace />;
   }
 
   if (isLoading) {

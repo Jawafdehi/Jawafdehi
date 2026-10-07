@@ -72,8 +72,8 @@ describe("isKnownRoute", () => {
     "/report/",
     "/updates/preview",
     "/updates/an-article",
-    "/entity/42",
     "/entity/organization/np/gov/tu",
+    "/entity/person/ram-shah",
     "/material/ngm/some-doc",
     "/admin",
     "/admin/reviews/case/x",
@@ -96,6 +96,17 @@ describe("isKnownRoute", () => {
     "/admin-panel",
     // Normalises to "", which the matcher would otherwise read as "/".
     "//",
+    // The legacy numeric entity route, removed in 2026-10 along with the records
+    // behind it. These answered 200 with the HOMEPAGE's pre-rendered HTML —
+    // homepage title, homepage body, rel=canonical on the homepage — which is
+    // what Search Console reported as "Duplicate, Google chose different
+    // canonical than user" across 131 indexed URLs. They are 404s now.
+    "/entity/42",
+    "/entity/1136",
+    // Same guard, non-numeric: an entity record IRI is always <prefix>/<slug>
+    // or deeper, so one segment is never a record.
+    "/entity/person",
+    "/entity",
   ])("rejects %s", (path) => {
     expect(isKnownRoute(path)).toBe(false);
   });
@@ -114,14 +125,16 @@ describe("isKnownRoute", () => {
     expect({
       numericEntity: selected("/entity/42"),
       iriEntity: selected("/entity/organization/np/gov/tu"),
+      shallowEntity: selected("/entity/person/ram-shah"),
       preview: selected("/updates/preview"),
       slug: selected("/updates/some-post"),
       caseSlug: selected("/case/some-slug"),
       overDeep: selected("/case/a/b"),
       junk: selected("/wp-login.php"),
     }).toEqual({
-      numericEntity: "/entity/:id",
+      numericEntity: null,
       iriEntity: "/entity/*",
+      shallowEntity: "/entity/*",
       preview: "/updates/preview",
       slug: "/updates/:slug",
       caseSlug: "/case/:id",

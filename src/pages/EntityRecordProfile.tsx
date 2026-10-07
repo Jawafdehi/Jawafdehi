@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
 
 import { http, API_BASE_URL } from "@/services/http";
-import { entityPath } from "@/lib/entity-links";
+import { entityPath, isEntityRecordTail } from "@/lib/entity-links";
 import { entityImageUrl } from "@/lib/entity-jsonld";
+import { Seo } from "@/components/Seo";
+import { previewImageUrl, SITE_URL } from "@/utils/seo";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
 import { EntityRelatedCases } from "@/components/EntityRelatedCases";
+import NotFound from "./NotFound";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -219,13 +221,18 @@ export default function EntityRecordProfile() {
   // the slashed one misses the dehydrated cache and refetches
   // /api/entities/<tail>/ on hydration.
   const tail = (params["*"] || "").replace(/\/+$/, "");
+  // matchRoute() refuses a non-IRI tail, so the edge already answers 404 for
+  // /entity/1136. Render NotFound for the same paths so the status line and the
+  // page agree — otherwise the body would show an entity page's error state
+  // under a 404.
+  const isRecord = isEntityRecordTail(tail);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["entity-record", tail],
     queryFn: async () => {
       const res = await http.get<EntityRecord>(`/api/entities/${tail}`);
       return res.data;
     },
-    enabled: tail.length > 0,
+    enabled: isRecord,
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
@@ -323,15 +330,27 @@ export default function EntityRecordProfile() {
     created ? `In the registry since ${created.slice(0, 4)}` : null,
   ].filter(Boolean);
 
+  if (!isRecord) return <NotFound />;
+
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
-      <Helmet>
-        <title>{displayName} | Jawafdehi Entity Registry</title>
-        <meta
-          name="description"
-          content={descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`}
-        />
-      </Helmet>
+      <Seo
+        title={`${displayName} | Jawafdehi Entity Registry`}
+        description={
+          descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`
+        }
+        // Trailing slash: these pages are pre-rendered to <tail>/index.html, the
+        // edge 307s the slashless form, and scripts/sitemap.ts advertises the
+        // slashed one. A canonical naming a redirect is the trap that has already
+        // bitten /case/* and /entity/* once each — keep all three in step.
+        canonicalUrl={`${SITE_URL}/entity/${tail}/`}
+        // null for anything that is not a real image URL, which falls the tag
+        // back to the site social card (and its known dimensions) rather than
+        // advertising an og:image a scraper cannot fetch.
+        imageUrl={previewImageUrl(imageUrl) ?? undefined}
+        type="profile"
+        language={currentLang}
+      />
 
       <div className="layout-container">
         <div className="mb-6 flex items-center justify-between gap-2">
