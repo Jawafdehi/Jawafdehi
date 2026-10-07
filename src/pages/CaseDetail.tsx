@@ -24,6 +24,8 @@ import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseByline } from "@/components/case-detail/case-byline";
 import { CaseStageDates } from "@/components/case-detail/case-stage-dates";
 import { caseStages, caseVerdictForum } from "@/utils/case-stages";
+import { decidedAppeals, personalAppeal } from "@/utils/appeal-verdict";
+import { shouldShowOutcome } from "@/utils/case-outcome";
 import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
@@ -175,6 +177,17 @@ const CaseDetail = () => {
   const groupedEntities = caseData ? getGroupedEntities(caseData.entities) : {};
 
   const hasInvolvedParties = Object.keys(groupedEntities).length > 0;
+  // A decided appeal goes on the accused's own card only when there is one
+  // accused whose verdict is shown; otherwise it is stated once for the case.
+  const accusedBinds = caseData ? caseData.entities.filter((e) => e.type === "accused") : [];
+  const cardAppeal = caseData
+    ? personalAppeal(caseData.entities, caseData.dates, caseData.appeal_verdicts, currentLang)
+    : null;
+  const appealOnCard = cardAppeal != null && shouldShowOutcome(accusedBinds[0]?.outcome);
+  const caseAppeals =
+    caseData && !appealOnCard
+      ? decidedAppeals(caseData.dates, caseData.appeal_verdicts, currentLang)
+      : [];
   const hasTimeline = (caseData?.timeline || []).length > 0;
   const hasCourtCases = (caseData?.court_cases ?? []).length > 0;
   const hasEvidence = (caseData?.evidence ?? []).length > 0;
@@ -671,6 +684,8 @@ const CaseDetail = () => {
                           resolvedEntities={resolvedEntities}
                           title={t("caseDetail.partiesInvolved")}
                           forum={caseVerdictForum(caseData.dates, currentLang)}
+                          personalAppeal={appealOnCard ? cardAppeal : null}
+                          caseAppeals={caseAppeals}
                           translateRelation={(relationType) =>
                             t(`caseDetail.relationTypes.${relationType}`, {
                               defaultValue: t("caseDetail.relationTypes.unknown"),

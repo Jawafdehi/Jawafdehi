@@ -344,6 +344,10 @@ export interface Case {
    * case_start_date/case_end_date range, which could not describe a case that
    * runs several dockets across several courts. */
   dates?: CaseDates | null;
+  /** Each appeal stage's `courtcase_iri` mapped to that docket's raw court
+   * `verdict_type` (AFFIRMED, CLAIM_DENIED, REVERSED, ...), null while pending.
+   * A verdict on the docket, not on any one defendant. */
+  appeal_verdicts?: Record<string, string | null> | null;
   /** Derived AD dates spanning the whole case; either may be null. */
   proceedings_started_on?: string | null;
   proceedings_decided_on?: string | null;

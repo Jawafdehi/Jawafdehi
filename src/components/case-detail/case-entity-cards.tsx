@@ -28,6 +28,7 @@ import {
   outcomeWithForumLabel,
   shouldShowOutcome,
 } from "@/utils/case-outcome";
+import { appealBadgeClass, appealWithForumLabel, type DecidedAppeal } from "@/utils/appeal-verdict";
 
 export interface CaseEntityCardsProps {
   className?: string;
@@ -41,6 +42,12 @@ export interface CaseEntityCardsProps {
    * pinned on a guessed court.
    */
   forum?: string | null;
+  /**
+   * The decided appeal to draw on the accused's card. Pass it only for a
+   * single-accused case (see `personalAppeal`): the docket verdict says nothing
+   * about any one defendant when there are several.
+   */
+  appeal?: DecidedAppeal | null;
   /**
    * Cards shown before the "view more" toggle. Required, not defaulted: the
    * Suspense fallback in involved-parties-section reserves exactly this many
@@ -133,9 +140,10 @@ interface EntityCardProps {
   entity: Entity | null;
   language: string;
   forum?: string | null;
+  appeal?: DecidedAppeal | null;
 }
 
-function EntityCard({ jawafEntity, entity, language, forum }: Readonly<EntityCardProps>) {
+function EntityCard({ jawafEntity, entity, language, forum, appeal }: Readonly<EntityCardProps>) {
   // Three independent reasons a card shows its details, all in state so the
   // ARIA and the transform read from one value (`revealed`):
   //   flipped     — an explicit toggle: Enter/Space on the front button, or a tap
@@ -197,6 +205,12 @@ function EntityCard({ jawafEntity, entity, language, forum }: Readonly<EntityCar
   const notes = stripNotes(jawafEntity.notes, language);
   const href = entityPath(jawafEntity.nes_id);
   const showOutcome = jawafEntity.type === "accused" && shouldShowOutcome(jawafEntity.outcome);
+  // `remanded` is written from the appeal court's order, so it is never the
+  // first instance's verdict to attribute.
+  const outcomeForum = jawafEntity.outcome === "remanded" ? null : forum;
+  // The appeal line qualifies the verdict above it; with no verdict shown it
+  // would say "overturned" about nothing.
+  const showAppeal = showOutcome && appeal != null;
 
   const toggleFlipped = () =>
     setFlipped((v) => {
@@ -209,9 +223,22 @@ function EntityCard({ jawafEntity, entity, language, forum }: Readonly<EntityCar
   const frontContent = (
     <EntityIdentity kind={kind} src={imageUrl} layout="tile" name={names.primary} alternate={names.alternate}>
       {showOutcome && (
-        <Badge variant="outline" className={cn("mt-3 text-sm", outcomeBadgeClass(jawafEntity.outcome))}>
-          {outcomeWithForumLabel(jawafEntity.outcome, forum, language)}
-        </Badge>
+        // Stacked, not side by side: the appeal line reads as a qualifier of
+        // the verdict above it.
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
+            {outcomeWithForumLabel(jawafEntity.outcome, outcomeForum, language)}
+          </Badge>
+          {showAppeal && (
+            <Badge
+              variant="outline"
+              className={appealBadgeClass(appeal.result, jawafEntity.outcome)}
+              data-testid="entity-card-appeal"
+            >
+              {appealWithForumLabel(appeal, language)}
+            </Badge>
+          )}
+        </div>
       )}
     </EntityIdentity>
   );
@@ -341,6 +368,7 @@ export function CaseEntityCards({
   language,
   initialLimit,
   forum,
+  appeal,
 }: Readonly<CaseEntityCardsProps>) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -368,6 +396,7 @@ export function CaseEntityCards({
                 entity={entity}
                 language={language}
                 forum={forum}
+                appeal={appeal}
               />
             </Reveal>
           );
