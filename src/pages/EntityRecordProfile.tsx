@@ -393,7 +393,9 @@ export default function EntityRecordProfile() {
                   </Alert>
                 ) : null}
 
-                {descText ? <p className="max-w-3xl text-lg leading-8 text-foreground">{descText}</p> : null}
+                {descText ? (
+                  <p className="max-w-3xl whitespace-pre-line text-lg leading-8 text-foreground">{descText}</p>
+                ) : null}
 
                 {hasFacts ? (
                   <section aria-labelledby="entity-about-heading" className="rounded-2xl bg-muted/50 p-5">
