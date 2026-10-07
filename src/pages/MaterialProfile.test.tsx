@@ -234,3 +234,24 @@ describe("MaterialProfile — a very large extracted table", () => {
     expect(await screen.findByText("row299")).toBeTruthy();
   });
 });
+
+describe("MaterialProfile — a report with no charts at all", () => {
+  it("renders the tables alone without an empty Charts heading", async () => {
+    // Ten of the thirty-five CIAA annual reports contain no chart, and none
+    // before BS 2055/56 does — a tables-only extraction is the normal shape for
+    // the older half of the corpus, not an edge case.
+    getMaterial.mockResolvedValue(material({}));
+    getMaterialExtraction.mockResolvedValue({
+      ...EXTRACTION,
+      counts: { tables: 1, figures: 0, points: 0 },
+      figures: [],
+    });
+    renderPage();
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Tables & charts/i }));
+
+    expect(await screen.findByRole("heading", { name: "Tables" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Charts" })).toBeNull();
+    // The count sentence must not advertise chart data points it does not have.
+    expect(screen.getByText(/0 charts were read out of this document\./)).toBeTruthy();
+  });
+});
