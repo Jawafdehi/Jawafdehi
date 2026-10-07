@@ -8,6 +8,8 @@
  * the archive never disagree.
  */
 
+import { SITE_NAME, SITE_NAME_NEPALI } from "@/utils/seo";
+
 export const PRESS_KIT_FILES = {
   zip: "/press-kit/jawafdehi-press-kit.zip",
   pdf: "/press-kit/jawafdehi-press-kit.pdf",
@@ -24,16 +26,28 @@ export const PRESS_KIT_LOGOS = {
 } as const;
 
 /**
- * Hex is canonical; the CSS tokens are derived from it, never the reverse.
- * `hex -> HSL -> hex` is lossy and the loss is silent, which is how two files
- * previously drifted from #0E1F3B to #0E1F3A.
+ * The palette as published to journalists.
+ *
+ * This is the one place in the app where a brand hex is *content* rather than a
+ * theme value — a newsroom needs the literal string to set type in it, and a
+ * `hsl(var(--primary))` token tells them nothing. `tests/brand/tokens.test.ts`
+ * therefore exempts this file from its no-hardcoded-hex scan and asserts
+ * instead that these values equal the hex documented in `src/index.css`, so the
+ * page cannot drift from the theme it describes.
+ *
+ * Do NOT compute these from the CSS custom properties at runtime: the tokens
+ * hold HSL, and `hex -> HSL -> hex` is lossy — #0E1F3B round-trips to #0E1F3A,
+ * which is exactly the drift that put a wrong navy into two files before.
+ *
+ * `swatch` is what the page paints, and it reads the live token, so the colour
+ * shown is always the colour the site actually renders.
  */
 export const PRESS_KIT_COLOURS = [
-  { key: "navy", hex: "#0E1F3B", token: "--primary" },
-  { key: "crimson", hex: "#B5242C", token: "--accent" },
-  { key: "crimsonDark", hex: "#F04C54", token: "--accent-on-dark" },
-  { key: "background", hex: "#FAFAF7", token: "--background" },
-  { key: "foreground", hex: "#1F2937", token: "--foreground" },
+  { key: "navy", hex: "#0E1F3B", swatch: "hsl(var(--primary))" },
+  { key: "crimson", hex: "#B5242C", swatch: "hsl(var(--accent))" },
+  { key: "crimsonDark", hex: "#F04C54", swatch: "hsl(var(--accent-on-dark))" },
+  { key: "background", hex: "#FAFAF7", swatch: "hsl(var(--background))" },
+  { key: "foreground", hex: "#1F2937", swatch: "hsl(var(--foreground))" },
 ] as const;
 
 /**
@@ -55,10 +69,13 @@ export const PRESS_KIT_DESCRIPTORS = {
   short: "Nepal's Permanent Corruption Case Archive — who, what, and when.",
 } as const;
 
+/**
+ * The registered name, in both scripts. Both come from utils/seo rather than
+ * being restated here — the Nepali spelling is board-standardised and carried
+ * by the amended certificate of incorporation (दीर्घ ही, श not स, भ not व), and
+ * a second copy is a second thing to get wrong.
+ */
 export const PRESS_KIT_NAMES = {
-  latin: "Jawafdehi Initiative",
-  /** Board-standardised 2026-07-01 and carried by the amended certificate of
-   *  incorporation: दीर्घ ही, श (not स), भ (not व). Do not let a spellchecker
-   *  "correct" this. */
-  devanagari: "जवाफदेही इनिशिएटिभ",
+  latin: SITE_NAME,
+  devanagari: SITE_NAME_NEPALI,
 } as const;

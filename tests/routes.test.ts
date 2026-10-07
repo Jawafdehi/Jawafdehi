@@ -31,6 +31,7 @@ describe("the route table", () => {
       "/research/corruption-accountability",
       "/our-process",
       "/commitment",
+      "/press-kit",
       "/volunteer",
       "/donate",
       "/donate/success",

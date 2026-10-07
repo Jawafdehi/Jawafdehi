@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 
 import { PRESS_KIT_COLOURS, PRESS_KIT_TYPEFACES } from "./constants";
 
-function ColourSwatch({ hex, label }: Readonly<{ hex: string; label: string }>) {
+function ColourSwatch({
+  hex,
+  swatch,
+  label,
+}: Readonly<{ hex: string; swatch: string; label: string }>) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -27,10 +31,12 @@ function ColourSwatch({ hex, label }: Readonly<{ hex: string; label: string }>) 
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background">
-      {/* Inset ring so the warm-white #FAFAF7 swatch stays visible on a white card. */}
+      {/* Painted from the live token, so the sample is always the colour the
+          site actually renders. The inset ring keeps the warm-white swatch
+          visible against a white card. */}
       <div
         className="h-20 w-full ring-1 ring-inset ring-black/10"
-        style={{ backgroundColor: hex }}
+        style={{ backgroundColor: swatch }}
         aria-hidden="true"
       />
 
@@ -79,6 +85,7 @@ export function PressKitBrand() {
             <ColourSwatch
               key={colour.hex}
               hex={colour.hex}
+              swatch={colour.swatch}
               label={t(`pressKit.colours.${colour.key}`)}
             />
           ))}
