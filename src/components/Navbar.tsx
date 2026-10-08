@@ -95,6 +95,7 @@ export function Navbar() {
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
       { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
       { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
+      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
     ],
     [t],
   );
@@ -125,8 +126,14 @@ export function Navbar() {
     if (aboutNavItems.some((item) => item.to === path)) {
       return "about";
     }
+    // Derived from archiveNavItems for the same reason as the group above —
+    // and this list had already drifted: it was a copy of the menu's paths, so
+    // /mcp went into the menu while the pill stayed dark on that page. The
+    // extra entries below are the ones with no menu item of their own: /cases
+    // (reached from the header, not this menu) and the detail-page prefixes.
     if (
-      ["/cases", "/search", "/materials", "/courtcases"].includes(path) ||
+      archiveNavItems.some((item) => item.to === path) ||
+      path === "/cases" ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
       path.startsWith("/courtcase/") ||
@@ -136,7 +143,7 @@ export function Navbar() {
     }
 
     return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
-  }, [location.pathname, navItems, aboutNavItems]);
+  }, [location.pathname, navItems, aboutNavItems, archiveNavItems]);
 
   const pillKey = hoveredKey ?? activeKey;
   const showPill = isScrolled && Boolean(pillKey);

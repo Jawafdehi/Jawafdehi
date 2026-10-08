@@ -175,6 +175,35 @@ describe('a case browse page past the end is a 404, not a soft 404', () => {
     expect(await res.text()).toContain('page 2 of the archive');
   });
 
+  // The redirects into a case page have to land on the SAME form the canonical
+  // names, or the 301 lands on a URL that immediately 307s. /case/212 cost two
+  // hops that way, and URL Inspection reported the middle one as declaring a
+  // redirecting URL as its canonical — "Duplicate, Google chose different
+  // canonical than user" on 16 URLs in the 2026-10-07 sweep.
+  it('sends a legacy numeric case URL straight to the slashed form, in one hop', async () => {
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/case/238'),
+      makeEnv() as never,
+      {} as never,
+    );
+
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe('/case/case-081-cr-0060-681d9859/');
+  });
+
+  it('sends a court-ref case URL straight to the slashed form, in one hop', async () => {
+    stubCaseApi({ slug: 'a-case' });
+
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/case/081-CR-0116'),
+      makeEnv() as never,
+      {} as never,
+    );
+
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe('/case/a-case/');
+  });
+
   it('leaves /cases itself alone', async () => {
     const env = makeEnv({
       '/cases': new Response('<!doctype html><html><body>page 1</body></html>', {

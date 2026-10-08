@@ -23,9 +23,19 @@ const SRC = resolve(process.cwd(), 'src');
 const ROUTES_TSX = readFileSync(resolve(SRC, 'routes.tsx'), 'utf8');
 
 // Paths whose content is not public, so share metadata would be meaningless.
-// Every one is also Disallow'd in public/robots.txt — keep the two in step: a
-// path that is crawlable needs share metadata.
-const NOT_PUBLIC = ['/admin/*', '/portal/*', '/embed/case/:id', '/document-viewer', '/updates/preview'];
+//
+// Derived from SITE_ROUTES rather than hand-listed, so marking a route noindex
+// is one edit instead of two that can drift apart. The hand-written copy this
+// replaces had already drifted: it omitted /moderation, which redirects into the
+// admin client-side and so is served to a crawler as a plain 200 shell.
+//
+// ⚠️ Its comment also claimed "every one is also Disallow'd in public/robots.txt".
+// That was never true and the opposite is what we want. robots.txt carries NO
+// path Disallow — only AI-training user-agents are blocked, and Googlebot has a
+// bare `Allow: /`. These pages MUST stay crawlable, because a crawler has to
+// fetch a page to read its noindex; a Disallow would freeze /admin in the index
+// permanently. The X-Robots-Tag in worker.ts is what keeps them out.
+const NOT_PUBLIC = SITE_ROUTES.filter((r) => 'noindex' in r && r.noindex).map((r) => r.path);
 
 // Elements that are not pages: redirects and layout wrappers. Named explicitly
 // so an unresolvable component is a failure rather than a silent skip.
@@ -89,7 +99,6 @@ function reachesSeo(file: string, depth = 0): boolean {
 // for a record page that has to describe the record.
 const AWAITING_SEO: Record<string, string> = {
   DataQuality: 'public page, needs a card and a description of its own',
-  EntityRecordProfile: 'per-record metadata — the entity name, type and image',
   MaterialProfile: 'per-record metadata — the document title and source',
   CourtCaseProfile: 'per-record metadata — the case number, court and parties',
   PaymentSuccess: 'transactional; pre-rendered, so it needs noindex not a card',
