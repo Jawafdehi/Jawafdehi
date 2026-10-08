@@ -17,9 +17,9 @@ vi.mock("@/components/AppSearchCommand", () => ({
 
 import { Navbar } from "@/components/Navbar";
 
-const renderNavbar = () =>
+const renderNavbar = (path = "/") =>
   render(
-    <MemoryRouter initialEntries={["/"]}>
+    <MemoryRouter initialEntries={[path]}>
       <Navbar />
     </MemoryRouter>,
   );
@@ -110,5 +110,19 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
       const links = screen.getAllByRole("link");
       expect(links.some((el) => el.getAttribute("href") === "/mcp")).toBe(true);
     });
+  });
+
+  // The menu entry and the active-state path check were two lists of the same
+  // paths, and they drifted the moment /mcp was added to only one: the entry
+  // appeared, and the Archive trigger went dark on the page it led to. The
+  // check is derived from the menu now, and this covers it. /courtcases is the
+  // control — without it, a test that stopped exercising the active state at
+  // all would still pass.
+  it.each(["/mcp", "/courtcases"])("keeps the Archive trigger active on %s", (path) => {
+    renderNavbar(path);
+
+    expect(screen.getByRole("button", { name: /Archive/ }).className).toContain(
+      "text-foreground/82",
+    );
   });
 });
