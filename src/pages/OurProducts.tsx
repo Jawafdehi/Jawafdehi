@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Bot, Code2, LayoutDashboard, Github, ExternalLink, SquareDashedBottomCode } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Bot, Code2, FileType, Github, ExternalLink, SquareDashedBottomCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
@@ -7,7 +8,18 @@ import { Seo } from "@/components/Seo";
 import { API_BASE_URL } from "@/services/http";
 import { SITE_URL } from "@/utils/seo";
 
-const PRODUCTS = [
+type Product = {
+  icon: typeof Code2;
+  name: string;
+  description: string;
+  tags: string[];
+  /** External destination, opened in a new tab. Exactly one of href/to is set. */
+  href?: string;
+  /** Internal route, handled by the router rather than a page load. */
+  to?: string;
+};
+
+const PRODUCTS: Product[] = [
   {
     icon: Code2,
     name: "Jawafdehi API",
@@ -17,19 +29,22 @@ const PRODUCTS = [
     tags: ["REST API", "Open Source", "Swagger Docs"],
   },
   {
-    icon: LayoutDashboard,
-    name: "Jawafdehi Web App",
-    href: "https://jawafdehi.org",
+    icon: FileType,
+    name: "likhit",
+    href: "https://jawafdehi.github.io/likhit",
     description:
-      "This platform — the public-facing interface for browsing cases, exploring entities, and understanding the archive.",
-    tags: ["React", "Open Source", "Bilingual"],
+      "A universal Markdown converter for Nepali documents, turning the PDFs and Word files public records arrive as into clean, structured text.",
+    tags: ["Markdown", "Open Source", "Nepali Documents"],
   },
   {
     icon: SquareDashedBottomCode,
-    name: "jawafdehi-mcp",
-    href: "https://github.com/Jawafdehi/jawafdehi-mcp",
+    name: "Jawafdehi MCP",
+    // The only internal destination in this list: the connect page, not the
+    // repository. Someone reading this page wants to use the server, and the
+    // README is a worse answer to that than the page with the URL on it.
+    to: "/mcp",
     description:
-      "An MCP server that helps AI tools query Jawafdehi's civic data, case archive, and public accountability records through structured tool access.",
+      "An MCP server that lets Claude, ChatGPT and other AI tools query the case archive, the people and offices we track, and court records.",
     tags: ["MCP Server", "AI Tooling", "Open Source"],
   },
   {
@@ -84,22 +99,33 @@ const OurProducts = () => {
          
 
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2">
-            {PRODUCTS.map(({ icon: Icon, name, href, description, tags }) => (
+            {PRODUCTS.map(({ icon: Icon, name, href, to, description, tags }) => (
               <div key={name} className="rounded-lg border border-primary/10 bg-background/70 p-6 shadow-sm shadow-primary-surface/5">
                 <div className="mb-5 flex items-start gap-4">
                   <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary-surface/[0.07] text-primary">
                     <Icon aria-hidden="true" className="h-7 w-7" strokeWidth={1.55} />
                   </div>
                   <div className="min-w-0">
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-lg font-bold leading-tight text-foreground transition-colors hover:text-primary"
-                    >
-                      {name}
-                      <ExternalLink className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                    </a>
+                    {/* An internal destination routes through the SPA and gets no
+                        external-link marker — that icon promises a new tab. */}
+                    {to ? (
+                      <Link
+                        to={to}
+                        className="inline-flex items-center gap-1.5 text-lg font-bold leading-tight text-foreground transition-colors hover:text-primary"
+                      >
+                        {name}
+                      </Link>
+                    ) : (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-lg font-bold leading-tight text-foreground transition-colors hover:text-primary"
+                      >
+                        {name}
+                        <ExternalLink className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                      </a>
+                    )}
                     <div className="mt-3 flex flex-wrap gap-2">
                       {tags.map((tag) => (
                         <span key={tag} className="rounded-full border border-primary/10 bg-primary-surface/[0.05] px-2.5 py-1 text-xs font-medium text-foreground/70">
