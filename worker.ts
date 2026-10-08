@@ -1,5 +1,5 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
-import { matchRoute, normalizePath } from './src/data/route-patterns';
+import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { casesPageCount } from './src/lib/cases-pagination';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
@@ -787,6 +787,22 @@ export default {
       : isEmbedRoute
         ? securityHeadersAllowFrame()
         : securityHeaders();
+
+    // Routes SITE_ROUTES marks noindex — the admin panel and the non-public
+    // standalone routes. Set here rather than in each branch because secHeaders
+    // is applied to every response the Worker builds (pre-rendered asset, SPA
+    // fallback and every redirect), so one assignment covers all of them.
+    //
+    // 🚨 This is the ONLY channel that works for these pages. They are served the
+    // SPA shell with no per-route Helmet output, so a <meta name="robots"> in the
+    // component never reaches a crawler — /admin shipped 241 KB with no title, no
+    // meta robots and no header at all, and Google indexed it and spent ~70% of
+    // its crawl budget there. The page deliberately keeps answering 200: a
+    // robots.txt Disallow would stop the re-crawl that lets Google SEE the
+    // noindex, which is what makes an already-indexed URL unremovable.
+    if (matched && isNoindexPath(path)) {
+      secHeaders['X-Robots-Tag'] = 'noindex, nofollow';
+    }
 
     // The social card used to ship under two names. /og-favicon.png was the
     // original, kept byte-identical to /assets/social-preview.png purely so
