@@ -103,6 +103,10 @@ export default function ExtractionFigureChart({
   // legend under the ring instead, which wraps.
   const narrow = useIsNarrow();
   const kind = chartKind(chartType);
+  // When the figure's own unit IS percent, its values already are shares —
+  // appending a computed one prints "28 (28%)". Only the exact token counts:
+  // "संख्या र प्रतिशत" mixes counts and shares and must keep both.
+  const valuesArePercent = unit.trim() === "प्रतिशत";
   // Past the palette there is no honest way to tell series apart, and the chart
   // would be unreadable anyway. The panel shows the numbers instead.
   if (!kind || tooManySeries(figure)) return null;
@@ -191,7 +195,9 @@ export default function ExtractionFigureChart({
                       fill={slice.fill}
                       fontSize={LABEL_SIZE}
                     >
-                      {`${slice.est ? "≈ " : ""}${slice.name} ${fmt(slice.value)} (${share}%)`}
+                      {valuesArePercent
+                        ? `${slice.est ? "≈ " : ""}${slice.name} ${fmt(slice.value)}%`
+                        : `${slice.est ? "≈ " : ""}${slice.name} ${fmt(slice.value)} (${share}%)`}
                     </text>
                   </g>
                 );
@@ -218,7 +224,9 @@ export default function ExtractionFigureChart({
                 wrapperStyle={{ fontSize: LABEL_SIZE, lineHeight: 1.7 }}
                 formatter={(value: string, entry: { payload?: { value?: number } }) => {
                   const v = entry?.payload?.value ?? 0;
-                  return `${value} ${fmt(v)} (${Math.round((v / total) * 100)}%)`;
+                  return valuesArePercent
+                    ? `${value} ${fmt(v)}%`
+                    : `${value} ${fmt(v)} (${Math.round((v / total) * 100)}%)`;
                 }}
               />
             ) : null}

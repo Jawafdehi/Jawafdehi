@@ -88,15 +88,9 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
 
   return (
     <li className="border-b border-border/70 py-6 last:border-b-0">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h4 className="text-lg font-semibold text-foreground">
-          {nepaliSafe(figure.title, "Untitled chart")}
-        </h4>
-        <span className="text-sm text-muted-foreground">page {figure.page_no}</span>
-        {figure.unit ? (
-          <span className="text-sm text-muted-foreground">{figure.unit}</span>
-        ) : null}
-      </div>
+      <h4 className="text-lg font-semibold text-foreground">
+        {nepaliSafe(figure.title, "Untitled chart")}
+      </h4>
 
       {plotted.hasEstimates ? (
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -107,21 +101,27 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
       ) : null}
 
       {drawable ? (
-        <div className="mt-3">
+        <figure className="mt-3">
           <FigureChart
             figure={plotted}
             chartType={figure.chart_type}
             unit={figure.unit}
             title={nepaliSafe(figure.title, "Chart")}
           />
-        </div>
+          <figcaption className="mt-2 text-sm italic text-muted-foreground/80">
+            Source: page {figure.page_no} of this report.
+          </figcaption>
+        </figure>
       ) : (
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           {tooManySeries(plotted)
             ? `This figure carries ${plotted.series.length} series — more than can be told
                apart by colour, so it is not redrawn. The values follow.`
             : `This figure is a ${figure.chart_type.replace(/[_-]+/g, " ")}, which we do not
-               redraw — approximating it would misrepresent the source. The values follow.`}
+               redraw — approximating it would misrepresent the source. The values follow.`}{" "}
+          <span className="italic text-muted-foreground/80">
+            Source: page {figure.page_no} of this report.
+          </span>
         </p>
       )}
 
