@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -14,6 +14,18 @@ vi.mock("@/services/datalake-api", () => ({
   getMaterialExtractionTable: (...args: unknown[]) =>
     getMaterialExtractionTable(...args),
 }));
+
+// recharts' ResponsiveContainer measures its container and jsdom has no
+// ResizeObserver; same inert stub as StreamField.test.tsx. The charts render at
+// zero size here, which is fine — these tests assert on the table and the
+// markers, and the chart itself carries an aria-label rather than content.
+beforeAll(() => {
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+});
 
 // Isolate MaterialProfile's own rendering from the shared dialog/button widgets.
 vi.mock("@/components/ViewJsonButton", () => ({ ViewJsonButton: () => null }));
@@ -253,5 +265,56 @@ describe("MaterialProfile — a report with no charts at all", () => {
     expect(screen.queryByRole("heading", { name: "Charts" })).toBeNull();
     // The count sentence must not advertise chart data points it does not have.
     expect(screen.getByText(/0 charts were read out of this document\./)).toBeTruthy();
+  });
+});
+
+describe("MaterialProfile — a figure whose axis fields are inverted", () => {
+  it("leads the table with the fiscal year, not the repeated measure name", async () => {
+    // ciaa-2081-82 p291 puts the MEASURE in `label` and the 35 fiscal years in
+    // `series`, the opposite of every other chart of its kind in the corpus.
+    // Trusting the field names printed "उजुरी सङ्ख्या" down 35 rows and demoted
+    // the years to a muted secondary column.
+    const years = ["२०४७/४८", "२०४८/४९", "२०४९/५०", "२०५०/५१"];
+    const points = years.flatMap((year, i) => [
+      {
+        point_index: i * 2 + 1,
+        label: "उजुरी सङ्ख्या",
+        series: year,
+        value: 100 * (i + 1),
+        estimated: false,
+      },
+      {
+        point_index: i * 2 + 2,
+        label: "फछ्यौट सङ्ख्या",
+        series: year,
+        value: 50 * (i + 1),
+        estimated: false,
+      },
+    ]);
+    getMaterial.mockResolvedValue(material({}));
+    getMaterialExtraction.mockResolvedValue({
+      ...EXTRACTION,
+      counts: { tables: 0, figures: 1, points: points.length },
+      tables: [],
+      figures: [
+        {
+          ...EXTRACTION.figures[0],
+          chart_type: "line",
+          title: "आयोग स्थापनादेखि हालसम्मको उजुरी र फछ्यौटको प्रवृत्ति",
+          points,
+        },
+      ],
+    });
+    renderPage();
+
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Tables & charts/i }));
+    fireEvent.click(await screen.findByText("Show the numbers"));
+
+    const firstCells = screen
+      .getAllByRole("row")
+      .map((row) => row.querySelector("td")?.textContent ?? "")
+      .filter(Boolean);
+    expect(firstCells[0]).toBe("२०४७/४८");
+    expect(firstCells).not.toContain("उजुरी सङ्ख्या");
   });
 });

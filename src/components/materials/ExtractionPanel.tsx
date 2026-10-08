@@ -2,20 +2,25 @@
  * The "Tables & charts" tab of a material page: the structure recovered from
  * inside the source document, served by `/api/materials/<tail>/extraction`.
  *
- * Two things this component is deliberate about.
+ * Three things this component is deliberate about.
  *
  * **Estimated values are marked, everywhere.** A value read off a chart image is
  * a weaker claim than one read from a printed figure, and the dataset tracks the
  * difference per point. Rendering the two identically would launder a guess into
- * a fact, so every estimate carries a marker and every chart that contains one
- * says so above the numbers.
+ * a fact, so every estimate carries a marker: `≈` in the table and the tooltip,
+ * a hollow dot on a line, and a note above the chart.
  *
- * **A chart's data is shown as a table, not re-drawn as a chart.** The corpus
- * holds pies, 3-D pies, venn diagrams, radars and stacked bars; faithfully
- * reproducing them is a different project, and approximating them would
- * misrepresent the source. The inline bar is a magnitude cue on a table, not a
- * reconstruction — so it is omitted entirely where the values are not comparable
- * magnitudes (a chart carrying more than one series, or any negative value).
+ * **Charts are redrawn, but only the three forms we can draw honestly.** Line,
+ * bar and pie go through recharts (lazily — see `FigureChart`, so recharts stays
+ * out of this page's chunk, and the overwhelming majority of materials have no
+ * extraction at all). The corpus also holds venn diagrams, radars and bubble
+ * charts; approximating those with a shape the source never had would
+ * misrepresent the document, so they show their numbers instead, expanded.
+ *
+ * **The category axis is detected, not assumed.** The dataset is not consistent
+ * about which of `label`/`series` holds it — see `lib/extraction-figure.ts`.
+ * Trusting the field names printed one measure name down 35 rows and demoted
+ * the fiscal years to a muted secondary column.
  */
 
 import { useState } from "react";
@@ -23,6 +28,9 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, FileSpreadsheet } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { lazyChart } from "@/components/charts/lazy";
+import { chartKind, plotFigure, tooManySeries } from "@/lib/extraction-figure";
+import type { ExtractionFigureChartProps } from "./ExtractionFigureChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getMaterialExtractionTable,
@@ -57,15 +65,21 @@ function formatValue(value: number | null): string {
 
 // ─── charts ─────────────────────────────────────────────────────────────────
 
+const FigureChart = lazyChart<ExtractionFigureChartProps>(
+  () => import("./ExtractionFigureChart").then((m) => m.default),
+  ({ height = 260 }) => <div className="w-full" style={{ height }} />,
+);
+
 function FigureCard({ figure }: { figure: ExtractionFigure }) {
-  const values = figure.points.map((p) => p.value).filter((v): v is number => v !== null);
-  const seriesNames = new Set(figure.points.map((p) => p.series).filter(Boolean));
-  // The bar is only honest when every value is a comparable, non-negative
-  // magnitude on one series. Otherwise show the numbers alone.
-  const comparable = seriesNames.size <= 1 && values.every((v) => v >= 0);
-  const max = values.length ? Math.max(...values) : 0;
-  const anyEstimated = figure.points.some((p) => p.estimated);
-  const showSeries = seriesNames.size > 1;
+  // Which of label/series is the category axis is detected from the data, not
+  // taken from the field names — the dataset uses both conventions. See
+  // lib/extraction-figure.ts.
+  const plotted = plotFigure(figure.points);
+  // Must agree with ExtractionFigureChart's own bail-outs, or the table stays
+  // collapsed behind a chart that never renders.
+  const drawable =
+    chartKind(figure.chart_type) !== null && !tooManySeries(plotted);
+  const multiSeries = plotted.series.length > 1;
 
   return (
     <li className="border-b border-border/70 py-6 last:border-b-0">
@@ -84,67 +98,80 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
         ) : null}
       </div>
 
-      {anyEstimated ? (
+      {plotted.hasEstimates ? (
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
           <span aria-hidden="true">{ESTIMATE_MARK}</span> marks a value read from the
-          chart image rather than a printed figure.
+          chart image rather than a printed figure
+          {drawable ? "; those points are drawn hollow" : ""}.
         </p>
       ) : null}
 
-      <table className="mt-3 w-full text-sm">
-        <caption className="sr-only">
-          Data behind the chart “{nepaliSafe(figure.title, "Untitled chart")}” on page{" "}
-          {figure.page_no}
-        </caption>
-        <thead className="sr-only">
-          <tr>
-            <th scope="col">Label</th>
-            {showSeries ? <th scope="col">Series</th> : null}
-            <th scope="col">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {figure.points.map((point) => (
-            <tr key={point.point_index} className="align-baseline">
-              <td className="py-1.5 pr-3 text-foreground">
-                {nepaliSafe(point.label, "—")}
-              </td>
-              {showSeries ? (
-                <td className="py-1.5 pr-3 text-xs text-muted-foreground">
-                  {point.series}
-                </td>
-              ) : null}
-              <td className="w-px whitespace-nowrap py-1.5 text-right font-mono text-[13px] tabular-nums text-foreground">
-                {point.estimated ? (
-                  <span
-                    className="text-muted-foreground"
-                    title="Read from the chart image, not a printed figure"
-                  >
-                    <span aria-hidden="true">{ESTIMATE_MARK}</span>
-                    <span className="sr-only">approximately </span>
-                  </span>
-                ) : null}
-                {formatValue(point.value)}
-              </td>
-              {comparable ? (
-                <td className="w-1/3 py-1.5 pl-3">
-                  <div
-                    className="h-1.5 rounded-sm bg-accent/70"
-                    style={{
-                      width:
-                        max > 0 && point.value !== null
-                          ? `${Math.max((point.value / max) * 100, 1)}%`
-                          : 0,
-                    }}
-                    // The numbers beside it are the content; this is decoration.
-                    aria-hidden="true"
-                  />
-                </td>
-              ) : null}
+      {drawable ? (
+        <div className="mt-3">
+          <FigureChart
+            figure={plotted}
+            chartType={figure.chart_type}
+            unit={figure.unit}
+            title={nepaliSafe(figure.title, "Chart")}
+          />
+        </div>
+      ) : (
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
+          {tooManySeries(plotted)
+            ? `This figure carries ${plotted.series.length} series — more than can be told
+               apart by colour, so it is not redrawn. The values follow.`
+            : `This figure is a ${figure.chart_type.replace(/[_-]+/g, " ")}, which we do not
+               redraw — approximating it would misrepresent the source. The values follow.`}
+        </p>
+      )}
+
+      <details className="mt-3" open={!drawable}>
+        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+          Show the numbers
+        </summary>
+        <table className="mt-2 w-full text-sm">
+          <caption className="sr-only">
+            Data behind the chart “{nepaliSafe(figure.title, "Untitled chart")}” on page{" "}
+            {figure.page_no}
+          </caption>
+          <thead className="sr-only">
+            <tr>
+              <th scope="col">Category</th>
+              {multiSeries ? <th scope="col">Series</th> : null}
+              <th scope="col">Value</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {plotted.series.flatMap((series) =>
+              series.points.map((point) => (
+                <tr key={`${series.name}-${point.category}`} className="align-baseline">
+                  {/* The CATEGORY leads, whichever upstream field it came from.
+                      Keying this on `label` printed one measure name 35 times
+                      and demoted the fiscal years to a muted column. */}
+                  <td className="py-1.5 pr-3 text-foreground">{point.category}</td>
+                  {multiSeries ? (
+                    <td className="py-1.5 pr-3 text-xs text-muted-foreground">
+                      {series.name}
+                    </td>
+                  ) : null}
+                  <td className="w-px whitespace-nowrap py-1.5 text-right font-mono text-[13px] tabular-nums text-foreground">
+                    {point.estimated ? (
+                      <span
+                        className="text-muted-foreground"
+                        title="Read from the chart image, not a printed figure"
+                      >
+                        <span aria-hidden="true">{ESTIMATE_MARK}</span>
+                        <span className="sr-only">approximately </span>
+                      </span>
+                    ) : null}
+                    {formatValue(point.value)}
+                  </td>
+                </tr>
+              )),
+            )}
+          </tbody>
+        </table>
+      </details>
 
       {figure.notes ? (
         <details className="mt-3">
