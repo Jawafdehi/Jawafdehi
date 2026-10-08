@@ -15,6 +15,14 @@ import {
   YAxis,
 } from "recharts";
 
+import { useIsNarrow } from "@/hooks/useIsNarrow";
+import {
+  LABEL_GAP,
+  LABEL_SIZE,
+  RADIAN,
+  layoutPieLabels,
+  sidedLabelRows,
+} from "@/lib/pie-labels";
 import {
   chartKind,
   pieIsSafe,
@@ -47,26 +55,19 @@ const SERIES_COLORS = [
   "hsl(var(--chart-5))",
 ];
 
-const AXIS = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };
+const AXIS = { fill: "hsl(var(--muted-foreground))", fontSize: 13 };
 
 const TOOLTIP_STYLE = {
   background: "hsl(var(--background))",
   border: "1px solid hsl(var(--border))",
   borderRadius: 2,
-  fontSize: 12,
+  fontSize: 13,
 };
 
 const fmt = (v: number | null) =>
   v === null ? "—" : v.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
 type Row = Record<string, string | number | null>;
-
-/** recharts hands the label renderer an untyped bag; name the bits we use. */
-interface PieLabel {
-  name?: string;
-  value?: number;
-  percent?: number;
-}
 
 /** Wide rows keyed by series name — the shape every recharts chart wants. */
 function toRows(figure: PlottedFigure): Row[] {
@@ -97,6 +98,10 @@ export default function ExtractionFigureChart({
   title,
   height = 260,
 }: ExtractionFigureChartProps) {
+  // Radial labels need horizontal room the phone does not have: sixteen of
+  // them run straight off both edges of a 390px screen. There they move into a
+  // legend under the ring instead, which wraps.
+  const narrow = useIsNarrow();
   const kind = chartKind(chartType);
   // Past the palette there is no honest way to tell series apart, and the chart
   // would be unreadable anyway. The panel shows the numbers instead.
@@ -115,34 +120,86 @@ export default function ExtractionFigureChart({
       est: p.estimated,
       fill: SERIES_COLORS[i % SERIES_COLORS.length],
     }));
-    // The ring grows with its slice count so the direct labels have somewhere
-    // to sit. These go to sixteen slices; a fixed height crushes them.
-    const tall = Math.max(height, 200 + slices.length * 18);
+    const total = slices.reduce((sum, s) => sum + s.value, 0) || 1;
+
+    // Each side of the ring needs LABEL_GAP of vertical room per label it
+    // carries, so the canvas is sized from the busier side rather than from a
+    // guess. Sixteen slices otherwise squeeze into a fixed height and collide.
+    const ringDiameter = narrow ? 180 : 220;
+    const tall = narrow
+      ? // Ring plus a legend that wraps to roughly two entries a line.
+        ringDiameter + 40 + Math.ceil(slices.length / 2) * 22
+      : Math.max(
+          height,
+          ringDiameter,
+          sidedLabelRows(slices.map((s) => s.value)) * LABEL_GAP + 40,
+        );
+    const cy = tall / 2;
+    const radius = Math.min(ringDiameter, tall - 40) / 2;
+    const specs = layoutPieLabels(
+      slices.map((s) => s.value),
+      cy,
+      radius,
+    );
+
     return (
       <div className="w-full" style={{ height: tall }} role="img" aria-label={summary}>
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart margin={{ top: 8, right: 96, bottom: 8, left: 96 }}>
+          {/* Generous side margins: the labels live outside the ring and are
+              long Devanagari phrases. */}
+          <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <Pie
               data={slices}
               dataKey="value"
               nameKey="name"
-              innerRadius="38%"
-              outerRadius="62%"
+              cy={narrow ? ringDiameter / 2 + 8 : cy}
+              innerRadius={radius * 0.6}
+              outerRadius={radius}
+              startAngle={90}
+              endAngle={-270}
               paddingAngle={1}
               isAnimationActive={false}
+              labelLine={false}
               // Identity comes from the label, not the hue — which is what makes
               // a sixteen-slice ring legible at all, and what lets the palette
               // repeat past five slices without the reader losing track.
-              label={({ name, value, percent }: PieLabel) =>
-                `${name} ${fmt(value ?? null)}${
-                  percent === undefined ? "" : ` (${Math.round(percent * 100)}%)`
-                }`
-              }
-              labelLine={{ stroke: "hsl(var(--border))" }}
+              label={narrow ? false : (props: { cx: number; index: number }) => {
+                const { cx, index } = props;
+                const slice = slices[index];
+                const spec = specs[index];
+                if (!slice || !spec) return <g key={index} />;
+                const right = spec.side === "right";
+                // Elbow on the ring edge, then a horizontal run out to the text.
+                const ex = cx + (right ? radius + 10 : -(radius + 10));
+                const tx = cx + (right ? radius + 18 : -(radius + 18));
+                const sx = cx + radius * Math.cos(-spec.midAngle * RADIAN);
+                const sy = cy + radius * Math.sin(-spec.midAngle * RADIAN);
+                const share = Math.round((slice.value / total) * 100);
+                return (
+                  <g key={`${slice.name}-${index}`}>
+                    <polyline
+                      points={`${sx},${sy} ${ex},${spec.y} ${tx},${spec.y}`}
+                      stroke="hsl(var(--border))"
+                      strokeWidth={1}
+                      fill="none"
+                    />
+                    <text
+                      x={tx + (right ? 3 : -3)}
+                      y={spec.y}
+                      textAnchor={right ? "start" : "end"}
+                      dominantBaseline="central"
+                      fill={slice.fill}
+                      fontSize={LABEL_SIZE}
+                    >
+                      {`${slice.est ? "≈ " : ""}${slice.name} ${fmt(slice.value)} (${share}%)`}
+                    </text>
+                  </g>
+                );
+              }}
             >
-              {slices.map((slice) => (
+              {slices.map((slice, i) => (
                 <Cell
-                  key={slice.name}
+                  key={`${slice.name}-${i}`}
                   fill={slice.fill}
                   stroke="hsl(var(--background))"
                 />
@@ -155,6 +212,16 @@ export default function ExtractionFigureChart({
                 unit || "value",
               ]}
             />
+            {narrow ? (
+              <Legend
+                verticalAlign="bottom"
+                wrapperStyle={{ fontSize: LABEL_SIZE, lineHeight: 1.7 }}
+                formatter={(value: string, entry: { payload?: { value?: number } }) => {
+                  const v = entry?.payload?.value ?? 0;
+                  return `${value} ${fmt(v)} (${Math.round((v / total) * 100)}%)`;
+                }}
+              />
+            ) : null}
           </PieChart>
         </ResponsiveContainer>
       </div>

@@ -306,7 +306,7 @@ export default function MaterialProfile() {
                   </TabsList>
 
                   <TabsContent value="summary" className="mt-0">
-                    <Card className="rounded-none border border-t-0 shadow-none">
+                    <Card className="rounded-none border border-t-0 bg-background shadow-none">
                       <div className="p-5 md:p-8">
                         {descText ? (
                           <p className="mb-6 max-w-3xl text-base leading-7 text-foreground">
@@ -376,7 +376,7 @@ export default function MaterialProfile() {
 
                   {fullTextStr ? (
                     <TabsContent value="text" className="mt-0">
-                      <Card className="rounded-none border border-t-0 shadow-none">
+                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
                         <p className="whitespace-pre-wrap break-words p-5 text-sm leading-7 text-foreground md:p-8">
                           {fullTextStr}
                         </p>
@@ -386,7 +386,7 @@ export default function MaterialProfile() {
 
                   {extraction ? (
                     <TabsContent value="extraction" className="mt-0">
-                      <Card className="rounded-none border border-t-0 shadow-none">
+                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
                         <ExtractionPanel tail={tail} extraction={extraction} />
                       </Card>
                     </TabsContent>
