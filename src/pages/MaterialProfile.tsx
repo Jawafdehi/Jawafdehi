@@ -130,6 +130,10 @@ function decodedUrl(url: string): string {
 // The jawafdehi:visibility[Policy] pair is a caseworker-only annotation the API
 // adds on authed reads; it is an editor concern (see MaterialVisibilityControl),
 // not a public detail, so keep it out of the generic grid.
+// isAccessibleForFree is schema.org's paywall flag. The API sets it to true on
+// every material in the archive, so as a Details row it renders the constant
+// "Is Accessible For Free — true" and tells a reader nothing. It stays in the
+// JSON-LD below (and in the API payload) where crawlers actually read it.
 const HANDLED_KEYS = new Set([
   "@id",
   "@type",
@@ -143,6 +147,7 @@ const HANDLED_KEYS = new Set([
   "sameAs",
   "identifier",
   "associatedMedia",
+  "isAccessibleForFree",
   "jawafdehi:visibility",
   "jawafdehi:visibilityPolicy",
 ]);

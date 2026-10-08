@@ -74,6 +74,18 @@ describe("MaterialProfile — overflow-safe rendering", () => {
     expect(para.className).toMatch(/\bbreak-words\b/); // but break over-long runs
   });
 
+  it("keeps the schema.org isAccessibleForFree flag out of the Summary details", async () => {
+    // The API stamps isAccessibleForFree: true on every material, so surfacing it
+    // in the details grid just prints a constant "Is Accessible For Free — true".
+    getMaterial.mockResolvedValue(
+      material({ isAccessibleForFree: true, "jawafdehi:recordId": "116707" }),
+    );
+    renderPage();
+
+    await screen.findByText("116707"); // details grid has rendered
+    expect(screen.queryByText(/Is Accessible For Free/i)).toBeNull();
+  });
+
   it("leaves a non-URL detail field as plain text", async () => {
     getMaterial.mockResolvedValue(material({ "jawafdehi:recordId": "116707" }));
     renderPage();
