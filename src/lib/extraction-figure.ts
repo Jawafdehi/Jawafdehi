@@ -98,34 +98,31 @@ export function chartKind(chartType: string): "line" | "bar" | "pie" | null {
 }
 
 /**
- * How many categorical hues we have. The brand defines exactly five chart
- * colours (`--chart-1`…`--chart-5`), and a sixth slice must NOT reuse the first:
- * two identically-coloured slices in one ring make the legend ambiguous.
- */
-export const MAX_HUES = 5;
-
-/**
- * A pie is only honest for ONE series of non-negative parts that fits the
- * palette.
+ * A pie is honest for ONE series of non-negative parts. Nothing else about the
+ * figure disqualifies it: if the report drew a pie, we draw a pie.
  *
- * The slice cap is not fussiness. Every slice in a ring is visually adjacent to
- * every other, so a pie is the all-pairs colour case, which is the hardest one —
- * past a handful of hues no ordering keeps them separable, for colour-blind
- * readers least of all. 95 of this corpus's 155 single-series pies have more
- * than five slices (up to sixteen), so those are drawn as horizontal bars
- * instead: the category sits beside its bar and carries no colour load at all.
- *
- * That is a re-encoding, not an approximation — identical numbers, a legible
- * shape. It is categorically different from redrawing a venn or a radar, where
- * the relationships encoded cannot survive the change.
+ * Slice COUNT deliberately does not. A ring is the hardest colour case there
+ * is — every slice is adjacent to every other — and this corpus has pies with
+ * up to sixteen slices, well past any palette. The answer is to stop making
+ * colour carry identity: every slice is labelled directly, so the hue is
+ * decoration and a repeat is survivable.
  */
 export function pieIsSafe(figure: PlottedFigure): boolean {
   return (
     figure.series.length === 1 &&
-    figure.series[0].points.length <= MAX_HUES &&
     figure.series[0].points.every((p) => p.value !== null && p.value >= 0)
   );
 }
+
+/**
+ * How many categorical hues the brand defines (`--chart-1`…`--chart-5`).
+ *
+ * It bounds SERIES, not pie slices. A line or a grouped bar identifies its
+ * series by colour alone — there is nowhere to put a direct label — so past
+ * five the palette would have to repeat and two series would be
+ * indistinguishable. A pie has no such limit because every slice is labelled.
+ */
+export const MAX_HUES = 5;
 
 /**
  * Beyond the palette there is no honest way to tell series apart, and a chart

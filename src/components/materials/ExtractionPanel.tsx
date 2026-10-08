@@ -10,12 +10,18 @@
  * a fact, so every estimate carries a marker: `≈` in the table and the tooltip,
  * a hollow dot on a line, and a note above the chart.
  *
- * **Charts are redrawn, but only the three forms we can draw honestly.** Line,
- * bar and pie go through recharts (lazily — see `FigureChart`, so recharts stays
- * out of this page's chunk, and the overwhelming majority of materials have no
- * extraction at all). The corpus also holds venn diagrams, radars and bubble
- * charts; approximating those with a shape the source never had would
- * misrepresent the document, so they show their numbers instead, expanded.
+ * **The form follows the document.** A figure the report drew as a pie is drawn
+ * as a pie, however many slices it has — up to sixteen here. That works because
+ * every slice is labelled directly, so the hue is decoration rather than the
+ * identity channel and the palette may repeat without the reader losing track.
+ * Line, bar and pie go through recharts, lazily (see `FigureChart`), so recharts
+ * stays out of this page's chunk — most materials have no extraction at all.
+ *
+ * What we cannot draw at all, we do not fake: venn diagrams, radars and bubble
+ * charts have no honest recharts equivalent (the venn's rows are intersections,
+ * so bar lengths would not sum to anything), and they show their numbers
+ * instead, expanded. Same for a figure with more series than the palette has
+ * hues, where a line has nowhere to put a direct label.
  *
  * **The category axis is detected, not assumed.** The dataset is not consistent
  * about which of `label`/`series` holds it — see `lib/extraction-figure.ts`.
@@ -27,7 +33,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, FileSpreadsheet } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, plotFigure, tooManySeries } from "@/lib/extraction-figure";
 import type { ExtractionFigureChartProps } from "./ExtractionFigureChart";
@@ -88,11 +93,6 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
           {nepaliSafe(figure.title, "Untitled chart")}
         </h4>
         <span className="text-xs text-muted-foreground">page {figure.page_no}</span>
-        {figure.chart_type ? (
-          <Badge variant="secondary" className="text-[11px] font-normal">
-            {figure.chart_type.replace(/[_-]+/g, " ")}
-          </Badge>
-        ) : null}
         {figure.unit ? (
           <span className="text-xs text-muted-foreground">{figure.unit}</span>
         ) : null}

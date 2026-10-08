@@ -172,15 +172,12 @@ describe("palette bounds", () => {
       Array.from({ length: n }, (_, i) => pt(i + 1, `slice${i}`, "", i + 1)),
     );
 
-  it("accepts a pie that fits the five brand hues", () => {
+  it("draws a pie whatever its slice count, because the report did", () => {
+    // Identity comes from the direct slice labels, not the hue, so a palette
+    // repeat past five slices is survivable and the form stays faithful.
     expect(pieIsSafe(ring(5))).toBe(true);
-  });
-
-  it("rejects a six-slice pie rather than reusing a hue", () => {
-    // Every slice in a ring is adjacent to every other, so a repeated colour is
-    // ambiguous outright. These are drawn as horizontal bars instead.
-    expect(pieIsSafe(ring(6))).toBe(false);
-    expect(pieIsSafe(ring(16))).toBe(false);
+    expect(pieIsSafe(ring(6))).toBe(true);
+    expect(pieIsSafe(ring(16))).toBe(true);
   });
 
   /** n series over n+1 categories, so the category axis is unambiguous. */

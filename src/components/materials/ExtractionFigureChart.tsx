@@ -61,6 +61,13 @@ const fmt = (v: number | null) =>
 
 type Row = Record<string, string | number | null>;
 
+/** recharts hands the label renderer an untyped bag; name the bits we use. */
+interface PieLabel {
+  name?: string;
+  value?: number;
+  percent?: number;
+}
+
 /** Wide rows keyed by series name — the shape every recharts chart wants. */
 function toRows(figure: PlottedFigure): Row[] {
   return figure.categories.map((category) => {
@@ -95,98 +102,59 @@ export default function ExtractionFigureChart({
   // would be unreadable anyway. The panel shows the numbers instead.
   if (!kind || tooManySeries(figure)) return null;
 
-  // A part-to-whole figure with more parts than hues becomes a HORIZONTAL bar:
-  // the category sits beside its bar and carries no colour load, so it scales
-  // to the sixteen-slice pies this corpus contains. Same numbers, legible shape.
-  const asRanked =
-    kind === "pie" && !pieIsSafe(figure) && figure.series.length === 1;
-
   // The chart is decorative over a table that carries the same numbers, so it
   // is labelled rather than described cell by cell.
   const summary = `${title || "Chart"}${unit ? ` (${unit})` : ""}: ${
     figure.categories.length
   } categories, ${figure.series.length} series. The figures follow in the table.`;
 
-  if (asRanked) {
-    const data = figure.series[0].points.map((p) => ({
-      category: p.category,
-      value: p.value,
-      est: p.estimated ? 1 : 0,
-    }));
-    // Tall enough for every label to have its own row; a squeezed categorical
-    // axis drops ticks silently, which would hide categories the source printed.
-    const rowHeight = 22;
-    const tall = Math.max(height, data.length * rowHeight + 32);
-    return (
-      <div className="w-full" style={{ height: tall }} role="img" aria-label={summary}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 4, right: 16, bottom: 4, left: 8 }}
-          >
-            <CartesianGrid
-              stroke="hsl(var(--border))"
-              strokeOpacity={0.5}
-              horizontal={false}
-            />
-            <XAxis type="number" tick={AXIS} tickLine={false} axisLine={false} />
-            <YAxis
-              type="category"
-              dataKey="category"
-              tick={AXIS}
-              tickLine={false}
-              axisLine={false}
-              width={150}
-              interval={0}
-            />
-            <Tooltip
-              contentStyle={TOOLTIP_STYLE}
-              formatter={(v: number, _n: string, item: { payload?: Row }) => [
-                `${item?.payload?.est ? "≈ " : ""}${fmt(v)}`,
-                unit || "value",
-              ]}
-            />
-            <Bar
-              dataKey="value"
-              fill={SERIES_COLORS[0]}
-              isAnimationActive={false}
-              radius={[0, 2, 2, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    );
-  }
-
   if (kind === "pie" && pieIsSafe(figure)) {
     const slices = figure.series[0].points.map((p, i) => ({
       name: p.category,
       value: p.value ?? 0,
+      est: p.estimated,
       fill: SERIES_COLORS[i % SERIES_COLORS.length],
     }));
+    // The ring grows with its slice count so the direct labels have somewhere
+    // to sit. These go to sixteen slices; a fixed height crushes them.
+    const tall = Math.max(height, 200 + slices.length * 18);
     return (
-      <div className="w-full" style={{ height }} role="img" aria-label={summary}>
+      <div className="w-full" style={{ height: tall }} role="img" aria-label={summary}>
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart margin={{ top: 8, right: 96, bottom: 8, left: 96 }}>
             <Pie
               data={slices}
               dataKey="value"
               nameKey="name"
-              innerRadius="45%"
-              outerRadius="78%"
+              innerRadius="38%"
+              outerRadius="62%"
               paddingAngle={1}
               isAnimationActive={false}
+              // Identity comes from the label, not the hue — which is what makes
+              // a sixteen-slice ring legible at all, and what lets the palette
+              // repeat past five slices without the reader losing track.
+              label={({ name, value, percent }: PieLabel) =>
+                `${name} ${fmt(value ?? null)}${
+                  percent === undefined ? "" : ` (${Math.round(percent * 100)}%)`
+                }`
+              }
+              labelLine={{ stroke: "hsl(var(--border))" }}
             >
-              {slices.map((s) => (
-                <Cell key={s.name} fill={s.fill} stroke="hsl(var(--background))" />
+              {slices.map((slice) => (
+                <Cell
+                  key={slice.name}
+                  fill={slice.fill}
+                  stroke="hsl(var(--background))"
+                />
               ))}
             </Pie>
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
-              formatter={(v: number) => [fmt(v), unit || "value"]}
+              formatter={(v: number, _n: string, item: { payload?: { est?: boolean } }) => [
+                `${item?.payload?.est ? "≈ " : ""}${fmt(v)}`,
+                unit || "value",
+              ]}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
           </PieChart>
         </ResponsiveContainer>
       </div>
