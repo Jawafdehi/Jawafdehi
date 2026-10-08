@@ -80,3 +80,25 @@ export function matchRoute(
 export function isKnownRoute(pathname: string): boolean {
   return matchRoute(pathname) !== null;
 }
+
+// The route patterns SITE_ROUTES marks `noindex: true`.
+const NOINDEX_PATTERNS: ReadonlySet<string> = new Set(
+  SITE_ROUTES.filter((route) => "noindex" in route && route.noindex).map((route) => route.path),
+);
+
+/**
+ * True when this path resolves to a route that must never be indexed.
+ *
+ * Keyed on the matched *pattern*, not a prefix test on the URL, so it inherits
+ * React Router's own ranking — the same reason matchRoute exists. A prefix test
+ * would also catch /administration, and would miss nothing today but drift the
+ * moment a route is added.
+ *
+ * ⚠️ The page must keep answering normally for this to work. A crawler has to be
+ * able to FETCH the page to read the noindex; blocking it in robots.txt instead
+ * would freeze /admin in the index permanently. See the SiteRoute.noindex doc.
+ */
+export function isNoindexPath(pathname: string): boolean {
+  const matched = matchRoute(pathname);
+  return matched !== null && NOINDEX_PATTERNS.has(matched.path);
+}
