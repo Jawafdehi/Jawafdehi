@@ -5,8 +5,10 @@
  */
 
 /** Pie label type size, and the vertical room one needs. */
-export const LABEL_SIZE = 13;
-export const LABEL_GAP = 19;
+// Matches the panel prose scale; the gap must grow with the type or the
+// de-collision leaves labels touching.
+export const LABEL_SIZE = 14;
+export const LABEL_GAP = 21;
 
 export const RADIAN = Math.PI / 180;
 

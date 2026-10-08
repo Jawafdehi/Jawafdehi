@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { layoutPieLabels, sidedLabelRows } from "@/lib/pie-labels";
 
 /** The minimum vertical gap the layout enforces; mirrors LABEL_GAP. */
-const GAP = 19;
+const GAP = 21;
 
 const gaps = (ys: number[]) =>
   ys

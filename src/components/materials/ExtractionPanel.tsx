@@ -89,17 +89,17 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
   return (
     <li className="border-b border-border/70 py-6 last:border-b-0">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h4 className="text-base font-semibold text-foreground">
+        <h4 className="text-lg font-semibold text-foreground">
           {nepaliSafe(figure.title, "Untitled chart")}
         </h4>
-        <span className="text-xs text-muted-foreground">page {figure.page_no}</span>
+        <span className="text-sm text-muted-foreground">page {figure.page_no}</span>
         {figure.unit ? (
-          <span className="text-xs text-muted-foreground">{figure.unit}</span>
+          <span className="text-sm text-muted-foreground">{figure.unit}</span>
         ) : null}
       </div>
 
       {plotted.hasEstimates ? (
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
           <span aria-hidden="true">{ESTIMATE_MARK}</span> marks a value read from the
           chart image rather than a printed figure
           {drawable ? "; those points are drawn hollow" : ""}.
@@ -116,7 +116,7 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
           />
         </div>
       ) : (
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
           {tooManySeries(plotted)
             ? `This figure carries ${plotted.series.length} series — more than can be told
                apart by colour, so it is not redrawn. The values follow.`
@@ -126,10 +126,10 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
       )}
 
       <details className="mt-3" open={!drawable}>
-        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+        <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
           Show the numbers
         </summary>
-        <table className="mt-2 w-full text-sm">
+        <table className="mt-2 w-full text-base">
           <caption className="sr-only">
             Data behind the chart “{nepaliSafe(figure.title, "Untitled chart")}” on page{" "}
             {figure.page_no}
@@ -150,11 +150,11 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
                       and demoted the fiscal years to a muted column. */}
                   <td className="py-1.5 pr-3 text-foreground">{point.category}</td>
                   {multiSeries ? (
-                    <td className="py-1.5 pr-3 text-xs text-muted-foreground">
+                    <td className="py-1.5 pr-3 text-sm text-muted-foreground">
                       {series.name}
                     </td>
                   ) : null}
-                  <td className="w-px whitespace-nowrap py-1.5 text-right font-mono text-[13px] tabular-nums text-foreground">
+                  <td className="w-px whitespace-nowrap py-1.5 text-right font-mono text-[15px] tabular-nums text-foreground">
                     {point.estimated ? (
                       <span
                         className="text-muted-foreground"
@@ -175,10 +175,10 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
 
       {figure.notes ? (
         <details className="mt-3">
-          <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+          <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
             How these numbers were established
           </summary>
-          <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground">
+          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
             {figure.notes}
           </p>
         </details>
@@ -225,8 +225,8 @@ function TableRow({
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1">
-          <span className="block break-words text-sm text-foreground">{label}</span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">
+          <span className="block break-words text-base text-foreground">{label}</span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">
             page {stub.page_no} · {stub.n_rows}×{stub.n_cols}
             {stub.fidelity === "ocr_vision" ? " · read by OCR" : ""}
           </span>
@@ -292,7 +292,7 @@ function MarkdownTable({
 
   if (rows.length === 0) {
     return (
-      <pre className="whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground">
+      <pre className="whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
         {markdown}
       </pre>
     );
@@ -304,7 +304,7 @@ function MarkdownTable({
 
   return (
     <>
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-base">
         <thead>
           <tr>
             {header.map((cell, i) => (
@@ -359,7 +359,7 @@ export function ExtractionPanel({
 
   return (
     <div className="p-5 md:p-8">
-      <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+      <p className="mb-6 max-w-3xl text-lg leading-8 text-muted-foreground">
         {counts.tables.toLocaleString()} table{counts.tables === 1 ? "" : "s"} and{" "}
         {counts.figures.toLocaleString()} chart{counts.figures === 1 ? "" : "s"} were
         read out of this document
@@ -376,7 +376,7 @@ export function ExtractionPanel({
         <section aria-labelledby="extraction-charts-heading">
           <h3
             id="extraction-charts-heading"
-            className="text-lg font-semibold text-foreground"
+            className="text-xl font-semibold text-foreground"
           >
             Charts
           </h3>
@@ -395,12 +395,12 @@ export function ExtractionPanel({
         >
           <h3
             id="extraction-tables-heading"
-            className="flex items-center gap-2 text-lg font-semibold text-foreground"
+            className="flex items-center gap-2 text-xl font-semibold text-foreground"
           >
             <FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />
             Tables
           </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-base leading-7 text-muted-foreground">
             Select a table to read it.
           </p>
           <ul className="mt-3">
@@ -411,7 +411,7 @@ export function ExtractionPanel({
         </section>
       ) : null}
 
-      <p className="mt-10 border-t border-border/70 pt-4 text-xs leading-5 text-muted-foreground">
+      <p className="mt-10 border-t border-border/70 pt-4 text-sm leading-6 text-muted-foreground">
         Extracted from the published PDF by the{" "}
         <a
           href={`https://huggingface.co/datasets/${provenance.dataset}`}

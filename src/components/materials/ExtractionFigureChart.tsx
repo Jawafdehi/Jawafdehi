@@ -55,13 +55,13 @@ const SERIES_COLORS = [
   "hsl(var(--chart-5))",
 ];
 
-const AXIS = { fill: "hsl(var(--muted-foreground))", fontSize: 13 };
+const AXIS = { fill: "hsl(var(--muted-foreground))", fontSize: 14 };
 
 const TOOLTIP_STYLE = {
   background: "hsl(var(--background))",
   border: "1px solid hsl(var(--border))",
   borderRadius: 2,
-  fontSize: 13,
+  fontSize: 14,
 };
 
 const fmt = (v: number | null) =>
@@ -252,7 +252,7 @@ export default function ExtractionFigureChart({
           name || unit || "value",
         ]}
       />
-      {showLegend ? <Legend wrapperStyle={{ fontSize: 11 }} /> : null}
+      {showLegend ? <Legend wrapperStyle={{ fontSize: 14 }} /> : null}
     </>
   );
 
