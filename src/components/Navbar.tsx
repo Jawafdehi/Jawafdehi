@@ -95,6 +95,7 @@ export function Navbar() {
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
       { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
       { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
+      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
     ],
     [t],
   );
