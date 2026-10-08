@@ -1,8 +1,8 @@
-import { Github, Terminal } from "lucide-react";
+import { Terminal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
-import { CopyField } from "@/components/mcp/copy-field";
+import { CopyButton, CopyField } from "@/components/mcp/copy-field";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
@@ -15,7 +15,11 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 // thing a reader copies off the page, so it is written out in full.
 const MCP_URL = "https://api.jawafdehi.org/mcp";
 
-const REPO_URL = "https://github.com/Jawafdehi/jawafdehi-mcp";
+// Split for display only — the path is set in the accent colour so the part
+// people get wrong stands out. MCP_URL above stays the single whole string that
+// is copied, so the two can't drift.
+const MCP_URL_ORIGIN = "https://api.jawafdehi.org";
+const MCP_URL_PATH = "/mcp";
 
 // One card per vendor: where to paste the URL in the chat app, and the one-line
 // equivalent for their coding CLI.
@@ -51,19 +55,17 @@ const Mcp = () => {
 
         <section id="endpoint" className="bg-muted/10 py-12 md:py-16">
           <div className="layout-container">
-            <div className="mx-auto max-w-2xl">
-              <h2 className="mb-3 text-center text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
-                {t("mcp.endpoint.title")}
-              </h2>
-              <p className="mb-6 text-center font-paragraph font-paragraph-foreground">
-                {t("mcp.endpoint.intro")}
-              </p>
+            <div className="flex items-center justify-center gap-3">
+              <code className="break-all text-center font-mono text-xl font-bold leading-tight text-foreground sm:text-2xl md:text-4xl lg:text-5xl">
+                {MCP_URL_ORIGIN}
+                <span className="text-accent">{MCP_URL_PATH}</span>
+              </code>
 
-              <CopyField value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />
-
-              <p className="mt-4 text-center text-sm text-muted-foreground">
-                {t("mcp.endpoint.note")}
-              </p>
+              <CopyButton
+                value={MCP_URL}
+                label={t("mcp.endpoint.copyLabel")}
+                iconClassName="h-5 w-5 md:h-6 md:w-6"
+              />
             </div>
           </div>
         </section>
@@ -106,16 +108,6 @@ const Mcp = () => {
                 {t("mcp.tools.title")}
               </h2>
               <p className="font-paragraph font-paragraph-foreground">{t("mcp.tools.body")}</p>
-
-              <a
-                href={REPO_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-accent"
-              >
-                <Github className="h-4 w-4" aria-hidden="true" />
-                {t("mcp.tools.repo")}
-              </a>
             </div>
           </div>
         </section>
