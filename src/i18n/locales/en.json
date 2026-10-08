@@ -176,7 +176,8 @@
       "caseDetail": "Open a documented corruption case.",
       "entityDetail": "Open a tracked person, office, or organization.",
       "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers.",
-      "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi."
+      "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
+      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol."
     }
   },
   "footer": {
@@ -215,7 +216,8 @@
       "whatsapp": "WhatsApp",
       "linktree": "Linktree"
     },
-    "pressKit": "Press Kit"
+    "pressKit": "Press Kit",
+    "mcp": "Jawafdehi MCP"
   },
   "home": {
     "hero": {
@@ -2727,5 +2729,46 @@
       "privacyLabel": "Data and deletion requests",
       "note": "For an interview, a comment, or an asset that isn't here, write to us and we'll come back to you."
     }
+  },
+  "mcp": {
+    "meta": {
+      "title": "Connect to Jawafdehi MCP",
+      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
+    },
+    "hero": {
+      "eyebrow": "Model Context Protocol",
+      "title": "Jawafdehi",
+      "titleAccent": "MCP",
+      "description": "Leverage the power of AI to access Nepal's permanent accountability archive."
+    },
+    "endpoint": {
+      "title": "The server URL",
+      "intro": "Everything on this page is the same one address. Paste it into any AI tool that speaks the Model Context Protocol.",
+      "copyLabel": "Copy the server URL",
+      "note": "Public records are open — no sign-in, no key. If your client asks how to authenticate, choose none."
+    },
+    "clients": {
+      "title": "Add it to your AI tool",
+      "copyCommand": "Copy the command",
+      "claude": {
+        "name": "Claude",
+        "appLabel": "Claude app and claude.ai",
+        "appSteps": "Open Settings → Connectors, add a custom connector, and paste the server URL.",
+        "cliLabel": "Claude Code"
+      },
+      "openai": {
+        "name": "OpenAI",
+        "appLabel": "ChatGPT",
+        "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
+        "cliLabel": "Codex CLI"
+      }
+    },
+    "tools": {
+      "title": "What your AI can read",
+      "body": "Published accountability cases, the people and offices tracked in the Nepal Entity Service, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only.",
+      "repo": "Source on GitHub"
+    },
+    "copied": "Copied",
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
   }
 }

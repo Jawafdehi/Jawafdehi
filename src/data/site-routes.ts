@@ -1,6 +1,7 @@
 
 export type SearchIconName =
   | "BookOpen"
+  | "Bot"
   | "Building2"
   | "FileText"
   | "HeartHandshake"
@@ -242,6 +243,15 @@ export const SITE_ROUTES = [
     keywords: ["products", "tools", "platforms"],
     icon: "FileText",
     sitemapTitle: "Products — Jawafdehi",
+  },
+  {
+    path: "/mcp",
+    chrome: "app",
+    titleKey: "mcp.meta.title",
+    descriptionKey: "searchCommand.descriptions.mcp",
+    keywords: ["mcp", "ai", "claude", "chatgpt", "openai", "connector", "api", "model context protocol"],
+    icon: "Bot",
+    sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
   },
   {
     path: "/openhouse",
