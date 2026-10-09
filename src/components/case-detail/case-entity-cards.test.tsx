@@ -275,3 +275,45 @@ describe("CaseEntityCards — the verdict names its forum", () => {
     expect(screen.getByText("Convicted")).toBeTruthy();
   });
 });
+
+describe("CaseEntityCards — the appeal line", () => {
+  const renderWithAppeal = (entity: JawafEntity, appeal: { result: "upheld" | "overturned" | "partly_overturned"; forum: string } | null) =>
+    render(
+      <MemoryRouter>
+        <CaseEntityCards
+          entities={[entity]}
+          resolvedEntities={{}}
+          language="en"
+          initialLimit={9}
+          forum="Special Court"
+          appeal={appeal}
+        />
+      </MemoryRouter>,
+    );
+
+  it("draws the appeal under the Special Court verdict", () => {
+    renderWithAppeal(party({ outcome: "convicted", notes: "" }), {
+      result: "overturned",
+      forum: "Supreme Court",
+    });
+
+    expect(screen.getByText("Special Court: convicted")).toBeTruthy();
+    expect(screen.getByTestId("entity-card-appeal").textContent).toBe("Supreme Court: overturned");
+  });
+
+  it("draws no appeal line when no verdict is shown", () => {
+    renderWithAppeal(party({ outcome: "charged", notes: "" }), {
+      result: "overturned",
+      forum: "Supreme Court",
+    });
+
+    expect(screen.queryByTestId("entity-card-appeal")).toBeNull();
+  });
+
+  it("never attributes a remand to the Special Court", () => {
+    renderWithAppeal(party({ outcome: "remanded", notes: "" }), null);
+
+    expect(screen.getByText("Remanded for retrial")).toBeTruthy();
+    expect(screen.queryByText(/Special Court/)).toBeNull();
+  });
+});

@@ -17,6 +17,7 @@ import {
   shouldShowOutcome,
 } from "@/utils/case-outcome";
 import { caseVerdictForum } from "@/utils/case-stages";
+import { appealBadgeClass, appealWithForumLabel, personalAppeal } from "@/utils/appeal-verdict";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -161,6 +162,13 @@ export function EntityRelatedCases({
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
+          const showOutcome = accused && shouldShowOutcome(outcome);
+          // Same rule as the case page: an appeal is this person's only on a
+          // single-accused case.
+          const appeal =
+            showOutcome && role === "accused"
+              ? personalAppeal(c.entities ?? [], c.dates, c.appeal_verdicts, language)
+              : null;
 
           const row = (
             <div
@@ -185,13 +193,23 @@ export function EntityRelatedCases({
                   >
                     {roleLabel}
                   </Badge>
-                  {accused && shouldShowOutcome(outcome) ? (
+                  {showOutcome ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
                       {outcomeWithForumLabel(
                         outcome,
-                        caseVerdictForum(c.dates, language),
+                        // `remanded` comes from the appeal court's order.
+                        outcome === "remanded" ? null : caseVerdictForum(c.dates, language),
                         language,
                       )}
+                    </Badge>
+                  ) : null}
+                  {appeal ? (
+                    <Badge
+                      variant="outline"
+                      className={appealBadgeClass(appeal.result, outcome)}
+                      data-testid="related-case-appeal"
+                    >
+                      {appealWithForumLabel(appeal, language)}
                     </Badge>
                   ) : null}
                   <span className="text-xs text-muted-foreground">
