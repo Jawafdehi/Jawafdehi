@@ -147,7 +147,7 @@ describe("appealBadgeClass", () => {
     for (const result of ["overturned", "partly_overturned"] as const) {
       expect(appealBadgeClass(result, "convicted")).not.toBe(outcomeBadgeClass("convicted"));
       expect(appealBadgeClass(result, "acquitted")).not.toBe(outcomeBadgeClass("acquitted"));
-      expect(appealBadgeClass(result, "convicted")).toMatch(/bg-muted/);
+      expect(appealBadgeClass(result, "convicted")).toMatch(/bg-secondary/);
     }
   });
 });

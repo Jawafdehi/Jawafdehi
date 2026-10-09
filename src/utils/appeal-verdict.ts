@@ -113,7 +113,7 @@ export function personalAppeal(
 export function appealBadgeClass(result: AppealResult, outcome: EntityOutcome): string {
   return result === "upheld"
     ? outcomeBadgeClass(outcome)
-    : "border-transparent bg-muted text-muted-foreground";
+    : "border-transparent bg-secondary text-secondary-foreground";
 }
 
 /** "Supreme Court: overturned" — the appeal named with the court that decided it. */
