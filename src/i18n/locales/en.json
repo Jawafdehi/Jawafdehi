@@ -2740,10 +2740,13 @@
       "eyebrow": "Model Context Protocol",
       "title": "Jawafdehi",
       "titleAccent": "MCP",
-      "description": "Connect Nepal's permanent accountability archive to the AI tool you already use."
+      "description": "Connect Nepal's permanent accountability archive to the AI tool you already use.",
+      "primaryCta": "Connect your AI tool",
+      "secondaryCta": "See what it can read"
     },
     "endpoint": {
-      "copyLabel": "Copy the server URL"
+      "copyLabel": "Copy the server URL",
+      "caption": "A hosted, remote MCP server. Nothing to install, no API key to issue, no account to create — paste the URL and your AI tool can read the archive."
     },
     "clients": {
       "title": "Add it to your AI tool",
@@ -2759,13 +2762,91 @@
         "appLabel": "ChatGPT",
         "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
         "cliLabel": "Codex CLI"
-      }
+      },
+      "cursor": {
+        "name": "Cursor",
+        "appLabel": "Cursor",
+        "appSteps": "Open Settings → MCP → Add new global MCP server, and add jawafdehi as an HTTP server pointing at the URL above."
+      },
+      "vscode": {
+        "name": "VS Code",
+        "appLabel": "GitHub Copilot in VS Code",
+        "appSteps": "Run MCP: Add Server from the Command Palette, choose HTTP, and paste the server URL.",
+        "cliLabel": "VS Code CLI"
+      },
+      "otherClients": "Any MCP client that speaks streamable HTTP will work — point it at the URL above. There is nothing to install and no key to issue."
     },
     "tools": {
       "title": "What your AI can read",
-      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only."
+      "body": "Thirteen read-only tools across four archives — published accountability cases, the people and offices we track, Nepal's court records, and the source documents behind them.",
+      "groups": {
+        "cases": {
+          "name": "Accountability cases",
+          "description": "Search and read every published Jawafdehi case, with its allegations, the entities involved, and the evidence cited."
+        },
+        "entities": {
+          "name": "People and offices",
+          "description": "Politicians, organisations and government bodies — searchable by name, type or tag, with the full version history of every record."
+        },
+        "courts": {
+          "name": "Court records",
+          "description": "Query Nepal's judicial data directly: registrations, hearings, benches and outcomes from the court system."
+        },
+        "materials": {
+          "name": "Source documents",
+          "description": "Browse the press releases, court orders and public records a case is built on, so any answer can be traced back to paper."
+        },
+        "search": {
+          "name": "One search across everything",
+          "description": "A single query spanning cases, entities, documents and court data, for when you do not know which archive holds the answer."
+        },
+        "dates": {
+          "name": "Dates and identity",
+          "description": "Convert between Bikram Sambat and the Gregorian calendar, and check which account the server sees you as."
+        }
+      }
     },
     "copied": "Copied",
-    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "prompts": {
+      "title": "Ask it things like",
+      "body": "Once the server is connected these are ordinary questions in your usual chat window. Your AI tool picks the right tool, reads the archive, and can cite what it found.",
+      "items": {
+        "cases": "Which corruption cases has Jawafdehi published about hydropower projects?",
+        "person": "Summarise Jawafdehi's case on the Giribandhu Tea Estate land swap.",
+        "office": "Which provincial ministries does Jawafdehi track, and which cases mention them?",
+        "court": "How many corruption cases did the Special Court decide in 2080 BS?",
+        "documents": "Show me the CIAA press releases a case is built on.",
+        "date": "What is 15 Shrawan 2081 BS in the Gregorian calendar?"
+      }
+    },
+    "scope": {
+      "title": "What it will and will not do",
+      "items": {
+        "readOnly": {
+          "name": "Read-only, always",
+          "description": "Every tool in the public catalogue only reads. Nothing reached over this URL can create, edit or delete a case, an entity or a document."
+        },
+        "noAccount": {
+          "name": "No account, no key",
+          "description": "The server answers anonymous callers. You do not sign up, you do not issue an API key, and we do not ask who you are."
+        },
+        "sameData": {
+          "name": "Nothing the website hides",
+          "description": "Each public tool wraps an API route that already serves the same data to anyone. This is a different door onto the public archive, not a wider one."
+        },
+        "signIn": {
+          "name": "Signing in adds authoring",
+          "description": "Jawafdehi caseworkers and moderators who connect with their own login also get the editing tools, governed by exactly the same permissions as the admin panel."
+        }
+      }
+    },
+    "learnMore": {
+      "title": "Go deeper",
+      "body": "The server is part of the open-source Jawafdehi API. Read the REST documentation it wraps, browse the source, or learn how the protocol itself works.",
+      "apiDocs": "API documentation",
+      "source": "Source on GitHub",
+      "protocol": "About MCP"
+    }
   }
 }
