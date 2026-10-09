@@ -46,7 +46,29 @@ function convertMarkdownToHtml(markdown: string): string {
     escapeHtml(value)
       .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+      // Single-asterisk emphasis, written WITHOUT lookbehind.
+      //
+      // This previously guarded both asterisks with negative lookbehind as well
+      // as lookahead. Lookbehind is a parse-time syntax error on Safari < 16.4
+      // and iOS < 16.4, and a regex LITERAL is parsed when the module is parsed
+      // — so the whole chunk failed to load and the table never rendered, rather
+      // than just losing italics. That is Sentry's "SyntaxError: Invalid regular
+      // expression: invalid group specifier name".
+      //
+      // The test suite asserts this file contains no lookbehind at all, which is
+      // why the old pattern is described here rather than quoted: the guard
+      // cannot distinguish a regex from a comment, and that is the right
+      // trade — it stays dumb and therefore reliable.
+      //
+      // The leading lookbehind becomes a captured group: `(^|[^*])` is either the
+      // start of the string or one non-asterisk character, which is re-emitted as
+      // `$1`. The trailing lookbehind is unnecessary once the content class is
+      // `[^*]+?` — content that cannot contain an asterisk cannot end in one.
+      //
+      // Narrowing the content from `(.+?)` to `[^*]+?` is safe HERE and only
+      // here: the `***` and `**` rules above have already consumed every
+      // multi-asterisk run, so anything left is a lone `*`.
+      .replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<em>$2</em>')
       .replace(/\[(.+?)\]\((.+?)\)/g, (_, text: string, url: string) => {
         const href = getSafeLinkHref(url);
         return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;

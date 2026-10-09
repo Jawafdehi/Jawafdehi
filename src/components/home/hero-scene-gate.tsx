@@ -18,6 +18,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { heroSceneAffordable, readConnectionSignals } from "./hero-connection-gate";
+import { webglSupported } from "./hero-webgl-gate";
 import { lazyChunk } from "@/lib/chunk-reload";
 
 const HeroScene = lazy(lazyChunk(() => import("./hero-scene"), (m) => m.default));
@@ -34,14 +35,6 @@ type HeroSceneGateProps = {
   onReady?: () => void;
 };
 
-function webglSupported(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
 
 export function HeroSceneGate({
   mapSrc,
