@@ -5,8 +5,6 @@ import { outcomeBadgeClass } from "@/utils/case-outcome";
 import {
   appealBadgeClass,
   appealResult,
-  appealSummaryCaveat,
-  appealSummarySentence,
   appealWithForumLabel,
   decidedAppeals,
   personalAppeal,
@@ -111,28 +109,6 @@ describe("labels", () => {
     );
     expect(appealWithForumLabel({ result: "upheld", forum: "सर्वोच्च अदालत" }, "ne")).toBe(
       "सर्वोच्च अदालत: सदर",
-    );
-  });
-
-  it("states the case-level result against the first-instance court", () => {
-    const appeal = { result: "partly_overturned" as const, forum: "Supreme Court" };
-    expect(appealSummarySentence(appeal, "Special Court", "en")).toBe(
-      "On appeal, the Supreme Court partly overturned the Special Court's decision.",
-    );
-    expect(
-      appealSummarySentence({ result: "upheld", forum: "सर्वोच्च अदालत" }, "विशेष अदालत", "ne"),
-    ).toBe("पुनरावेदनमा सर्वोच्च अदालतले विशेष अदालतको फैसला सदर गरेको छ।");
-  });
-
-  it("never names whose verdict a partial reversal changed", () => {
-    const caveat = appealSummaryCaveat("partly_overturned", "Special Court", "en");
-    expect(caveat).toMatch(/cannot say whose verdict changed/);
-    expect(caveat).toMatch(/The verdicts below are the Special Court's\./);
-  });
-
-  it("drops the attribution when there is no single first instance", () => {
-    expect(appealSummaryCaveat("upheld", null, "en")).toBe(
-      "The appeal may not cover every defendant listed below.",
     );
   });
 });

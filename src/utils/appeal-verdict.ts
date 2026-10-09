@@ -4,9 +4,8 @@
  * `appeal_verdicts` maps each appeal stage's court-case IRI to that docket's
  * raw `verdict_type`. It is a verdict on the DOCKET, not on any one defendant:
  * the CIAA often appeals only some of the accused, and for a partial reversal
- * we hold no Supreme Court order saying whose verdict changed. So a per-person
- * appeal line is only ever drawn on a single-accused case; every other case
- * gets one case-level sentence.
+ * we hold no Supreme Court order saying whose verdict changed. So an appeal is
+ * only ever drawn on a single-accused case; every other case shows nothing.
  *
  * Labels are keyed by `language` directly, like `case-outcome`, so they render
  * under SSR/pre-render.
@@ -33,13 +32,6 @@ const RESULT_LABELS: Record<AppealResult, { en: string; ne: string }> = {
   upheld: { en: "Upheld", ne: "सदर" },
   overturned: { en: "Overturned", ne: "उल्टी" },
   partly_overturned: { en: "Partly overturned", ne: "केही उल्टी" },
-};
-
-// Past-tense verbs for the case-level sentence.
-const RESULT_VERBS: Record<AppealResult, { en: string; ne: string }> = {
-  upheld: { en: "upheld", ne: "सदर गरेको छ" },
-  overturned: { en: "overturned", ne: "उल्टी गरेको छ" },
-  partly_overturned: { en: "partly overturned", ne: "केही उल्टी गरेको छ" },
 };
 
 type AppealVerdicts = Record<string, string | null> | null | undefined;
@@ -121,46 +113,4 @@ export function appealWithForumLabel(appeal: DecidedAppeal, language: string): s
   const label = appealResultLabel(appeal.result, language);
   if (!appeal.forum) return label;
   return `${appeal.forum}: ${language === "ne" ? label : label.toLowerCase()}`;
-}
-
-/**
- * The case-level sentence shown above a multi-accused roster, e.g. "On appeal,
- * the Supreme Court upheld the Special Court's decision." `trialForum` is the
- * localized first-instance court, or null when there is not exactly one.
- */
-export function appealSummarySentence(
-  appeal: DecidedAppeal,
-  trialForum: string | null,
-  language: string,
-): string {
-  const ne = language === "ne";
-  const verb = RESULT_VERBS[appeal.result][ne ? "ne" : "en"];
-  if (ne) {
-    const court = appeal.forum || "पुनरावेदन अदालत";
-    const below = trialForum ? `${trialForum}को फैसला` : "तल्लो अदालतको फैसला";
-    return `पुनरावेदनमा ${court}ले ${below} ${verb}।`;
-  }
-  const court = appeal.forum ? `the ${appeal.forum}` : "the appeal court";
-  const below = trialForum ? `the ${trialForum}'s decision` : "the earlier decision";
-  return `On appeal, ${court} ${verb} ${below}.`;
-}
-
-/** The caveat under the sentence: the docket verdict is not a per-person verdict. */
-export function appealSummaryCaveat(
-  result: AppealResult,
-  trialForum: string | null,
-  language: string,
-): string {
-  const ne = language === "ne";
-  const scope =
-    result === "partly_overturned"
-      ? ne
-        ? "कुन प्रतिवादीको हकमा फैसला बदलियो भनी देखाउने सर्वोच्च अदालतको पूर्ण फैसला हामीसँग छैन।"
-        : "We do not hold the Supreme Court's full judgment, so we cannot say whose verdict changed."
-      : ne
-        ? "यो पुनरावेदनले तल सूचीकृत सबै प्रतिवादीलाई नसमेटेको हुन सक्छ।"
-        : "The appeal may not cover every defendant listed below.";
-  if (!trialForum) return scope;
-  const below = ne ? `तलका फैसला ${trialForum}का हुन्।` : `The verdicts below are the ${trialForum}'s.`;
-  return `${scope} ${below}`;
 }

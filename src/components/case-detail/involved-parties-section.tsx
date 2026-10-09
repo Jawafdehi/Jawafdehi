@@ -6,11 +6,7 @@ import type { JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
-import {
-  appealSummaryCaveat,
-  appealSummarySentence,
-  type DecidedAppeal,
-} from "@/utils/appeal-verdict";
+import type { DecidedAppeal } from "@/utils/appeal-verdict";
 
 // Deferred for the same reason CourtCasesSection is: the case-detail route is
 // eager, so a static import would put the flip-card grid in the initial payload
@@ -75,9 +71,6 @@ interface InvolvedPartiesSectionProps {
   forum?: string | null;
   /** The decided appeal for a single-accused case, drawn on that card. */
   personalAppeal?: DecidedAppeal | null;
-  /** Decided appeals on a case whose roster cannot carry them per person;
-   * stated once, above the accused. */
-  caseAppeals?: DecidedAppeal[];
 }
 
 export function InvolvedPartiesSection({
@@ -89,7 +82,6 @@ export function InvolvedPartiesSection({
   translateRelation,
   forum,
   personalAppeal,
-  caseAppeals = [],
 }: Readonly<InvolvedPartiesSectionProps>) {
   return (
     <section id="parties-involved" className={cn("mb-12 scroll-mt-28 max-w-4xl", className)}>
@@ -125,28 +117,6 @@ export function InvolvedPartiesSection({
                 </h3>
 
               </div>
-              {type === "accused" && caseAppeals.length > 0 && (
-                <div className="space-y-1.5" data-testid="case-appeal-summary">
-                  {caseAppeals.map((appeal, index) => (
-                    <p key={index} className="font-paragraph text-primary/85">
-                      {appealSummarySentence(appeal, forum ?? null, language)}
-                    </p>
-                  ))}
-                  {entities.length > 1 && (
-                    <p className="text-sm text-muted-foreground">
-                      {appealSummaryCaveat(
-                        caseAppeals.some((a) => a.result === "partly_overturned")
-                          ? "partly_overturned"
-                          : caseAppeals[0].result,
-                        // A remand comes from the appeal court's order, so the
-                        // roster is not all the first instance's verdicts.
-                        entities.some((e) => e.outcome === "remanded") ? null : forum ?? null,
-                        language,
-                      )}
-                    </p>
-                  )}
-                </div>
-              )}
               <CaseEntityCards
                 className="print:hidden"
                 entities={entities}
