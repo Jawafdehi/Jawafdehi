@@ -19,9 +19,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { humanizeEntityType } from "@/utils/entity-helpers";
 import {
   getMaterial,
+  getMaterialExtraction,
   type Material,
   type MaterialBilingual,
 } from "@/services/datalake-api";
+import { ExtractionPanel } from "@/components/materials/ExtractionPanel";
 import { API_BASE_URL } from "@/services/http";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import {
@@ -165,6 +167,18 @@ export default function MaterialProfile() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Extracted tables/charts. Most materials have none — the endpoint 404s and
+  // the client resolves that to null — so the tab is simply absent for them
+  // rather than opening onto an empty state. Fetched independently of the
+  // material so a slow or failing extraction never delays the page itself.
+  const { data: extraction } = useQuery({
+    queryKey: ["datalake-material-extraction", tail],
+    queryFn: () => getMaterialExtraction(tail),
+    enabled: tail.length > 0,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName =
     name.en ||
@@ -293,10 +307,18 @@ export default function MaterialProfile() {
                         Document text
                       </TabsTrigger>
                     ) : null}
+                    {extraction ? (
+                      <TabsTrigger
+                        value="extraction"
+                        className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                      >
+                        Tables &amp; charts
+                      </TabsTrigger>
+                    ) : null}
                   </TabsList>
 
                   <TabsContent value="summary" className="mt-0">
-                    <Card className="rounded-none border border-t-0 shadow-none">
+                    <Card className="rounded-none border border-t-0 bg-background shadow-none">
                       <div className="p-5 md:p-8">
                         {descText ? (
                           <p className="mb-6 max-w-3xl text-base leading-7 text-foreground">
@@ -366,10 +388,18 @@ export default function MaterialProfile() {
 
                   {fullTextStr ? (
                     <TabsContent value="text" className="mt-0">
-                      <Card className="rounded-none border border-t-0 shadow-none">
+                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
                         <p className="whitespace-pre-wrap break-words p-5 text-sm leading-7 text-foreground md:p-8">
                           {fullTextStr}
                         </p>
+                      </Card>
+                    </TabsContent>
+                  ) : null}
+
+                  {extraction ? (
+                    <TabsContent value="extraction" className="mt-0">
+                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
+                        <ExtractionPanel tail={tail} extraction={extraction} />
                       </Card>
                     </TabsContent>
                   ) : null}
