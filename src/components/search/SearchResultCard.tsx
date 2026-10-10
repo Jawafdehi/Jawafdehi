@@ -117,7 +117,12 @@ function MaterialResultCard({
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const source = sourceFromMaterialUrl(result.url);
-  const series = source ? seriesBySource(source) : undefined;
+  // The KIND is required alongside the source: one source token can carry
+  // several shelves, and 210 of the 228 `official_report` documents are not
+  // annual reports. Absent on materials from corpora that classify nothing.
+  const series = source
+    ? seriesBySource(source, result.extra?.dataset_bucket)
+    : undefined;
   // Every material names its series. A curated-registry source keeps its
   // editorial name ("CIAA press releases" — it also has a browsable
   // ?series= page); every other source resolves to its collection's document
