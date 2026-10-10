@@ -2746,7 +2746,8 @@
     },
     "endpoint": {
       "copyLabel": "Copy the server URL",
-      "caption": "A hosted, remote MCP server. Nothing to install, no API key to issue, no account to create — paste the URL and your AI tool can read the archive."
+      "caption": "A hosted, remote MCP server. Nothing to install, no API key to issue, no account to create — paste the URL and your AI tool can read the archive.",
+      "label": "mcp endpoint"
     },
     "clients": {
       "title": "Add it to your AI tool",
@@ -2774,7 +2775,11 @@
         "appSteps": "Run MCP: Add Server from the Command Palette, choose HTTP, and paste the server URL.",
         "cliLabel": "VS Code CLI"
       },
-      "otherClients": "Any MCP client that speaks streamable HTTP will work — point it at the URL above. There is nothing to install and no key to issue."
+      "other": {
+        "name": "Any other client",
+        "appLabel": "Any MCP client that speaks streamable HTTP",
+        "appSteps": "Add a remote MCP server and point it at the URL above. There is nothing to install, no key to issue, and no OAuth flow to complete for the public tools."
+      }
     },
     "tools": {
       "title": "What your AI can read",
@@ -2818,7 +2823,8 @@
         "court": "How many corruption cases did the Special Court decide in 2080 BS?",
         "documents": "Show me the CIAA press releases a case is built on.",
         "date": "What is 15 Shrawan 2081 BS in the Gregorian calendar?"
-      }
+      },
+      "terminalLabel": "ask anything"
     },
     "scope": {
       "title": "What it will and will not do",
@@ -2847,6 +2853,10 @@
       "apiDocs": "API documentation",
       "source": "Source on GitHub",
       "protocol": "About MCP"
+    },
+    "install": {
+      "title": "Install",
+      "body": "The server is remote, so there is nothing to download. Pick your tool and either paste the URL into its connector settings or run the one-line command."
     }
   }
 }

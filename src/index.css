@@ -258,6 +258,12 @@ All colors MUST be HSL.
        machine output, not page content. */
     --code-surface: 222 47% 11%;
     --code-surface-foreground: 215 20% 95%;
+    /* Accent for text ON the code surface. Must NOT be --accent: the surface
+       stays dark in both themes while --accent lightens only in dark mode, so
+       the light-theme crimson (#B5242C) lands at 2.8:1 here and fails. This
+       lightness clears 4.5:1 against the lighter of the two code surfaces, so
+       it is fixed rather than themed. */
+    --code-surface-accent: 357 72% 62%;
 
     /* "Paper" — rendered documents, PDF page chrome and the external embed
        card. A rendered page is a picture of a physical document and an embed
@@ -479,6 +485,8 @@ All colors MUST be HSL.
 
     --code-surface: 222 47% 7%;       /* sits below --card so <pre> still reads as recessed */
     --code-surface-foreground: 215 20% 92%;
+    /* Same value as the light theme on purpose — see the note there. */
+    --code-surface-accent: 357 72% 62%;
 
     --chart-1: 213 68% 45%;
     --chart-2: 357 67% 46%;

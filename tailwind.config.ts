@@ -83,6 +83,7 @@ export default {
         "code-surface": {
           DEFAULT: "hsl(var(--code-surface))",
           foreground: "hsl(var(--code-surface-foreground))",
+          accent: "hsl(var(--code-surface-accent))",
         },
         // Fixed document/embed surface — see src/index.css. Same in both themes.
         paper: {
