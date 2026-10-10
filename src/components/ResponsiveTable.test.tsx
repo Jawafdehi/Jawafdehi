@@ -1,6 +1,3 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { join, resolve } from "node:path";
-
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 
@@ -12,8 +9,8 @@ import { ResponsiveTable } from "@/components/ResponsiveTable";
  * The rule used to be written with lookbehind, which is a PARSE-time
  * SyntaxError on Safari < 16.4 — it took the whole chunk down rather than
  * merely losing italics. These cases pin the behaviour the rewrite has to
- * preserve, so a future "simplification" back to lookbehind is caught here
- * rather than by iOS users.
+ * preserve; the lookbehind guard itself lives in tests/no-lookbehind-in-src.ts
+ * so it survives this file being renamed or deleted.
  */
 
 function html(markdown: string): string {
@@ -68,32 +65,5 @@ describe("ResponsiveTable inline markdown", () => {
 
     expect(out).toContain("&lt;");
     expect(out).toContain("<em>");
-  });
-
-  it("contains no lookbehind anywhere in src/", () => {
-    // The actual regression guard, and it is repo-wide on purpose. A lookbehind
-    // in ANY module under src/ is a Safari < 16.4 parse error that takes that
-    // chunk down, so scoping this to one file would leave the next one
-    // unguarded. No behavioural test can catch it either: the runner's engine
-    // supports lookbehind perfectly well, so every case above stays green while
-    // real iOS users get a blank page.
-    const root = resolve(process.cwd(), "src");
-    const offenders: string[] = [];
-
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(full);
-        } else if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) {
-          if (/\(\?<[=!]/.test(readFileSync(full, "utf8"))) {
-            offenders.push(full.slice(root.length + 1));
-          }
-        }
-      }
-    };
-    walk(root);
-
-    expect(offenders).toEqual([]);
   });
 });

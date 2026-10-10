@@ -14,18 +14,22 @@ import { webglSupported } from "@/components/home/hero-webgl-gate";
 const VERTEX_SHADER = 0x8b31;
 const FRAGMENT_SHADER = 0x8b30;
 const HIGH_FLOAT = 0x8df2;
+const MEDIUM_FLOAT = 0x8df1;
 
 type Format = WebGLShaderPrecisionFormat | null | undefined;
 
 function makeContext(
-  precisionFor: (shader: number) => Format = () =>
+  precisionFor: (shader: number, precision: number) => Format = () =>
     ({ precision: 23, rangeMin: 127, rangeMax: 127 }) as WebGLShaderPrecisionFormat,
 ) {
   return {
     VERTEX_SHADER,
     FRAGMENT_SHADER,
     HIGH_FLOAT,
-    getShaderPrecisionFormat: vi.fn((shader: number) => precisionFor(shader)),
+    MEDIUM_FLOAT,
+    getShaderPrecisionFormat: vi.fn((shader: number, precision: number) =>
+      precisionFor(shader, precision),
+    ),
   };
 }
 
@@ -78,6 +82,40 @@ describe("webglSupported", () => {
     stubCanvas({ webgl2: makeContext(() => null) });
 
     expect(webglSupported()).toBe(false);
+  });
+
+  it("rejects a context that fails only on the MEDIUM_FLOAT query", () => {
+    // The realistic shape of this: a stage without highp answers
+    // `{precision: 0}` (not an error), three.js falls through to mediump and
+    // dereferences THAT result. A highp-only probe passed this device.
+    stubCanvas({
+      webgl2: makeContext((_shader, precision) =>
+        precision === MEDIUM_FLOAT
+          ? null
+          : ({ precision: 0 } as WebGLShaderPrecisionFormat),
+      ),
+    });
+
+    expect(webglSupported()).toBe(false);
+  });
+
+  it("probes both shader stages at both precisions", () => {
+    const ctx = makeContext();
+    stubCanvas({ webgl2: ctx });
+
+    webglSupported();
+
+    const pairs = ctx.getShaderPrecisionFormat.mock.calls.map(
+      ([s, p]) => `${s}:${p}`,
+    );
+    expect(new Set(pairs)).toEqual(
+      new Set([
+        `${VERTEX_SHADER}:${HIGH_FLOAT}`,
+        `${VERTEX_SHADER}:${MEDIUM_FLOAT}`,
+        `${FRAGMENT_SHADER}:${HIGH_FLOAT}`,
+        `${FRAGMENT_SHADER}:${MEDIUM_FLOAT}`,
+      ]),
+    );
   });
 
   it("rejects a context that fails only on the fragment shader", () => {

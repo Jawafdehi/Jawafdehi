@@ -5,8 +5,21 @@
 // hero-connection-gate.ts. Both gates import it — a second copy is how the
 // donate globe kept throwing after the hero was fixed.
 
-/** Precision queries three.js makes while constructing WebGLRenderer. */
-const PRECISION_PROBES = ["VERTEX_SHADER", "FRAGMENT_SHADER"] as const;
+/** Shader stages three.js asks about. */
+const SHADERS = ["VERTEX_SHADER", "FRAGMENT_SHADER"] as const;
+
+/**
+ * Precisions three.js asks about, and why BOTH are needed.
+ *
+ * `getMaxPrecision` (three.module.js:2368-2382) tries highp first and falls
+ * through to mediump when either highp query reports `precision: 0` — which is
+ * the normal answer on a stage that does not support highp, not a failure. It
+ * then dereferences `.precision` on the mediump results unguarded.
+ *
+ * So probing highp alone is not enough: a stack that answers `{precision: 0}`
+ * for highp and `null` for mediump passes a highp-only gate and still throws.
+ */
+const PRECISIONS = ["HIGH_FLOAT", "MEDIUM_FLOAT"] as const;
 
 export function webglSupported(): boolean {
   try {
@@ -28,10 +41,13 @@ export function webglSupported(): boolean {
     // "TypeError: null is not an object (evaluating
     // 'getShaderPrecisionFormat(...).precision')".
     //
-    // Both shader types are probed because three.js queries both; `!= null`
-    // rather than `!== null` so an `undefined` return is rejected too.
-    return PRECISION_PROBES.every(
-      (shader) => gl.getShaderPrecisionFormat(gl[shader], gl.HIGH_FLOAT) != null,
+    // All four combinations three.js can reach, not just the first two.
+    // `!= null` rather than `!== null` so an `undefined` return is rejected too.
+    return SHADERS.every((shader) =>
+      PRECISIONS.every(
+        (precision) =>
+          gl.getShaderPrecisionFormat(gl[shader], gl[precision]) != null,
+      ),
     );
   } catch {
     return false;
