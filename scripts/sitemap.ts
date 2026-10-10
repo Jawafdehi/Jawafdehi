@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { writeFile, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -176,11 +177,32 @@ async function main() {
   // `entities/search_visibility.py` in the API). `cases` here is the published
   // set, so deriving from its binds gives that rule for free; the ~186k
   // registry records no case names stay out, which is the point.
-  const entityPaths = [...new Set(
-    cases
-      .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
-      .filter((path): path is string => path != null)
-  )];
+  //
+  // Then filtered to the pages pre-render ACTUALLY WROTE. Deriving the list
+  // twice from the same rule was fine while pre-render rendered every cited
+  // entity; it stopped being fine with PRERENDER_ENTITY_LIMIT, which caps the
+  // rendered set (see pre-render.ts). Without this filter the sitemap would
+  // advertise ~7.6k URLs that exist only as the SPA shell — HTTP 200 with no
+  // <title> and no entity name in the HTML — which is worse for search than not
+  // listing them at all. Reading the directory is also the durable fix: the
+  // sitemap can no longer drift from the build, whatever the rule becomes.
+  const rendered = cases
+    .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
+    .filter((path): path is string => path != null);
+  const entityPaths: string[] = [];
+  const seenEntity = new Set<string>();
+  for (const path of rendered) {
+    if (seenEntity.has(path)) continue;
+    seenEntity.add(path);
+    if (existsSync(join(ROOT, 'dist', path, 'index.html'))) entityPaths.push(path);
+  }
+  const skipped = seenEntity.size - entityPaths.length;
+  if (skipped > 0) {
+    console.log(
+      `[sitemap] ${entityPaths.length} entity URLs listed; ${skipped} cited ` +
+        `entities were not pre-rendered (PRERENDER_ENTITY_LIMIT) and are omitted.`,
+    );
+  }
 
   // Pages 2..N of the case browse. `/cases/` itself comes from the static route
   // list above, so drop the first path here rather than emitting it twice.
