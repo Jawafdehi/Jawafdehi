@@ -6,7 +6,10 @@
 // contract as the home hero's scene gate:
 //
 //   1. mounted        — never during SSR/prerender (hydration stays identical)
-//   2. WebGL support  — probe a throwaway canvas; no context, no scene
+//   2. WebGL support  — probe a throwaway canvas for a WEBGL2 context (three.js
+//                      dropped WebGL1 at r163) and for a non-null
+//                      getShaderPrecisionFormat() at both shader stages and
+//                      both precisions; see hero-webgl-gate.ts
 //   3. reduced motion — prefers-reduced-motion keeps the static world map
 //   4. affordability  — Data Saver / 2g-3g / low-memory devices never download
 //                       the 3D chunk at all (hero-connection-gate.ts)
@@ -21,18 +24,10 @@ import {
   heroSceneAffordable,
   readConnectionSignals,
 } from "@/components/home/hero-connection-gate";
+import { webglSupported } from "@/components/home/hero-webgl-gate";
 import { lazyChunk } from "@/lib/chunk-reload";
 
 const GlobeScene = lazy(lazyChunk(() => import("./globe-scene"), (m) => m.default));
-
-function webglSupported(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
 
 export function GlobeGate() {
   const [eligible, setEligible] = useState(false);

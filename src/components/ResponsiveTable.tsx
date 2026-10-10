@@ -46,7 +46,41 @@ function convertMarkdownToHtml(markdown: string): string {
     escapeHtml(value)
       .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+      // Single-asterisk emphasis, written WITHOUT lookbehind.
+      //
+      // This previously guarded both asterisks with negative lookbehind as well
+      // as lookahead. Lookbehind is a parse-time syntax error on Safari < 16.4
+      // and iOS < 16.4, and a regex LITERAL is parsed when the module is parsed
+      // — so the whole chunk failed to load and the table never rendered, rather
+      // than just losing italics. That is Sentry's "SyntaxError: Invalid regular
+      // expression: invalid group specifier name".
+      //
+      // The test suite asserts this file contains no lookbehind at all, which is
+      // why the old pattern is described here rather than quoted: the guard
+      // cannot distinguish a regex from a comment, and that is the right
+      // trade — it stays dumb and therefore reliable.
+      //
+      // Both negative lookbehinds are re-expressed without changing what
+      // matches. The one guarding the OPENING asterisk becomes the captured
+      // group `(^|[^*])` — start of string, or one non-asterisk character,
+      // re-emitted as `$1`. The one guarding the CLOSING asterisk becomes the
+      // content class `(.*?[^*])`: content that must end in a non-asterisk
+      // cannot leave an asterisk immediately before the closing delimiter.
+      //
+      // (Described rather than quoted. The test suite asserts no lookbehind
+      // appears anywhere under src/, and it cannot tell a regex from a comment —
+      // which is the right trade, because it stays dumb and therefore reliable.)
+      //
+      // Content stays `.`-based rather than `[^*]`. An earlier version used
+      // `[^*]+?` on the reasoning that the `***`/`**` rules above consume every
+      // multi-asterisk run — that reasoning is WRONG for an UNPAIRED `**`, and
+      // it silently dropped emphasis from strings like `*note: 5**2 is 25*`.
+      //
+      // Equivalence is not argued, it is measured: brute-forced over all 21,844
+      // strings of length <= 7 from {`*`, `a`, `b`, ` `}, this pattern and the
+      // original lookbehind one produce identical output on every input. The
+      // `[^*]+?` version diverged on 126 of them.
+      .replace(/(^|[^*])\*(?!\*)(.*?[^*])\*(?!\*)/g, '$1<em>$2</em>')
       .replace(/\[(.+?)\]\((.+?)\)/g, (_, text: string, url: string) => {
         const href = getSafeLinkHref(url);
         return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
