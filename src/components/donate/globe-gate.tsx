@@ -21,18 +21,10 @@ import {
   heroSceneAffordable,
   readConnectionSignals,
 } from "@/components/home/hero-connection-gate";
+import { webglSupported } from "@/components/home/hero-webgl-gate";
 import { lazyChunk } from "@/lib/chunk-reload";
 
 const GlobeScene = lazy(lazyChunk(() => import("./globe-scene"), (m) => m.default));
-
-function webglSupported(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
 
 export function GlobeGate() {
   const [eligible, setEligible] = useState(false);

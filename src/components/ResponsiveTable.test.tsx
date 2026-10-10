@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
@@ -47,6 +47,12 @@ describe("ResponsiveTable inline markdown", () => {
     expect(html("*one* and *two*")).toContain("<em>one</em> and <em>two</em>");
   });
 
+  it("keeps emphasis around an unpaired double asterisk", () => {
+    // Regression: a content class of [^*]+? dropped this entirely, because the
+    // ** here is not a bold delimiter and so is never consumed by the rule above.
+    expect(html("*note: 5**2 is 25*")).toContain("<em>note: 5**2 is 25</em>");
+  });
+
   it("leaves a lone asterisk alone", () => {
     const out = html("2 * 3 = 6");
 
@@ -64,16 +70,30 @@ describe("ResponsiveTable inline markdown", () => {
     expect(out).toContain("<em>");
   });
 
-  it("contains no lookbehind in the shipped source", () => {
-    // The actual regression guard. A lookbehind anywhere in this module is a
-    // Safari < 16.4 parse error, and no behavioural test can catch it because
-    // the test runner's engine supports lookbehind perfectly well — every case
-    // above would stay green while real iOS users got a blank table.
-    const source = readFileSync(
-      resolve(process.cwd(), "src/components/ResponsiveTable.tsx"),
-      "utf8",
-    );
+  it("contains no lookbehind anywhere in src/", () => {
+    // The actual regression guard, and it is repo-wide on purpose. A lookbehind
+    // in ANY module under src/ is a Safari < 16.4 parse error that takes that
+    // chunk down, so scoping this to one file would leave the next one
+    // unguarded. No behavioural test can catch it either: the runner's engine
+    // supports lookbehind perfectly well, so every case above stays green while
+    // real iOS users get a blank page.
+    const root = resolve(process.cwd(), "src");
+    const offenders: string[] = [];
 
-    expect(source).not.toMatch(/\(\?<[=!]/);
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+        } else if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) {
+          if (/\(\?<[=!]/.test(readFileSync(full, "utf8"))) {
+            offenders.push(full.slice(root.length + 1));
+          }
+        }
+      }
+    };
+    walk(root);
+
+    expect(offenders).toEqual([]);
   });
 });
