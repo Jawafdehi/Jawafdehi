@@ -61,8 +61,6 @@ describe("caseCardPropsFromSearchResult", () => {
       id: "case-1",
       slug: "giribandhu-tea-estate",
       title: "Giribandhu Tea Estate Land Swap Scandal",
-      // `closed` in the index, `resolved` on the badge.
-      status: "ongoing",
       tags: ["Land Grab"],
       // Every subject name, so <CaseCard> can say "X and N others" itself
       // rather than being handed a pre-truncated string.
@@ -74,13 +72,6 @@ describe("caseCardPropsFromSearchResult", () => {
     });
   });
 
-  it("renames the closed lifecycle to the resolved badge", () => {
-    expect(caseCardPropsFromSearchResult(searchResult({ status: "closed" }), "en").status)
-      .toBe("resolved");
-    expect(caseCardPropsFromSearchResult(searchResult({ status: "others" }), "en").status)
-      .toBe("under-investigation");
-  });
-
   // Docs indexed before the card payload existed carry no `card` at all.
   it("falls back to the result envelope when the doc has no card payload", () => {
     const props = caseCardPropsFromSearchResult(searchResult(), "en");
@@ -88,16 +79,8 @@ describe("caseCardPropsFromSearchResult", () => {
     // Slug parsed out of the URL, and the highlight markup stripped off the title.
     expect(props.slug).toBe("giribandhu-tea-estate");
     expect(props.title).toBe("Indexed title");
-    expect(props.status).toBe("under-investigation");
     expect(props.entity).toBe("Unknown Entity");
     expect(props.location).toBe("Unknown Location");
-  });
-
-  it("reads the lifecycle off the envelope when only that carries it", () => {
-    const result = searchResult();
-    result.extra.case_status = "closed";
-
-    expect(caseCardPropsFromSearchResult(result, "en").status).toBe("resolved");
   });
 
   it("drops nameless entities rather than listing them as placeholders", () => {
@@ -151,47 +134,4 @@ describe("caseCardPropsFromCaseDetail", () => {
     );
   });
 
-  it("reads the lifecycle the API derived, instead of guessing from dates", () => {
-    // A case runs many dockets across many courts; there is no single end date
-    // to read a lifecycle off, so the server derives it and we render it.
-    expect(caseCardPropsFromCaseDetail(detail, searchResult(), "en").status).toBe(
-      "ongoing",
-    );
-
-    const concluded = caseCardPropsFromCaseDetail(
-      { ...detail, status: "concluded" } as CaseDetail,
-      searchResult(),
-      "en",
-    );
-    expect(concluded.status).toBe("resolved");
-
-    const investigating = caseCardPropsFromCaseDetail(
-      { ...detail, status: "under_investigation" } as CaseDetail,
-      searchResult(),
-      "en",
-    );
-    expect(investigating.status).toBe("under-investigation");
-  });
-
-  it("keeps a withdrawn or dormant case out of the resolved (green) badge", () => {
-    // Nobody decided these; calling them "resolved" would be a claim.
-    for (const status of ["withdrawn", "dormant"] as const) {
-      const props = caseCardPropsFromCaseDetail(
-        { ...detail, status } as CaseDetail,
-        searchResult(),
-        "en",
-      );
-      expect(props.status).toBe(status);
-    }
-  });
-
-  it("falls back to under-investigation when the payload predates `status`", () => {
-    const stale = { ...detail } as Record<string, unknown>;
-    delete stale.status;
-
-    expect(
-      caseCardPropsFromCaseDetail(stale as unknown as CaseDetail, searchResult(), "en")
-        .status,
-    ).toBe("under-investigation");
-  });
 });
