@@ -7,16 +7,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MapPin, User } from "lucide-react";
 
-import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
-import { getCaseStatusLabelKey } from "@/lib/case-badges";
 import {
   CASE_PLACEHOLDER_IMAGE,
   caseImageCandidates,
 } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import { summarizeNames } from "@/utils/name-summary";
-import type { CaseCardStatus } from "@/lib/case-card-props";
 
 type FeaturedCaseSpotlightProps = {
   slug?: string | null;
@@ -25,7 +22,6 @@ type FeaturedCaseSpotlightProps = {
   /** Structured subject names; summarized the way <CaseCard> summarizes them. */
   entityNames?: string[];
   location: string;
-  status: CaseCardStatus;
   tags?: string[];
   thumbnailUrl?: string;
   bannerUrl?: string;
@@ -37,7 +33,6 @@ export function FeaturedCaseSpotlight({
   entity,
   entityNames,
   location,
-  status,
   tags = [],
   thumbnailUrl,
   bannerUrl,
@@ -67,8 +62,6 @@ export function FeaturedCaseSpotlight({
   }, [candidateKey]);
   const imageSrc = imageCandidates[Math.min(imageIndex, imageCandidates.length - 1)];
   const isPlaceholder = imageSrc === CASE_PLACEHOLDER_IMAGE;
-
-  const statusLabel = t(getCaseStatusLabelKey(status));
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (!caseSlug) return;
@@ -115,7 +108,6 @@ export function FeaturedCaseSpotlight({
           <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-accent-foreground">
             {t("home.featuredCases.spotlightLabel", "Featured case")}
           </span>
-          <CaseStatusBadge status={status}>{statusLabel}</CaseStatusBadge>
         </div>
 
         {/* NOTE: Dynamic case content (title, entity names) from the Entity API
