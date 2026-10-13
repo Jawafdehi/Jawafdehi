@@ -2264,6 +2264,27 @@
         "between": "{{from}} – {{to}}",
         "from": "{{from}} देखि",
         "upTo": "{{to}} सम्म"
+      },
+      "entityTypeValue": {
+        "Person": "व्यक्ति",
+        "Organization": "संस्था",
+        "GovernmentOrganization": "सरकारी कार्यालय",
+        "Hospital": "अस्पताल",
+        "EducationalOrganization": "विद्यालय र विश्वविद्यालय",
+        "Corporation": "कम्पनी",
+        "NGO": "गैरसरकारी संस्था",
+        "PoliticalParty": "राजनीतिक दल",
+        "InternationalOrganization": "अन्तर्राष्ट्रिय निकाय",
+        "Courthouse": "अदालत",
+        "JudicialBody": "न्यायिक निकाय",
+        "AdministrativeArea": "प्रशासनिक क्षेत्र",
+        "Province": "प्रदेश",
+        "District": "जिल्ला",
+        "Municipality": "नगरपालिका",
+        "RuralMunicipality": "गाउँपालिका",
+        "MetropolitanCity": "महानगरपालिका",
+        "SubMetropolitanCity": "उपमहानगरपालिका",
+        "Place": "स्थान"
       }
     },
     "materialSeries": "श्रृंखला",
