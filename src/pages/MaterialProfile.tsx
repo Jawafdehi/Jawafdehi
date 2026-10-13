@@ -19,11 +19,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { humanizeEntityType } from "@/utils/entity-helpers";
 import {
   getMaterial,
-  getMaterialExtraction,
   type Material,
   type MaterialBilingual,
 } from "@/services/datalake-api";
-import { ExtractionPanel } from "@/components/materials/ExtractionPanel";
+import { DocumentContentPanel } from "@/components/materials/DocumentContentPanel";
 import { API_BASE_URL } from "@/services/http";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import {
@@ -167,17 +166,11 @@ export default function MaterialProfile() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Extracted tables/charts. Most materials have none — the endpoint 404s and
-  // the client resolves that to null — so the tab is simply absent for them
-  // rather than opening onto an empty state. Fetched independently of the
-  // material so a slow or failing extraction never delays the page itself.
-  const { data: extraction } = useQuery({
-    queryKey: ["datalake-material-extraction", tail],
-    queryFn: () => getMaterialExtraction(tail),
-    enabled: tail.length > 0,
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  });
+  // What is inside the document, if we have read it. This rides on the material
+  // payload itself, so deciding whether to offer the tab costs no request —
+  // and the key is ABSENT rather than zeroed for the ~346k materials we have
+  // not parsed, which is why presence is the test.
+  const contentSummary = data?.["jawafdehi:content"];
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName =
@@ -300,12 +293,12 @@ export default function MaterialProfile() {
                         Document text
                       </TabsTrigger>
                     ) : null}
-                    {extraction ? (
+                    {contentSummary ? (
                       <TabsTrigger
-                        value="extraction"
+                        value="content"
                         className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                       >
-                        Tables &amp; charts
+                        Contents
                       </TabsTrigger>
                     ) : null}
                   </TabsList>
@@ -389,10 +382,10 @@ export default function MaterialProfile() {
                     </TabsContent>
                   ) : null}
 
-                  {extraction ? (
-                    <TabsContent value="extraction" className="mt-0">
+                  {contentSummary ? (
+                    <TabsContent value="content" className="mt-0">
                       <Card className="rounded-none border border-t-0 bg-background shadow-none">
-                        <ExtractionPanel tail={tail} extraction={extraction} />
+                        <DocumentContentPanel tail={tail} summary={contentSummary} />
                       </Card>
                     </TabsContent>
                   ) : null}

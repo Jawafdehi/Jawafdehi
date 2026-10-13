@@ -6,8 +6,8 @@ import {
   pieIsSafe,
   plotFigure,
   tooManySeries,
-} from "@/lib/extraction-figure";
-import type { ExtractionPoint } from "@/services/datalake-api";
+} from "@/lib/content-figure";
+import type { ContentPoint } from "@/services/datalake-api";
 
 const pt = (
   i: number,
@@ -15,7 +15,7 @@ const pt = (
   series: string,
   value: number | null,
   estimated = false,
-): ExtractionPoint => ({
+): ContentPoint => ({
   point_index: i,
   label,
   series,

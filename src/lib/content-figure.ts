@@ -14,7 +14,7 @@
  * more distinct values is the category axis, and the other names the series.
  */
 
-import type { ExtractionPoint } from "@/services/datalake-api";
+import type { ContentPoint } from "@/services/datalake-api";
 
 export interface PlottedSeries {
   name: string;
@@ -39,14 +39,14 @@ const distinct = (values: string[]) => new Set(values.filter(Boolean)).size;
  * Ties go to `label`, which is the dataset's more common convention — and when
  * both have one distinct value the choice cannot matter.
  */
-export function categoryField(points: ExtractionPoint[]): "label" | "series" {
+export function categoryField(points: ContentPoint[]): "label" | "series" {
   return distinct(points.map((p) => p.series)) >
     distinct(points.map((p) => p.label))
     ? "series"
     : "label";
 }
 
-export function plotFigure(points: ExtractionPoint[]): PlottedFigure {
+export function plotFigure(points: ContentPoint[]): PlottedFigure {
   const field = categoryField(points);
   const other = field === "label" ? "series" : "label";
 

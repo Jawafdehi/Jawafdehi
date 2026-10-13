@@ -28,7 +28,7 @@ import {
   pieIsSafe,
   tooManySeries,
   type PlottedFigure,
-} from "@/lib/extraction-figure";
+} from "@/lib/content-figure";
 
 /**
  * One extracted chart, redrawn.
@@ -83,7 +83,7 @@ function toRows(figure: PlottedFigure): Row[] {
   });
 }
 
-export interface ExtractionFigureChartProps {
+export interface ContentFigureChartProps {
   figure: PlottedFigure;
   chartType: string;
   unit: string;
@@ -91,13 +91,13 @@ export interface ExtractionFigureChartProps {
   height?: number;
 }
 
-export default function ExtractionFigureChart({
+export default function ContentFigureChart({
   figure,
   chartType,
   unit,
   title,
   height = 260,
-}: ExtractionFigureChartProps) {
+}: ContentFigureChartProps) {
   // Radial labels need horizontal room the phone does not have: sixteen of
   // them run straight off both edges of a 390px screen. There they move into a
   // legend under the ring instead, which wraps.

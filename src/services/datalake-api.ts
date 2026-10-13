@@ -52,6 +52,12 @@ export interface Material {
   identifier?: string;
   dateCreated?: string;
   datePublished?: string;
+  /**
+   * What is inside this document, when we have parsed it. ABSENT — not zeroed —
+   * when we have not: only a few dozen of ~346k materials carry it, and zeros
+   * would claim we looked inside and found nothing.
+   */
+  'jawafdehi:content'?: MaterialContentSummary;
   [key: string]: unknown;
 }
 
@@ -112,15 +118,21 @@ export async function getMaterial(iriOrTail: string): Promise<Material> {
   }
 }
 
-// ─── extracted tables + charts ──────────────────────────────────────────────
+// ─── document content: pages, tables, figures ───────────────────────────────
 //
-// A material's *structure*, recovered from inside the source document and served
-// alongside the JSON-LD. Two endpoints, because one report's table markdown runs
-// to hundreds of KiB: the manifest carries figures in full and tables as stubs,
-// and a table's markdown is fetched when a reader opens it.
+// What is INSIDE a document, served by `/content?type=…` alongside the JSON-LD.
+//
+// Every shape comes in two sizes, and the split is the whole reason a 446-page
+// report is browsable: a LISTING carries stubs with no page text and no table
+// markdown, and one ITEM carries the heavy field. A single table reaches 170 KiB
+// and a document's pages are its entire transcript, so a UI that rendered a
+// listing in full would be unusable on exactly the documents worth reading.
+//
+// The counts come free on the material payload itself (`jawafdehi:content`), so
+// deciding whether a document has content at all costs no extra request.
 
 /** One datum of one chart. */
-export interface ExtractionPoint {
+export interface ContentPoint {
   point_index: number;
   label: string;
   series: string;
@@ -134,13 +146,14 @@ export interface ExtractionPoint {
   estimated: boolean;
 }
 
-export interface ExtractionFigure {
+export interface ContentFigure {
   /** Document order, for display. Recomputed on every ingest — never address by it. */
   ordinal: number;
   /** Stable handle (`p0018-f1`). Safe to put in a URL fragment or a React key. */
   key: string;
   uid: string;
   page_no: number;
+  index_on_page: number;
   title: string;
   chart_type: string;
   unit: string;
@@ -150,16 +163,17 @@ export interface ExtractionFigure {
   verify_note: string;
   /** Null means "not checked", which is a different claim from "checked and failed". */
   verified: boolean | null;
-  points: ExtractionPoint[];
+  points: ContentPoint[];
 }
 
-/** A table as the manifest lists it — everything but the markdown. */
-export interface ExtractionTableStub {
+/** A table as the listing returns it — everything but the markdown. */
+export interface ContentTableStub {
   ordinal: number;
-  /** Stable handle (`p0018-t1`); this is what `getMaterialExtractionTable` takes. */
+  /** Stable handle (`p0018-t1`); this is what `getMaterialTable` takes. */
   key: string;
   uid: string;
   page_no: number;
+  index_on_page: number;
   caption: string;
   header: string[];
   n_rows: number;
@@ -167,42 +181,78 @@ export interface ExtractionTableStub {
   fidelity: string;
 }
 
-export interface ExtractionTable extends ExtractionTableStub {
+export interface ContentTable extends ContentTableStub {
   markdown: string;
 }
 
-export interface MaterialExtraction {
-  material: string;
+/** A page as the listing returns it — everything but the text. */
+export interface ContentPageStub {
+  page_no: number;
+  uid: string;
+  /**
+   * What happened to this page. `anchored` was read from the PDF's own text
+   * layer; `ocr_vision` by a vision model (weaker); anything else means little
+   * or no text. An empty `text` is a statement about our OCR, not about the
+   * page, so the UI must never render the two alike.
+   */
+  coverage_state: string;
+  anchor_fidelity: string;
+  ocr_source: string;
+  landscape: boolean;
+  n_table_blocks: number;
+  chars: number;
+}
+
+export interface ContentPage extends ContentPageStub {
+  text: string;
+}
+
+/** The counts the material payload carries at `jawafdehi:content`. */
+export interface MaterialContentSummary {
+  pages: number;
+  pages_read: number;
+  tables: number;
+  figures: number;
+  points: number;
   provenance: {
+    doc_id: string;
     dataset: string;
     dataset_revision: string;
-    doc_id: string;
-    page_count: number;
     text_source: string;
     transcript_verdict: string;
     figures_verdict: string;
     ingested_at: string;
   };
-  counts: { tables: number; figures: number; points: number };
-  tables: ExtractionTableStub[];
-  figures: ExtractionFigure[];
+}
+
+interface ContentList<T> {
+  material: string;
+  type: string;
+  count: number;
+  items: T[];
+}
+
+interface ContentItem<T> {
+  material: string;
+  type: string;
+  item: T;
+}
+
+function contentEndpoint(iriOrTail: string): string {
+  return `/api/materials/${encodeTail(materialTail(iriOrTail))}/content`;
 }
 
 /**
- * A material's extracted tables and charts, or `null` when it has none.
+ * GET one `/content` shape, resolving 404 to `null`.
  *
- * Most materials are a single scraped page with nothing to extract, so the API
- * answers 404 for them. That is the normal case, not an error — it is resolved
- * to `null` here so a caller can simply not render the tab. Any other failure
- * still throws.
+ * A 404 here means "this material has no stored content at all", which is the
+ * common case — most materials are a single scraped page. That is not an error
+ * and must not surface as one: the caller simply renders nothing. Any other
+ * failure still throws.
  */
-export async function getMaterialExtraction(
-  iriOrTail: string,
-): Promise<MaterialExtraction | null> {
-  const tail = encodeTail(materialTail(iriOrTail));
-  const endpoint = `/api/materials/${tail}/extraction`;
+async function getContent<T>(endpoint: string, params: Record<string, string | number>) {
   try {
-    const response = await http.get<MaterialExtraction>(endpoint);
+    const response = await http.get<T>(endpoint, { params });
     return response.data;
   } catch (error) {
     if ((error as { response?: { status?: number } })?.response?.status === 404) {
@@ -213,22 +263,55 @@ export async function getMaterialExtraction(
 }
 
 /**
- * One extracted table, markdown included. `key` is the stub's `key` (`p0018-t1`),
- * NOT its `ordinal`: ordinals are recomputed on every ingest, so addressing by
- * one would eventually resolve to a different table.
+ * Every table in a document, WITHOUT its markdown.
+ *
+ * The split is the whole reason this is usable: one report's tables come to
+ * ~830 KiB of markdown and a single table reaches 170 KiB, so the listing is
+ * what a reader browses and `getMaterialTable` is what they open.
  */
-export async function getMaterialExtractionTable(
-  iriOrTail: string,
-  key: string,
-): Promise<ExtractionTable> {
-  const tail = encodeTail(materialTail(iriOrTail));
-  const endpoint = `/api/materials/${tail}/extraction/tables/${encodeURIComponent(key)}`;
-  try {
-    const response = await http.get<ExtractionTable>(endpoint);
-    return response.data;
-  } catch (error) {
-    handleDataLakeError(error, endpoint);
-  }
+export async function listMaterialTables(iriOrTail: string) {
+  const data = await getContent<ContentList<ContentTableStub>>(contentEndpoint(iriOrTail), {
+    type: "table",
+  });
+  return data?.items ?? null;
+}
+
+/**
+ * One table, markdown included. `key` is the listing's `key` (`p0018-t1`), NOT
+ * its `ordinal`: ordinals are recomputed on every ingest, so addressing by one
+ * would eventually resolve to a different table.
+ */
+export async function getMaterialTable(iriOrTail: string, key: string) {
+  const data = await getContent<ContentItem<ContentTable>>(contentEndpoint(iriOrTail), {
+    type: "table",
+    id: key,
+  });
+  return data?.item ?? null;
+}
+
+/** Every figure, each with its full series inline — the corpus total is ~6k points. */
+export async function listMaterialFigures(iriOrTail: string) {
+  const data = await getContent<ContentList<ContentFigure>>(contentEndpoint(iriOrTail), {
+    type: "figure",
+  });
+  return data?.items ?? null;
+}
+
+/** Every page, WITHOUT its text. This is the document's table of contents. */
+export async function listMaterialPages(iriOrTail: string) {
+  const data = await getContent<ContentList<ContentPageStub>>(contentEndpoint(iriOrTail), {
+    type: "page",
+  });
+  return data?.items ?? null;
+}
+
+/** One page's transcript, addressed by its PRINTED folio — checkable against the PDF. */
+export async function getMaterialPage(iriOrTail: string, pageNo: number) {
+  const data = await getContent<ContentItem<ContentPage>>(contentEndpoint(iriOrTail), {
+    type: "page",
+    num: pageNo,
+  });
+  return data?.item ?? null;
 }
 
 /**

@@ -24,24 +24,29 @@
  * hues, where a line has nowhere to put a direct label.
  *
  * **The category axis is detected, not assumed.** The dataset is not consistent
- * about which of `label`/`series` holds it — see `lib/extraction-figure.ts`.
+ * about which of `label`/`series` holds it — see `lib/content-figure.ts`.
  * Trusting the field names printed one measure name down 35 rows and demoted
  * the fiscal years to a muted secondary column.
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, FileSpreadsheet, FileText } from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
-import { chartKind, plotFigure, tooManySeries } from "@/lib/extraction-figure";
-import type { ExtractionFigureChartProps } from "./ExtractionFigureChart";
+import { chartKind, plotFigure, tooManySeries } from "@/lib/content-figure";
+import type { ContentFigureChartProps } from "./ContentFigureChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getMaterialExtractionTable,
-  type ExtractionFigure,
-  type ExtractionTableStub,
-  type MaterialExtraction,
+  getMaterialPage,
+  getMaterialTable,
+  listMaterialFigures,
+  listMaterialPages,
+  listMaterialTables,
+  type ContentFigure,
+  type ContentPageStub,
+  type ContentTableStub,
+  type MaterialContentSummary,
 } from "@/services/datalake-api";
 import { cn } from "@/lib/utils";
 
@@ -70,17 +75,17 @@ function formatValue(value: number | null): string {
 
 // ─── charts ─────────────────────────────────────────────────────────────────
 
-const FigureChart = lazyChart<ExtractionFigureChartProps>(
-  () => import("./ExtractionFigureChart").then((m) => m.default),
+const FigureChart = lazyChart<ContentFigureChartProps>(
+  () => import("./ContentFigureChart").then((m) => m.default),
   ({ height = 260 }) => <div className="w-full" style={{ height }} />,
 );
 
-function FigureCard({ figure }: { figure: ExtractionFigure }) {
+function FigureCard({ figure }: { figure: ContentFigure }) {
   // Which of label/series is the category axis is detected from the data, not
   // taken from the field names — the dataset uses both conventions. See
-  // lib/extraction-figure.ts.
+  // lib/content-figure.ts.
   const plotted = plotFigure(figure.points);
-  // Must agree with ExtractionFigureChart's own bail-outs, or the table stays
+  // Must agree with ContentFigureChart's own bail-outs, or the table stays
   // collapsed behind a chart that never renders.
   const drawable =
     chartKind(figure.chart_type) !== null && !tooManySeries(plotted);
@@ -189,20 +194,100 @@ function FigureCard({ figure }: { figure: ExtractionFigure }) {
 
 // ─── tables ─────────────────────────────────────────────────────────────────
 
+
+/** How a page was read, in the reader's words rather than the pipeline's. */
+function pageState(state: string): { label: string; muted: boolean } {
+  if (state === "anchored") return { label: "", muted: false };
+  if (state === "ocr_vision") return { label: "read by OCR", muted: false };
+  if (state === "blank") return { label: "blank page", muted: true };
+  // Everything else — gap, folded, ocr_unread, or a value the upstream adds
+  // later — means we hold the page and could not read it. Say that, rather
+  // than letting an empty page pass for an empty one.
+  return { label: "could not be read", muted: true };
+}
+
+function PageRow({ tail, stub }: { tail: string; stub: ContentPageStub }) {
+  const [open, setOpen] = useState(false);
+  // One page's text, fetched on open. A document's pages ARE its transcript, so
+  // the listing deliberately carries none of it.
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["material-content-page", tail, stub.page_no],
+    queryFn: () => getMaterialPage(tail, stub.page_no),
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const state = pageState(stub.coverage_state);
+
+  return (
+    <li className="border-b border-border/70 last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-baseline gap-3 py-3 text-left"
+      >
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 self-center text-muted-foreground transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+          aria-hidden="true"
+        />
+        <span className="font-medium text-foreground">Page {stub.page_no}</span>
+        {state.label ? (
+          <span className="text-sm text-muted-foreground">{state.label}</span>
+        ) : null}
+        {stub.n_table_blocks > 0 ? (
+          <span className="text-sm text-muted-foreground">
+            {stub.n_table_blocks} table{stub.n_table_blocks === 1 ? "" : "s"}
+          </span>
+        ) : null}
+      </button>
+
+      {open ? (
+        <div className="pb-4 pl-7">
+          {isLoading ? <Skeleton className="h-20 w-full" /> : null}
+          {isError ? (
+            <p className="text-base text-muted-foreground">
+              That page could not be loaded. Try again.
+            </p>
+          ) : null}
+          {data ? (
+            data.text.trim() ? (
+              <p className="max-w-3xl whitespace-pre-wrap text-base leading-8 text-foreground">
+                {data.text}
+              </p>
+            ) : (
+              // An empty transcript is ambiguous on its own, and the ambiguity
+              // matters: a reader must not read our failure as the document's
+              // silence.
+              <p className="text-base leading-7 text-muted-foreground">
+                {state.muted && stub.coverage_state === "blank"
+                  ? "This page is blank in the source document."
+                  : "We hold this page but could not read it. Open the original PDF to see it."}
+              </p>
+            )
+          ) : null}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
 function TableRow({
   tail,
   stub,
 }: {
   tail: string;
-  stub: ExtractionTableStub;
+  stub: ContentTableStub;
 }) {
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   // Markdown is fetched only when a reader opens the table: one report's tables
   // come to ~830 KiB, which is why the API keeps them off the manifest.
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["material-extraction-table", tail, stub.key],
-    queryFn: () => getMaterialExtractionTable(tail, stub.key),
+    queryKey: ["material-content-table", tail, stub.key],
+    queryFn: () => getMaterialTable(tail, stub.key),
     enabled: open,
     staleTime: 5 * 60 * 1000,
   });
@@ -348,71 +433,171 @@ function MarkdownTable({
 
 // ─── panel ──────────────────────────────────────────────────────────────────
 
-export function ExtractionPanel({
+/**
+ * One collapsible section of the contents — Pages, Tables or Charts.
+ *
+ * The listing is fetched on FIRST OPEN, never on mount. A document's three
+ * listings are three requests, and a reader who came for one table should not
+ * pay for 446 page stubs to get it. `enabled` is what makes that true; the
+ * count in the header comes from the material payload, so the section can label
+ * itself honestly before it has fetched anything.
+ */
+function ContentSection<T>({
+  id,
+  title,
+  count,
+  hint,
+  icon,
+  load,
+  render,
+}: {
+  id: string;
+  title: string;
+  count: number;
+  hint: string;
+  icon?: ReactNode;
+  load: () => Promise<T[] | null>;
+  render: (items: T[]) => ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["datalake-material-content", id],
+    queryFn: load,
+    enabled: open,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (count < 1) return null;
+
+  return (
+    <section aria-labelledby={`${id}-heading`} className="border-t border-border/70">
+      <h3 id={`${id}-heading`}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex w-full items-center gap-3 py-4 text-left"
+        >
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+          {icon}
+          <span className="text-xl font-semibold text-foreground">{title}</span>
+          <span className="text-base text-muted-foreground">
+            {count.toLocaleString()}
+          </span>
+        </button>
+      </h3>
+
+      {open ? (
+        <div className="pb-6">
+          <p className="mb-3 text-base leading-7 text-muted-foreground">{hint}</p>
+          {isLoading ? <Skeleton className="h-24 w-full" /> : null}
+          {isError ? (
+            <p className="text-base text-muted-foreground">
+              That list could not be loaded. Try again.
+            </p>
+          ) : null}
+          {data ? render(data) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/**
+ * The "Contents" tab of a material page: what was read out of the source
+ * document, served by `/api/materials/<tail>/content`.
+ *
+ * **Nothing heavy is fetched until it is asked for.** The tab renders from the
+ * counts already on the material payload; each section fetches its listing when
+ * opened; each row fetches its own page text or table markdown when expanded.
+ * That ordering is not an optimisation — a 446-page report's pages ARE its
+ * transcript and one table reaches 170 KiB, so a panel that loaded its contents
+ * eagerly would be unusable on precisely the documents worth reading.
+ */
+export function DocumentContentPanel({
   tail,
-  extraction,
+  summary,
 }: {
   tail: string;
-  extraction: MaterialExtraction;
+  summary: MaterialContentSummary;
 }) {
-  const { counts, provenance, tables, figures } = extraction;
+  const { pages, pages_read, tables, figures, points, provenance } = summary;
+  const unread = Math.max(pages - pages_read, 0);
 
   return (
     <div className="p-5 md:p-8">
       <p className="mb-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-        {counts.tables.toLocaleString()} table{counts.tables === 1 ? "" : "s"} and{" "}
-        {counts.figures.toLocaleString()} chart{counts.figures === 1 ? "" : "s"} were
-        read out of this document
-        {counts.points > 0
-          ? `, recovering ${counts.points.toLocaleString()} chart data point${
-              counts.points === 1 ? "" : "s"
+        {tables.toLocaleString()} table{tables === 1 ? "" : "s"} and{" "}
+        {figures.toLocaleString()} chart{figures === 1 ? "" : "s"} were read out of
+        this document
+        {points > 0
+          ? `, recovering ${points.toLocaleString()} chart data point${
+              points === 1 ? "" : "s"
             }`
           : ""}
         . Figures are reproduced as they were published; nothing here is corrected
         or recalculated.
       </p>
 
-      {figures.length > 0 ? (
-        <section aria-labelledby="extraction-charts-heading">
-          <h3
-            id="extraction-charts-heading"
-            className="text-xl font-semibold text-foreground"
-          >
-            Charts
-          </h3>
-          <ul className="mt-1">
-            {figures.map((figure) => (
-              <FigureCard key={figure.key} figure={figure} />
+      <ContentSection
+        id={`${tail}-pages`}
+        title="Pages"
+        count={pages}
+        icon={<FileText className="h-4 w-4 text-accent" aria-hidden="true" />}
+        hint={
+          unread > 0
+            ? `Select a page to read it. ${unread.toLocaleString()} of these pages could not be read, and open empty — that is a limit of our transcription, not a blank page.`
+            : "Select a page to read it."
+        }
+        load={() => listMaterialPages(tail)}
+        render={(items) => (
+          <ul>
+            {items.map((stub) => (
+              <PageRow key={stub.page_no} tail={tail} stub={stub} />
             ))}
           </ul>
-        </section>
-      ) : null}
+        )}
+      />
 
-      {tables.length > 0 ? (
-        <section
-          aria-labelledby="extraction-tables-heading"
-          className={figures.length > 0 ? "mt-10" : undefined}
-        >
-          <h3
-            id="extraction-tables-heading"
-            className="flex items-center gap-2 text-xl font-semibold text-foreground"
-          >
-            <FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />
-            Tables
-          </h3>
-          <p className="mt-1 text-base leading-7 text-muted-foreground">
-            Select a table to read it.
-          </p>
-          <ul className="mt-3">
-            {tables.map((stub) => (
+      <ContentSection
+        id={`${tail}-tables`}
+        title="Tables"
+        count={tables}
+        icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
+        hint="Select a table to read it."
+        load={() => listMaterialTables(tail)}
+        render={(items) => (
+          <ul>
+            {items.map((stub) => (
               <TableRow key={stub.key} tail={tail} stub={stub} />
             ))}
           </ul>
-        </section>
-      ) : null}
+        )}
+      />
+
+      <ContentSection
+        id={`${tail}-figures`}
+        title="Charts"
+        count={figures}
+        hint="Select a chart to see it drawn, with the numbers behind it."
+        load={() => listMaterialFigures(tail)}
+        render={(items) => (
+          <ul>
+            {items.map((figure) => (
+              <FigureCard key={figure.key} figure={figure} />
+            ))}
+          </ul>
+        )}
+      />
 
       <p className="mt-10 border-t border-border/70 pt-4 text-sm leading-6 text-muted-foreground">
-        Extracted from the published PDF by the{" "}
+        Read out of the published PDF by the{" "}
         <a
           href={`https://huggingface.co/datasets/${provenance.dataset}`}
           target="_blank"
@@ -426,7 +611,7 @@ export function ExtractionPanel({
           ? ` (revision ${provenance.dataset_revision.slice(0, 7)})`
           : ""}
         , document <code className="font-mono">{provenance.doc_id}</code>
-        {provenance.page_count ? ` · ${provenance.page_count} pages` : ""}
+        {pages ? ` · ${pages.toLocaleString()} pages` : ""}
         {provenance.text_source === "vision_ocr"
           ? " · the PDF carries no text layer, so the text was read by OCR"
           : ""}
@@ -439,4 +624,4 @@ export function ExtractionPanel({
   );
 }
 
-export default ExtractionPanel;
+export default DocumentContentPanel;
