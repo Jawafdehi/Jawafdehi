@@ -193,13 +193,30 @@ export function SearchFilters({
           // Court facets are intentionally absent from the all-records view:
           // applying one there hides unrelated entity/material/case results,
           // while the control itself is only useful once Court cases is selected.
-          if (
-            name === "court" ||
-            name === "court_type" ||
-            name === "district" ||
-            name === "province"
-          ) {
+          if (name === "court" || name === "court_type") {
             return selectedType === "courtcase";
+          }
+          // District/Province are no longer court facets. They now carry SUBJECT
+          // geography — which district a record is ABOUT — and court cases,
+          // Jawafdehi cases and entities all populate them (the API resolves a
+          // case's own `location` bind and promotes it onto the entities that
+          // case cites). So the control belongs on all three tabs, not just the
+          // one that used to own the field.
+          //
+          // Still withheld from "all records", and for the ORIGINAL reason
+          // rather than inertia: materials carry no geography at all, so a
+          // ticked district would silently drop 346k of the 398k documents
+          // through a control the reader cannot see from that tab. The same
+          // argument that keeps `material_type` off the other tabs keeps this
+          // one off the combined view. Enabling it there is a one-line change if
+          // "everything about Kathmandu" turns out to be worth losing materials
+          // for.
+          if (name === "district" || name === "province") {
+            return (
+              selectedType === "courtcase" ||
+              selectedType === "case" ||
+              selectedType === "entity"
+            );
           }
           // Document type is scoped the same way, and for the same reason: only
           // materials carry one, so the buckets are empty everywhere else and a
@@ -231,19 +248,29 @@ export function SearchFiltersSkeleton({
   // failure the बिगो block below is gated against.
   //
   // Court-case browsing adds four location groups to the two term groups.
-  // Entities fill only "Entity type" — the case_type and tags facets come back
-  // empty for them. Materials fill exactly one group, "Document type": 10 of the
-  // 12 tokens have documents, so reserve the collapsed height (8 rows) rather
-  // than the full vocabulary. Their case_type and tags buckets come back empty,
-  // like the entity tab's.
+  // Materials fill exactly one group, "Document type": 10 of the 12 tokens have
+  // documents, so reserve the collapsed height (8 rows) rather than the full
+  // vocabulary. Their case_type and tags buckets come back empty.
+  //
+  // Entities and cases each gained District and Province: the subject-geography
+  // facets are populated for both now (75 districts and 7 provinces on each),
+  // not just for court cases. They are reserved at 3 rows apiece, matching how
+  // the court-case branch already reserves the same two groups — the point is a
+  // stable first paint, not an exact bucket count.
+  //
+  // "all" keeps the two term groups alone: District/Province are deliberately
+  // NOT rendered on the combined view (see the live filter above), so reserving
+  // them there would collapse ~2 groups of height on every cold /search load.
   const groupRowCounts =
     selectedType === "courtcase"
       ? [3, 3, 3, 3, 3, 3]
       : selectedType === "entity"
-        ? [4]
-        : selectedType === "material"
-          ? [8]
-          : [4, 3];
+        ? [4, 3, 3]
+        : selectedType === "case"
+          ? [4, 3, 3, 3]
+          : selectedType === "material"
+            ? [8]
+            : [4, 3];
 
   return (
     <aside

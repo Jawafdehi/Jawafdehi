@@ -295,6 +295,74 @@ describe("SearchFilters — बिगो range control", () => {
   });
 });
 
+// Every facet populated, so the only thing deciding what renders is the tab. A
+// fixture that left a group empty would make the scoping tests below pass for
+// the wrong reason — an absent control would read as "correctly scoped out"
+// when it was really just unfilled.
+const EVERY_FACET: typeof emptyFacets = {
+  entity_type: [{ name: "Person", count: 14_206 }],
+  case_type: [{ name: "CORRUPTION", count: 2_627 }],
+  tags: [{ name: "procurement", count: 12 }],
+  status: [{ name: "under_investigation", count: 941 }],
+  court: [{ name: "kathmandudc", count: 5_502 }],
+  court_type: [{ name: "district", count: 20_000 }],
+  district: [{ name: "Kathmandu", count: 5_502 }],
+  province: [{ name: "Bagmati", count: 14_625 }],
+  material_type: [{ name: "press_release", count: 3_628 }],
+};
+
+describe("SearchFilters — subject-geography scoping", () => {
+  // District/Province used to be court facets, filtering the DECIDING COURT's
+  // own seat. They now carry subject geography — which district a record is
+  // about — and court cases, Jawafdehi cases and entities all populate them, so
+  // the control has to appear on all three tabs rather than the one that
+  // originally owned the field.
+  it.each(["courtcase", "case", "entity"] as const)(
+    "offers District and Province on the %s tab",
+    (type) => {
+      renderFilters(type, { facets: EVERY_FACET });
+      expect(screen.queryByText("District")).not.toBeNull();
+      expect(screen.queryByText("Province")).not.toBeNull();
+    },
+  );
+
+  it.each(["all", "material"] as const)(
+    "withholds District and Province from the %s view",
+    (type) => {
+      // Materials carry no geography at all, so a ticked district would
+      // silently drop 346k of the 398k documents — on the combined view through
+      // a control the reader cannot see from there. Same argument that keeps
+      // Document type off the other tabs.
+      renderFilters(type, { facets: EVERY_FACET });
+      expect(screen.queryByText("District")).toBeNull();
+      expect(screen.queryByText("Province")).toBeNull();
+    },
+  );
+
+  it("does not move Court or Court level off the court tab", () => {
+    // These did NOT travel with District/Province: they answer "which bench
+    // heard it", which only a court case has.
+    renderFilters("entity", { facets: EVERY_FACET });
+    expect(screen.queryByText("Court")).toBeNull();
+    expect(screen.queryByText("Court level")).toBeNull();
+  });
+
+  it("still offers Court level on the court tab", () => {
+    renderFilters("courtcase", { facets: EVERY_FACET });
+    expect(screen.queryByText("Court level")).not.toBeNull();
+  });
+
+  it("keeps Entity type on the entity tab", () => {
+    renderFilters("entity", { facets: EVERY_FACET });
+    expect(screen.queryByText("Entity type")).not.toBeNull();
+  });
+
+  it("withholds Entity type from the case tab", () => {
+    renderFilters("case", { facets: EVERY_FACET });
+    expect(screen.queryByText("Entity type")).toBeNull();
+  });
+});
+
 describe("SearchFiltersSkeleton", () => {
   it("reserves the बिगो block in the slot the real control occupies", () => {
     // Untested until now, and it renders on every cold load of /search. The
@@ -305,16 +373,20 @@ describe("SearchFiltersSkeleton", () => {
     const aside = container.querySelector("aside");
     expect(aside).toBeTruthy();
 
-    // Header + bigo block + case type and tags. The record-type group is gone
-    // from this column — it is a row of tabs above the results now.
+    // Header + bigo block + case type, tags, District and Province. The
+    // record-type group is gone from this column — it is a row of tabs above the
+    // results now — and the two geography groups arrived when district/province
+    // stopped being court-only facets and became subject geography the case tab
+    // populates too.
     const blocks = Array.from(aside!.children);
-    expect(blocks).toHaveLength(4);
+    expect(blocks).toHaveLength(6);
 
     // The बिगो placeholder is the one carrying the histogram-height bar.
     expect(blocks[1].querySelector(".h-14")).toBeTruthy();
     // ...and the facet groups after it do not.
-    expect(blocks[2].querySelector(".h-14")).toBeNull();
-    expect(blocks[3].querySelector(".h-14")).toBeNull();
+    for (const block of blocks.slice(2)) {
+      expect(block.querySelector(".h-14")).toBeNull();
+    }
   });
 
   it("omits the बिगो block for every record type that cannot show it", () => {
@@ -326,9 +398,12 @@ describe("SearchFiltersSkeleton", () => {
     // know whether the case index is in scope") was wrong: the type is read
     // synchronously off the URL, well before the first response.
     // Block counts are the header plus the groups that tab can actually fill:
-    // "all" shows case type + tags, entities fill only their own type facet,
-    // and materials get the date control plus Document type (see below).
-    const expectedBlocks = { all: 3, entity: 2, material: 3 } as const;
+    // "all" shows case type + tags, entities fill their own type facet PLUS
+    // District and Province (subject geography is populated for entities now,
+    // not just for court cases), and materials get the date control plus
+    // Document type (see below). "all" deliberately does not gain the geography
+    // pair: materials carry none, so the combined view withholds the control.
+    const expectedBlocks = { all: 3, entity: 4, material: 3 } as const;
     for (const type of ["all", "entity", "material"] as const) {
       const { container, unmount } = render(
         <SearchFiltersSkeleton selectedType={type} />,
