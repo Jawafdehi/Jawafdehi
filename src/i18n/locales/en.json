@@ -785,7 +785,7 @@
     "showLess": "Show less",
     "aiGenerated": {
       "label": "AI-generated",
-      "explanation": "This section was written by AI from the court judgment and CIAA press release. Our team has not checked it yet. Please tell us if you spot an error.",
+      "explanation": "This section was written by AI from court and CIAA documents. Our team has not checked it yet. Please tell us if you spot an error.",
       "explainLabel": "What does AI-generated mean?"
     }
   },
