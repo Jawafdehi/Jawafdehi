@@ -491,9 +491,13 @@ export default function MaterialProfile() {
                       className="mt-3 w-full justify-start gap-2"
                       onClick={() => {
                         setTab("content");
+                        // Guard the METHOD, not just the element: jsdom has no
+                        // scrollIntoView, so `?.` on the element alone still
+                        // throws there — and scrolling is a nicety, never a
+                        // reason to break the click that switches the tab.
                         document
                           .getElementById("material-content-tab")
-                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          ?.scrollIntoView?.({ behavior: "smooth", block: "start" });
                       }}
                     >
                       <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
