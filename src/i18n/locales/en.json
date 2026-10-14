@@ -2737,7 +2737,6 @@
       "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
     },
     "hero": {
-      "eyebrow": "Jawafdehi MCP",
       "description": "Connect Claude, ChatGPT or any MCP client to 2,627 published cases, the people and offices behind them, and Nepal's court data. Read-only, and no account needed.",
       "primaryCta": "Connect your AI tool",
       "secondaryCta": "See what it can read",
@@ -2783,7 +2782,6 @@
     },
     "tools": {
       "title": "What your AI can read",
-      "body": "Twelve read-only tools across four archives — published accountability cases, the people and offices we track, Nepal's court records, and the source documents behind them.",
       "groups": {
         "cases": {
           "name": "Accountability cases",
@@ -2823,34 +2821,6 @@
         "documents": "Show me the CIAA press releases a case is built on.",
         "date": "What is 15 Shrawan 2081 BS in the Gregorian calendar?"
       }
-    },
-    "scope": {
-      "title": "What it will and will not do",
-      "items": {
-        "readOnly": {
-          "name": "Read-only, always",
-          "description": "Every tool in the public catalogue only reads. Nothing reached over this URL can create, edit or delete a case, an entity or a document."
-        },
-        "noAccount": {
-          "name": "No account, no key",
-          "description": "The server answers anonymous callers. You do not sign up, you do not issue an API key, and we do not ask who you are."
-        },
-        "sameData": {
-          "name": "Nothing the website hides",
-          "description": "Each public tool wraps an API route that already serves the same data to anyone. This is a different door onto the public archive, not a wider one."
-        },
-        "signIn": {
-          "name": "Signing in adds authoring",
-          "description": "Jawafdehi caseworkers and moderators who connect with their own login also get the editing tools, governed by exactly the same permissions as the admin panel."
-        }
-      }
-    },
-    "learnMore": {
-      "title": "Go deeper",
-      "body": "The server is part of the open-source Jawafdehi API. Read the REST documentation it wraps, browse the source, or learn how the protocol itself works.",
-      "apiDocs": "API documentation",
-      "source": "Source on GitHub",
-      "protocol": "About MCP"
     },
     "install": {
       "title": "Install",

@@ -1,13 +1,9 @@
 import {
-  BookOpen,
   CalendarDays,
-  ExternalLink,
   FileText,
-  Github,
   Landmark,
   Scale,
   Search,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -23,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { API_BASE_URL } from "@/services/http";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 // The canonical MCP endpoint, pinned rather than derived from API_BASE_URL.
@@ -94,7 +89,6 @@ const TOOL_GROUPS = [
   { key: "dates", icon: CalendarDays, tools: ["convert_date", "get_current_user"] },
 ] as const;
 
-const SCOPE_KEYS = ["readOnly", "noAccount", "sameData", "signIn"] as const;
 
 const SECTION_HEADING = "text-3xl font-extrabold tracking-normal text-accent md:text-4xl";
 const CARD = "rounded-lg border border-border bg-background p-6";
@@ -125,10 +119,6 @@ const Mcp = () => {
           <div className="relative z-10 pb-14 pt-14 md:pb-20 md:pt-20">
             <div className="layout-container">
               <div className="mx-auto max-w-5xl">
-                <Eyebrow className="mb-4 animate-hero-rise motion-reduce:animate-none">
-                  {t("mcp.hero.eyebrow")}
-                </Eyebrow>
-
                 {/* Two display lines, each animating in on its own beat. The
                     locale picks its own split, so the accent always lands on
                     the archive rather than on a fixed word position. */}
@@ -267,12 +257,12 @@ const Mcp = () => {
         <section id="tools" className="bg-muted/10 py-12 md:py-14">
           <div className="layout-container">
             <div className="mx-auto max-w-5xl">
-              <h2 className={SECTION_HEADING}>{t("mcp.tools.title")}</h2>
-              <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
-                {t("mcp.tools.body")}
-              </p>
+              {/* The eyebrow IS this section's heading, so it renders as h2
+                  rather than the default p — the cards below still need
+                  something above them in the document outline. */}
+              <Eyebrow as="h2">{t("mcp.tools.title")}</Eyebrow>
 
-              <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {TOOL_GROUPS.map(({ key, icon: Icon, tools }) => (
                   <div key={key} className={CARD}>
                     <Icon className="h-5 w-5 text-accent" aria-hidden="true" />
@@ -301,72 +291,6 @@ const Mcp = () => {
           </div>
         </section>
 
-        <section
-          id="scope"
-          className="py-12 md:py-14"
-        >
-          <div className="layout-container">
-            <div className="mx-auto max-w-5xl">
-              <ShieldCheck className="h-6 w-6 text-accent" aria-hidden="true" />
-              <h2 className={`mt-3 ${SECTION_HEADING}`}>{t("mcp.scope.title")}</h2>
-
-              <dl className="mt-10 grid gap-6 md:grid-cols-2">
-                {SCOPE_KEYS.map((key) => (
-                  <div key={key} className={CARD}>
-                    <dt className="text-lg font-bold text-primary">
-                      {t(`mcp.scope.items.${key}.name`)}
-                    </dt>
-                    <dd className="mt-2 font-paragraph font-paragraph-foreground text-sm">
-                      {t(`mcp.scope.items.${key}.description`)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
-        </section>
-
-        <section id="learn-more" className="bg-muted/10 py-12 md:py-14">
-          <div className="layout-container">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className={SECTION_HEADING}>{t("mcp.learnMore.title")}</h2>
-              <p className="mt-3 font-paragraph font-paragraph-foreground">
-                {t("mcp.learnMore.body")}
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Button asChild variant="outline" className="font-semibold">
-                  <a href={`${API_BASE_URL}/api/swagger/`} target="_blank" rel="noopener noreferrer">
-                    <BookOpen className="h-4 w-4" aria-hidden="true" />
-                    {t("mcp.learnMore.apiDocs")}
-                  </a>
-                </Button>
-
-                <Button asChild variant="outline" className="font-semibold">
-                  <a
-                    href="https://github.com/Jawafdehi/JawafdehiAPI"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Github className="h-4 w-4" aria-hidden="true" />
-                    {t("mcp.learnMore.source")}
-                  </a>
-                </Button>
-
-                <Button asChild variant="outline" className="font-semibold">
-                  <a
-                    href="https://modelcontextprotocol.io"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                    {t("mcp.learnMore.protocol")}
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );
