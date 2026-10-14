@@ -15,7 +15,14 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Vesper Libre", "Georgia", "Noto Sans Devanagari", "serif"],
+        // Headline face. Deliberately a single var rather than a literal stack:
+        // the stack itself lives in --font-family-heading (src/styles/
+        // typography.css) and switches per locale — Vesper Libre under
+        // lang="ne", Inter under lang="en". Hardcoding Vesper here instead
+        // pinned ~12 ad-hoc `font-display` h1/h2 on /insights, /data-quality
+        // and /research to serif in BOTH locales, which is half of why
+        // headlines looked arbitrary from page to page.
+        display: ["var(--font-family-heading)"],
         // "Register" data face: figures, counts, dates and case references.
         // Noto Sans Devanagari carries Nepali digits/text that appear in a
         // mono context (IBM Plex Mono has no Devanagari glyphs of its own).

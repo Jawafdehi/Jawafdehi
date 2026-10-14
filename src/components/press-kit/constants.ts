@@ -54,9 +54,27 @@ export const PRESS_KIT_COLOURS = [
  * IBM Plex Mono is Latin-only — Devanagari set in it silently falls back to
  * Noto, which would misrepresent the face. Its sample is figures instead,
  * which is also the job it actually does.
+ *
+ * The two headline faces carry an explicit `family` rather than riding
+ * `font-display`. `font-display` resolves to --font-family-heading, which is
+ * Vesper under lang="ne" and Inter under lang="en" — so a single card using it
+ * would show whichever face the reader's locale happens to select while the
+ * caption underneath named the other one. A press kit documents both faces to
+ * both audiences, so each sample is pinned to the face it is labelled with.
  */
 export const PRESS_KIT_TYPEFACES = [
-  { key: "displayRole", name: "Vesper Libre", className: "font-display", sample: "जवाफदेही Aa" },
+  {
+    key: "displayRoleNepali",
+    name: "Vesper Libre",
+    family: '"Vesper Libre", Georgia, serif',
+    sample: "जवाफदेही",
+  },
+  {
+    key: "displayRoleLatin",
+    name: "Inter",
+    family: '"Inter", Helvetica, Arial, sans-serif',
+    sample: "Jawafdehi Aa",
+  },
   { key: "bodyRole", name: "Noto Sans Devanagari", className: "font-sans", sample: "जवाफदेही Aa" },
   { key: "monoRole", name: "IBM Plex Mono", className: "font-mono", sample: "082-CR-0154" },
 ] as const;
