@@ -3,9 +3,10 @@
  *
  * `appeal_verdicts` maps each appeal stage's court-case IRI to that docket's
  * raw `verdict_type`. It is a verdict on the DOCKET, not on any one defendant:
- * the CIAA often appeals only some of the accused, and for a partial reversal
- * we hold no Supreme Court order saying whose verdict changed. So an appeal is
- * only ever drawn on a single-accused case; every other case shows nothing.
+ * the CIAA often appeals only some of the accused. `appeal_parties` says who was
+ * on each docket, so on a multi-accused case an UPHELD appeal is drawn on the
+ * cards of the accused who were on it. A reversal is not: we hold no Supreme
+ * Court order saying what changed for whom.
  *
  * Labels are keyed by `language` directly, like `case-outcome`, so they render
  * under SSR/pre-render.
@@ -35,6 +36,7 @@ const RESULT_LABELS: Record<AppealResult, { en: string; ne: string }> = {
 };
 
 type AppealVerdicts = Record<string, string | null> | null | undefined;
+type AppealParties = Record<string, string[]> | null | undefined;
 
 /** The reader-facing result for a raw verdict, or null (pending or unclassifiable). */
 export function appealResult(verdictType: string | null | undefined): AppealResult | null {
@@ -69,31 +71,53 @@ export function decidedAppeals(
 ): DecidedAppeal[] {
   return caseStages(dates).flatMap((stage) => {
     const result = stageAppealResult(stage, appealVerdicts);
-    if (!result) return [];
-    const court = parseCourtCaseRef(stage.courtcase_iri)?.court;
-    return [{ result, forum: court ? formatCourtName(court, language) : "" }];
+    return result ? [toDecided(stage, result, language)] : [];
   });
 }
 
+function toDecided(stage: CaseStage, result: AppealResult, language: string): DecidedAppeal {
+  const court = parseCourtCaseRef(stage.courtcase_iri)?.court;
+  return { result, forum: court ? formatCourtName(court, language) : "" };
+}
+
 /**
- * The appeal result to draw on a defendant's own card, or null.
+ * The appeal result to draw on one accused's card, or null.
  *
- * Only when the case has exactly one accused and exactly one appeal stage, and
- * that appeal is decided: then the appeal can only have been about that
- * person. With several accused the docket verdict says nothing about any one
- * of them, and with several appeals there is no single line to draw.
+ * One accused, one appeal stage, decided: the appeal is theirs, whatever it
+ * did -- unless the docket's resolved parties name other people and not them.
+ *
+ * Several accused: only an appeal they are listed on in `appealParties`, only
+ * when there is exactly one such decided appeal, and only when it was upheld.
+ * Upheld means nothing changed for anyone on the docket; a reversal on a
+ * docket of several says nothing about what changed for this person.
  */
-export function personalAppeal(
+export function accusedAppeal(
+  entity: JawafEntity,
   entities: JawafEntity[],
   dates: CaseDates | null | undefined,
   appealVerdicts: AppealVerdicts,
+  appealParties: AppealParties,
   language: string,
 ): DecidedAppeal | null {
-  const accused = entities.filter((e) => e.type === "accused");
-  if (accused.length !== 1) return null;
+  if (entity.type !== "accused") return null;
   const appeals = caseStages(dates).filter((s) => s.stage === "appeal");
-  if (appeals.length !== 1) return null;
-  return decidedAppeals(dates, appealVerdicts, language)[0] ?? null;
+  const listed = (stage: CaseStage) =>
+    !!entity.nes_id && (appealParties?.[stage.courtcase_iri ?? ""] ?? []).includes(entity.nes_id);
+
+  if (entities.filter((e) => e.type === "accused").length === 1) {
+    if (appeals.length !== 1) return null;
+    const [stage] = appeals;
+    const result = stageAppealResult(stage, appealVerdicts);
+    if (!result) return null;
+    const parties = appealParties?.[stage.courtcase_iri ?? ""] ?? [];
+    if (parties.length > 0 && !listed(stage)) return null;
+    return toDecided(stage, result, language);
+  }
+
+  const mine = appeals.filter((stage) => listed(stage) && stageAppealResult(stage, appealVerdicts));
+  if (mine.length !== 1) return null;
+  const result = stageAppealResult(mine[0], appealVerdicts);
+  return result === "upheld" ? toDecided(mine[0], result, language) : null;
 }
 
 /**

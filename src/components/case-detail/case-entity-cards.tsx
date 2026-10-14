@@ -43,11 +43,10 @@ export interface CaseEntityCardsProps {
    */
   forum?: string | null;
   /**
-   * The decided appeal to draw on the accused's card. Pass it only for a
-   * single-accused case (see `personalAppeal`): the docket verdict says nothing
-   * about any one defendant when there are several.
+   * The decided appeal to draw on one party's card, or null (see
+   * `accusedAppeal`): the docket verdict belongs only to the accused on it.
    */
-  appeal?: DecidedAppeal | null;
+  appealFor?: (jawafEntity: JawafEntity) => DecidedAppeal | null;
   /**
    * Cards shown before the "view more" toggle. Required, not defaulted: the
    * Suspense fallback in involved-parties-section reserves exactly this many
@@ -368,7 +367,7 @@ export function CaseEntityCards({
   language,
   initialLimit,
   forum,
-  appeal,
+  appealFor,
 }: Readonly<CaseEntityCardsProps>) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -396,7 +395,7 @@ export function CaseEntityCards({
                 entity={entity}
                 language={language}
                 forum={forum}
-                appeal={appeal}
+                appeal={appealFor?.(jawafEntity) ?? null}
               />
             </Reveal>
           );

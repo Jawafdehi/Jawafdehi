@@ -286,10 +286,31 @@ describe("CaseEntityCards — the appeal line", () => {
           language="en"
           initialLimit={9}
           forum="Special Court"
-          appeal={appeal}
+          appealFor={() => appeal}
         />
       </MemoryRouter>,
     );
+
+  it("draws each accused's own appeal, and none on a card the appeal left out", () => {
+    const onAppeal = party({ nes_id: "https://jawafdehi.org/entity/person/on", display_name: "On", outcome: "convicted", notes: "" });
+    const leftOut = party({ nes_id: "https://jawafdehi.org/entity/person/out", display_name: "Out", outcome: "convicted", notes: "" });
+    render(
+      <MemoryRouter>
+        <CaseEntityCards
+          entities={[onAppeal, leftOut]}
+          resolvedEntities={{}}
+          language="en"
+          initialLimit={9}
+          forum="Special Court"
+          appealFor={(e) => (e.nes_id === onAppeal.nes_id ? { result: "upheld", forum: "Supreme Court" } : null)}
+        />
+      </MemoryRouter>,
+    );
+
+    const pills = screen.getAllByTestId("entity-card-appeal");
+    expect(pills).toHaveLength(1);
+    expect(pills[0].textContent).toBe("Supreme Court: upheld");
+  });
 
   it("draws the appeal under the Special Court verdict", () => {
     renderWithAppeal(party({ outcome: "convicted", notes: "" }), {

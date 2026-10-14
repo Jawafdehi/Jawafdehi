@@ -6,8 +6,8 @@ import {
   appealBadgeClass,
   appealResult,
   appealWithForumLabel,
+  accusedAppeal,
   decidedAppeals,
-  personalAppeal,
 } from "@/utils/appeal-verdict";
 
 const SPECIAL = "https://jawafdehi.org/courtcase/special/071-cr-0255";
@@ -71,34 +71,100 @@ describe("decidedAppeals", () => {
   });
 });
 
-describe("personalAppeal", () => {
-  const verdicts = { [SUPREME]: "REVERSED" };
+describe("accusedAppeal", () => {
+  const reversed = { [SUPREME]: "REVERSED" };
+  const upheld = { [SUPREME]: "AFFIRMED" };
+  const [a, b, c] = [accused("a"), accused("b"), accused("c")];
+  const onAppeal = (...people: JawafEntity[]) => ({ [SUPREME]: people.map((p) => p.nes_id!) });
 
-  it("belongs to the defendant when there is exactly one accused", () => {
-    expect(personalAppeal([accused("dinesh"), location], decided, verdicts, "en")).toEqual({
-      result: "overturned",
-      forum: "Supreme Court",
+  describe("one accused", () => {
+    it("is the defendant's, whatever the appeal did", () => {
+      expect(accusedAppeal(a, [a, location], decided, reversed, undefined, "en")).toEqual({
+        result: "overturned",
+        forum: "Supreme Court",
+      });
+    });
+
+    it("still is when the docket's parties confirm them", () => {
+      expect(accusedAppeal(a, [a], decided, reversed, onAppeal(a), "en")?.result).toBe("overturned");
+    });
+
+    it("is not when the docket's parties name someone else", () => {
+      expect(accusedAppeal(a, [a], decided, reversed, onAppeal(b), "en")).toBeNull();
+    });
+
+    it("is nobody's when the case has two appeals", () => {
+      const two: CaseDates = {
+        stages: [
+          ...decided.stages,
+          { stage: "appeal", courtcase_iri: SUPREME_2, start: "2023-01-01", end: "2024-01-01" },
+        ],
+      };
+      expect(accusedAppeal(a, [a], two, { ...reversed, [SUPREME_2]: "AFFIRMED" }, undefined, "en")).toBeNull();
+    });
+
+    it("is null while the appeal is pending", () => {
+      expect(accusedAppeal(a, [a], pending, { [SUPREME]: null }, undefined, "en")).toBeNull();
     });
   });
 
-  it("belongs to nobody on a multi-accused case", () => {
-    expect(personalAppeal([accused("a"), accused("b")], decided, verdicts, "en")).toBeNull();
+  describe("several accused", () => {
+    it("shows an upheld appeal to an accused who was on it", () => {
+      expect(accusedAppeal(a, [a, b], decided, upheld, onAppeal(a, b), "ne")).toEqual({
+        result: "upheld",
+        forum: "सर्वोच्च अदालत",
+      });
+    });
+
+    it("reads a denied appeal as upheld too", () => {
+      expect(
+        accusedAppeal(a, [a, b], decided, { [SUPREME]: "CLAIM_DENIED" }, onAppeal(a), "en")?.result,
+      ).toBe("upheld");
+    });
+
+    it("shows nothing to an accused the appeal left out", () => {
+      expect(accusedAppeal(c, [a, b, c], decided, upheld, onAppeal(a, b), "en")).toBeNull();
+    });
+
+    it("shows nothing for a reversal: the docket verdict cannot say what changed for whom", () => {
+      expect(accusedAppeal(a, [a, b], decided, reversed, onAppeal(a, b), "en")).toBeNull();
+      expect(
+        accusedAppeal(a, [a, b], decided, { [SUPREME]: "PARTIALLY_REVERSED" }, onAppeal(a, b), "en"),
+      ).toBeNull();
+    });
+
+    it("shows nothing before the API says who was on the appeal", () => {
+      expect(accusedAppeal(a, [a, b], decided, upheld, undefined, "en")).toBeNull();
+      expect(accusedAppeal(a, [a, b], decided, upheld, { [SUPREME]: [] }, "en")).toBeNull();
+    });
+
+    it("uses the one appeal the accused was on when the case has two", () => {
+      const two: CaseDates = {
+        stages: [
+          ...decided.stages,
+          { stage: "appeal", courtcase_iri: SUPREME_2, start: "2023-01-01", end: "2024-01-01" },
+        ],
+      };
+      const verdicts = { [SUPREME]: "REVERSED", [SUPREME_2]: "AFFIRMED" };
+      const parties = { [SUPREME]: [b.nes_id!], [SUPREME_2]: [a.nes_id!] };
+      expect(accusedAppeal(a, [a, b], two, verdicts, parties, "en")?.result).toBe("upheld");
+    });
+
+    it("shows nothing to an accused on two decided appeals", () => {
+      const two: CaseDates = {
+        stages: [
+          ...decided.stages,
+          { stage: "appeal", courtcase_iri: SUPREME_2, start: "2023-01-01", end: "2024-01-01" },
+        ],
+      };
+      const verdicts = { [SUPREME]: "AFFIRMED", [SUPREME_2]: "AFFIRMED" };
+      const parties = { [SUPREME]: [a.nes_id!], [SUPREME_2]: [a.nes_id!] };
+      expect(accusedAppeal(a, [a, b], two, verdicts, parties, "en")).toBeNull();
+    });
   });
 
-  it("belongs to nobody when the case has two appeals", () => {
-    const two: CaseDates = {
-      stages: [
-        ...decided.stages,
-        { stage: "appeal", courtcase_iri: SUPREME_2, start: "2023-01-01", end: "2024-01-01" },
-      ],
-    };
-    expect(
-      personalAppeal([accused("a")], two, { ...verdicts, [SUPREME_2]: "AFFIRMED" }, "en"),
-    ).toBeNull();
-  });
-
-  it("is null while the appeal is pending", () => {
-    expect(personalAppeal([accused("a")], pending, { [SUPREME]: null }, "en")).toBeNull();
+  it("is never drawn for anyone but an accused", () => {
+    expect(accusedAppeal(location, [a, location], decided, upheld, onAppeal(a), "en")).toBeNull();
   });
 });
 

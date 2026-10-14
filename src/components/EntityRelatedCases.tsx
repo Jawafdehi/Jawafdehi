@@ -17,7 +17,7 @@ import {
   shouldShowOutcome,
 } from "@/utils/case-outcome";
 import { caseVerdictForum } from "@/utils/case-stages";
-import { appealBadgeClass, appealWithForumLabel, personalAppeal } from "@/utils/appeal-verdict";
+import { accusedAppeal, appealBadgeClass, appealWithForumLabel } from "@/utils/appeal-verdict";
 import type { Case } from "@/types/jds";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
@@ -163,11 +163,20 @@ export function EntityRelatedCases({
           const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? `/case/${c.slug}` : undefined;
           const showOutcome = accused && shouldShowOutcome(outcome);
-          // Same rule as the case page: an appeal is this person's only on a
-          // single-accused case.
+          // Same rule as the case page; see `accusedAppeal`.
+          const bind = (c.entities ?? []).find(
+            (e) => e.nes_id === entityIri && e.type === "accused",
+          );
           const appeal =
-            showOutcome && role === "accused"
-              ? personalAppeal(c.entities ?? [], c.dates, c.appeal_verdicts, language)
+            showOutcome && bind
+              ? accusedAppeal(
+                  bind,
+                  c.entities ?? [],
+                  c.dates,
+                  c.appeal_verdicts,
+                  c.appeal_parties,
+                  language,
+                )
               : null;
 
           const row = (

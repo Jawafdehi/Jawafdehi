@@ -69,8 +69,8 @@ interface InvolvedPartiesSectionProps {
   /** Localized court the verdicts are attributed to; null when there is no
    * single first instance to name. */
   forum?: string | null;
-  /** The decided appeal for a single-accused case, drawn on that card. */
-  personalAppeal?: DecidedAppeal | null;
+  /** The decided appeal to draw on one party's card, or null. */
+  appealFor?: (jawafEntity: JawafEntity) => DecidedAppeal | null;
 }
 
 export function InvolvedPartiesSection({
@@ -81,7 +81,7 @@ export function InvolvedPartiesSection({
   title,
   translateRelation,
   forum,
-  personalAppeal,
+  appealFor,
 }: Readonly<InvolvedPartiesSectionProps>) {
   return (
     <section id="parties-involved" className={cn("mb-12 scroll-mt-28 max-w-4xl", className)}>
@@ -124,7 +124,7 @@ export function InvolvedPartiesSection({
                 language={language}
                 initialLimit={INITIAL_PARTY_LIMIT}
                 forum={forum}
-                appeal={type === "accused" ? personalAppeal : null}
+                appealFor={type === "accused" ? appealFor : undefined}
               />
               <p className="hidden print:block">
                 <strong>{translateRelation(type)}:</strong> {names.join(", ")}
