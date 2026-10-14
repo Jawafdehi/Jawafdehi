@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
 import { BlueprintBackdrop } from "@/components/mcp/blueprint";
+import { PromptMarquee } from "@/components/mcp/prompt-marquee";
 import {
   TerminalCommand,
   TerminalCopyButton,
@@ -84,7 +85,10 @@ const TOOL_GROUPS = [
       "get_nes_entity_versions",
     ],
   },
-  { key: "courts", icon: Landmark, tools: ["ngm_query_judicial", "browse_court_data"] },
+  // No ngm_query_judicial: it is listed in ANONYMOUS_TOOL_NAMES but that set is
+  // intersected with the registered tools, and it is not registered in the
+  // monolith — tools/list against the live endpoint returns 12 names, not 13.
+  { key: "courts", icon: Landmark, tools: ["browse_court_data"] },
   { key: "materials", icon: FileText, tools: ["browse_materials"] },
   { key: "search", icon: Search, tools: ["search_control_plane"] },
   { key: "dates", icon: CalendarDays, tools: ["convert_date", "get_current_user"] },
@@ -110,44 +114,40 @@ const Mcp = () => {
       />
 
       <main id="main-content" className="flex-1">
-        {/* Hero — Sentry's split: the pitch on the left, the thing you came for
-            (the URL, in a terminal) on the right. */}
+        {/* Hero — Linear's shape: one large statement, a short lede, one CTA
+            pair, then the product itself drifting past underneath. The headline
+            is the claim; the endpoint moved down into its own band so the first
+            thing read is what this does, not where it lives. */}
         <section
           id="mcp-hero"
           className="relative isolate -mt-[76px] overflow-hidden border-b border-border bg-background pt-[76px]"
         >
           <BlueprintBackdrop />
 
-          <div className="layout-container relative z-10 py-14 md:py-20">
-            <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2 lg:gap-14">
-              <div>
-                <Eyebrow className="mb-4">{t("mcp.hero.eyebrow")}</Eyebrow>
+          <div className="relative z-10 pb-14 pt-14 md:pb-20 md:pt-20">
+            <div className="layout-container">
+              <div className="mx-auto max-w-5xl">
+                <Eyebrow className="mb-4 animate-hero-rise motion-reduce:animate-none">
+                  {t("mcp.hero.eyebrow")}
+                </Eyebrow>
 
+                {/* Two display lines, each animating in on its own beat. The
+                    locale picks its own split, so the accent always lands on
+                    the archive rather than on a fixed word position. */}
                 <h1 className="font-hero-title">
-                  {t("mcp.hero.title")}{" "}
-                  <span className="text-accent">{t("mcp.hero.titleAccent")}</span>
+                  <span className="block animate-hero-rise [animation-delay:70ms] motion-reduce:animate-none">
+                    {t("mcp.hero.titleLine1")}
+                  </span>
+                  <span className="block animate-hero-rise text-accent [animation-delay:150ms] motion-reduce:animate-none">
+                    {t("mcp.hero.titleLine2")}
+                  </span>
                 </h1>
 
-                <p className="font-hero-lede mt-6">{t("mcp.hero.description")}</p>
-              </div>
-
-              <div>
-                <TerminalWindow
-                  label={t("mcp.endpoint.label")}
-                  action={<TerminalCopyButton value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />}
-                  bodyClassName="px-4 py-4"
-                >
-                  <code className="block overflow-x-auto whitespace-nowrap font-mono text-base font-bold text-code-surface-foreground sm:text-lg">
-                    {MCP_URL_ORIGIN}
-                    <span className="text-code-surface-accent">{MCP_URL_PATH}</span>
-                  </code>
-                </TerminalWindow>
-
-                <p className="mt-4 font-paragraph font-paragraph-foreground text-sm">
-                  {t("mcp.endpoint.caption")}
+                <p className="font-hero-lede mt-6 max-w-2xl animate-hero-rise [animation-delay:240ms] motion-reduce:animate-none">
+                  {t("mcp.hero.description")}
                 </p>
 
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-8 flex flex-wrap gap-3 animate-hero-rise [animation-delay:320ms] motion-reduce:animate-none">
                   <Button asChild className="font-semibold">
                     <a href="#install">{t("mcp.hero.primaryCta")}</a>
                   </Button>
@@ -156,6 +156,44 @@ const Mcp = () => {
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* Full-bleed, so the row runs off both edges of the viewport the
+                way Linear's does — hence it sits outside layout-container. */}
+            <div className="mt-14 animate-hero-rise [animation-delay:420ms] motion-reduce:animate-none md:mt-16">
+              <div className="layout-container">
+                <p className="mx-auto mb-4 max-w-5xl text-sm font-bold uppercase tracking-wide text-muted-foreground">
+                  {t("mcp.prompts.title")}
+                </p>
+              </div>
+
+              <PromptMarquee items={PROMPT_KEYS.map((key) => t(`mcp.prompts.items.${key}`))} />
+            </div>
+          </div>
+        </section>
+
+        {/* The endpoint, on its own. It is the one string anybody copies, so it
+            gets a band rather than a corner of the hero. */}
+        <section id="endpoint" className="relative isolate overflow-hidden border-b border-border py-12 md:py-14">
+          <BlueprintBackdrop />
+
+          <div className="layout-container relative z-10">
+            <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
+              <TerminalWindow
+                label={t("mcp.endpoint.label")}
+                action={<TerminalCopyButton value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />}
+                bodyClassName="px-4 py-4"
+                className="w-full text-left"
+              >
+                <code className="block overflow-x-auto whitespace-nowrap font-mono text-base font-bold text-code-surface-foreground sm:text-lg md:text-xl">
+                  {MCP_URL_ORIGIN}
+                  <span className="text-code-surface-accent">{MCP_URL_PATH}</span>
+                </code>
+              </TerminalWindow>
+
+              <p className="font-paragraph font-paragraph-foreground text-sm">
+                {t("mcp.endpoint.caption")}
+              </p>
             </div>
           </div>
         </section>
@@ -229,51 +267,10 @@ const Mcp = () => {
           </div>
         </section>
 
-        {/* Prompts, as one terminal session rather than a card grid — the
-            closest thing this page has to Sentry's animated demo panel. */}
-        <section
-          id="prompts"
-          className="relative isolate overflow-hidden border-y border-border bg-muted/10 py-14 md:py-20"
-        >
-          <BlueprintBackdrop />
-
-          <div className="layout-container relative z-10">
-            <div className="mx-auto max-w-5xl">
-              <h2 className={SECTION_HEADING}>{t("mcp.prompts.title")}</h2>
-              <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
-                {t("mcp.prompts.body")}
-              </p>
-
-              <TerminalWindow
-                label={t("mcp.prompts.terminalLabel")}
-                className="mt-8"
-                bodyClassName="px-4 py-4 sm:px-6 sm:py-5"
-              >
-                <ul className="space-y-3.5">
-                  {PROMPT_KEYS.map((key) => (
-                    <li key={key} className="flex gap-3">
-                      <span
-                        className="shrink-0 select-none font-mono text-sm text-code-surface-accent"
-                        aria-hidden="true"
-                      >
-                        &gt;
-                      </span>
-                      {/* Not font-mono: these are questions, not commands, and
-                          monospace Devanagari sets badly — the fallback face
-                          loses the conjuncts and spaces matras oddly. The caret
-                          above carries the terminal reading on its own. */}
-                      <span className="text-sm leading-relaxed text-code-surface-foreground">
-                        {t(`mcp.prompts.items.${key}`)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </TerminalWindow>
-            </div>
-          </div>
-        </section>
-
-        <section id="tools" className="relative isolate overflow-hidden py-14 md:py-20">
+        {/* The example prompts used to repeat here as a static terminal. The
+            hero marquee carries them now — printing the same six questions
+            twice on one page read as padding. */}
+        <section id="tools" className="relative isolate overflow-hidden border-t border-border py-14 md:py-20">
           <BlueprintBackdrop />
 
           <div className="layout-container relative z-10">
