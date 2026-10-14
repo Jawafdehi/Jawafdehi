@@ -112,10 +112,10 @@ export function FeaturedCaseSpotlight({
 
         {/* NOTE: Dynamic case content (title, entity names) from the Entity API
             remains in English until API-side i18n lands — same as CaseCard. */}
-        <h3
-          className="mt-5 text-2xl font-bold leading-snug sm:text-3xl lg:text-4xl"
-          style={{ fontFamily: '"Vesper Libre", Georgia, "Noto Sans Devanagari", serif' }}
-        >
+        {/* `font-display` rather than an inline family: it resolves to
+            --font-family-heading, so this headline follows the same per-locale
+            pin as every other one instead of being serif in both locales. */}
+        <h3 className="mt-5 font-display text-2xl font-bold leading-snug sm:text-3xl lg:text-4xl">
           {caseSlug ? (
             <Link
               to={`/case/${caseSlug}`}

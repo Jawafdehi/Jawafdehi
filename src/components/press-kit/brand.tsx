@@ -110,19 +110,34 @@ export function PressKitBrand() {
           {t("pressKit.type.title")}
         </h2>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {PRESS_KIT_TYPEFACES.map((face) => (
-            <div
-              key={face.name}
-              className="rounded-lg border border-border bg-background p-5"
-            >
-              <p className={`${face.className} text-2xl text-primary`}>{face.sample}</p>
-              <p className="mt-3 font-bold text-primary">{face.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {t(`pressKit.type.${face.key}`)}
-              </p>
-            </div>
-          ))}
+        {/* Four faces since the headline role split per locale, so the 3-col
+            grid would leave an orphan: 2 columns from sm, 4 from lg. */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PRESS_KIT_TYPEFACES.map((face) => {
+            // A face is documented either by an explicit family — pinned to
+            // the face the caption names, which is all but the mono card — or
+            // by a utility class, where the sample is whatever that role
+            // currently resolves to. See the note in ./constants.
+            const className = "className" in face ? face.className : "";
+            const family = "family" in face ? face.family : undefined;
+            return (
+              <div
+                key={face.name}
+                className="rounded-lg border border-border bg-background p-5"
+              >
+                <p
+                  className={`${className} text-2xl text-primary`}
+                  style={family ? { fontFamily: family } : undefined}
+                >
+                  {face.sample}
+                </p>
+                <p className="mt-3 font-bold text-primary">{face.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t(`pressKit.type.${face.key}`)}
+                </p>
+              </div>
+            );
+          })}
         </div>
 
         <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-muted-foreground">
