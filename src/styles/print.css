@@ -310,6 +310,28 @@
     margin: 10pt 0 4pt !important;
   }
 
+  /* The case section heading wraps an inline h2; size the wrapper to match it. */
+  .print-content .font-case-section-title {
+    font-size: 13pt !important;
+    line-height: 1.25 !important;
+  }
+
+  /* The on-screen AI label is a button, which print hides; this text stands in. */
+  .print-content .print-ai-label {
+    display: inline !important;
+    margin-left: 4pt !important;
+    font-size: 9pt !important;
+    font-weight: 400 !important;
+  }
+
+  .print-content .print-ai-label::before {
+    content: "(";
+  }
+
+  .print-content .print-ai-label::after {
+    content: ")";
+  }
+
   .print-content p,
   .print-content li,
   .print-content dt,

@@ -45,11 +45,33 @@ describe("CaseSectionHeading AI-generated label", () => {
     expect(badges()).toHaveLength(0);
   });
 
-  it("shows the label inside the heading when the section is AI-generated", () => {
+  it("shows the label beside the heading, outside its accessible name", () => {
     renderInRouter(<CaseSectionHeading aiGenerated>Overview</CaseSectionHeading>);
     const badge = screen.getByTestId("ai-generated-badge");
-    expect(badge.closest("h2")).not.toBeNull();
     expect(badge.textContent).toContain("caseDetail.aiGenerated.label");
+    expect(badge.closest("h2")).toBeNull();
+    expect(screen.getByTestId("ai-generated-print-label").closest("h2")).toBeNull();
+
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(heading.parentElement).toBe(badge.parentElement);
+    expect(heading).toHaveProperty("textContent", "Overview");
+    expect(screen.getByRole("heading", { level: 2, name: "Overview" })).toBe(heading);
+  });
+
+  it("renders the label as plain text for print, where buttons are hidden", () => {
+    renderInRouter(<CaseSectionHeading aiGenerated>Overview</CaseSectionHeading>);
+    const printLabel = screen.getByTestId("ai-generated-print-label");
+    expect(printLabel.tagName).toBe("SPAN");
+    expect(printLabel.textContent).toBe("caseDetail.aiGenerated.label");
+    // Hidden on screen, shown by the print variant and print.css.
+    expect(printLabel.className).toContain("hidden");
+    expect(printLabel.className).toContain("print:inline");
+    expect(printLabel.className).toContain("print-ai-label");
+  });
+
+  it("shows no print label when the section is not AI-generated", () => {
+    renderInRouter(<CaseSectionHeading>Overview</CaseSectionHeading>);
+    expect(screen.queryByTestId("ai-generated-print-label")).toBeNull();
   });
 
   it("opens the explanation and the Our process link on click or tap", () => {
@@ -83,6 +105,62 @@ describe("CaseSectionHeading AI-generated label", () => {
         vi.advanceTimersByTime(500);
       });
       expect(screen.getByText("caseDetail.aiGenerated.explanation")).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("moves focus into the explanation and back only when opened by click or keyboard", () => {
+    vi.useFakeTimers();
+    try {
+      renderInRouter(<CaseSectionHeading aiGenerated>Overview</CaseSectionHeading>);
+      const badge = screen.getByTestId("ai-generated-badge");
+
+      badge.focus();
+      fireEvent.click(badge);
+      expect(screen.getByRole("dialog").contains(document.activeElement)).toBe(true);
+
+      fireEvent.keyDown(document.activeElement as Element, { key: "Escape" });
+      act(() => {
+        vi.runAllTimers();
+      });
+      expect(screen.queryByText("caseDetail.aiGenerated.explanation")).toBeNull();
+      expect(document.activeElement).toBe(badge);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("leaves focus where it was when opened and closed by mouse hover", () => {
+    vi.useFakeTimers();
+    try {
+      renderInRouter(
+        <>
+          <input aria-label="search" />
+          <CaseSectionHeading aiGenerated>Overview</CaseSectionHeading>
+        </>,
+      );
+      const input = screen.getByLabelText("search");
+      const badge = screen.getByTestId("ai-generated-badge");
+      input.focus();
+
+      fireEvent.pointerEnter(badge, { pointerType: "mouse" });
+      act(() => {
+        vi.runAllTimers();
+      });
+      expect(screen.getByText("caseDetail.aiGenerated.explanation")).toBeTruthy();
+      expect(document.activeElement).toBe(input);
+
+      fireEvent.pointerLeave(badge, { pointerType: "mouse" });
+      act(() => {
+        vi.runAllTimers();
+      });
+      // Radix restores focus on a timer scheduled by the close itself.
+      act(() => {
+        vi.runAllTimers();
+      });
+      expect(screen.queryByText("caseDetail.aiGenerated.explanation")).toBeNull();
+      expect(document.activeElement).toBe(input);
     } finally {
       vi.useRealTimers();
     }

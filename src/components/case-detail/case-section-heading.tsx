@@ -17,6 +17,9 @@ type CaseSectionHeadingProps = {
  * Reveal is inert (SSR/pre-render, no JS, prefers-reduced-motion, content
  * already on screen) `data-reveal` stays "idle", the hidden-state selector
  * never matches, and the rule simply renders at full width.
+ *
+ * The `<h2>` is inline inside a wrapper so the AI label sits beside it in the
+ * same text flow without joining the heading's accessible name.
  */
 export function CaseSectionHeading({
   children,
@@ -24,13 +27,13 @@ export function CaseSectionHeading({
   aiGenerated = false,
 }: Readonly<CaseSectionHeadingProps>) {
   return (
-    <h2 className={cn("font-case-section-title mb-6", className)}>
-      {children}
+    <div className={cn("font-case-section-title mb-6", className)}>
+      <h2 className="inline">{children}</h2>
       {aiGenerated && <AiGeneratedBadge className="ml-3" />}
       <span
         aria-hidden="true"
         className="mt-2.5 block h-1 w-12 origin-left rounded-full bg-accent transition-transform delay-200 duration-700 ease-out group-data-[reveal=hidden]:scale-x-0"
       />
-    </h2>
+    </div>
   );
 }

@@ -19,7 +19,15 @@ export function AiGeneratedBadge({ className }: Readonly<{ className?: string }>
   // True while the popover is open only because a mouse is over it; a click
   // then pins it open instead of toggling it shut.
   const openedByHover = useRef(false);
+  // Set as a hover-opened popover closes, so focus is not sent to the trigger.
+  const skipCloseFocus = useRef(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const close = () => {
+    skipCloseFocus.current = openedByHover.current;
+    openedByHover.current = false;
+    setOpen(false);
+  };
 
   const cancelClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -38,59 +46,66 @@ export function AiGeneratedBadge({ className }: Readonly<{ className?: string }>
   const onPointerLeave = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse" || !openedByHover.current) return;
     cancelClose();
-    closeTimer.current = setTimeout(() => {
-      openedByHover.current = false;
-      setOpen(false);
-    }, HOVER_CLOSE_DELAY_MS);
+    closeTimer.current = setTimeout(close, HOVER_CLOSE_DELAY_MS);
   };
 
+  const label = t("caseDetail.aiGenerated.label");
+
   return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) openedByHover.current = false;
-        setOpen(next);
-      }}
-    >
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          data-testid="ai-generated-badge"
-          aria-label={`${t("caseDetail.aiGenerated.label")}: ${t("caseDetail.aiGenerated.explainLabel")}`}
-          className={cn(
-            badgeVariants({ variant: "accent" }),
-            "cursor-pointer gap-1 align-middle tracking-normal",
-            className,
-          )}
+    <>
+      <Popover open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            data-testid="ai-generated-badge"
+            aria-label={`${label}: ${t("caseDetail.aiGenerated.explainLabel")}`}
+            className={cn(
+              badgeVariants({ variant: "accent" }),
+              "cursor-pointer gap-1 align-middle tracking-normal",
+              className,
+            )}
+            onPointerEnter={onPointerEnter}
+            onPointerLeave={onPointerLeave}
+            onClick={(e) => {
+              // preventDefault stops Radix's own toggle, which would close it.
+              if (open && openedByHover.current) {
+                e.preventDefault();
+                cancelClose();
+                openedByHover.current = false;
+              }
+            }}
+          >
+            <Info aria-hidden="true" className="h-3 w-3" />
+            {label}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="space-y-2 text-sm leading-6"
           onPointerEnter={onPointerEnter}
           onPointerLeave={onPointerLeave}
-          onClick={(e) => {
-            // preventDefault stops Radix's own toggle, which would close it.
-            if (open && openedByHover.current) {
-              e.preventDefault();
-              cancelClose();
-              openedByHover.current = false;
-            }
+          // A hover is only a glance: it must not move focus in, or back out.
+          onOpenAutoFocus={(e) => {
+            if (openedByHover.current) e.preventDefault();
+          }}
+          onCloseAutoFocus={(e) => {
+            if (skipCloseFocus.current) e.preventDefault();
+            skipCloseFocus.current = false;
           }}
         >
-          <Info aria-hidden="true" className="h-3 w-3" />
-          {t("caseDetail.aiGenerated.label")}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="space-y-2 text-sm leading-6"
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
-      >
-        <p>{t("caseDetail.aiGenerated.explanation")}</p>
-        <Link
-          to="/our-process"
-          className="inline-block font-medium text-accent underline underline-offset-4 hover:text-accent/80"
-        >
-          {t("nav.ourProcess")}
-        </Link>
-      </PopoverContent>
-    </Popover>
+          <p>{t("caseDetail.aiGenerated.explanation")}</p>
+          <Link
+            to="/our-process"
+            className="inline-block font-medium text-accent underline underline-offset-4 hover:text-accent/80"
+          >
+            {t("nav.ourProcess")}
+          </Link>
+        </PopoverContent>
+      </Popover>
+      {/* print.css hides every button, so a printout carries the label as text. */}
+      <span data-testid="ai-generated-print-label" className="print-ai-label hidden print:inline">
+        {label}
+      </span>
+    </>
   );
 }
