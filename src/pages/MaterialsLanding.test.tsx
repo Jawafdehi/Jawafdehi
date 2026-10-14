@@ -8,11 +8,22 @@ import type { MaterialsMetrics } from "@/types/jds";
 const getStatistics = vi.hoisted(() => vi.fn());
 const searchArchive = vi.hoisted(() => vi.fn());
 
+// Mirrors the two call shapes this page uses: `t(key, "inline default")` and
+// `t(key, { defaultValue, ...vars })`. The second has to interpolate, or an
+// assertion on an interpolated sentence can only ever see the raw key.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     i18n: { language: "en" },
-    t: (key: string, fallback?: unknown) =>
-      typeof fallback === "string" ? fallback : key,
+    t: (key: string, fallback?: unknown) => {
+      if (typeof fallback === "string") return fallback;
+      if (!fallback || typeof fallback !== "object") return key;
+      const options = fallback as Record<string, unknown>;
+      const template =
+        typeof options.defaultValue === "string" ? options.defaultValue : key;
+      return template.replace(/\{\{(\w+)\}\}/g, (match, name: string) =>
+        name in options ? String(options[name]) : match,
+      );
+    },
   }),
 }));
 
@@ -24,7 +35,9 @@ vi.mock("@/services/search-api", () => ({
   searchArchive: (...args: unknown[]) => searchArchive(...args),
 }));
 vi.mock("@/services/datalake-api", () => ({
-  getMaterial: vi.fn(),
+  // Resolve null rather than undefined: the per-card description fetch is a
+  // real query, and react-query warns on an undefined result.
+  getMaterial: vi.fn().mockResolvedValue(null),
   materialTail: (id: string) => id,
 }));
 
@@ -117,5 +130,45 @@ describe("MaterialsLanding folder counts", () => {
     await waitFor(() => expect(countFor("Audit journal")).toBe("0"));
     expect(countFor("Auditor General annual reports")).toBe("0");
     expect(countFor("Other Auditor General publications")).toBe("228");
+  });
+});
+
+// A reviewer read the four "Recently added" cards as the archive's whole news
+// holding and asked why we only had those three articles. The carousel is the
+// newest slice of 579,249 documents; it has to say so.
+describe("MaterialsLanding recently-added framing", () => {
+  const recent = (id: string, date: string) => ({
+    id,
+    url: `/material/news/${id}`,
+    title: { en: id, ne: id },
+    snippet: { en: "", ne: "" },
+    extra: { date },
+  });
+
+  it("says what slice the carousel is, and links to the rest", async () => {
+    getStatistics.mockResolvedValue({ materials: metrics() });
+    searchArchive.mockResolvedValue({
+      results: [recent("a", "2026-10-02"), recent("b", "2026-09-30")],
+      count: 2,
+    });
+    renderPage();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/The 2 newest of 5,79,249 documents in the archive\./),
+      ).toBeTruthy(),
+    );
+
+    const browseAll = screen.getByRole("link", { name: "Browse all documents" });
+    expect(browseAll.getAttribute("href")).toBe("/materials/?sort=newest");
+  });
+
+  it("claims no total before the statistics arrive", () => {
+    getStatistics.mockReturnValue(new Promise(() => {}));
+    searchArchive.mockResolvedValue({ results: [recent("a", "2026-10-02")], count: 1 });
+    renderPage();
+
+    // Better to say nothing than to size the archive at zero.
+    expect(screen.queryByText(/newest of/)).toBeNull();
   });
 });
