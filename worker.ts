@@ -696,10 +696,11 @@ async function handleMaterialMetaFallback(
   // The JSON-LD goes in as well as the meta tags. A material IS a schema.org
   // document — it is stored as JSON-LD — so this is the one page type where the
   // structured data is the record rather than a summary of it.
+  //
+  // materialJsonLd escapes `<` itself, so this is safe to interpolate into a
+  // script element as-is; MaterialProfile.tsx relies on the same guarantee.
   const jsonLd = materialJsonLd(material, displayName, materialDescriptionText(material));
-  const head = `${metaTags}\n    <script type="application/ld+json">${
-    jsonLd.replace(/</g, '\\u003c')
-  }</script>`;
+  const head = `${metaTags}\n    <script type="application/ld+json">${jsonLd}</script>`;
 
   return metaHtmlResponse(injectHeadMeta(indexHtml, head));
 }

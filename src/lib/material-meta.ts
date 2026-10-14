@@ -158,7 +158,18 @@ export function materialCanonicalUrl(tail: string): string {
   return `${SITE_URL}/material/${encodeMaterialTail(tail)}`;
 }
 
-/** schema.org JSON-LD for crawlers. */
+/**
+ * schema.org JSON-LD for crawlers, safe to embed in a `<script>` element.
+ *
+ * `<` is escaped as `<` HERE rather than at each call site, because both
+ * callers embed the result in a script element and only one of them was doing it.
+ * A `<script>` element's content is raw text, so a `</script>` anywhere inside
+ * ends it — and `name` reaches this verbatim (unlike `description`, which callers
+ * pass through `materialDescriptionText`/`stripHtml` first).
+ *
+ * `<` is valid JSON and parses back to `<`, so the structured data a crawler
+ * reads is unchanged.
+ */
 export function materialJsonLd(
   data: MaterialMetaSource,
   displayName: string,
@@ -178,5 +189,5 @@ export function materialJsonLd(
       ? { datePublished: String(data.datePublished) }
       : {}),
     publisher: { "@type": "Organization", name: "Jawafdehi" },
-  });
+  }).replace(/</g, "\\u003c");
 }
