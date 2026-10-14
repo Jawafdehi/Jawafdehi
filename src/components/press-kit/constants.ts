@@ -61,12 +61,18 @@ export const PRESS_KIT_COLOURS = [
  * would show whichever face the reader's locale happens to select while the
  * caption underneath named the other one. A press kit documents both faces to
  * both audiences, so each sample is pinned to the face it is labelled with.
+ *
+ * The Vesper stack keeps Noto Sans Devanagari behind it — its sample is pure
+ * Devanagari and Georgia carries none of that script, so without the guard the
+ * card falls to tofu for the whole `font-display: swap` window, and stays there
+ * if the Vesper file ever fails to load. The Inter sample is Latin-only and
+ * needs no such guard.
  */
 export const PRESS_KIT_TYPEFACES = [
   {
     key: "displayRoleNepali",
     name: "Vesper Libre",
-    family: '"Vesper Libre", Georgia, serif',
+    family: '"Vesper Libre", "Noto Sans Devanagari", Georgia, serif',
     sample: "जवाफदेही",
   },
   {

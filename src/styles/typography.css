@@ -18,9 +18,17 @@
        This is the HEADLINE family only. Body, UI and data roles keep
        --font-family-app, so the locale's reading face is unchanged.
        Inter's @font-face carries a Latin-only unicode-range, so Devanagari in an
-       otherwise-English headline falls through to Noto Sans Devanagari rather
-       than to a system face — the stack order below is load-bearing. */
-    --font-family-heading: "Inter", "Noto Sans Devanagari", Helvetica, Arial,
+       otherwise-English headline falls through to Noto Sans Devanagari — which
+       is the only reason Noto is in this stack at all. It sits LAST, behind the
+       system sans, exactly as in --font-family-app above: per-character
+       fallback reaches it either way (neither Helvetica nor Arial carries
+       Devanagari), but ahead of them it would be the *Latin* fallback too.
+       That matters because Noto is always already loaded here — the document
+       ships lang="ne" and src/i18n/config.ts flips to en only on the next frame
+       — so an English headline would paint in Noto's Latin design for the whole
+       of Inter's `font-display: swap` window, and stay there permanently if the
+       Inter file ever failed to load. */
+    --font-family-heading: "Inter", Helvetica, Arial, "Noto Sans Devanagari",
       sans-serif;
     --font-eyebrow-leading: 1.25;
     --font-eyebrow-tracking: 0.1em;

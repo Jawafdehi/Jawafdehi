@@ -3,7 +3,11 @@ import { useTranslation } from "react-i18next";
 import { toNepaliNumerals } from "@/utils/bs-calendar";
 
 interface CapabilityRowProps {
-  /** 1-based position; renders as a large serif ०१/०२/०३ (01/02/03 in EN). */
+  /**
+   * 1-based position; renders large as ०१/०२/०३ (01/02/03 in EN). The face is
+   * `font-display`, i.e. the per-locale headline pin — Vesper Libre's serif in
+   * Nepali, Inter in English — not a serif in both.
+   */
   index: number;
   title: string;
   line: string;
