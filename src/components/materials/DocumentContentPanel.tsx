@@ -1,8 +1,20 @@
 /**
- * The "Tables & charts" tab of a material page: the structure recovered from
- * inside the source document, served by `/api/materials/<tail>/extraction`.
+ * The "Contents" tab of a material page: what was read out of the source
+ * document — its pages, its ruled tables and its charts — served by
+ * `/api/materials/<tail>/content`.
  *
- * Three things this component is deliberate about.
+ * Four things this component is deliberate about.
+ *
+ * **It is a table of contents, not a rendered document.** Each section fetches
+ * its listing when opened and each row fetches its own text when expanded. A
+ * 446-page report's pages ARE its transcript and one table reaches 170 KiB, so
+ * a panel that loaded its contents eagerly would be unusable on precisely the
+ * documents worth reading.
+ *
+ * **An empty page is never rendered as nothing.** `coverage_state` separates a
+ * page that is blank in the source from one we hold and could not read, and the
+ * Pages section says up front how many fall in the second group. Collapsing the
+ * two reports a failure of our OCR as an absence of content in the document.
  *
  * **Estimated values are marked, everywhere.** A value read off a chart image is
  * a weaker claim than one read from a printed figure, and the dataset tracks the
