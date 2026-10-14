@@ -3,12 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getCaseById } from "@/services/jds-api";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
 import { formatCaseDateRange } from "@/utils/date";
 import { useCaseImage } from "@/lib/use-case-image";
-import { cn } from "@/lib/utils";
 import type { JawafEntity } from "@/types/jds";
 
 const RELATION_PRIORITY: Record<string, number> = {
@@ -97,26 +95,6 @@ const EmbedCaseCard = () => {
     );
   }
 
-  const stateMap: Record<string, { label: string; className: string }> = {
-    DRAFT: {
-      label: t("embedCase.status.underInvestigation", "Under Investigation"),
-      className: "bg-alert-strong/10 text-alert-strong",
-    },
-    IN_REVIEW: {
-      label: t("embedCase.status.underInvestigation", "Under Investigation"),
-      className: "bg-alert-strong/10 text-alert-strong",
-    },
-    PUBLISHED: {
-      label: t("embedCase.status.ongoing", "Ongoing"),
-      className: "bg-navy-100 text-navy-800",
-    },
-    CLOSED: {
-      label: t("embedCase.status.resolved", "Resolved"),
-      className: "bg-success-strong/10 text-success-strong",
-    },
-  };
-
-  const status = stateMap[caseData.state] || stateMap.PUBLISHED;
   const primaryEntity = getPrimaryEntity(caseData.entities);
   const locationEntity = getLocationEntity(caseData.entities);
   // One card, one line: the DERIVED span of the whole proceedings, not the
@@ -155,30 +133,9 @@ const EmbedCaseCard = () => {
               onError={advanceImage}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-            <div className="absolute left-3 top-3">
-              <Badge
-                className={cn(
-                  "rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
-                  status.className
-                )}
-              >
-                {status.label}
-              </Badge>
-            </div>
           </div>
         ) : (
-          <div className="relative h-20 bg-gradient-to-r from-navy-800 to-navy-700">
-            <div className="absolute left-3 top-3">
-              <Badge
-                className={cn(
-                  "rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
-                  status.className
-                )}
-              >
-                {status.label}
-              </Badge>
-            </div>
-          </div>
+          <div className="relative h-20 bg-gradient-to-r from-navy-800 to-navy-700" />
         )}
 
         {/* Content */}
