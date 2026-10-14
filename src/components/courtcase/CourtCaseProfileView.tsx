@@ -14,7 +14,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { formatDateForLanguage, formatDate, convertToBS } from "@/utils/date";
 import { formatBSString } from "@/utils/bs-calendar";
-import { formatCourtName, courtStatusBadgeValue } from "@/utils/court-case-format";
+import {
+  courtStatusBadgeValue,
+  courtStatusDisplay,
+  formatCourtName,
+} from "@/utils/court-case-format";
 
 const INITIAL_VISIBLE_PARTIES = 3;
 
@@ -189,6 +193,7 @@ export function CourtCaseProfileView({
     courtCase?.court_identifier || courtIdentifier,
     language,
   );
+  const statusDisplay = courtStatusDisplay(courtCase?.case_status);
 
   // Court records are Nepal-first regardless of the interface language. Passing
   // "ne" makes the BS date primary and leaves AD as a parenthesised reference.
@@ -233,11 +238,14 @@ export function CourtCaseProfileView({
             {displayTitle}
           </h1>
 
-          {courtCase?.case_status ? (
-            <div className="shrink-0 pt-1">
-              <CaseStatusBadge status={courtStatusBadgeValue(courtCase.case_status)}>
-                {courtCase.case_status}
+          {statusDisplay ? (
+            <div className="flex shrink-0 flex-col items-start gap-1 pt-1 sm:items-end">
+              <CaseStatusBadge status={courtStatusBadgeValue(courtCase?.case_status)}>
+                {t(statusDisplay.labelKey, statusDisplay.labelFallback)}
               </CaseStatusBadge>
+              {statusDisplay.detail ? (
+                <span className="text-xs text-muted-foreground">{statusDisplay.detail}</span>
+              ) : null}
             </div>
           ) : null}
         </div>

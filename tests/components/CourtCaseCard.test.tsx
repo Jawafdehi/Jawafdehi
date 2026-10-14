@@ -147,7 +147,7 @@ describe("CourtCaseCard", () => {
           caseNumber="079-WO-0811"
           court="supreme"
           registrationDate="2022-07-24"
-          status="फैसला भएको"
+          status="फैसला / अन्तिम आदेश >> अभियोग दाबी नपुग्ने"
           title="नेपाली सेनामा अवकाश उमेरको विवाद"
           url="/courtcase/supreme/079-wo-0811"
         />
@@ -168,7 +168,10 @@ describe("CourtCaseCard", () => {
     expect(screen.getByText("Registered: 2022-07-24").className).not.toContain(
       "truncate",
     );
-    expect(screen.getByText("फैसला भएको").className).toContain("truncate");
+    // The pill carries the normalized state; the register's own outcome sits
+    // beside it rather than inside it.
+    expect(screen.getByText("Decided").className).toContain("truncate");
+    expect(screen.getByText("अभियोग दाबी नपुग्ने")).toBeTruthy();
     expect(container.querySelector(".bg-success-strong.text-white")).toBeTruthy();
     // The wash keys off the COURT TIER, not the status: this resolved Supreme
     // Court case keeps its green status pill but takes the supreme oxblood

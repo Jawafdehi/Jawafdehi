@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   courtStatusBadgeValue,
+  courtStatusDisplay,
   courtTypeValue,
   formatCourtName,
   formatCourtType,
@@ -103,5 +104,71 @@ describe("courtTypeValue", () => {
     expect(courtTypeValue("   ")).toBeNull();
     // The retired appellate courts have no `court_type` value.
     expect(courtTypeValue("appellate")).toBeNull();
+  });
+});
+
+/**
+ * Every shape below was read off the live corpus (`court_cases`, 2,290,879
+ * rows, 2026-10-14) rather than invented — the whole non-null vocabulary is
+ * चालु, चलिरहेको, अन्तिम आदेश, and फैसला in three forms.
+ */
+describe("courtStatusDisplay", () => {
+  const PENDING = { labelKey: "courtCaseDetail.status.pending", labelFallback: "Ongoing" };
+  const DECIDED = { labelKey: "courtCaseDetail.status.decided", labelFallback: "Decided" };
+
+  // The reviewer's actual complaint: two cards side by side, one reading चालु
+  // and one चलिरहेको, look like two different states. They are one state.
+  it("gives चालु and चलिरहेको the same label", () => {
+    expect(courtStatusDisplay("चालु")).toEqual({ ...PENDING, detail: null });
+    expect(courtStatusDisplay("चलिरहेको")).toEqual({ ...PENDING, detail: null });
+  });
+
+  it("keeps the outcome after the arrow, which is the finding itself", () => {
+    expect(courtStatusDisplay("फैसला / अन्तिम आदेश >> अभियोग दाबी नपुग्ने")).toEqual({
+      ...DECIDED,
+      detail: "अभियोग दाबी नपुग्ने",
+    });
+    // A stray double space after the separator is in the data too.
+    expect(courtStatusDisplay("फैसला / अन्तिम आदेश >>  अन्य")?.detail).toBeNull();
+  });
+
+  // 322 rows literally end ">> undefined". It must never reach a reader.
+  it("drops the scraper's placeholder outcomes", () => {
+    expect(courtStatusDisplay("फैसला / अन्तिम आदेश >> undefined")).toEqual({
+      ...DECIDED,
+      detail: null,
+    });
+  });
+
+  it("shows a decision date, but only when it is really a date", () => {
+    expect(courtStatusDisplay("फैसला (२०६७/०५/२८)")).toEqual({
+      ...DECIDED,
+      detail: "२०६७/०५/२८",
+    });
+    // All three are in the corpus: an all-zero date, a 42nd month, and a year
+    // with a hyphen punched into it. A pill must not print any of them.
+    expect(courtStatusDisplay("फैसला (००००/००/००)")?.detail).toBeNull();
+    expect(courtStatusDisplay("फैसला (०७१०/४२/६)")?.detail).toBeNull();
+    expect(courtStatusDisplay("फैसला (०७१-/०९/०६)")?.detail).toBeNull();
+  });
+
+  it("handles the bare decided forms", () => {
+    expect(courtStatusDisplay("फैसला")).toEqual({ ...DECIDED, detail: null });
+    expect(courtStatusDisplay("अन्तिम आदेश")).toEqual({ ...DECIDED, detail: null });
+  });
+
+  it("renders nothing at all for an absent status", () => {
+    expect(courtStatusDisplay(null)).toBeNull();
+    expect(courtStatusDisplay(undefined)).toBeNull();
+    expect(courtStatusDisplay("   ")).toBeNull();
+  });
+
+  // The vocabulary is closed today, but the scraper feeds it. An unseen value
+  // must degrade to showing itself, not disappear behind a wrong label.
+  it("keeps an unrecognized status visible", () => {
+    expect(courtStatusDisplay("कुनै नयाँ अवस्था")).toEqual({
+      ...PENDING,
+      detail: "कुनै नयाँ अवस्था",
+    });
   });
 });

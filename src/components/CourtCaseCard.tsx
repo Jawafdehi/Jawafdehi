@@ -14,6 +14,7 @@ import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   courtStatusBadgeValue,
+  courtStatusDisplay,
   courtTypeValue,
   formatCourtName,
   type CourtTypeValue,
@@ -41,14 +42,6 @@ export interface CourtCaseCardProps {
   // the field, so a card must read exactly the same with neither side present.
   defendant?: NameGroup | null;
   plaintiff?: NameGroup | null;
-}
-
-function displayCourtStatus(status: string) {
-  const spaced = status.replace(/[_-]+/g, " ").trim();
-  if (spaced !== spaced.toUpperCase()) return spaced;
-  return spaced
-    .toLowerCase()
-    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 }
 
 // The top-down wash encodes the COURT TIER. It used to encode the case status,
@@ -189,6 +182,7 @@ export function CourtCaseCard({
       : registrationDate || registrationDateBs || "";
   const viewCaseLabel = t("courtCaseDetail.viewCase", "View case");
   const statusBadgeValue = status ? courtStatusBadgeValue(status) : null;
+  const statusDisplay = courtStatusDisplay(status);
   const courtTier = courtTypeValue(court, courtType);
 
   return (
@@ -212,21 +206,25 @@ export function CourtCaseCard({
       to={url}
     >
       <article className="flex h-full min-w-0 flex-col">
-        {status ? (
-          <div>
-            <CaseStatusBadge
-              className="max-w-full"
-              status={statusBadgeValue}
-            >
-              <span className="truncate">{displayCourtStatus(status)}</span>
+        {statusDisplay ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <CaseStatusBadge className="max-w-full" status={statusBadgeValue}>
+              <span className="truncate">{t(statusDisplay.labelKey, statusDisplay.labelFallback)}</span>
             </CaseStatusBadge>
+            {/* The register's own wording — the outcome, or the decision date
+                — beside the pill rather than inside it. */}
+            {statusDisplay.detail ? (
+              <span className="min-w-0 truncate text-xs text-primary/60">
+                {statusDisplay.detail}
+              </span>
+            ) : null}
           </div>
         ) : null}
 
         <h3
           className={cn(
             "break-words text-pretty font-semibold text-primary",
-            status ? "mt-4 sm:mt-5" : "mt-1",
+            statusDisplay ? "mt-4 sm:mt-5" : "mt-1",
             isCard
               ? "line-clamp-3 text-lg leading-6 sm:text-xl sm:leading-7"
               : "line-clamp-2 text-base leading-5",

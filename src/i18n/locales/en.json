@@ -1305,7 +1305,11 @@
   "courtCaseDetail": {
     "relatedCases": "Related Jawafdehi Cases",
     "moreCases": "+{{count}} more",
-    "viewCase": "View case"
+    "viewCase": "View case",
+    "status": {
+      "pending": "Ongoing",
+      "decided": "Decided"
+    }
   },
   "courtCaseProfile": {
     "fallbackTitle": "Court case",

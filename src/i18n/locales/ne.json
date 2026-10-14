@@ -1305,7 +1305,11 @@
   "courtCaseDetail": {
     "relatedCases": "सम्बन्धित जवाफदेहि मुद्दाहरू",
     "moreCases": "+{{count}} थप",
-    "viewCase": "मुद्दा हेर्नुहोस्"
+    "viewCase": "मुद्दा हेर्नुहोस्",
+    "status": {
+      "pending": "चलिरहेको",
+      "decided": "फैसला भएको"
+    }
   },
   "courtCaseProfile": {
     "fallbackTitle": "अदालती मुद्दा",

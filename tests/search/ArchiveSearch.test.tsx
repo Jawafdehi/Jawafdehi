@@ -737,7 +737,7 @@ describe("ArchiveSearch", () => {
           extra: {
             court: "SPECIAL_COURT",
             case_number: "081-CR-0060",
-            case_status: "SUB_JUDICE",
+            case_status: "चालु",
             date: "2025-01-10",
             date_bs: "2081-09-26",
           },
@@ -751,7 +751,7 @@ describe("ArchiveSearch", () => {
     // Court cases use the dedicated reusable card in both view modes. The field
     // set stays the same while the shell becomes more compact in list view.
     const renderedFields = () => ({
-      status: screen.getByText("Sub Judice").textContent,
+      status: screen.getByText("Ongoing").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
       caseNumber: screen.getByText("081-CR-0060").textContent,
       // Nepali court name and BS date: this suite runs the real i18n, which has

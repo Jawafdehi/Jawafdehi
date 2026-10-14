@@ -174,3 +174,98 @@ export function courtStatusBadgeValue(
   }
   return "under-investigation";
 }
+
+/**
+ * What a court case's status should actually SHOW.
+ *
+ * `case_status` arrives as raw scraper output, and the register writes one
+ * state four different ways. Measured against the 2,290,879 rows in
+ * `court_cases` (2026-10-14), the entire non-null vocabulary is:
+ *
+ *   चालु                              270,650   pending
+ *   चलिरहेको                           53,867   pending — the same state, other word
+ *   फैसला / अन्तिम आदेश >> <outcome> ~1,212,871  decided, outcome enumerable
+ *   फैसला (<BS date>)                 534,495   decided, date recoverable
+ *   फैसला                                 134   decided
+ *   अन्तिम आदेश                             3   decided
+ *
+ * Printing that verbatim is what a reviewer flagged: two cards side by side
+ * reading चालु and चलिरहेको look like different states. It also puts a date
+ * inside a status pill, and on 322 rows prints the literal string
+ * `फैसला / अन्तिम आदेश >> undefined`.
+ *
+ * So the pill gets the normalized STATE, and the register's own detail — the
+ * outcome, or the decision date — comes back as a separate field rather than
+ * being thrown away. Callers render `detail` outside the pill.
+ *
+ * Anything unrecognized keeps its raw text as the detail and falls to the
+ * pending state, so a vocabulary change degrades to today's behaviour rather
+ * than hiding a status we have never seen.
+ */
+export interface CourtStatusDisplay {
+  /** i18n key for the one word the pill shows. */
+  labelKey: string;
+  /** English default for `labelKey`, so the two cannot drift across callers. */
+  labelFallback: string;
+  /** The register's own wording, for display beside the pill. */
+  detail: string | null;
+}
+
+const DECIDED = {
+  labelKey: "courtCaseDetail.status.decided",
+  labelFallback: "Decided",
+} as const;
+const PENDING = {
+  labelKey: "courtCaseDetail.status.pending",
+  labelFallback: "Ongoing",
+} as const;
+
+/** Scraper placeholders that must never reach a reader. */
+const EMPTY_OUTCOMES = new Set(["undefined", "null", "-", "अन्य"]);
+
+/** A BS date is only shown when it is actually a date: ####/##/## in range. */
+function usableBsDate(raw: string): string | null {
+  const ascii = raw.replace(/[०-९]/g, (d) => String("०१२३४५६७८९".indexOf(d)));
+  const match = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(ascii.trim());
+  if (!match) return null;
+  const [, year, month, day] = match.map(Number);
+  if (year < 1900 || year > 2200) return null;
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 32) return null;
+  return raw.trim();
+}
+
+export function courtStatusDisplay(
+  status: string | null | undefined,
+): CourtStatusDisplay | null {
+  const trimmed = status?.trim();
+  if (!trimmed) return null;
+
+  // Shape 1: "फैसला / अन्तिम आदेश >> <outcome>". The outcome is the point —
+  // "अभियोग दाबी नपुग्ने" is a finding, not decoration — so it survives.
+  const arrow = trimmed.indexOf(">>");
+  if (arrow !== -1) {
+    const outcome = trimmed.slice(arrow + 2).trim();
+    return {
+      ...DECIDED,
+      detail: outcome && !EMPTY_OUTCOMES.has(outcome) ? outcome : null,
+    };
+  }
+
+  // Shape 2: "फैसला (२०६७/०५/२८)" — and "फैसला (००००/००/००)", and a month of
+  // 42. A date that cannot be one is dropped rather than printed.
+  const paren = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(trimmed);
+  if (paren && paren[1].includes("फैसला")) {
+    return { ...DECIDED, detail: usableBsDate(paren[2]) };
+  }
+
+  if (trimmed.includes("फैसला") || trimmed.includes("अन्तिम आदेश")) {
+    return { ...DECIDED, detail: null };
+  }
+
+  if (trimmed === "चालु" || trimmed === "चलिरहेको") {
+    return { ...PENDING, detail: null };
+  }
+
+  return { ...PENDING, detail: trimmed };
+}
