@@ -34,10 +34,12 @@ import { getMaterialSourceLinks } from "@/lib/material-links";
 import {
   materialBilingual as bilingual,
   materialCanonicalUrl,
+  materialDescriptionText,
   materialDisplayName,
   materialJsonLd,
   materialMetaDescription,
   materialMetaTitle,
+  materialRobots,
   materialTypeLabel,
 } from "@/lib/material-meta";
 
@@ -183,8 +185,16 @@ export default function MaterialProfile() {
 
   // The head, built by the same module the edge uses — see @/lib/material-meta.
   const metaDescription = materialMetaDescription(data, displayName, typeLabel);
+  const robots = materialRobots(data);
   // schema.org JSON-LD for crawlers (parity with the retired R2 HTML landing page).
-  const jsonLd = data ? materialJsonLd(data, displayName, descText) : null;
+  //
+  // materialDescriptionText, not the raw `descText` the body renders: the worker
+  // passes the stripped form, and passing a different one here would make the
+  // structured data differ edge vs hydrated — the exact drift this shared module
+  // exists to prevent.
+  const jsonLd = data
+    ? materialJsonLd(data, displayName, materialDescriptionText(data))
+    : null;
 
   return (
     <main
@@ -200,6 +210,7 @@ export default function MaterialProfile() {
           banner. worker.ts injects the same tags for clients that never run JS.
         */}
         <link rel="canonical" href={materialCanonicalUrl(tail)} />
+        {robots ? <meta name="robots" content={robots} /> : null}
         <meta property="og:type" content="article" />
         <meta property="og:url" content={materialCanonicalUrl(tail)} />
         <meta property="og:title" content={materialMetaTitle(displayName)} />

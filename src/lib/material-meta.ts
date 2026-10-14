@@ -41,6 +41,35 @@ export interface MaterialMetaSource {
   description?: MaterialTextValue;
   datePublished?: unknown;
   identifier?: unknown;
+  /** `LISTED` | `UNLISTED` — see `materialRobots`. Absent on older API builds. */
+  "jawafdehi:visibility"?: unknown;
+}
+
+/**
+ * The `robots` value for a material, or `null` to leave it indexable.
+ *
+ * `GET /api/materials/<iri>/` resolves LISTED **and** UNLISTED to anonymous
+ * callers, by design — `materials/models.py` defines UNLISTED as "reachable by
+ * direct IRI, but NOT searchable / NOT in sitemaps", the YouTube-unlisted
+ * semantics an IN_REVIEW case's documents inherit. Serving those a full indexable
+ * head would publish in-review editorial work to search engines.
+ *
+ * `handleCaseMetaFallback` has gated this since it was written (`state ===
+ * 'PUBLISHED' ? null : 'noindex, nofollow'`); materials simply had no fallback to
+ * gate, and adding one without this would have been a regression rather than a
+ * gap.
+ *
+ * ⚠️ FAILS CLOSED, deliberately. Anything that is not explicitly `LISTED` —
+ * including the field being absent, which is what every API build before the
+ * companion change returns — is treated as not indexable. The cost of failing
+ * closed is that material pages are noindex until that change deploys; the cost of
+ * failing open is publishing in-review documents, and only one of those is
+ * reversible. Open Graph is unaffected either way, so share cards work throughout.
+ */
+export function materialRobots(
+  data: MaterialMetaSource | null | undefined,
+): string | null {
+  return data?.["jawafdehi:visibility"] === "LISTED" ? null : "noindex, nofollow";
 }
 
 /** English preferred, Nepali as the fallback — both sides kept for the caller. */
@@ -78,9 +107,40 @@ export function materialIriLabel(iri: string | undefined): string {
  * A tail is `<source>/<ident>` and idents are not always URL-safe — Devanagari and
  * already-percent-encoded upstream filenames both occur. Encoding the whole string
  * would eat the `/` that separates source from ident.
+ *
+ * ⚠️ This does NOT make an arbitrary tail safe to interpolate into a URL, because
+ * `encodeURIComponent("..")` is `".."` — dots are unreserved. Call `isMaterialTail`
+ * first; see the note there for what that costs if you skip it.
  */
 export function encodeMaterialTail(tail: string): string {
   return tail.split("/").map(encodeURIComponent).join("/");
+}
+
+/**
+ * Is this splat a material tail worth resolving at all?
+ *
+ * `/material/*` matches at any depth, so the splat is attacker-controlled. Without
+ * this check `/material/..%2Fcases%2F<slug>` decodes to `../cases/<slug>`, survives
+ * `encodeMaterialTail` (dots are unreserved), and `fetch` then NORMALISES
+ * `…/api/materials/../cases/<slug>/` to `…/api/cases/<slug>/` — so the edge renders
+ * an unrelated record's title into the head and advertises
+ * `canonical=…/material/../cases/<slug>`. Verified against the deployed preview on
+ * 2026-10-14: HTTP 200, with the case's slug as the title.
+ *
+ * That is an unbounded family of indexable junk URLs on our own origin, reachable
+ * by anyone, so this is a gate rather than a sanitiser: anything that is not plainly
+ * `<source>/<ident>` is not a material and gets a 404.
+ *
+ * Two segments is the minimum rather than the exact count: a material IRI is
+ * `/material/<source>/<ident>` and idents are upstream keys that may themselves
+ * contain a slash.
+ */
+export function isMaterialTail(tail: string): boolean {
+  const segments = tail.split("/");
+  if (segments.length < 2) return false;
+  return segments.every(
+    (segment) => segment.length > 0 && segment !== "." && segment !== "..",
+  );
 }
 
 /** The title shown, in order of preference: name → IRI tail → the URL tail. */
@@ -182,7 +242,12 @@ export function materialJsonLd(
     name: displayName,
     url: data["@id"],
     identifier: data.identifier ?? undefined,
-    inLanguage: name.ne ? "ne" : "en",
+    // Which language the title above is actually IN, which is not the same as
+    // "does this record have a Nepali name". The old test was `name.ne ? "ne"
+    // : "en"`, so a bilingual record was labelled Nepali while `displayName`
+    // had already preferred its English name — mislabelling the one string this
+    // node exposes. Mirror materialDisplayName's preference instead.
+    inLanguage: name.en ? "en" : name.ne ? "ne" : "en",
     isAccessibleForFree: true,
     ...(description ? { description } : {}),
     ...(data.datePublished

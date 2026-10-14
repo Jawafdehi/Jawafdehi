@@ -4,12 +4,14 @@ import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { casesPageCount } from './src/lib/cases-pagination';
 import {
   encodeMaterialTail,
+  isMaterialTail,
   materialCanonicalUrl,
   materialDescriptionText,
   materialDisplayName,
   materialJsonLd,
   materialMetaDescription,
   materialMetaTitle,
+  materialRobots,
   materialTypeLabel,
   type MaterialMetaSource,
 } from './src/lib/material-meta';
@@ -656,6 +658,12 @@ async function handleMaterialMetaFallback(
   env: Env,
   tail: string,
 ): Promise<Response | null> {
+  // `/material/*` matches at any depth, so the splat is attacker-controlled and
+  // is checked BEFORE it reaches a URL. See isMaterialTail: without this,
+  // /material/..%2Fcases%2F<slug> normalises into a different API endpoint and
+  // renders an unrelated record into the head.
+  if (!isMaterialTail(tail)) return notFoundShellResponse(request, env);
+
   const apiResponse = await fetchWithTimeout(
     `${JDS_API_BASE}/materials/${encodeMaterialTail(tail)}/`,
   );
@@ -691,6 +699,10 @@ async function handleMaterialMetaFallback(
     type: 'article',
     publishedTime:
       typeof material.datePublished === 'string' ? material.datePublished : null,
+    // UNLISTED materials resolve by direct IRI but must not be indexed — the
+    // same gate handleCaseMetaFallback applies to non-PUBLISHED cases. Fails
+    // closed; see materialRobots.
+    robots: materialRobots(material),
   });
 
   // The JSON-LD goes in as well as the meta tags. A material IS a schema.org

@@ -2,12 +2,14 @@ import { describe, it, expect } from "vitest";
 
 import {
   encodeMaterialTail,
+  isMaterialTail,
   materialCanonicalUrl,
   materialDescriptionText,
   materialDisplayName,
   materialJsonLd,
   materialMetaDescription,
   materialMetaTitle,
+  materialRobots,
 } from "./material-meta";
 
 // This module is the single source of the head a material page shows, because
@@ -107,6 +109,66 @@ describe("the title falls back through the record, then the URL", () => {
 
   it("is suffixed consistently", () => {
     expect(materialMetaTitle("A Report")).toBe("A Report | Jawafdehi governance archive");
+  });
+});
+
+describe("isMaterialTail gates what reaches a URL", () => {
+  it.each(["..", "../cases/a-case", "ag/../../cases/a-case", "./x", "ag/.", "ag//x", "oag-11353", ""])(
+    "rejects %o",
+    (tail) => {
+      // `encodeURIComponent("..")` is `".."` — dots are unreserved — so encoding
+      // alone does NOT make a tail safe. fetch then normalises the `..` away and
+      // the request lands on a different API endpoint entirely.
+      expect(isMaterialTail(tail)).toBe(false);
+    },
+  );
+
+  it.each(["document/oag-11353", "ag/क-1", "us_court/dcd/24-cr-00302"])(
+    "accepts %o",
+    (tail) => {
+      expect(isMaterialTail(tail)).toBe(true);
+    },
+  );
+});
+
+describe("materialRobots fails closed", () => {
+  it("indexes only an explicitly LISTED material", () => {
+    expect(materialRobots({ "jawafdehi:visibility": "LISTED" })).toBeNull();
+  });
+
+  it.each([
+    { "jawafdehi:visibility": "UNLISTED" },
+    { "jawafdehi:visibility": "PRIVATE" },
+    { "jawafdehi:visibility": null },
+    {},
+    null,
+  ])("noindexes %o", (data) => {
+    // The empty object is the case that matters: it is what every API build
+    // before the companion change returns.
+    expect(materialRobots(data)).toBe("noindex, nofollow");
+  });
+});
+
+describe("inLanguage names the language of the title actually shown", () => {
+  it("says en for a bilingual record, because displayName prefers English", () => {
+    // The bug: `name.ne ? "ne" : "en"` labelled this Nepali while the title
+    // emitted alongside it was the English one.
+    const parsed = JSON.parse(
+      materialJsonLd(
+        { "@id": "x", name: { en: "Annual Report", ne: "वार्षिक प्रतिवेदन" } },
+        "Annual Report",
+        "",
+      ),
+    );
+    expect(parsed.name).toBe("Annual Report");
+    expect(parsed.inLanguage).toBe("en");
+  });
+
+  it("says ne when Nepali is the only name", () => {
+    const parsed = JSON.parse(
+      materialJsonLd({ "@id": "x", name: { ne: "वार्षिक प्रतिवेदन" } }, "वार्षिक प्रतिवेदन", ""),
+    );
+    expect(parsed.inLanguage).toBe("ne");
   });
 });
 

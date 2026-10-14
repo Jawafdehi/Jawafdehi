@@ -227,6 +227,97 @@ describe('a material with no description still says something specific', () => {
   });
 });
 
+describe('the splat cannot be steered at another endpoint', () => {
+  it.each([
+    '/material/..%2Fcases%2Fa-case',
+    '/material/ag/..%2F..%2Fcases%2Fa-case',
+    '/material/.%2F.%2Fentities',
+    '/material/oag-11353',
+  ])('404s %s without asking the API at all', async (path) => {
+    // Verified against the deployed preview on 2026-10-14 before this gate:
+    // /material/..%2Fcases%2F<slug> answered 200 with the CASE's slug as the
+    // title and canonical=…/material/../cases/<slug>. `fetch` normalises the
+    // `..` away, so the edge had silently queried /api/cases/<slug>/.
+    //
+    // The last case is not traversal — a single segment is not a material IRI
+    // (`/material/<source>/<ident>`), so it is not a page either.
+    const upstream = vi.fn();
+    vi.stubGlobal('fetch', upstream);
+
+    const res = await worker.fetch(
+      new Request(`https://jawafdehi.org${path}`),
+      makeEnv() as never,
+      {} as never,
+    );
+
+    expect(res.status).toBe(404);
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it('still serves an ident that legitimately contains a slash', async () => {
+    // Two segments is a MINIMUM, not an exact count: idents are upstream keys.
+    stubMaterialApi({ ...A_MATERIAL, name: { en: 'Deep ident' } });
+
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/material/us_court/dcd/24-cr-00302'),
+      makeEnv() as never,
+      {} as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('Deep ident');
+  });
+});
+
+describe('visibility gates indexing, the way it does for cases', () => {
+  it('leaves a LISTED material indexable', async () => {
+    stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:visibility': 'LISTED' });
+
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/material/document/oag-11353'),
+      makeEnv() as never,
+      {} as never,
+    );
+
+    expect(await res.text()).not.toContain('name="robots"');
+  });
+
+  it('noindexes an UNLISTED material', async () => {
+    // UNLISTED is "reachable by direct IRI, NOT searchable / NOT in sitemaps"
+    // (materials/models.py) — the documents of an IN_REVIEW case. The API serves
+    // them 200 to anonymous callers, so without this the edge would publish
+    // in-review editorial work to search engines.
+    stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:visibility': 'UNLISTED' });
+
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/material/document/oag-11353'),
+      makeEnv() as never,
+      {} as never,
+    );
+
+    expect(await res.text()).toContain('name="robots" content="noindex, nofollow"');
+  });
+
+  it('noindexes when the API does not report visibility at all', async () => {
+    // Fails CLOSED. Every API build before the companion change omits the field,
+    // so this is the live behaviour on merge: material pages are noindex until
+    // that deploys. Publishing an in-review document is not reversible; a few
+    // days of noindex is.
+    stubMaterialApi(A_MATERIAL);
+
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/material/document/oag-11353'),
+      makeEnv() as never,
+      {} as never,
+    );
+    const html = await res.text();
+
+    expect(html).toContain('name="robots" content="noindex, nofollow"');
+    // Open Graph is unaffected, so share cards keep working throughout.
+    expect(html).toContain('property="og:title"');
+  });
+});
+
 describe('the fallback fails in the safe direction', () => {
   it('serves a real 404 when the API says the material does not exist', async () => {
     // A positive answer: a retired ident, a soft-deleted row, or one no longer
