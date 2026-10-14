@@ -13,7 +13,6 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
-import { BlueprintBackdrop } from "@/components/mcp/blueprint";
 import { PromptMarquee } from "@/components/mcp/prompt-marquee";
 import {
   TerminalCommand,
@@ -22,6 +21,7 @@ import {
 } from "@/components/mcp/terminal-block";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_BASE_URL } from "@/services/http";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
@@ -103,9 +103,7 @@ const Mcp = () => {
   const { t, i18n } = useTranslation();
 
   return (
-    // --blueprint-column is the width of the ruled content column the backdrop
-    // draws, matched to the max-width the sections below lay out to.
-    <div className="min-h-screen flex flex-col bg-background [--blueprint-column:64rem]">
+    <div className="min-h-screen flex flex-col bg-background">
       <Seo
         title={`${t("mcp.meta.title")} | ${SITE_NAME}`}
         description={t("mcp.meta.description")}
@@ -120,9 +118,9 @@ const Mcp = () => {
             thing read is what this does, not where it lives. */}
         <section
           id="mcp-hero"
-          className="relative isolate -mt-[76px] overflow-hidden border-b border-border bg-background pt-[76px]"
+          className="relative isolate -mt-[76px] overflow-hidden bg-background pt-[76px]"
         >
-          <BlueprintBackdrop />
+          <PageHeroBackdrop />
 
           <div className="relative z-10 pb-14 pt-14 md:pb-20 md:pt-20">
             <div className="layout-container">
@@ -174,10 +172,8 @@ const Mcp = () => {
 
         {/* The endpoint, on its own. It is the one string anybody copies, so it
             gets a band rather than a corner of the hero. */}
-        <section id="endpoint" className="relative isolate overflow-hidden border-b border-border py-12 md:py-14">
-          <BlueprintBackdrop />
-
-          <div className="layout-container relative z-10">
+        <section id="endpoint" className="bg-muted/10 py-12 md:py-14">
+          <div className="layout-container">
             <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
               <TerminalWindow
                 label={t("mcp.endpoint.label")}
@@ -200,10 +196,8 @@ const Mcp = () => {
 
         {/* Installation — Sentry's tabbed client picker. One tab per client
             shows the commands one at a time instead of as a wall of four. */}
-        <section id="install" className="relative isolate overflow-hidden py-14 md:py-20">
-          <BlueprintBackdrop />
-
-          <div className="layout-container relative z-10">
+        <section id="install" className="py-12 md:py-14">
+          <div className="layout-container">
             <div className="mx-auto max-w-5xl">
               <h2 className={SECTION_HEADING}>{t("mcp.install.title")}</h2>
               <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
@@ -270,10 +264,8 @@ const Mcp = () => {
         {/* The example prompts used to repeat here as a static terminal. The
             hero marquee carries them now — printing the same six questions
             twice on one page read as padding. */}
-        <section id="tools" className="relative isolate overflow-hidden border-t border-border py-14 md:py-20">
-          <BlueprintBackdrop />
-
-          <div className="layout-container relative z-10">
+        <section id="tools" className="bg-muted/10 py-12 md:py-14">
+          <div className="layout-container">
             <div className="mx-auto max-w-5xl">
               <h2 className={SECTION_HEADING}>{t("mcp.tools.title")}</h2>
               <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
@@ -311,11 +303,9 @@ const Mcp = () => {
 
         <section
           id="scope"
-          className="relative isolate overflow-hidden border-y border-border bg-muted/10 py-14 md:py-20"
+          className="py-12 md:py-14"
         >
-          <BlueprintBackdrop />
-
-          <div className="layout-container relative z-10">
+          <div className="layout-container">
             <div className="mx-auto max-w-5xl">
               <ShieldCheck className="h-6 w-6 text-accent" aria-hidden="true" />
               <h2 className={`mt-3 ${SECTION_HEADING}`}>{t("mcp.scope.title")}</h2>
@@ -336,10 +326,8 @@ const Mcp = () => {
           </div>
         </section>
 
-        <section id="learn-more" className="relative isolate overflow-hidden py-14 md:py-20">
-          <BlueprintBackdrop />
-
-          <div className="layout-container relative z-10">
+        <section id="learn-more" className="bg-muted/10 py-12 md:py-14">
+          <div className="layout-container">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className={SECTION_HEADING}>{t("mcp.learnMore.title")}</h2>
               <p className="mt-3 font-paragraph font-paragraph-foreground">
