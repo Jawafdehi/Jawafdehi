@@ -1,5 +1,5 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
-import { matchRoute, normalizePath } from './src/data/route-patterns';
+import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { casesPageCount } from './src/lib/cases-pagination';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
@@ -788,6 +788,22 @@ export default {
         ? securityHeadersAllowFrame()
         : securityHeaders();
 
+    // Routes SITE_ROUTES marks noindex — the admin panel and the non-public
+    // standalone routes. Set here rather than in each branch because secHeaders
+    // is applied to every response the Worker builds (pre-rendered asset, SPA
+    // fallback and every redirect), so one assignment covers all of them.
+    //
+    // 🚨 This is the ONLY channel that works for these pages. They are served the
+    // SPA shell with no per-route Helmet output, so a <meta name="robots"> in the
+    // component never reaches a crawler — /admin shipped 241 KB with no title, no
+    // meta robots and no header at all, and Google indexed it and spent ~70% of
+    // its crawl budget there. The page deliberately keeps answering 200: a
+    // robots.txt Disallow would stop the re-crawl that lets Google SEE the
+    // noindex, which is what makes an already-indexed URL unremovable.
+    if (matched && isNoindexPath(path)) {
+      secHeaders['X-Robots-Tag'] = 'noindex, nofollow';
+    }
+
     // The social card used to ship under two names. /og-favicon.png was the
     // original, kept byte-identical to /assets/social-preview.png purely so
     // shares already cached against the old filename kept resolving. The file is
@@ -845,6 +861,12 @@ export default {
     }
 
     // Handle legacy numeric case redirects (301)
+    //
+    // Target carries the trailing slash the pre-rendered page is published at,
+    // for the same reason /research above does: without it this 301 lands on a
+    // URL that immediately 307s, so /case/212 cost two hops and the middle one
+    // named a redirecting URL as its canonical. Search Console counted that as
+    // "Duplicate, Google chose different canonical than user" on 16 URLs.
     const caseMatch = path.match(/^\/case\/(\d+)\/?$/);
     if (caseMatch) {
       const legacyId = caseMatch[1];
@@ -853,7 +875,7 @@ export default {
         return new Response(null, {
           status: 301,
           headers: {
-            'Location': `/case/${targetSlug}`,
+            'Location': `/case/${targetSlug}/`,
             'Cache-Control': 'public, max-age=3600',
             ...secHeaders,
           },
@@ -862,6 +884,7 @@ export default {
     }
 
     // Court-case-ref case URLs: /case/081-CR-0116 → canonical slug (301)
+    // Slash-terminated for the same reason as the numeric redirect above.
     const courtRefMatch = path.match(/^\/case\/(\d+-[A-Za-z]+-\d+)\/?$/);
     if (courtRefMatch) {
       const targetSlug = await resolveCourtRefSlug(courtRefMatch[1]);
@@ -869,7 +892,7 @@ export default {
         return new Response(null, {
           status: 301,
           headers: {
-            'Location': `/case/${targetSlug}`,
+            'Location': `/case/${targetSlug}/`,
             'Cache-Control': 'public, max-age=3600',
             ...secHeaders,
           },

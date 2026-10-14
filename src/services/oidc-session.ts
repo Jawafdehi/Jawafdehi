@@ -12,6 +12,8 @@
 // implementation in `./oidc`. Anonymous readers never fetch the library at all;
 // `scripts/bundle-budget.mjs` enforces that it stays out of the initial payload.
 
+import { getPrerenderToken } from "./prerender-auth";
+
 // Public OIDC config values (they ship in the browser anyway). `./oidc` builds
 // its UserManager from these same constants so the storage key below can never
 // drift from the key the library actually writes.
@@ -50,6 +52,26 @@ export function hasStoredOidcSession(): boolean {
  * defers to the real `getAccessToken`, which validates expiry properly.
  */
 export async function getAccessToken(): Promise<string | null> {
+  // Server (the pre-render): the build's own token, or null when it is running
+  // anonymously. This is the ONLY place a bearer enters a server-side request —
+  // `./oidc`'s getAccessToken is never reached here, because the line below
+  // resolves false off the browser and the dynamic import never happens.
+  //
+  // Returning a token at all looks like a violation of the rule the guards in
+  // this file exist for ("pre-rendered HTML must only contain data everyone may
+  // see"), so: it is that rule holding, not an exception to it. The build
+  // authenticates as `sa-prerender`, whose single Zitadel role maps to a Django
+  // group with no permissions that is named by no gate — DRAFT cases 404 for it
+  // exactly as they do for an anonymous caller. The role buys one thing, a
+  // separate throttle bucket, because rendering the whole archive against the
+  // 1000/hour anonymous cap had started failing production deploys.
+  //
+  // ⚠️ The emptiness of that role is what makes this safe. If it is ever granted
+  // anything, this line starts publishing it to crawlers. The invariant is
+  // pinned in JawafdehiAPI `tests/test_prerender_role.py`; the reasoning is in
+  // its docs/security/authz-model.md §8.4.
+  if (typeof window === "undefined") return getPrerenderToken();
+
   if (!hasStoredOidcSession()) return null;
   const { getAccessToken: realGetAccessToken } = await import("./oidc");
   return realGetAccessToken();

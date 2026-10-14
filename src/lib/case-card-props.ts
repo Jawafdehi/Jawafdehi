@@ -14,33 +14,6 @@ import type { CaseDetail } from "@/types/jds";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
 
-/** The badge vocabulary every case-tile surface shares. Exported so the card
- * and the featured spotlight cannot hold two different versions of it. */
-export type CaseCardStatus =
-  | "ongoing"
-  | "resolved"
-  | "under-investigation"
-  | "withdrawn"
-  | "dormant";
-
-// Two vocabularies land here. The search index still stores the old three
-// values (`ongoing`/`closed`/`others`) so deployed cards keep working; the case
-// API serves the six-value lifecycle. `withdrawn` and `dormant` pass through as
-// themselves — neither is "resolved", because nobody decided them.
-const CASE_STATUS_BADGE: Record<string, CaseCardStatus> = {
-  ongoing: "ongoing",
-  closed: "resolved",
-  concluded: "resolved",
-  others: "under-investigation",
-  under_investigation: "under-investigation",
-  withdrawn: "withdrawn",
-  dormant: "dormant",
-};
-
-function mapCaseStatus(status: string | null | undefined): CaseCardStatus {
-  return (status && CASE_STATUS_BADGE[status]) || "under-investigation";
-}
-
 // Titles come off the index carrying <em> highlight marks, and occasionally
 // other markup; the cards render plain text, so strip tags outright.
 function stripTags(value: string): string {
@@ -91,8 +64,8 @@ function splitEntities<T extends NamedEntity & { type?: string | null }>(
  *
  * The `card` payload is denormalized into the index doc, so this is the common
  * path. It is optional, not just nullable: docs indexed before the field
- * existed carry no `card` at all, and those fall back to the case status on
- * `extra` and to the slug parsed out of the result URL.
+ * existed carry no `card` at all, and those fall back to the slug parsed out of
+ * the result URL.
  */
 export function caseCardPropsFromSearchResult(
   result: ArchiveSearchResult,
@@ -103,7 +76,6 @@ export function caseCardPropsFromSearchResult(
     id: result.id,
     slug: card?.slug || caseSlugFromUrl(result.url),
     title: card?.title || pickText(result.title) || result.id,
-    status: mapCaseStatus(card?.status || result.extra.case_status),
     tags: card?.tags || [],
     image: card?.thumbnail ?? null,
     thumbnailUrl: card?.thumbnail_url || undefined,
@@ -115,9 +87,7 @@ export function caseCardPropsFromSearchResult(
 
 /**
  * Fallback for older indexed docs with no `card` payload: derive the same props
- * from a fetched case detail. The lifecycle is read off the API's own `status`
- * — it is derived server-side from the case's stages, and a case running
- * several dockets has no single end date the client could infer it from.
+ * from a fetched case detail.
  *
  * Kept in step with {@link caseCardPropsFromSearchResult} — the two feed the
  * same <CaseCard>, so a field added to one must be added to both or a case
@@ -133,7 +103,6 @@ export function caseCardPropsFromCaseDetail(
     id: result.id,
     slug: detail.slug || fallbackSlug || null,
     title: detail.title || pickText(result.title),
-    status: mapCaseStatus(detail.status),
     tags: detail.tags || [],
     image: detail.thumbnail ?? null,
     thumbnailUrl: detail.thumbnail_url || undefined,

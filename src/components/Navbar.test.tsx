@@ -17,9 +17,9 @@ vi.mock("@/components/AppSearchCommand", () => ({
 
 import { Navbar } from "@/components/Navbar";
 
-const renderNavbar = () =>
+const renderNavbar = (path = "/") =>
   render(
-    <MemoryRouter initialEntries={["/"]}>
+    <MemoryRouter initialEntries={[path]}>
       <Navbar />
     </MemoryRouter>,
   );
@@ -80,5 +80,49 @@ describe("Navbar — the Open House entry", () => {
       const links = screen.getAllByRole("link");
       expect(links.some((el) => el.getAttribute("href") === "/openhouse")).toBe(true);
     });
+  });
+});
+
+describe("Navbar — the Jawafdehi MCP entry", () => {
+  // Same shape as the Open House pair above, and for the same reason: the
+  // archive group feeds both renderers from one array, and Radix mounts
+  // neither until opened, so no build-output grep can see this entry.
+  it("appears in the desktop archive dropdown", async () => {
+    renderNavbar();
+
+    fireEvent.keyDown(screen.getByRole("button", { name: /Archive/ }), { key: "Enter" });
+
+    await waitFor(() => {
+      const link = screen
+        .getAllByRole("menuitem")
+        .find((el) => el.getAttribute("href") === "/mcp");
+      expect(link).toBeTruthy();
+      expect(link?.textContent).toContain("Jawafdehi MCP");
+    });
+  });
+
+  it("appears in the mobile navigation sheet", async () => {
+    renderNavbar();
+
+    fireEvent.click(screen.getByRole("button", { name: /nav\.menu/ }));
+
+    await waitFor(() => {
+      const links = screen.getAllByRole("link");
+      expect(links.some((el) => el.getAttribute("href") === "/mcp")).toBe(true);
+    });
+  });
+
+  // The menu entry and the active-state path check were two lists of the same
+  // paths, and they drifted the moment /mcp was added to only one: the entry
+  // appeared, and the Archive trigger went dark on the page it led to. The
+  // check is derived from the menu now, and this covers it. /courtcases is the
+  // control — without it, a test that stopped exercising the active state at
+  // all would still pass.
+  it.each(["/mcp", "/courtcases"])("keeps the Archive trigger active on %s", (path) => {
+    renderNavbar(path);
+
+    expect(screen.getByRole("button", { name: /Archive/ }).className).toContain(
+      "text-foreground/82",
+    );
   });
 });

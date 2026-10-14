@@ -165,8 +165,14 @@ describe('brand colour tokens', () => {
     scan('index.html', INDEX_HTML.replace(/<!--[\s\S]*?-->/g, ''), (hex) => hex === '#0E1F3B');
     scan('public/site.webmanifest', JSON.stringify(MANIFEST), (hex) => hex === '#0E1F3B');
 
-    // Application source gets no exemption at all — every one of these has a token.
+    // Application source gets no exemption at all — every one of these has a
+    // token — except the press kit, where the hex is the *content*: a newsroom
+    // needs the literal string, and a token tells them nothing. That file is
+    // pinned to the documented hex by the test below instead, which is a
+    // stricter guarantee than "absent".
+    const PRESS_KIT_PALETTE = join('src', 'components', 'press-kit', 'constants.ts');
     for (const file of sourceFiles('src')) {
+      if (file === PRESS_KIT_PALETTE) continue;
       scan(file, stripComments(readFileSync(root(file), 'utf8')), () => false);
     }
 
@@ -174,5 +180,20 @@ describe('brand colour tokens', () => {
       offenders,
       'hardcoded brand hex — use the token instead: hsl(var(--primary)), hsl(var(--accent))',
     ).toEqual([]);
+  });
+
+  it('publishes the documented hex on the press kit page', async () => {
+    // The press kit hands these strings to newsrooms, so they must be the same
+    // values src/index.css documents. Deriving them from the tokens instead
+    // would be worse, not better: the tokens hold HSL, and hex -> HSL -> hex is
+    // lossy — #0E1F3B comes back as #0E1F3A — so the page would quietly publish
+    // a colour that is not the brand one.
+    const { PRESS_KIT_COLOURS } = await import('../../src/components/press-kit/constants');
+    const published = Object.fromEntries(
+      PRESS_KIT_COLOURS.map((colour) => [colour.key, colour.hex.toUpperCase()]),
+    );
+
+    expect(published.navy).toBe(documentedHex('primary'));
+    expect(published.crimson).toBe(documentedHex('accent'));
   });
 });

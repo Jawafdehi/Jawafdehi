@@ -8,6 +8,28 @@
 @layer base {
   :root {
     --font-family-app: Helvetica, Arial, "Noto Sans Devanagari", sans-serif;
+    /* Headlines are pinned to ONE face per locale — Inter in English, Vesper
+       Libre in Nepali (see the [lang="ne"] block). Before this, headline roles
+       were split three ways: some took --font-family-app (i.e. Helvetica, a
+       system face), some hardcoded Vesper Libre, and Inter was self-hosted but
+       reached only the materials filter controls. The result was that /insights
+       and /materials headings were serif while /about and /report headings were
+       Helvetica, on the same site.
+       This is the HEADLINE family only. Body, UI and data roles keep
+       --font-family-app, so the locale's reading face is unchanged.
+       Inter's @font-face carries a Latin-only unicode-range, so Devanagari in an
+       otherwise-English headline falls through to Noto Sans Devanagari — which
+       is the only reason Noto is in this stack at all. It sits LAST, behind the
+       system sans, exactly as in --font-family-app above: per-character
+       fallback reaches it either way (neither Helvetica nor Arial carries
+       Devanagari), but ahead of them it would be the *Latin* fallback too.
+       That matters because Noto is always already loaded here — the document
+       ships lang="ne" and src/i18n/config.ts flips to en only on the next frame
+       — so an English headline would paint in Noto's Latin design for the whole
+       of Inter's `font-display: swap` window, and stay there permanently if the
+       Inter file ever failed to load. */
+    --font-family-heading: "Inter", Helvetica, Arial, "Noto Sans Devanagari",
+      sans-serif;
     --font-eyebrow-leading: 1.25;
     --font-eyebrow-tracking: 0.1em;
     --font-eyebrow-display-tracking: 0.14em;
@@ -32,6 +54,15 @@
 
   :root[lang="ne"] {
     --font-family-app: "Noto Sans Devanagari", Helvetica, Arial, sans-serif;
+    /* Vesper Libre covers Latin AND Devanagari (456 codepoints, 124 of them
+       Devanagari), so a Nepali headline that embeds a Latin name or acronym
+       stays in one typeface instead of splicing two. Noto sits behind it only
+       as the tofu guard for codepoints Vesper lacks.
+       Nepali is the default locale (index.html ships lang="ne") and
+       VesperLibre-Bold.woff2 is already preloaded there, so pinning Nepali
+       headlines to Vesper adds no fetch on the common path. */
+    --font-family-heading: "Vesper Libre", "Noto Sans Devanagari", Georgia,
+      serif;
     --font-eyebrow-leading: 1.5;
     --font-eyebrow-tracking: 0;
     --font-eyebrow-display-tracking: 0.04em;
@@ -104,11 +135,11 @@
   }
 
   .font-home-hero-title {
-    /* Editorial serif (mockup B "The Ledger"): Vesper Libre carries both Latin
-       and Devanagari, so the bilingual headline stays in one typeface. Bold,
-       not extrabold — Vesper has no 800 face. */
+    /* Bold, not extrabold — Vesper has no 800 face. The family comes from
+       --font-family-heading, which is Vesper here in Nepali (the default
+       locale, unchanged) and Inter in English. */
     @apply text-4xl font-bold text-primary sm:text-5xl md:text-6xl;
-    font-family: "Vesper Libre", Georgia, "Noto Sans Devanagari", serif;
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-home-hero-leading);
     max-inline-size: min(100%, var(--font-home-hero-measure));
@@ -116,14 +147,14 @@
 
   .font-hero-title {
     @apply text-3xl font-bold text-primary sm:text-5xl md:text-6xl;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
   }
 
   .font-page-title {
     @apply text-3xl font-bold text-primary md:text-5xl;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
   }
@@ -136,9 +167,14 @@
     @apply text-3xl;
   }
 
+  /* The one headline role at weight 800. Inter's variable file carries the full
+     100-900 range (see src/index.css), so English gets a real 800. Vesper is
+     static 400/500/700/900 with no 800, so Nepali resolves up to Black per the
+     CSS font-matching rules — deliberately left alone rather than demoted to
+     700, which would make this role lighter than .font-home-hero-title. */
   .font-status-title {
     @apply text-3xl font-extrabold text-primary md:text-4xl lg:text-5xl;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-status-leading);
   }
@@ -237,10 +273,13 @@
     line-height: var(--font-meta-leading);
   }
 
-  /* Archive display roles (/materials): the serif register of the catalogue.
-     Vesper Libre at weight 500 — display for the H1 and section headings ONLY;
-     body/UI stays on the app face. Both roles share the archive display
-     leading, which opens up under lang="ne". */
+  /* Archive display roles (/materials): the display register of the catalogue,
+     at weight 500 — the H1 and section headings ONLY; body/UI stays on the app
+     face. Both roles share the archive display leading, which opens up under
+     lang="ne". The family rides Tailwind's `display` key, which is now
+     --font-family-heading (tailwind.config.ts), so these follow the same
+     per-locale pin as every other headline instead of being hardcoded serif in
+     both locales. */
   .font-archive-hero-title {
     @apply font-display text-4xl font-medium text-primary sm:text-5xl;
     letter-spacing: var(--font-heading-tracking);
@@ -318,7 +357,7 @@
   .font-section-title,
   .content-prose h1 {
     @apply text-2xl font-bold text-primary md:text-3xl;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
   }
@@ -330,18 +369,18 @@
   .font-subsection-title,
   .content-prose h2 {
     @apply text-xl font-semibold text-primary md:text-2xl;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
   }
 
-  /* Case-detail section headings: the same editorial serif as the home hero
-     (Vesper Libre covers Latin + Devanagari, so bilingual titles stay in one
-     face). Sized like .font-subsection-title but bolded — the serif reads
-     lighter than the sans at equal weight. */
+  /* Case-detail section headings: the same face as the home hero, which is now
+     the per-locale headline pin rather than a hardcoded serif. Sized like
+     .font-subsection-title but bolded — Vesper reads lighter than the sans at
+     equal weight, and the Nepali locale is the one this role was tuned on. */
   .font-case-section-title {
     @apply text-xl font-bold text-primary md:text-2xl;
-    font-family: "Vesper Libre", Georgia, "Noto Sans Devanagari", serif;
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
   }
@@ -353,7 +392,7 @@
   .font-card-title,
   .content-prose h3 {
     @apply text-lg font-bold text-foreground;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
   }
@@ -364,7 +403,7 @@
 
   .content-prose h4 {
     @apply mt-4 mb-2 text-base font-semibold text-foreground;
-    font-family: var(--font-family-app);
+    font-family: var(--font-family-heading);
     line-height: var(--font-heading-leading);
   }
 

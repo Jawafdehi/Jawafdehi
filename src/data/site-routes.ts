@@ -1,6 +1,7 @@
 
 export type SearchIconName =
   | "BookOpen"
+  | "Bot"
   | "Building2"
   | "FileText"
   | "HeartHandshake"
@@ -57,7 +58,21 @@ export type StaticSiteRoute = { path: string } & StaticPageMeta;
 // Whether the route renders inside the site chrome (<AppLayout>) or full-screen.
 export type RouteChrome = "app" | "standalone";
 
-export type SiteRoute = { path: string; chrome: RouteChrome } & Partial<StaticPageMeta>;
+/**
+ * Routes that exist but must never appear in a search index.
+ *
+ * ⚠️ This is a `noindex` flag, NOT a robots.txt `Disallow`, and the two are
+ * mutually defeating. `Disallow` stops the fetch, so an already-indexed URL
+ * stays indexed forever — the crawler can no longer re-read the page to learn it
+ * should be dropped. `noindex` is the only directive that removes, and the page
+ * has to stay crawlable for it to be seen. Never reach for both at once.
+ *
+ * `/admin` is why this exists: it answered 200 with the SPA shell, carried no
+ * title, no meta robots and no X-Robots-Tag, and robots.txt did not cover it, so
+ * Google indexed the staff panel and spent most of its crawl budget there.
+ */
+export type SiteRoute = { path: string; chrome: RouteChrome; noindex?: true } &
+  Partial<StaticPageMeta>;
 
 export type UpdateRouteEntry = {
   id: string;
@@ -87,12 +102,14 @@ export type UpdateRouteEntry = {
 // MUST stay free of component imports — the Worker imports this table, and
 // pulling React into the edge bundle would be a large regression.
 export const SITE_ROUTES = [
-  // Standalone, outside the site chrome.
-  { path: "/embed/case/:id", chrome: "standalone" },
-  { path: "/document-viewer", chrome: "standalone" },
-  { path: "/admin/*", chrome: "standalone" },
+  // Standalone, outside the site chrome. None of these is a public page: the
+  // embed is a widget duplicating a case, the viewer is a document frame, and
+  // the admin is the auth-gated staff panel — so all carry noindex.
+  { path: "/embed/case/:id", chrome: "standalone", noindex: true },
+  { path: "/document-viewer", chrome: "standalone", noindex: true },
+  { path: "/admin/*", chrome: "standalone", noindex: true },
   // Back-compat: the casework portal moved from /portal to /admin.
-  { path: "/portal/*", chrome: "standalone" },
+  { path: "/portal/*", chrome: "standalone", noindex: true },
 
   {
     path: "/",
@@ -168,6 +185,15 @@ export const SITE_ROUTES = [
     sitemapTitle: "Our Commitment — Jawafdehi",
   },
   {
+    path: "/press-kit",
+    chrome: "app",
+    titleKey: "footer.pressKit",
+    descriptionKey: "searchCommand.descriptions.pressKit",
+    keywords: ["press", "kit", "media", "logo", "brand", "assets", "journalist"],
+    icon: "Newspaper",
+    sitemapTitle: "Press Kit — Jawafdehi",
+  },
+  {
     path: "/volunteer",
     chrome: "app",
     titleKey: "nav.volunteer",
@@ -233,6 +259,15 @@ export const SITE_ROUTES = [
     keywords: ["products", "tools", "platforms"],
     icon: "FileText",
     sitemapTitle: "Products — Jawafdehi",
+  },
+  {
+    path: "/mcp",
+    chrome: "app",
+    titleKey: "mcp.meta.title",
+    descriptionKey: "searchCommand.descriptions.mcp",
+    keywords: ["mcp", "ai", "claude", "chatgpt", "openai", "connector", "api", "model context protocol"],
+    icon: "Bot",
+    sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
   },
   {
     path: "/openhouse",
@@ -304,10 +339,10 @@ export const SITE_ROUTES = [
   { path: "/case/:id", chrome: "app" },
   // Public author profile. Client-rendered like the other detail pages.
   { path: "/author/:slug", chrome: "app" },
-  { path: "/entity/:id", chrome: "app" },
-  // Entity record by IRI tail (multi-segment, e.g. organization/.../tu). React
-  // Router prefers the more specific :id route for single-segment numeric ids,
-  // so this splat only catches the hierarchical entity IRIs.
+  // Entity record by IRI tail (multi-segment, e.g. organization/.../tu). The
+  // legacy numeric sibling route `/entity/:id` was removed in 2026-10 along with
+  // the records behind it; isEntityRecordTail in route-patterns.ts is what now
+  // keeps a single-segment tail from falling into this splat.
   { path: "/entity/*", chrome: "app" },
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },
@@ -337,16 +372,25 @@ export const SITE_ROUTES = [
     sitemapTitle: "Court Cases — Jawafdehi",
   },
   // Wagtail headless preview target.
-  { path: "/updates/preview", chrome: "app" },
+  // The Wagtail headless preview target: an unsaved draft. previewSecurityHeaders()
+  // in worker.ts already sends noindex for it alongside the CSP that scopes
+  // framing to the CMS; this declares the same fact on the route itself so the
+  // table is the one place that says which routes are not indexable.
+  { path: "/updates/preview", chrome: "app", noindex: true },
   { path: "/updates/:slug", chrome: "app" },
   { path: "/data-quality", chrome: "app" },
   { path: "/newsletter/confirmed", chrome: "app" },
   { path: "/newsletter/unsubscribe/:token", chrome: "app" },
   // Redirects to a canonical home: the entities directory folded into search,
   // /information duplicated /faq, and moderation moved under /admin.
+  // /entities and /information redirect to PUBLIC pages, so they stay indexable
+  // and Google folds them into the target (it already reports both as "Page with
+  // redirect" canonicalised to /search/). /moderation is different: it redirects
+  // into the admin, and the redirect is a client-side <Navigate>, so a crawler
+  // sees only a 200 shell and never follows it. It needs the noindex itself.
   { path: "/entities", chrome: "app" },
   { path: "/information", chrome: "app" },
-  { path: "/moderation", chrome: "app" },
+  { path: "/moderation", chrome: "app", noindex: true },
 ] as const satisfies readonly SiteRoute[];
 
 // Every path the SPA will render, as a React Router pattern.

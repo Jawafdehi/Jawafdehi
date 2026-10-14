@@ -26,7 +26,6 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 import NotFound from "./NotFound";
 
 type CaseLifecycleStatus = "ongoing" | "closed" | "others";
-type CaseBadgeStatus = "ongoing" | "resolved" | "under-investigation";
 
 type CaseCardViewModel = {
   id: string;
@@ -53,14 +52,6 @@ type CaseCardViewModel = {
 function scrollToResults(): void {
   if (typeof document === "undefined") return;
   document.getElementById("case-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function mapCaseStatusToBadge(status: CaseLifecycleStatus): CaseBadgeStatus {
-  switch (status) {
-    case "ongoing": return "ongoing";
-    case "closed": return "resolved";
-    case "others": return "under-investigation";
-  }
 }
 
 function normalizeStatus(value: string | null | undefined): CaseLifecycleStatus {
@@ -412,7 +403,6 @@ function CaseResults({
             entity={entity}
             entityNames={entityNames}
             location={location}
-            status={mapCaseStatusToBadge(caseItem.status)}
             tags={caseItem.tags}
             entityIds={caseItem.subjectEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}
             locationIds={caseItem.locationEntities.map((entity) => entity.nes_id).filter((id): id is string => Boolean(id))}

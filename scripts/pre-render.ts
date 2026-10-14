@@ -20,6 +20,7 @@ import {
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
+import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -57,6 +58,82 @@ if (SCOPE !== 'full' && SCOPE !== 'static') {
 }
 const RENDER_ENTITY_PAGES = SCOPE === 'full';
 
+// Ceiling on pre-rendered ENTITY pages. Not a performance tuning knob — it is
+// what keeps the deploy under Cloudflare's hard limit of 20,000 static asset
+// files per Worker version, which the build silently crossed in October 2026
+// and which froze production on an old bundle for days (error 10304, and the
+// only symptom is a failed deploy days after the publishing that caused it).
+//
+// A CEILING rather than a rule like "cited by 2+ cases", because a rule still
+// grows with the corpus. Capped, the asset count stops tracking the entity
+// corpus and only grows with case pages (~1 file each), which buys thousands of
+// cases of headroom instead of a few hundred.
+//
+//   assets ≈ 2,712 fixed (case pages, pagination, JS/CSS) + ENTITY_LIMIT
+//
+// so 10,000 lands near 12,700 against the 20,000 ceiling. Raise it the day the
+// account moves to Workers Paid (limit 100,000) — that is why it is an env var
+// and not a constant.
+const ENTITY_LIMIT = Number(process.env.PRERENDER_ENTITY_LIMIT ?? 10_000);
+if (!Number.isInteger(ENTITY_LIMIT) || ENTITY_LIMIT < 1) {
+  console.error(
+    `[pre-render] ERROR: PRERENDER_ENTITY_LIMIT must be a positive integer, got ${JSON.stringify(
+      process.env.PRERENDER_ENTITY_LIMIT,
+    )}.`,
+  );
+  process.exit(1);
+}
+
+/**
+ * The entity pages to pre-render, best first, capped at ENTITY_LIMIT.
+ *
+ * Ranked by citation count, then by the newest citing case, then by path.
+ *
+ * The tie-break is the load-bearing part, not a detail. ~90% of cited entities
+ * (15,867 of 17,585 as of 2026-10-10) are cited by EXACTLY ONE case, so a cut at
+ * 10,000 falls inside one enormous tie. Ordered only by count, which entities
+ * land above the line would depend on object iteration order and would differ
+ * between builds — thousands of pages appearing and disappearing on every
+ * deploy, churning the asset list and the search-engine view of the site. The
+ * full key is deterministic: identical inputs give an identical list.
+ *
+ * Recency is the tie-break because it is the only other well-populated signal.
+ * `weight` is 0 on virtually every case and `bigo` is frequently null, so
+ * neither can order the tie; an entity named in a recent case is also the one
+ * readers are most likely to be looking for.
+ *
+ * Entities below the cut are NOT lost — they fall through to the edge renderer
+ * like any other un-pre-rendered route.
+ */
+function rankEntityPaths(
+  paths: string[],
+  citations: Map<string, { count: number; newest: string }>,
+): string[] {
+  if (paths.length <= ENTITY_LIMIT) return paths;
+  // Code-unit comparison, NOT localeCompare: with no explicit locale that reads
+  // the runtime's default, so Devanagari paths could tie-break one way in this
+  // container and another way in Cloudflare's — which is the exact
+  // build-to-build churn the ranking exists to prevent. `<`/`>` is locale-free
+  // and total, and ISO dates order correctly under it anyway.
+  const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+  const ranked = [...paths].sort((a, b) => {
+    const x = citations.get(a);
+    const y = citations.get(b);
+    return (
+      (y?.count ?? 0) - (x?.count ?? 0) ||
+      order(y?.newest ?? '', x?.newest ?? '') ||
+      order(a, b)
+    );
+  });
+  const dropped = ranked.length - ENTITY_LIMIT;
+  console.warn(
+    `[pre-render] entity cap: rendering the top ${ENTITY_LIMIT} of ${ranked.length} ` +
+      `cited entities; ${dropped} fall through to the edge renderer. ` +
+      `Raise PRERENDER_ENTITY_LIMIT once the Workers plan allows more assets.`,
+  );
+  return ranked.slice(0, ENTITY_LIMIT);
+}
+
 // Case pages cost one upstream call each — the detail endpoint is per-slug and
 // has no batch form, unlike entities — so a full build spends ~463 of them here.
 // That is affordable only because it happens alone: on a push to `main` GitHub
@@ -70,6 +147,22 @@ const RENDER_CASE_PAGES = SCOPE === 'full';
 // timed-out request is noise and the edge fallback covers it; a tenth of the
 // archive missing is a broken API wearing the same costume.
 const CASE_SKIP_TOLERANCE = 0.02;
+
+// A `full` build must authenticate. It reads the whole archive — thousands of
+// requests in a few minutes — and the anonymous cap is 1000/hour, so running one
+// anonymously no longer fits: the production build on 2026-10-03 spent ~1,010
+// and passed only on the synced throttle's approximate accounting.
+//
+// Fail BEFORE the work rather than after. Without this the symptom of a dropped
+// CI secret is eight minutes of rendering followed by a wall of 429s and a
+// refusal to publish, which reads like an API outage rather than a missing
+// variable. `static` builds are untouched: they make a few dozen calls and have
+// no reason to hold a credential.
+//
+// `PRERENDER_ANONYMOUS=1` opts out, for a local `bun run build` by someone who
+// has no credentials and does not need them. Not set in CI, deliberately — the
+// same arrangement as PRERENDER_ALLOW_EMPTY_PREFETCH above.
+const ALLOW_ANONYMOUS_FULL_BUILD = process.env.PRERENDER_ANONYMOUS === '1';
 
 interface RouteConfig {
   path: string;
@@ -102,6 +195,9 @@ interface PaginatedCaseList {
     title?: string | null;
     description?: string | null;
     updated_at: string;
+    // Only used to rank entities for the pre-render cap (see ENTITY_LIMIT): it
+    // is the tie-break for the ~90% of entities cited by exactly one case.
+    case_publish_date?: string | null;
     // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
     // canonical NES `@id` IRI and the case serializer stopped emitting one.
     entities: Array<{ nes_id: string | null; display_name?: string | null }>;
@@ -129,11 +225,16 @@ interface EntityBatchResponse {
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
+  // Authenticated when the build has credentials. These calls (the case list and
+  // the entity batches) go out from this script rather than through the SSR
+  // bundle's axios client, so they need the header attached here too — the
+  // bundle's own requests get it from setPrerenderToken in main().
+  const headers = await buildAuthHeaders();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(url, { signal: controller.signal });
+    res = await fetch(url, { signal: controller.signal, headers });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
@@ -476,6 +577,18 @@ function entityToSearchEntry(path: string, name: string | null | undefined): Sea
 }
 
 async function main() {
+  if (SCOPE === 'full' && !hasBuildCredentials() && !ALLOW_ANONYMOUS_FULL_BUILD) {
+    console.error(
+      '[pre-render] ERROR: a full build needs API credentials.\n' +
+        '  Set PRERENDER_CLIENT_ID and PRERENDER_CLIENT_SECRET (the sa-prerender machine\n' +
+        '  user; credentials are in OpenBao at kv/jawafdehi/private/prerender/creds).\n' +
+        '  Rendering the whole archive anonymously exceeds the 1000/hour anonymous cap.\n' +
+        '  To build locally without them anyway: PRERENDER_ANONYMOUS=1, or the cheaper\n' +
+        '  `bun run build:preview`.',
+    );
+    process.exit(1);
+  }
+
   // Copy client assets (JS/CSS/etc.) from dist/client/ into dist/ so they're
   // reachable at the same absolute paths referenced in index.html (e.g. /assets/index-[hash].js)
   await cp(join(ROOT, 'dist/client'), join(ROOT, 'dist'), { recursive: true });
@@ -493,9 +606,24 @@ async function main() {
 
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
   // @ts-expect-error: module only exists after `vite build --ssr`
-  const { render } = await import('../dist/server/entry-server.js') as {
+  const serverEntry = await import('../dist/server/entry-server.js') as {
     render: (url: string, seed?: { entityRecord?: unknown }) => Promise<RenderResult>;
+    setPrerenderToken: (token: string | null) => void;
   };
+  const { render } = serverEntry;
+
+  // Install the build's token on THIS module instance. The bundle carries its
+  // own copy of the shared axios client, so configuring the TypeScript source
+  // from here would reach a different instance and leave every prefetch
+  // anonymous — the same aliasing that made an interceptor added here silently
+  // do nothing. See src/services/prerender-auth.ts.
+  const token = await buildAuthToken();
+  serverEntry.setPrerenderToken(token);
+  console.log(
+    token
+      ? '[pre-render] Authenticated as the prerender service account.'
+      : '[pre-render] No build credentials — fetching anonymously.',
+  );
 
   const staticRoutes: RouteConfig[] = PRE_RENDERED_STATIC_ROUTES.map((route) => ({
     path: route.path,
@@ -544,17 +672,38 @@ async function main() {
   // path. Insertion order is first-appearance order, matching the Set-based
   // dedupe this replaced, so the emitted page order is unchanged.
   const iriByPath = new Map<string, string>();
+  //: How many published cases cite each entity, and the newest of those cases —
+  //: the two halves of the ranking below. Both are free here: `cases` already
+  //: carries every bind, so nothing extra is fetched.
+  const citations = new Map<string, { count: number; newest: string }>();
   if (apiReachable && RENDER_ENTITY_PAGES) {
     for (const caseItem of cases) {
+      const published = caseItem.case_publish_date ?? '';
+      // A case may name the same person twice (accused AND related). That is
+      // ONE citation — "cited by 2 cases" has to mean two cases.
+      const seen = new Set<string>();
       for (const entity of caseItem.entities) {
         const path = entityPath(entity.nes_id);
-        if (path && entity.nes_id && !iriByPath.has(path)) {
-          iriByPath.set(path, entity.nes_id);
+        if (!path || !entity.nes_id || seen.has(path)) continue;
+        seen.add(path);
+        if (!iriByPath.has(path)) iriByPath.set(path, entity.nes_id);
+        const prev = citations.get(path);
+        if (prev) {
+          prev.count += 1;
+          if (published > prev.newest) prev.newest = published;
+        } else {
+          citations.set(path, { count: 1, newest: published });
         }
       }
     }
   }
-  const entityPaths = [...iriByPath.keys()];
+  const entityPaths = rankEntityPaths([...iriByPath.keys()], citations);
+  // Drop the IRIs that did not make the cut, so the batch record fetch below
+  // asks only for pages that will actually be rendered.
+  const kept = new Set(entityPaths);
+  for (const path of [...iriByPath.keys()]) {
+    if (!kept.has(path)) iriByPath.delete(path);
+  }
 
   // Said once, loudly, and at the top rather than buried in the page log: a
   // static-scope build is NOT the site. It is missing every entity page, and the

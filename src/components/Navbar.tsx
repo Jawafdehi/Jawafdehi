@@ -95,6 +95,7 @@ export function Navbar() {
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
       { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
       { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
+      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
     ],
     [t],
   );
@@ -125,8 +126,14 @@ export function Navbar() {
     if (aboutNavItems.some((item) => item.to === path)) {
       return "about";
     }
+    // Derived from archiveNavItems for the same reason as the group above —
+    // and this list had already drifted: it was a copy of the menu's paths, so
+    // /mcp went into the menu while the pill stayed dark on that page. The
+    // extra entries below are the ones with no menu item of their own: /cases
+    // (reached from the header, not this menu) and the detail-page prefixes.
     if (
-      ["/cases", "/search", "/materials", "/courtcases"].includes(path) ||
+      archiveNavItems.some((item) => item.to === path) ||
+      path === "/cases" ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
       path.startsWith("/courtcase/") ||
@@ -136,7 +143,7 @@ export function Navbar() {
     }
 
     return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
-  }, [location.pathname, navItems, aboutNavItems]);
+  }, [location.pathname, navItems, aboutNavItems, archiveNavItems]);
 
   const pillKey = hoveredKey ?? activeKey;
   const showPill = isScrolled && Boolean(pillKey);
@@ -322,31 +329,33 @@ export function Navbar() {
               </NavLink>
             ) : null}
 
-            <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
+            {/* Archive sits directly after Home: the public archive is what most
+                visitors come for, so it leads and About closes the row. */}
+            <DropdownMenu open={archiveOpen} onOpenChange={setArchiveOpen}>
               <DropdownMenuTrigger
-                ref={setNavRef("about")}
-                onPointerEnter={() => setHoveredKey("about")}
+                ref={setNavRef("archive")}
+                onPointerEnter={() => setHoveredKey("archive")}
                 className={cn(
                   "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  desktopNavWidthClass.about,
-                  (activeKey === "about" || aboutOpen) && "text-foreground/82",
+                  desktopNavWidthClass.archive,
+                  (activeKey === "archive" || archiveOpen) && "text-foreground/82",
                   overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "about" || aboutOpen) && "text-primary-foreground",
+                  overDarkHero && (activeKey === "archive" || archiveOpen) && "text-primary-foreground",
                 )}
               >
-                {t("nav.about")}
+                {t("nav.archive", "Archive")}
                 <ChevronDown
                   className={cn(
                     "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    aboutOpen && "rotate-180",
+                    archiveOpen && "rotate-180",
                   )}
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="center"
-                className="mt-3 w-56 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+                className="mt-3 w-52 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
               >
-                {aboutNavItems.map((item) => (
+                {archiveNavItems.map((item) => (
                   <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
                     <Link to={item.to}>{item.label}</Link>
                   </DropdownMenuItem>
@@ -375,31 +384,31 @@ export function Navbar() {
               </NavLink>
             ))}
 
-            <DropdownMenu open={archiveOpen} onOpenChange={setArchiveOpen}>
+            <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
               <DropdownMenuTrigger
-                ref={setNavRef("archive")}
-                onPointerEnter={() => setHoveredKey("archive")}
+                ref={setNavRef("about")}
+                onPointerEnter={() => setHoveredKey("about")}
                 className={cn(
                   "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  desktopNavWidthClass.archive,
-                  (activeKey === "archive" || archiveOpen) && "text-foreground/82",
+                  desktopNavWidthClass.about,
+                  (activeKey === "about" || aboutOpen) && "text-foreground/82",
                   overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "archive" || archiveOpen) && "text-primary-foreground",
+                  overDarkHero && (activeKey === "about" || aboutOpen) && "text-primary-foreground",
                 )}
               >
-                {t("nav.archive", "Archive")}
+                {t("nav.about")}
                 <ChevronDown
                   className={cn(
                     "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    archiveOpen && "rotate-180",
+                    aboutOpen && "rotate-180",
                   )}
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="center"
-                className="mt-3 w-52 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+                className="mt-3 w-56 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
               >
-                {archiveNavItems.map((item) => (
+                {aboutNavItems.map((item) => (
                   <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
                     <Link to={item.to}>{item.label}</Link>
                   </DropdownMenuItem>
@@ -538,7 +547,8 @@ export function Navbar() {
                       {homeNavItem.label}
                     </NavLink>
                   ) : null}
-                  {aboutNavItems.map((item) => (
+                  {/* Same order as the desktop row: Archive first, About last. */}
+                  {archiveNavItems.map((item) => (
                     <NavLink
                       key={item.key}
                       to={item.to}
@@ -560,7 +570,7 @@ export function Navbar() {
                       {item.label}
                     </NavLink>
                   ))}
-                  {archiveNavItems.map((item) => (
+                  {aboutNavItems.map((item) => (
                     <NavLink
                       key={item.key}
                       to={item.to}

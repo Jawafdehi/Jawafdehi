@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
+  Bot,
   Building2,
   FileText,
   HeartHandshake,
@@ -59,6 +60,7 @@ let searchIndexRequest: Promise<SearchIndexEntry[]> | null = null;
 
 const routeIcons: Record<SearchIconName, typeof Search> = {
   BookOpen,
+  Bot,
   Building2,
   FileText,
   HeartHandshake,

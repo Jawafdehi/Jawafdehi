@@ -9,14 +9,15 @@
 //
 // Matching is React Router's own matcher over SITE_ROUTES, the same table App.tsx
 // renders from. There is no second copy of the route list to keep in step, and no
-// hand-written regex re-implementing `:param` / `*` precedence — /entity/42 picks
-// /entity/:id over /entity/*, /updates/preview beats /updates/:slug, and
-// /case/a/b matches nothing, because that is what the app itself does.
+// hand-written regex re-implementing `:param` / `*` precedence — /updates/preview
+// beats /updates/:slug and /case/a/b matches nothing, because that is what the
+// app itself does.
 //
 // matchRoutes comes from @remix-run/router, react-router's DOM-free and
 // React-free core, so importing it here does not pull React into the edge bundle.
 import { matchRoutes } from "@remix-run/router";
 
+import { isEntityRecordTail } from "../lib/entity-links";
 import { SITE_ROUTES } from "./site-routes";
 
 const MATCHABLE_ROUTES = SITE_ROUTES.map((route) => ({ path: route.path }));
@@ -50,6 +51,7 @@ export function isWorkerOwnedPath(pathname: string): boolean {
   return WORKER_OWNED_PATHS.includes(normalizePath(pathname));
 }
 
+
 // Which route a path resolves to, and the params it carries — or null when the
 // SPA would render NotFound. Params arrive percent-decoded.
 //
@@ -67,10 +69,36 @@ export function matchRoute(
   const matches = matchRoutes(MATCHABLE_ROUTES, path);
   if (!matches || matches.length === 0) return null;
   const leaf = matches[matches.length - 1];
+  // The splat matches any depth; only an IRI tail is a real record page.
+  if (leaf.route.path === "/entity/*" && !isEntityRecordTail(leaf.params["*"])) {
+    return null;
+  }
   return { path: leaf.route.path ?? "", params: leaf.params };
 }
 
 // True when the SPA has a route for this path.
 export function isKnownRoute(pathname: string): boolean {
   return matchRoute(pathname) !== null;
+}
+
+// The route patterns SITE_ROUTES marks `noindex: true`.
+const NOINDEX_PATTERNS: ReadonlySet<string> = new Set(
+  SITE_ROUTES.filter((route) => "noindex" in route && route.noindex).map((route) => route.path),
+);
+
+/**
+ * True when this path resolves to a route that must never be indexed.
+ *
+ * Keyed on the matched *pattern*, not a prefix test on the URL, so it inherits
+ * React Router's own ranking — the same reason matchRoute exists. A prefix test
+ * would also catch /administration, and would miss nothing today but drift the
+ * moment a route is added.
+ *
+ * ⚠️ The page must keep answering normally for this to work. A crawler has to be
+ * able to FETCH the page to read the noindex; blocking it in robots.txt instead
+ * would freeze /admin in the index permanently. See the SiteRoute.noindex doc.
+ */
+export function isNoindexPath(pathname: string): boolean {
+  const matched = matchRoute(pathname);
+  return matched !== null && NOINDEX_PATTERNS.has(matched.path);
 }
