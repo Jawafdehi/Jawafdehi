@@ -44,22 +44,6 @@ const caseTypePillClassNames: Record<string, string> = {
   CORRUPTION: "border-transparent bg-accent/10 text-accent hover:bg-accent/15",
 };
 
-const CASE_STATUS_LABEL_KEYS: Record<string, string> = {
-  DRAFT: "caseDetail.status.underInvestigation",
-  IN_REVIEW: "caseDetail.status.underInvestigation",
-  PUBLISHED: "caseDetail.status.ongoing",
-  CLOSED: "caseDetail.status.resolved",
-  ongoing: "caseDetail.status.ongoing",
-  concluded: "caseDetail.status.concluded",
-  resolved: "caseDetail.status.resolved",
-  closed: "caseDetail.status.resolved",
-  "under-investigation": "caseDetail.status.underInvestigation",
-  UNDER_INVESTIGATION: "caseDetail.status.underInvestigation",
-  others: "caseDetail.status.underInvestigation",
-  withdrawn: "caseDetail.status.withdrawn",
-  dormant: "caseDetail.status.dormant",
-};
-
 function normalizedLookupKeys(value: string | null | undefined) {
   const trimmed = value?.trim();
   if (!trimmed) return [];
@@ -111,35 +95,3 @@ export function getCaseBadgeClassName(kind: CaseBadgeKind, value?: string | null
   );
 }
 
-export function getCaseStatusLabelKey(status: CaseStatusValue) {
-  const key = normalizedLookupKeys(status).find(
-    (lookupKey) => CASE_STATUS_LABEL_KEYS[lookupKey],
-  );
-  return key ? CASE_STATUS_LABEL_KEYS[key] : "caseDetail.status.underInvestigation";
-}
-
-/**
- * The status shown on a public case chip.
- *
- * The lifecycle itself is DERIVED SERVER-SIDE and served as `status` — the
- * client cannot derive it, because a case has no single end date to read: one
- * published case runs twelve dockets across eight courts. Our own workflow
- * states still win, because that chip is reviewer-facing and describes our
- * publication rather than the proceedings.
- */
-export function deriveCaseStatus(
-  state: string | null | undefined,
-  status?: CaseStatus | string | null,
-): CaseStatusValue {
-  // Normalize case and separators so a lowercase/mixed-case API value
-  // ("draft", "in-review", "closed") is compared the same as its canonical form.
-  const normalizedState = state?.trim().toUpperCase().replace(/-/g, "_");
-
-  if (normalizedState === "DRAFT" || normalizedState === "IN_REVIEW") return normalizedState;
-  if (normalizedState === "CLOSED") return "CLOSED";
-
-  const served = status?.trim();
-  if (served) return served;
-
-  return normalizedState || "PUBLISHED";
-}
