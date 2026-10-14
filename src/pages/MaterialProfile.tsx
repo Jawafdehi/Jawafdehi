@@ -502,9 +502,6 @@ export default function MaterialProfile() {
                     >
                       <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
                       Read the transcript
-                      <span className="ml-auto text-sm text-muted-foreground">
-                        {contentSummary.pages_read.toLocaleString()} pages
-                      </span>
                     </Button>
                   ) : null}
 

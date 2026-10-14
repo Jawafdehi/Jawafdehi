@@ -476,7 +476,6 @@ describe("MaterialProfile — reaching the transcript", () => {
     renderPage();
 
     const button = await screen.findByRole("button", { name: /Read the transcript/i });
-    expect(button.textContent).toContain("2"); // pages_read, not pages
     fireEvent.click(button);
 
     expect(await screen.findByRole("heading", { name: /^Pages/ })).toBeTruthy();
