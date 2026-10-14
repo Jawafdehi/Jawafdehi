@@ -1,12 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import {
-  categoryField,
-  chartKind,
-  pieIsSafe,
-  plotFigure,
-  tooManySeries,
-} from "@/lib/content-figure";
+import { categoryField, chartKind, isStacked, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
 import type { ContentPoint } from "@/services/datalake-api";
 
 const pt = (
@@ -201,5 +195,54 @@ describe("palette bounds", () => {
     const figure = grid(5);
     expect(figure.series).toHaveLength(5);
     expect(tooManySeries(figure)).toBe(false);
+  });
+});
+
+describe("isStacked — the source's own spelling", () => {
+  it("recognises every spelling the corpus actually uses", () => {
+    // Measured across all 477 figures: stacked_bar (5), stacked-bar (4),
+    // "stacked bar" (1), stacked_bar_horizontal (1), stacked_bar_3d (1).
+    // Drawn grouped, their heights stop summing to the published total.
+    for (const t of [
+      "stacked_bar",
+      "stacked-bar",
+      "stacked bar",
+      "stacked_bar_horizontal",
+      "stacked_bar_3d",
+      "Stacked_Bar",
+    ]) {
+      expect(isStacked(t)).toBe(true);
+    }
+  });
+
+  it("does not claim an ordinary bar is stacked", () => {
+    for (const t of ["bar", "clustered_bar", "bar_grouped", "column", "pie", "line"]) {
+      expect(isStacked(t)).toBe(false);
+    }
+  });
+});
+
+describe("pieIsSafe — a pie we cannot draw honestly", () => {
+  it("refuses a multi-series pie", () => {
+    // 15 of the corpus's 477 figures are multi-series pies. Drawing one as a
+    // BAR silently changes the form the report published.
+    // Two categories across two series, so the axis detection cannot collapse
+    // it to one — the shape a multi-series pie actually has.
+    const figure = plotFigure([
+      { point_index: 1, label: "क", series: "२०८०", value: 5, estimated: false },
+      { point_index: 2, label: "ख", series: "२०८०", value: 7, estimated: false },
+      { point_index: 3, label: "क", series: "२०८१", value: 6, estimated: false },
+      { point_index: 4, label: "ख", series: "२०८१", value: 8, estimated: false },
+    ]);
+    expect(figure.series.length).toBeGreaterThan(1);
+    expect(pieIsSafe(figure)).toBe(false);
+  });
+
+  it("accepts a single series of non-negative parts", () => {
+    const figure = plotFigure([
+      { point_index: 1, label: "क", series: "", value: 5, estimated: false },
+      { point_index: 2, label: "ख", series: "", value: 6, estimated: false },
+    ]);
+    expect(pieIsSafe(figure)).toBe(true);
   });
 });

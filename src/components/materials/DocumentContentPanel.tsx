@@ -46,7 +46,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, FileSpreadsheet, FileText } from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
-import { chartKind, plotFigure, tooManySeries } from "@/lib/content-figure";
+import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
 import type { ContentFigureChartProps } from "./ContentFigureChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -99,8 +99,15 @@ function FigureCard({ figure }: { figure: ContentFigure }) {
   const plotted = plotFigure(figure.points);
   // Must agree with ContentFigureChart's own bail-outs, or the table stays
   // collapsed behind a chart that never renders.
+  // Must agree with ContentFigureChart's bail-outs EXACTLY, or the table stays
+  // collapsed behind a chart that never renders. The pie clause is the one that
+  // bit: a multi-series pie is undrawable, and 15 of this corpus's 477 figures
+  // are exactly that.
+  const kind = chartKind(figure.chart_type);
   const drawable =
-    chartKind(figure.chart_type) !== null && !tooManySeries(plotted);
+    kind !== null &&
+    !tooManySeries(plotted) &&
+    (kind !== "pie" || pieIsSafe(plotted));
   const multiSeries = plotted.series.length > 1;
 
   return (
@@ -113,7 +120,7 @@ function FigureCard({ figure }: { figure: ContentFigure }) {
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           <span aria-hidden="true">{ESTIMATE_MARK}</span> marks a value read from the
           chart image rather than a printed figure
-          {drawable ? "; those points are drawn hollow" : ""}.
+          {drawable && kind === "line" ? "; those points are drawn hollow" : ""}.
         </p>
       ) : null}
 
@@ -377,8 +384,12 @@ function MarkdownTable({
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.startsWith("|"))
-    // The `| --- | --- |` separator carries no data.
-    .filter((line) => !/^\|[\s|:-]*\|?$/.test(line))
+    // The `| --- | --- |` separator carries no data. Matched on a RUN of
+    // dashes, not on any dash: a lone `-` in a cell is a value in these tables
+    // — it is how the source writes nil — and `| - | - |` is a data row, not a
+    // rule. An all-blank row is dropped as the merged-cell artefact it is.
+    .filter((line) => !/^\|[\s|:]*(?:-{3,}[\s|:]*)+\|?$/.test(line))
+    .filter((line) => !/^\|[\s|]*\|?$/.test(line))
     .map((line) =>
       line
         .replace(/^\|/, "")

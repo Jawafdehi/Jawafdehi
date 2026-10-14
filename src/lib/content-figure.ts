@@ -98,6 +98,20 @@ export function chartKind(chartType: string): "line" | "bar" | "pie" | null {
 }
 
 /**
+ * Whether the source drew the bars STACKED rather than side by side.
+ *
+ * Drawing a stacked chart grouped is not a styling difference: the bar heights
+ * stop summing to the total the report published, so a reader comparing our
+ * chart to the PDF sees different numbers. The corpus spells it four ways —
+ * `stacked_bar`, `stacked-bar`, `stacked bar`, `stacked_bar_horizontal` — so
+ * the separators are normalised away before matching, exactly as `chartKind`
+ * does.
+ */
+export function isStacked(chartType: string): boolean {
+  return chartType.toLowerCase().replace(/[\s_-]+/g, "").startsWith("stacked");
+}
+
+/**
  * A pie is honest for ONE series of non-negative parts. Nothing else about the
  * figure disqualifies it: if the report drew a pie, we draw a pie.
  *

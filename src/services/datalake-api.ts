@@ -243,19 +243,27 @@ function contentEndpoint(iriOrTail: string): string {
 }
 
 /**
- * GET one `/content` shape, resolving 404 to `null`.
+ * GET one `/content` shape.
  *
- * A 404 here means "this material has no stored content at all", which is the
- * common case — most materials are a single scraped page. That is not an error
- * and must not surface as one: the caller simply renders nothing. Any other
- * failure still throws.
+ * `absentIsNull` is the whole subtlety. On a LISTING a 404 means "this material
+ * has no stored content at all" — the common case, since most materials are a
+ * single scraped page — so it resolves to `null` and the caller renders
+ * nothing. On ONE ITEM the same status means "no such page or table", which is
+ * a genuine failure of the thing the reader just clicked: swallowing it to
+ * `null` leaves an expanded row that is simply blank, with no error state to
+ * show, because `isError` stays false. It throws instead.
  */
-async function getContent<T>(endpoint: string, params: Record<string, string | number>) {
+async function getContent<T>(
+  endpoint: string,
+  params: Record<string, string | number>,
+  { absentIsNull = false }: { absentIsNull?: boolean } = {},
+) {
   try {
     const response = await http.get<T>(endpoint, { params });
     return response.data;
   } catch (error) {
-    if ((error as { response?: { status?: number } })?.response?.status === 404) {
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (absentIsNull && status === 404) {
       return null;
     }
     handleDataLakeError(error, endpoint);
@@ -272,7 +280,7 @@ async function getContent<T>(endpoint: string, params: Record<string, string | n
 export async function listMaterialTables(iriOrTail: string) {
   const data = await getContent<ContentList<ContentTableStub>>(contentEndpoint(iriOrTail), {
     type: "table",
-  });
+  }, { absentIsNull: true });
   return data?.items ?? null;
 }
 
@@ -293,7 +301,7 @@ export async function getMaterialTable(iriOrTail: string, key: string) {
 export async function listMaterialFigures(iriOrTail: string) {
   const data = await getContent<ContentList<ContentFigure>>(contentEndpoint(iriOrTail), {
     type: "figure",
-  });
+  }, { absentIsNull: true });
   return data?.items ?? null;
 }
 
@@ -301,7 +309,7 @@ export async function listMaterialFigures(iriOrTail: string) {
 export async function listMaterialPages(iriOrTail: string) {
   const data = await getContent<ContentList<ContentPageStub>>(contentEndpoint(iriOrTail), {
     type: "page",
-  });
+  }, { absentIsNull: true });
   return data?.items ?? null;
 }
 

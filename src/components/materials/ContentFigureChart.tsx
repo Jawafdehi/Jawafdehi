@@ -25,6 +25,7 @@ import {
 } from "@/lib/pie-labels";
 import {
   chartKind,
+  isStacked,
   pieIsSafe,
   tooManySeries,
   type PlottedFigure,
@@ -103,13 +104,20 @@ export default function ContentFigureChart({
   // legend under the ring instead, which wraps.
   const narrow = useIsNarrow();
   const kind = chartKind(chartType);
+  const stacked = isStacked(chartType);
   // When the figure's own unit IS percent, its values already are shares —
   // appending a computed one prints "28 (28%)". Only the exact token counts:
   // "संख्या र प्रतिशत" mixes counts and shares and must keep both.
   const valuesArePercent = unit.trim() === "प्रतिशत";
   // Past the palette there is no honest way to tell series apart, and the chart
   // would be unreadable anyway. The panel shows the numbers instead.
+  // A pie the source drew that we cannot draw honestly — more than one series,
+  // or a negative/absent part — must not be redrawn as a BAR. Fifteen pies in
+  // this corpus are multi-series. Silently changing the form misrepresents the
+  // document, which is the one thing this component refuses to do; the panel
+  // shows the numbers instead.
   if (!kind || tooManySeries(figure)) return null;
+  if (kind === "pie" && !pieIsSafe(figure)) return null;
 
   // The chart is decorative over a table that carries the same numbers, so it
   // is labelled rather than described cell by cell.
@@ -311,9 +319,14 @@ export default function ContentFigureChart({
               <Bar
                 key={name}
                 dataKey={name}
+                // A source that stacked its bars must stay stacked: drawn
+                // grouped, the heights stop summing to the published total and
+                // our chart disagrees with the PDF it came from. Twelve figures
+                // in this corpus are stacked.
+                stackId={stacked ? "stack" : undefined}
                 fill={SERIES_COLORS[i % SERIES_COLORS.length]}
                 isAnimationActive={false}
-                radius={[2, 2, 0, 0]}
+                radius={stacked ? undefined : [2, 2, 0, 0]}
               />
             ))}
           </BarChart>
