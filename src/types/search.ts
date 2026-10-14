@@ -38,6 +38,16 @@ export interface ArchiveSearchParams {
   // returns the list of sources — the column mixes publishers with document forms,
   // so it is scoped against but never offered as options. Material-only.
   source?: string[];
+  // CORPUS SCOPE one level finer: the document KIND within a source. Needed
+  // because `source` alone cannot identify a shelf when one token holds many
+  // kinds — every Auditor General document is `official_report` and only 18 of
+  // 228 are annual reports. Built by `seriesScope`, never assembled by hand.
+  // Material-only.
+  dataset_bucket?: string[];
+  // The negation: everything in the source EXCEPT these kinds. Repeated values
+  // union into one exclusion. A document with no kind is NOT excluded, so a
+  // complement shelf catches it.
+  dataset_bucket_exclude?: string[];
   // Exact-match refine facets (each a repeatable query param).
   entity_type?: string[];
   case_type?: string[];
@@ -181,6 +191,12 @@ export interface SearchResultExtra {
   // the indexer later, so a document only gains it on reindex. Until the index
   // is rebuilt this key is simply absent — the cards must render without it.
   parties?: SearchResultParties;
+  // Material-only: the document KIND, so a card can name the shelf the document
+  // actually belongs to rather than inferring it from `source` — which is wrong
+  // for most of a mixed corpus. Served from the document's stored JSON-LD, so
+  // it is present from the moment the kind was ingested, not only after a
+  // reindex. Absent on every material that carries no kind at all.
+  dataset_bucket?: string;
 }
 
 // One result hit — the common envelope every type shares. Rich per-result

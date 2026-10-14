@@ -232,7 +232,7 @@
       "searchSubmit": "Search Jawafdehi",
       "suggestionsLabel": "Case suggestions",
       "stats": {
-        "casesDocumented": "Cases documented",
+        "casesDocumented": "Corruption cases documented",
         "totalBigo": "Total embezzled amount",
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
@@ -2718,10 +2718,11 @@
     },
     "type": {
       "title": "Typography",
-      "displayRole": "Display and headings",
+      "displayRoleNepali": "Headlines — Nepali",
+      "displayRoleLatin": "Headlines — English",
       "bodyRole": "Body and UI",
       "monoRole": "Figures, dates, case references",
-      "note": "Vesper Libre covers both Latin and Devanagari, so a bilingual headline stays in one typeface. Devanagari needs looser leading than Latin because of matra stacking — please don't set Devanagari copy on Latin metrics."
+      "note": "Headlines are pinned to one face per language: Vesper Libre for Nepali, Inter for English. Vesper Libre covers both Latin and Devanagari, so a bilingual Nepali headline stays in one typeface. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics."
     },
     "contact": {
       "title": "Contact",

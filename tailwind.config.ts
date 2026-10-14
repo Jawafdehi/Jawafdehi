@@ -15,7 +15,22 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Vesper Libre", "Georgia", "Noto Sans Devanagari", "serif"],
+        // Headline face. Deliberately a single var rather than a literal stack:
+        // the stack itself lives in --font-family-heading (src/styles/
+        // typography.css) and switches per locale — Vesper Libre under
+        // lang="ne", Inter under lang="en". Hardcoding Vesper here instead
+        // pinned ~12 ad-hoc `font-display` h1/h2 on /insights, /data-quality
+        // and /research to serif in BOTH locales, which is half of why
+        // headlines looked arbitrary from page to page.
+        display: ["var(--font-family-heading)"],
+        // Reading face, same arrangement as `display` above. Without this key
+        // `font-sans` was Tailwind's own `ui-sans-serif, system-ui, …`, so the
+        // press-kit card captioned "Noto Sans Devanagari" documented the face
+        // by rendering in the visitor's OS UI font instead — the same mislabel
+        // the display card was fixed for. It also puts Preflight's `html`
+        // default on the app face, which is what the `:where(body, …)` rule in
+        // src/styles/typography.css already sets one level down.
+        sans: ["var(--font-family-app)"],
         // "Register" data face: figures, counts, dates and case references.
         // Noto Sans Devanagari carries Nepali digits/text that appear in a
         // mono context (IBM Plex Mono has no Devanagari glyphs of its own).

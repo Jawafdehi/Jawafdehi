@@ -84,10 +84,13 @@ function LocationProbe() {
   return null;
 }
 
-function renderPage(initial = "/materials/?series=charge-sheets") {
-  const queryClient = new QueryClient({
+function renderPage(
+  initial = "/materials/?series=charge-sheets",
+  slug = "charge-sheets",
+  queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
-  });
+  }),
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initial]}>
@@ -97,7 +100,7 @@ function renderPage(initial = "/materials/?series=charge-sheets") {
             element={
               <>
                 <LocationProbe />
-                <MaterialSeriesBrowse slug="charge-sheets" />
+                <MaterialSeriesBrowse slug={slug} />
               </>
             }
           />
@@ -133,6 +136,68 @@ describe("MaterialSeriesBrowse", () => {
     // Reverse-chronological is the default, and it is the SERVER that applies it —
     // the old page sorted only the rows already fetched.
     expect(params.sort).toBe("newest");
+  });
+
+  // The five Auditor General shelves all scope `official_report`, so source
+  // alone no longer identifies a shelf. seriesScope() is unit-tested; these
+  // pin that this page actually FORWARDS it to the API.
+  it("narrows a kind shelf to its document bucket, not just its source", async () => {
+    searchArchive.mockResolvedValue(response([hit("1", "54th Annual Report", "2024-01-02")]));
+    renderPage("/materials/?series=auditor-general-reports", "auditor-general-reports");
+
+    await waitFor(() => expect(searchArchive).toHaveBeenCalled());
+    const params = lastParams();
+    expect(params.source).toEqual(["official_report"]);
+    expect(params.dataset_bucket).toEqual(["report_annual-report"]);
+    // A kind shelf must not ALSO exclude, or it would scope to nothing.
+    expect(params.dataset_bucket_exclude).toBeUndefined();
+  });
+
+  it("sends the complement shelf as an exclusion of its four siblings", async () => {
+    searchArchive.mockResolvedValue(response([hit("1", "An RTI report", "2024-01-02")]));
+    renderPage("/materials/?series=oag-publications", "oag-publications");
+
+    await waitFor(() => expect(searchArchive).toHaveBeenCalled());
+    const params = lastParams();
+    expect(params.source).toEqual(["official_report"]);
+    expect(params.dataset_bucket).toBeUndefined();
+    // Stated as an exclusion, so a bucket the registry has never heard of still
+    // lands here rather than vanishing from the site entirely.
+    expect(params.dataset_bucket_exclude).toEqual([
+      "report_annual-report",
+      "report_province-report",
+      "publication_audit-journals",
+      "publication_audit-bulletin",
+    ]);
+  });
+
+  it("does not serve one Auditor General shelf's documents on another", async () => {
+    // The query is cached for 5 minutes, so a cache key that ignored the kind
+    // would show the annual reports on the journal page WITHOUT a refetch —
+    // silently, and only for the second visitor of the pair.
+    searchArchive.mockImplementation((params: ArchiveSearchParams) =>
+      Promise.resolve(
+        response([
+          params.dataset_bucket?.[0] === "publication_audit-journals"
+            ? hit("2", "Journal of Government Auditing", "2024-01-02")
+            : hit("1", "54th Annual Report", "2024-01-02"),
+        ]),
+      ),
+    );
+    const shared = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    renderPage(
+      "/materials/?series=auditor-general-reports",
+      "auditor-general-reports",
+      shared,
+    );
+    await waitFor(() => expect(screen.getByText("54th Annual Report")).toBeDefined());
+
+    renderPage("/materials/?series=audit-journal", "audit-journal", shared);
+    await waitFor(() =>
+      expect(screen.getByText("Journal of Government Auditing")).toBeDefined(),
+    );
+    expect(searchArchive).toHaveBeenCalledTimes(2);
   });
 
   it("reports the corpus total, not the number of rows fetched", async () => {

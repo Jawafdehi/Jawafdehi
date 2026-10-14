@@ -532,6 +532,18 @@ export interface MaterialsMetrics {
   by_source: { source: string; count: number }[];
   /** Source×type cross-tab: how many of each document type each source holds. */
   by_source_type: { source: string; material_type: string; count: number }[];
+  /**
+   * Source×KIND cross-tab — how many documents of each `dataset_bucket` each
+   * source holds. The counterpart to the search scope of the same name, and the
+   * only way to count a /materials shelf that is narrower than a source token
+   * (every Auditor General document is `official_report`; 18 of 228 are annual
+   * reports). Materials carrying no kind are excluded rather than grouped under
+   * null, so these rows do NOT sum to `total`.
+   *
+   * Optional: an API deployed before this field simply omits it, and
+   * `seriesCount` yields 0 for a kinded shelf rather than a wrong number.
+   */
+  by_dataset_bucket?: { source: string; dataset_bucket: string; count: number }[];
   counts: {
     with_description: number;
     with_url: number;

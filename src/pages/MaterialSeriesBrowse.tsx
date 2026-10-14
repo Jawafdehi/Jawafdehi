@@ -30,7 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { seriesBySlug } from "@/data/material-series";
+import { seriesBySlug, seriesScope } from "@/data/material-series";
 import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
 import { searchArchive } from "@/services/search-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
@@ -171,7 +171,11 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
   const documentsQuery = useInfiniteQuery({
     queryKey: [
       "material-series-search",
-      series?.source ?? slug,
+      // The SLUG, not the source: several shelves share one source token now
+      // (the five Auditor General ones all scope `official_report`), so keying
+      // on the source would serve the annual-report page's results on the
+      // audit-journal page from cache.
+      slug,
       query,
       sortOrder,
       dateFrom,
@@ -181,7 +185,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
       searchArchive({
         q: query,
         type: "material",
-        source: [series?.source ?? ""],
+        ...(series ? seriesScope(series) : { source: [""] }),
         sort: sortOrder,
         page: pageParam,
         page_size: PAGE_SIZE,

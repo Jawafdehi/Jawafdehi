@@ -184,7 +184,14 @@ export default function MaterialProfile() {
   const links = getMaterialSourceLinks(data);
   const [previewDocument, setPreviewDocument] =
     useState<PreviewDocument | null>(null);
-  const series = seriesBySource(tail.split("/")[0] || "");
+  // The document's own JSON-LD carries the kind, so this page never has to
+  // guess which of a source's shelves it belongs to.
+  const series = seriesBySource(
+    tail.split("/")[0] || "",
+    typeof data?.["jawafdehi:datasetBucket"] === "string"
+      ? data["jawafdehi:datasetBucket"]
+      : undefined,
+  );
 
   // Generic details: any presentable scalar field not handled elsewhere.
   const detailRows: Array<{ label: string; value: string }> = [];

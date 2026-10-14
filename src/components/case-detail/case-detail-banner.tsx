@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { ArrowUpRight, Share2 } from "lucide-react";
-import { CaseStatusBadge, CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
+import { CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
-import { deriveCaseStatus, getCaseStatusLabelKey } from "@/lib/case-badges";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";
 import { cn } from "@/lib/utils";
@@ -98,10 +97,6 @@ export function CaseDetailBanner({
     isPlaceholder,
     onError: advanceImage,
   } = useCaseImage(caseData.banner, [caseData.banner_url, caseData.thumbnail_url]);
-  // The lifecycle is derived server-side and served as `status`; only our own
-  // DRAFT/IN_REVIEW workflow states override it.
-  const effectiveStatus = deriveCaseStatus(caseData.state, caseData.status);
-  const statusLabel = t(getCaseStatusLabelKey(effectiveStatus));
   // A known case type localizes; an unknown/scraped one humanizes its raw value
   // rather than mislabelling (getCaseTypeLabelKey returns null when unknown).
   // `case_type` renamed to `offence_type`; both are served this release.
@@ -242,10 +237,6 @@ export function CaseDetailBanner({
               </h1>
 
               <div className="mb-5 flex flex-wrap items-center gap-2">
-                <CaseStatusBadge status={effectiveStatus}>
-                  {statusLabel}
-                </CaseStatusBadge>
-
                 {caseTypeLabel ? (
                   <CaseTypeBadge caseType={offenceType}>
                     {caseTypeLabel}
