@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
-import { formatCourtName } from "@/utils/court-case-format";
+import { courtStatusDisplay, formatCourtName } from "@/utils/court-case-format";
 import { formatDateWithBS } from "@/utils/date";
 import { cn } from "@/lib/utils";
 
@@ -89,10 +89,14 @@ function getStatusTone(status: string | null | undefined) {
   return "border-alert-strong/25 bg-alert-strong/10 text-alert-strong dark:border-alert-strong/25 dark:bg-alert-strong/10 dark:text-alert-strong";
 }
 
-function getLatestCourtUpdate(courtCase: CourtCase) {
+// `statusText` is the already-normalized status, passed in rather than read off
+// `case_status` here: the raw column is scraper output ("फैसला / अन्तिम आदेश >>
+// …", a BS date in parentheses) and this line used to print it verbatim beside
+// the pill that no longer does.
+function getLatestCourtUpdate(courtCase: CourtCase, statusText: string | null) {
   if (courtCase.verdict_date_ad) {
     return {
-      type: courtCase.case_status || "Faisala",
+      type: statusText || "",
       fallbackKey: "caseDetail.courtFaisala",
       date: formatDateWithBS(courtCase.verdict_date_ad, "PP", courtCase.verdict_date_bs),
     };
@@ -147,7 +151,11 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
 
   const { courtName, caseNumber } = parseCourtIdentifier(courtCaseId, lang);
   const detailPath = linkToDetail ? courtCaseDetailPath(courtCaseId) : null;
-  const lastUpdate = courtCase ? getLatestCourtUpdate(courtCase) : null;
+  const statusDisplay = courtStatusDisplay(courtCase?.case_status);
+  const statusText = statusDisplay
+    ? statusDisplay.detail ?? t(statusDisplay.labelKey, statusDisplay.labelFallback)
+    : null;
+  const lastUpdate = courtCase ? getLatestCourtUpdate(courtCase, statusText) : null;
 
   const headerText = (
     <span className="break-words">
@@ -184,13 +192,18 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
             </p>
           )}
 
-          {courtCase?.case_status && (
-            <Badge
-              variant="outline"
-              className={cn("w-fit rounded-full px-3 py-1 text-xs font-semibold", getStatusTone(courtCase.case_status))}
-            >
-              {courtCase.case_status}
-            </Badge>
+          {statusDisplay && (
+            <div className="flex w-fit flex-col items-start gap-1">
+              <Badge
+                variant="outline"
+                className={cn("w-fit rounded-full px-3 py-1 text-xs font-semibold", getStatusTone(courtCase?.case_status))}
+              >
+                {t(statusDisplay.labelKey, statusDisplay.labelFallback)}
+              </Badge>
+              {statusDisplay.detail ? (
+                <span className="text-xs text-primary/60">{statusDisplay.detail}</span>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

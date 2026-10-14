@@ -133,8 +133,10 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(screen.getAllByRole("navigation", { name: "Jump to case section" })).toHaveLength(2);
     expect(screen.getAllByRole("link", { name: "Case summary" })).toHaveLength(2);
 
-    // Status badge: existing status pill
-    expect(screen.getByText("चालु")).toBeTruthy();
+    // Status badge: the register writes this state as both चालु and चलिरहेको,
+    // so the pill shows one normalized word for either.
+    expect(screen.getByText("Ongoing")).toBeTruthy();
+    expect(screen.queryByText("चालु")).toBeNull();
 
     // Metadata list
     expect(screen.getByText("Case number")).toBeTruthy();
