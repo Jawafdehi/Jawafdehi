@@ -311,7 +311,7 @@ function TableRow({
     staleTime: 5 * 60 * 1000,
   });
 
-  const label = nepaliSafe(stub.caption, `Table on page ${stub.page_no}`);
+  const label = nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`);
 
   return (
     <li className="border-b border-border/70 last:border-b-0">
@@ -465,6 +465,122 @@ function MarkdownTable({
  * count in the header comes from the material payload, so the section can label
  * itself honestly before it has fetched anything.
  */
+
+/**
+ * A filter over a long listing.
+ *
+ * 446 pages and 145 tables are not browsable by scrolling, and neither list has
+ * a natural order a reader can exploit — a table's caption is the only handle
+ * most of them have, and 89 of this document's 145 carry none at all. So the
+ * filter matches BOTH the visible label and the page number: typing "52" finds
+ * page 52 and every table on it, and typing a word finds the captions that
+ * contain it.
+ */
+function FilterBox({
+  label,
+  value,
+  onChange,
+  shown,
+  total,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  shown: number;
+  total: number;
+}) {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-3">
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={label}
+        aria-label={label}
+        className="w-full max-w-xs rounded-md border border-border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+      />
+      <span className="text-sm text-muted-foreground">
+        {shown === total
+          ? `${total.toLocaleString()} in all`
+          : `${shown.toLocaleString()} of ${total.toLocaleString()}`}
+      </span>
+    </div>
+  );
+}
+
+/** A table's handle: its caption where the source printed one, else where it sits. */
+function tableLabel(stub: ContentTableStub): string {
+  const caption = stub.caption.trim();
+  if (caption) return caption;
+  // 89 of this document's 145 tables have no caption upstream. "Table on page
+  // 52" tells a reader nothing they can choose by, so the shape goes in the
+  // label — it is the only other thing that distinguishes two tables on a page.
+  const where = stub.index_on_page > 1 ? `Page ${stub.page_no} (${stub.index_on_page})` : `Page ${stub.page_no}`;
+  return `${where} · ${stub.n_rows}×${stub.n_cols}`;
+}
+
+function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {
+  const [q, setQ] = useState("");
+  const needle = q.trim().toLowerCase();
+  const shown = needle
+    ? items.filter(
+        (t) =>
+          tableLabel(t).toLowerCase().includes(needle) ||
+          String(t.page_no).includes(needle),
+      )
+    : items;
+
+  return (
+    <>
+      <FilterBox
+        label="Filter tables by caption or page"
+        value={q}
+        onChange={setQ}
+        shown={shown.length}
+        total={items.length}
+      />
+      {shown.length === 0 ? (
+        <p className="text-base text-muted-foreground">No table matches that.</p>
+      ) : (
+        <ul>
+          {shown.map((stub) => (
+            <TableRow key={stub.key} tail={tail} stub={stub} />
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function PageList({ tail, items }: { tail: string; items: ContentPageStub[] }) {
+  const [q, setQ] = useState("");
+  const needle = q.trim();
+  const shown = needle
+    ? items.filter((p) => String(p.page_no).includes(needle))
+    : items;
+
+  return (
+    <>
+      <FilterBox
+        label="Jump to a page number"
+        value={q}
+        onChange={setQ}
+        shown={shown.length}
+        total={items.length}
+      />
+      {shown.length === 0 ? (
+        <p className="text-base text-muted-foreground">No page with that number.</p>
+      ) : (
+        <ul>
+          {shown.map((stub) => (
+            <PageRow key={stub.page_no} tail={tail} stub={stub} />
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
 function ContentSection<T>({
   id,
   title,
@@ -555,39 +671,6 @@ export function DocumentContentPanel({
 
   return (
     <div className="p-5 md:p-8">
-      <p className="mb-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-        {tables.toLocaleString()} table{tables === 1 ? "" : "s"} and{" "}
-        {figures.toLocaleString()} chart{figures === 1 ? "" : "s"} were read out of
-        this document
-        {points > 0
-          ? `, recovering ${points.toLocaleString()} chart data point${
-              points === 1 ? "" : "s"
-            }`
-          : ""}
-        . Figures are reproduced as they were published; nothing here is corrected
-        or recalculated.
-      </p>
-
-      <ContentSection
-        id={`${tail}-pages`}
-        title="Pages"
-        count={pages}
-        icon={<FileText className="h-4 w-4 text-accent" aria-hidden="true" />}
-        hint={
-          unread > 0
-            ? `Select a page to read it. ${unread.toLocaleString()} of these pages could not be read, and open empty — that is a limit of our transcription, not a blank page.`
-            : "Select a page to read it."
-        }
-        load={() => listMaterialPages(tail)}
-        render={(items) => (
-          <ul>
-            {items.map((stub) => (
-              <PageRow key={stub.page_no} tail={tail} stub={stub} />
-            ))}
-          </ul>
-        )}
-      />
-
       <ContentSection
         id={`${tail}-tables`}
         title="Tables"
@@ -595,13 +678,7 @@ export function DocumentContentPanel({
         icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
         hint="Select a table to read it."
         load={() => listMaterialTables(tail)}
-        render={(items) => (
-          <ul>
-            {items.map((stub) => (
-              <TableRow key={stub.key} tail={tail} stub={stub} />
-            ))}
-          </ul>
-        )}
+        render={(items) => <TableList tail={tail} items={items} />}
       />
 
       <ContentSection
@@ -619,29 +696,34 @@ export function DocumentContentPanel({
         )}
       />
 
-      <p className="mt-10 border-t border-border/70 pt-4 text-sm leading-6 text-muted-foreground">
-        Read out of the published PDF by the{" "}
+      <ContentSection
+        id={`${tail}-pages`}
+        title="Pages"
+        count={pages}
+        icon={<FileText className="h-4 w-4 text-accent" aria-hidden="true" />}
+        hint={
+          unread > 0
+            ? `Select a page to read it. ${unread.toLocaleString()} of these pages could not be read, and open empty — that is a limit of our transcription, not a blank page.`
+            : "Select a page to read it."
+        }
+        load={() => listMaterialPages(tail)}
+        render={(items) => <PageList tail={tail} items={items} />}
+      />
+
+      {/* The dataset is CC BY-NC 4.0, which REQUIRES attribution — so this line
+          is a licence term, not a flourish, and cannot simply be dropped. Kept
+          to one muted line instead of the paragraph of provenance it replaced. */}
+      <p className="mt-8 text-sm leading-6 text-muted-foreground">
+        Source:{" "}
         <a
           href={`https://huggingface.co/datasets/${provenance.dataset}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary underline underline-offset-2 hover:no-underline"
+          className="underline underline-offset-2 hover:no-underline"
         >
           {provenance.dataset}
         </a>{" "}
-        dataset
-        {provenance.dataset_revision
-          ? ` (revision ${provenance.dataset_revision.slice(0, 7)})`
-          : ""}
-        , document <code className="font-mono">{provenance.doc_id}</code>
-        {pages ? ` · ${pages.toLocaleString()} pages` : ""}
-        {provenance.text_source === "vision_ocr"
-          ? " · the PDF carries no text layer, so the text was read by OCR"
-          : ""}
-        {provenance.figures_verdict === "needs_work"
-          ? " · the chart readings for this report are flagged as needing review"
-          : ""}
-        .
+        (CC BY-NC 4.0)
       </p>
     </div>
   );

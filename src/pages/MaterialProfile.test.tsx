@@ -324,8 +324,6 @@ describe("MaterialProfile — a report with no charts at all", () => {
     // The section headings carry their counts, so match on the leading word.
     expect(await screen.findByRole("heading", { name: /^Tables/ })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /^Charts/ })).toBeNull();
-    // The count sentence must not advertise chart data points it does not have.
-    expect(screen.getByText(/0 charts were read out of this document\./)).toBeTruthy();
   });
 });
 
