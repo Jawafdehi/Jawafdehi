@@ -171,6 +171,10 @@ export default function MaterialProfile() {
   // and the key is ABSENT rather than zeroed for the ~346k materials we have
   // not parsed, which is why presence is the test.
   const contentSummary = data?.["jawafdehi:content"];
+  // Controlled so the aside can send a reader straight to the transcript. The
+  // document's text lives in the Contents tab's Pages section, which is not
+  // somewhere a reader would think to look from a Downloads list.
+  const [tab, setTab] = useState("summary");
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName =
@@ -277,7 +281,7 @@ export default function MaterialProfile() {
 
             <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] xl:gap-14">
               <section className="min-w-0">
-                <Tabs defaultValue="summary">
+                <Tabs value={tab} onValueChange={setTab} id="material-content-tab">
                   <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
                     <TabsTrigger
                       value="summary"
@@ -480,6 +484,25 @@ export default function MaterialProfile() {
                       </Button>
                     ) : null}
                   </div>
+
+                  {contentSummary && contentSummary.pages_read > 0 ? (
+                    <Button
+                      variant="outline"
+                      className="mt-3 w-full justify-start gap-2"
+                      onClick={() => {
+                        setTab("content");
+                        document
+                          .getElementById("material-content-tab")
+                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                    >
+                      <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      Read the transcript
+                      <span className="ml-auto text-sm text-muted-foreground">
+                        {contentSummary.pages_read.toLocaleString()} pages
+                      </span>
+                    </Button>
+                  ) : null}
 
                   {links.length === 0 && !data.url ? (
                     <p className="mt-4 text-sm leading-6 text-muted-foreground">

@@ -371,6 +371,24 @@ function TableRow({
  * cells that overflow. Splitting the pipes ourselves keeps every cell the
  * document actually had.
  */
+/**
+ * Whether a cell is a figure rather than prose, in EITHER script.
+ *
+ * Worth detecting because alignment is what makes a column of numbers readable:
+ * left-aligned, `10,245` and `263` do not line up on their digits and the eye
+ * cannot compare them down the column. These tables mix scripts freely — a
+ * single CIAA table carries `10,245` beside `१९४८८` — so both numeral ranges
+ * count, along with the separators, percent signs and dashes that travel with
+ * them. Anything containing a letter is prose and stays left-aligned.
+ */
+const DIGITS = /[0-9\u0966-\u096F]/;
+const NON_NUMERIC = /[^\d\u0966-\u096F\s.,%()+\-–—/]/;
+
+function isFigure(cell: string): boolean {
+  const v = cell.trim();
+  return v !== "" && DIGITS.test(v) && !NON_NUMERIC.test(v);
+}
+
 function MarkdownTable({
   markdown,
   showAll,
@@ -412,14 +430,20 @@ function MarkdownTable({
 
   return (
     <>
-      <table className="w-full border-collapse text-base">
-        <thead>
+      {/* Horizontal rules only, not a full grid: these tables run to five
+          columns of mixed Devanagari prose and figures, and boxing every cell
+          turns the page into a spreadsheet the eye cannot scan down. The header
+          sticks because the longest table here is 668 rows. */}
+      <table className="w-max min-w-full border-collapse text-[0.95rem]">
+        <thead className="sticky top-0 z-10 bg-background">
           <tr>
             {header.map((cell, i) => (
               <th
                 key={i}
                 scope="col"
-                className="border border-border/70 bg-muted/50 px-2 py-1.5 text-left align-top font-semibold text-foreground"
+                className={`min-w-[7rem] max-w-[20rem] border-b-2 border-border bg-background px-3 py-2 align-bottom font-semibold text-foreground ${
+                  isFigure(cell) ? "text-right" : "text-left"
+                }`}
               >
                 {cell}
               </th>
@@ -428,11 +452,18 @@ function MarkdownTable({
         </thead>
         <tbody>
           {visible.map((row, r) => (
-            <tr key={r}>
+            <tr
+              key={r}
+              className="border-b border-border/40 last:border-b-0 even:bg-muted/30"
+            >
               {row.map((cell, c) => (
                 <td
                   key={c}
-                  className="border border-border/70 px-2 py-1.5 align-top text-foreground"
+                  className={`min-w-[7rem] max-w-[20rem] px-3 py-2 align-top text-foreground ${
+                    isFigure(cell)
+                      ? "whitespace-nowrap text-right tabular-nums"
+                      : "text-left"
+                  }`}
                 >
                   {cell}
                 </td>
@@ -508,15 +539,17 @@ function FilterBox({
   );
 }
 
-/** A table's handle: its caption where the source printed one, else where it sits. */
+/** A table's handle: its caption where the source printed one, else its number.
+ *
+ * 89 of this document's 145 tables carry no caption upstream, so the fallback is
+ * the common case rather than the exception. It is the ORDINAL — the table's
+ * position as a reader counts them — because the row already carries page and
+ * shape underneath, and repeating those as the title says nothing twice.
+ *
+ * Display only. Addressing a table by ordinal is a bug (they are recomputed on
+ * every ingest); that is what `key` is for. */
 function tableLabel(stub: ContentTableStub): string {
-  const caption = stub.caption.trim();
-  if (caption) return caption;
-  // 89 of this document's 145 tables have no caption upstream. "Table on page
-  // 52" tells a reader nothing they can choose by, so the shape goes in the
-  // label — it is the only other thing that distinguishes two tables on a page.
-  const where = stub.index_on_page > 1 ? `Page ${stub.page_no} (${stub.index_on_page})` : `Page ${stub.page_no}`;
-  return `${where} · ${stub.n_rows}×${stub.n_cols}`;
+  return stub.caption.trim() || `Table ${stub.ordinal}`;
 }
 
 function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {

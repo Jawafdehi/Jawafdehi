@@ -466,3 +466,31 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     expect(await screen.findByText(/1 of these pages could not be read/i)).toBeTruthy();
   });
 });
+
+describe("MaterialProfile — reaching the transcript", () => {
+  it("offers a way into the transcript from the downloads aside", async () => {
+    // The document's text lives inside the Contents tab's Pages section, which
+    // is not somewhere a reader looking for "the transcript" would think to
+    // look. The aside is where they are already looking for the PDF.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    renderPage();
+
+    const button = await screen.findByRole("button", { name: /Read the transcript/i });
+    expect(button.textContent).toContain("2"); // pages_read, not pages
+    fireEvent.click(button);
+
+    expect(await screen.findByRole("heading", { name: /^Pages/ })).toBeTruthy();
+  });
+
+  it("does not offer it when nothing has been transcribed", async () => {
+    // Holding a document is not having read it; the button would promise text
+    // that does not exist.
+    getMaterial.mockResolvedValue(
+      material({ "jawafdehi:content": { ...SUMMARY, pages_read: 0 } }),
+    );
+    renderPage();
+    await screen.findByRole("tab", { name: /Contents/i });
+
+    expect(screen.queryByRole("button", { name: /Read the transcript/i })).toBeNull();
+  });
+});
