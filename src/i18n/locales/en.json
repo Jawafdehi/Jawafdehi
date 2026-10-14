@@ -2316,6 +2316,8 @@
     },
     "recent": {
       "title": "Recently added",
+      "slice": "The {{shown}} newest of {{total}} documents in the archive.",
+      "browseAll": "Browse all documents",
       "untitled": "Untitled document",
       "previous": "Previous documents",
       "next": "Next documents"

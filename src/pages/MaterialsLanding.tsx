@@ -305,9 +305,33 @@ export default function MaterialsLanding() {
               materials={recents}
               descriptions={descriptions}
               heading={
-                <h2 id="recent-heading" className="font-archive-section-title">
-                  {t("materialsLanding.recent.title", "Recently added")}
-                </h2>
+                <div>
+                  <h2 id="recent-heading" className="font-archive-section-title">
+                    {t("materialsLanding.recent.title", "Recently added")}
+                  </h2>
+                  {/* Four cards with nothing around them read as the whole
+                      holding — a reviewer counted three news items here and
+                      asked why we only have those three. Say what the slice is
+                      and where the rest live. */}
+                  {materials && (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      <span className="tabular-nums">
+                        {t("materialsLanding.recent.slice", {
+                          shown: formatArchiveCount(recents.length, language),
+                          total: formatArchiveCount(materials.total, language),
+                          defaultValue:
+                            "The {{shown}} newest of {{total}} documents in the archive.",
+                        })}
+                      </span>{" "}
+                      <Link
+                        to="/materials/?sort=newest"
+                        className="font-medium text-primary underline underline-offset-4 hover:text-primary/75"
+                      >
+                        {t("materialsLanding.recent.browseAll", "Browse all documents")}
+                      </Link>
+                    </p>
+                  )}
+                </div>
               }
             />
           ) : (
