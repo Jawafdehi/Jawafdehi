@@ -67,6 +67,15 @@ export const PRESS_KIT_COLOURS = [
  * card falls to tofu for the whole `font-display: swap` window, and stays there
  * if the Vesper file ever fails to load. The Inter sample is Latin-only and
  * needs no such guard.
+ *
+ * Noto is pinned for the same reason the headline faces are. It rode
+ * `font-sans`, which resolves to --font-family-app and therefore leads with
+ * Helvetica under lang="en" — so the one card whose caption names Noto showed
+ * its Latin half in a system face to exactly the audience reading the English
+ * press kit. (`font-sans` was worse still before tailwind.config.ts gained a
+ * `sans` key: Tailwind's own `ui-sans-serif, system-ui, …`, i.e. the visitor's
+ * OS UI font in both locales.) Only the mono card still rides a utility, and
+ * `font-mono` leads with the face it is captioned with in either locale.
  */
 export const PRESS_KIT_TYPEFACES = [
   {
@@ -81,7 +90,12 @@ export const PRESS_KIT_TYPEFACES = [
     family: '"Inter", Helvetica, Arial, sans-serif',
     sample: "Jawafdehi Aa",
   },
-  { key: "bodyRole", name: "Noto Sans Devanagari", className: "font-sans", sample: "जवाफदेही Aa" },
+  {
+    key: "bodyRole",
+    name: "Noto Sans Devanagari",
+    family: '"Noto Sans Devanagari", Helvetica, Arial, sans-serif',
+    sample: "जवाफदेही Aa",
+  },
   { key: "monoRole", name: "IBM Plex Mono", className: "font-mono", sample: "082-CR-0154" },
 ] as const;
 

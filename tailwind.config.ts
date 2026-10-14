@@ -23,6 +23,14 @@ export default {
         // and /research to serif in BOTH locales, which is half of why
         // headlines looked arbitrary from page to page.
         display: ["var(--font-family-heading)"],
+        // Reading face, same arrangement as `display` above. Without this key
+        // `font-sans` was Tailwind's own `ui-sans-serif, system-ui, …`, so the
+        // press-kit card captioned "Noto Sans Devanagari" documented the face
+        // by rendering in the visitor's OS UI font instead — the same mislabel
+        // the display card was fixed for. It also puts Preflight's `html`
+        // default on the app face, which is what the `:where(body, …)` rule in
+        // src/styles/typography.css already sets one level down.
+        sans: ["var(--font-family-app)"],
         // "Register" data face: figures, counts, dates and case references.
         // Noto Sans Devanagari carries Nepali digits/text that appear in a
         // mono context (IBM Plex Mono has no Devanagari glyphs of its own).

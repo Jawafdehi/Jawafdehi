@@ -114,9 +114,10 @@ export function PressKitBrand() {
             grid would leave an orphan: 2 columns from sm, 4 from lg. */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PRESS_KIT_TYPEFACES.map((face) => {
-            // A face is documented either by a utility class (it is whatever
-            // that role currently resolves to) or by an explicit family (the
-            // headline faces — see the note in ./constants).
+            // A face is documented either by an explicit family — pinned to
+            // the face the caption names, which is all but the mono card — or
+            // by a utility class, where the sample is whatever that role
+            // currently resolves to. See the note in ./constants.
             const className = "className" in face ? face.className : "";
             const family = "family" in face ? face.family : undefined;
             return (
