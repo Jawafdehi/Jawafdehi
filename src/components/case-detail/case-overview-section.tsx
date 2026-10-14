@@ -9,17 +9,19 @@ import { CollapsibleCaseContent } from "@/components/case-detail/collapsible-cas
 interface CaseOverviewSectionProps {
   description: string;
   title: string;
+  aiGenerated?: boolean;
 }
 
 export function CaseOverviewSection({
   description,
   title,
+  aiGenerated = false,
 }: Readonly<CaseOverviewSectionProps>) {
   const { t } = useTranslation();
 
   return (
     <section id="overview" className="mb-12 w-full max-w-4xl min-w-0 scroll-mt-28">
-      <CaseSectionHeading>{title}</CaseSectionHeading>
+      <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
       <CollapsibleCaseContent
         readMoreLabel={t("caseDetail.readMore")}

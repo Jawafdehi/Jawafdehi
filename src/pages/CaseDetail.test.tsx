@@ -42,16 +42,31 @@ vi.mock("@/components/DisqusComments", () => ({ DisqusComments: () => null }));
 vi.mock("@/components/case-detail/case-detail-banner", () => ({ CaseDetailBanner: () => null }));
 vi.mock("@/components/case-detail/case-contact-strip", () => ({ CaseContactStrip: () => null }));
 vi.mock("@/components/case-detail/case-disclaimer-banner", () => ({ CaseDisclaimerBanner: () => null }));
-vi.mock("@/components/case-detail/case-overview-section", () => ({ CaseOverviewSection: () => null }));
+// The three narrative sections render a marker carrying the `aiGenerated`
+// prop, so the label wiring can be asserted without their real bodies.
+type AiProps = { aiGenerated?: boolean };
+vi.mock("@/components/case-detail/case-overview-section", () => ({
+  CaseOverviewSection: ({ aiGenerated }: AiProps) => (
+    <div data-testid="section-overview" data-ai={String(Boolean(aiGenerated))} />
+  ),
+}));
 vi.mock("@/components/case-detail/case-section-jump-nav", () => ({ CaseSectionJumpNav: () => null }));
 vi.mock("@/components/case-detail/missing-details-section", () => ({ MissingDetailsSection: () => null }));
 vi.mock("@/components/case-detail/notes-section", () => ({ NotesSection: () => null }));
-vi.mock("@/components/case-detail/case-timeline-section", () => ({ CaseTimelineSection: () => null }));
+vi.mock("@/components/case-detail/case-timeline-section", () => ({
+  CaseTimelineSection: ({ aiGenerated }: AiProps) => (
+    <div data-testid="section-timeline" data-ai={String(Boolean(aiGenerated))} />
+  ),
+}));
 vi.mock("@/components/case-detail/mobile-share-expander", () => ({ MobileShareExpander: () => null }));
 vi.mock("@/components/case-detail/court-cases-section", () => ({ CourtCasesSection: () => null }));
 vi.mock("@/components/case-detail/evidence-section", () => ({ EvidenceSection: () => null }));
 vi.mock("@/components/case-detail/involved-parties-section", () => ({ InvolvedPartiesSection: () => null }));
-vi.mock("@/components/case-detail/key-allegations-section", () => ({ KeyAllegationsSection: () => null }));
+vi.mock("@/components/case-detail/key-allegations-section", () => ({
+  KeyAllegationsSection: ({ aiGenerated }: AiProps) => (
+    <div data-testid="section-allegations" data-ai={String(Boolean(aiGenerated))} />
+  ),
+}));
 
 import CaseDetail from "@/pages/CaseDetail";
 
@@ -255,5 +270,67 @@ describe("CaseDetail stage dates (banner and sidebar in step)", () => {
     await waitFor(() =>
       expect(container.textContent).toContain("मिसिल जलेको"),
     );
+  });
+});
+
+describe("CaseDetail AI-generated labels", () => {
+  const withTimeline = (extra: Partial<CaseDetailType> = {}): CaseDetailType => ({
+    ...makeCase("ai-case"),
+    timeline: [{ date: "2024-03-12", title: "Charge sheet filed", description: "" }],
+    ...extra,
+  });
+  const aiFlags = (container: HTMLElement) =>
+    Object.fromEntries(
+      ["overview", "allegations", "timeline"].map((name) => [
+        name,
+        container.querySelector(`[data-testid="section-${name}"]`)?.getAttribute("data-ai"),
+      ]),
+    );
+
+  it("labels exactly the sections the case lists", async () => {
+    getCaseById.mockResolvedValue(
+      withTimeline({ ai_generated_sections: ["description", "timeline"] }),
+    );
+
+    const { container } = renderAt("ai-case");
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-testid="section-overview"]')).not.toBeNull(),
+    );
+    expect(aiFlags(container)).toEqual({
+      overview: "true",
+      allegations: "false",
+      timeline: "true",
+    });
+  });
+
+  it("labels nothing when the list is empty", async () => {
+    getCaseById.mockResolvedValue(withTimeline({ ai_generated_sections: [] }));
+
+    const { container } = renderAt("ai-case");
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-testid="section-overview"]')).not.toBeNull(),
+    );
+    expect(aiFlags(container)).toEqual({
+      overview: "false",
+      allegations: "false",
+      timeline: "false",
+    });
+  });
+
+  it("labels nothing when the payload predates the field", async () => {
+    getCaseById.mockResolvedValue(withTimeline());
+
+    const { container } = renderAt("ai-case");
+
+    await waitFor(() =>
+      expect(container.querySelector('[data-testid="section-overview"]')).not.toBeNull(),
+    );
+    expect(aiFlags(container)).toEqual({
+      overview: "false",
+      allegations: "false",
+      timeline: "false",
+    });
   });
 });
