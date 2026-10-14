@@ -2808,7 +2808,11 @@
           "name": "Dates and identity",
           "description": "Convert between Bikram Sambat and the Gregorian calendar, and check which account the server sees you as."
         }
-      }
+      },
+      "learnMore": "Learn more",
+      "learnMoreAbout": "Learn more about {{name}}",
+      "prev": "Previous",
+      "next": "Next"
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",

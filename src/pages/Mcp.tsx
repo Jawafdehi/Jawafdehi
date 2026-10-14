@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
 import { PromptMarquee } from "@/components/mcp/prompt-marquee";
+import { ToolCarousel } from "@/components/mcp/tool-carousel";
 import {
   TerminalCommand,
   TerminalCopyButton,
@@ -63,35 +64,31 @@ const CLIENTS = [
 // here long before they recognise it in a list of tool names.
 const PROMPT_KEYS = ["cases", "person", "office", "court", "documents", "date"] as const;
 
-// The anonymous tool catalogue, grouped by what a reader is looking for rather
-// than by which Django app serves it. Names are the wire names the server
-// advertises, so they can be matched against a client's tool list verbatim.
-// Source of truth: ANONYMOUS_TOOL_NAMES in jawafdehi_mcp/identity.py.
+// The six things the server can do, grouped by what a reader is looking for
+// rather than by which Django app serves them. The wire tool names are no
+// longer printed on the page — this list is only the categories now — but the
+// grouping still tracks the anonymous catalogue (ANONYMOUS_TOOL_NAMES in
+// jawafdehi_mcp/identity.py), so a category must not outlive its tools.
+//
+// There is no court-SQL category beyond browsing: ngm_query_judicial is listed
+// in ANONYMOUS_TOOL_NAMES, but that set is intersected with the registered
+// tools and it is not registered in the monolith — tools/list against the live
+// endpoint returns 12 names, not 13.
+//
+// `to` is the page on this site that browses the same data by hand. Five of the
+// six have one; "dates and identity" has no page of its own and so carries no
+// link rather than a link that goes somewhere only loosely related.
 const TOOL_GROUPS = [
-  { key: "cases", icon: Scale, tools: ["search_jawafdehi_cases", "get_jawafdehi_case"] },
-  {
-    key: "entities",
-    icon: Users,
-    tools: [
-      "search_nes_entities",
-      "get_nes_entities",
-      "get_nes_tags",
-      "get_nes_entity_prefixes",
-      "get_nes_entity_versions",
-    ],
-  },
-  // No ngm_query_judicial: it is listed in ANONYMOUS_TOOL_NAMES but that set is
-  // intersected with the registered tools, and it is not registered in the
-  // monolith — tools/list against the live endpoint returns 12 names, not 13.
-  { key: "courts", icon: Landmark, tools: ["browse_court_data"] },
-  { key: "materials", icon: FileText, tools: ["browse_materials"] },
-  { key: "search", icon: Search, tools: ["search_control_plane"] },
-  { key: "dates", icon: CalendarDays, tools: ["convert_date", "get_current_user"] },
+  { key: "cases", icon: Scale, to: "/cases" },
+  { key: "entities", icon: Users, to: "/entities" },
+  { key: "courts", icon: Landmark, to: "/courtcases" },
+  { key: "materials", icon: FileText, to: "/materials" },
+  { key: "search", icon: Search, to: "/search" },
+  { key: "dates", icon: CalendarDays, to: undefined },
 ] as const;
 
 
-const SECTION_HEADING = "text-3xl font-extrabold tracking-normal text-accent md:text-4xl";
-const CARD = "rounded-lg border border-border bg-background p-6";
+const SECTION_EYEBROW = "text-base md:text-lg [&>span]:h-3 [&>span]:w-3";
 
 const Mcp = () => {
   const { t, i18n } = useTranslation();
@@ -112,13 +109,13 @@ const Mcp = () => {
             thing read is what this does, not where it lives. */}
         <section
           id="mcp-hero"
-          className="relative isolate -mt-[76px] overflow-hidden bg-background pt-[76px]"
+          className="relative isolate -mt-[76px] flex min-h-svh flex-col overflow-hidden bg-background pt-[76px]"
         >
           <PageHeroBackdrop />
 
-          <div className="relative z-10 pb-14 pt-14 md:pb-20 md:pt-20">
+          <div className="relative z-10 flex flex-1 flex-col justify-center py-14 md:py-20">
             <div className="layout-container">
-              <div className="mx-auto max-w-5xl">
+              <div>
                 {/* Two display lines, each animating in on its own beat. The
                     locale picks its own split, so the accent always lands on
                     the archive rather than on a fixed word position. */}
@@ -150,7 +147,7 @@ const Mcp = () => {
                 way Linear's does — hence it sits outside layout-container. */}
             <div className="mt-14 animate-hero-rise [animation-delay:420ms] motion-reduce:animate-none md:mt-16">
               <div className="layout-container">
-                <p className="mx-auto mb-4 max-w-5xl text-sm font-bold uppercase tracking-wide text-muted-foreground">
+                <p className="mb-4 text-sm font-bold uppercase tracking-wide text-muted-foreground">
                   {t("mcp.prompts.title")}
                 </p>
               </div>
@@ -188,16 +185,25 @@ const Mcp = () => {
             shows the commands one at a time instead of as a wall of four. */}
         <section id="install" className="py-12 md:py-14">
           <div className="layout-container">
-            <div className="mx-auto max-w-5xl">
-              <h2 className={SECTION_HEADING}>{t("mcp.install.title")}</h2>
+            <div>
+              <Eyebrow as="h2" className={SECTION_EYEBROW}>
+                {t("mcp.install.title")}
+              </Eyebrow>
               <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
                 {t("mcp.install.body")}
               </p>
 
               <Tabs defaultValue="claude" className="mt-8">
-                <TabsList className="h-auto flex-wrap justify-start gap-1 bg-muted/60 p-1">
+                {/* A capsule rail: the track is a pill, and the selected tab
+                    is a solid pill inside it. The shape carries the state, so
+                    the inactive tabs need no chrome of their own. */}
+                <TabsList className="h-auto flex-wrap justify-start gap-1 rounded-full border border-border bg-background p-1.5">
                   {CLIENTS.map(({ key }) => (
-                    <TabsTrigger key={key} value={key} className="font-semibold">
+                    <TabsTrigger
+                      key={key}
+                      value={key}
+                      className="rounded-full px-5 py-2.5 text-sm font-semibold text-muted-foreground shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:text-base"
+                    >
                       {t(`mcp.clients.${key}.name`)}
                     </TabsTrigger>
                   ))}
@@ -256,37 +262,28 @@ const Mcp = () => {
             twice on one page read as padding. */}
         <section id="tools" className="bg-muted/10 py-12 md:py-14">
           <div className="layout-container">
-            <div className="mx-auto max-w-5xl">
+            <div>
               {/* The eyebrow IS this section's heading, so it renders as h2
                   rather than the default p — the cards below still need
                   something above them in the document outline. */}
-              <Eyebrow as="h2">{t("mcp.tools.title")}</Eyebrow>
+              <Eyebrow as="h2" className={SECTION_EYEBROW}>
+                {t("mcp.tools.title")}
+              </Eyebrow>
 
-              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {TOOL_GROUPS.map(({ key, icon: Icon, tools }) => (
-                  <div key={key} className={CARD}>
-                    <Icon className="h-5 w-5 text-accent" aria-hidden="true" />
-
-                    <p className="mt-3 text-lg font-bold text-primary">
-                      {t(`mcp.tools.groups.${key}.name`)}
-                    </p>
-                    <p className="mt-2 font-paragraph font-paragraph-foreground text-sm">
-                      {t(`mcp.tools.groups.${key}.description`)}
-                    </p>
-
-                    <ul className="mt-4 flex flex-wrap gap-1.5">
-                      {tools.map((tool) => (
-                        <li
-                          key={tool}
-                          className="rounded border border-white/10 bg-code-surface px-1.5 py-0.5 font-mono text-xs text-code-surface-foreground/80"
-                        >
-                          {tool}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+              <ToolCarousel
+                label={t("mcp.tools.title")}
+                learnMore={t("mcp.tools.learnMore")}
+                learnMoreAbout={(name) => t("mcp.tools.learnMoreAbout", { name })}
+                prevLabel={t("mcp.tools.prev")}
+                nextLabel={t("mcp.tools.next")}
+                slides={TOOL_GROUPS.map(({ key, icon, to }) => ({
+                  key,
+                  icon,
+                  to,
+                  name: t(`mcp.tools.groups.${key}.name`),
+                  description: t(`mcp.tools.groups.${key}.description`),
+                }))}
+              />
             </div>
           </div>
         </section>
