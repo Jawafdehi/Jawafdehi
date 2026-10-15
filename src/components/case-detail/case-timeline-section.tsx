@@ -14,6 +14,7 @@ interface CaseTimelineSectionProps {
   language: string;
   timeline: TimelineEntry[];
   title: string;
+  aiGenerated?: boolean;
 }
 
 function splitSingleDateLabel(value: string, calendar: "AD" | "BS") {
@@ -58,6 +59,7 @@ export function CaseTimelineSection({
   language,
   timeline,
   title,
+  aiGenerated = false,
 }: Readonly<CaseTimelineSectionProps>) {
   const { t } = useTranslation();
 
@@ -106,7 +108,7 @@ export function CaseTimelineSection({
     >
       {/* Heading sits outside the collapsible: it is the section's label, not
           collapsible content, so it never counts against the clamp height. */}
-      <CaseSectionHeading>{title}</CaseSectionHeading>
+      <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
       <CollapsibleCaseContent
         readMoreLabel={t("caseDetail.readMore")}

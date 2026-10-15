@@ -10,6 +10,8 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 interface Props {
   rows: TimelineEventRow[];
   onChange: (rows: TimelineEventRow[]) => void;
+  /** Rendered under the "Timeline" heading, e.g. the AI-generated box. */
+  headerSlot?: React.ReactNode;
 }
 
 const BLANK_ROW: TimelineEventRow = { date: "", date_bs: "", title: "", description: "" };
@@ -40,7 +42,7 @@ function InsertPoint({ onInsert, label }: { onInsert: () => void; label: string 
 // F4 — timeline editor. Add (at any position) / edit / reorder / delete events;
 // the parent diffs into a replace op on /timeline (§3). AD date is required; BS
 // date optional.
-export default function TimelineEditor({ rows, onChange }: Props) {
+export default function TimelineEditor({ rows, onChange, headerSlot }: Props) {
   // Stable per-row keys. Rows are plain data owned by the parent, so identity
   // lives here: ids move with their row through insert/remove/move. Keying by
   // array index would re-associate every input below an insertion point —
@@ -76,6 +78,7 @@ export default function TimelineEditor({ rows, onChange }: Props) {
   return (
     <div className="space-y-3 rounded-md border bg-white p-4">
       <Label className="text-sm font-semibold">Timeline</Label>
+      {headerSlot}
 
       {rows.length === 0 ? (
         <>

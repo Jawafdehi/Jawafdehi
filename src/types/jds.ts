@@ -328,6 +328,9 @@ export interface CaseEditHistoryEntry {
   remarks: string;
 }
 
+/** A case section that can carry the "AI-generated" label. */
+export type AiGeneratedSection = "description" | "key_allegations" | "timeline";
+
 export interface Case {
   id: number;
   slug: string | null; // URL-friendly slug; older cases may not have one yet
@@ -384,6 +387,10 @@ export interface Case {
   entities: JawafEntity[]; // Unified entity relationships with type field
   tags: string[]; // Tags for categorization (e.g., 'land-encroachment', 'national-interest')
   key_allegations: string[]; // List of key allegation statements
+  /** Narrative sections written by AI and not yet reviewed by a person; each
+   * gets an "AI-generated" label. Optional: absent on pre-deploy payloads,
+   * which means none. */
+  ai_generated_sections?: AiGeneratedSection[];
   court_cases: string[]; // Canonical court-case @id IRIs (e.g., "https://jawafdehi.org/courtcase/special/081-cr-0060"); legacy "<court>:<number>" tolerated on read
   bigo?: number | null;
   created_at: string; // ISO datetime
