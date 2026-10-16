@@ -271,11 +271,8 @@ const Mcp = () => {
               </Eyebrow>
 
               <ToolCarousel
-                label={t("mcp.tools.title")}
                 learnMore={t("mcp.tools.learnMore")}
                 learnMoreAbout={(name) => t("mcp.tools.learnMoreAbout", { name })}
-                prevLabel={t("mcp.tools.prev")}
-                nextLabel={t("mcp.tools.next")}
                 slides={TOOL_GROUPS.map(({ key, icon, to }) => ({
                   key,
                   icon,

@@ -2810,9 +2810,7 @@
         }
       },
       "learnMore": "Learn more",
-      "learnMoreAbout": "Learn more about {{name}}",
-      "prev": "Previous",
-      "next": "Next"
+      "learnMoreAbout": "Learn more about {{name}}"
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
