@@ -4,6 +4,7 @@ export type SearchIconName =
   | "Bot"
   | "Building2"
   | "FileText"
+  | "FileType"
   | "HeartHandshake"
   | "Home"
   | "Info"
@@ -268,6 +269,15 @@ export const SITE_ROUTES = [
     keywords: ["mcp", "ai", "claude", "chatgpt", "openai", "connector", "api", "model context protocol"],
     icon: "Bot",
     sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
+  },
+  {
+    path: "/likhit",
+    chrome: "app",
+    titleKey: "likhit.meta.title",
+    descriptionKey: "searchCommand.descriptions.likhit",
+    keywords: ["likhit", "markdown", "pdf", "doc", "docx", "ocr", "devanagari", "nepali", "converter", "markitdown"],
+    icon: "FileType",
+    sitemapTitle: "likhit — Nepali documents to Markdown — Jawafdehi",
   },
   {
     path: "/openhouse",

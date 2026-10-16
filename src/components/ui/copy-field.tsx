@@ -58,11 +58,11 @@ export function CopyButton({
       {/* Visible for sighted users; the live region below announces the same
           thing. A red icon alone would say something went wrong without saying
           what, and the fix (select it by hand) is not guessable. */}
-      {failed ? <span className="text-xs text-accent">{t("mcp.copyFailed")}</span> : null}
+      {failed ? <span className="text-xs text-accent">{t("common.copyFailed")}</span> : null}
 
       <span aria-live="polite" className="sr-only">
-        {copied ? t("mcp.copied") : ""}
-        {failed ? t("mcp.copyFailed") : ""}
+        {copied ? t("common.copied") : ""}
+        {failed ? t("common.copyFailed") : ""}
       </span>
     </>
   );
@@ -84,6 +84,33 @@ export function CopyField({
       </code>
 
       <CopyButton value={value} label={label} />
+    </div>
+  );
+}
+
+/**
+ * The multi-line form — a shell recipe copied as one block. The copy button
+ * floats in the corner so it does not take a line away from the code.
+ *
+ * `whitespace-pre-wrap` WITHOUT a word-break: comment lines are prose and should
+ * wrap at their spaces, but a shell token must not be broken mid-word. Allowing
+ * that printed `export OPENAI_BASE_URL=http://127.0.0.` / `1:11434/v1` across
+ * two lines, which reads as two different values. An unbreakable token overflows
+ * instead and `overflow-x-auto` is how you reach the rest of it.
+ */
+export function CopyBlock({
+  value,
+  label,
+}: Readonly<{ value: string; label: string }>) {
+  return (
+    <div className="relative rounded-lg border border-border bg-muted/30">
+      <pre className="overflow-x-auto whitespace-pre-wrap px-4 py-3.5 pr-12 font-mono text-xs leading-relaxed text-foreground sm:text-sm">
+        {value}
+      </pre>
+
+      <div className="absolute right-1.5 top-1.5 flex items-center gap-2">
+        <CopyButton value={value} label={label} />
+      </div>
     </div>
   );
 }
