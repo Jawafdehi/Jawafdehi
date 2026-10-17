@@ -1,0 +1,608 @@
+/* The likhit landing page, typeset in likhit's own visual language rather than
+   the site's.
+
+   This is a deliberate exception. Every other route on jawafdehi.org uses the
+   Tailwind theme in src/index.css — Inter/Vesper Libre, the navy-and-crimson
+   palette, the shadcn tokens. likhit is a separate project with a separate
+   identity, and its published benchmark at jawafdehi.github.io/likhit is the
+   canonical presentation of it. This file ports that presentation: soft
+   lavender-tinged paper, Geist, lilac as the accent, marigold as the highlight,
+   hairline rules instead of boxes.
+
+   Keep it in step with the source of truth, services/likhit/site/static/styles.css
+   in the likhit repo. The class names below match that file's deliberately, so
+   the two can be diffed by eye.
+
+   EVERYTHING IS SCOPED UNDER .likhit-page. The custom properties are declared on
+   that element, not :root, so they cannot leak into the navbar and footer that
+   still wrap this page — those stay in the site's own theme, which is what keeps
+   /likhit recognisably part of jawafdehi.org rather than an iframe of another
+   site. */
+
+/* WHAT THIS COSTS EVERY OTHER ROUTE: about 2 KB gzipped, once. /likhit is
+   pre-rendered, so routes.tsx must import it eagerly (see the split policy
+   there), so Vite folds this file into the single index-*.css rather than
+   splitting it out the way it does for lazy routes like /admin. Measured:
+   30.9 KB -> 32.9 KB gzipped. The FONTS below are the part that would actually
+   have hurt, and they are not in that number — a browser fetches a woff2 only
+   when it has a glyph to render in that family, so a reader who never opens
+   /likhit never fetches Geist, even though the @font-face rule is in the
+   stylesheet they loaded.
+
+   Geist, latin subset, variable wght, ~52 KB for the pair. See
+   scripts/fonts/sources/Geist-OFL.txt for provenance and licence. */
+@font-face {
+  font-family: "Geist";
+  src: url("/font/Geist/Geist-latin-wght.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/font/Geist/GeistMono-latin-wght.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.likhit-page {
+  /* Paper neutrals with a whisper of lavender */
+  --lk-canvas: oklch(98.6% 0.003 300);
+  --lk-surface: oklch(99.7% 0.002 300);
+  --lk-surface-muted: oklch(96.6% 0.004 300);
+  --lk-line: oklch(92.8% 0.005 300);
+  --lk-line-strong: oklch(87% 0.007 300);
+  --lk-ink: oklch(19% 0.014 300);
+  --lk-ink-2: oklch(34% 0.014 300);
+  --lk-ink-muted: oklch(51% 0.016 300);
+
+  /* Lilac: the accent system. Red is never a primary here — on the benchmark it
+     means "something failed" and nothing else, and the palette is carried over
+     whole so the two pages stay recognisably one product. */
+  --lk-pop: oklch(50% 0.16 300);
+  --lk-pop-ink: oklch(99.5% 0.005 300);
+  --lk-pop-deep: oklch(42% 0.15 300);
+
+  /* Marigold: the highlight. From the brand lockup (#E9B949). */
+  --lk-marigold: oklch(80% 0.13 85);
+  --lk-marigold-deep: oklch(52% 0.11 75);
+  --lk-marigold-soft: oklch(96.5% 0.055 90);
+
+  --lk-green: oklch(52% 0.12 152);
+  --lk-green-soft: oklch(95.8% 0.033 152);
+  --lk-blue: oklch(51% 0.13 245);
+  --lk-blue-soft: oklch(95.8% 0.028 245);
+
+  --lk-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --lk-wrap: 1320px;
+  --lk-gutter: 32px;
+
+  /* Noto Sans Devanagari is the site's, already loaded, and is what keeps the
+     Nepali translation of this page from rendering as tofu in a Latin-only face. */
+  --lk-sans: "Geist", Inter, "Noto Sans Devanagari", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --lk-mono: "Geist Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  /* The benchmark declares `color-scheme: light` and has no dark variants. Rather
+     than invent a dark likhit, the page pins its own light surface and keeps the
+     site's dark navbar and footer around it. */
+  color-scheme: light;
+  background: var(--lk-canvas);
+  color: var(--lk-ink);
+  font-family: var(--lk-sans);
+}
+
+/* Intro -------------------------------------------------------------------- */
+
+.likhit-page .lk-intro {
+  display: grid;
+  gap: 64px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 88px var(--lk-gutter) 72px;
+}
+
+.likhit-page .lk-intro h1 {
+  margin: 0 0 20px;
+  font-size: clamp(2.3rem, 3.6vw + 0.5rem, 3.6rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  max-width: 18ch;
+  overflow-wrap: anywhere;
+}
+
+/* The marigold squiggle under the last word of the headline. */
+.likhit-page .lk-hl {
+  padding-bottom: 0.14em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='7' viewBox='0 0 22 7'%3E%3Cpath d='M1 4.5 Q 4 1.5 6.5 4 T 12 4 T 17.5 4 T 21.5 3.5' fill='none' stroke='%23E9B949' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E")
+    repeat-x left bottom / 22px 7px;
+}
+
+.likhit-page .lk-lede {
+  margin: 0 0 28px;
+  max-width: 62ch;
+  color: var(--lk-ink-2);
+  font-size: 1.06rem;
+  line-height: 1.65;
+}
+
+.likhit-page .lk-lede strong {
+  color: var(--lk-ink);
+  font-weight: 600;
+}
+
+.likhit-page .lk-lede a {
+  color: var(--lk-pop-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.likhit-page .lk-lede a:hover {
+  text-decoration: none;
+}
+
+.likhit-page .lk-install {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 8px 8px 18px;
+  border: 1px solid var(--lk-line-strong);
+  border-radius: 999px;
+  background: var(--lk-surface);
+}
+
+.likhit-page .lk-install code {
+  color: var(--lk-ink);
+  font-family: var(--lk-mono);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.likhit-page .lk-usage {
+  margin: 16px 0 26px;
+  max-width: 62ch;
+  color: var(--lk-ink-muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.likhit-page code.lk-code {
+  padding: 0.1em 0.36em;
+  border-radius: 4px;
+  background: var(--lk-surface-muted);
+  font-family: var(--lk-mono);
+  font-size: 0.86em;
+}
+
+.likhit-page .lk-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Feature list: quiet editorial rules rather than boxed cards — the type carries
+   the hierarchy, and a coloured square stands in for the icon. */
+.likhit-page .lk-features {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.likhit-page .lk-features li {
+  display: block;
+  padding: 22px 0 20px;
+  border-top: 1px solid var(--lk-line-strong);
+}
+
+.likhit-page .lk-features li:last-child {
+  padding-bottom: 0;
+}
+
+.likhit-page .lk-features strong {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.likhit-page .lk-features strong::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--lk-pop);
+}
+
+.likhit-page .lk-features li:nth-child(2) strong::before { background: var(--lk-marigold); }
+.likhit-page .lk-features li:nth-child(3) strong::before { background: var(--lk-blue); }
+.likhit-page .lk-features li:nth-child(4) strong::before { background: var(--lk-green); }
+
+.likhit-page .lk-features span {
+  display: block;
+  color: var(--lk-ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Buttons and links -------------------------------------------------------- */
+
+.likhit-page .lk-copy-button {
+  padding: 5px 15px;
+  border: 1px solid var(--lk-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--lk-pop-deep);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 160ms var(--lk-ease-out),
+    background-color 160ms var(--lk-ease-out),
+    transform 140ms var(--lk-ease-out);
+}
+
+.likhit-page .lk-copy-button:hover {
+  border-color: var(--lk-pop);
+}
+
+.likhit-page .lk-copy-button:active {
+  transform: scale(0.97);
+}
+
+.likhit-page .lk-copy-button:focus-visible {
+  outline: 2px solid var(--lk-pop);
+  outline-offset: 2px;
+}
+
+/* The install command's copy button is the one filled call to action. */
+.likhit-page .lk-install .lk-copy-button {
+  padding: 8px 18px;
+  border: 0;
+  background: var(--lk-pop);
+  color: var(--lk-pop-ink);
+}
+
+.likhit-page .lk-install .lk-copy-button:hover {
+  background: var(--lk-pop-deep);
+}
+
+/* Both labels share one grid cell, so the button is sized by the widest label
+   and never moves. "Copy" slides up and out; "Copied" rises in from below. */
+.likhit-page .lk-copy-swap {
+  display: inline-grid;
+  overflow: hidden;
+}
+
+.likhit-page .lk-copy-face {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  text-align: center;
+  transition:
+    transform 240ms var(--lk-ease-out),
+    opacity 240ms var(--lk-ease-out);
+}
+
+.likhit-page .lk-copy-face-done {
+  transform: translateY(120%);
+  opacity: 0;
+}
+
+.likhit-page .is-copied .lk-copy-face-resting {
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+.likhit-page .is-copied .lk-copy-face-done {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.likhit-page .lk-copy-failed {
+  color: var(--lk-pop-deep);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.likhit-page .lk-command-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 9px 20px;
+  border: 1px solid var(--lk-line-strong);
+  border-radius: 999px;
+  background: var(--lk-surface);
+  color: var(--lk-ink-2);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color 160ms var(--lk-ease-out),
+    transform 140ms var(--lk-ease-out);
+}
+
+.likhit-page .lk-command-link:hover {
+  border-color: var(--lk-pop);
+}
+
+.likhit-page .lk-command-link:active {
+  transform: scale(0.97);
+}
+
+.likhit-page .lk-command-link svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* likhit-save CLI section -------------------------------------------------- */
+
+.likhit-page .lk-cli {
+  display: grid;
+  gap: 64px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 80px;
+}
+
+.likhit-page .lk-section-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.likhit-page .lk-cli-copy p {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--lk-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.likhit-page .lk-cli-examples {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.likhit-page .lk-cli-examples li {
+  display: grid;
+  gap: 6px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--lk-line);
+  border-radius: 12px;
+  background: var(--lk-surface);
+  transition: border-color 180ms var(--lk-ease-out);
+}
+
+.likhit-page .lk-cli-examples li:hover {
+  border-color: var(--lk-line-strong);
+}
+
+.likhit-page .lk-cli-label {
+  grid-column: 1 / -1;
+  color: var(--lk-ink-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.likhit-page .lk-cli-examples code {
+  overflow-x: auto;
+  color: var(--lk-ink);
+  font-family: var(--lk-mono);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* OCR configuration recipes ------------------------------------------------ */
+
+.likhit-page .lk-ocr {
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 84px;
+}
+
+.likhit-page .lk-ocr-copy p {
+  margin: 0 0 8px;
+  max-width: 72ch;
+  color: var(--lk-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.likhit-page .lk-recipes {
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 22px;
+  border-top: 1px solid var(--lk-line-strong);
+}
+
+/* Each recipe is a full-width row — prose on the left, commands on the right,
+   echoing the CLI section above. Three narrow columns forced 60-character
+   command lines to break mid-URL, which is exactly where a reader is copying
+   from. Full rows give every line room to stay whole. */
+.likhit-page .lk-recipe {
+  display: grid;
+  position: relative;
+  grid-template-areas:
+    "head code"
+    "note copy";
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px 44px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--lk-line);
+}
+
+.likhit-page .lk-recipe-head {
+  grid-area: head;
+}
+
+.likhit-page .lk-recipe-head h3 {
+  margin: 12px 0 6px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.likhit-page .lk-recipe-head p {
+  margin: 0;
+  color: var(--lk-ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.likhit-page .lk-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--lk-blue-soft);
+  color: var(--lk-blue);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.likhit-page .lk-badge-free {
+  background: var(--lk-green-soft);
+  color: var(--lk-green);
+}
+
+.likhit-page .lk-badge-hosted {
+  background: var(--lk-marigold-soft);
+  color: var(--lk-marigold-deep);
+}
+
+.likhit-page .lk-commands {
+  grid-area: code;
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid var(--lk-line);
+  border-radius: 12px;
+  background: var(--lk-canvas);
+  color: var(--lk-ink-2);
+  font-family: var(--lk-mono);
+  font-size: 0.78rem;
+  line-height: 1.75;
+  /* Wrap rather than scroll. A model id or base URL that runs past the card edge
+     is invisible in a narrow column, and these commands are the whole point of
+     the section — a reader should never have to scroll a box to find out what
+     they are being told to run. The full-width row above is what makes wrapping
+     safe: there is enough width that no token has to break. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.likhit-page .lk-recipe .lk-copy-button {
+  grid-area: copy;
+  justify-self: start;
+}
+
+.likhit-page .lk-footnote {
+  grid-area: note;
+  align-self: end;
+  margin: 0;
+  color: var(--lk-ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+/* Closing benchmark panel -------------------------------------------------- */
+
+.likhit-page .lk-benchmark {
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 84px;
+}
+
+.likhit-page .lk-benchmark h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.9rem, 2.8vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.likhit-page .lk-benchmark p {
+  margin: 0 0 22px;
+  max-width: 62ch;
+  color: var(--lk-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+/* The one filled button outside the install pill, because it is where the page
+   is sending you next. */
+.likhit-page .lk-benchmark .lk-command-link {
+  border-color: transparent;
+  background: var(--lk-pop);
+  color: var(--lk-pop-ink);
+}
+
+.likhit-page .lk-benchmark .lk-command-link:hover {
+  background: var(--lk-pop-deep);
+}
+
+/* ------------------------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .likhit-page .lk-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+    padding: 48px 18px 40px;
+  }
+
+  .likhit-page .lk-cli {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 0 18px 52px;
+  }
+
+  .likhit-page .lk-ocr,
+  .likhit-page .lk-benchmark {
+    padding: 0 18px 56px;
+  }
+
+  .likhit-page .lk-recipe {
+    grid-template-areas:
+      "head"
+      "code"
+      "copy"
+      "note";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .likhit-page .lk-copy-button,
+  .likhit-page .lk-copy-face,
+  .likhit-page .lk-command-link,
+  .likhit-page .lk-cli-examples li {
+    transition: none;
+  }
+}

@@ -1,0 +1,15 @@
+Geist and Geist Mono are published by Vercel under the SIL Open Font License 1.1.
+
+  Upstream: https://github.com/vercel/geist-font
+  Licence:  https://github.com/vercel/geist-font/blob/main/LICENSE.TXT
+
+The two WOFF2 files in public/font/Geist/ are the LATIN subsets of the variable
+fonts, taken from the Google Fonts CDN (Geist v5, Geist Mono v6) rather than
+built by scripts/fonts/build-webfonts.sh — the same route Inter took, and the
+reason there is no TTF for them in this directory. Both carry a single `wght`
+axis.
+
+They exist for ONE page, /likhit, which is deliberately typeset in the likhit
+project's own typefaces rather than the site's Inter/Vesper Libre pair. They are
+declared in src/pages/likhit.css, not src/index.css, so no other route pays for
+them.
