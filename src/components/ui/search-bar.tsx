@@ -10,6 +10,14 @@ type SearchBarProps = React.ComponentProps<typeof Input> & {
   inputClassName?: string;
   submitLabel?: string;
   submitText?: string;
+  /**
+   * Whether to render the submit button. Default true.
+   *
+   * `false` is for a LIVE filter — one that narrows a list as you type and has
+   * nothing to submit. A button there is a control that does nothing, and the
+   * input keeps the right-hand padding that was only ever there to clear it.
+   */
+  showSubmit?: boolean;
 };
 
 const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
@@ -20,6 +28,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
       inputClassName,
       submitLabel = "Search",
       submitText,
+      showSubmit = true,
       ...props
     },
     ref,
@@ -36,22 +45,24 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           ref={ref}
           className={cn(
             "h-12 rounded-full pl-12",
-            hasSubmitText ? "pr-40 sm:pr-48" : "pr-14",
+            !showSubmit ? "pr-4" : hasSubmitText ? "pr-40 sm:pr-48" : "pr-14",
             inputClassName,
           )}
           {...props}
         />
-        <Button
-          aria-label={submitLabel}
-          className={cn(
-            "absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full",
-            hasSubmitText ? "h-9 px-4 sm:min-w-[10rem]" : "h-9 w-9 p-0",
-            buttonClassName,
-          )}
-          type="submit"
-        >
-          {submitText || <Search aria-hidden="true" className="h-4 w-4" />}
-        </Button>
+        {showSubmit ? (
+          <Button
+            aria-label={submitLabel}
+            className={cn(
+              "absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full",
+              hasSubmitText ? "h-9 px-4 sm:min-w-[10rem]" : "h-9 w-9 p-0",
+              buttonClassName,
+            )}
+            type="submit"
+          >
+            {submitText || <Search aria-hidden="true" className="h-4 w-4" />}
+          </Button>
+        ) : null}
       </div>
     );
   },

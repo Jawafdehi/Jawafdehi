@@ -49,6 +49,7 @@ import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
 import type { ContentFigureChartProps } from "./ContentFigureChart";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchBar } from "@/components/ui/search-bar";
 import {
   getMaterialTable,
   listMaterialFigures,
@@ -89,13 +90,22 @@ const FigureChart = lazyChart<ContentFigureChartProps>(
   ({ height = 260 }) => <div className="w-full" style={{ height }} />,
 );
 
-function FigureCard({ figure }: { figure: ContentFigure }) {
+/**
+ * One chart, once its row is open.
+ *
+ * Mounted only on expand, which is what keeps recharts out of this page's work
+ * until a reader actually asks for a chart — and what stops a 46-figure report
+ * from drawing all 46 the moment the section opens.
+ *
+ * Carries no rules of its own. The page it came from is cited by the row's
+ * right-hand page number, table-of-contents style, so a caption here would say
+ * the same thing twice and put a line under the chart to do it.
+ */
+function FigureBody({ figure }: { figure: ContentFigure }) {
   // Which of label/series is the category axis is detected from the data, not
   // taken from the field names — the dataset uses both conventions. See
   // lib/content-figure.ts.
   const plotted = plotFigure(figure.points);
-  // Must agree with ContentFigureChart's own bail-outs, or the table stays
-  // collapsed behind a chart that never renders.
   // Must agree with ContentFigureChart's bail-outs EXACTLY, or the table stays
   // collapsed behind a chart that never renders. The pie clause is the one that
   // bit: a multi-series pie is undrawable, and 15 of this corpus's 477 figures
@@ -108,13 +118,9 @@ function FigureCard({ figure }: { figure: ContentFigure }) {
   const multiSeries = plotted.series.length > 1;
 
   return (
-    <li className="border-b border-border/70 py-6 last:border-b-0">
-      <h4 className="text-lg font-semibold text-foreground">
-        {nepaliSafe(figure.title, "Untitled chart")}
-      </h4>
-
+    <>
       {plotted.hasEstimates ? (
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        <p className="mb-3 text-sm leading-6 text-muted-foreground">
           <span aria-hidden="true">{ESTIMATE_MARK}</span> marks a value read from the
           chart image rather than a printed figure
           {drawable && kind === "line" ? "; those points are drawn hollow" : ""}.
@@ -122,27 +128,19 @@ function FigureCard({ figure }: { figure: ContentFigure }) {
       ) : null}
 
       {drawable ? (
-        <figure className="mt-3">
-          <FigureChart
-            figure={plotted}
-            chartType={figure.chart_type}
-            unit={figure.unit}
-            title={nepaliSafe(figure.title, "Chart")}
-          />
-          <figcaption className="mt-2 text-sm italic text-muted-foreground/80">
-            Source: page {figure.page_no} of this report.
-          </figcaption>
-        </figure>
+        <FigureChart
+          figure={plotted}
+          chartType={figure.chart_type}
+          unit={figure.unit}
+          title={nepaliSafe(figure.title, "Chart")}
+        />
       ) : (
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        <p className="text-sm leading-6 text-muted-foreground">
           {tooManySeries(plotted)
             ? `This figure carries ${plotted.series.length} series — more than can be told
                apart by colour, so it is not redrawn. The values follow.`
             : `This figure is a ${figure.chart_type.replace(/[_-]+/g, " ")}, which we do not
-               redraw — approximating it would misrepresent the source. The values follow.`}{" "}
-          <span className="italic text-muted-foreground/80">
-            Source: page {figure.page_no} of this report.
-          </span>
+               redraw — approximating it would misrepresent the source. The values follow.`}
         </p>
       )}
 
@@ -204,33 +202,34 @@ function FigureCard({ figure }: { figure: ContentFigure }) {
           </p>
         </details>
       ) : null}
-    </li>
+    </>
   );
 }
 
 // ─── tables ─────────────────────────────────────────────────────────────────
 
 
-function TableRow({
-  tail,
-  stub,
+/**
+ * One row of a contents listing — a table or a chart — closed until asked for.
+ *
+ * Laid out like a table of contents: the title runs left, the page number sits
+ * hard right in tabular figures so the column of them lines up down the list.
+ * The body MOUNTS on open rather than being hidden with CSS, which is what
+ * makes "nothing is fetched or drawn until you ask" true rather than merely
+ * visual.
+ */
+function ContentRow({
+  title,
+  pageNo,
+  note,
+  children,
 }: {
-  tail: string;
-  stub: ContentTableStub;
+  title: string;
+  pageNo: number;
+  note?: string;
+  children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-  // Markdown is fetched only when a reader opens the table: one report's tables
-  // come to ~830 KiB, which is why `?type=table` returns stubs and the markdown
-  // is addressable only one table at a time.
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["material-content-table", tail, stub.key],
-    queryFn: () => getMaterialTable(tail, stub.key),
-    enabled: open,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const label = nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`);
 
   return (
     <li className="border-b border-border/70 last:border-b-0">
@@ -238,46 +237,103 @@ function TableRow({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-start gap-3 py-3 text-left hover:bg-muted/40"
+        className="flex min-h-11 w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
       >
         <ChevronDown
           className={cn(
-            "mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
             open && "rotate-180",
           )}
           aria-hidden="true"
         />
-        <span className="min-w-0 flex-1">
-          <span className="block break-words text-base text-foreground">{label}</span>
-          <span className="mt-0.5 block text-sm text-muted-foreground">
-            page {stub.page_no} · {stub.n_rows}×{stub.n_cols}
-            {stub.fidelity === "ocr_vision" ? " · read by OCR" : ""}
-          </span>
+        <span className="min-w-0 flex-1 break-words text-base text-foreground">
+          {title}
+        </span>
+        {note ? (
+          <span className="shrink-0 text-sm text-muted-foreground">{note}</span>
+        ) : null}
+        <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
+          {pageNo}
         </span>
       </button>
 
-      {open ? (
-        <div className="pb-4 pl-7">
-          {isLoading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : isError ? (
-            <p className="text-sm text-muted-foreground">
-              This table could not be loaded.
-            </p>
-          ) : data ? (
-            // Horizontally scrollable: these are government tables, some 65
-            // columns wide, and they must not blow out the page on mobile.
-            <div className="overflow-x-auto">
-              <MarkdownTable
-                markdown={data.markdown}
-                showAll={showAll}
-                onShowAll={() => setShowAll(true)}
-              />
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {open ? <div className="pb-5 pl-7">{children}</div> : null}
     </li>
+  );
+}
+
+/**
+ * The placeholder a table shows while its markdown is in flight.
+ *
+ * Shaped from the STUB's own `n_rows`/`n_cols`, which the listing already
+ * carries, so the placeholder is the size of the thing that replaces it. A
+ * fixed grey block told a reader nothing about what was coming and jumped the
+ * page when a 60-row table landed where a 3-row box had been.
+ */
+function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
+  // Bounded for the same reason the real render is: the widest table in the
+  // corpus is 2,979 x 65, and a placeholder has no business drawing that.
+  const r = Math.min(Math.max(rows, 2), 8);
+  const c = Math.min(Math.max(cols, 1), 6);
+
+  return (
+    <div aria-hidden="true" className="space-y-2">
+      <div className="flex gap-3">
+        {Array.from({ length: c }, (_, i) => (
+          <Skeleton key={i} className="h-5 flex-1 bg-muted-foreground/20" />
+        ))}
+      </div>
+      {Array.from({ length: r }, (_, row) => (
+        <div key={row} className="flex gap-3">
+          {Array.from({ length: c }, (_, i) => (
+            <Skeleton key={i} className="h-4 flex-1" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** A table's markdown, fetched on the open that mounted this. */
+function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
+  const [showAll, setShowAll] = useState(false);
+  // One report's tables come to ~830 KiB, which is why `?type=table` returns
+  // stubs and the markdown is addressable only one table at a time.
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["material-content-table", tail, stub.key],
+    queryFn: () => getMaterialTable(tail, stub.key),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) return <TableSkeleton rows={stub.n_rows} cols={stub.n_cols} />;
+  if (isError)
+    return (
+      <p className="text-sm text-muted-foreground">This table could not be loaded.</p>
+    );
+  if (!data) return null;
+
+  return (
+    // Horizontally scrollable: these are government tables, some 65 columns
+    // wide, and they must not blow out the page on mobile.
+    <div className="overflow-x-auto">
+      <MarkdownTable
+        markdown={data.markdown}
+        showAll={showAll}
+        onShowAll={() => setShowAll(true)}
+      />
+    </div>
+  );
+}
+
+function TableRow({ tail, stub }: { tail: string; stub: ContentTableStub }) {
+  return (
+    <ContentRow
+      title={nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`)}
+      pageNo={stub.page_no}
+      note={stub.fidelity === "ocr_vision" ? "read by OCR" : undefined}
+    >
+      <TableBody tail={tail} stub={stub} />
+    </ContentRow>
   );
 }
 
@@ -419,12 +475,14 @@ function MarkdownTable({
 /**
  * A filter over a long listing.
  *
- * 446 pages and 145 tables are not browsable by scrolling, and neither list has
- * a natural order a reader can exploit — a table's caption is the only handle
- * most of them have, and 89 of this document's 145 carry none at all. So the
- * filter matches BOTH the visible label and the page number: typing "52" finds
- * page 52 and every table on it, and typing a word finds the captions that
- * contain it.
+ * 145 tables are not browsable by scrolling, and the list has no natural order
+ * a reader can exploit — a table's caption is the only handle most of them
+ * have, and 89 of this document's 145 carry none at all. So the filter matches
+ * BOTH the visible label and the page number: typing "52" finds page 52 and
+ * every table on it, and typing a word finds the captions that contain it.
+ *
+ * Uses the shared `SearchBar` rather than a bespoke input, with its submit
+ * button turned off: this narrows as you type, so there is nothing to submit.
  */
 function FilterBox({
   label,
@@ -440,14 +498,15 @@ function FilterBox({
   total: number;
 }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-3">
-      <input
+    <div className="mb-4 flex flex-wrap items-center gap-3">
+      <SearchBar
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={label}
         aria-label={label}
-        className="w-full max-w-xs rounded-md border border-border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+        showSubmit={false}
+        className="max-w-sm"
       />
       <span className="text-sm text-muted-foreground">
         {shown === total
@@ -462,8 +521,8 @@ function FilterBox({
  *
  * 89 of this document's 145 tables carry no caption upstream, so the fallback is
  * the common case rather than the exception. It is the ORDINAL — the table's
- * position as a reader counts them — because the row already carries page and
- * shape underneath, and repeating those as the title says nothing twice.
+ * position as a reader counts them — because the row already carries the page
+ * number on its right, and repeating that as the title says nothing twice.
  *
  * Display only. Addressing a table by ordinal is a bug (they are recomputed on
  * every ingest); that is what `key` is for. */
@@ -504,11 +563,51 @@ function TableList({ tail, items }: { tail: string; items: ContentTableStub[] })
   );
 }
 
+/**
+ * The placeholder a listing shows while it loads.
+ *
+ * Rows of the same shape as the real ones — a chevron, a title and a
+ * right-hand page number — so the section does not resize under the reader
+ * when the listing lands. `count` comes from the material payload, so the
+ * placeholder is even the right LENGTH for short sections.
+ */
+function ListSkeleton({ count }: { count: number }) {
+  const rows = Math.min(Math.max(count, 1), 6);
+
+  return (
+    <ul aria-hidden="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <li
+          key={i}
+          className="flex min-h-11 items-center gap-3 border-b border-border/70 py-3 last:border-b-0"
+        >
+          <Skeleton className="h-4 w-4 shrink-0 rounded-sm" />
+          <Skeleton
+            className="h-4 flex-1"
+            style={{ maxWidth: `${70 - ((i * 7) % 25)}%` }}
+          />
+          <Skeleton className="h-4 w-7 shrink-0" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * One collapsible section of the contents — Tables or Charts.
+ *
+ * The listing is fetched on FIRST OPEN, never on mount: two listings are two
+ * requests, and a reader who came for one table should not pay for every chart
+ * in the report to get it. `enabled` is what makes that true.
+ *
+ * `count` is NOT displayed. It sizes the loading placeholder and decides
+ * whether the section exists at all, but a number beside the title competed
+ * with the titles themselves for the reader's eye.
+ */
 function ContentSection<T>({
   id,
   title,
   count,
-  hint,
   icon,
   load,
   render,
@@ -516,7 +615,6 @@ function ContentSection<T>({
   id: string;
   title: string;
   count: number;
-  hint: string;
   icon?: ReactNode;
   load: () => Promise<T[] | null>;
   render: (items: T[]) => ReactNode;
@@ -542,23 +640,20 @@ function ContentSection<T>({
           className="flex w-full items-center gap-3 py-4 text-left"
         >
           <ChevronDown
-            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
-              open ? "rotate-180" : ""
-            }`}
+            className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-180",
+            )}
             aria-hidden="true"
           />
           {icon}
           <span className="text-xl font-semibold text-foreground">{title}</span>
-          <span className="text-base text-muted-foreground">
-            {count.toLocaleString()}
-          </span>
         </button>
       </h3>
 
       {open ? (
         <div className="pb-6">
-          <p className="mb-3 text-base leading-7 text-muted-foreground">{hint}</p>
-          {isLoading ? <Skeleton className="h-24 w-full" /> : null}
+          {isLoading ? <ListSkeleton count={count} /> : null}
           {isError ? (
             <p className="text-base text-muted-foreground">
               That list could not be loaded. Try again.
@@ -598,7 +693,6 @@ export function DocumentContentPanel({
         title="Tables"
         count={tables}
         icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
-        hint="Select a table to read it."
         load={() => listMaterialTables(tail)}
         render={(items) => <TableList tail={tail} items={items} />}
       />
@@ -608,12 +702,17 @@ export function DocumentContentPanel({
         title="Charts"
         count={figures}
         icon={<BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />}
-        hint="Select a chart to see it drawn, with the numbers behind it."
         load={() => listMaterialFigures(tail)}
         render={(items) => (
           <ul>
             {items.map((figure) => (
-              <FigureCard key={figure.key} figure={figure} />
+              <ContentRow
+                key={figure.key}
+                title={nepaliSafe(figure.title, "Untitled chart")}
+                pageNo={figure.page_no}
+              >
+                <FigureBody figure={figure} />
+              </ContentRow>
             ))}
           </ul>
         )}

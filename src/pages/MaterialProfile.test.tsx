@@ -234,8 +234,12 @@ describe("MaterialProfile — the Contents tab", () => {
     fireEvent.mouseDown(tab);
     fireEvent.click(await screen.findByRole("button", { name: /^Charts/ }));
 
-    expect(await screen.findByText("उजुरीको संख्या")).toBeTruthy();
-    expect(screen.getByText("19,580")).toBeTruthy();
+    // The listing names the chart; its numbers arrive only once the row opens.
+    const row = await screen.findByRole("button", { name: /उजुरीको संख्या/ });
+    expect(screen.queryByText("19,580")).toBeNull();
+
+    fireEvent.click(row);
+    expect(await screen.findByText("19,580")).toBeTruthy();
     expect(screen.getByText("19,488")).toBeTruthy();
   });
 
@@ -244,6 +248,7 @@ describe("MaterialProfile — the Contents tab", () => {
     renderPage();
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
     fireEvent.click(await screen.findByRole("button", { name: /^Charts/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /उजुरीको संख्या/ }));
 
     // A value read off the image is a weaker claim than a printed one; rendering
     // them identically would launder a guess into a fact.
@@ -373,6 +378,9 @@ describe("MaterialProfile — a figure whose axis fields are inverted", () => {
 
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
     fireEvent.click(await screen.findByRole("button", { name: /^Charts/ }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /आयोग स्थापनादेखि/ }),
+    );
     fireEvent.click(await screen.findByText("Show the numbers"));
 
     const firstCells = screen
@@ -403,17 +411,36 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     expect(listMaterialFigures).not.toHaveBeenCalled();
   });
 
-  it("labels each section from the counts before fetching anything", async () => {
-    // The counts ride on the material payload, so the tab can describe itself
-    // honestly without a request.
+  it("titles each section without a count competing with it", async () => {
+    // The counts still ride on the material payload — they size the loading
+    // placeholder and decide whether a section exists — but a number beside the
+    // title competed with the titles themselves for the reader's eye.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
     renderPage();
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
 
     const tables = await screen.findByRole("heading", { name: /^Tables/ });
-    expect(tables.textContent).toContain("1");
-    expect(screen.getByRole("heading", { name: /^Charts/ }).textContent).toContain("1");
+    expect(tables.textContent?.trim()).toBe("Tables");
+    expect(
+      screen.getByRole("heading", { name: /^Charts/ }).textContent?.trim(),
+    ).toBe("Charts");
     expect(listMaterialTables).not.toHaveBeenCalled();
+  });
+
+  it("puts each row's page number on the right, table-of-contents style", async () => {
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialTables.mockResolvedValue(TABLES);
+    renderPage();
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
+
+    const row = await screen.findByRole("button", { name: /तालिका २\.१/ });
+    const spans = [...row.querySelectorAll("span")];
+    // The page number is the row's LAST element, not a "page 18 · 9×4" line
+    // under the title.
+    expect(spans[spans.length - 1].textContent).toBe("18");
+    expect(row.textContent).not.toMatch(/9×4/);
+    expect(row.textContent).not.toMatch(/page 18/i);
   });
 
   it("gives the Charts section an icon, like every other section", async () => {
