@@ -6,8 +6,9 @@ type CaseSectionHeadingProps = {
 };
 
 /**
- * Shared heading for the case-detail content sections: the editorial serif
- * (Vesper Libre, same face as the home hero) over a short crimson rule.
+ * Shared heading for the case-detail content sections: the headline face (same
+ * as the home hero — Vesper Libre in Nepali, Inter in English) over a short
+ * crimson rule.
  *
  * The rule choreographs off the nearest `<Reveal className="group">` wrapper —
  * it draws in from the left as the section enters the viewport. Everywhere

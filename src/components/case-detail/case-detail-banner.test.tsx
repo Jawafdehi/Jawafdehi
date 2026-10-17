@@ -240,19 +240,15 @@ describe("CaseDetailBanner case stages", () => {
   });
 });
 
-describe("CaseDetailBanner status chip", () => {
-  it("reads the lifecycle off the API rather than deriving it from a date", () => {
-    // The server derives `status` from the stages; the client cannot, and used
-    // to guess "concluded" from the presence of an end date.
+describe("CaseDetailBanner chips", () => {
+  // The lifecycle chip was dropped from every Jawafdehi case surface: a reader
+  // could not tell "ongoing" from "under investigation", and both labels
+  // overstated what the record says. Court-case cards keep their own status.
+  it("renders no lifecycle chip, whatever the API says the status is", () => {
     renderBanner(makeCase({ state: "PUBLISHED", status: "concluded" }));
 
-    expect(screen.getByText("caseDetail.status.concluded")).toBeTruthy();
-  });
-
-  it("keeps the reviewer-facing workflow chip for a draft", () => {
-    renderBanner(makeCase({ state: "DRAFT", status: "concluded" }));
-
-    expect(screen.getByText("caseDetail.status.underInvestigation")).toBeTruthy();
+    expect(screen.queryByText("caseDetail.status.concluded")).toBeNull();
+    expect(screen.queryByText("caseDetail.status.underInvestigation")).toBeNull();
   });
 
   it("reads the renamed offence_type in preference to the deprecated case_type", () => {

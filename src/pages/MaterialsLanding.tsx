@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesBySlug, seriesCount } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
 import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
 import {
@@ -36,12 +36,11 @@ export default function MaterialsLanding() {
   const { data: statistics } = useQuery({ ...archiveStatisticsQuery(), staleTime: 5 * 60 * 1000 });
   const { data: recentResponse } = useQuery({ ...recentMaterialsQuery(), staleTime: 5 * 60 * 1000 });
 
+  // Counts come from `seriesCount` rather than a by_source lookup here: a shelf
+  // can now be narrower than its source token (five of them scope
+  // `official_report`), so the arithmetic differs per shelf and lives with the
+  // registry that defines it.
   const materials = statistics?.materials;
-  const countBySource = new Map(
-    (materials?.by_source ?? []).map((row) => [row.source, row.count]),
-  );
-  const seriesCount = (source: string): number | null =>
-    materials ? (countBySource.get(source) ?? 0) : null;
 
   const recents = recentResponse
     ? pickRecentMaterials(recentResponse.results, RECENT_MATERIALS_COUNT)
@@ -230,7 +229,7 @@ export default function MaterialsLanding() {
           <ul className="mt-12 grid list-none grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {MATERIAL_SERIES.map((series) => (
               <li key={series.slug} className="pt-4">
-                <FolderCard series={series} count={seriesCount(series.source)} />
+                <FolderCard series={series} count={seriesCount(series, materials)} />
               </li>
             ))}
             <li className="pt-4">
@@ -306,9 +305,33 @@ export default function MaterialsLanding() {
               materials={recents}
               descriptions={descriptions}
               heading={
-                <h2 id="recent-heading" className="font-archive-section-title">
-                  {t("materialsLanding.recent.title", "Recently added")}
-                </h2>
+                <div>
+                  <h2 id="recent-heading" className="font-archive-section-title">
+                    {t("materialsLanding.recent.title", "Recently added")}
+                  </h2>
+                  {/* Four cards with nothing around them read as the whole
+                      holding — a reviewer counted three news items here and
+                      asked why we only have those three. Say what the slice is
+                      and where the rest live. */}
+                  {materials && (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      <span className="tabular-nums">
+                        {t("materialsLanding.recent.slice", {
+                          shown: formatArchiveCount(recents.length, language),
+                          total: formatArchiveCount(materials.total, language),
+                          defaultValue:
+                            "The {{shown}} newest of {{total}} documents in the archive.",
+                        })}
+                      </span>{" "}
+                      <Link
+                        to="/materials/?sort=newest"
+                        className="font-medium text-primary underline underline-offset-4 hover:text-primary/75"
+                      >
+                        {t("materialsLanding.recent.browseAll", "Browse all documents")}
+                      </Link>
+                    </p>
+                  )}
+                </div>
               }
             />
           ) : (

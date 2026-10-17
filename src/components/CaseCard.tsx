@@ -3,14 +3,12 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CaseStatusBadge, CaseTagBadge } from "@/components/CaseBadge";
-import { getCaseStatusLabelKey } from "@/lib/case-badges";
+import { CaseTagBadge } from "@/components/CaseBadge";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { CaseImage } from "@/types/jds";
-import type { CaseCardStatus } from "@/lib/case-card-props";
 import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 import { summarizeNames } from "@/utils/name-summary";
@@ -22,9 +20,6 @@ interface CaseCardProps {
   entity: string;
   entityNames?: string[];
   location: string;
-  // `withdrawn` / `dormant` are lifecycles the API derives; neither is
-  // "resolved", so they carry their own label and the muted pill.
-  status: CaseCardStatus;
   tags?: string[];
   entityIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
   locationIds?: string[]; // NES entity @id IRIs (used to link to /entity/*)
@@ -51,7 +46,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, t: 
   return summarizeNames({ names: entityNames ?? entity.split(",") }, { t, fallback: entity });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, status, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, t);
@@ -75,8 +70,6 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
     isPlaceholder,
     onError: handleImageError,
   } = useCaseImage(image, [thumbnailUrl, bannerUrl]);
-
-  const statusLabel = t(getCaseStatusLabelKey(status));
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (!caseSlug) return;
@@ -120,9 +113,11 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
               isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
             )}
           />
-          {/* Legibility scrim for the status badge over a real photograph. The
-              placeholder is a near-flat light panel and needs no scrim — and in
-              dark mode the inverted placeholder would tint it the wrong way. */}
+          {/* Scrim over a real photograph, kept now that the status badge it was
+              drawn for is gone: it settles a busy press photo against the card's
+              top edge. The placeholder is a near-flat light panel and needs no
+              scrim — and in dark mode the inverted placeholder would tint it the
+              wrong way. */}
           {!isPlaceholder && (
             // Main wrote this scrim as from-slate-950/30 via-slate-900/5; the
             // semantic equivalent is --foreground, which is the same near-black
@@ -130,12 +125,6 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, statu
             // name, so to-white/10 stays.
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
           )}
-
-          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-            <CaseStatusBadge status={status} className="shrink-0">
-              {statusLabel}
-            </CaseStatusBadge>
-          </div>
         </div>
 
         <div className="flex flex-1 flex-col bg-card min-w-0">
