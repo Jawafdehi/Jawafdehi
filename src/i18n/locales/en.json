@@ -2775,20 +2775,18 @@
       "description": "likhit is Jawafdehi's open-source MarkItDown plugin for Nepali documents: Devanagari repair, layout-aware Markdown, optional OCR for scanned pages, and legacy .doc support."
     },
     "hero": {
-      "eyebrow": "Document conversion",
       "title": "Nepali documents, converted",
       "titleAccent": "faithfully",
-      "description": "The PDFs and Word files Nepal's public records arrive as, turned into clean, structured Markdown.",
       "benchmark": "See the benchmark",
-      "source": "Source on GitHub"
+      "source": "Source on GitHub",
+      "pypi": "PyPI"
     },
     "install": {
       "copyLabel": "Copy the install command",
-      "lede": "<name>likhit</name> is Jawafdehi's public <markitdown>MarkItDown</markitdown> plugin for Nepal-specific document support. For PDFs it evaluates several extraction paths and returns the best result rather than trusting one fixed pipeline.",
+      "lede": "<name>likhit</name> is Jawafdehi's public <markitdown>MarkItDown</markitdown> plugin for Nepal-specific document support. It adds Nepali PDF repair, layout-aware Markdown assembly, optional OCR for image-dominant pages, and legacy <doc>.doc</doc> support. For PDFs it evaluates several extraction paths and returns the best result rather than trusting one fixed pipeline.",
       "usage": "Then enable plugins when you convert: <api>MarkItDown(enable_plugins=True)</api>, or from the command line <cli>markitdown --use-plugins document.pdf</cli>."
     },
     "features": {
-      "title": "What it adds",
       "repair": {
         "name": "Devanagari repair",
         "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."
@@ -2840,6 +2838,7 @@
       "title": "Every claim here is measured",
       "body": "Each document in the benchmark is a real, published government record — no synthetic fixtures — converted three ways and compared side by side. Read what likhit extracted, and check the assertions that gate the build.",
       "cta": "Open the benchmark"
-    }
+    },
+    "copy": "Copy"
   }
 }

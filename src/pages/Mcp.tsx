@@ -2,7 +2,7 @@ import { Terminal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
-import { CopyButton, CopyField } from "@/components/ui/copy-field";
+import { CopyButton, CopyField } from "@/components/mcp/copy-field";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";

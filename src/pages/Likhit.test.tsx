@@ -64,6 +64,37 @@ describe("the likhit landing page", () => {
     ).toBe("https://github.com/Jawafdehi/likhit");
   });
 
+  // Everything in src/pages/likhit.css is written as `.likhit-page .lk-*`. If the
+  // page stopped rendering that wrapper the whole stylesheet would silently stop
+  // applying, and the page would fall back to unstyled markup inside the site
+  // chrome — which still renders, still passes every other assertion here, and
+  // looks obviously wrong only to a human.
+  it("scopes itself under .likhit-page so the ported stylesheet applies", async () => {
+    const { container } = await renderPage("en");
+
+    const page = container.querySelector(".likhit-page");
+    expect(page).not.toBeNull();
+    // Every styled element has to be inside it, not a sibling.
+    expect(container.querySelectorAll("[class*='lk-']").length).toBeGreaterThan(0);
+    for (const el of container.querySelectorAll("[class*='lk-']")) {
+      expect(page?.contains(el)).toBe(true);
+    }
+  });
+
+  it("lists the four features as rows, in the order their colours are keyed to", async () => {
+    const { container } = await renderPage("en");
+
+    // likhit.css colours the square before each row by :nth-child, so the order
+    // here is load-bearing — reordering them re-colours them.
+    const rows = [...container.querySelectorAll(".lk-features li strong")];
+    expect(rows.map((el) => el.textContent)).toEqual([
+      i18n.t("likhit.features.repair.name"),
+      i18n.t("likhit.features.layout.name"),
+      i18n.t("likhit.features.ocr.name"),
+      i18n.t("likhit.features.legacy.name"),
+    ]);
+  });
+
   it("gives every OCR recipe a copyable block", async () => {
     const { container } = await renderPage("en");
 
@@ -85,7 +116,8 @@ describe("the likhit landing page", () => {
     const { container } = await renderPage(language);
 
     const text = container.textContent ?? "";
-    for (const tag of ["name", "markitdown", "api", "cli", "cmd", "baseUrl", "apiKey", "model"]) {
+    const tags = ["name", "doc", "markitdown", "api", "cli", "cmd", "baseUrl", "apiKey", "model"];
+    for (const tag of tags) {
       expect(text).not.toContain(`<${tag}>`);
       expect(text).not.toContain(`</${tag}>`);
     }

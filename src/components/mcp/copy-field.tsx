@@ -1,7 +1,7 @@
 import { Check, Copy } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,22 +17,7 @@ export function CopyButton({
   iconClassName,
 }: Readonly<{ value: string; label: string; className?: string; iconClassName?: string }>) {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
-  const timer = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const copy = useCallback(async () => {
-    let next: "copied" | "failed" = "copied";
-    try {
-      await navigator.clipboard.writeText(value);
-    } catch {
-      next = "failed";
-    }
-    setStatus(next);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setStatus("idle"), next === "copied" ? 1600 : 4000);
-  }, [value]);
+  const { status, copy } = useCopyToClipboard(value);
 
   const copied = status === "copied";
   const failed = status === "failed";
@@ -84,33 +69,6 @@ export function CopyField({
       </code>
 
       <CopyButton value={value} label={label} />
-    </div>
-  );
-}
-
-/**
- * The multi-line form — a shell recipe copied as one block. The copy button
- * floats in the corner so it does not take a line away from the code.
- *
- * `whitespace-pre-wrap` WITHOUT a word-break: comment lines are prose and should
- * wrap at their spaces, but a shell token must not be broken mid-word. Allowing
- * that printed `export OPENAI_BASE_URL=http://127.0.0.` / `1:11434/v1` across
- * two lines, which reads as two different values. An unbreakable token overflows
- * instead and `overflow-x-auto` is how you reach the rest of it.
- */
-export function CopyBlock({
-  value,
-  label,
-}: Readonly<{ value: string; label: string }>) {
-  return (
-    <div className="relative rounded-lg border border-border bg-muted/30">
-      <pre className="overflow-x-auto whitespace-pre-wrap px-4 py-3.5 pr-12 font-mono text-xs leading-relaxed text-foreground sm:text-sm">
-        {value}
-      </pre>
-
-      <div className="absolute right-1.5 top-1.5 flex items-center gap-2">
-        <CopyButton value={value} label={label} />
-      </div>
     </div>
   );
 }
