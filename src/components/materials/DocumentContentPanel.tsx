@@ -303,7 +303,8 @@ function TableRow({
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   // Markdown is fetched only when a reader opens the table: one report's tables
-  // come to ~830 KiB, which is why the API keeps them off the manifest.
+  // come to ~830 KiB, which is why `?type=table` returns stubs and the markdown
+  // is addressable only one table at a time.
   const { data, isLoading, isError } = useQuery({
     queryKey: ["material-content-table", tail, stub.key],
     queryFn: () => getMaterialTable(tail, stub.key),
@@ -699,7 +700,7 @@ export function DocumentContentPanel({
   tail: string;
   summary: MaterialContentSummary;
 }) {
-  const { pages, pages_read, tables, figures, points, provenance } = summary;
+  const { pages, pages_read, tables, figures } = summary;
   const unread = Math.max(pages - pages_read, 0);
 
   return (
@@ -743,21 +744,6 @@ export function DocumentContentPanel({
         render={(items) => <PageList tail={tail} items={items} />}
       />
 
-      {/* The dataset is CC BY-NC 4.0, which REQUIRES attribution — so this line
-          is a licence term, not a flourish, and cannot simply be dropped. Kept
-          to one muted line instead of the paragraph of provenance it replaced. */}
-      <p className="mt-8 text-sm leading-6 text-muted-foreground">
-        Source:{" "}
-        <a
-          href={`https://huggingface.co/datasets/${provenance.dataset}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2 hover:no-underline"
-        >
-          {provenance.dataset}
-        </a>{" "}
-        (CC BY-NC 4.0)
-      </p>
     </div>
   );
 }
