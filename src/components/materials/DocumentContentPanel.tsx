@@ -1,20 +1,20 @@
 /**
- * The "Contents" tab of a material page: what was read out of the source
- * document — its pages, its ruled tables and its charts — served by
+ * The "Contents" tab of a material page: the STRUCTURE read out of the source
+ * document — its ruled tables and its charts — served by
  * `/api/materials/<tail>/content`.
  *
- * Four things this component is deliberate about.
+ * **The document's pages are not here.** They are its transcript, and a
+ * transcript is something you read continuously rather than unfold one row at
+ * a time; it has its own reader (`TranscriptReader`), opened from the material
+ * page. Listing 446 page stubs beside 145 tables also buried the two things
+ * this tab exists to expose.
+ *
+ * Three things this component is deliberate about.
  *
  * **It is a table of contents, not a rendered document.** Each section fetches
- * its listing when opened and each row fetches its own text when expanded. A
- * 446-page report's pages ARE its transcript and one table reaches 170 KiB, so
- * a panel that loaded its contents eagerly would be unusable on precisely the
- * documents worth reading.
- *
- * **An empty page is never rendered as nothing.** `coverage_state` separates a
- * page that is blank in the source from one we hold and could not read, and the
- * Pages section says up front how many fall in the second group. Collapsing the
- * two reports a failure of our OCR as an absence of content in the document.
+ * its listing when opened and each row fetches its own markdown when expanded.
+ * One table reaches 170 KiB, so a panel that loaded its contents eagerly would
+ * be unusable on precisely the documents worth reading.
  *
  * **Estimated values are marked, everywhere.** A value read off a chart image is
  * a weaker claim than one read from a printed figure, and the dataset tracks the
@@ -43,20 +43,17 @@
 
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, FileSpreadsheet, FileText } from "lucide-react";
+import { BarChart3, ChevronDown, FileSpreadsheet } from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
 import type { ContentFigureChartProps } from "./ContentFigureChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getMaterialPage,
   getMaterialTable,
   listMaterialFigures,
-  listMaterialPages,
   listMaterialTables,
   type ContentFigure,
-  type ContentPageStub,
   type ContentTableStub,
   type MaterialContentSummary,
 } from "@/services/datalake-api";
@@ -213,85 +210,6 @@ function FigureCard({ figure }: { figure: ContentFigure }) {
 
 // ─── tables ─────────────────────────────────────────────────────────────────
 
-
-/** How a page was read, in the reader's words rather than the pipeline's. */
-function pageState(state: string): { label: string; muted: boolean } {
-  if (state === "anchored") return { label: "", muted: false };
-  if (state === "ocr_vision") return { label: "read by OCR", muted: false };
-  if (state === "blank") return { label: "blank page", muted: true };
-  // Everything else — gap, folded, ocr_unread, or a value the upstream adds
-  // later — means we hold the page and could not read it. Say that, rather
-  // than letting an empty page pass for an empty one.
-  return { label: "could not be read", muted: true };
-}
-
-function PageRow({ tail, stub }: { tail: string; stub: ContentPageStub }) {
-  const [open, setOpen] = useState(false);
-  // One page's text, fetched on open. A document's pages ARE its transcript, so
-  // the listing deliberately carries none of it.
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["material-content-page", tail, stub.page_no],
-    queryFn: () => getMaterialPage(tail, stub.page_no),
-    enabled: open,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const state = pageState(stub.coverage_state);
-
-  return (
-    <li className="border-b border-border/70 last:border-b-0">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-baseline gap-3 py-3 text-left"
-      >
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 self-center text-muted-foreground transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-          aria-hidden="true"
-        />
-        <span className="font-medium text-foreground">Page {stub.page_no}</span>
-        {state.label ? (
-          <span className="text-sm text-muted-foreground">{state.label}</span>
-        ) : null}
-        {stub.n_table_blocks > 0 ? (
-          <span className="text-sm text-muted-foreground">
-            {stub.n_table_blocks} table{stub.n_table_blocks === 1 ? "" : "s"}
-          </span>
-        ) : null}
-      </button>
-
-      {open ? (
-        <div className="pb-4 pl-7">
-          {isLoading ? <Skeleton className="h-20 w-full" /> : null}
-          {isError ? (
-            <p className="text-base text-muted-foreground">
-              That page could not be loaded. Try again.
-            </p>
-          ) : null}
-          {data ? (
-            data.text.trim() ? (
-              <p className="max-w-3xl whitespace-pre-wrap text-base leading-8 text-foreground">
-                {data.text}
-              </p>
-            ) : (
-              // An empty transcript is ambiguous on its own, and the ambiguity
-              // matters: a reader must not read our failure as the document's
-              // silence.
-              <p className="text-base leading-7 text-muted-foreground">
-                {state.muted && stub.coverage_state === "blank"
-                  ? "This page is blank in the source document."
-                  : "We hold this page but could not read it. Open the original PDF to see it."}
-              </p>
-            )
-          ) : null}
-        </div>
-      ) : null}
-    </li>
-  );
-}
 
 function TableRow({
   tail,
@@ -586,35 +504,6 @@ function TableList({ tail, items }: { tail: string; items: ContentTableStub[] })
   );
 }
 
-function PageList({ tail, items }: { tail: string; items: ContentPageStub[] }) {
-  const [q, setQ] = useState("");
-  const needle = q.trim();
-  const shown = needle
-    ? items.filter((p) => String(p.page_no).includes(needle))
-    : items;
-
-  return (
-    <>
-      <FilterBox
-        label="Jump to a page number"
-        value={q}
-        onChange={setQ}
-        shown={shown.length}
-        total={items.length}
-      />
-      {shown.length === 0 ? (
-        <p className="text-base text-muted-foreground">No page with that number.</p>
-      ) : (
-        <ul>
-          {shown.map((stub) => (
-            <PageRow key={stub.page_no} tail={tail} stub={stub} />
-          ))}
-        </ul>
-      )}
-    </>
-  );
-}
-
 function ContentSection<T>({
   id,
   title,
@@ -688,10 +577,10 @@ function ContentSection<T>({
  *
  * **Nothing heavy is fetched until it is asked for.** The tab renders from the
  * counts already on the material payload; each section fetches its listing when
- * opened; each row fetches its own page text or table markdown when expanded.
- * That ordering is not an optimisation — a 446-page report's pages ARE its
- * transcript and one table reaches 170 KiB, so a panel that loaded its contents
- * eagerly would be unusable on precisely the documents worth reading.
+ * opened; each row fetches its own table markdown when expanded. That ordering
+ * is not an optimisation — one table reaches 170 KiB, so a panel that loaded
+ * its contents eagerly would be unusable on precisely the documents worth
+ * reading.
  */
 export function DocumentContentPanel({
   tail,
@@ -700,8 +589,7 @@ export function DocumentContentPanel({
   tail: string;
   summary: MaterialContentSummary;
 }) {
-  const { pages, pages_read, tables, figures, points, provenance } = summary;
-  const unread = Math.max(pages - pages_read, 0);
+  const { tables, figures } = summary;
 
   return (
     <div className="p-5 md:p-8">
@@ -719,6 +607,7 @@ export function DocumentContentPanel({
         id={`${tail}-figures`}
         title="Charts"
         count={figures}
+        icon={<BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />}
         hint="Select a chart to see it drawn, with the numbers behind it."
         load={() => listMaterialFigures(tail)}
         render={(items) => (
@@ -729,36 +618,6 @@ export function DocumentContentPanel({
           </ul>
         )}
       />
-
-      <ContentSection
-        id={`${tail}-pages`}
-        title="Pages"
-        count={pages}
-        icon={<FileText className="h-4 w-4 text-accent" aria-hidden="true" />}
-        hint={
-          unread > 0
-            ? `Select a page to read it. ${unread.toLocaleString()} of these pages could not be read, and open empty — that is a limit of our transcription, not a blank page.`
-            : "Select a page to read it."
-        }
-        load={() => listMaterialPages(tail)}
-        render={(items) => <PageList tail={tail} items={items} />}
-      />
-
-      {/* The dataset is CC BY-NC 4.0, which REQUIRES attribution — so this line
-          is a licence term, not a flourish, and cannot simply be dropped. Kept
-          to one muted line instead of the paragraph of provenance it replaced. */}
-      <p className="mt-8 text-sm leading-6 text-muted-foreground">
-        Source:{" "}
-        <a
-          href={`https://huggingface.co/datasets/${provenance.dataset}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2 hover:no-underline"
-        >
-          {provenance.dataset}
-        </a>{" "}
-        (CC BY-NC 4.0)
-      </p>
     </div>
   );
 }

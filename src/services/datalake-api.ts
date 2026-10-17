@@ -323,6 +323,36 @@ export async function getMaterialPage(iriOrTail: string, pageNo: number) {
 }
 
 /**
+ * How many pages one range request may cover.
+ *
+ * Mirrors the API's `MAX_PAGE_SPAN`. Over the cap the API answers 400 naming
+ * the cap rather than truncating silently, so asking for more than this is a
+ * client bug, not a degraded read — keep windows at or under it.
+ */
+export const MAX_PAGE_SPAN = 50;
+
+/**
+ * A span of pages, inclusive at BOTH ends, each with its text.
+ *
+ * Inclusive because a citation is: "pages 30–32" is three pages, and
+ * `from === to` returns that one page. This is what a continuous reader wants —
+ * one request per window instead of one per page, which for a 446-page report
+ * is the difference between 9 requests and 446.
+ */
+export async function getMaterialPageRange(
+  iriOrTail: string,
+  from: number,
+  to: number,
+) {
+  const data = await getContent<ContentList<ContentPage>>(contentEndpoint(iriOrTail), {
+    type: "page",
+    from,
+    to,
+  });
+  return data?.items ?? null;
+}
+
+/**
  * Parse a court-case lookup id into its composite key. Ids are the canonical
  * @id IRI (`https://<host>/courtcase/special/081-cr-0060`, the only form
  * `Case.court_cases[]` carries) or an INTERNAL `<court>:<number>` lookup key

@@ -23,6 +23,13 @@ import {
   type MaterialBilingual,
 } from "@/services/datalake-api";
 import { DocumentContentPanel } from "@/components/materials/DocumentContentPanel";
+import { TranscriptReader } from "@/components/materials/TranscriptReader";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { API_BASE_URL } from "@/services/http";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import {
@@ -171,9 +178,6 @@ export default function MaterialProfile() {
   // and the key is ABSENT rather than zeroed for the ~346k materials we have
   // not parsed, which is why presence is the test.
   const contentSummary = data?.["jawafdehi:content"];
-  // Controlled so the aside can send a reader straight to the transcript. The
-  // document's text lives in the Contents tab's Pages section, which is not
-  // somewhere a reader would think to look from a Downloads list.
   const [tab, setTab] = useState("summary");
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
@@ -195,6 +199,9 @@ export default function MaterialProfile() {
   const links = getMaterialSourceLinks(data);
   const [previewDocument, setPreviewDocument] =
     useState<PreviewDocument | null>(null);
+  // The transcript opens in its own reader rather than inside a tab panel: it
+  // is the document's text, which a reader wants full-width and continuous.
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   // The document's own JSON-LD carries the kind, so this page never has to
   // guess which of a source's shelves it belongs to.
   const series = seriesBySource(
@@ -413,7 +420,12 @@ export default function MaterialProfile() {
                   </h2>
                   <Separator className="mt-3" />
 
-                  <div className="mt-4 inline-grid gap-3">
+                  {/* `grid`, not `inline-grid`: an inline grid sizes itself to
+                      its widest child, so these buttons were as wide as the
+                      longest label while the transcript button below was
+                      `w-full`. Every action in this list is now one column of
+                      the aside, so they match whatever the labels say. */}
+                  <div className="mt-4 grid gap-3">
                     {links.map((link) =>
                     link.previewType ? (
                         <Button
@@ -490,27 +502,26 @@ export default function MaterialProfile() {
                         </a>
                       </Button>
                     ) : null}
-                  </div>
 
-                  {contentSummary && contentSummary.pages_read > 0 ? (
-                    <Button
-                      variant="outline"
-                      className="mt-3 w-full justify-start gap-2"
-                      onClick={() => {
-                        setTab("content");
-                        // Guard the METHOD, not just the element: jsdom has no
-                        // scrollIntoView, so `?.` on the element alone still
-                        // throws there — and scrolling is a nicety, never a
-                        // reason to break the click that switches the tab.
-                        document
-                          .getElementById("material-content-tab")
-                          ?.scrollIntoView?.({ behavior: "smooth", block: "start" });
-                      }}
-                    >
-                      <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      Read the transcript
-                    </Button>
-                  ) : null}
+                    {/* Inside the grid with the other downloads, and carrying
+                        their exact classes — it is the same kind of action
+                        (open this document and read it), and it used to be the
+                        one button in the aside with a different width. */}
+                    {contentSummary && contentSummary.pages_read > 0 ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                        onClick={() => setTranscriptOpen(true)}
+                      >
+                        <FileText
+                          className="h-4 w-4 shrink-0 text-accent"
+                          aria-hidden="true"
+                        />
+                        Read the transcript
+                      </Button>
+                    ) : null}
+                  </div>
 
                   {links.length === 0 && !data.url ? (
                     <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -562,6 +573,28 @@ export default function MaterialProfile() {
           if (!open) setPreviewDocument(null);
         }}
       />
+
+      {contentSummary ? (
+        <Dialog open={transcriptOpen} onOpenChange={setTranscriptOpen}>
+          <DialogContent
+            overlayClassName="bg-black/85"
+            className="h-[94vh] w-[min(98vw,1280px)] max-w-none overflow-hidden border-white/10 bg-code-surface p-0 shadow-2xl sm:rounded-xl [&>button:last-child]:hidden"
+          >
+            <DialogTitle className="sr-only">{displayName}</DialogTitle>
+            <DialogDescription className="sr-only">
+              The transcript of this document, page by page.
+            </DialogDescription>
+            <TranscriptReader
+              tail={tail}
+              title={displayName}
+              dataset={contentSummary.provenance?.dataset}
+              pages={contentSummary.pages}
+              pagesRead={contentSummary.pages_read}
+              onClose={() => setTranscriptOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </main>
   );
 }

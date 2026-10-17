@@ -8,6 +8,7 @@ import type { Material } from "@/services/datalake-api";
 const getMaterial = vi.fn();
 const listMaterialPages = vi.fn();
 const getMaterialPage = vi.fn();
+const getMaterialPageRange = vi.fn();
 const listMaterialTables = vi.fn();
 const getMaterialTable = vi.fn();
 const listMaterialFigures = vi.fn();
@@ -15,6 +16,8 @@ vi.mock("@/services/datalake-api", () => ({
   getMaterial: (...args: unknown[]) => getMaterial(...args),
   listMaterialPages: (...args: unknown[]) => listMaterialPages(...args),
   getMaterialPage: (...args: unknown[]) => getMaterialPage(...args),
+  getMaterialPageRange: (...args: unknown[]) => getMaterialPageRange(...args),
+  MAX_PAGE_SPAN: 50,
   listMaterialTables: (...args: unknown[]) => listMaterialTables(...args),
   getMaterialTable: (...args: unknown[]) => getMaterialTable(...args),
   listMaterialFigures: (...args: unknown[]) => listMaterialFigures(...args),
@@ -271,15 +274,17 @@ describe("MaterialProfile — the Contents tab", () => {
     expect(getMaterialTable).toHaveBeenCalledWith("ag/116707", "p0018-t1");
   });
 
-  it("credits the dataset the data came from", async () => {
+  it("does not list the document's pages — those are the transcript", async () => {
+    // 446 page stubs beside 145 tables buried the two things this tab exists to
+    // expose, and a transcript is read continuously rather than unfolded a row
+    // at a time. The pages have their own reader.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
     renderPage();
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
+    await screen.findByRole("heading", { name: /^Tables/ });
 
-    const link = await screen.findByRole("link", {
-      name: /damo-da\/ciaa-annual-reports/,
-    });
-    expect(link.getAttribute("href")).toContain("huggingface.co/datasets");
+    expect(screen.queryByRole("heading", { name: /^Pages/ })).toBeNull();
+    expect(listMaterialPages).not.toHaveBeenCalled();
   });
 });
 
@@ -381,22 +386,20 @@ describe("MaterialProfile — a figure whose axis fields are inverted", () => {
 
 describe("MaterialProfile — the Contents tab is a table of contents", () => {
   it("fetches nothing until a section is opened", async () => {
-    // Three listings is three requests, and a 446-page report's pages ARE its
-    // transcript. A reader who came for one table must not pay for all of it.
+    // Two listings is two requests. A reader who came for one table must not
+    // pay for every chart in the report to get it.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
     renderPage();
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
-    await screen.findByRole("heading", { name: /^Pages/ });
+    await screen.findByRole("heading", { name: /^Tables/ });
 
-    expect(listMaterialPages).not.toHaveBeenCalled();
     expect(listMaterialTables).not.toHaveBeenCalled();
     expect(listMaterialFigures).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Pages/ }));
-    await screen.findByRole("button", { name: /Page 18/ });
-    expect(listMaterialPages).toHaveBeenCalledWith("ag/116707");
-    // Opening one section must not pull the others in with it.
-    expect(listMaterialTables).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /^Tables/ }));
+    await screen.findByRole("button", { name: /तालिका २\.१/ });
+    expect(listMaterialTables).toHaveBeenCalledWith("ag/116707");
+    // Opening one section must not pull the other in with it.
     expect(listMaterialFigures).not.toHaveBeenCalled();
   });
 
@@ -407,78 +410,154 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     renderPage();
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
 
-    const pages = await screen.findByRole("heading", { name: /^Pages/ });
-    expect(pages.textContent).toContain("3");
-    expect(screen.getByRole("heading", { name: /^Tables/ }).textContent).toContain("1");
-    expect(listMaterialPages).not.toHaveBeenCalled();
+    const tables = await screen.findByRole("heading", { name: /^Tables/ });
+    expect(tables.textContent).toContain("1");
+    expect(screen.getByRole("heading", { name: /^Charts/ }).textContent).toContain("1");
+    expect(listMaterialTables).not.toHaveBeenCalled();
   });
 
-  it("fetches a page's text only when that page is opened", async () => {
+  it("gives the Charts section an icon, like every other section", async () => {
+    // A section without one read as a different kind of thing from its
+    // neighbours. The icon is inside the heading's button.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
-    getMaterialPage.mockResolvedValue({
-      ...PAGES[0],
-      text: "समेत गरी जम्मा ३७,०२६ वटा उजुरीहरूको दर्ता कायम भएको छ।",
-    });
     renderPage();
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /^Pages/ }));
 
-    const row = await screen.findByRole("button", { name: /Page 18/ });
-    expect(getMaterialPage).not.toHaveBeenCalled();
+    const charts = await screen.findByRole("button", { name: /^Charts/ });
+    const tables = screen.getByRole("button", { name: /^Tables/ });
+    // Each section button holds a chevron plus its own icon.
+    expect(charts.querySelectorAll("svg").length).toBe(
+      tables.querySelectorAll("svg").length,
+    );
+  });
+});
 
-    fireEvent.click(row);
+describe("MaterialProfile — the transcript reader", () => {
+  const openReader = async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: /Read the transcript/i }));
+  };
+
+  it("reads a window of pages in ONE request, not one request per page", async () => {
+    // The API serves an inclusive from/to range capped at 50. A 446-page report
+    // read a page at a time would be 446 round trips.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialPages.mockResolvedValue(PAGES);
+    getMaterialPageRange.mockResolvedValue([
+      { ...PAGES[0], text: "समेत गरी जम्मा ३७,०२६ वटा उजुरीहरूको दर्ता कायम भएको छ।" },
+      { ...PAGES[1], text: "" },
+      { ...PAGES[2], text: "" },
+    ]);
+    await openReader();
+
     expect(await screen.findByText(/३७,०२६/)).toBeTruthy();
-    expect(getMaterialPage).toHaveBeenCalledWith("ag/116707", 18);
+    expect(getMaterialPageRange).toHaveBeenCalledTimes(1);
+    expect(getMaterialPage).not.toHaveBeenCalled();
+    // The window is anchored to the document's first folio, not to 1.
+    expect(getMaterialPageRange).toHaveBeenCalledWith("ag/116707", 18, 20);
   });
 
   it("says a page was unreadable rather than letting it pass for blank", async () => {
-    // The distinction the whole panel turns on: an empty transcript is a
+    // The distinction the whole feature turns on: an empty transcript is a
     // statement about our OCR, not about the page. Rendering both as nothing
     // reports a failure to read as an absence of content.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
-    getMaterialPage.mockResolvedValue({ ...PAGES[1], text: "" });
-    renderPage();
-    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /^Pages/ }));
-    fireEvent.click(await screen.findByRole("button", { name: /Page 19/ }));
+    // Only the unreadable page, so the assertion cannot be satisfied by some
+    // other page that merely failed to load.
+    listMaterialPages.mockResolvedValue([PAGES[1]]);
+    getMaterialPageRange.mockResolvedValue([{ ...PAGES[1], text: "" }]);
+    await openReader();
 
     expect(await screen.findByText(/could not read it/i)).toBeTruthy();
   });
 
   it("distinguishes a genuinely blank page from an unread one", async () => {
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
-    getMaterialPage.mockResolvedValue({ ...PAGES[2], text: "" });
-    renderPage();
-    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /^Pages/ }));
-    fireEvent.click(await screen.findByRole("button", { name: /Page 20/ }));
+    listMaterialPages.mockResolvedValue([PAGES[2]]);
+    getMaterialPageRange.mockResolvedValue([{ ...PAGES[2], text: "" }]);
+    await openReader();
 
     expect(await screen.findByText(/blank in the source document/i)).toBeTruthy();
   });
 
-  it("warns up front how many pages could not be read", async () => {
+  it("never calls a page blank over text it is showing", async () => {
+    // Upstream marks some pages `blank` that nonetheless carry text — 2 of the
+    // 446 in the 35th CIAA report, one of them 253 characters. coverage_state
+    // may only explain an ABSENCE; printed above visible text it contradicts
+    // the evidence on screen and discredits the label everywhere else.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
-    renderPage();
-    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /^Pages/ }));
+    listMaterialPages.mockResolvedValue([PAGES[2]]);
+    getMaterialPageRange.mockResolvedValue([
+      { ...PAGES[2], text: "हाम्रो चाहना : स्वच्छ, पारदर्शी राज्य संयन्त्रको स्थापना" },
+    ]);
+    await openReader();
 
-    // 3 pages, 2 read.
-    expect(await screen.findByText(/1 of these pages could not be read/i)).toBeTruthy();
+    expect(await screen.findByText(/हाम्रो चाहना/)).toBeTruthy();
+    expect(screen.queryByText(/blank in the source/i)).toBeNull();
+  });
+
+  it("carries the dataset credit the licence requires", async () => {
+    // CC BY-NC 4.0 requires attribution that NAMES the work, so the dataset is
+    // spelled out rather than linked by host.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialPages.mockResolvedValue(PAGES);
+    getMaterialPageRange.mockResolvedValue([{ ...PAGES[0], text: "text" }]);
+    await openReader();
+
+    const link = await screen.findByRole("link", {
+      name: /damo-da\/ciaa-annual-reports/,
+    });
+    expect(link.getAttribute("href")).toContain("huggingface.co/datasets");
+  });
+
+  it("quotes the API's own pages_read rather than recounting the stubs", async () => {
+    // pages_read is not pages, and it is denormalised from the upstream row.
+    // Recounting readable stubs here would answer 1 where the rest of the site
+    // says 2 — a second source of truth, free to drift from the first.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialPages.mockResolvedValue(PAGES);
+    getMaterialPageRange.mockResolvedValue([{ ...PAGES[0], text: "text" }]);
+    await openReader();
+
+    await screen.findByLabelText(/Go to page/i);
+    // Broken across text nodes, so match on the containing element.
+    expect(
+      screen
+        .getAllByText(/pages readable/i)
+        .some((el) => el.textContent?.includes("2 of 3 pages readable")),
+    ).toBe(true);
   });
 });
 
 describe("MaterialProfile — reaching the transcript", () => {
   it("offers a way into the transcript from the downloads aside", async () => {
-    // The document's text lives inside the Contents tab's Pages section, which
-    // is not somewhere a reader looking for "the transcript" would think to
-    // look. The aside is where they are already looking for the PDF.
+    // The aside is where a reader is already looking for the PDF, and the
+    // transcript is the same kind of action: open this document and read it.
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialPages.mockResolvedValue(PAGES);
+    getMaterialPageRange.mockResolvedValue([{ ...PAGES[0], text: "text" }]);
     renderPage();
 
-    const button = await screen.findByRole("button", { name: /Read the transcript/i });
-    fireEvent.click(button);
+    fireEvent.click(await screen.findByRole("button", { name: /Read the transcript/i }));
 
-    expect(await screen.findByRole("heading", { name: /^Pages/ })).toBeTruthy();
+    expect(await screen.findByLabelText(/Go to page/i)).toBeTruthy();
+  });
+
+  it("gives every download action the same width", async () => {
+    // "Read the transcript" used to be the one w-full button beside an
+    // inline-grid of content-width ones, so it alone ran wider.
+    getMaterial.mockResolvedValue(
+      material({ "jawafdehi:content": SUMMARY, url: "https://ciaa.gov.np/x" }),
+    );
+    renderPage();
+
+    const transcript = await screen.findByRole("button", {
+      name: /Read the transcript/i,
+    });
+    const original = screen.getByRole("link", { name: /Original source/i });
+    expect(transcript.className).toBe(original.className);
+    // ...and they are siblings in one grid, which is what makes that true.
+    expect(transcript.parentElement).toBe(original.parentElement);
   });
 
   it("does not offer it when nothing has been transcribed", async () => {
