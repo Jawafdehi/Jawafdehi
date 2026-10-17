@@ -213,15 +213,6 @@ export default function MaterialProfile() {
       if (s) detailRows.push({ label: labelFor(key), value: s });
     }
   }
-  // Where the pages, tables and charts were read from. It belongs in the details
-  // rather than beside the content it describes — but it cannot simply be
-  // dropped: the dataset is CC BY-NC 4.0 and that licence requires attribution.
-  if (contentSummary?.provenance?.dataset) {
-    detailRows.push({
-      label: "Content read from",
-      value: `https://huggingface.co/datasets/${contentSummary.provenance.dataset}`,
-    });
-  }
 
   // schema.org JSON-LD for crawlers (parity with the retired R2 HTML landing page).
   const jsonLd = data
