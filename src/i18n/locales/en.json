@@ -2281,6 +2281,27 @@
         "between": "{{from}} – {{to}}",
         "from": "{{from}} onwards",
         "upTo": "Up to {{to}}"
+      },
+      "entityTypeValue": {
+        "Person": "People",
+        "Organization": "Organizations",
+        "GovernmentOrganization": "Government offices",
+        "Hospital": "Hospitals",
+        "EducationalOrganization": "Schools & universities",
+        "Corporation": "Companies",
+        "NGO": "NGOs",
+        "PoliticalParty": "Political parties",
+        "InternationalOrganization": "International bodies",
+        "Courthouse": "Courthouses",
+        "JudicialBody": "Judicial bodies",
+        "AdministrativeArea": "Administrative areas",
+        "Province": "Provinces",
+        "District": "Districts",
+        "Municipality": "Municipalities",
+        "RuralMunicipality": "Rural municipalities",
+        "MetropolitanCity": "Metropolitan cities",
+        "SubMetropolitanCity": "Sub-metropolitan cities",
+        "Place": "Places"
       }
     },
     "materialSeries": "Series",

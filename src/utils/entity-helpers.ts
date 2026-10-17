@@ -16,13 +16,18 @@ import type { Entity, Name, Contact, LangText, ContactType } from '@/types/entit
  * "AdministrativeArea,jawafdehi:RuralMunicipality" -> "Rural Municipality"
  * "EducationalOrganization"                          -> "Educational Organization"
  */
-export const humanizeEntityType = (raw: string | null | undefined): string => {
-  if (!raw) return 'Entity';
+export const entityTypeToken = (raw: string | null | undefined): string | null => {
+  if (!raw) return null;
   const tokens = raw.split(',').map((t) => t.trim()).filter(Boolean);
-  if (tokens.length === 0) return 'Entity';
+  if (tokens.length === 0) return null;
   // Most specific token wins (the trailing one); drop any "namespace:" prefix.
   const specific = tokens[tokens.length - 1];
-  const bare = specific.includes(':') ? specific.split(':').pop()! : specific;
+  return specific.includes(':') ? specific.split(':').pop()! : specific;
+};
+
+export const humanizeEntityType = (raw: string | null | undefined): string => {
+  const bare = entityTypeToken(raw);
+  if (!bare) return 'Entity';
   // Split CamelCase / PascalCase into spaced words.
   return bare
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
