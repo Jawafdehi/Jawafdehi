@@ -333,19 +333,13 @@ function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
     // needs, but a table that escapes its container also escapes the reading
     // measure of everything around it.
     <>
-      <div
-        className={cn(
-          "overflow-x-auto",
-          // The open table breaks out of the panel's reading column. A
-          // 14-column government table does not fit 630px, and the column
-          // exists for prose, which this is not.
-          //
-          // `lg:` only, and bounded: below that there is no sidebar to reclaim,
-          // and an unbounded 100vw would outrun the page on a narrow desktop
-          // window and give the whole document a horizontal scrollbar.
-          "lg:-ml-7 lg:w-[calc(100vw-6rem)] lg:max-w-[72rem] lg:pl-7",
-        )}
-      >
+      {/* Scrolls inside its own column. It deliberately does NOT break out
+          past the column with a viewport width: the aside is a sibling in the
+          same grid, so a table wider than the column slides UNDER "Read the
+          transcript" and "View JSON" rather than over empty space. The room a
+          wide table needs comes from the focused view below, which drops the
+          aside instead of colliding with it. */}
+      <div className="overflow-x-auto">
         <MarkdownTable
           markdown={data.markdown}
           showAll={showAll}

@@ -12,6 +12,7 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -307,7 +308,17 @@ export default function MaterialProfile() {
               ) : null}
             </header>
 
-            <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] xl:gap-14">
+            {/* One focused table takes the whole width: these are 14-column
+                government tables, and 17rem of sticky aside is the difference
+                between four columns visible and six. The aside is DROPPED here
+                rather than scrolled under — a table wide enough to reach it
+                would otherwise collide with "Read the transcript". */}
+            <div
+              className={cn(
+                "mt-8 grid items-start gap-10 xl:gap-14",
+                !focusedTable && "lg:grid-cols-[minmax(0,1fr)_17rem]",
+              )}
+            >
               <section className="min-w-0">
                 <Tabs value={tab} onValueChange={setTab} id="material-content-tab">
                   <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
@@ -435,6 +446,7 @@ export default function MaterialProfile() {
                 </Tabs>
               </section>
 
+              {focusedTable ? null : (
               <aside className="space-y-8 lg:sticky lg:top-24">
                 <section aria-labelledby="material-downloads-heading">
                   <h2
@@ -586,6 +598,7 @@ export default function MaterialProfile() {
                   </div>
                 </section>
               </aside>
+              )}
             </div>
           </article>
         ) : null}

@@ -69,10 +69,9 @@ export function TableFocusView({
             Page {data.page_no} of this report · {data.n_rows}×{data.n_cols}
           </p>
 
-          {/* Same break-out as an open table in the listing: this view exists
-              because 630px of reading column is not where a 14-column
-              government table belongs. */}
-          <div className="mt-4 overflow-x-auto lg:-mr-6 lg:w-[calc(100vw-6rem)] lg:max-w-[72rem]">
+          {/* No negative margins needed: on this view the material page drops
+              its aside, so the column IS the page. */}
+          <div className="mt-4 overflow-x-auto">
             <MarkdownTableView markdown={data.markdown} />
           </div>
         </>
