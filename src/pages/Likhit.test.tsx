@@ -101,6 +101,62 @@ describe("the likhit landing page", () => {
     ]);
   });
 
+  // The version is hardcoded and so is the What's new copy beside it, so they
+  // can drift apart at the next release. Asserting they appear together at least
+  // makes a half-done bump visible.
+  it("shows the released version, and links it to the changelog", async () => {
+    const { container } = await renderPage("en");
+
+    const changelog = [...container.querySelectorAll("a")].filter(
+      (a) => a.getAttribute("href") === "https://github.com/Jawafdehi/likhit/blob/main/CHANGELOG.md",
+    );
+    expect(changelog.length).toBeGreaterThanOrEqual(2); // the badge and the section link
+    expect(container.querySelector(".lk-version")?.textContent).toBe("v0.2.0");
+    expect(container.querySelector(".lk-version-tag")?.textContent).toBe("0.2.0");
+  });
+
+  it("names all four redaction tiers, least-removed first", async () => {
+    const { container } = await renderPage("en");
+
+    const tiers = [...container.querySelectorAll(".lk-tier dt code")];
+    expect(tiers.map((el) => el.textContent)).toEqual([
+      "none",
+      "identifiers",
+      "contact",
+      "strict",
+    ]);
+  });
+
+  // `--journal` is a required argument on both writing subcommands. A copied
+  // command without it fails at the parser, so the page would be handing readers
+  // something that cannot run.
+  it("gives every likhit-redact command its required arguments", async () => {
+    const { container } = await renderPage("en");
+
+    const commands = [...container.querySelectorAll(".lk-redact-commands code")].map(
+      (el) => el.textContent ?? "",
+    );
+    expect(commands).toHaveLength(3);
+    for (const command of commands) {
+      expect(command.startsWith("likhit-redact ")).toBe(true);
+      // scan writes no transcript and so takes no journal; the two that write do.
+      if (!command.includes(" scan ")) expect(command).toContain("--journal ");
+    }
+  });
+
+  it("links each deep dive to the likhit repository", async () => {
+    const { container } = await renderPage("en");
+
+    const links = [...container.querySelectorAll(".lk-writing-list a")];
+    expect(links).toHaveLength(3);
+    for (const link of links) {
+      expect(link.getAttribute("href")).toMatch(
+        /^https:\/\/github\.com\/Jawafdehi\/likhit\/blob\/main\/docs\//,
+      );
+      expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+    }
+  });
+
   it("gives every OCR recipe a copyable block", async () => {
     const { container } = await renderPage("en");
 
@@ -122,7 +178,10 @@ describe("the likhit landing page", () => {
     const { container } = await renderPage(language);
 
     const text = container.textContent ?? "";
-    const tags = ["name", "doc", "markitdown", "api", "cli", "cmd", "baseUrl", "apiKey", "model"];
+    const tags = [
+      "name", "doc", "markitdown", "api", "cli", "cmd",
+      "baseUrl", "apiKey", "model", "pkg", "opt", "tier",
+    ];
     for (const tag of tags) {
       expect(text).not.toContain(`<${tag}>`);
       expect(text).not.toContain(`</${tag}>`);

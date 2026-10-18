@@ -444,6 +444,93 @@
   height: 15px;
 }
 
+/* Version badge and "What's new" ------------------------------------------- */
+
+.likhit-page .lk-install-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.likhit-page .lk-version {
+  padding: 7px 14px;
+  border: 1px solid var(--lk-line-strong);
+  border-radius: 999px;
+  background: var(--lk-pop-soft);
+  color: var(--lk-pop-deep);
+  font-family: var(--lk-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 160ms var(--lk-ease-out);
+}
+
+.likhit-page .lk-version:hover {
+  border-color: var(--lk-pop);
+}
+
+.likhit-page .lk-whats-new {
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 72px;
+}
+
+.likhit-page .lk-whats-new-head p {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--lk-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.likhit-page .lk-whats-new .lk-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+
+.likhit-page .lk-version-tag {
+  color: var(--lk-pop);
+  font-family: var(--lk-mono);
+  font-size: 0.5em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Three across, on the same hairline rules the rest of the page uses rather than
+   in boxes — the stacking cards below are the one place that gets cards, and two
+   card treatments in a row would flatten both. */
+.likhit-page .lk-whats-new-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 44px;
+  margin: 26px 0 28px;
+  padding: 0;
+  border-top: 1px solid var(--lk-line-strong);
+  list-style: none;
+}
+
+.likhit-page .lk-whats-new-list li {
+  padding: 20px 0 0;
+}
+
+.likhit-page .lk-whats-new-list strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.likhit-page .lk-whats-new-list span {
+  display: block;
+  color: var(--lk-ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
 /* likhit-save CLI section -------------------------------------------------- */
 
 .likhit-page .lk-cli {
@@ -628,6 +715,170 @@
 
 /* ------------------------------------------------------------------------- */
 
+/* Redaction --------------------------------------------------------------- */
+
+.likhit-page .lk-privacy {
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 84px;
+}
+
+.likhit-page .lk-privacy-copy p {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--lk-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.likhit-page .lk-tiers {
+  margin-top: 34px;
+}
+
+.likhit-page .lk-tiers h3,
+.likhit-page .lk-redact-commands h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.likhit-page .lk-tiers-lede {
+  margin: 0 0 18px;
+  max-width: 72ch;
+  color: var(--lk-ink-muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.likhit-page .lk-tiers dl {
+  margin: 0;
+  border-top: 1px solid var(--lk-line-strong);
+}
+
+/* Label left, what it removes right — the same two-column rhythm as the OCR
+   recipes, so the page has one way of presenting "name, then detail". */
+.likhit-page .lk-tier {
+  display: grid;
+  grid-template-columns: minmax(0, 0.22fr) minmax(0, 0.78fr);
+  gap: 8px 44px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--lk-line);
+}
+
+.likhit-page .lk-tier dt code {
+  font-family: var(--lk-mono);
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--lk-pop-deep);
+}
+
+.likhit-page .lk-tier dd {
+  margin: 0;
+  color: var(--lk-ink-2);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.likhit-page .lk-redact-commands {
+  margin-top: 34px;
+}
+
+.likhit-page .lk-redact-commands .lk-cli-examples {
+  margin-top: 16px;
+}
+
+/* The limit, set apart. Marigold rather than lilac: it is the one block on the
+   page that corrects an assumption rather than describing a capability, and it
+   has to survive a reader who is skimming. */
+.likhit-page .lk-limit {
+  margin-top: 34px;
+  padding: 22px 26px;
+  border: 1px solid var(--lk-marigold);
+  border-radius: 14px;
+  background: var(--lk-marigold-soft);
+}
+
+.likhit-page .lk-limit h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--lk-marigold-deep);
+}
+
+.likhit-page .lk-limit p {
+  margin: 0;
+  max-width: 82ch;
+  color: var(--lk-ink-2);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.likhit-page .lk-inline-note {
+  margin: 12px 0 0;
+  max-width: 44ch;
+  color: var(--lk-ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+
+/* Deep dives -------------------------------------------------------------- */
+
+.likhit-page .lk-writing {
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 88px;
+}
+
+.likhit-page .lk-writing-head p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--lk-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.likhit-page .lk-writing-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.likhit-page .lk-writing-list a {
+  display: block;
+  height: 100%;
+  padding: 22px 24px;
+  border: 1px solid var(--lk-line);
+  border-radius: 14px;
+  background: var(--lk-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 180ms var(--lk-ease-out);
+}
+
+.likhit-page .lk-writing-list a:hover {
+  border-color: var(--lk-pop);
+}
+
+.likhit-page .lk-writing-list strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.likhit-page .lk-writing-list span {
+  display: block;
+  color: var(--lk-ink-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
 @media (max-width: 980px) {
   .likhit-page .lk-intro {
     padding: 48px 18px 36px;
@@ -661,6 +912,27 @@
 
   .likhit-page .lk-ocr {
     padding: 0 18px 56px;
+  }
+
+  .likhit-page .lk-whats-new,
+  .likhit-page .lk-privacy,
+  .likhit-page .lk-writing {
+    padding: 0 18px 56px;
+  }
+
+  .likhit-page .lk-whats-new-list,
+  .likhit-page .lk-writing-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .likhit-page .lk-whats-new-list li {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--lk-line);
+  }
+
+  .likhit-page .lk-tier {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
   }
 
   .likhit-page .lk-recipe {

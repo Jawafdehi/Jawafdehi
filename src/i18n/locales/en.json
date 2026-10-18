@@ -2806,6 +2806,7 @@
       }
     },
     "cli": {
+      "redactNote": "Since 0.2.0 this redacts as it converts, at the <tier>strict</tier> tier. Pass <opt>--redact none</opt> to write the transcript untouched.",
       "title": "Convert from the command line",
       "body": "The package installs <cmd>likhit-save</cmd>, a helper that runs MarkItDown with the plugin enabled and writes the Markdown out for you — no Python needed.",
       "copyCommand": "Copy the command",
@@ -2833,6 +2834,70 @@
         "badge": "Hosted",
         "name": "A hosted API",
         "body": "Point at any OpenAI-compatible provider. For Gemini, set the Google key alone and likhit selects Google's OpenAI-compatible base URL for you."
+      }
+    },
+    "whatsNew": {
+      "title": "What's new",
+      "released": "Released 16 October 2026 — the first release to reach PyPI since 0.1.7, so everything tagged in between ships here too.",
+      "privacy": {
+        "name": "Redaction, built in",
+        "body": "<pkg>likhit.privacy</pkg> and the <cli>likhit-redact</cli> command remove personal data over four named tiers — and conversion now applies the widest of them by default."
+      },
+      "quality": {
+        "name": "Transcript auditing",
+        "body": "<pkg>likhit.quality</pkg> and <cli>likhit-audit</cli> score a converted tree, so a bad extraction can be found without reading every file in it."
+      },
+      "extraction": {
+        "name": "Around sixty extraction fixes",
+        "body": "Overwhelmingly in the legacy-font path: which Preeti map wins, how garble is measured, ruled tables that emitted every page twice, and legacy .doc anchored on LibreOffice."
+      },
+      "changelog": "Read the full changelog"
+    },
+    "privacy": {
+      "title": "Taking personal data out",
+      "body": "A public accountability archive still has to keep citizenship numbers, dates of birth and phone numbers out of what it publishes. As of 0.2.0 <cmd>likhit-save</cmd> redacts at the widest tier by default, so the unredacted transcript is no longer written to disk first and cleaned up afterwards. <opt>--redact none</opt> restores the old behaviour exactly.",
+      "tiersTitle": "Four tiers, not a box of flags",
+      "tiersBody": "Precision is measured per removal rule against a real corpus, so a tier is a configuration that carries a number. A flag set would let every caller invent a combination nobody has measured.",
+      "tiers": {
+        "none": {
+          "name": "none",
+          "body": "Removes nothing; the output is byte-identical to the input. First-class on purpose — internal casework, the retained original and the research corpus all need it."
+        },
+        "identifiers": {
+          "name": "identifiers",
+          "body": "Citizenship numbers and dates of birth: the two classes adjudicated as unambiguously personal and of no research value."
+        },
+        "contact": {
+          "name": "contact",
+          "body": "Everything above, plus mobile numbers, landlines and email addresses."
+        },
+        "strict": {
+          "name": "strict",
+          "body": "Everything likhit can remove — contact plus bank account, age and passport. The default. Not PAN: a business registration number is public by design, so it is reported and left in place."
+        }
+      },
+      "commandsTitle": "Running it on its own",
+      "copyCommand": "Copy the command",
+      "scan": "Report what is there, write nothing",
+      "pdf": "Redact one PDF into a redacted PDF",
+      "tree": "Redact a whole tree into a staging copy",
+      "limitTitle": "No tier removes names, and none ever will",
+      "limitBody": "Three reasons, none of them “not implemented yet”. Nothing detects a Nepali name reliably: across thirteen CIAA transcripts, 2,179 श्री tokens survive the institution filter and not one नाम: field is filled — a rule firing that often on a signal that cannot tell an office from a person is a corpus shredder, not a redactor. It is also the wrong instrument, since removing every party but the accused needs role assignment rather than a pattern. And for this corpus it would invert the product: naming the officials who were prosecuted, convicted or acquitted is the thing the archive exists to do."
+    },
+    "writing": {
+      "title": "Deep dives",
+      "body": "Notes from building it, kept alongside the code.",
+      "cib": {
+        "name": "Extracting Nepal Police CIB press releases",
+        "body": "Roughly a quarter carry a decoy text layer whose bytes decode to garbage under every legacy map. What it took to stop trusting it."
+      },
+      "tests": {
+        "name": "Writing tests for likhit",
+        "body": "A legacy Nepali PDF can be wrong in ways that are individually plausible and jointly invisible. On whether a passing suite means anything."
+      },
+      "publishing": {
+        "name": "Publishing a release",
+        "body": "Merging a version bump to main is the whole release — no manual tagging step, and no release tags cut by hand."
       }
     },
     "copy": "Copy"

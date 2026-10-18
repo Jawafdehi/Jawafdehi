@@ -14,6 +14,15 @@ const REPO_URL = "https://github.com/Jawafdehi/likhit";
 const PYPI_URL = "https://pypi.org/project/likhit/";
 const BENCHMARK_URL = "https://jawafdehi.github.io/likhit/";
 const MARKITDOWN_URL = "https://github.com/microsoft/markitdown";
+const CHANGELOG_URL = `${REPO_URL}/blob/main/CHANGELOG.md`;
+const DOCS_URL = `${REPO_URL}/blob/main/docs`;
+
+// Hand-maintained, and the whole "What's new" section with it. Bump this when a
+// release goes out and rewrite likhit.whatsNew.* to match — nothing here reads
+// PyPI or the changelog at runtime, by choice: a landing page that fetches a
+// third-party API on load to render one version string is a worse trade than
+// one line of upkeep per release.
+const VERSION = "0.2.0";
 
 const INSTALL_COMMAND = "pip install likhit";
 
@@ -22,6 +31,35 @@ const INSTALL_COMMAND = "pip install likhit";
 // the benchmark, and so is its sticky offset in the stack. Reordering these
 // re-colours them and changes where they land.
 const FEATURES = ["repair", "layout", "ocr", "legacy"] as const;
+
+const WHATS_NEW = ["privacy", "quality", "extraction"] as const;
+
+// Ordered least to most removed, which is the order the tiers themselves are
+// defined in — a reader scanning for "what do I get by default" should arrive at
+// `strict` last, having seen what it accumulates.
+const REDACTION_TIERS = ["none", "identifiers", "contact", "strict"] as const;
+
+const REDACT_COMMANDS = [
+  { key: "scan", command: "likhit-redact scan transcripts/ --out report.json" },
+  {
+    key: "pdf",
+    command:
+      "likhit-redact pdf charge-sheet.pdf --out redacted.pdf --journal redaction.jsonl",
+  },
+  {
+    key: "tree",
+    command:
+      "likhit-redact redact transcripts/ --out-tree redacted/ --journal redaction.jsonl",
+  },
+] as const;
+
+// Hand-curated. These are the writeups that live in the likhit repository; add a
+// row when something worth reading lands, and point `href` wherever it is.
+const WRITING = [
+  { key: "cib", href: `${DOCS_URL}/cib-press-release-extraction.md` },
+  { key: "tests", href: `${DOCS_URL}/writing-tests.md` },
+  { key: "publishing", href: `${DOCS_URL}/publishing.md` },
+] as const;
 
 const CLI_EXAMPLES = [
   { key: "one", command: "likhit-save notice.pdf --out notice.md" },
@@ -109,12 +147,18 @@ const Likhit = () => {
               />
             </p>
 
-            <div className="lk-install">
-              <code>{INSTALL_COMMAND}</code>
-              <LikhitCopyButton
-                value={INSTALL_COMMAND}
-                label={t("likhit.install.copyLabel")}
-              />
+            <div className="lk-install-row">
+              <div className="lk-install">
+                <code>{INSTALL_COMMAND}</code>
+                <LikhitCopyButton
+                  value={INSTALL_COMMAND}
+                  label={t("likhit.install.copyLabel")}
+                />
+              </div>
+
+              <a className="lk-version" href={CHANGELOG_URL} target="_blank" rel="noopener noreferrer">
+                v{VERSION}
+              </a>
             </div>
 
             <p className="lk-usage">
@@ -157,6 +201,39 @@ const Likhit = () => {
 
         </section>
 
+        <section className="lk-whats-new" aria-labelledby="likhit-whats-new-title">
+          <div className="lk-whats-new-head">
+            <h2 className="lk-section-title" id="likhit-whats-new-title">
+              {t("likhit.whatsNew.title")}
+              <span className="lk-version-tag">{VERSION}</span>
+            </h2>
+            <p>{t("likhit.whatsNew.released")}</p>
+          </div>
+
+          <ul className="lk-whats-new-list">
+            {WHATS_NEW.map((key) => (
+              <li key={key}>
+                <strong>{t(`likhit.whatsNew.${key}.name`)}</strong>
+                <span>
+                  <Trans
+                    i18nKey={`likhit.whatsNew.${key}.body`}
+                    components={{ pkg: <Code />, cli: <Code /> }}
+                  />
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <a
+            className="lk-command-link"
+            href={CHANGELOG_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("likhit.whatsNew.changelog")}
+          </a>
+        </section>
+
         <section className="lk-features-section" aria-labelledby="likhit-features-title">
           <h2 className="lk-section-title" id="likhit-features-title">
             {t("likhit.features.title")}
@@ -186,6 +263,16 @@ const Likhit = () => {
             <p>
               <Trans i18nKey="likhit.cli.body" components={{ cmd: <Code /> }} />
             </p>
+
+            {/* The commands below changed behaviour in 0.2.0 and look identical,
+                so the page has to say so or a reader copies one and wonders why
+                the output has holes in it. */}
+            <p className="lk-inline-note">
+              <Trans
+                i18nKey="likhit.cli.redactNote"
+                components={{ tier: <Code />, opt: <Code /> }}
+              />
+            </p>
           </div>
 
           <ul className="lk-cli-examples">
@@ -197,6 +284,61 @@ const Likhit = () => {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="lk-privacy" aria-labelledby="likhit-privacy-title">
+          <div className="lk-privacy-copy">
+            <h2 className="lk-section-title" id="likhit-privacy-title">
+              {t("likhit.privacy.title")}
+            </h2>
+            <p>
+              <Trans
+                i18nKey="likhit.privacy.body"
+                components={{ cmd: <Code />, opt: <Code /> }}
+              />
+            </p>
+          </div>
+
+          <div className="lk-tiers">
+            <h3>{t("likhit.privacy.tiersTitle")}</h3>
+            <p className="lk-tiers-lede">{t("likhit.privacy.tiersBody")}</p>
+
+            <dl>
+              {REDACTION_TIERS.map((key) => (
+                <div className="lk-tier" key={key}>
+                  <dt>
+                    <code>{t(`likhit.privacy.tiers.${key}.name`)}</code>
+                  </dt>
+                  <dd>{t(`likhit.privacy.tiers.${key}.body`)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="lk-redact-commands">
+            <h3>{t("likhit.privacy.commandsTitle")}</h3>
+
+            <ul className="lk-cli-examples">
+              {REDACT_COMMANDS.map(({ key, command }) => (
+                <li key={key}>
+                  <span className="lk-cli-label">{t(`likhit.privacy.${key}`)}</span>
+                  <code>{command}</code>
+                  <LikhitCopyButton
+                    value={command}
+                    label={t("likhit.privacy.copyCommand")}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* The most important paragraph in the section, and the one a reader is
+              most likely to assume the opposite of. It is set apart rather than
+              buried in the tier list for that reason. */}
+          <aside className="lk-limit">
+            <h3>{t("likhit.privacy.limitTitle")}</h3>
+            <p>{t("likhit.privacy.limitBody")}</p>
+          </aside>
         </section>
 
         <section className="lk-ocr" aria-labelledby="likhit-ocr-title">
@@ -232,6 +374,26 @@ const Likhit = () => {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="lk-writing" aria-labelledby="likhit-writing-title">
+          <div className="lk-writing-head">
+            <h2 className="lk-section-title" id="likhit-writing-title">
+              {t("likhit.writing.title")}
+            </h2>
+            <p>{t("likhit.writing.body")}</p>
+          </div>
+
+          <ul className="lk-writing-list">
+            {WRITING.map(({ key, href }) => (
+              <li key={key}>
+                <a href={href} target="_blank" rel="noopener noreferrer">
+                  <strong>{t(`likhit.writing.${key}.name`)}</strong>
+                  <span>{t(`likhit.writing.${key}.body`)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       </main>
     </div>
