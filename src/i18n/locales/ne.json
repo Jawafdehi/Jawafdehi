@@ -2766,6 +2766,7 @@
       "usage": "त्यसपछि रूपान्तरण गर्दा प्लगइन सक्रिय गर्नुहोस्: <api>MarkItDown(enable_plugins=True)</api>, वा कमान्ड लाइनबाट <cli>markitdown --use-plugins document.pdf</cli>।"
     },
     "features": {
+      "title": "यसले के थप्छ",
       "repair": {
         "name": "देवनागरी मर्मत",
         "body": "साधारण निकासीले बिगारेर प्रतिस्थापन चिह्न बनाइदिने संयुक्ताक्षर र मात्रा फेरि जोडिदिन्छ।"

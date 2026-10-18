@@ -2787,6 +2787,7 @@
       "usage": "Then enable plugins when you convert: <api>MarkItDown(enable_plugins=True)</api>, or from the command line <cli>markitdown --use-plugins document.pdf</cli>."
     },
     "features": {
+      "title": "What it adds",
       "repair": {
         "name": "Devanagari repair",
         "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."

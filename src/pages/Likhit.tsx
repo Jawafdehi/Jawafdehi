@@ -17,9 +17,10 @@ const MARKITDOWN_URL = "https://github.com/microsoft/markitdown";
 
 const INSTALL_COMMAND = "pip install likhit";
 
-// Four rows, in this order: the coloured square before each one is keyed to its
+// Four cards, in this order: the coloured square on each one is keyed to its
 // position by :nth-child in likhit.css (lilac, marigold, blue, green), matching
-// the benchmark. Reordering these re-colours them.
+// the benchmark, and so is its sticky offset in the stack. Reordering these
+// re-colours them and changes where they land.
 const FEATURES = ["repair", "layout", "ocr", "legacy"] as const;
 
 const CLI_EXAMPLES = [
@@ -154,11 +155,24 @@ const Likhit = () => {
             </div>
           </div>
 
-          <ul className="lk-features">
+        </section>
+
+        <section className="lk-features-section" aria-labelledby="likhit-features-title">
+          <h2 className="lk-section-title" id="likhit-features-title">
+            {t("likhit.features.title")}
+          </h2>
+
+          {/* Each card is sticky at a slightly lower offset than the one before,
+              so scrolling deals them into a pile instead of running them past.
+              The offsets and the depth are in likhit.css — nothing here listens
+              to scroll. */}
+          <ul className="lk-stack">
             {FEATURES.map((key) => (
               <li key={key}>
-                <strong>{t(`likhit.features.${key}.name`)}</strong>
-                <span>{t(`likhit.features.${key}.body`)}</span>
+                <article className="lk-feature-card">
+                  <strong>{t(`likhit.features.${key}.name`)}</strong>
+                  <span>{t(`likhit.features.${key}.body`)}</span>
+                </article>
               </li>
             ))}
           </ul>

@@ -96,14 +96,13 @@
 
 /* Intro -------------------------------------------------------------------- */
 
+/* One column, not the benchmark's two. The feature list that used to sit in the
+   right-hand column is now its own stacking section below, which needs the full
+   width and its own scroll runway. */
 .likhit-page .lk-intro {
-  display: grid;
-  gap: 64px;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  align-items: center;
   max-width: var(--lk-wrap);
   margin: 0 auto;
-  padding: 88px var(--lk-gutter) 72px;
+  padding: 88px var(--lk-gutter) 64px;
 }
 
 .likhit-page .lk-intro h1 {
@@ -185,53 +184,150 @@
   gap: 10px;
 }
 
-/* Feature list: quiet editorial rules rather than boxed cards — the type carries
-   the hierarchy, and a coloured square stands in for the icon. */
-.likhit-page .lk-features {
-  display: grid;
-  gap: 0;
+/* Feature stack ------------------------------------------------------------
+   The one place this page departs from the benchmark's layout. There the four
+   features are quiet editorial rows in the intro's right-hand column; here they
+   are cards that deal into a pile as you scroll.
+
+   How it works, and why there is no JavaScript: every card is `position: sticky`
+   at an offset 18px lower than the one before it. Scrolling therefore pins card
+   one, slides card two up over it leaving an 18px lip, and so on — the browser
+   does the whole effect from layout, off the main thread, with no scroll
+   listener to drop frames and nothing to hydrate. The pre-rendered HTML stacks
+   correctly before React boots.
+
+   The 100px base offset clears the site navbar, which is `sticky top-0` and 76px
+   tall. If that height changes, this has to follow or the top card will tuck
+   under it. */
+
+.likhit-page .lk-features-section {
+  max-width: var(--lk-wrap);
+  margin: 0 auto;
+  padding: 0 var(--lk-gutter) 96px;
+}
+
+.likhit-page .lk-features-section .lk-section-title {
+  margin: 0 0 32px;
+}
+
+.likhit-page .lk-stack {
+  --lk-stack-top: 100px;
+  /* The lip each stacked card leaves showing. Sized to clear the card's top
+     padding plus one line of title, so a card that has been covered still shows
+     its coloured square and its name — the pile becomes a readable index of the
+     four features instead of four anonymous strips. Change the card's padding
+     or title size and this has to follow. */
+  --lk-stack-step: 48px;
+  /* `block`, NOT `grid`, and this is the whole trick. A sticky grid item is
+     constrained to its own grid area — which, with one card per row, is exactly
+     the card's height, leaving it nowhere to travel and no stacking at all. In
+     normal flow the containing block is the whole <ul>, so each card can ride
+     all the way down it. Spacing is margin for the same reason: `gap` only
+     exists in grid and flex. */
+  display: block;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.likhit-page .lk-features li {
-  display: block;
-  padding: 22px 0 20px;
-  border-top: 1px solid var(--lk-line-strong);
+/* The runway: how far a card travels before the next one catches it. Too small
+   and the cards arrive already stacked. */
+.likhit-page .lk-stack > li + li {
+  margin-top: 32px;
 }
 
-.likhit-page .lk-features li:last-child {
-  padding-bottom: 0;
+.likhit-page .lk-stack > li {
+  position: sticky;
+  top: calc(var(--lk-stack-top) + var(--lk-stack-i, 0) * var(--lk-stack-step));
 }
 
-.likhit-page .lk-features strong {
+.likhit-page .lk-stack > li:nth-child(2) { --lk-stack-i: 1; }
+.likhit-page .lk-stack > li:nth-child(3) { --lk-stack-i: 2; }
+.likhit-page .lk-stack > li:nth-child(4) { --lk-stack-i: 3; }
+
+.likhit-page .lk-feature-card {
+  display: grid;
+  /* `start`, not `center`: the title has to sit at a fixed distance from the
+     card's top edge for the lip above to frame it predictably. */
+  align-content: start;
+  gap: 10px;
+  /* Uniform height matters more here than on a plain list: in a stack the cards
+     sit directly on one another, so one taller than its neighbour would hang out
+     below the card covering it. This floor fits a two-line body, which is the
+     most any of the four wraps to before the mobile breakpoint takes over — so
+     they stay identical in height at every width that stacks. */
+  min-height: 140px;
+  padding: 24px 38px 30px;
+  border: 1px solid var(--lk-line);
+  border-radius: 18px;
+  background: var(--lk-surface);
+  /* The depth cue. A stacked card sits ON the one below it, so it needs a cast
+     shadow — without this the pile reads as four flat rectangles sliding over
+     each other. */
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 4%),
+    0 18px 40px -24px oklch(0% 0 0 / 30%);
+}
+
+.likhit-page .lk-feature-card strong {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 6px;
-  font-size: 0.98rem;
+  gap: 10px;
+  font-size: 1.14rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.likhit-page .lk-features strong::before {
+.likhit-page .lk-feature-card strong::before {
   content: "";
   flex: none;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 3px;
   background: var(--lk-pop);
 }
 
-.likhit-page .lk-features li:nth-child(2) strong::before { background: var(--lk-marigold); }
-.likhit-page .lk-features li:nth-child(3) strong::before { background: var(--lk-blue); }
-.likhit-page .lk-features li:nth-child(4) strong::before { background: var(--lk-green); }
+.likhit-page .lk-stack > li:nth-child(2) strong::before { background: var(--lk-marigold); }
+.likhit-page .lk-stack > li:nth-child(3) strong::before { background: var(--lk-blue); }
+.likhit-page .lk-stack > li:nth-child(4) strong::before { background: var(--lk-green); }
 
-.likhit-page .lk-features span {
+.likhit-page .lk-feature-card span {
   display: block;
+  max-width: 62ch;
   color: var(--lk-ink-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* Each card rises and resolves as it enters, so the pile assembles rather than
+   appearing already built. Scroll-linked, so `linear` is right: easing a
+   scroll-driven animation decouples it from the finger and reads as lag.
+
+   Progressive enhancement, deliberately. `animation-timeline` is unevenly
+   supported, and where it is missing the cards simply appear at full opacity and
+   still stack — the effect the user asked for is the sticky positioning above,
+   which works everywhere. Nothing here is load-bearing. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .likhit-page .lk-feature-card {
+      animation: lk-card-in linear both;
+      animation-timeline: view();
+      /* Finishes well before the card reaches its sticky offset, so a pinned
+         card is never mid-animation. */
+      animation-range: entry 10% cover 28%;
+    }
+  }
+}
+
+@keyframes lk-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Buttons and links -------------------------------------------------------- */
@@ -534,9 +630,27 @@
 
 @media (max-width: 980px) {
   .likhit-page .lk-intro {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 36px;
-    padding: 48px 18px 40px;
+    padding: 48px 18px 36px;
+  }
+
+  .likhit-page .lk-features-section {
+    padding: 0 18px 64px;
+  }
+
+  /* A phone viewport cannot spare 100px of pinned header plus four 18px lips, so
+     the stack tightens rather than eating the screen. */
+  .likhit-page .lk-stack {
+    --lk-stack-top: 88px;
+    --lk-stack-step: 44px;
+  }
+
+  .likhit-page .lk-stack > li + li {
+    margin-top: 24px;
+  }
+
+  .likhit-page .lk-feature-card {
+    min-height: 0;
+    padding: 20px 22px 26px;
   }
 
   .likhit-page .lk-cli {
@@ -567,5 +681,13 @@
   .likhit-page .lk-command-link,
   .likhit-page .lk-cli-examples li {
     transition: none;
+  }
+
+  /* Fewer and gentler, not none: the cards stay — they are the design, and
+     losing them would cost a reader information — but they stop stacking.
+     Sticky positioning is scroll-driven movement, which is exactly what this
+     preference is asking us not to do. They become a plain list of cards. */
+  .likhit-page .lk-stack > li {
+    position: static;
   }
 }

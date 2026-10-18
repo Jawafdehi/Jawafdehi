@@ -83,12 +83,16 @@ describe("the likhit landing page", () => {
     }
   });
 
-  it("lists the four features as rows, in the order their colours are keyed to", async () => {
+  it("stacks the four features as cards, in the order their offsets are keyed to", async () => {
     const { container } = await renderPage("en");
 
-    // likhit.css colours the square before each row by :nth-child, so the order
-    // here is load-bearing — reordering them re-colours them.
-    const rows = [...container.querySelectorAll(".lk-features li strong")];
+    // likhit.css keys BOTH the coloured square and the sticky offset off
+    // :nth-child, so the order here is load-bearing twice over — reordering
+    // these re-colours the cards and changes where each one lands in the pile.
+    const cards = container.querySelectorAll(".lk-stack > li > .lk-feature-card");
+    expect(cards).toHaveLength(4);
+
+    const rows = [...container.querySelectorAll(".lk-stack > li strong")];
     expect(rows.map((el) => el.textContent)).toEqual([
       i18n.t("likhit.features.repair.name"),
       i18n.t("likhit.features.layout.name"),
