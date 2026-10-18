@@ -43,7 +43,8 @@
 
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, ChevronDown, FileSpreadsheet } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BarChart3, ChevronDown, ExternalLink, FileSpreadsheet } from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
@@ -59,6 +60,11 @@ import {
   type MaterialContentSummary,
 } from "@/services/datalake-api";
 import { cn } from "@/lib/utils";
+import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
+import {
+  ContentLayoutLab,
+  type ContentLayout,
+} from "./ContentLayoutLab";
 
 /** The marker a reader sees beside any value that was read off a chart image. */
 const ESTIMATE_MARK = "≈";
@@ -299,7 +305,15 @@ function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
 }
 
 /** A table's markdown, fetched on the open that mounted this. */
-function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
+function TableBody({
+  tail,
+  stub,
+  wide = false,
+}: {
+  tail: string;
+  stub: ContentTableStub;
+  wide?: boolean;
+}) {
   const [showAll, setShowAll] = useState(false);
   // One report's tables come to ~830 KiB, which is why `?type=table` returns
   // stubs and the markdown is addressable only one table at a time.
@@ -319,7 +333,18 @@ function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
   return (
     // Horizontally scrollable: these are government tables, some 65 columns
     // wide, and they must not blow out the page on mobile.
-    <div className="overflow-x-auto">
+    //
+    // `wide` pulls the open table out of the panel's column with negative
+    // margins — DEV-ONLY (see ContentLayoutLab), and the reason it is a
+    // candidate rather than the default: it gives a 14-column table the room it
+    // needs, but a table that escapes its container also escapes the reading
+    // measure of everything around it.
+    <div
+      className={cn(
+        "overflow-x-auto",
+        wide && "-ml-7 w-[calc(100vw-6rem)] max-w-[80rem] pl-7",
+      )}
+    >
       <MarkdownTable
         markdown={data.markdown}
         showAll={showAll}
@@ -329,14 +354,49 @@ function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
   );
 }
 
-function TableRow({ tail, stub }: { tail: string; stub: ContentTableStub }) {
+function TableRow({
+  tail,
+  stub,
+  layout,
+}: {
+  tail: string;
+  stub: ContentTableStub;
+  layout: ContentLayout;
+}) {
+  const title = nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`);
+  const note = stub.fidelity === "ocr_vision" ? "read by OCR" : undefined;
+
+  // `page`: the row is a LINK, not a disclosure. That is the whole point of the
+  // variant — a table a reader can send someone, and a crawler can reach.
+  if (layout === "page") {
+    return (
+      <li className="border-b border-border/70 last:border-b-0">
+        <Link
+          to={`?table=${encodeURIComponent(stub.key)}`}
+          className="flex min-h-11 w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
+        >
+          <ExternalLink
+            className="h-4 w-4 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <span className="min-w-0 flex-1 break-words text-base text-foreground">
+            {title}
+          </span>
+          {note ? (
+            <span className="shrink-0 text-sm text-muted-foreground">{note}</span>
+          ) : null}
+          <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
+            <span className="sr-only">page </span>
+            {stub.page_no}
+          </span>
+        </Link>
+      </li>
+    );
+  }
+
   return (
-    <ContentRow
-      title={nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`)}
-      pageNo={stub.page_no}
-      note={stub.fidelity === "ocr_vision" ? "read by OCR" : undefined}
-    >
-      <TableBody tail={tail} stub={stub} />
+    <ContentRow title={title} pageNo={stub.page_no} note={note}>
+      <TableBody tail={tail} stub={stub} wide={layout === "wide"} />
     </ContentRow>
   );
 }
@@ -403,9 +463,24 @@ function MarkdownTable({
     );
   }
 
-  const [header, ...body] = rows;
+  // Lossless: a column survives if ANY row has something in it. See
+  // lib/content-table.ts — this is what stops a 14-column grid reserving
+  // 7rem apiece for the four columns that hold nothing at all.
+  const dense = dropEmptyColumns(rows);
+  const widths = columnWidths(dense);
+  const [header, ...body] = dense;
   const truncated = !showAll && body.length > TABLE_ROW_PREVIEW;
   const visible = truncated ? body.slice(0, TABLE_ROW_PREVIEW) : body;
+
+  // Sized from content rather than a flat minimum. `wide` deliberately gets no
+  // max: a capped prose column wraps to a column of single words, which is the
+  // shape that made these tables unreadable in the first place.
+  const widthClass = (i: number) =>
+    widths[i] === "narrow"
+      ? "min-w-[3rem] max-w-[6rem]"
+      : widths[i] === "normal"
+        ? "min-w-[6rem] max-w-[14rem]"
+        : "min-w-[14rem] max-w-[28rem]";
 
   return (
     <>
@@ -420,9 +495,11 @@ function MarkdownTable({
               <th
                 key={i}
                 scope="col"
-                className={`min-w-[7rem] max-w-[20rem] border-b-2 border-border bg-background px-3 py-2 align-bottom font-semibold text-foreground ${
-                  isFigure(cell) ? "text-right" : "text-left"
-                }`}
+                className={cn(
+                  "border-b-2 border-border bg-background px-3 py-2 align-bottom font-semibold text-foreground",
+                  widthClass(i),
+                  isFigure(cell) ? "text-right" : "text-left",
+                )}
               >
                 {cell}
               </th>
@@ -438,11 +515,13 @@ function MarkdownTable({
               {row.map((cell, c) => (
                 <td
                   key={c}
-                  className={`min-w-[7rem] max-w-[20rem] px-3 py-2 align-top text-foreground ${
+                  className={cn(
+                    "px-3 py-2 align-top text-foreground",
+                    widthClass(c),
                     isFigure(cell)
                       ? "whitespace-nowrap text-right tabular-nums"
-                      : "text-left"
-                  }`}
+                      : "text-left",
+                  )}
                 >
                   {cell}
                 </td>
@@ -462,6 +541,15 @@ function MarkdownTable({
       ) : null}
     </>
   );
+}
+
+/**
+ * `MarkdownTable` for a context that has already committed to showing the whole
+ * table — the focused view. No row cap, because a reader who navigated to one
+ * table's own URL asked for that table, not a preview of it.
+ */
+export function MarkdownTableView({ markdown }: { markdown: string }) {
+  return <MarkdownTable markdown={markdown} showAll onShowAll={() => {}} />;
 }
 
 // ─── panel ──────────────────────────────────────────────────────────────────
@@ -534,7 +622,15 @@ function tableLabel(stub: ContentTableStub): string {
   return stub.caption.trim() || `Table ${stub.ordinal}`;
 }
 
-function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {
+function TableList({
+  tail,
+  items,
+  layout,
+}: {
+  tail: string;
+  items: ContentTableStub[];
+  layout: ContentLayout;
+}) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
   const shown = needle
@@ -559,7 +655,7 @@ function TableList({ tail, items }: { tail: string; items: ContentTableStub[] })
       ) : (
         <ul>
           {shown.map((stub) => (
-            <TableRow key={stub.key} tail={tail} stub={stub} />
+            <TableRow key={stub.key} tail={tail} stub={stub} layout={layout} />
           ))}
         </ul>
       )}
@@ -689,16 +785,21 @@ export function DocumentContentPanel({
   summary: MaterialContentSummary;
 }) {
   const { tables, figures } = summary;
+  // DEV-ONLY (see ContentLayoutLab). In a production build `import.meta.env.DEV`
+  // is false, the lab renders null and this never leaves "inline".
+  const [layout, setLayout] = useState<ContentLayout>("inline");
 
   return (
     <div className="p-5 md:p-8">
+      <ContentLayoutLab layout={layout} onChange={setLayout} />
+
       <ContentSection
         id={`${tail}-tables`}
         title="Tables"
         count={tables}
         icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
         load={() => listMaterialTables(tail)}
-        render={(items) => <TableList tail={tail} items={items} />}
+        render={(items) => <TableList tail={tail} items={items} layout={layout} />}
       />
 
       <ContentSection

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -24,6 +24,7 @@ import {
 } from "@/services/datalake-api";
 import { DocumentContentPanel } from "@/components/materials/DocumentContentPanel";
 import { TranscriptReader } from "@/components/materials/TranscriptReader";
+import { TableFocusView } from "@/components/materials/TableFocusView";
 import {
   Dialog,
   DialogContent,
@@ -178,7 +179,20 @@ export default function MaterialProfile() {
   // and the key is ABSENT rather than zeroed for the ~346k materials we have
   // not parsed, which is why presence is the test.
   const contentSummary = data?.["jawafdehi:content"];
-  const [tab, setTab] = useState("summary");
+
+  // `?table=<key>` addresses one table directly — the `page` candidate in
+  // ContentLayoutLab. Harmless in production: nothing links to it there,
+  // because the dev-only lab is the only thing that builds the link.
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const focusedTable = searchParams.get("table");
+
+  // A deep link has to survive a COLD load, not just a click. Defaulting to
+  // "summary" meant pasting `?table=…` into a fresh tab opened the Summary tab
+  // and showed no table at all — which would have made the citable-URL variant
+  // look like it worked, while the only case that matters, someone opening a
+  // link you sent them, silently did nothing.
+  const [tab, setTab] = useState(focusedTable ? "content" : "summary");
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName =
@@ -403,7 +417,18 @@ export default function MaterialProfile() {
                   {contentSummary ? (
                     <TabsContent value="content" className="mt-0">
                       <Card className="rounded-none border border-t-0 bg-background shadow-none">
-                        <DocumentContentPanel tail={tail} summary={contentSummary} />
+                        {focusedTable ? (
+                          <TableFocusView
+                            tail={tail}
+                            tableKey={focusedTable}
+                            backTo={location.pathname}
+                          />
+                        ) : (
+                          <DocumentContentPanel
+                            tail={tail}
+                            summary={contentSummary}
+                          />
+                        )}
                       </Card>
                     </TabsContent>
                   ) : null}
