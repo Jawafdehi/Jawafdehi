@@ -253,6 +253,10 @@ function ContentRow({
           <span className="shrink-0 text-sm text-muted-foreground">{note}</span>
         ) : null}
         <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
+          {/* Sighted readers get the page number from its position in the
+              right-hand column; a screen reader gets "तालिका २.१ 18" and no
+              way to tell what the 18 is. */}
+          <span className="sr-only">page </span>
           {pageNo}
         </span>
       </button>

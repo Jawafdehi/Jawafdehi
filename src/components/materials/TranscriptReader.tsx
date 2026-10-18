@@ -154,6 +154,15 @@ export function TranscriptReader({
     if (stubs?.length && start === null) setStart(stubs[0].page_no);
   }, [stubs, start]);
 
+  // ...but a DIFFERENT document is a different spine. On the full-page route
+  // `tail` comes from the URL and can change under a mounted reader, and
+  // without this the new document opens at the old one's window — on a report
+  // whose folios do not reach that far, at no pages at all.
+  useEffect(() => {
+    setStart(null);
+    setJump("");
+  }, [tail]);
+
   const from = start ?? firstPage;
   const to = Math.min(from + WINDOW - 1, lastPage);
 

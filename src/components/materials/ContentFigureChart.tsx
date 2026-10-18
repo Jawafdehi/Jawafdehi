@@ -286,7 +286,14 @@ export default function ContentFigureChart({
                 stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
                 strokeWidth={2}
                 isAnimationActive={false}
-                connectNulls
+                // NOT `connectNulls`. A null is "we have no number for this
+                // category" — either the extraction read none, or this series
+                // has no point there at all (see `toRows`). Bridging the gap
+                // draws a straight trend segment between two real readings and
+                // asserts the source published something it did not; the reader
+                // cannot tell that invented stretch from a measured one. A
+                // broken line is the honest rendering, and it is the same
+                // argument as the `≈` marker: never let a gap read as data.
                 dot={(props: {
                   cx?: number;
                   cy?: number;
@@ -295,6 +302,13 @@ export default function ContentFigureChart({
                 }) => {
                   const estimated = Boolean(props.payload?.[`${name}__est`]);
                   const color = SERIES_COLORS[i % SERIES_COLORS.length];
+                  // A gap has no coordinates. Recharts still calls `dot` for
+                  // it, and an estimated point whose value is null would then
+                  // paint a marker at the SVG origin — a dot in the corner of
+                  // the chart standing for a reading we do not have.
+                  if (!Number.isFinite(props.cx) || !Number.isFinite(props.cy)) {
+                    return <g key={props.key} />;
+                  }
                   return (
                     <circle
                       key={props.key}

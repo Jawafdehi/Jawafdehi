@@ -246,3 +246,23 @@ describe("pieIsSafe — a pie we cannot draw honestly", () => {
     expect(pieIsSafe(figure)).toBe(true);
   });
 });
+
+describe("plotFigure — a missing value stays missing", () => {
+  it("passes null through rather than coercing it to zero", () => {
+    // The chart renders a null as a GAP in the line (no `connectNulls`), and
+    // the table prints it as an em dash. Both depend on null surviving this
+    // far: coerced to 0 it would plot as a real reading on the axis, which is
+    // a number the source never published.
+    const plotted = plotFigure([
+      pt(1, "२०४७/४८", "उजुरी", 10),
+      pt(2, "२०४८/४९", "उजुरी", null),
+      pt(3, "२०४९/५०", "उजुरी", 20),
+    ]);
+
+    const values = plotted.series[0].points.map((p) => p.value);
+    expect(values).toEqual([10, null, 20]);
+    // The category is kept too — dropping it would close the gap by sliding
+    // the two real readings together, which is the same lie by other means.
+    expect(plotted.categories).toEqual(["२०४७/४८", "२०४८/४९", "२०४९/५०"]);
+  });
+});

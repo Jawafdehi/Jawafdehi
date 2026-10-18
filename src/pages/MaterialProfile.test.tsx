@@ -435,12 +435,14 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
 
     const row = await screen.findByRole("button", { name: /तालिका २\.१/ });
-    const spans = [...row.querySelectorAll("span")];
-    // The page number is the row's LAST element, not a "page 18 · 9×4" line
-    // under the title.
-    expect(spans[spans.length - 1].textContent).toBe("18");
+    // The page number is the row's LAST element — the right-hand column —
+    // rather than a "page 18 · 9×4" line under the title.
+    const last = row.children[row.children.length - 1];
+    expect(last.textContent).toBe("page 18");
+    // Carried for a screen reader, which gets no help from the column.
+    expect(last.querySelector(".sr-only")?.textContent).toBe("page ");
+    // The table's shape is not advertised before anyone has opened it.
     expect(row.textContent).not.toMatch(/9×4/);
-    expect(row.textContent).not.toMatch(/page 18/i);
   });
 
   it("gives the Charts section an icon, like every other section", async () => {
