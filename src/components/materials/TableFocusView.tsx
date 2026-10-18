@@ -11,9 +11,12 @@
  * resolve to a DIFFERENT table after the next run. A 200 with the wrong table
  * is worse than a 404.
  *
- * Still DEV-gated through the lab. Shipping it means deciding what a bare
- * `?table=` does to the pre-render budget, which is a separate call — see the
- * note in the PR.
+ * **Nothing links here from a crawlable surface.** The contents listing rows
+ * are disclosures, not links; the only way in is the explicit "Link to this
+ * table" on an open table. That is deliberate — 145 tables across 40 reports
+ * is ~5,800 URLs, and the pre-render already runs against a 20k asset cap. The
+ * address exists for a human to cite and share; making it discoverable by a
+ * crawler is a separate decision with a budget attached.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -66,7 +69,10 @@ export function TableFocusView({
             Page {data.page_no} of this report · {data.n_rows}×{data.n_cols}
           </p>
 
-          <div className="mt-4 overflow-x-auto">
+          {/* Same break-out as an open table in the listing: this view exists
+              because 630px of reading column is not where a 14-column
+              government table belongs. */}
+          <div className="mt-4 overflow-x-auto lg:-mr-6 lg:w-[calc(100vw-6rem)] lg:max-w-[72rem]">
             <MarkdownTableView markdown={data.markdown} />
           </div>
         </>

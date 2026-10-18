@@ -44,7 +44,12 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { BarChart3, ChevronDown, ExternalLink, FileSpreadsheet } from "lucide-react";
+import {
+  BarChart3,
+  ChevronDown,
+  FileSpreadsheet,
+  Link as LinkIcon,
+} from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
@@ -61,10 +66,6 @@ import {
 } from "@/services/datalake-api";
 import { cn } from "@/lib/utils";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
-import {
-  ContentLayoutLab,
-  type ContentLayout,
-} from "./ContentLayoutLab";
 
 /** The marker a reader sees beside any value that was read off a chart image. */
 const ESTIMATE_MARK = "≈";
@@ -305,15 +306,7 @@ function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
 }
 
 /** A table's markdown, fetched on the open that mounted this. */
-function TableBody({
-  tail,
-  stub,
-  wide = false,
-}: {
-  tail: string;
-  stub: ContentTableStub;
-  wide?: boolean;
-}) {
+function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
   const [showAll, setShowAll] = useState(false);
   // One report's tables come to ~830 KiB, which is why `?type=table` returns
   // stubs and the markdown is addressable only one table at a time.
@@ -339,64 +332,55 @@ function TableBody({
     // candidate rather than the default: it gives a 14-column table the room it
     // needs, but a table that escapes its container also escapes the reading
     // measure of everything around it.
-    <div
-      className={cn(
-        "overflow-x-auto",
-        wide && "-ml-7 w-[calc(100vw-6rem)] max-w-[80rem] pl-7",
-      )}
-    >
-      <MarkdownTable
-        markdown={data.markdown}
-        showAll={showAll}
-        onShowAll={() => setShowAll(true)}
-      />
-    </div>
+    <>
+      <div
+        className={cn(
+          "overflow-x-auto",
+          // The open table breaks out of the panel's reading column. A
+          // 14-column government table does not fit 630px, and the column
+          // exists for prose, which this is not.
+          //
+          // `lg:` only, and bounded: below that there is no sidebar to reclaim,
+          // and an unbounded 100vw would outrun the page on a narrow desktop
+          // window and give the whole document a horizontal scrollbar.
+          "lg:-ml-7 lg:w-[calc(100vw-6rem)] lg:max-w-[72rem] lg:pl-7",
+        )}
+      >
+        <MarkdownTable
+          markdown={data.markdown}
+          showAll={showAll}
+          onShowAll={() => setShowAll(true)}
+        />
+      </div>
+
+      {/* The citable half. A row is a disclosure, not a link, so a reader
+          after one glance pays no navigation — but a finding in a government
+          table still has to be something you can send someone, and an
+          uncitable number is a number nobody can check.
+
+          Keyed on `key`, never `ordinal`: ordinals are recomputed on every
+          ingest, so a saved link keyed on one would later resolve to a
+          DIFFERENT table, and a 200 with the wrong table beats a 404 only in
+          the sense that nobody notices. */}
+      <Link
+        to={`?table=${encodeURIComponent(stub.key)}`}
+        className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-primary underline underline-offset-2 hover:no-underline"
+      >
+        <LinkIcon className="h-3.5 w-3.5" aria-hidden="true" />
+        Link to this table
+      </Link>
+    </>
   );
 }
 
-function TableRow({
-  tail,
-  stub,
-  layout,
-}: {
-  tail: string;
-  stub: ContentTableStub;
-  layout: ContentLayout;
-}) {
-  const title = nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`);
-  const note = stub.fidelity === "ocr_vision" ? "read by OCR" : undefined;
-
-  // `page`: the row is a LINK, not a disclosure. That is the whole point of the
-  // variant — a table a reader can send someone, and a crawler can reach.
-  if (layout === "page") {
-    return (
-      <li className="border-b border-border/70 last:border-b-0">
-        <Link
-          to={`?table=${encodeURIComponent(stub.key)}`}
-          className="flex min-h-11 w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
-        >
-          <ExternalLink
-            className="h-4 w-4 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <span className="min-w-0 flex-1 break-words text-base text-foreground">
-            {title}
-          </span>
-          {note ? (
-            <span className="shrink-0 text-sm text-muted-foreground">{note}</span>
-          ) : null}
-          <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
-            <span className="sr-only">page </span>
-            {stub.page_no}
-          </span>
-        </Link>
-      </li>
-    );
-  }
-
+function TableRow({ tail, stub }: { tail: string; stub: ContentTableStub }) {
   return (
-    <ContentRow title={title} pageNo={stub.page_no} note={note}>
-      <TableBody tail={tail} stub={stub} wide={layout === "wide"} />
+    <ContentRow
+      title={nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`)}
+      pageNo={stub.page_no}
+      note={stub.fidelity === "ocr_vision" ? "read by OCR" : undefined}
+    >
+      <TableBody tail={tail} stub={stub} />
     </ContentRow>
   );
 }
@@ -622,15 +606,7 @@ function tableLabel(stub: ContentTableStub): string {
   return stub.caption.trim() || `Table ${stub.ordinal}`;
 }
 
-function TableList({
-  tail,
-  items,
-  layout,
-}: {
-  tail: string;
-  items: ContentTableStub[];
-  layout: ContentLayout;
-}) {
+function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
   const shown = needle
@@ -655,7 +631,7 @@ function TableList({
       ) : (
         <ul>
           {shown.map((stub) => (
-            <TableRow key={stub.key} tail={tail} stub={stub} layout={layout} />
+            <TableRow key={stub.key} tail={tail} stub={stub} />
           ))}
         </ul>
       )}
@@ -785,21 +761,16 @@ export function DocumentContentPanel({
   summary: MaterialContentSummary;
 }) {
   const { tables, figures } = summary;
-  // DEV-ONLY (see ContentLayoutLab). In a production build `import.meta.env.DEV`
-  // is false, the lab renders null and this never leaves "inline".
-  const [layout, setLayout] = useState<ContentLayout>("inline");
 
   return (
     <div className="p-5 md:p-8">
-      <ContentLayoutLab layout={layout} onChange={setLayout} />
-
       <ContentSection
         id={`${tail}-tables`}
         title="Tables"
         count={tables}
         icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
         load={() => listMaterialTables(tail)}
-        render={(items) => <TableList tail={tail} items={items} layout={layout} />}
+        render={(items) => <TableList tail={tail} items={items} />}
       />
 
       <ContentSection

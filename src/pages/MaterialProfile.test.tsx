@@ -427,6 +427,32 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     expect(listMaterialTables).not.toHaveBeenCalled();
   });
 
+  it("offers a citable link on an open table, but keeps the row a disclosure", async () => {
+    // Both halves matter. A row that navigated would charge a reader a page
+    // load for a glance at one of 145 tables; a table with no address would
+    // leave a finding in a government report uncitable. So: disclosure to
+    // read, explicit link to cite.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialTables.mockResolvedValue(TABLES);
+    getMaterialTable.mockResolvedValue({ ...TABLES[0], markdown: "| a |\n| 1 |" });
+    renderPage();
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
+
+    const row = await screen.findByRole("button", { name: /तालिका २\.१/ });
+    // Nothing in the listing is a link, which is what keeps ~5,800 table URLs
+    // off every crawlable surface.
+    expect(row.tagName).toBe("BUTTON");
+    expect(screen.queryByRole("link", { name: /Link to this table/i })).toBeNull();
+
+    fireEvent.click(row);
+    const permalink = await screen.findByRole("link", {
+      name: /Link to this table/i,
+    });
+    // Addressed by KEY, never ordinal: ordinals are recomputed on every ingest.
+    expect(permalink.getAttribute("href")).toContain("table=p0018-t1");
+  });
+
   it("puts each row's page number on the right, table-of-contents style", async () => {
     getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
     listMaterialTables.mockResolvedValue(TABLES);
