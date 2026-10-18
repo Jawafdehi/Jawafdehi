@@ -49,9 +49,11 @@ describe("the likhit landing page", () => {
   it("sends readers to the benchmark and the repository, in a new tab", async () => {
     await renderPage("en");
 
-    // Two of them: the hero button and the closing call to action.
+    // Exactly one, in the intro link row. The benchmark gets a link, not a
+    // section of its own — this page is the landing page and the measurements
+    // live on GitHub Pages.
     const benchmark = screen.getAllByRole("link", { name: /benchmark/i });
-    expect(benchmark).toHaveLength(2);
+    expect(benchmark).toHaveLength(1);
     for (const link of benchmark) {
       expect(link.getAttribute("href")).toBe(BENCHMARK_URL);
       expect(link.getAttribute("target")).toBe("_blank");

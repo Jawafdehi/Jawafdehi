@@ -2777,7 +2777,7 @@
     "hero": {
       "title": "Nepali documents, converted",
       "titleAccent": "faithfully",
-      "benchmark": "See the benchmark",
+      "benchmark": "Read the benchmark",
       "source": "Source on GitHub",
       "pypi": "PyPI"
     },
@@ -2833,11 +2833,6 @@
         "name": "A hosted API",
         "body": "Point at any OpenAI-compatible provider. For Gemini, set the Google key alone and likhit selects Google's OpenAI-compatible base URL for you."
       }
-    },
-    "benchmark": {
-      "title": "Every claim here is measured",
-      "body": "Each document in the benchmark is a real, published government record — no synthetic fixtures — converted three ways and compared side by side. Read what likhit extracted, and check the assertions that gate the build.",
-      "cta": "Open the benchmark"
     },
     "copy": "Copy"
   }

@@ -219,20 +219,6 @@ const Likhit = () => {
             ))}
           </div>
         </section>
-
-        <section className="lk-benchmark" aria-labelledby="likhit-benchmark-title">
-          <h2 id="likhit-benchmark-title">{t("likhit.benchmark.title")}</h2>
-          <p>{t("likhit.benchmark.body")}</p>
-
-          <a
-            className="lk-command-link"
-            href={BENCHMARK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("likhit.benchmark.cta")}
-          </a>
-        </section>
       </main>
     </div>
   );
