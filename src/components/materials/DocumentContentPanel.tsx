@@ -45,10 +45,10 @@ import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
+  ArrowUpRight,
   BarChart3,
   ChevronDown,
   FileSpreadsheet,
-  Link as LinkIcon,
 } from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
@@ -66,6 +66,7 @@ import {
 } from "@/services/datalake-api";
 import { cn } from "@/lib/utils";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
+import { rememberListScroll } from "@/lib/contents-scroll";
 
 /** The marker a reader sees beside any value that was read off a chart image. */
 const ESTIMATE_MARK = "≈";
@@ -229,22 +230,28 @@ function ContentRow({
   title,
   pageNo,
   note,
+  openHref,
   children,
 }: {
   title: string;
   pageNo: number;
   note?: string;
+  /** Where "open this on its own page" goes. Omitted = no such affordance. */
+  openHref?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <li className="border-b border-border/70 last:border-b-0">
+    <li className="flex flex-wrap items-center border-b border-border/70 last:border-b-0">
+      {/* The disclosure and the link are SIBLINGS, never nested: an anchor
+          inside a button is invalid, and browsers resolve it by making one of
+          the two unclickable. */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
+        className="flex min-h-11 flex-1 items-center gap-3 py-3 text-left hover:bg-muted/40"
       >
         <ChevronDown
           className={cn(
@@ -259,16 +266,34 @@ function ContentRow({
         {note ? (
           <span className="shrink-0 text-sm text-muted-foreground">{note}</span>
         ) : null}
-        <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
-          {/* Sighted readers get the page number from its position in the
-              right-hand column; a screen reader gets "तालिका २.१ 18" and no
-              way to tell what the 18 is. */}
-          <span className="sr-only">page </span>
-          {pageNo}
-        </span>
       </button>
 
-      {open ? <div className="pb-5 pl-7">{children}</div> : null}
+      {openHref ? (
+        <Link
+          to={openHref}
+          aria-label={`Open "${title}" on its own page`}
+          title="Open on its own page"
+          // Recorded HERE, on the click, not in an effect afterwards:
+          // ScrollToTop runs on every `search` change and has already zeroed
+          // window.scrollY by the time any effect of ours gets to look at it.
+          onClick={() => rememberListScroll()}
+          className="flex min-h-11 shrink-0 items-center px-2 text-muted-foreground hover:text-primary"
+        >
+          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      ) : null}
+
+      <span className="shrink-0 pl-1 pr-0 tabular-nums text-sm text-muted-foreground">
+        {/* Sighted readers get the page number from its position in the
+            right-hand column; a screen reader gets "तालिका २.१ 18" and no
+            way to tell what the 18 is. */}
+        <span className="sr-only">page </span>
+        {pageNo}
+      </span>
+
+      {open ? (
+        <div className="w-full basis-full pb-5 pl-7">{children}</div>
+      ) : null}
     </li>
   );
 }
@@ -324,46 +349,18 @@ function TableBody({ tail, stub }: { tail: string; stub: ContentTableStub }) {
   if (!data) return null;
 
   return (
-    // Horizontally scrollable: these are government tables, some 65 columns
-    // wide, and they must not blow out the page on mobile.
-    //
-    // `wide` pulls the open table out of the panel's column with negative
-    // margins — DEV-ONLY (see ContentLayoutLab), and the reason it is a
-    // candidate rather than the default: it gives a 14-column table the room it
-    // needs, but a table that escapes its container also escapes the reading
-    // measure of everything around it.
-    <>
-      {/* Scrolls inside its own column. It deliberately does NOT break out
-          past the column with a viewport width: the aside is a sibling in the
-          same grid, so a table wider than the column slides UNDER "Read the
-          transcript" and "View JSON" rather than over empty space. The room a
-          wide table needs comes from the focused view below, which drops the
-          aside instead of colliding with it. */}
-      <div className="overflow-x-auto">
-        <MarkdownTable
-          markdown={data.markdown}
-          showAll={showAll}
-          onShowAll={() => setShowAll(true)}
-        />
-      </div>
-
-      {/* The citable half. A row is a disclosure, not a link, so a reader
-          after one glance pays no navigation — but a finding in a government
-          table still has to be something you can send someone, and an
-          uncitable number is a number nobody can check.
-
-          Keyed on `key`, never `ordinal`: ordinals are recomputed on every
-          ingest, so a saved link keyed on one would later resolve to a
-          DIFFERENT table, and a 200 with the wrong table beats a 404 only in
-          the sense that nobody notices. */}
-      <Link
-        to={`?table=${encodeURIComponent(stub.key)}`}
-        className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-primary underline underline-offset-2 hover:no-underline"
-      >
-        <LinkIcon className="h-3.5 w-3.5" aria-hidden="true" />
-        Link to this table
-      </Link>
-    </>
+    // Scrolls inside its own column, and deliberately does NOT break out past
+    // it with a viewport width: the aside is a SIBLING in the same grid, so a
+    // table wider than the column slides under "Read the transcript" rather
+    // than over empty space. The room a wide table needs comes from the
+    // focused view, which drops the aside instead of colliding with it.
+    <div className="overflow-x-auto">
+      <MarkdownTable
+        markdown={data.markdown}
+        showAll={showAll}
+        onShowAll={() => setShowAll(true)}
+      />
+    </div>
   );
 }
 
@@ -373,6 +370,10 @@ function TableRow({ tail, stub }: { tail: string; stub: ContentTableStub }) {
       title={nepaliSafe(tableLabel(stub), `Page ${stub.page_no}`)}
       pageNo={stub.page_no}
       note={stub.fidelity === "ocr_vision" ? "read by OCR" : undefined}
+      // Addressed by KEY, never ordinal: ordinals are recomputed on every
+      // ingest, so a saved link keyed on one would later resolve to a
+      // DIFFERENT table.
+      openHref={`?table=${encodeURIComponent(stub.key)}`}
     >
       <TableBody tail={tail} stub={stub} />
     </ContentRow>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ import {
   type MaterialBilingual,
 } from "@/services/datalake-api";
 import { DocumentContentPanel } from "@/components/materials/DocumentContentPanel";
+import { restoreScroll, takeListScroll } from "@/lib/contents-scroll";
 import { TranscriptReader } from "@/components/materials/TranscriptReader";
 import { TableFocusView } from "@/components/materials/TableFocusView";
 import {
@@ -187,6 +188,17 @@ export default function MaterialProfile() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const focusedTable = searchParams.get("table");
+
+  // ScrollToTop fires on every `search` change, so opening a table and coming
+  // back both jump to the top of the document. The position was recorded on
+  // the click that left; put the reader back on it once the listing has laid
+  // out far enough to allow it.
+  useEffect(() => {
+    if (focusedTable) return;
+    const y = takeListScroll(location.pathname);
+    if (y === null) return;
+    return restoreScroll(y);
+  }, [focusedTable, location.pathname]);
 
   // A deep link has to survive a COLD load, not just a click. Defaulting to
   // "summary" meant pasting `?table=…` into a fresh tab opened the Summary tab
@@ -434,12 +446,22 @@ export default function MaterialProfile() {
                             tableKey={focusedTable}
                             backTo={location.pathname}
                           />
-                        ) : (
+                        ) : null}
+                        {/* The panel stays MOUNTED behind the focused view
+                            rather than being swapped out for it. Unmounting
+                            threw away everything the reader had set up — which
+                            sections were open, what they had typed into the
+                            filter, which table was expanded — so "Back to
+                            contents" dropped them at the top of a closed list
+                            and made them find their place again. Hidden, not
+                            removed, so all of that state is still there when
+                            they come back. */}
+                        <div hidden={Boolean(focusedTable)}>
                           <DocumentContentPanel
                             tail={tail}
                             summary={contentSummary}
                           />
-                        )}
+                        </div>
                       </Card>
                     </TabsContent>
                   ) : null}

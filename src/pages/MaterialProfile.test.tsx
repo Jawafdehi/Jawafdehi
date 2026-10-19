@@ -427,7 +427,7 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     expect(listMaterialTables).not.toHaveBeenCalled();
   });
 
-  it("offers a citable link on an open table, but keeps the row a disclosure", async () => {
+  it("opens a table in place, and offers its own page beside the page number", async () => {
     // Both halves matter. A row that navigated would charge a reader a page
     // load for a glance at one of 145 tables; a table with no address would
     // leave a finding in a government report uncitable. So: disclosure to
@@ -440,17 +440,17 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
 
     const row = await screen.findByRole("button", { name: /तालिका २\.१/ });
-    // Nothing in the listing is a link, which is what keeps ~5,800 table URLs
-    // off every crawlable surface.
+    // The row itself expands in place — a reader after one glance at one of
+    // 145 tables pays no page load.
     expect(row.tagName).toBe("BUTTON");
-    expect(screen.queryByRole("link", { name: /Link to this table/i })).toBeNull();
 
-    fireEvent.click(row);
-    const permalink = await screen.findByRole("link", {
-      name: /Link to this table/i,
-    });
+    // ...and the icon beside the page number opens it on its own page. A
+    // sibling of the disclosure, never nested inside it: an anchor inside a
+    // button is invalid and browsers make one of the two unclickable.
+    const openLink = screen.getByRole("link", { name: /Open .* on its own page/i });
+    expect(row.contains(openLink)).toBe(false);
     // Addressed by KEY, never ordinal: ordinals are recomputed on every ingest.
-    expect(permalink.getAttribute("href")).toContain("table=p0018-t1");
+    expect(openLink.getAttribute("href")).toContain("table=p0018-t1");
   });
 
   it("puts each row's page number on the right, table-of-contents style", async () => {
@@ -460,7 +460,8 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
     fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
 
-    const row = await screen.findByRole("button", { name: /तालिका २\.१/ });
+    const button = await screen.findByRole("button", { name: /तालिका २\.१/ });
+    const row = button.closest("li")!;
     // The page number is the row's LAST element — the right-hand column —
     // rather than a "page 18 · 9×4" line under the title.
     const last = row.children[row.children.length - 1];
