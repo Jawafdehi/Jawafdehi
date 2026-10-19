@@ -119,13 +119,10 @@ describe("soleInitialCourt", () => {
     ).toBeNull();
   });
 
-  it("names no court once a later court stage has CONCLUDED", () => {
-    // `outcome` is a per-defendant field with no forum of its own, and a
-    // terminal verdict is set from whatever primary court order was read --
-    // an appellate order included. A defendant acquitted at the Special
-    // Court and convicted on appeal would otherwise render as "Special
-    // Court: convicted", which is false about a named real person and
-    // strictly worse than the bare verdict it replaced.
+  it("still names it once the appeal has CONCLUDED", () => {
+    // The appeal's own result is drawn beside the verdict from
+    // `appeal_verdicts`; dropping the forum here made a Special Court
+    // conviction the Supreme Court overturned read as a bare final "Convicted".
     expect(
       soleInitialCourt(
         dates([
@@ -141,6 +138,23 @@ describe("soleInitialCourt", () => {
             start: "2024-06-20",
             end: "2025-09-01",
           },
+        ]),
+      ),
+    ).toBe("special");
+  });
+
+  it("names no court once a REVIEW has concluded", () => {
+    // No appeal line describes a review, so the verdict may be the review's.
+    expect(
+      soleInitialCourt(
+        dates([
+          {
+            stage: "initial",
+            courtcase_iri: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+            end: "2024-05-22",
+          },
+          { stage: "appeal", courtcase_iri: "https://jawafdehi.org/courtcase/supreme/082-cr-0011", end: "2025-09-01" },
+          { stage: "review", courtcase_iri: "https://jawafdehi.org/courtcase/supreme/083-rv-0001", end: "2026-02-01" },
         ]),
       ),
     ).toBeNull();

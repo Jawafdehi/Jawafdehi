@@ -52,8 +52,9 @@ const OUTCOME_BADGE_CLASSES: Record<EntityOutcome, string> = {
     "border-transparent bg-success-strong/10 text-success-strong dark:bg-success-strong/40 dark:text-success-strong",
   charged:
     "border-transparent bg-alert-strong/10 text-alert-strong dark:bg-alert-strong/40 dark:text-alert-strong",
+  // Not bg-muted: the defendant card is bg-muted/50, so a muted fill vanishes.
   abated:
-    "border-transparent bg-muted text-muted-foreground",
+    "border-transparent bg-secondary text-secondary-foreground",
   // Its own colour: the case is live again, which is neither a verdict nor
   // the ordinary pre-trial "charged".
   remanded:
