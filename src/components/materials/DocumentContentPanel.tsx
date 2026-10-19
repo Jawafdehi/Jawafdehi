@@ -552,39 +552,28 @@ export function MarkdownTableView({ markdown }: { markdown: string }) {
  * BOTH the visible label and the page number: typing "52" finds page 52 and
  * every table on it, and typing a word finds the captions that contain it.
  *
- * Uses the shared `SearchBar` rather than a bespoke input, with its submit
- * button turned off: this narrows as you type, so there is nothing to submit.
+ * The shared `SearchBar` with its submit button off: this narrows as you type,
+ * so there is nothing to submit.
  */
 function FilterBox({
   label,
   value,
   onChange,
-  shown,
-  total,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  shown: number;
-  total: number;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3">
-      <SearchBar
-        type="search"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={label}
-        aria-label={label}
-        showSubmit={false}
-        className="max-w-sm"
-      />
-      <span className="text-sm text-muted-foreground">
-        {shown === total
-          ? `${total.toLocaleString()} in all`
-          : `${shown.toLocaleString()} of ${total.toLocaleString()}`}
-      </span>
-    </div>
+    <SearchBar
+      type="search"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={label}
+      aria-label={label}
+      showSubmit={false}
+      className="w-full sm:w-72"
+    />
   );
 }
 
@@ -601,9 +590,16 @@ function tableLabel(stub: ContentTableStub): string {
   return stub.caption.trim() || `Table ${stub.ordinal}`;
 }
 
-function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {
-  const [q, setQ] = useState("");
-  const needle = q.trim().toLowerCase();
+function TableList({
+  tail,
+  items,
+  filter,
+}: {
+  tail: string;
+  items: ContentTableStub[];
+  filter: string;
+}) {
+  const needle = filter.trim().toLowerCase();
   const shown = needle
     ? items.filter(
         (t) =>
@@ -614,13 +610,6 @@ function TableList({ tail, items }: { tail: string; items: ContentTableStub[] })
 
   return (
     <>
-      <FilterBox
-        label="Filter tables by caption or page"
-        value={q}
-        onChange={setQ}
-        shown={shown.length}
-        total={items.length}
-      />
       {shown.length === 0 ? (
         <p className="text-base text-muted-foreground">No table matches that.</p>
       ) : (
@@ -680,6 +669,7 @@ function ContentSection<T>({
   title,
   count,
   icon,
+  toolbar,
   load,
   render,
 }: {
@@ -687,6 +677,8 @@ function ContentSection<T>({
   title: string;
   count: number;
   icon?: ReactNode;
+  /** Shown on the heading line, right-aligned, only while the section is open. */
+  toolbar?: ReactNode;
   load: () => Promise<T[] | null>;
   render: (items: T[]) => ReactNode;
 }) {
@@ -703,24 +695,34 @@ function ContentSection<T>({
 
   return (
     <section aria-labelledby={`${id}-heading`} className="border-t border-border/70">
-      <h3 id={`${id}-heading`}>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          className="flex w-full items-center gap-3 py-4 text-left"
-        >
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-              open && "rotate-180",
-            )}
-            aria-hidden="true"
-          />
-          {icon}
-          <span className="text-xl font-semibold text-foreground">{title}</span>
-        </button>
-      </h3>
+      {/* The filter rides on the heading line rather than under it: it belongs
+          to the section, and a row of its own pushed the first table a whole
+          control-height further down a list the reader is trying to scan.
+          Wraps below the title on narrow screens, where there is no room
+          beside it. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-4">
+        <h3 id={`${id}-heading`} className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            className="flex w-full items-center gap-3 text-left"
+          >
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                open && "rotate-180",
+              )}
+              aria-hidden="true"
+            />
+            {icon}
+            <span className="text-xl font-semibold text-foreground">{title}</span>
+          </button>
+        </h3>
+        {open && toolbar ? (
+          <div className="w-full shrink-0 sm:w-auto">{toolbar}</div>
+        ) : null}
+      </div>
 
       {open ? (
         <div className="pb-6">
@@ -756,6 +758,9 @@ export function DocumentContentPanel({
   summary: MaterialContentSummary;
 }) {
   const { tables, figures } = summary;
+  // Lifted out of TableList so the control can sit on the section's heading
+  // line while the list it filters stays in the section body.
+  const [tableFilter, setTableFilter] = useState("");
 
   return (
     <div className="p-5 md:p-8">
@@ -764,8 +769,17 @@ export function DocumentContentPanel({
         title="Tables"
         count={tables}
         icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
+        toolbar={
+          <FilterBox
+            label="Filter tables by caption or page"
+            value={tableFilter}
+            onChange={setTableFilter}
+          />
+        }
         load={() => listMaterialTables(tail)}
-        render={(items) => <TableList tail={tail} items={items} />}
+        render={(items) => (
+          <TableList tail={tail} items={items} filter={tableFilter} />
+        )}
       />
 
       <ContentSection
