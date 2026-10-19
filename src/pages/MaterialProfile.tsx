@@ -490,7 +490,7 @@ export default function MaterialProfile() {
                         <Button
                           key={link.href}
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                           onClick={() =>
                             setPreviewDocument({
@@ -510,7 +510,7 @@ export default function MaterialProfile() {
                       <Button
                         asChild
                         key={link.href}
-                        variant="outline"
+                        variant="ghost"
                         className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                       >
                         <a href={link.href} target="_blank" rel="noopener noreferrer">
@@ -525,7 +525,7 @@ export default function MaterialProfile() {
                         <Button
                           asChild
                           key={link.href}
-                          variant="outline"
+                          variant="ghost"
                           className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                         >
                           <a
@@ -545,7 +545,7 @@ export default function MaterialProfile() {
                     {data.url ? (
                       <Button
                         asChild
-                        variant="outline"
+                        variant="ghost"
                         className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                       >
                         <a
@@ -569,7 +569,7 @@ export default function MaterialProfile() {
                     {contentSummary && contentSummary.pages_read > 0 ? (
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                         onClick={() => setTranscriptOpen(true)}
                       >
@@ -604,7 +604,7 @@ export default function MaterialProfile() {
                         data={data}
                         title={`${displayName} — JSON-LD`}
                         rawUrl={`${API_BASE_URL}/api/materials/${tail}`}
-                        variant="outline"
+                        variant="ghost"
                         className="h-11 justify-start gap-3 px-4"
                       />
                     ) : null}
