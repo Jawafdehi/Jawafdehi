@@ -92,6 +92,31 @@ describe("MATERIAL_SERIES registry", () => {
     ]);
   });
 
+  it("never fills a whole grid row with one publisher", () => {
+    // Registry order IS render order. Five of the nine shelves are the Auditor
+    // General's, and listed as a block they filled two of the grid's three
+    // rows — a page about the archive's BREADTH reading as one institution.
+    // The fix is to interleave them, NOT to drop shelves from the grid: every
+    // one still has a folder, so nothing became harder to find.
+    //
+    // Checked at both widths the grid actually uses (lg:grid-cols-4 and
+    // sm:grid-cols-2). A trailing part-row is skipped — it is not a full row,
+    // and with an odd count there is always one.
+    for (const columns of [4, 2]) {
+      for (let start = 0; start + columns <= MATERIAL_SERIES.length; start += columns) {
+        const row = MATERIAL_SERIES.slice(start, start + columns);
+        const perSource = new Map<string, number>();
+        for (const series of row) {
+          perSource.set(series.source, (perSource.get(series.source) ?? 0) + 1);
+        }
+        // No MAJORITY, not merely "more than one distinct": three of four cards
+        // from one publisher still reads as that publisher's row.
+        const dominant = Math.max(...perSource.values());
+        expect(dominant, `${columns}-col row at ${start}`).toBeLessThanOrEqual(columns / 2);
+      }
+    }
+  });
+
   it("looks up by slug and by source", () => {
     const bySlug = seriesBySlug("charge-sheets");
     expect(bySlug?.source).toBe("ag");
