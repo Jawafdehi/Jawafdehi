@@ -63,9 +63,11 @@ export function FigureFocusView({
           <h2 className="text-xl font-semibold text-foreground">
             {data.title.trim() || `Chart ${data.ordinal}`}
           </h2>
+          {/* The page, and nothing else. The chart TYPE was here and said
+              "pie" above a pie — the reader can see what shape it is, and the
+              word was the pipeline's vocabulary rather than the document's. */}
           <p className="mt-1 text-sm text-muted-foreground">
             Page {data.page_no} of this report
-            {data.chart_type ? ` · ${data.chart_type.replace(/[_-]+/g, " ")}` : ""}
           </p>
 
           <div className="mt-4">

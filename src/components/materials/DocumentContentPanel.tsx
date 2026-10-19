@@ -65,6 +65,7 @@ import {
   type MaterialContentSummary,
 } from "@/services/datalake-api";
 import { cn } from "@/lib/utils";
+import { matchesRomanized } from "@/lib/devanagari-roman";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
 import { rememberListScroll } from "@/lib/contents-scroll";
 
@@ -605,11 +606,11 @@ function TableList({
   items: ContentTableStub[];
   filter: string;
 }) {
-  const needle = filter.trim().toLowerCase();
+  const needle = filter.trim();
   const shown = needle
     ? items.filter(
         (t) =>
-          tableLabel(t).toLowerCase().includes(needle) ||
+          matchesRomanized(tableLabel(t), needle) ||
           String(t.page_no).includes(needle),
       )
     : items;
@@ -670,6 +671,43 @@ function ListSkeleton({ count }: { count: number }) {
  * whether the section exists at all, but a number beside the title competed
  * with the titles themselves for the reader's eye.
  */
+function FigureList({
+  items,
+  filter,
+}: {
+  items: ContentFigure[];
+  filter: string;
+}) {
+  const needle = filter.trim();
+  const shown = needle
+    ? items.filter(
+        (f) =>
+          matchesRomanized(nepaliSafe(f.title, "Untitled chart"), needle) ||
+          String(f.page_no).includes(needle),
+      )
+    : items;
+
+  if (shown.length === 0) {
+    return <p className="text-base text-muted-foreground">No chart matches that.</p>;
+  }
+
+  return (
+    <ul>
+      {shown.map((figure) => (
+        <ContentRow
+          key={figure.key}
+          title={nepaliSafe(figure.title, "Untitled chart")}
+          pageNo={figure.page_no}
+          // Same as a table: keyed on `key`, never `ordinal`.
+          openHref={`?figure=${encodeURIComponent(figure.key)}`}
+        >
+          <FigureBody figure={figure} />
+        </ContentRow>
+      ))}
+    </ul>
+  );
+}
+
 function ContentSection<T>({
   id,
   title,
@@ -738,7 +776,14 @@ function ContentSection<T>({
               That list could not be loaded. Try again.
             </p>
           ) : null}
-          {data ? render(data) : null}
+          {/* The list scrolls inside its own box. 145 tables — or one opened
+              table 50 rows deep — pushed the Charts heading so far down the
+              page that reaching it meant scrolling past everything above it.
+              Bounded here, the section below stays within reach, and a wheel
+              that runs out of list carries on down the page as usual. */}
+          {data ? (
+            <div className="max-h-[70vh] overflow-y-auto pr-1">{render(data)}</div>
+          ) : null}
         </div>
       ) : null}
     </section>
@@ -767,6 +812,7 @@ export function DocumentContentPanel({
   // Lifted out of TableList so the control can sit on the section's heading
   // line while the list it filters stays in the section body.
   const [tableFilter, setTableFilter] = useState("");
+  const [figureFilter, setFigureFilter] = useState("");
 
   return (
     <div className="p-5 md:p-8">
@@ -793,22 +839,15 @@ export function DocumentContentPanel({
         title="Charts"
         count={figures}
         icon={<BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />}
+        toolbar={
+          <FilterBox
+            label="Filter charts by title or page"
+            value={figureFilter}
+            onChange={setFigureFilter}
+          />
+        }
         load={() => listMaterialFigures(tail)}
-        render={(items) => (
-          <ul>
-            {items.map((figure) => (
-              <ContentRow
-                key={figure.key}
-                title={nepaliSafe(figure.title, "Untitled chart")}
-                pageNo={figure.page_no}
-                // Same as a table: keyed on `key`, never `ordinal`.
-                openHref={`?figure=${encodeURIComponent(figure.key)}`}
-              >
-                <FigureBody figure={figure} />
-              </ContentRow>
-            ))}
-          </ul>
-        )}
+        render={(items) => <FigureList items={items} filter={figureFilter} />}
       />
     </div>
   );
