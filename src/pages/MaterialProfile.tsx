@@ -27,6 +27,7 @@ import { DocumentContentPanel } from "@/components/materials/DocumentContentPane
 import { restoreScroll, takeListScroll } from "@/lib/contents-scroll";
 import { TranscriptReader } from "@/components/materials/TranscriptReader";
 import { TableFocusView } from "@/components/materials/TableFocusView";
+import { FigureFocusView } from "@/components/materials/FigureFocusView";
 import {
   Dialog,
   DialogContent,
@@ -188,24 +189,30 @@ export default function MaterialProfile() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const focusedTable = searchParams.get("table");
+  const focusedFigure = searchParams.get("figure");
+  // Either focus hides the listing and drops the aside, so the rest of the
+  // page asks this rather than one of them.
+  const focused = focusedTable ?? focusedFigure;
 
   // ScrollToTop fires on every `search` change, so opening a table and coming
   // back both jump to the top of the document. The position was recorded on
   // the click that left; put the reader back on it once the listing has laid
   // out far enough to allow it.
   useEffect(() => {
-    if (focusedTable) return;
+    if (focused) return;
     const y = takeListScroll(location.pathname);
     if (y === null) return;
     return restoreScroll(y);
-  }, [focusedTable, location.pathname]);
+  }, [focused, location.pathname]);
 
   // A deep link has to survive a COLD load, not just a click. Defaulting to
   // "summary" meant pasting `?table=…` into a fresh tab opened the Summary tab
   // and showed no table at all — which would have made the citable-URL variant
   // look like it worked, while the only case that matters, someone opening a
   // link you sent them, silently did nothing.
-  const [tab, setTab] = useState(focusedTable ? "content" : "summary");
+  const [tab, setTab] = useState(
+    searchParams.get("table") || searchParams.get("figure") ? "content" : "summary",
+  );
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
   const displayName =
@@ -328,7 +335,7 @@ export default function MaterialProfile() {
             <div
               className={cn(
                 "mt-8 grid items-start gap-10 xl:gap-14",
-                !focusedTable && "lg:grid-cols-[minmax(0,1fr)_17rem]",
+                !focused && "lg:grid-cols-[minmax(0,1fr)_17rem]",
               )}
             >
               <section className="min-w-0">
@@ -447,6 +454,13 @@ export default function MaterialProfile() {
                             backTo={location.pathname}
                           />
                         ) : null}
+                        {!focusedTable && focusedFigure ? (
+                          <FigureFocusView
+                            tail={tail}
+                            figureKey={focusedFigure}
+                            backTo={location.pathname}
+                          />
+                        ) : null}
                         {/* The panel stays MOUNTED behind the focused view
                             rather than being swapped out for it. Unmounting
                             threw away everything the reader had set up — which
@@ -456,7 +470,7 @@ export default function MaterialProfile() {
                             and made them find their place again. Hidden, not
                             removed, so all of that state is still there when
                             they come back. */}
-                        <div hidden={Boolean(focusedTable)}>
+                        <div hidden={Boolean(focused)}>
                           <DocumentContentPanel
                             tail={tail}
                             summary={contentSummary}
@@ -468,7 +482,7 @@ export default function MaterialProfile() {
                 </Tabs>
               </section>
 
-              {focusedTable ? null : (
+              {focused ? null : (
               <aside className="space-y-8 lg:sticky lg:top-24">
                 <section aria-labelledby="material-downloads-heading">
                   <h2

@@ -45,10 +45,10 @@ import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  ArrowUpRight,
   BarChart3,
   ChevronDown,
   FileSpreadsheet,
+  Maximize2,
 } from "lucide-react";
 
 import { lazyChart } from "@/components/charts/lazy";
@@ -109,7 +109,7 @@ const FigureChart = lazyChart<ContentFigureChartProps>(
  * right-hand page number, table-of-contents style, so a caption here would say
  * the same thing twice and put a line under the chart to do it.
  */
-function FigureBody({ figure }: { figure: ContentFigure }) {
+export function FigureBody({ figure }: { figure: ContentFigure }) {
   // Which of label/series is the category axis is detected from the data, not
   // taken from the field names — the dataset uses both conventions. See
   // lib/content-figure.ts.
@@ -268,28 +268,34 @@ function ContentRow({
         ) : null}
       </button>
 
-      {openHref ? (
-        <Link
-          to={openHref}
-          aria-label={`Open "${title}" on its own page`}
-          title="Open on its own page"
-          // Recorded HERE, on the click, not in an effect afterwards:
-          // ScrollToTop runs on every `search` change and has already zeroed
-          // window.scrollY by the time any effect of ours gets to look at it.
-          onClick={() => rememberListScroll()}
-          className="flex min-h-11 shrink-0 items-center px-2 text-muted-foreground hover:text-primary"
-        >
-          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      ) : null}
-
-      <span className="shrink-0 pl-1 pr-0 tabular-nums text-sm text-muted-foreground">
+      <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
         {/* Sighted readers get the page number from its position in the
             right-hand column; a screen reader gets "तालिका २.१ 18" and no
             way to tell what the 18 is. */}
         <span className="sr-only">page </span>
         {pageNo}
       </span>
+
+      {openHref ? (
+        <Link
+          to={openHref}
+          aria-label={`Open "${title}" at full size`}
+          title="Open at full size"
+          // Recorded HERE, on the click, not in an effect afterwards:
+          // ScrollToTop runs on every `search` change and has already zeroed
+          // window.scrollY by the time any effect of ours gets to look at it.
+          onClick={() => rememberListScroll()}
+          className="flex min-h-11 shrink-0 items-center pl-2 text-muted-foreground hover:text-primary"
+        >
+          {/* `Maximize2`, not an external-link or a bare arrow. This navigates
+              WITHIN the site and in the same tab, so the external-link glyph
+              would promise something it does not do; a plain arrow says only
+              "somewhere". What the destination actually offers is SIZE — the
+              page drops the aside so a 14-column table has room — and
+              "open at full size" is what this glyph already means. */}
+          <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+        </Link>
+      ) : null}
 
       {open ? (
         <div className="w-full basis-full pb-5 pl-7">{children}</div>
@@ -795,6 +801,8 @@ export function DocumentContentPanel({
                 key={figure.key}
                 title={nepaliSafe(figure.title, "Untitled chart")}
                 pageNo={figure.page_no}
+                // Same as a table: keyed on `key`, never `ordinal`.
+                openHref={`?figure=${encodeURIComponent(figure.key)}`}
               >
                 <FigureBody figure={figure} />
               </ContentRow>

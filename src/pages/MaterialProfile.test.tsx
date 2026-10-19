@@ -447,7 +447,7 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
     // ...and the icon beside the page number opens it on its own page. A
     // sibling of the disclosure, never nested inside it: an anchor inside a
     // button is invalid and browsers make one of the two unclickable.
-    const openLink = screen.getByRole("link", { name: /Open .* on its own page/i });
+    const openLink = screen.getByRole("link", { name: /Open .* at full size/i });
     expect(row.contains(openLink)).toBe(false);
     // Addressed by KEY, never ordinal: ordinals are recomputed on every ingest.
     expect(openLink.getAttribute("href")).toContain("table=p0018-t1");
@@ -462,14 +462,36 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
 
     const button = await screen.findByRole("button", { name: /तालिका २\.१/ });
     const row = button.closest("li")!;
-    // The page number is the row's LAST element — the right-hand column —
-    // rather than a "page 18 · 9×4" line under the title.
-    const last = row.children[row.children.length - 1];
-    expect(last.textContent).toBe("page 18");
+    // Title, then the page number in its own right-hand column, then the
+    // affordance that opens it full size — rather than a "page 18 · 9×4" line
+    // under the title.
+    const kids = [...row.children];
+    const pageCell = kids.find((el) => el.textContent?.trim() === "page 18")!;
+    expect(pageCell).toBeTruthy();
     // Carried for a screen reader, which gets no help from the column.
-    expect(last.querySelector(".sr-only")?.textContent).toBe("page ");
+    expect(pageCell.querySelector(".sr-only")?.textContent).toBe("page ");
+    // The open affordance sits AFTER the number, not before it.
+    const openEl = kids.find((el) => el.tagName === "A")!;
+    expect(kids.indexOf(openEl)).toBeGreaterThan(kids.indexOf(pageCell));
     // The table's shape is not advertised before anyone has opened it.
     expect(row.textContent).not.toMatch(/9×4/);
+  });
+
+  it("offers a chart its own page too, the same as a table", async () => {
+    // A chart in a government report is a claim about public money. The
+    // argument for an address is the same one tables got: an uncitable claim
+    // is one nobody can check.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialFigures.mockResolvedValue(FIGURES);
+    renderPage();
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Charts/ }));
+
+    const open = await screen.findByRole("link", {
+      name: /Open .* at full size/i,
+    });
+    // Keyed on `key`, never `ordinal`.
+    expect(open.getAttribute("href")).toContain("figure=p0018-f1");
   });
 
   it("gives the Charts section an icon, like every other section", async () => {

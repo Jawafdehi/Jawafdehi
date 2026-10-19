@@ -305,6 +305,20 @@ export async function listMaterialFigures(iriOrTail: string) {
   return data?.items ?? null;
 }
 
+/**
+ * One figure with its series, addressed by `key`.
+ *
+ * The listing already inlines every figure's points, so this exists for the
+ * focused view, which is reached by URL and has no listing to read from.
+ */
+export async function getMaterialFigure(iriOrTail: string, key: string) {
+  const data = await getContent<ContentItem<ContentFigure>>(contentEndpoint(iriOrTail), {
+    type: "figure",
+    id: key,
+  });
+  return data?.item ?? null;
+}
+
 /** Every page, WITHOUT its text. This is the document's table of contents. */
 export async function listMaterialPages(iriOrTail: string) {
   const data = await getContent<ContentList<ContentPageStub>>(contentEndpoint(iriOrTail), {
