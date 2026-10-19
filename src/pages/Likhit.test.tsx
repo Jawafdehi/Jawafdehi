@@ -83,16 +83,12 @@ describe("the likhit landing page", () => {
     }
   });
 
-  it("stacks the four features as cards, in the order their offsets are keyed to", async () => {
+  it("lists the four features as rows, in the order their colours are keyed to", async () => {
     const { container } = await renderPage("en");
 
-    // likhit.css keys BOTH the coloured square and the sticky offset off
-    // :nth-child, so the order here is load-bearing twice over — reordering
-    // these re-colours the cards and changes where each one lands in the pile.
-    const cards = container.querySelectorAll(".lk-stack > li > .lk-feature-card");
-    expect(cards).toHaveLength(4);
-
-    const rows = [...container.querySelectorAll(".lk-stack > li strong")];
+    // likhit.css colours the square before each row by :nth-child, so the order
+    // here is load-bearing — reordering them re-colours them.
+    const rows = [...container.querySelectorAll(".lk-features li strong")];
     expect(rows.map((el) => el.textContent)).toEqual([
       i18n.t("likhit.features.repair.name"),
       i18n.t("likhit.features.layout.name"),
@@ -144,26 +140,25 @@ describe("the likhit landing page", () => {
     }
   });
 
-  it("links each deep dive to the likhit repository", async () => {
-    const { container } = await renderPage("en");
-
-    const links = [...container.querySelectorAll(".lk-writing-list a")];
-    expect(links).toHaveLength(3);
-    for (const link of links) {
-      expect(link.getAttribute("href")).toMatch(
-        /^https:\/\/github\.com\/Jawafdehi\/likhit\/blob\/main\/docs\//,
-      );
-      expect(link.getAttribute("rel")).toBe("noopener noreferrer");
-    }
-  });
-
-  it("gives every OCR recipe a copyable block", async () => {
+  it("gives every OCR recipe a copyable block, as a card in the stack", async () => {
     const { container } = await renderPage("en");
 
     // One per recipe: a model on your own machine, Bedrock, a hosted API.
     expect(
       screen.getAllByRole("button", { name: i18n.t("likhit.ocr.copyRecipe") }),
     ).toHaveLength(3);
+
+    // likhit.css keys each card's sticky offset off :nth-child within
+    // .lk-recipes, so the cards have to be its direct children in order — an
+    // extra wrapper would silently give every card the same offset and the pile
+    // would stop stepping.
+    const cards = container.querySelectorAll(".lk-recipes > .lk-recipe");
+    expect(cards).toHaveLength(3);
+    expect([...cards].map((el) => el.querySelector(".lk-badge")?.textContent)).toEqual([
+      i18n.t("likhit.ocr.local.badge"),
+      i18n.t("likhit.ocr.bedrock.badge"),
+      i18n.t("likhit.ocr.hosted.badge"),
+    ]);
     expect(container.textContent).toContain("ollama pull qwen2.5vl:7b");
     expect(container.textContent).toContain("litellm --model bedrock");
     expect(container.textContent).toContain("GEMINI_API_KEY");

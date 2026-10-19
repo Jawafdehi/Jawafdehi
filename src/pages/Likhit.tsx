@@ -15,7 +15,6 @@ const PYPI_URL = "https://pypi.org/project/likhit/";
 const BENCHMARK_URL = "https://jawafdehi.github.io/likhit/";
 const MARKITDOWN_URL = "https://github.com/microsoft/markitdown";
 const CHANGELOG_URL = `${REPO_URL}/blob/main/CHANGELOG.md`;
-const DOCS_URL = `${REPO_URL}/blob/main/docs`;
 
 // Hand-maintained, and the whole "What's new" section with it. Bump this when a
 // release goes out and rewrite likhit.whatsNew.* to match — nothing here reads
@@ -26,10 +25,9 @@ const VERSION = "0.2.0";
 
 const INSTALL_COMMAND = "pip install likhit";
 
-// Four cards, in this order: the coloured square on each one is keyed to its
+// Four rows, in this order: the coloured square before each one is keyed to its
 // position by :nth-child in likhit.css (lilac, marigold, blue, green), matching
-// the benchmark, and so is its sticky offset in the stack. Reordering these
-// re-colours them and changes where they land.
+// the benchmark. Reordering these re-colours them.
 const FEATURES = ["repair", "layout", "ocr", "legacy"] as const;
 
 const WHATS_NEW = ["privacy", "quality", "extraction"] as const;
@@ -51,14 +49,6 @@ const REDACT_COMMANDS = [
     command:
       "likhit-redact redact transcripts/ --out-tree redacted/ --journal redaction.jsonl",
   },
-] as const;
-
-// Hand-curated. These are the writeups that live in the likhit repository; add a
-// row when something worth reading lands, and point `href` wherever it is.
-const WRITING = [
-  { key: "cib", href: `${DOCS_URL}/cib-press-release-extraction.md` },
-  { key: "tests", href: `${DOCS_URL}/writing-tests.md` },
-  { key: "publishing", href: `${DOCS_URL}/publishing.md` },
 ] as const;
 
 const CLI_EXAMPLES = [
@@ -199,6 +189,14 @@ const Likhit = () => {
             </div>
           </div>
 
+          <ul className="lk-features">
+            {FEATURES.map((key) => (
+              <li key={key}>
+                <strong>{t(`likhit.features.${key}.name`)}</strong>
+                <span>{t(`likhit.features.${key}.body`)}</span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="lk-whats-new" aria-labelledby="likhit-whats-new-title">
@@ -232,27 +230,6 @@ const Likhit = () => {
           >
             {t("likhit.whatsNew.changelog")}
           </a>
-        </section>
-
-        <section className="lk-features-section" aria-labelledby="likhit-features-title">
-          <h2 className="lk-section-title" id="likhit-features-title">
-            {t("likhit.features.title")}
-          </h2>
-
-          {/* Each card is sticky at a slightly lower offset than the one before,
-              so scrolling deals them into a pile instead of running them past.
-              The offsets and the depth are in likhit.css — nothing here listens
-              to scroll. */}
-          <ul className="lk-stack">
-            {FEATURES.map((key) => (
-              <li key={key}>
-                <article className="lk-feature-card">
-                  <strong>{t(`likhit.features.${key}.name`)}</strong>
-                  <span>{t(`likhit.features.${key}.body`)}</span>
-                </article>
-              </li>
-            ))}
-          </ul>
         </section>
 
         <section className="lk-cli" aria-labelledby="likhit-cli-title">
@@ -332,13 +309,6 @@ const Likhit = () => {
             </ul>
           </div>
 
-          {/* The most important paragraph in the section, and the one a reader is
-              most likely to assume the opposite of. It is set apart rather than
-              buried in the tier list for that reason. */}
-          <aside className="lk-limit">
-            <h3>{t("likhit.privacy.limitTitle")}</h3>
-            <p>{t("likhit.privacy.limitBody")}</p>
-          </aside>
         </section>
 
         <section className="lk-ocr" aria-labelledby="likhit-ocr-title">
@@ -355,6 +325,10 @@ const Likhit = () => {
             </p>
           </div>
 
+          {/* Each recipe is sticky at a slightly lower offset than the one
+              before, so scrolling deals them into a pile instead of running them
+              past. The offsets and the depth are in likhit.css — nothing here
+              listens to scroll. */}
           <div className="lk-recipes">
             {OCR_RECIPES.map(({ key, badgeClass, commands }) => (
               <article className="lk-recipe" key={key}>
@@ -376,25 +350,6 @@ const Likhit = () => {
           </div>
         </section>
 
-        <section className="lk-writing" aria-labelledby="likhit-writing-title">
-          <div className="lk-writing-head">
-            <h2 className="lk-section-title" id="likhit-writing-title">
-              {t("likhit.writing.title")}
-            </h2>
-            <p>{t("likhit.writing.body")}</p>
-          </div>
-
-          <ul className="lk-writing-list">
-            {WRITING.map(({ key, href }) => (
-              <li key={key}>
-                <a href={href} target="_blank" rel="noopener noreferrer">
-                  <strong>{t(`likhit.writing.${key}.name`)}</strong>
-                  <span>{t(`likhit.writing.${key}.body`)}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
       </main>
     </div>
   );

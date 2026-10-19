@@ -2787,7 +2787,6 @@
       "usage": "Then enable plugins when you convert: <api>MarkItDown(enable_plugins=True)</api>, or from the command line <cli>markitdown --use-plugins document.pdf</cli>."
     },
     "features": {
-      "title": "What it adds",
       "repair": {
         "name": "Devanagari repair",
         "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."
@@ -2880,25 +2879,7 @@
       "copyCommand": "Copy the command",
       "scan": "Report what is there, write nothing",
       "pdf": "Redact one PDF into a redacted PDF",
-      "tree": "Redact a whole tree into a staging copy",
-      "limitTitle": "No tier removes names, and none ever will",
-      "limitBody": "Three reasons, none of them “not implemented yet”. Nothing detects a Nepali name reliably: across thirteen CIAA transcripts, 2,179 श्री tokens survive the institution filter and not one नाम: field is filled — a rule firing that often on a signal that cannot tell an office from a person is a corpus shredder, not a redactor. It is also the wrong instrument, since removing every party but the accused needs role assignment rather than a pattern. And for this corpus it would invert the product: naming the officials who were prosecuted, convicted or acquitted is the thing the archive exists to do."
-    },
-    "writing": {
-      "title": "Deep dives",
-      "body": "Notes from building it, kept alongside the code.",
-      "cib": {
-        "name": "Extracting Nepal Police CIB press releases",
-        "body": "Roughly a quarter carry a decoy text layer whose bytes decode to garbage under every legacy map. What it took to stop trusting it."
-      },
-      "tests": {
-        "name": "Writing tests for likhit",
-        "body": "A legacy Nepali PDF can be wrong in ways that are individually plausible and jointly invisible. On whether a passing suite means anything."
-      },
-      "publishing": {
-        "name": "Publishing a release",
-        "body": "Merging a version bump to main is the whole release — no manual tagging step, and no release tags cut by hand."
-      }
+      "tree": "Redact a whole tree into a staging copy"
     },
     "copy": "Copy"
   }
