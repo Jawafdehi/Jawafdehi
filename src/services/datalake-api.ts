@@ -238,6 +238,21 @@ interface ContentItem<T> {
   item: T;
 }
 
+/**
+ * `q` only when there is one to send.
+ *
+ * An empty `q` is NOT the same request as no `q`: it is another cache key on
+ * our side and another ETag on the server's, for a response identical to the
+ * unfiltered listing.
+ */
+function queryParam(query?: string): Record<string, string> {
+  const q = query?.trim();
+  return q ? { q } : {};
+}
+
+/** The longest `q` the API accepts; past it the request is a 400. */
+export const MAX_CONTENT_QUERY = 200;
+
 function contentEndpoint(iriOrTail: string): string {
   return `/api/materials/${encodeTail(materialTail(iriOrTail))}/content`;
 }
@@ -277,10 +292,12 @@ async function getContent<T>(
  * ~830 KiB of markdown and a single table reaches 170 KiB, so the listing is
  * what a reader browses and `getMaterialTable` is what they open.
  */
-export async function listMaterialTables(iriOrTail: string) {
-  const data = await getContent<ContentList<ContentTableStub>>(contentEndpoint(iriOrTail), {
-    type: "table",
-  }, { absentIsNull: true });
+export async function listMaterialTables(iriOrTail: string, query?: string) {
+  const data = await getContent<ContentList<ContentTableStub>>(
+    contentEndpoint(iriOrTail),
+    { type: "table", ...queryParam(query) },
+    { absentIsNull: true },
+  );
   return data?.items ?? null;
 }
 
@@ -298,10 +315,12 @@ export async function getMaterialTable(iriOrTail: string, key: string) {
 }
 
 /** Every figure, each with its full series inline — the corpus total is ~6k points. */
-export async function listMaterialFigures(iriOrTail: string) {
-  const data = await getContent<ContentList<ContentFigure>>(contentEndpoint(iriOrTail), {
-    type: "figure",
-  }, { absentIsNull: true });
+export async function listMaterialFigures(iriOrTail: string, query?: string) {
+  const data = await getContent<ContentList<ContentFigure>>(
+    contentEndpoint(iriOrTail),
+    { type: "figure", ...queryParam(query) },
+    { absentIsNull: true },
+  );
   return data?.items ?? null;
 }
 
