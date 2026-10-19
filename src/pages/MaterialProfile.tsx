@@ -43,35 +43,22 @@ import {
 import { ShareButton } from "@/components/ShareButton";
 import { seriesBySource } from "@/data/material-series";
 import { getMaterialSourceLinks } from "@/lib/material-links";
+import {
+  materialBilingual as bilingual,
+  materialCanonicalUrl,
+  materialDescriptionText,
+  materialDisplayName,
+  materialJsonLd,
+  materialMetaDescription,
+  materialMetaTitle,
+  materialRobots,
+  materialTypeLabel,
+} from "@/lib/material-meta";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
-
-function bilingual(v: MaterialBilingual | string | undefined): {
-  en: string;
-  ne: string;
-} {
-  if (!v) return { en: "", ne: "" };
-  if (typeof v === "string") return { en: v, ne: "" };
-  return { en: v.en || "", ne: v.ne || "" };
-}
-
-function typeToken(
-  t: Material["@type"],
-  additional?: string,
-): string | undefined {
-  const parts: string[] = [];
-  if (Array.isArray(t)) parts.push(...t);
-  else if (t) parts.push(t);
-  if (additional) parts.push(additional);
-  return parts.length ? parts.join(",") : undefined;
-}
-
-// Last IRI segment, humanized — a fallback title when no name is present.
-function iriLabel(iri: string | undefined): string {
-  if (!iri) return "";
-  const tail = iri.split("/").filter(Boolean).pop() || iri;
-  return tail.replace(/[-_]/g, " ").trim() || tail;
-}
+//
+// The head this page renders lives in `@/lib/material-meta`, not here: worker.ts
+// injects the same head at the edge for crawlers, which never run this component.
 
 // schema.org / jawafdehi key -> human label for the generic Details section.
 const FIELD_LABELS: Record<string, string> = {
@@ -215,15 +202,8 @@ export default function MaterialProfile() {
   );
 
   const name = data ? bilingual(data.name) : { en: "", ne: "" };
-  const displayName =
-    name.en ||
-    name.ne ||
-    iriLabel(data?.["@id"]) ||
-    tail.split("/").pop() ||
-    "Material";
-  const typeLabel = humanizeEntityType(
-    data ? typeToken(data["@type"], data.additionalType) : undefined,
-  );
+  const displayName = materialDisplayName(data, tail);
+  const typeLabel = materialTypeLabel(data);
   const description = data ? bilingual(data.description) : { en: "", ne: "" };
   const descText = description.en || description.ne;
   const fullText = data
@@ -255,22 +235,17 @@ export default function MaterialProfile() {
     }
   }
 
+  // The head, built by the same module the edge uses — see @/lib/material-meta.
+  const metaDescription = materialMetaDescription(data, displayName, typeLabel);
+  const robots = materialRobots(data);
   // schema.org JSON-LD for crawlers (parity with the retired R2 HTML landing page).
+  //
+  // materialDescriptionText, not the raw `descText` the body renders: the worker
+  // passes the stripped form, and passing a different one here would make the
+  // structured data differ edge vs hydrated — the exact drift this shared module
+  // exists to prevent.
   const jsonLd = data
-    ? JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "CreativeWork",
-        name: displayName,
-        url: data["@id"],
-        identifier: data.identifier ?? undefined,
-        inLanguage: name.ne ? "ne" : "en",
-        isAccessibleForFree: true,
-        ...(descText ? { description: descText } : {}),
-        ...(data.datePublished
-          ? { datePublished: String(data.datePublished) }
-          : {}),
-        publisher: { "@type": "Organization", name: "Jawafdehi" },
-      })
+    ? materialJsonLd(data, displayName, materialDescriptionText(data))
     : null;
 
   return (
@@ -279,14 +254,21 @@ export default function MaterialProfile() {
       className="min-h-screen bg-background py-8 md:py-12"
     >
       <Helmet>
-        <title>{displayName} | Jawafdehi governance archive</title>
-        <meta
-          name="description"
-          content={
-            descText ||
-            `${displayName} — ${typeLabel} in the Jawafdehi governance archive.`
-          }
-        />
+        <title>{materialMetaTitle(displayName)}</title>
+        <meta name="description" content={metaDescription} />
+        {/*
+          Canonical and Open Graph were both missing here, so even after hydration
+          a material page declared no canonical URL and unfurled as the site
+          banner. worker.ts injects the same tags for clients that never run JS.
+        */}
+        <link rel="canonical" href={materialCanonicalUrl(tail)} />
+        {robots ? <meta name="robots" content={robots} /> : null}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={materialCanonicalUrl(tail)} />
+        <meta property="og:title" content={materialMetaTitle(displayName)} />
+        <meta property="og:description" content={metaDescription} />
+        <meta name="twitter:title" content={materialMetaTitle(displayName)} />
+        <meta name="twitter:description" content={metaDescription} />
         {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
       </Helmet>
 

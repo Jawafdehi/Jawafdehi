@@ -2,6 +2,19 @@ import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
 import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { casesPageCount } from './src/lib/cases-pagination';
+import {
+  encodeMaterialTail,
+  isMaterialTail,
+  materialCanonicalUrl,
+  materialDescriptionText,
+  materialDisplayName,
+  materialJsonLd,
+  materialMetaDescription,
+  materialMetaTitle,
+  materialRobots,
+  materialTypeLabel,
+  type MaterialMetaSource,
+} from './src/lib/material-meta';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
 import {
   AUTHOR_CARD_HEIGHT,
@@ -623,6 +636,87 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
+// Inject share metadata and JSON-LD for a material page.
+//
+// Unlike cases and updates, this is not a gap-filler for records published since
+// the last build — it is the ONLY head a material page has. There are 346,250
+// materials against Cloudflare's ceiling of 20,000 static asset files per Worker
+// version, so none of them is pre-rendered and none can be.
+//
+// What that meant in practice, measured on production 2026-10-13: every
+// /material/* URL served dist/index.html verbatim — 278 KB whose <title> and
+// og:title were the site-wide "Jawafdehi Initiative — Nepal's Corruption Case
+// Archive" and which contained none of the document's text. 346,250 URLs serving
+// byte-identical homepage content is a duplicate-content signal, not a neutral
+// starting point.
+//
+// The head is built by @/lib/material-meta, the same module MaterialProfile.tsx
+// renders from, so the head a crawler reads here and the head a browser gets
+// after hydration cannot drift.
+async function handleMaterialMetaFallback(
+  request: Request,
+  env: Env,
+  tail: string,
+): Promise<Response | null> {
+  // `/material/*` matches at any depth, so the splat is attacker-controlled and
+  // is checked BEFORE it reaches a URL. See isMaterialTail: without this,
+  // /material/..%2Fcases%2F<slug> normalises into a different API endpoint and
+  // renders an unrelated record into the head.
+  if (!isMaterialTail(tail)) return notFoundShellResponse(request, env);
+
+  const apiResponse = await fetchWithTimeout(
+    `${JDS_API_BASE}/materials/${encodeMaterialTail(tail)}/`,
+  );
+  if (!apiResponse) return null;
+  // A positive "no such material" — a retired ident, a soft-deleted row, or one
+  // whose visibility is no longer LISTED. Unlike a timeout, that is an answer.
+  if (apiResponse.status === 404) return notFoundShellResponse(request, env);
+  if (!apiResponse.ok) return null;
+
+  let material: MaterialMetaSource;
+  try {
+    material = (await apiResponse.json()) as MaterialMetaSource;
+  } catch {
+    return null;
+  }
+
+  const displayName = materialDisplayName(material, tail);
+  const typeLabel = materialTypeLabel(material);
+  const description = materialMetaDescription(material, displayName, typeLabel);
+
+  const indexHtml = await fetchIndexHtml(request, env);
+  if (!indexHtml) return null;
+
+  const metaTags = buildMetaTags({
+    title: materialMetaTitle(displayName),
+    description,
+    canonicalUrl: materialCanonicalUrl(tail),
+    // Materials carry no image of their own, so the site card is the honest
+    // choice; no imageWidth/imageHeight, matching how buildMetaTags is called
+    // elsewhere for the shared fallback card.
+    imageUrl: SOCIAL_IMAGE_URL,
+    imageAlt: displayName,
+    type: 'article',
+    publishedTime:
+      typeof material.datePublished === 'string' ? material.datePublished : null,
+    // UNLISTED materials resolve by direct IRI but must not be indexed — the
+    // same gate handleCaseMetaFallback applies to non-PUBLISHED cases. Fails
+    // closed; see materialRobots.
+    robots: materialRobots(material),
+  });
+
+  // The JSON-LD goes in as well as the meta tags. A material IS a schema.org
+  // document — it is stored as JSON-LD — so this is the one page type where the
+  // structured data is the record rather than a summary of it.
+  //
+  // materialJsonLd escapes `<` itself, so this is safe to interpolate into a
+  // script element as-is; MaterialProfile.tsx relies on the same guarantee.
+  const jsonLd = materialJsonLd(material, displayName, materialDescriptionText(material));
+  const head = `${metaTags}\n    <script type="application/ld+json">${jsonLd}</script>`;
+
+  return metaHtmlResponse(injectHeadMeta(indexHtml, head));
+}
+
 // The author's composed share card, proxied from the platform API.
 //
 // Served under THIS origin rather than linking crawlers straight at
@@ -933,6 +1027,13 @@ export default {
     }
     if (matched?.path === '/author/:slug' && matched.params.slug) {
       const metaResponse = await handleAuthorMetaFallback(request, env, matched.params.slug);
+      if (metaResponse) return metaResponse;
+    }
+    // Materials are never pre-rendered (see handleMaterialMetaFallback), so this
+    // is not a gap-filler like the three above — it is the only head these pages
+    // get. The splat param carries `<source>/<ident>`, percent-decoded.
+    if (matched?.path === '/material/*' && matched.params['*']) {
+      const metaResponse = await handleMaterialMetaFallback(request, env, matched.params['*']);
       if (metaResponse) return metaResponse;
     }
 
