@@ -2,6 +2,7 @@
 // /admin/proposals. Lists CaseUpdateProposals from the monolith; approve/reject
 // call the backend actions (approve applies the intent onto the case).
 import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import CaseworkLayout from "@/components/CaseworkLayout";
@@ -19,6 +20,9 @@ import { toast } from "@/hooks/use-toast";
 
 export default function CaseworkProposals() {
   const { t } = useTranslation();
+  // /admin/proposals/:id — the notification's deep link. Absent on the bare
+  // /admin/proposals, where the queue opens on its first row as before.
+  const { id: focusId } = useParams<{ id: string }>();
   const [proposals, setProposals] = useState<CaseUpdateProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -96,7 +100,12 @@ export default function CaseworkProposals() {
       ) : err ? (
         <p className="text-sm text-danger">{err}</p>
       ) : (
-        <ProposalQueue proposals={proposals} onDecision={onDecision} onEditIntent={onEditIntent} />
+        <ProposalQueue
+          proposals={proposals}
+          onDecision={onDecision}
+          onEditIntent={onEditIntent}
+          focusId={focusId}
+        />
       )}
     </CaseworkLayout>
   );

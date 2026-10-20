@@ -47,6 +47,9 @@ export interface ProposalQueueProps {
   // Correct a pending proposal's change before approving. Omit to hide the editor
   // (e.g. for a read-only viewer). Should REJECT on failure so the pane can show why.
   onEditIntent?: (id: string, intent: Intent) => void | Promise<void>;
+  // Open on this proposal rather than the top of the queue — the id from
+  // /admin/proposals/:id, which is what the Discord notification links to.
+  focusId?: string;
 }
 
 const STATUS_FILTERS: (ProposalStatus | "all")[] = ["all", "pending", "approved", "rejected"];
@@ -61,12 +64,27 @@ function Pill({ className, children }: { className?: string; children: React.Rea
   );
 }
 
-export default function ProposalQueue({ proposals, onDecision, onEditIntent }: ProposalQueueProps) {
+export default function ProposalQueue({
+  proposals,
+  onDecision,
+  onEditIntent,
+  focusId,
+}: ProposalQueueProps) {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<ProposalStatus | "all">("pending");
+
+  // Resolved once, from the list as it stood on mount. The page only renders this
+  // component after the fetch settles, so the full set is already here — and
+  // `listProposals` follows pagination, so "not in the list" means not in the
+  // database rather than not on page one.
+  const focused = focusId ? proposals.find((p) => p.id === focusId) : undefined;
+
+  // The default filter is "pending", so a link to a proposal somebody has already
+  // decided would land on a queue that excludes it. Opening on the focused
+  // proposal's OWN status is what makes the link land where it points.
+  const [status, setStatus] = useState<ProposalStatus | "all">(focused?.status ?? "pending");
   const [source, setSource] = useState<SignalSource | "all">("all");
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(focused?.id ?? null);
 
   const pendingCount = useMemo(() => proposals.filter((p) => p.status === "pending").length, [proposals]);
 
@@ -110,6 +128,20 @@ export default function ProposalQueue({ proposals, onDecision, onEditIntent }: P
           })}
         </Pill>
       </div>
+
+      {/* A link naming a proposal that is not here. Said out loud, because the
+          detail pane falls back to the first row of the queue — so staying quiet
+          would show a REVIEWER A DIFFERENT PROPOSAL than the one they clicked,
+          and the approve button works just as well on the wrong one. */}
+      {focusId && !focused && (
+        <p className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {t("admin.proposals.focusNotFound", {
+            defaultValue:
+              "Proposal #{{id}} was not found — it may have been deleted. Showing the full queue instead.",
+            id: focusId,
+          })}
+        </p>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
