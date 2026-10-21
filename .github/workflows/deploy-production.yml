@@ -32,11 +32,18 @@
 #
 #   1. merge this, run it in `dry-run` (the default) — proves the build works
 #      here and prints the per-phase timing nothing currently measures;
-#   2. run it once in `deploy` mode and confirm production is correct;
-#   3. ONLY THEN turn off the Cloudflare production trigger in the dashboard;
-#   4. then, as a separate PR, add `on: push: branches: [main]`.
+#   2. BEFORE the first real deploy, open the Workers Builds settings and list
+#      every environment variable set there. VITE_* values are read at BUILD
+#      time, so anything configured only in that dashboard is absent here and
+#      would silently ship a differently-configured bundle. The ones this repo
+#      expects have committed defaults — VITE_JAWAFDEHI_API_BASE_URL comes from
+#      .env.production and the VITE_OIDC_* values default in code — so the
+#      question is specifically whether the dashboard ADDS or OVERRIDES any;
+#   3. run it once in `deploy` mode and confirm production is correct;
+#   4. ONLY THEN turn off the Cloudflare production trigger in the dashboard;
+#   5. then, as a separate PR, add `on: push: branches: [main]`.
 #
-# Doing 4 before 3 double-deploys every merge. Doing 3 before 2 leaves nothing
+# Doing 5 before 4 double-deploys every merge. Doing 4 before 3 leaves nothing
 # deploying at all.
 name: Deploy production
 
@@ -75,6 +82,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Bun
+        # `latest`, deliberately, even though wrangler below is pinned — the two
+        # are not the same question. Pinning wrangler fixes a behavioural cliff
+        # (the 100,000-asset limit needs >= 4.34.0) that is invisible until a
+        # deploy is rejected. Bun is the toolchain, and ci.yml also uses
+        # `latest`: pinning it ONLY here would mean production builds on a
+        # different bun from the one every PR was tested against, which is the
+        # worse failure. If bun gets pinned, pin it in both files together.
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
@@ -99,6 +113,24 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
         run: |
           set -euo pipefail
+          # ⚠️ KEEP IN SYNC WITH THE `build` SCRIPT IN package.json.
+          # The phases are spelled out rather than calling `bun run build` so each
+          # one can be timed separately — and that duplication is a real hazard:
+          # once this is the deploy path, a phase added to `build` later will not
+          # run in production and nothing will flag it. package.json carries the
+          # matching warning. The assertion below is the backstop.
+          # Two accepted forms, because the asset-budget phase arrives with #447
+          # and this file may land either side of it.
+          BASE='vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts'
+          ACTUAL=$(node -e 'process.stdout.write(require("./package.json").scripts.build)')
+          if [ "$ACTUAL" != "$BASE" ] && [ "$ACTUAL" != "$BASE && node scripts/asset-budget.mjs" ]; then
+            echo "::error::package.json's build script changed and this workflow was not updated."
+            echo "  accepted: $BASE"
+            echo "        or: $BASE && node scripts/asset-budget.mjs"
+            echo "  actual:   $ACTUAL"
+            echo "  Update the phases below to match, then update this check."
+            exit 1
+          fi
           # Per-phase timing. The full build's duration has never been measured —
           # it runs on Cloudflare, where the log is not reachable from here — and
           # it is the number that decides how close the 20-minute ceiling is.
@@ -124,28 +156,39 @@ jobs:
         # whatever version Cloudflare's build image happens to ship. The 100,000
         # static-asset limit on Workers Paid requires >= 4.34.0, so "whatever the
         # image ships" is a silent dependency on someone else's upgrade cadence.
+        #
+        # 4.149.0 rather than the newest: it is ~2 weeks old at time of writing,
+        # which is the point — the newest release is a day old and this is the
+        # thing that publishes production. Bump it deliberately, not reflexively.
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Through env rather than interpolated into the script. The choice list
+          # makes injection impossible today; this keeps it impossible if the
+          # input ever becomes free text.
+          MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
-          if [ "${{ inputs.mode }}" = "deploy" ]; then
-            bunx wrangler@4.151.3 deploy
+          if [ "$MODE" = "deploy" ]; then
+            bunx wrangler@4.149.0 deploy
           else
             echo "dry-run: validating the bundle and asset manifest, publishing nothing."
-            bunx wrangler@4.151.3 deploy --dry-run
+            bunx wrangler@4.149.0 deploy --dry-run
           fi
 
       - name: Summary
         if: always()
+        env:
+          MODE: ${{ inputs.mode }}
+          SHA: ${{ github.sha }}
         run: |
           {
-            echo "### Deploy production — \`${{ inputs.mode }}\`"
+            echo "### Deploy production — \`$MODE\`"
             echo ""
-            echo "- commit: \`${{ github.sha }}\`"
-            echo "- mode: \`${{ inputs.mode }}\`"
+            echo "- commit: \`$SHA\`"
+            echo "- mode: \`$MODE\`"
             echo "- asset-file count and per-phase timings are in the build log above."
-            if [ "${{ inputs.mode }}" != "deploy" ]; then
+            if [ "$MODE" != "deploy" ]; then
               echo ""
               echo "> Nothing was published. Re-run with mode \`deploy\` to publish."
             fi
