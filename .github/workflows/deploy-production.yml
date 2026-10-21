@@ -1,0 +1,152 @@
+# SPDX-License-Identifier: Hippocratic-3.0
+#
+# Production build + deploy, run from GitHub Actions instead of Workers Builds.
+#
+# WHY THIS EXISTS
+#
+# Production is deployed today by Cloudflare's "Deploy default branch" trigger.
+# That works, and three of its limits are not raisable on any plan:
+#
+#   * 20-minute build timeout. The full build renders ~12,884 pages, and the
+#     case count went 463 → 2,629 during October 2026, in bulk imports. The
+#     margin is unknown because nothing measures it (that is what `dry-run`
+#     below is for) and the failure mode is a rejected deploy with production
+#     silently frozen on the previous bundle.
+#   * 1 concurrent build, account-wide, on the Free plan. Preview builds for
+#     every open branch queue against the production deploy. Measured
+#     2026-10-19: 29 minutes from merge to live, of which at most 20 can have
+#     been the build itself.
+#   * No build cache. Any future incremental build needs somewhere to keep the
+#     previous dist/; Workers Builds has nowhere to put it.
+#
+# And one that is not a limit but a gap: Cloudflare posts NO check run for the
+# production deploy. A merge commit gets test-and-lint, Bundle budget, SPDX and
+# Phone gates — the "Workers Builds" check on a PR is the *preview* build.
+# Nothing reports whether production deployed, failed, or timed out. This
+# workflow shows up in the Actions tab either way.
+#
+# ⚠️ THIS IS DELIBERATELY MANUAL-ONLY FOR NOW
+#
+# There is no `on: push` trigger, because Cloudflare still deploys `main` and two
+# deployers racing on the same Worker is worse than a slow one. The rollout is:
+#
+#   1. merge this, run it in `dry-run` (the default) — proves the build works
+#      here and prints the per-phase timing nothing currently measures;
+#   2. run it once in `deploy` mode and confirm production is correct;
+#   3. ONLY THEN turn off the Cloudflare production trigger in the dashboard;
+#   4. then, as a separate PR, add `on: push: branches: [main]`.
+#
+# Doing 4 before 3 double-deploys every merge. Doing 3 before 2 leaves nothing
+# deploying at all.
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run builds and validates without publishing; deploy publishes"
+        type: choice
+        required: true
+        default: dry-run
+        options:
+          - dry-run
+          - deploy
+
+# Never two production builds at once: they would race on the Worker and on the
+# API's throttle. Queue rather than cancel — cancelling a half-finished deploy is
+# worse than waiting for it.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and ${{ inputs.mode }}
+    runs-on: ubuntu-latest
+    # Actions allows 6 h. Generous on purpose: the point of moving off Workers
+    # Builds is to stop a slow build being a failed deploy. If a run ever
+    # approaches this, the build is broken, not merely big.
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Full build
+        # PRERENDER_SCOPE is left at its default of `full` on purpose. A `static`
+        # build publishes the site with every case and entity page missing, and
+        # scripts/pre-render.ts documents why that default must never be
+        # overridden from the deploy side.
+        #
+        # The credentials are required: a full build reads the whole archive in a
+        # few minutes and the anonymous cap is 1000/hour. pre-render.ts fails
+        # before doing any work if they are absent, rather than after eight
+        # minutes of rendering.
+        env:
+          PRERENDER_CLIENT_ID: ${{ secrets.PRERENDER_CLIENT_ID }}
+          PRERENDER_CLIENT_SECRET: ${{ secrets.PRERENDER_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+        run: |
+          set -euo pipefail
+          # Per-phase timing. The full build's duration has never been measured —
+          # it runs on Cloudflare, where the log is not reachable from here — and
+          # it is the number that decides how close the 20-minute ceiling is.
+          phase() { echo "::group::$1"; S=$(date +%s); shift; "$@"; E=$(date +%s); echo "::endgroup::"; echo "PHASE $((E-S))s"; }
+          T0=$(date +%s)
+          phase "vite build (client)"  bunx vite build
+          phase "vite build (ssr)"     bunx vite build --ssr
+          phase "pre-render"           bun run scripts/pre-render.ts
+          phase "sitemap"              bun run scripts/sitemap.ts
+          # Conditional so this workflow does not depend on merge order: the
+          # asset budget arrives with #447 and this file may land first.
+          if [ -f scripts/asset-budget.mjs ]; then
+            phase "asset budget"       node scripts/asset-budget.mjs
+          else
+            echo "scripts/asset-budget.mjs not present on this ref — skipping the file-count gate."
+            echo "Files that would be uploaded: $(find dist -type f | wc -l) (hard limit 20000)"
+          fi
+          echo "TOTAL BUILD: $(( $(date +%s) - T0 ))s  (Workers Builds terminates at 1200s)"
+
+      - name: Publish
+        # Wrangler is pinned here, and that is the point rather than a detail: it
+        # is not in package.json at all, so the current production deploy runs
+        # whatever version Cloudflare's build image happens to ship. The 100,000
+        # static-asset limit on Workers Paid requires >= 4.34.0, so "whatever the
+        # image ships" is a silent dependency on someone else's upgrade cadence.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.mode }}" = "deploy" ]; then
+            bunx wrangler@4.151.3 deploy
+          else
+            echo "dry-run: validating the bundle and asset manifest, publishing nothing."
+            bunx wrangler@4.151.3 deploy --dry-run
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy production — \`${{ inputs.mode }}\`"
+            echo ""
+            echo "- commit: \`${{ github.sha }}\`"
+            echo "- mode: \`${{ inputs.mode }}\`"
+            echo "- asset-file count and per-phase timings are in the build log above."
+            if [ "${{ inputs.mode }}" != "deploy" ]; then
+              echo ""
+              echo "> Nothing was published. Re-run with mode \`deploy\` to publish."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
