@@ -1,0 +1,195 @@
+# SPDX-License-Identifier: Hippocratic-3.0
+#
+# Production build + deploy, run from GitHub Actions instead of Workers Builds.
+#
+# WHY THIS EXISTS
+#
+# Production is deployed today by Cloudflare's "Deploy default branch" trigger.
+# That works, and three of its limits are not raisable on any plan:
+#
+#   * 20-minute build timeout. The full build renders ~12,884 pages, and the
+#     case count went 463 → 2,629 during October 2026, in bulk imports. The
+#     margin is unknown because nothing measures it (that is what `dry-run`
+#     below is for) and the failure mode is a rejected deploy with production
+#     silently frozen on the previous bundle.
+#   * 1 concurrent build, account-wide, on the Free plan. Preview builds for
+#     every open branch queue against the production deploy. Measured
+#     2026-10-19: 29 minutes from merge to live, of which at most 20 can have
+#     been the build itself.
+#   * No build cache. Any future incremental build needs somewhere to keep the
+#     previous dist/; Workers Builds has nowhere to put it.
+#
+# And one that is not a limit but a gap: Cloudflare posts NO check run for the
+# production deploy. A merge commit gets test-and-lint, Bundle budget, SPDX and
+# Phone gates — the "Workers Builds" check on a PR is the *preview* build.
+# Nothing reports whether production deployed, failed, or timed out. This
+# workflow shows up in the Actions tab either way.
+#
+# ⚠️ THIS IS DELIBERATELY MANUAL-ONLY FOR NOW
+#
+# There is no `on: push` trigger, because Cloudflare still deploys `main` and two
+# deployers racing on the same Worker is worse than a slow one. The rollout is:
+#
+#   1. merge this, run it in `dry-run` (the default) — proves the build works
+#      here and prints the per-phase timing nothing currently measures;
+#   2. BEFORE the first real deploy, open the Workers Builds settings and list
+#      every environment variable set there. VITE_* values are read at BUILD
+#      time, so anything configured only in that dashboard is absent here and
+#      would silently ship a differently-configured bundle. The ones this repo
+#      expects have committed defaults — VITE_JAWAFDEHI_API_BASE_URL comes from
+#      .env.production and the VITE_OIDC_* values default in code — so the
+#      question is specifically whether the dashboard ADDS or OVERRIDES any;
+#   3. run it once in `deploy` mode and confirm production is correct;
+#   4. ONLY THEN turn off the Cloudflare production trigger in the dashboard;
+#   5. then, as a separate PR, add `on: push: branches: [main]`.
+#
+# Doing 5 before 4 double-deploys every merge. Doing 4 before 3 leaves nothing
+# deploying at all.
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run builds and validates without publishing; deploy publishes"
+        type: choice
+        required: true
+        default: dry-run
+        options:
+          - dry-run
+          - deploy
+
+# Never two production builds at once: they would race on the Worker and on the
+# API's throttle. Queue rather than cancel — cancelling a half-finished deploy is
+# worse than waiting for it.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and ${{ inputs.mode }}
+    runs-on: ubuntu-latest
+    # Actions allows 6 h. Generous on purpose: the point of moving off Workers
+    # Builds is to stop a slow build being a failed deploy. If a run ever
+    # approaches this, the build is broken, not merely big.
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        # `latest`, deliberately, even though wrangler below is pinned — the two
+        # are not the same question. Pinning wrangler fixes a behavioural cliff
+        # (the 100,000-asset limit needs >= 4.34.0) that is invisible until a
+        # deploy is rejected. Bun is the toolchain, and ci.yml also uses
+        # `latest`: pinning it ONLY here would mean production builds on a
+        # different bun from the one every PR was tested against, which is the
+        # worse failure. If bun gets pinned, pin it in both files together.
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Full build
+        # PRERENDER_SCOPE is left at its default of `full` on purpose. A `static`
+        # build publishes the site with every case and entity page missing, and
+        # scripts/pre-render.ts documents why that default must never be
+        # overridden from the deploy side.
+        #
+        # The credentials are required: a full build reads the whole archive in a
+        # few minutes and the anonymous cap is 1000/hour. pre-render.ts fails
+        # before doing any work if they are absent, rather than after eight
+        # minutes of rendering.
+        env:
+          PRERENDER_CLIENT_ID: ${{ secrets.PRERENDER_CLIENT_ID }}
+          PRERENDER_CLIENT_SECRET: ${{ secrets.PRERENDER_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+        run: |
+          set -euo pipefail
+          # ⚠️ KEEP IN SYNC WITH THE `build` SCRIPT IN package.json.
+          # The phases are spelled out rather than calling `bun run build` so each
+          # one can be timed separately — and that duplication is a real hazard:
+          # once this is the deploy path, a phase added to `build` later will not
+          # run in production and nothing will flag it. package.json carries the
+          # matching warning. The assertion below is the backstop.
+          # Two accepted forms, because the asset-budget phase arrives with #447
+          # and this file may land either side of it.
+          BASE='vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts'
+          ACTUAL=$(node -e 'process.stdout.write(require("./package.json").scripts.build)')
+          if [ "$ACTUAL" != "$BASE" ] && [ "$ACTUAL" != "$BASE && node scripts/asset-budget.mjs" ]; then
+            echo "::error::package.json's build script changed and this workflow was not updated."
+            echo "  accepted: $BASE"
+            echo "        or: $BASE && node scripts/asset-budget.mjs"
+            echo "  actual:   $ACTUAL"
+            echo "  Update the phases below to match, then update this check."
+            exit 1
+          fi
+          # Per-phase timing. The full build's duration has never been measured —
+          # it runs on Cloudflare, where the log is not reachable from here — and
+          # it is the number that decides how close the 20-minute ceiling is.
+          phase() { echo "::group::$1"; S=$(date +%s); shift; "$@"; E=$(date +%s); echo "::endgroup::"; echo "PHASE $((E-S))s"; }
+          T0=$(date +%s)
+          phase "vite build (client)"  bunx vite build
+          phase "vite build (ssr)"     bunx vite build --ssr
+          phase "pre-render"           bun run scripts/pre-render.ts
+          phase "sitemap"              bun run scripts/sitemap.ts
+          # Conditional so this workflow does not depend on merge order: the
+          # asset budget arrives with #447 and this file may land first.
+          if [ -f scripts/asset-budget.mjs ]; then
+            phase "asset budget"       node scripts/asset-budget.mjs
+          else
+            echo "scripts/asset-budget.mjs not present on this ref — skipping the file-count gate."
+            echo "Files that would be uploaded: $(find dist -type f | wc -l) (hard limit 20000)"
+          fi
+          echo "TOTAL BUILD: $(( $(date +%s) - T0 ))s  (Workers Builds terminates at 1200s)"
+
+      - name: Publish
+        # Wrangler is pinned here, and that is the point rather than a detail: it
+        # is not in package.json at all, so the current production deploy runs
+        # whatever version Cloudflare's build image happens to ship. The 100,000
+        # static-asset limit on Workers Paid requires >= 4.34.0, so "whatever the
+        # image ships" is a silent dependency on someone else's upgrade cadence.
+        #
+        # 4.149.0 rather than the newest: it is ~2 weeks old at time of writing,
+        # which is the point — the newest release is a day old and this is the
+        # thing that publishes production. Bump it deliberately, not reflexively.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Through env rather than interpolated into the script. The choice list
+          # makes injection impossible today; this keeps it impossible if the
+          # input ever becomes free text.
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" = "deploy" ]; then
+            bunx wrangler@4.149.0 deploy
+          else
+            echo "dry-run: validating the bundle and asset manifest, publishing nothing."
+            bunx wrangler@4.149.0 deploy --dry-run
+          fi
+
+      - name: Summary
+        if: always()
+        env:
+          MODE: ${{ inputs.mode }}
+          SHA: ${{ github.sha }}
+        run: |
+          {
+            echo "### Deploy production — \`$MODE\`"
+            echo ""
+            echo "- commit: \`$SHA\`"
+            echo "- mode: \`$MODE\`"
+            echo "- asset-file count and per-phase timings are in the build log above."
+            if [ "$MODE" != "deploy" ]; then
+              echo ""
+              echo "> Nothing was published. Re-run with mode \`deploy\` to publish."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
