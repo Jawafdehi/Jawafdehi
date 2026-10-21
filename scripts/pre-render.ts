@@ -252,12 +252,38 @@ async function fetchJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function fetchAllCases(): Promise<PaginatedCaseList['results']> {
+/**
+ * The case archive. `sample` stops after one page.
+ *
+ * A `full` build needs every case: it renders a page per slug and ranks entities
+ * by citation. A `static` build renders neither, but it is NOT true that it has
+ * no use for the list — the loop that builds `renderableCases` also pushes every
+ * case into search-index.json. Skipping the fetch outright took that index from
+ * 2,652 entries to 23 and stopped CI exercising caseToSearchEntry and the
+ * no-slug warning at all.
+ *
+ * So sample rather than skip: one page still exercises those paths, still proves
+ * the API is reachable through the same try/catch (which is what
+ * PRERENDER_ALLOW_EMPTY_PREFETCH needs in order to keep working), and costs ~2.5 s
+ * against the ~145 s a 132-call sweep at the default page_size of 20 was costing
+ * every preview build.
+ *
+ * page_size is honoured by /api/cases/ and is NOT capped at 50 the way
+ * /api/materials/ and /api/search/ are.
+ */
+const SAMPLE_PAGE_SIZE = 200;
+
+async function fetchAllCases(
+  { sample = false }: { sample?: boolean } = {},
+): Promise<PaginatedCaseList['results']> {
   const all: PaginatedCaseList['results'] = [];
-  let url: string | null = `${API_BASE}/cases/`;
+  let url: string | null = sample
+    ? `${API_BASE}/cases/?page_size=${SAMPLE_PAGE_SIZE}`
+    : `${API_BASE}/cases/`;
   while (url) {
     const data: PaginatedCaseList = await fetchJson<PaginatedCaseList>(url);
     all.push(...data.results);
+    if (sample) break;
     url = data.next;
   }
   return all;
@@ -691,41 +717,35 @@ async function main() {
 
   // Fetch cases and entity IDs.
   //
-  // ⚠️ Only when something is going to RENDER from them. The whole archive is
-  // ~2,629 records over 132 paginated calls and cost 145 s of a 496 s preview
-  // build on 2026-10-19 — and in `static` scope the only surviving use of the
-  // result was `cases.length` in the "Case browse" log line below. Entity
-  // ranking and case rendering are both gated on the scope flags, so a preview
-  // build paid two and a half minutes for a number in a log message.
+  // `static` scope samples one page instead of sweeping all 132. The sweep cost
+  // 145 s of a 496 s preview build on 2026-10-19 and nothing in that scope
+  // renders a case or an entity page from it — but it is NOT unused there: the
+  // loop below also pushes every case into search-index.json. See fetchAllCases.
   //
-  // In `static` scope `apiReachable` is instead proven by caseBrowsePagePaths(),
-  // which makes one cheap count call and throws rather than guessing — so an
-  // unreachable API still fails loudly, just further down and for a fraction of
-  // the traffic.
-  const NEEDS_CASE_LIST = RENDER_ENTITY_PAGES || RENDER_CASE_PAGES;
+  // Keeping the fetch (rather than skipping it) is also what keeps
+  // PRERENDER_ALLOW_EMPTY_PREFETCH working: that opt-out depends on this
+  // try/catch setting `apiReachable`, and every later API call is gated on it.
+  const SAMPLE_CASES = !(RENDER_ENTITY_PAGES || RENDER_CASE_PAGES);
   let cases: PaginatedCaseList['results'] = [];
   let apiReachable = true;
-  if (NEEDS_CASE_LIST) {
-    try {
-      cases = await fetchAllCases();
-      console.log(`[pre-render] Fetched ${cases.length} cases`);
-    } catch (err) {
-      // Rendering static routes only was the tolerant default. It is not tolerable
-      // for a deploy: every page that prefetches anything would be published empty,
-      // and no case or entity page would be published at all.
-      if (!ALLOW_EMPTY_PREFETCH) {
-        console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
-        console.error('[pre-render] Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.');
-        process.exit(1);
-      }
-      console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
-      apiReachable = false;
-    }
-  } else {
+  try {
+    cases = await fetchAllCases({ sample: SAMPLE_CASES });
     console.log(
-      '[pre-render] PRERENDER_SCOPE=static — skipping the case-list sweep; ' +
-      'nothing in this scope renders from it.',
+      SAMPLE_CASES
+        ? `[pre-render] PRERENDER_SCOPE=static — sampled ${cases.length} cases (not the full archive)`
+        : `[pre-render] Fetched ${cases.length} cases`,
     );
+  } catch (err) {
+    // Rendering static routes only was the tolerant default. It is not tolerable
+    // for a deploy: every page that prefetches anything would be published empty,
+    // and no case or entity page would be published at all.
+    if (!ALLOW_EMPTY_PREFETCH) {
+      console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
+      console.error('[pre-render] Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.');
+      process.exit(1);
+    }
+    console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
+    apiReachable = false;
   }
 
   // Entity pages worth pre-rendering are exactly the ones a published case
@@ -823,10 +843,15 @@ async function main() {
   // comment is defending.
   //
   // ⚠️ The page count comes from caseBrowsePagePaths(), NOT from `cases.length`.
-  // That is deliberate (see scripts/case-browse-pages.ts: the DB list count and
-  // the search index count are different systems and writing the wrong one emits
-  // 404s), and it is also what lets this block still run in `static` scope now
-  // that the case-list sweep is skipped there.
+  // That is deliberate — see scripts/case-browse-pages.ts: the DB list count and
+  // the search index count are different systems, and writing the wrong one
+  // emits 404s into the build. It matters twice as much now that `static` scope
+  // only samples the case list, where `cases.length` is 200 and meaningless.
+  //
+  // This whole block stays gated on `apiReachable` so that
+  // PRERENDER_ALLOW_EMPTY_PREFETCH still produces a build when the API is down:
+  // caseBrowsePagePaths() throws rather than guessing, and there is no try/catch
+  // here to absorb it.
   if (apiReachable) {
     const casePagePaths = (await caseBrowsePagePaths(API_BASE)).slice(1);
     // Concurrent, like the three other render loops in this file. Serially this
@@ -836,9 +861,15 @@ async function main() {
     // stops them queueing behind each other.
     //
     // A failure here is still fatal: a missing listing page breaks the chain
-    // that reaches every page after it. Record the first error, let the pool
-    // drain, then exit — rather than calling process.exit() from inside a worker
-    // while other renders are mid-write.
+    // that reaches every page after it. Record the first ordinary error, let the
+    // pool drain, then exit — rather than calling process.exit() from inside a
+    // worker while other renders are mid-write.
+    //
+    // SuspenseStubError is the exception and still rejects the pool immediately,
+    // which can leave a sibling render mid-write. That matches what the other
+    // three concurrent loops in this file already do, and the condition is a
+    // code-level mistake (a lazy() route that must be eager) rather than
+    // something a build can be left half-finished by in practice.
     let browseFailure: { path: string; err: unknown } | null = null;
     await withConcurrency(casePagePaths, CONCURRENCY, async (path) => {
       if (browseFailure) return;
