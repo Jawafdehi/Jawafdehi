@@ -38,6 +38,8 @@ interface CaseSummary {
 interface PaginatedCaseList {
   next: string | null;
   results: CaseSummary[];
+  /** Archive-wide total. Only read to report what a sampled run skipped. */
+  count?: number;
 }
 
 function toYMD(isoDate: string): string {
@@ -96,14 +98,42 @@ function withTrailingSlash(path: string): string {
   return path === '/' || path.endsWith('/') ? path : `${path}/`;
 }
 
+// A sitemap written by a `static` build is never published — `build:preview`
+// has no deploy path — so sweeping the whole archive for it is pure cost. It was
+// 115 s of a 496 s preview build on 2026-10-19, a second full sweep on top of the
+// one pre-render.ts had already done.
+//
+// Sample rather than skip: one page still exercises every code path below —
+// URL construction, withTrailingSlash, lastmod, the section grouping and the
+// counts — so a regression in sitemap logic still fails the PR. Only the
+// pagination loop shrinks.
+//
+// ⚠️ `static` must never reach a deploy. It cannot today, and the log line
+// below says so loudly if anyone wires one up.
+const SITEMAP_SCOPE = process.env.PRERENDER_SCOPE ?? 'full';
+const SAMPLE_ONLY = SITEMAP_SCOPE === 'static';
+const SAMPLE_PAGE_SIZE = 200;
+
 async function fetchAllCases(): Promise<CaseSummary[]> {
   const all: CaseSummary[] = [];
-  let url: string | null = `${API_BASE}/cases/`;
+  // page_size is honoured by /api/cases/ and is NOT capped at 50 the way
+  // /api/materials/ and /api/search/ are. Following `next` still handles
+  // whatever page size the server actually returns.
+  let url: string | null = SAMPLE_ONLY
+    ? `${API_BASE}/cases/?page_size=${SAMPLE_PAGE_SIZE}`
+    : `${API_BASE}/cases/`;
   while (url) {
     const res = await fetchWithTimeout(url);
     if (!res.ok) throw new Error(`API error ${res.status}`);
     const data: PaginatedCaseList = await res.json();
     all.push(...data.results);
+    if (SAMPLE_ONLY) {
+      console.warn(
+        `[sitemap] PRERENDER_SCOPE=static — sampling ${all.length} of ${data.count ?? '?'} ` +
+        `cases. This sitemap is NOT publishable; it exists to exercise the code path.`,
+      );
+      break;
+    }
     url = data.next;
   }
   return all;

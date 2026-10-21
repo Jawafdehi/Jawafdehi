@@ -689,23 +689,43 @@ async function main() {
     }
   };
 
-  // Fetch cases and entity IDs
+  // Fetch cases and entity IDs.
+  //
+  // ⚠️ Only when something is going to RENDER from them. The whole archive is
+  // ~2,629 records over 132 paginated calls and cost 145 s of a 496 s preview
+  // build on 2026-10-19 — and in `static` scope the only surviving use of the
+  // result was `cases.length` in the "Case browse" log line below. Entity
+  // ranking and case rendering are both gated on the scope flags, so a preview
+  // build paid two and a half minutes for a number in a log message.
+  //
+  // In `static` scope `apiReachable` is instead proven by caseBrowsePagePaths(),
+  // which makes one cheap count call and throws rather than guessing — so an
+  // unreachable API still fails loudly, just further down and for a fraction of
+  // the traffic.
+  const NEEDS_CASE_LIST = RENDER_ENTITY_PAGES || RENDER_CASE_PAGES;
   let cases: PaginatedCaseList['results'] = [];
   let apiReachable = true;
-  try {
-    cases = await fetchAllCases();
-    console.log(`[pre-render] Fetched ${cases.length} cases`);
-  } catch (err) {
-    // Rendering static routes only was the tolerant default. It is not tolerable
-    // for a deploy: every page that prefetches anything would be published empty,
-    // and no case or entity page would be published at all.
-    if (!ALLOW_EMPTY_PREFETCH) {
-      console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
-      console.error('[pre-render] Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.');
-      process.exit(1);
+  if (NEEDS_CASE_LIST) {
+    try {
+      cases = await fetchAllCases();
+      console.log(`[pre-render] Fetched ${cases.length} cases`);
+    } catch (err) {
+      // Rendering static routes only was the tolerant default. It is not tolerable
+      // for a deploy: every page that prefetches anything would be published empty,
+      // and no case or entity page would be published at all.
+      if (!ALLOW_EMPTY_PREFETCH) {
+        console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
+        console.error('[pre-render] Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.');
+        process.exit(1);
+      }
+      console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
+      apiReachable = false;
     }
-    console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
-    apiReachable = false;
+  } else {
+    console.log(
+      '[pre-render] PRERENDER_SCOPE=static — skipping the case-list sweep; ' +
+      'nothing in this scope renders from it.',
+    );
   }
 
   // Entity pages worth pre-rendering are exactly the ones a published case
@@ -796,17 +816,32 @@ async function main() {
   // otherwise reach production unnoticed and re-orphan every case page after the
   // break.
   //
-  // ⚠️ The affordability claim above was written at 38 pages and is now
-  // 220. Rendered serially this is ~209 s, the single largest phase of a
-  // preview build. The fix is to run it through withConcurrency like the three
-  // other render loops in this file, NOT to sample it — sampling would give up
-  // exactly the coverage this comment is defending.
+  // The affordability claim above was written at 38 pages and is now 220.
+  // Rendered serially that was ~209 s — the single largest phase of a preview
+  // build — so the loop below is concurrent. Sampling it would have been the
+  // cheaper edit and the wrong one: it gives up exactly the coverage this
+  // comment is defending.
   //
-  // The count comes from `cases`, already fetched above, so deriving the page
-  // list costs nothing extra.
+  // ⚠️ The page count comes from caseBrowsePagePaths(), NOT from `cases.length`.
+  // That is deliberate (see scripts/case-browse-pages.ts: the DB list count and
+  // the search index count are different systems and writing the wrong one emits
+  // 404s), and it is also what lets this block still run in `static` scope now
+  // that the case-list sweep is skipped there.
   if (apiReachable) {
     const casePagePaths = (await caseBrowsePagePaths(API_BASE)).slice(1);
-    for (const path of casePagePaths) {
+    // Concurrent, like the three other render loops in this file. Serially this
+    // was ~0.95 s per page and 209 s of a 496 s preview build — the largest
+    // single phase — because each page makes its own search call and then
+    // renders. withConcurrency keeps every page rendered in every scope; it only
+    // stops them queueing behind each other.
+    //
+    // A failure here is still fatal: a missing listing page breaks the chain
+    // that reaches every page after it. Record the first error, let the pool
+    // drain, then exit — rather than calling process.exit() from inside a worker
+    // while other renders are mid-write.
+    let browseFailure: { path: string; err: unknown } | null = null;
+    await withConcurrency(casePagePaths, CONCURRENCY, async (path) => {
+      if (browseFailure) return;
       const outFile = join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
       try {
         const result = await render(path);
@@ -815,15 +850,16 @@ async function main() {
         console.log(`[pre-render] ✓ ${path}`);
       } catch (err) {
         if (err instanceof SuspenseStubError) throw err;
-        // Unlike an update or an entity, a missing listing page breaks the chain
-        // that reaches every page after it, so this is fatal rather than skipped.
-        console.error(`[pre-render] ERROR rendering ${path}:`, err);
-        if (err instanceof Error) console.error(err.stack);
-        process.exit(1);
+        browseFailure ??= { path, err };
       }
+    });
+    if (browseFailure) {
+      console.error(`[pre-render] ERROR rendering ${browseFailure.path}:`, browseFailure.err);
+      if (browseFailure.err instanceof Error) console.error(browseFailure.err.stack);
+      process.exit(1);
     }
     console.log(
-      `[pre-render] Case browse: ${casePagePaths.length + 1} pages for ${cases.length} cases ` +
+      `[pre-render] Case browse: ${casePagePaths.length + 1} pages ` +
       `(${CASES_PAGE_SIZE} per page)`,
     );
   }
