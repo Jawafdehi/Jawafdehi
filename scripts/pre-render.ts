@@ -383,14 +383,20 @@ async function writeHtml(outFile: string, content: string): Promise<void> {
  * above them. Until this existed, production served
  * `/server/entry-server.js` (1.4 MB, the SSR bundle) and
  * `/client/search-index.json` (7.9 MB, a byte-identical duplicate of
- * `/search-index.json`) to anyone who asked, and spent ~160 of Cloudflare's
- * 20,000 static-asset slots per version doing it.
+ * `/search-index.json`) to anyone who asked, and spent 250 of Cloudflare's
+ * 20,000 static-asset slots per version doing it — measured 2026-10-21 against
+ * a real build: 385 files in `dist/`, of which 135 are publishable.
  *
  * ⚠️ Ignore them, do NOT delete them. Both directories are inputs to this very
  * build — `dist/server/entry-server.js` is imported below and the HTML template
  * is read from `dist/client/index.html` — and `dist/client` is also what
  * `vite preview` serves locally. `.assetsignore` keeps them on disk and off the
  * web, which is the distinction that matters.
+ *
+ * Note what "off the web" means here: an ignored path is simply one the assets
+ * binding does not hold, so `env.ASSETS.fetch` 404s and worker.ts falls through
+ * to its SPA shell. `/client/search-index.json` therefore stops being a 7.9 MB
+ * JSON download and becomes the ordinary app shell — it does NOT become a 404.
  *
  * Written here rather than committed because `dist/` is regenerated every build.
  * The file lists itself: wrangler's self-exclusion is undocumented, so it is

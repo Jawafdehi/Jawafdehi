@@ -22,15 +22,21 @@
 //
 // WHAT IT COUNTS
 //
-// Only what wrangler would actually upload: every file under `dist/`, minus
-// anything `dist/.assetsignore` excludes (see writeAssetsIgnore in
-// scripts/pre-render.ts). Counting the raw tree instead would over-report by
-// ~160 and make the budget meaningless in the direction that matters.
+// Every file under `dist/`, minus anything `dist/.assetsignore` excludes (see
+// writeAssetsIgnore in scripts/pre-render.ts). Counting the raw tree instead
+// would over-report by 250 — measured 2026-10-21, 385 files of which 135 are
+// publishable — and that is the direction that makes a budget useless.
 //
-// The ignore matching here is deliberately literal — directory prefixes and
-// exact names, which is all .assetsignore is used for in this repo. It is not a
-// general .gitignore engine, and it should fail loudly rather than silently
-// under-count if that file ever grows globs.
+// ⚠️ This is an APPROXIMATION of wrangler's rule, not a reimplementation of it.
+// `.assetsignore` takes .gitignore syntax, where a bare `name` matches at EVERY
+// depth; the matching here anchors at the top level of dist/. So a nested
+// `foo/.assetsignore` would be counted here and skipped by wrangler, and the
+// count would be one too high.
+//
+// That is deliberate, and the error is in the safe direction: over-counting
+// trips the budget early, under-counting lets a deploy cross a hard limit
+// unnoticed. For the three literal rules this repo actually writes the two
+// agree exactly. Globs are refused outright below rather than guessed at.
 import fs from "node:fs";
 import path from "node:path";
 
