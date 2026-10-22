@@ -165,6 +165,10 @@ const AdminApp = () => (
               on the case; manage docs under Data Lake → Materials. */}
           {/* Casework (folded in from /portal) */}
           <Route path="proposals" element={<CaseworkProposals />} />
+          {/* Deep link from the case-update notification. Same page: the id only
+              chooses which row opens, so a stale or deleted id still lands on a
+              working queue rather than a 404. */}
+          <Route path="proposals/:id" element={<CaseworkProposals />} />
           <Route path="reviews" element={<CaseworkReviews />} />
           <Route path="reviews/case/:slug" element={<CaseworkCaseReviews />} />
           <Route path="reviews/:id" element={<CaseworkRunRedirect />} />

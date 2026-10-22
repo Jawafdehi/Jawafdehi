@@ -2007,6 +2007,7 @@
       "subtitle": "Automation-drafted case updates awaiting review. Approve to apply the change to the case, reject to dismiss it.",
       "pendingCount": "{{count}} pending",
       "loadFailed": "Failed to load proposals.",
+      "focusNotFound": "Proposal #{{id}} was not found — it may have been deleted. Showing the full queue instead.",
       "loading": "Loading proposals…",
       "allSources": "All sources",
       "filterBySource": "Filter by source",
