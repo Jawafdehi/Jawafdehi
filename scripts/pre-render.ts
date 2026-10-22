@@ -419,10 +419,17 @@ async function writeHtml(outFile: string, content: string): Promise<void> {
  * `vite preview` serves locally. `.assetsignore` keeps them on disk and off the
  * web, which is the distinction that matters.
  *
- * Note what "off the web" means here: an ignored path is simply one the assets
- * binding does not hold, so `env.ASSETS.fetch` 404s and worker.ts falls through
- * to its SPA shell. `/client/search-index.json` therefore stops being a 7.9 MB
- * JSON download and becomes the ordinary app shell — it does NOT become a 404.
+ * Note what "off the web" means here. An ignored path is one the assets binding
+ * does not hold, so `env.ASSETS.fetch` 404s and worker.ts falls through to its
+ * SPA fallback — which serves the shell BODY but sets the status from whether
+ * the path matches a known SPA route (`status = matched && !outOfRangeCasePage
+ * ? 200 : 404`). `/client/*` and `/server/*` match nothing, so they answer
+ * **404 with an HTML body**, and React Router renders the styled NotFound page.
+ *
+ * Verified in production 2026-10-21, the first build after this landed:
+ * `/server/entry-server.js` and `/client/search-index.json` both went from
+ * 200 + their real payload to 404 + the 292 KB shell, while
+ * `/search-index.json` kept serving its 7.9 MB for real.
  *
  * Written here rather than committed because `dist/` is regenerated every build.
  * The file lists itself: wrangler's self-exclusion is undocumented, so it is
