@@ -160,6 +160,22 @@ type PaginationControlsProps = {
    * follow.
    */
   hrefFor?: (page: number) => string;
+  /**
+   * Hard ceiling on the page number this pager will offer, when the backing API
+   * can serve fewer pages than `totalItems` implies.
+   *
+   * Without it the last page is `ceil(totalItems / pageSize)` — which assumes
+   * every row the count reports is actually reachable by paging. That is false
+   * for offset-paged search APIs with a result-window limit: the archive search
+   * reports 578k results but refuses any offset past 10k, so the pager advertised
+   * page 48,185 and every click on it returned HTTP 400.
+   *
+   * Capping here rather than at the call site keeps `clampPage`, the numbered
+   * list, the Next button and the "page X of Y" label consistent with each other.
+   * It also matters for `hrefFor`: an uncapped last-page link is a real `<Link>`,
+   * so a crawler walks straight into the API's error.
+   */
+  maxPages?: number;
   className?: string;
 };
 
@@ -169,11 +185,18 @@ const PaginationControls = ({
   totalItems,
   onPageChange,
   hrefFor,
+  maxPages,
   className,
 }: PaginationControlsProps) => {
   const { t } = useTranslation();
   const safePageSize = Math.max(1, pageSize);
-  const totalPages = Math.max(1, Math.ceil(totalItems / safePageSize));
+  // What the count implies, then what the API can actually serve. Everything
+  // below derives from the capped value, so there is one notion of "last page".
+  const impliedPages = Math.max(1, Math.ceil(totalItems / safePageSize));
+  const totalPages =
+    maxPages === undefined
+      ? impliedPages
+      : Math.min(impliedPages, Math.max(1, Math.floor(maxPages)));
   if (totalPages <= 1) return null;
 
   // `page` is whatever the caller asked for — search echoes back the requested

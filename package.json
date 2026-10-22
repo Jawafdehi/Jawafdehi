@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts",
+    "//build": "KEEP IN SYNC: .github/workflows/deploy-production.yml spells these phases out individually so it can time each one, and asserts this exact string. Changing this script without updating that workflow fails the deploy build by design.",
+    "build": "vite build && vite build --ssr && bun run scripts/pre-render.ts && bun run scripts/sitemap.ts && node scripts/asset-budget.mjs",
     "build:preview": "PRERENDER_SCOPE=static bun run build",
     "build:dev": "vite build --mode development",
     "analyze": "ANALYZE=true vite build && echo 'Bundle treemap written to dist/stats.html'",

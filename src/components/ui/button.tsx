@@ -16,7 +16,15 @@ const buttonVariants = cva(
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-primary font-bold bg-background text-primary hover:bg-accent hover:text-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        // Hover colours the LABEL, not a block behind it. A ghost button has
+        // no border and no fill, so painting its whole box on hover draws a
+        // shape that did not exist a moment ago — in a column of them it reads
+        // as the row being selected rather than the control being pointed at.
+        //
+        // Icon-only ghosts are the exception; see compoundVariants. They have
+        // no label to colour, so a text-only hover would leave them with no
+        // hover state at all.
+        ghost: "hover:text-primary",
         navIcon:
           "border border-border/70 bg-background/70 text-foreground/75 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-background hover:text-foreground",
         disclosure:
@@ -66,6 +74,22 @@ const buttonVariants = cva(
         navMenuIcon: "h-11 w-11",
       },
     },
+    compoundVariants: [
+      // An icon-only ghost has nothing to recolour that a reader would notice —
+      // a 16px glyph changing hue is not a hover state. These keep the block,
+      // which is the only affordance they have. 16 of the 67 ghost call sites
+      // are this shape.
+      {
+        variant: "ghost",
+        size: "icon",
+        class: "hover:bg-accent hover:text-accent-foreground",
+      },
+      {
+        variant: "ghost",
+        size: "navMenuIcon",
+        class: "hover:bg-accent hover:text-accent-foreground",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

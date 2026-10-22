@@ -645,26 +645,18 @@
     "title": "Corruption Cases",
     "description": "Browse and search documented corruption cases in Nepal",
     "searchPlaceholder": "Search by title, entity, or location...",
-    "filterByStatus": "Filter by status",
     "filterByType": "Filter by type",
-    "allStatuses": "All Statuses",
     "allTypes": "All Types",
-    "clearFilters": "Clear Filters",
+    "clearSearch": "Clear search",
     "loading": "Loading...",
     "showingRange": "Showing {{from}}–{{to}} of {{total}} cases",
     "noCasesFound": "No cases found matching your criteria",
     "unableToLoad": "Unable to load cases at this time",
-    "tryAgain": "Try Again",
-    "clearAllFilters": "Clear All Filters",
     "retry": "Retry",
     "tooManyRequests": "Too many requests. Please wait a moment and try again.",
     "failedToLoad": "Failed to load cases. Please try again.",
     "status": {
-      "ongoing": "Ongoing",
-      "underInvestigation": "Under Investigation",
-      "resolved": "Resolved",
-      "closed": "Closed",
-      "others": "Others"
+      "ongoing": "Ongoing"
     },
     "gridView": "Grid view",
     "listView": "List view",
@@ -1313,7 +1305,11 @@
   "courtCaseDetail": {
     "relatedCases": "Related Jawafdehi Cases",
     "moreCases": "+{{count}} more",
-    "viewCase": "View case"
+    "viewCase": "View case",
+    "status": {
+      "pending": "Ongoing",
+      "decided": "Decided"
+    }
   },
   "courtCaseProfile": {
     "fallbackTitle": "Court case",
@@ -2324,6 +2320,8 @@
     },
     "recent": {
       "title": "Recently added",
+      "slice": "The {{shown}} newest of {{total}} documents in the archive.",
+      "browseAll": "Browse all documents",
       "untitled": "Untitled document",
       "previous": "Previous documents",
       "next": "Next documents"

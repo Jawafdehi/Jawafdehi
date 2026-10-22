@@ -7,10 +7,9 @@ import { Seo } from "@/components/Seo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/ui/pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, AlertCircle, Filter, LayoutGrid, List } from "lucide-react";
+import { Search, AlertCircle, LayoutGrid, List, X } from "lucide-react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 import {
@@ -25,14 +24,11 @@ import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 import NotFound from "./NotFound";
 
-type CaseLifecycleStatus = "ongoing" | "closed" | "others";
-
 type CaseCardViewModel = {
   id: string;
   slug: string | null;
   title: string;
   tags: string[];
-  status: CaseLifecycleStatus;
   image: CaseImage | null;
   thumbnailUrl?: string;
   bannerUrl?: string;
@@ -52,10 +48,6 @@ type CaseCardViewModel = {
 function scrollToResults(): void {
   if (typeof document === "undefined") return;
   document.getElementById("case-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function normalizeStatus(value: string | null | undefined): CaseLifecycleStatus {
-  return value === "ongoing" || value === "closed" || value === "others" ? value : "others";
 }
 
 function pickTitle(result: ArchiveSearchResult, card?: CaseSearchCard): string {
@@ -96,7 +88,6 @@ function toCaseCardViewModel(result: ArchiveSearchResult): CaseCardViewModel {
     slug: card?.slug || slugFromUrl(result.url),
     title: pickTitle(result, card),
     tags: card?.tags || [],
-    status: normalizeStatus(card?.status || result.extra.case_status),
     image: card?.thumbnail ?? null,
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
@@ -116,13 +107,12 @@ const Cases = () => {
   const { page: pageParam } = useParams<{ page?: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | CaseLifecycleStatus>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const page = parseCasesPageParam(pageParam);
 
-  // Debounce search input, and send any search or filter change back to page one
-  // — page 7 of the unfiltered archive is not page 7 of a three-result search.
+  // Debounce search input, and send any search change back to page one — page 7
+  // of the unfiltered archive is not page 7 of a three-result search.
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
@@ -131,9 +121,9 @@ const Cases = () => {
   // Only the unfiltered browse has its state in the URL, so only it can be paged
   // by href. A filtered view keeps its page in component state and renders the
   // same controls as buttons — see `hrefFor` on PaginationControls.
-  const isFiltered = debouncedSearch !== "" || statusFilter !== "all";
+  const isFiltered = debouncedSearch !== "";
   const [filteredPage, setFilteredPage] = useState(1);
-  useEffect(() => setFilteredPage(1), [debouncedSearch, statusFilter]);
+  useEffect(() => setFilteredPage(1), [debouncedSearch]);
 
   // Searching from /cases/page/7 leaves a path that no longer describes what is
   // on screen, and clearing the search would then restore page 7 of the full
@@ -149,11 +139,10 @@ const Cases = () => {
   const requestedPage = isFiltered ? filteredPage : (page ?? 1);
 
   const { data, isLoading: loading, isPlaceholderData, isError, refetch } = useQuery({
-    queryKey: ["cases-search", { search: debouncedSearch, status: statusFilter, page: requestedPage }],
+    queryKey: ["cases-search", { search: debouncedSearch, page: requestedPage }],
     queryFn: () => searchArchive({
       q: debouncedSearch || undefined,
       type: "case",
-      status: statusFilter === "all" ? undefined : [statusFilter],
       sort: debouncedSearch ? "relevance" : "newest",
       page_size: CASES_PAGE_SIZE,
       page: requestedPage,
@@ -231,36 +220,21 @@ const Cases = () => {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | CaseLifecycleStatus)}>
-                  <SelectTrigger className="h-11 rounded-full">
-                    <SelectValue placeholder={t("cases.filterByStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("cases.allStatuses")}</SelectItem>
-                    <SelectItem value="ongoing">{t("cases.status.ongoing")}</SelectItem>
-                    <SelectItem value="closed">{t("cases.status.closed")}</SelectItem>
-                    <SelectItem value="others">{t("cases.status.others")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setSearchQuery("");
-                }}
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                {t("cases.clearFilters")}
-              </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              {/* Search is the only narrowing left on this page, so the reset
+                  button clears it alone — and only earns its place while there
+                  is something to clear (the input has no clear affordance). */}
+              {searchQuery !== "" && (
+                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                  <X className="mr-2 h-4 w-4" />
+                  {t("cases.clearSearch", "Clear search")}
+                </Button>
+              )}
 
               {/* gap-1: the two `size="icon"` buttons each carry a tap ring 2px past their
                   painted box, so without 4px of clearance the left button's last 2px
                   activate the right one. Measured before the gap was added. */}
-              <div className="flex gap-1 border rounded-md">
+              <div className="flex gap-1 border rounded-md sm:ml-auto">
                 <Button
                   variant={viewMode === "grid" ? "secondary" : "ghost"}
                   size="icon"
@@ -318,7 +292,7 @@ const Cases = () => {
               viewMode={viewMode}
               cases={cases}
               currentLang={currentLang}
-              setStatusFilter={setStatusFilter}
+              hasSearch={searchQuery !== ""}
               setSearchQuery={setSearchQuery}
               t={t}
             />
@@ -351,14 +325,14 @@ type CaseResultsProps = Readonly<{
   viewMode: "grid" | "list";
   cases: CaseCardViewModel[];
   currentLang: string;
-  setStatusFilter: (v: "all" | CaseLifecycleStatus) => void;
+  hasSearch: boolean;
   setSearchQuery: (v: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
 }>;
 
 function CaseResults({
   isInitialLoading, isError, viewMode, cases,
-  currentLang, setStatusFilter, setSearchQuery, t,
+  currentLang, hasSearch, setSearchQuery, t,
 }: CaseResultsProps) {
   const gridClass = viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-6";
 
@@ -380,9 +354,13 @@ function CaseResults({
         <p className="text-muted-foreground text-lg mb-4">
           {isError ? t("cases.unableToLoad") : t("cases.noCasesFound")}
         </p>
-        <Button variant="outline" onClick={() => { setStatusFilter("all"); setSearchQuery(""); }}>
-          {isError ? t("cases.tryAgain") : t("cases.clearAllFilters")}
-        </Button>
+        {/* Only offer the reset when there is a search to reset. An empty
+            archive with an empty search box had a button that did nothing. */}
+        {!isError && hasSearch && (
+          <Button variant="outline" onClick={() => setSearchQuery("")}>
+            {t("cases.clearSearch", "Clear search")}
+          </Button>
+        )}
       </div>
     );
   }

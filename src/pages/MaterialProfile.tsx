@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +12,7 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,17 @@ import {
   type Material,
   type MaterialBilingual,
 } from "@/services/datalake-api";
+import { DocumentContentPanel } from "@/components/materials/DocumentContentPanel";
+import { restoreScroll, takeListScroll } from "@/lib/contents-scroll";
+import { TranscriptReader } from "@/components/materials/TranscriptReader";
+import { TableFocusView } from "@/components/materials/TableFocusView";
+import { FigureFocusView } from "@/components/materials/FigureFocusView";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { API_BASE_URL } from "@/services/http";
 import { ViewJsonButton } from "@/components/ViewJsonButton";
 import {
@@ -31,35 +43,22 @@ import {
 import { ShareButton } from "@/components/ShareButton";
 import { seriesBySource } from "@/data/material-series";
 import { getMaterialSourceLinks } from "@/lib/material-links";
+import {
+  materialBilingual as bilingual,
+  materialCanonicalUrl,
+  materialDescriptionText,
+  materialDisplayName,
+  materialJsonLd,
+  materialMetaDescription,
+  materialMetaTitle,
+  materialRobots,
+  materialTypeLabel,
+} from "@/lib/material-meta";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
-
-function bilingual(v: MaterialBilingual | string | undefined): {
-  en: string;
-  ne: string;
-} {
-  if (!v) return { en: "", ne: "" };
-  if (typeof v === "string") return { en: v, ne: "" };
-  return { en: v.en || "", ne: v.ne || "" };
-}
-
-function typeToken(
-  t: Material["@type"],
-  additional?: string,
-): string | undefined {
-  const parts: string[] = [];
-  if (Array.isArray(t)) parts.push(...t);
-  else if (t) parts.push(t);
-  if (additional) parts.push(additional);
-  return parts.length ? parts.join(",") : undefined;
-}
-
-// Last IRI segment, humanized — a fallback title when no name is present.
-function iriLabel(iri: string | undefined): string {
-  if (!iri) return "";
-  const tail = iri.split("/").filter(Boolean).pop() || iri;
-  return tail.replace(/[-_]/g, " ").trim() || tail;
-}
+//
+// The head this page renders lives in `@/lib/material-meta`, not here: worker.ts
+// injects the same head at the edge for crawlers, which never run this component.
 
 // schema.org / jawafdehi key -> human label for the generic Details section.
 const FIELD_LABELS: Record<string, string> = {
@@ -165,16 +164,46 @@ export default function MaterialProfile() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const name = data ? bilingual(data.name) : { en: "", ne: "" };
-  const displayName =
-    name.en ||
-    name.ne ||
-    iriLabel(data?.["@id"]) ||
-    tail.split("/").pop() ||
-    "Material";
-  const typeLabel = humanizeEntityType(
-    data ? typeToken(data["@type"], data.additionalType) : undefined,
+  // What is inside the document, if we have read it. This rides on the material
+  // payload itself, so deciding whether to offer the tab costs no request —
+  // and the key is ABSENT rather than zeroed for the ~346k materials we have
+  // not parsed, which is why presence is the test.
+  const contentSummary = data?.["jawafdehi:content"];
+
+  // `?table=<key>` addresses one table directly — the `page` candidate in
+  // ContentLayoutLab. Harmless in production: nothing links to it there,
+  // because the dev-only lab is the only thing that builds the link.
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const focusedTable = searchParams.get("table");
+  const focusedFigure = searchParams.get("figure");
+  // Either focus hides the listing and drops the aside, so the rest of the
+  // page asks this rather than one of them.
+  const focused = focusedTable ?? focusedFigure;
+
+  // ScrollToTop fires on every `search` change, so opening a table and coming
+  // back both jump to the top of the document. The position was recorded on
+  // the click that left; put the reader back on it once the listing has laid
+  // out far enough to allow it.
+  useEffect(() => {
+    if (focused) return;
+    const y = takeListScroll(location.pathname);
+    if (y === null) return;
+    return restoreScroll(y);
+  }, [focused, location.pathname]);
+
+  // A deep link has to survive a COLD load, not just a click. Defaulting to
+  // "summary" meant pasting `?table=…` into a fresh tab opened the Summary tab
+  // and showed no table at all — which would have made the citable-URL variant
+  // look like it worked, while the only case that matters, someone opening a
+  // link you sent them, silently did nothing.
+  const [tab, setTab] = useState(
+    searchParams.get("table") || searchParams.get("figure") ? "content" : "summary",
   );
+
+  const name = data ? bilingual(data.name) : { en: "", ne: "" };
+  const displayName = materialDisplayName(data, tail);
+  const typeLabel = materialTypeLabel(data);
   const description = data ? bilingual(data.description) : { en: "", ne: "" };
   const descText = description.en || description.ne;
   const fullText = data
@@ -184,6 +213,9 @@ export default function MaterialProfile() {
   const links = getMaterialSourceLinks(data);
   const [previewDocument, setPreviewDocument] =
     useState<PreviewDocument | null>(null);
+  // The transcript opens in its own reader rather than inside a tab panel: it
+  // is the document's text, which a reader wants full-width and continuous.
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   // The document's own JSON-LD carries the kind, so this page never has to
   // guess which of a source's shelves it belongs to.
   const series = seriesBySource(
@@ -203,22 +235,17 @@ export default function MaterialProfile() {
     }
   }
 
+  // The head, built by the same module the edge uses — see @/lib/material-meta.
+  const metaDescription = materialMetaDescription(data, displayName, typeLabel);
+  const robots = materialRobots(data);
   // schema.org JSON-LD for crawlers (parity with the retired R2 HTML landing page).
+  //
+  // materialDescriptionText, not the raw `descText` the body renders: the worker
+  // passes the stripped form, and passing a different one here would make the
+  // structured data differ edge vs hydrated — the exact drift this shared module
+  // exists to prevent.
   const jsonLd = data
-    ? JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "CreativeWork",
-        name: displayName,
-        url: data["@id"],
-        identifier: data.identifier ?? undefined,
-        inLanguage: name.ne ? "ne" : "en",
-        isAccessibleForFree: true,
-        ...(descText ? { description: descText } : {}),
-        ...(data.datePublished
-          ? { datePublished: String(data.datePublished) }
-          : {}),
-        publisher: { "@type": "Organization", name: "Jawafdehi" },
-      })
+    ? materialJsonLd(data, displayName, materialDescriptionText(data))
     : null;
 
   return (
@@ -227,14 +254,21 @@ export default function MaterialProfile() {
       className="min-h-screen bg-background py-8 md:py-12"
     >
       <Helmet>
-        <title>{displayName} | Jawafdehi governance archive</title>
-        <meta
-          name="description"
-          content={
-            descText ||
-            `${displayName} — ${typeLabel} in the Jawafdehi governance archive.`
-          }
-        />
+        <title>{materialMetaTitle(displayName)}</title>
+        <meta name="description" content={metaDescription} />
+        {/*
+          Canonical and Open Graph were both missing here, so even after hydration
+          a material page declared no canonical URL and unfurled as the site
+          banner. worker.ts injects the same tags for clients that never run JS.
+        */}
+        <link rel="canonical" href={materialCanonicalUrl(tail)} />
+        {robots ? <meta name="robots" content={robots} /> : null}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={materialCanonicalUrl(tail)} />
+        <meta property="og:title" content={materialMetaTitle(displayName)} />
+        <meta property="og:description" content={metaDescription} />
+        <meta name="twitter:title" content={materialMetaTitle(displayName)} />
+        <meta name="twitter:description" content={metaDescription} />
         {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
       </Helmet>
 
@@ -275,9 +309,19 @@ export default function MaterialProfile() {
               ) : null}
             </header>
 
-            <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] xl:gap-14">
+            {/* One focused table takes the whole width: these are 14-column
+                government tables, and 17rem of sticky aside is the difference
+                between four columns visible and six. The aside is DROPPED here
+                rather than scrolled under — a table wide enough to reach it
+                would otherwise collide with "Read the transcript". */}
+            <div
+              className={cn(
+                "mt-8 grid items-start gap-10 xl:gap-14",
+                !focused && "lg:grid-cols-[minmax(0,1fr)_17rem]",
+              )}
+            >
               <section className="min-w-0">
-                <Tabs defaultValue="summary">
+                <Tabs value={tab} onValueChange={setTab} id="material-content-tab">
                   <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
                     <TabsTrigger
                       value="summary"
@@ -293,10 +337,18 @@ export default function MaterialProfile() {
                         Document text
                       </TabsTrigger>
                     ) : null}
+                    {contentSummary ? (
+                      <TabsTrigger
+                        value="content"
+                        className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                      >
+                        Contents
+                      </TabsTrigger>
+                    ) : null}
                   </TabsList>
 
                   <TabsContent value="summary" className="mt-0">
-                    <Card className="rounded-none border border-t-0 shadow-none">
+                    <Card className="rounded-none border border-t-0 bg-background shadow-none">
                       <div className="p-5 md:p-8">
                         {descText ? (
                           <p className="mb-6 max-w-3xl text-base leading-7 text-foreground">
@@ -366,16 +418,53 @@ export default function MaterialProfile() {
 
                   {fullTextStr ? (
                     <TabsContent value="text" className="mt-0">
-                      <Card className="rounded-none border border-t-0 shadow-none">
+                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
                         <p className="whitespace-pre-wrap break-words p-5 text-sm leading-7 text-foreground md:p-8">
                           {fullTextStr}
                         </p>
                       </Card>
                     </TabsContent>
                   ) : null}
+
+                  {contentSummary ? (
+                    <TabsContent value="content" className="mt-0">
+                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
+                        {focusedTable ? (
+                          <TableFocusView
+                            tail={tail}
+                            tableKey={focusedTable}
+                            backTo={location.pathname}
+                          />
+                        ) : null}
+                        {!focusedTable && focusedFigure ? (
+                          <FigureFocusView
+                            tail={tail}
+                            figureKey={focusedFigure}
+                            backTo={location.pathname}
+                          />
+                        ) : null}
+                        {/* The panel stays MOUNTED behind the focused view
+                            rather than being swapped out for it. Unmounting
+                            threw away everything the reader had set up — which
+                            sections were open, what they had typed into the
+                            filter, which table was expanded — so "Back to
+                            contents" dropped them at the top of a closed list
+                            and made them find their place again. Hidden, not
+                            removed, so all of that state is still there when
+                            they come back. */}
+                        <div hidden={Boolean(focused)}>
+                          <DocumentContentPanel
+                            tail={tail}
+                            summary={contentSummary}
+                          />
+                        </div>
+                      </Card>
+                    </TabsContent>
+                  ) : null}
                 </Tabs>
               </section>
 
+              {focused ? null : (
               <aside className="space-y-8 lg:sticky lg:top-24">
                 <section aria-labelledby="material-downloads-heading">
                   <h2
@@ -386,13 +475,18 @@ export default function MaterialProfile() {
                   </h2>
                   <Separator className="mt-3" />
 
-                  <div className="mt-4 inline-grid gap-3">
+                  {/* `grid`, not `inline-grid`: an inline grid sizes itself to
+                      its widest child, so these buttons were as wide as the
+                      longest label while the transcript button below was
+                      `w-full`. Every action in this list is now one column of
+                      the aside, so they match whatever the labels say. */}
+                  <div className="mt-4 grid gap-3">
                     {links.map((link) =>
                     link.previewType ? (
                         <Button
                           key={link.href}
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                           onClick={() =>
                             setPreviewDocument({
@@ -412,7 +506,7 @@ export default function MaterialProfile() {
                       <Button
                         asChild
                         key={link.href}
-                        variant="outline"
+                        variant="ghost"
                         className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                       >
                         <a href={link.href} target="_blank" rel="noopener noreferrer">
@@ -427,7 +521,7 @@ export default function MaterialProfile() {
                         <Button
                           asChild
                           key={link.href}
-                          variant="outline"
+                          variant="ghost"
                           className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                         >
                           <a
@@ -447,7 +541,7 @@ export default function MaterialProfile() {
                     {data.url ? (
                       <Button
                         asChild
-                        variant="outline"
+                        variant="ghost"
                         className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                       >
                         <a
@@ -461,6 +555,25 @@ export default function MaterialProfile() {
                           />
                           Original source
                         </a>
+                      </Button>
+                    ) : null}
+
+                    {/* Inside the grid with the other downloads, and carrying
+                        their exact classes — it is the same kind of action
+                        (open this document and read it), and it used to be the
+                        one button in the aside with a different width. */}
+                    {contentSummary && contentSummary.pages_read > 0 ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                        onClick={() => setTranscriptOpen(true)}
+                      >
+                        <FileText
+                          className="h-4 w-4 shrink-0 text-accent"
+                          aria-hidden="true"
+                        />
+                        Read the transcript
                       </Button>
                     ) : null}
                   </div>
@@ -487,7 +600,7 @@ export default function MaterialProfile() {
                         data={data}
                         title={`${displayName} — JSON-LD`}
                         rawUrl={`${API_BASE_URL}/api/materials/${tail}`}
-                        variant="outline"
+                        variant="ghost"
                         className="h-11 justify-start gap-3 px-4"
                       />
                     ) : null}
@@ -503,6 +616,7 @@ export default function MaterialProfile() {
                   </div>
                 </section>
               </aside>
+              )}
             </div>
           </article>
         ) : null}
@@ -515,6 +629,28 @@ export default function MaterialProfile() {
           if (!open) setPreviewDocument(null);
         }}
       />
+
+      {contentSummary ? (
+        <Dialog open={transcriptOpen} onOpenChange={setTranscriptOpen}>
+          <DialogContent
+            overlayClassName="bg-black/85"
+            className="h-[94vh] w-[min(98vw,1280px)] max-w-none overflow-hidden border-white/10 bg-code-surface p-0 shadow-2xl sm:rounded-xl [&>button:last-child]:hidden"
+          >
+            <DialogTitle className="sr-only">{displayName}</DialogTitle>
+            <DialogDescription className="sr-only">
+              The transcript of this document, page by page.
+            </DialogDescription>
+            <TranscriptReader
+              tail={tail}
+              title={displayName}
+              dataset={contentSummary.provenance?.dataset}
+              pages={contentSummary.pages}
+              pagesRead={contentSummary.pages_read}
+              onClose={() => setTranscriptOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </main>
   );
 }

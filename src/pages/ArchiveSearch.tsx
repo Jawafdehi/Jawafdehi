@@ -80,6 +80,20 @@ const validSorts = new Set<ArchiveSearchSort>([
   "featured",
 ]);
 const archiveSearchPageSize = 12;
+// Mirrors MAX_OFFSET_RESULT_WINDOW in the API's search/service.py. Offset paging
+// (?page=) is rejected with HTTP 400 once `page * page_size` passes this, because
+// OpenSearch will not serve a `from + size` beyond its max_result_window — so the
+// reachable page count is bounded by THIS, not by the result count.
+//
+// At page_size 12 that is page 833, while `count` (578k+ records) implies 48,185.
+// The pager used to offer the implied last page and every click on it 400'd.
+//
+// Raising the API's window means raising this too — they are one constant in two
+// repos, and the FE cannot discover the server's value (it is not in the search
+// response envelope). If deep paging is ever genuinely needed, the response's
+// `next_cursor` is the unbounded path; it is next-only, so it cannot back a
+// numbered pager and would need a different affordance.
+const archiveSearchMaxOffsetResults = 10_000;
 const emptyFacets: ArchiveSearchFacets = {
   entity_type: [],
   case_type: [],
@@ -762,6 +776,9 @@ export default function ArchiveSearch({
             data &&
             data.count > data.page_size ? (
               <PaginationControls
+                maxPages={Math.floor(
+                  archiveSearchMaxOffsetResults / Math.max(1, data.page_size),
+                )}
                 onPageChange={(page) => updateParams({ page })}
                 page={data.page}
                 pageSize={data.page_size}

@@ -165,4 +165,26 @@ describe("EmbedCaseCard dates", () => {
     await waitFor(() => expect(container.textContent).toContain("Oct 2, 2021"));
     expect(container.textContent).toContain("cases.status.ongoing");
   });
+
+  // The card used to map `state` — our editorial workflow — onto a public chip,
+  // so a case we had merely not finished writing was syndicated to third-party
+  // sites as "Under Investigation", and every finished one read "Ongoing"
+  // regardless of the record. The workflow must not be visible here at all.
+  it.each(["DRAFT", "IN_REVIEW", "PUBLISHED", "CLOSED"] as const)(
+    "never shows a status chip for a case in state %s",
+    async (state) => {
+      getCaseById.mockResolvedValue(makeCase({ state }));
+
+      const { container } = renderEmbed();
+
+      await waitFor(() => expect(container.textContent).toContain("A case"));
+      // "Ongoing" is the removed PUBLISHED pill's own fallback string. The
+      // date-range placeholder for an undecided case resolves to the bare key
+      // `cases.status.ongoing` under this file's t() mock, so asserting the
+      // human-readable string catches the pill without colliding with it.
+      for (const leak of ["Under Investigation", "Ongoing", "Resolved", state]) {
+        expect(container.textContent).not.toContain(leak);
+      }
+    },
+  );
 });
