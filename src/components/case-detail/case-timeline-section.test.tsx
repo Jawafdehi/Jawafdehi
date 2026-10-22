@@ -43,15 +43,16 @@ describe("CaseTimelineSection heading", () => {
 
     expect(headings).toHaveLength(1);
     expect(headings[0].textContent).toContain("Timeline");
-    expect(headings[0].className).toContain("font-case-section-title");
+    // The h2 sits inline in the styled wrapper, beside any AI label.
+    expect(headings[0].parentElement?.className).toContain("font-case-section-title");
   });
 
   it("keeps the heading outside the collapsible so it never counts against the clamp", () => {
     const { container } = renderSection();
     const section = container.querySelector("section#timeline");
 
-    // Direct child of the section, ahead of the collapsible — same shape as
-    // every other case-detail section.
-    expect(section?.firstElementChild?.tagName).toBe("H2");
+    // The heading block is the section's first child, ahead of the
+    // collapsible — same shape as every other case-detail section.
+    expect(section?.firstElementChild?.firstElementChild?.tagName).toBe("H2");
   });
 });

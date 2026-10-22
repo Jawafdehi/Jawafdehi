@@ -3,16 +3,18 @@ interface KeyAllegationsSectionProps {
   allegations: string[];
   emptyLabel: string;
   title: string;
+  aiGenerated?: boolean;
 }
 
 export function KeyAllegationsSection({
   allegations,
   emptyLabel,
   title,
+  aiGenerated = false,
 }: Readonly<KeyAllegationsSectionProps>) {
   return (
     <section id="allegations" className="mb-12 scroll-mt-28 max-w-4xl">
-      <CaseSectionHeading>{title}</CaseSectionHeading>
+      <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
       <div className="text-primary/75">
         <ul className="space-y-6">

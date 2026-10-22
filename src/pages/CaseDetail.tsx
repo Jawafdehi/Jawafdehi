@@ -49,6 +49,7 @@ import { entityPath } from "@/lib/entity-links";
 import { formatBigo } from "@/utils/number";
 import { resolveLegacyCaseSlug } from "@/utils/legacyCaseMap";
 import { isCourtCaseRef } from "@/utils/courtCaseRef";
+import { isAiGenerated } from "@/utils/ai-generated";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import "@/styles/print.css";
@@ -662,6 +663,7 @@ const CaseDetail = () => {
                         crimson rule draw in off the same trigger. */}
                     <Reveal className="group">
                       <KeyAllegationsSection
+                        aiGenerated={isAiGenerated(caseData.ai_generated_sections, "key_allegations")}
                         allegations={caseData.key_allegations || []}
                         emptyLabel={t("common.notAvailable")}
                         title={t("caseDetail.allegations")}
@@ -688,6 +690,7 @@ const CaseDetail = () => {
                     {hasTimeline && (
                       <Reveal className="group">
                         <CaseTimelineSection
+                          aiGenerated={isAiGenerated(caseData.ai_generated_sections, "timeline")}
                           className="mb-12 print:static print:mb-8"
                           language={currentLang}
                           timeline={caseData.timeline || []}
@@ -697,7 +700,11 @@ const CaseDetail = () => {
                     )}
 
                     <Reveal className="group">
-                      <CaseOverviewSection description={caseData.description} title={t("caseDetail.overview")} />
+                      <CaseOverviewSection
+                        aiGenerated={isAiGenerated(caseData.ai_generated_sections, "description")}
+                        description={caseData.description}
+                        title={t("caseDetail.overview")}
+                      />
                     </Reveal>
 
                     <Reveal className="group">
