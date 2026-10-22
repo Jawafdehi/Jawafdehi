@@ -65,7 +65,7 @@ import {
   type MaterialContentSummary,
 } from "@/services/datalake-api";
 import { cn } from "@/lib/utils";
-import { matchesRomanized } from "@/lib/devanagari-roman";
+import { useDebounced } from "@/hooks/use-debounced";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
 import { rememberListScroll } from "@/lib/contents-scroll";
 
@@ -555,12 +555,16 @@ export function MarkdownTableView({ markdown }: { markdown: string }) {
  *
  * 145 tables are not browsable by scrolling, and the list has no natural order
  * a reader can exploit — a table's caption is the only handle most of them
- * have, and 89 of this document's 145 carry none at all. So the filter matches
- * BOTH the visible label and the page number: typing "52" finds page 52 and
- * every table on it, and typing a word finds the captions that contain it.
+ * have, and 89 of this document's 145 carry none at all.
  *
- * The shared `SearchBar` with its submit button off: this narrows as you type,
- * so there is nothing to submit.
+ * **The matching happens on the SERVER**, via `?q=`. It is phonetic as well as
+ * literal, so a query typed on a Latin keyboard reaches a Devanagari caption —
+ * "vivaran" finds विवरण. That vocabulary belongs to the platform, not to this
+ * component: the archive search already owns one, and a second copy here drifted
+ * from it (ours romanized व as "w", so विवरण — the most common word in the CIAA
+ * corpus — was unreachable). See `jawafdehi_shared.search.transliterate`.
+ *
+ * The shared `SearchBar` with its submit button off: this narrows as you type.
  */
 function FilterBox({
   label,
@@ -597,36 +601,17 @@ function tableLabel(stub: ContentTableStub): string {
   return stub.caption.trim() || `Table ${stub.ordinal}`;
 }
 
-function TableList({
-  tail,
-  items,
-  filter,
-}: {
-  tail: string;
-  items: ContentTableStub[];
-  filter: string;
-}) {
-  const needle = filter.trim();
-  const shown = needle
-    ? items.filter(
-        (t) =>
-          matchesRomanized(tableLabel(t), needle) ||
-          String(t.page_no).includes(needle),
-      )
-    : items;
+function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {
+  if (items.length === 0) {
+    return <p className="text-base text-muted-foreground">No table matches that.</p>;
+  }
 
   return (
-    <>
-      {shown.length === 0 ? (
-        <p className="text-base text-muted-foreground">No table matches that.</p>
-      ) : (
-        <ul>
-          {shown.map((stub) => (
-            <TableRow key={stub.key} tail={tail} stub={stub} />
-          ))}
-        </ul>
-      )}
-    </>
+    <ul>
+      {items.map((stub) => (
+        <TableRow key={stub.key} tail={tail} stub={stub} />
+      ))}
+    </ul>
   );
 }
 
@@ -671,29 +656,14 @@ function ListSkeleton({ count }: { count: number }) {
  * whether the section exists at all, but a number beside the title competed
  * with the titles themselves for the reader's eye.
  */
-function FigureList({
-  items,
-  filter,
-}: {
-  items: ContentFigure[];
-  filter: string;
-}) {
-  const needle = filter.trim();
-  const shown = needle
-    ? items.filter(
-        (f) =>
-          matchesRomanized(nepaliSafe(f.title, "Untitled chart"), needle) ||
-          String(f.page_no).includes(needle),
-      )
-    : items;
-
-  if (shown.length === 0) {
+function FigureList({ items }: { items: ContentFigure[] }) {
+  if (items.length === 0) {
     return <p className="text-base text-muted-foreground">No chart matches that.</p>;
   }
 
   return (
     <ul>
-      {shown.map((figure) => (
+      {items.map((figure) => (
         <ContentRow
           key={figure.key}
           title={nepaliSafe(figure.title, "Untitled chart")}
@@ -714,6 +684,7 @@ function ContentSection<T>({
   count,
   icon,
   toolbar,
+  query,
   load,
   render,
 }: {
@@ -723,16 +694,24 @@ function ContentSection<T>({
   icon?: ReactNode;
   /** Shown on the heading line, right-aligned, only while the section is open. */
   toolbar?: ReactNode;
-  load: () => Promise<T[] | null>;
+  /** The narrowing the API is being asked for. Part of the request, so part of
+   *  the cache key: one key per listing would serve the previous query's rows. */
+  query?: string;
+  load: (query?: string) => Promise<T[] | null>;
   render: (items: T[]) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const narrowed = query?.trim() || "";
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["datalake-material-content", id],
-    queryFn: load,
+    queryKey: ["datalake-material-content", id, narrowed],
+    queryFn: () => load(narrowed || undefined),
     enabled: open,
     retry: false,
     staleTime: 5 * 60 * 1000,
+    // Keep the rows on screen while the next narrowing is in flight. Without
+    // it every keystroke empties the list and redraws the skeleton, which
+    // reads as the filter thrashing rather than working.
+    placeholderData: (previous) => previous,
   });
 
   if (count < 1) return null;
@@ -813,6 +792,10 @@ export function DocumentContentPanel({
   // line while the list it filters stays in the section body.
   const [tableFilter, setTableFilter] = useState("");
   const [figureFilter, setFigureFilter] = useState("");
+  // The input reacts immediately; the REQUEST waits for the typing to settle,
+  // so "vivaran" is one call rather than seven.
+  const tableQuery = useDebounced(tableFilter);
+  const figureQuery = useDebounced(figureFilter);
 
   return (
     <div className="p-5 md:p-8">
@@ -828,9 +811,10 @@ export function DocumentContentPanel({
             onChange={setTableFilter}
           />
         }
-        load={() => listMaterialTables(tail)}
+        query={tableQuery}
+        load={(q) => listMaterialTables(tail, q)}
         render={(items) => (
-          <TableList tail={tail} items={items} filter={tableFilter} />
+          <TableList tail={tail} items={items} />
         )}
       />
 
@@ -846,8 +830,9 @@ export function DocumentContentPanel({
             onChange={setFigureFilter}
           />
         }
-        load={() => listMaterialFigures(tail)}
-        render={(items) => <FigureList items={items} filter={figureFilter} />}
+        query={figureQuery}
+        load={(q) => listMaterialFigures(tail, q)}
+        render={(items) => <FigureList items={items} />}
       />
     </div>
   );

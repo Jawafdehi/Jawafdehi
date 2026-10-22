@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -406,9 +406,46 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^Tables/ }));
     await screen.findByRole("button", { name: /तालिका २\.१/ });
-    expect(listMaterialTables).toHaveBeenCalledWith("ag/116707");
+    expect(listMaterialTables).toHaveBeenCalledWith("ag/116707", undefined);
     // Opening one section must not pull the other in with it.
     expect(listMaterialFigures).not.toHaveBeenCalled();
+  });
+
+  it("asks the API to narrow the listing instead of filtering in the browser", async () => {
+    // The phonetic vocabulary belongs to the platform, not to this component.
+    // A second copy here drifted from the one the archive search uses — ours
+    // romanized व as "w", so विवरण, the most common word in the corpus, was
+    // unreachable from a Latin keyboard.
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialTables.mockResolvedValue(TABLES);
+    renderPage();
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
+    await screen.findByRole("button", { name: /तालिका २\.१/ });
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "vivaran" },
+    });
+    // Debounced: the keystroke alone must not reach the network.
+    expect(listMaterialTables).not.toHaveBeenCalledWith("ag/116707", "vivaran");
+
+    await waitFor(() =>
+      expect(listMaterialTables).toHaveBeenCalledWith("ag/116707", "vivaran"),
+    );
+  });
+
+  it("does not send an empty q, which is a different request for one answer", async () => {
+    getMaterial.mockResolvedValue(material({ "jawafdehi:content": SUMMARY }));
+    listMaterialTables.mockResolvedValue(TABLES);
+    renderPage();
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: /Contents/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Tables/ }));
+    await screen.findByRole("button", { name: /तालिका २\.१/ });
+
+    // `undefined`, never `""`: an empty q is another cache key on our side and
+    // another ETag on the server's, for an identical body.
+    expect(listMaterialTables).toHaveBeenCalledWith("ag/116707", undefined);
+    expect(listMaterialTables).not.toHaveBeenCalledWith("ag/116707", "");
   });
 
   it("titles each section without a count competing with it", async () => {
