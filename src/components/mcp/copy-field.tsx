@@ -1,7 +1,7 @@
 import { Check, Copy } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,22 +17,7 @@ export function CopyButton({
   iconClassName,
 }: Readonly<{ value: string; label: string; className?: string; iconClassName?: string }>) {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
-  const timer = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const copy = useCallback(async () => {
-    let next: "copied" | "failed" = "copied";
-    try {
-      await navigator.clipboard.writeText(value);
-    } catch {
-      next = "failed";
-    }
-    setStatus(next);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setStatus("idle"), next === "copied" ? 1600 : 4000);
-  }, [value]);
+  const { status, copy } = useCopyToClipboard(value);
 
   const copied = status === "copied";
   const failed = status === "failed";
@@ -58,11 +43,11 @@ export function CopyButton({
       {/* Visible for sighted users; the live region below announces the same
           thing. A red icon alone would say something went wrong without saying
           what, and the fix (select it by hand) is not guessable. */}
-      {failed ? <span className="text-xs text-accent">{t("mcp.copyFailed")}</span> : null}
+      {failed ? <span className="text-xs text-accent">{t("common.copyFailed")}</span> : null}
 
       <span aria-live="polite" className="sr-only">
-        {copied ? t("mcp.copied") : ""}
-        {failed ? t("mcp.copyFailed") : ""}
+        {copied ? t("common.copied") : ""}
+        {failed ? t("common.copyFailed") : ""}
       </span>
     </>
   );
