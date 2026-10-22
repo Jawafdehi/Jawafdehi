@@ -2812,17 +2812,6 @@
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
-    "prompts": {
-      "title": "Ask it things like",
-      "items": {
-        "cases": "Which corruption cases has Jawafdehi published about hydropower projects?",
-        "person": "Summarise Jawafdehi's case on the Giribandhu Tea Estate land swap.",
-        "office": "Which provincial ministries does Jawafdehi track, and which cases mention them?",
-        "court": "How many corruption cases did the Special Court decide in 2080 BS?",
-        "documents": "Show me the CIAA press releases a case is built on.",
-        "date": "What is 15 Shrawan 2081 BS in the Gregorian calendar?"
-      }
-    },
     "install": {
       "title": "Install",
       "body": "The server is remote, so there is nothing to download. Pick your tool and either paste the URL into its connector settings or run the one-line command."

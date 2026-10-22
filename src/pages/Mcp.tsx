@@ -9,7 +9,6 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
-import { PromptMarquee } from "@/components/mcp/prompt-marquee";
 import { ToolCarousel } from "@/components/mcp/tool-carousel";
 import {
   TerminalCommand,
@@ -59,11 +58,6 @@ const CLIENTS = [
   { key: "other", terminalLabel: undefined, command: undefined },
 ] as const;
 
-// The six questions this page is really selling. Prompts are the clearest way to
-// show what a tool catalogue is for — a reader recognises their own question
-// here long before they recognise it in a list of tool names.
-const PROMPT_KEYS = ["cases", "person", "office", "court", "documents", "date"] as const;
-
 // The six things the server can do, grouped by what a reader is looking for
 // rather than by which Django app serves them. The wire tool names are no
 // longer printed on the page — this list is only the categories now — but the
@@ -109,7 +103,7 @@ const Mcp = () => {
             thing read is what this does, not where it lives. */}
         <section
           id="mcp-hero"
-          className="relative isolate -mt-[76px] flex min-h-svh flex-col overflow-hidden bg-background pt-[76px]"
+          className="relative isolate -mt-[76px] flex min-h-[90svh] flex-col overflow-hidden bg-background pt-[76px]"
         >
           <PageHeroBackdrop />
 
@@ -143,41 +137,6 @@ const Mcp = () => {
               </div>
             </div>
 
-            {/* Full-bleed, so the row runs off both edges of the viewport the
-                way Linear's does — hence it sits outside layout-container. */}
-            <div className="mt-14 animate-hero-rise [animation-delay:420ms] motion-reduce:animate-none md:mt-16">
-              <div className="layout-container">
-                <p className="mb-4 text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                  {t("mcp.prompts.title")}
-                </p>
-              </div>
-
-              <PromptMarquee items={PROMPT_KEYS.map((key) => t(`mcp.prompts.items.${key}`))} />
-            </div>
-          </div>
-        </section>
-
-        {/* The endpoint, on its own. It is the one string anybody copies, so it
-            gets a band rather than a corner of the hero. */}
-        <section id="endpoint" className="bg-muted/10 py-12 md:py-14">
-          <div className="layout-container">
-            <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-              <TerminalWindow
-                label={t("mcp.endpoint.label")}
-                action={<TerminalCopyButton value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />}
-                bodyClassName="px-4 py-4"
-                className="w-full text-left"
-              >
-                <code className="block overflow-x-auto whitespace-nowrap font-mono text-base font-bold text-code-surface-foreground sm:text-lg md:text-xl">
-                  {MCP_URL_ORIGIN}
-                  <span className="text-code-surface-accent">{MCP_URL_PATH}</span>
-                </code>
-              </TerminalWindow>
-
-              <p className="font-paragraph font-paragraph-foreground text-sm">
-                {t("mcp.endpoint.caption")}
-              </p>
-            </div>
           </div>
         </section>
 
@@ -193,16 +152,39 @@ const Mcp = () => {
                 {t("mcp.install.body")}
               </p>
 
+              {/* The URL sits at the head of the section that tells you
+                  where to paste it. On its own it was a centred band in a
+                  left-aligned page, orphaned from the only instructions
+                  that use it. */}
+              <div className="mt-6 max-w-2xl">
+                <TerminalWindow
+                  label={t("mcp.endpoint.label")}
+                  action={
+                    <TerminalCopyButton value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />
+                  }
+                  bodyClassName="px-4 py-3.5"
+                >
+                  <code className="block overflow-x-auto whitespace-nowrap font-mono text-base font-bold text-code-surface-foreground sm:text-lg">
+                    {MCP_URL_ORIGIN}
+                    <span className="text-code-surface-accent">{MCP_URL_PATH}</span>
+                  </code>
+                </TerminalWindow>
+
+                <p className="mt-3 font-paragraph font-paragraph-foreground text-sm">
+                  {t("mcp.endpoint.caption")}
+                </p>
+              </div>
+
               <Tabs defaultValue="claude" className="mt-8">
                 {/* A capsule rail: the track is a pill, and the selected tab
                     is a solid pill inside it. The shape carries the state, so
                     the inactive tabs need no chrome of their own. */}
-                <TabsList className="h-auto flex-wrap justify-start gap-1 rounded-full border border-border bg-background p-1.5">
+                <TabsList className="h-auto flex-wrap justify-start gap-1 rounded-full border border-border bg-background p-1">
                   {CLIENTS.map(({ key }) => (
                     <TabsTrigger
                       key={key}
                       value={key}
-                      className="rounded-full px-5 py-2.5 text-sm font-semibold text-muted-foreground shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:text-base"
+                      className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
                     >
                       {t(`mcp.clients.${key}.name`)}
                     </TabsTrigger>
