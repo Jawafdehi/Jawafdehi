@@ -31,7 +31,10 @@ const PRODUCTS: Product[] = [
   {
     icon: FileType,
     name: "likhit",
-    href: "https://jawafdehi.github.io/likhit",
+    // Internal, for the same reason /mcp is: someone on this page wants to use
+    // the converter, and the benchmark is a worse first answer to that than the
+    // page with the install command on it. The benchmark is linked from there.
+    to: "/likhit",
     description:
       "A universal Markdown converter for Nepali documents, turning the PDFs and Word files public records arrive as into clean, structured text.",
     tags: ["Markdown", "Open Source", "Nepali Documents"],

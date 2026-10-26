@@ -178,7 +178,8 @@
       "entityDetail": "Open a tracked person, office, or organization.",
       "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers.",
       "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
-      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol."
+      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
+      "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter."
     }
   },
   "footer": {
@@ -218,7 +219,8 @@
       "linktree": "Linktree"
     },
     "pressKit": "Press Kit",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "likhit": "likhit"
   },
   "home": {
     "hero": {
@@ -1107,6 +1109,8 @@
     "returnHome": "Return to Home"
   },
   "common": {
+    "copied": "Copied",
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
     "changeLanguage": "Change language",
     "english": "English",
     "nepali": "नेपाली (Nepali)",
@@ -2769,8 +2773,120 @@
     "tools": {
       "title": "What your AI can read",
       "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only."
+    }
+  },
+  "likhit": {
+    "meta": {
+      "title": "likhit — Nepali documents to Markdown",
+      "description": "likhit is Jawafdehi's open-source MarkItDown plugin for Nepali documents: Devanagari repair, layout-aware Markdown, optional OCR for scanned pages, and legacy .doc support."
     },
-    "copied": "Copied",
-    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
+    "hero": {
+      "title": "Nepali documents, converted",
+      "titleAccent": "faithfully",
+      "benchmark": "Read the benchmark",
+      "source": "Source on GitHub",
+      "pypi": "PyPI"
+    },
+    "install": {
+      "copyLabel": "Copy the install command",
+      "lede": "<name>likhit</name> is Jawafdehi's public <markitdown>MarkItDown</markitdown> plugin for Nepal-specific document support. It adds Nepali PDF repair, layout-aware Markdown assembly, optional OCR for image-dominant pages, and legacy <doc>.doc</doc> support. For PDFs it evaluates several extraction paths and returns the best result rather than trusting one fixed pipeline.",
+      "usage": "Then enable plugins when you convert: <api>MarkItDown(enable_plugins=True)</api>, or from the command line <cli>markitdown --use-plugins document.pdf</cli>."
+    },
+    "features": {
+      "repair": {
+        "name": "Devanagari repair",
+        "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."
+      },
+      "layout": {
+        "name": "Layout-aware Markdown",
+        "body": "Reconstructs reading order and tables instead of emitting a flat character dump."
+      },
+      "ocr": {
+        "name": "OCR when needed",
+        "body": "Falls back to a vision model on image-only pages, which no text layer can serve."
+      },
+      "legacy": {
+        "name": "Legacy formats",
+        "body": "Reads the .doc and Preeti-era files government archives are actually made of."
+      }
+    },
+    "cli": {
+      "redactNote": "Since 0.2.0 this redacts as it converts, at the <tier>strict</tier> tier. Pass <opt>--redact none</opt> to write the transcript untouched.",
+      "title": "Convert from the command line",
+      "body": "The package installs <cmd>likhit-save</cmd>, a helper that runs MarkItDown with the plugin enabled and writes the Markdown out for you — no Python needed.",
+      "copyCommand": "Copy the command",
+      "one": "One file",
+      "many": "Many files",
+      "pages": "Page range"
+    },
+    "ocr": {
+      "title": "Turn on OCR for scanned pages",
+      "body": "Plenty of published records are page images with no usable text layer — nothing but a vision model can read them. likhit adds an OCR candidate when it finds such a page and OCR is configured. It talks to any endpoint that speaks the OpenAI chat API, so the same three variables cover a model on your own machine, Bedrock behind a gateway, or a hosted API.",
+      "note": "<baseUrl>OPENAI_BASE_URL</baseUrl> points at the endpoint, <apiKey>OPENAI_API_KEY</apiKey> authenticates to it, and <model>MARKITDOWN_OCR_MODEL</model> names the model. Leave them unset and likhit still converts — it just records that a page needed OCR and carries on with the text it could extract.",
+      "copyRecipe": "Copy the setup",
+      "local": {
+        "badge": "No API cost",
+        "name": "A model on your own machine",
+        "body": "Ollama, llama.cpp or vLLM — all three serve an OpenAI-compatible endpoint, and no page image leaves the machine."
+      },
+      "bedrock": {
+        "badge": "AWS",
+        "name": "Bedrock, through a gateway",
+        "body": "Bedrock does not speak the OpenAI API, so run a translating proxy in front of it. The proxy picks up your AWS credentials the usual way, and likhit only ever sees an OpenAI endpoint.",
+        "footnote": "Any vision-capable model your account has enabled will do — swap the model id for the one you have access to."
+      },
+      "hosted": {
+        "badge": "Hosted",
+        "name": "A hosted API",
+        "body": "Point at any OpenAI-compatible provider. For Gemini, set the Google key alone and likhit selects Google's OpenAI-compatible base URL for you."
+      }
+    },
+    "whatsNew": {
+      "title": "What's new",
+      "released": "Released 16 October 2026 — the first release to reach PyPI since 0.1.7, so everything tagged in between ships here too.",
+      "privacy": {
+        "name": "Redaction, built in",
+        "body": "<pkg>likhit.privacy</pkg> and the <cli>likhit-redact</cli> command remove personal data over four named tiers — and conversion now applies the widest of them by default."
+      },
+      "quality": {
+        "name": "Transcript auditing",
+        "body": "<pkg>likhit.quality</pkg> and <cli>likhit-audit</cli> score a converted tree, so a bad extraction can be found without reading every file in it."
+      },
+      "extraction": {
+        "name": "Around sixty extraction fixes",
+        "body": "Overwhelmingly in the legacy-font path: which Preeti map wins, how garble is measured, ruled tables that emitted every page twice, and legacy .doc anchored on LibreOffice."
+      },
+      "changelog": "Read the full changelog"
+    },
+    "privacy": {
+      "title": "Taking personal data out",
+      "body": "A public accountability archive still has to keep citizenship numbers, dates of birth and phone numbers out of what it publishes. As of 0.2.0 <cmd>likhit-save</cmd> redacts at the widest tier by default, so the unredacted transcript is no longer written to disk first and cleaned up afterwards. <opt>--redact none</opt> restores the old behaviour exactly.",
+      "tiersTitle": "Four tiers, not a box of flags",
+      "tiersBody": "Precision is measured per removal rule against a real corpus, so a tier is a configuration that carries a number. A flag set would let every caller invent a combination nobody has measured.",
+      "tiers": {
+        "none": {
+          "name": "none",
+          "body": "Removes nothing; the output is byte-identical to the input. First-class on purpose — internal casework, the retained original and the research corpus all need it."
+        },
+        "identifiers": {
+          "name": "identifiers",
+          "body": "Citizenship numbers and dates of birth: the two classes adjudicated as unambiguously personal and of no research value."
+        },
+        "contact": {
+          "name": "contact",
+          "body": "Everything above, plus mobile numbers, landlines and email addresses."
+        },
+        "strict": {
+          "name": "strict",
+          "body": "Everything likhit can remove — contact plus bank account, age and passport. The default. Not PAN: a business registration number is public by design, so it is reported and left in place."
+        }
+      },
+      "commandsTitle": "Running it on its own",
+      "copyCommand": "Copy the command",
+      "scan": "Report what is there, write nothing",
+      "pdf": "Redact one PDF into a redacted PDF",
+      "tree": "Redact a whole tree into a staging copy"
+    },
+    "copy": "Copy"
   }
 }
