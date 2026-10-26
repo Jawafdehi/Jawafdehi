@@ -44,7 +44,7 @@ export function appealResult(verdictType: string | null | undefined): AppealResu
   return RESULT_BY_VERDICT[verdictType.trim().toUpperCase()] ?? null;
 }
 
-export function appealResultLabel(result: AppealResult, language: string): string {
+function appealResultLabel(result: AppealResult, language: string): string {
   return RESULT_LABELS[result][language === "ne" ? "ne" : "en"];
 }
 
@@ -61,18 +61,6 @@ export interface DecidedAppeal {
   result: AppealResult;
   /** The appeal court, localized ("Supreme Court"); empty when the IRI names none. */
   forum: string;
-}
-
-/** Every decided appeal with a classified verdict, in stage order. */
-export function decidedAppeals(
-  dates: CaseDates | null | undefined,
-  appealVerdicts: AppealVerdicts,
-  language: string,
-): DecidedAppeal[] {
-  return caseStages(dates).flatMap((stage) => {
-    const result = stageAppealResult(stage, appealVerdicts);
-    return result ? [toDecided(stage, result, language)] : [];
-  });
 }
 
 function toDecided(stage: CaseStage, result: AppealResult, language: string): DecidedAppeal {

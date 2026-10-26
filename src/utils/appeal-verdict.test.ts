@@ -7,7 +7,6 @@ import {
   appealResult,
   appealWithForumLabel,
   accusedAppeal,
-  decidedAppeals,
 } from "@/utils/appeal-verdict";
 
 const SPECIAL = "https://jawafdehi.org/courtcase/special/071-cr-0255";
@@ -53,24 +52,6 @@ describe("appealResult", () => {
   });
 });
 
-describe("decidedAppeals", () => {
-  it("names the appeal court in the reader's language", () => {
-    const verdicts = { [SUPREME]: "REVERSED" };
-    expect(decidedAppeals(decided, verdicts, "en")).toEqual([
-      { result: "overturned", forum: "Supreme Court" },
-    ]);
-    expect(decidedAppeals(decided, verdicts, "ne")[0].forum).toBe("सर्वोच्च अदालत");
-  });
-
-  it("ignores an appeal stage with no end date even if a verdict is served", () => {
-    expect(decidedAppeals(pending, { [SUPREME]: "AFFIRMED" }, "en")).toEqual([]);
-  });
-
-  it("is empty without appeal_verdicts", () => {
-    expect(decidedAppeals(decided, undefined, "en")).toEqual([]);
-  });
-});
-
 describe("accusedAppeal", () => {
   const reversed = { [SUPREME]: "REVERSED" };
   const upheld = { [SUPREME]: "AFFIRMED" };
@@ -105,6 +86,14 @@ describe("accusedAppeal", () => {
 
     it("is null while the appeal is pending", () => {
       expect(accusedAppeal(a, [a], pending, { [SUPREME]: null }, undefined, "en")).toBeNull();
+    });
+
+    it("is null for an appeal stage with no end date even if a verdict is served", () => {
+      expect(accusedAppeal(a, [a], pending, upheld, undefined, "en")).toBeNull();
+    });
+
+    it("is null without appeal_verdicts", () => {
+      expect(accusedAppeal(a, [a], decided, undefined, undefined, "en")).toBeNull();
     });
   });
 
