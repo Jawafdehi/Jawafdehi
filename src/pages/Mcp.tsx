@@ -218,7 +218,7 @@ const Mcp = () => {
               <Button
                 asChild
                 variant="ghost"
-                className="-mx-4 font-medium sm:mx-0 sm:-mr-4"
+                className="-mx-4 font-semibold sm:mx-0 sm:-mr-4"
               >
                 <a
                   href={SKILLS_REPO_URL}

@@ -18,7 +18,7 @@ export const ToggleList = forwardRef<
   <TabsList
     ref={ref}
     className={cn(
-      "inline-flex h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-full border border-border bg-background p-1 [scrollbar-width:none]",
+      "inline-flex h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-full border border-border bg-background p-0.5 [scrollbar-width:none]",
       className,
     )}
     {...props}
@@ -33,7 +33,7 @@ export const ToggleTrigger = forwardRef<
   <TabsTrigger
     ref={ref}
     className={cn(
-      "shrink-0 rounded-full px-3 py-1.5 text-sm font-normal text-muted-foreground shadow-none hover:text-foreground sm:px-4",
+      "shrink-0 rounded-full px-3 py-1 text-sm font-normal text-muted-foreground shadow-none hover:text-foreground sm:px-4",
       "data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none",
       className,
     )}
