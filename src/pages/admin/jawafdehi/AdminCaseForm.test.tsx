@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render as rtlRender, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
+import { fireEvent, render as rtlRender, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // BB-37 — the admin case editor gains a "View on website" link to the public
@@ -41,18 +41,22 @@ vi.mock("@/context/CaseworkAuthContext", () => ({
 vi.mock("@/services/admin-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/admin-api")>()),
   getCaseWithEtag: vi.fn(),
+  patchCaseWithEtag: vi.fn(),
   // The byline editor fetches the account roster on mount. Stubbed so the test
   // exercises the form, not axios against a jsdom origin that has no server.
   listCaseAuthorCandidates: vi.fn(async () => []),
 }));
-import { getCaseWithEtag } from "@/services/admin-api";
+import { getCaseWithEtag, patchCaseWithEtag } from "@/services/admin-api";
 
 // Heavy / side-effectful children are irrelevant to the header link under test;
 // stub them so the form renders fast and without the Markdown editor, the
 // Nepali datepicker, or the history panel's own fetch on mount.
 vi.mock("@uiw/react-md-editor", () => ({ default: () => <div /> }));
 vi.mock("@/components/admin/case/EntityRelationshipsEditor", () => ({ default: () => <div /> }));
-vi.mock("@/components/admin/case/TimelineEditor", () => ({ default: () => <div /> }));
+// Renders its header slot, which is where the timeline's AI-generated box sits.
+vi.mock("@/components/admin/case/TimelineEditor", () => ({
+  default: ({ headerSlot }: { headerSlot?: React.ReactNode }) => <div>{headerSlot}</div>,
+}));
 vi.mock("@/components/admin/case/EvidenceEditor", () => ({ default: () => <div /> }));
 vi.mock("@/components/admin/case/ChipListEditor", () => ({ default: () => <div /> }));
 vi.mock("@/components/admin/case/CaseStateControl", () => ({ default: () => <div /> }));
@@ -89,6 +93,7 @@ const viewLink = (): HTMLAnchorElement | null =>
 
 beforeEach(() => {
   vi.mocked(getCaseWithEtag).mockReset();
+  vi.mocked(patchCaseWithEtag).mockReset();
   navigate.mockReset();
 });
 
@@ -313,5 +318,127 @@ describe("AdminCaseForm — the stage editor replaces the single date pair", () 
     const save = screen.getByRole("button", { name: /admin.caseForm.saveChanges/ });
     expect(save.hasAttribute("disabled")).toBe(false);
     expect(screen.queryByText("admin.caseForm.stageRowsInvalid")).toBeNull();
+  });
+});
+
+// Sections an enricher wrote carry a public "AI-generated" label until a
+// caseworker unticks the section's box. The list rides the normal case PATCH.
+describe("AdminCaseForm — AI-generated section boxes", () => {
+  // Radix Checkbox measures itself; jsdom has no ResizeObserver.
+  beforeAll(() => {
+    globalThis.ResizeObserver ??= class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+  });
+
+  const box = (section: string) =>
+    screen
+      .getByTestId(`ai-generated-toggle-${section}`)
+      .querySelector('[role="checkbox"]') as HTMLElement;
+  const isTicked = (section: string) => box(section).getAttribute("aria-checked") === "true";
+  const save = () => screen.getByRole("button", { name: /admin.caseForm.saveChanges/ });
+  const sentOps = () => vi.mocked(patchCaseWithEtag).mock.calls[0][1];
+
+  const loadAi = (sections: unknown, extra: Record<string, unknown> = {}) =>
+    loadCase("DRAFT", {
+      key_allegations: ["Paid twice for one contract"],
+      ai_generated_sections: sections,
+      ...extra,
+    });
+
+  // Echo the saved case back, as the API does.
+  const patchEchoes = () =>
+    vi.mocked(patchCaseWithEtag).mockImplementation(async (_slug, ops) => {
+      const op = ops.find((o) => o.path === "/ai_generated_sections");
+      return {
+        data: {
+          slug: "ncell-tax-case",
+          title: "Ncell tax case",
+          case_type: "CORRUPTION",
+          state: "DRAFT",
+          key_allegations: ["Paid twice for one contract"],
+          ai_generated_sections: op ? op.value : ["description", "timeline"],
+        },
+        etag: 'W/"2"',
+      };
+    });
+
+  it("reflects the loaded list, one box per section", async () => {
+    loadAi(["description", "timeline"]);
+    render(<AdminCaseForm />);
+
+    await waitFor(() => expect(screen.getByTestId("ai-generated-toggle-description")).toBeTruthy());
+    expect(isTicked("description")).toBe(true);
+    expect(isTicked("key_allegations")).toBe(false);
+    expect(isTicked("timeline")).toBe(true);
+  });
+
+  it("offers no boxes when the payload has no ai_generated_sections key", async () => {
+    // A backend a release behind: absent must not read as "none", or a save
+    // would write a field that API does not know.
+    loadCase("DRAFT", {});
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/admin\.caseForm\.editingHint/)).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("ai-generated-toggle-description")).toBeNull();
+    expect(screen.queryByTestId("ai-generated-toggle-key_allegations")).toBeNull();
+    expect(screen.queryByTestId("ai-generated-toggle-timeline")).toBeNull();
+  });
+
+  it("sends the updated list in the PATCH when a box is toggled", async () => {
+    loadAi(["description", "timeline"]);
+    patchEchoes();
+    render(<AdminCaseForm />);
+
+    await waitFor(() => expect(screen.getByTestId("ai-generated-toggle-description")).toBeTruthy());
+    fireEvent.click(box("description"));
+    fireEvent.click(box("key_allegations"));
+    expect(isTicked("description")).toBe(false);
+    expect(isTicked("key_allegations")).toBe(true);
+    fireEvent.click(save());
+
+    await waitFor(() => expect(patchCaseWithEtag).toHaveBeenCalledTimes(1));
+    expect(sentOps()).toEqual([
+      { op: "replace", path: "/ai_generated_sections", value: ["key_allegations", "timeline"] },
+    ]);
+  });
+
+  it("sends an empty list once every box is unticked", async () => {
+    loadAi(["timeline"]);
+    patchEchoes();
+    render(<AdminCaseForm />);
+
+    await waitFor(() => expect(screen.getByTestId("ai-generated-toggle-timeline")).toBeTruthy());
+    fireEvent.click(box("timeline"));
+    fireEvent.click(save());
+
+    await waitFor(() => expect(patchCaseWithEtag).toHaveBeenCalledTimes(1));
+    expect(sentOps()).toEqual([
+      { op: "replace", path: "/ai_generated_sections", value: [] },
+    ]);
+  });
+
+  it("keeps a section's box ticked when its text is edited", async () => {
+    // Fixing a typo is not a review: only an explicit untick clears the label.
+    loadAi(["key_allegations"]);
+    patchEchoes();
+    render(<AdminCaseForm />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("ai-generated-toggle-key_allegations")).toBeTruthy(),
+    );
+    const row = screen.getByLabelText("admin.caseForm.allegationRowLabel") as HTMLInputElement;
+    fireEvent.change(row, { target: { value: "Paid twice for a single contract" } });
+    expect(isTicked("key_allegations")).toBe(true);
+    fireEvent.click(save());
+
+    await waitFor(() => expect(patchCaseWithEtag).toHaveBeenCalledTimes(1));
+    const paths = sentOps().map((o) => o.path);
+    expect(paths).toContain("/key_allegations");
+    expect(paths).not.toContain("/ai_generated_sections");
   });
 });

@@ -46,7 +46,8 @@ import CaseStagesEditor from "@/components/admin/case/CaseStagesEditor";
 import EvidenceEditor from "@/components/admin/case/EvidenceEditor";
 import ChipListEditor from "@/components/admin/case/ChipListEditor";
 import CaseImageField from "@/components/admin/case/CaseImageField";
-import type { CaseImage } from "@/types/jds";
+import type { AiGeneratedSection, CaseImage } from "@/types/jds";
+import { AI_GENERATED_SECTIONS } from "@/utils/ai-generated";
 import CaseBylineEditor, {
   type AuthorRow,
   type EditHistoryRow,
@@ -56,6 +57,7 @@ import CaseReviewScoreBadge from "@/components/admin/case/CaseReviewScoreBadge";
 import CaseHistoryPanel from "@/components/admin/case/CaseHistoryPanel";
 import { FormError, FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -117,6 +119,9 @@ interface CaseFormState {
   // DERIVED at display time (public pages and the admin BS picker), never
   // stored — the backend has no BS columns.
   stages: CaseStageRow[];
+  // Sections still carrying the public "AI-generated" label. Only an explicit
+  // untick clears one; editing the section's text never does.
+  ai_generated_sections: string[];
 }
 
 const EMPTY: CaseFormState = {
@@ -143,6 +148,7 @@ const EMPTY: CaseFormState = {
   tags: [],
   court_cases: [],
   stages: [],
+  ai_generated_sections: [],
 };
 
 // Coerce a loaded relationship_type into the known enum (default ACCUSED).
@@ -285,6 +291,22 @@ function previewsFromCase(c: Record<string, unknown>) {
   return { thumbnail: image(c.thumbnail), banner: image(c.banner) };
 }
 
+// Whether the payload carries `ai_generated_sections` at all. Absent is not
+// empty (same reasoning as hasStageList): an API a release behind would show
+// every box unticked, and a save would try to write a field it does not know.
+function hasAiSections(c: Record<string, unknown>): boolean {
+  return Array.isArray(c.ai_generated_sections);
+}
+
+// Known sections in page order, then anything else the API sent, so a value
+// this build does not know survives a save rather than being dropped.
+function orderAiSections(list: readonly string[]): string[] {
+  const unique = Array.from(new Set(list));
+  const known = AI_GENERATED_SECTIONS.filter((s) => unique.includes(s));
+  const rest = unique.filter((s) => !(AI_GENERATED_SECTIONS as readonly string[]).includes(s));
+  return [...known, ...rest];
+}
+
 // Parse a loaded case (loose read-plane shape) into the editor state.
 function fromCase(c: Record<string, unknown>): CaseFormState {
   const allegations = Array.isArray(c.key_allegations)
@@ -317,6 +339,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     // Canonical @id IRIs — the only court-case reference format.
     court_cases: strList(c.court_cases),
     stages: parseStages(c),
+    ai_generated_sections: orderAiSections(strList(c.ai_generated_sections)),
   };
 }
 
@@ -340,6 +363,8 @@ export default function AdminCaseForm() {
   // See hasStageList: false means the payload had no `dates` key, so the
   // editor must neither show rows nor emit a /dates op.
   const [stagesAvailable, setStagesAvailable] = useState(true);
+  // See hasAiSections: false hides the AI-generated boxes and emits no op.
+  const [aiSectionsAvailable, setAiSectionsAvailable] = useState(false);
   const [caseState, setCaseState] = useState<string>("DRAFT");
   // Index of a just-added allegation row so its input can grab focus once it
   // mounts — otherwise a row appended below the fold reads as a no-op (cf. BB-27).
@@ -392,6 +417,7 @@ export default function AdminCaseForm() {
       setForm(parsed);
       setOriginal(parsed);
       setStagesAvailable(hasStageList(c));
+      setAiSectionsAvailable(hasAiSections(c));
       setPreviews(previewsFromCase(c));
       setCaseState(str(c.state ?? c.status) || "DRAFT");
       setEtag(tok);
@@ -446,6 +472,32 @@ export default function AdminCaseForm() {
     // for focus so the new (empty) input is ready to type into.
     pendingAllegationFocus.current = form.key_allegations.length;
     setForm((f) => ({ ...f, key_allegations: [...f.key_allegations, ""] }));
+  };
+
+  const setAiSection = (section: AiGeneratedSection, on: boolean) =>
+    setForm((f) => {
+      const rest = f.ai_generated_sections.filter((s) => s !== section);
+      return { ...f, ai_generated_sections: orderAiSections(on ? [...rest, section] : rest) };
+    });
+
+  // The "AI-generated, not yet reviewed" box for one section. Edit mode only:
+  // nothing renders until a loaded case says the API serves the field.
+  const aiSectionToggle = (section: AiGeneratedSection, sectionLabel: string) => {
+    if (!aiSectionsAvailable) return null;
+    const id = `ai-generated-${section}`;
+    return (
+      <div className="flex items-center gap-2" data-testid={`ai-generated-toggle-${section}`}>
+        <Checkbox
+          id={id}
+          checked={form.ai_generated_sections.includes(section)}
+          onCheckedChange={(v) => setAiSection(section, v === true)}
+          aria-label={`${sectionLabel}: ${t("admin.caseForm.aiGeneratedSection")}`}
+        />
+        <Label htmlFor={id} className="text-xs font-normal text-muted-foreground">
+          {t("admin.caseForm.aiGeneratedSection")}
+        </Label>
+      </div>
+    );
   };
 
   const effectiveSlug = editing
@@ -548,6 +600,8 @@ export default function AdminCaseForm() {
     // editor that started blank would delete the stages the case really has.
     if (stagesAvailable && changed(form.stages, original.stages))
       ops.push(buildStagesPatch(form.stages));
+    if (aiSectionsAvailable && changed(form.ai_generated_sections, original.ai_generated_sections))
+      ops.push(replaceOp("/ai_generated_sections", form.ai_generated_sections));
     return ops;
   };
 
@@ -601,6 +655,7 @@ export default function AdminCaseForm() {
         setForm(parsed);
         setOriginal(parsed);
         setStagesAvailable(hasStageList(updated));
+        setAiSectionsAvailable(hasAiSections(updated));
         setPreviews(previewsFromCase(updated));
         setCaseState(str(updated.state ?? updated.status) || caseState);
         setEtag(tok);
@@ -870,6 +925,7 @@ export default function AdminCaseForm() {
           <p className="text-xs text-muted-foreground">
             {t("admin.caseForm.descriptionHelp")}
           </p>
+          {aiSectionToggle("description", t("admin.caseForm.labelDescription"))}
           <MDEditor
             value={form.description}
             onChange={(v) => set("description", v ?? "")}
@@ -938,6 +994,7 @@ export default function AdminCaseForm() {
           <p className="text-xs text-muted-foreground">
             {t("admin.caseForm.allegationsHelp")}
           </p>
+          {aiSectionToggle("key_allegations", t("admin.caseForm.labelAllegations"))}
           {form.key_allegations.length > 0 && (
             <div className="space-y-2">
               {form.key_allegations.map((allegation, i) => (
@@ -1122,6 +1179,7 @@ export default function AdminCaseForm() {
             <TimelineEditor
               rows={form.timeline}
               onChange={(rows) => set("timeline", rows)}
+              headerSlot={aiSectionToggle("timeline", t("caseDetail.timeline"))}
             />
             <EvidenceEditor
               rows={form.evidence}
