@@ -7,6 +7,53 @@
 
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
 import { formatCourtName, formatCourtType } from "@/utils/court-case-format";
+import { entityTypeToken, humanizeEntityType } from "@/utils/entity-helpers";
+
+/**
+ * Entity-type facet tokens that carry a bilingual label, keyed by the CANONICAL
+ * token rather than the raw bucket value.
+ *
+ * The raw values are schema.org `@type`, comma-joined when the record declares
+ * more than one class and still carrying the `jawafdehi:` CURIE:
+ * `AdministrativeArea,jawafdehi:RuralMunicipality`, `Organization,Corporation`,
+ * `jawafdehi:JudicialBody`. Three of them truncate to the identical
+ * `AdministrativeArea,jaw…` in the sidebar's width, which is how a reader ends
+ * up with three checkboxes that look the same and select different things.
+ *
+ * `entityTypeToken` collapses each to its most specific class with the prefix
+ * stripped — the rule `humanizeEntityType` has always applied on the entity and
+ * material pages, so the sidebar now agrees with the pages it links to instead
+ * of showing the raw token only here.
+ *
+ * Keyed on the canonical token so `GovernmentOrganization` and
+ * `Organization,GovernmentOrganization` resolve to ONE label rather than two
+ * spellings of the same institution.
+ *
+ * An unknown token falls through to `humanizeEntityType`, which splits the
+ * CamelCase into English words. Never to a wrong label — the same discipline
+ * `case_type` and `material_type` already follow above.
+ */
+const ENTITY_TYPE_LABEL_KEYS = new Set([
+  "Person",
+  "Organization",
+  "GovernmentOrganization",
+  "Hospital",
+  "EducationalOrganization",
+  "Corporation",
+  "NGO",
+  "PoliticalParty",
+  "InternationalOrganization",
+  "Courthouse",
+  "JudicialBody",
+  "AdministrativeArea",
+  "Province",
+  "District",
+  "Municipality",
+  "RuralMunicipality",
+  "MetropolitanCity",
+  "SubMetropolitanCity",
+  "Place",
+]);
 
 const LOCATION_ROLE = "location";
 const ACCUSED_ROLE = "accused";
@@ -86,6 +133,19 @@ export function getFacetItemLabel(
   language = "en",
 ): string {
   const humanize = (v: string) => v.replaceAll("_", " ").replaceAll("-", " ");
+  // Entity type. The bucket value is a raw schema.org `@type` — see
+  // ENTITY_TYPE_LABEL_KEYS for why reading it verbatim is the bug.
+  if (facetName === "entity_type") {
+    const token = entityTypeToken(item.name);
+    // The humanized class is both the fallback for an unknown token and the
+    // literal default for a known one, so a bundle that is missing a key
+    // degrades to readable English words rather than to a dotted key path.
+    // Same shape as `provinceNational` below.
+    const fallback = humanizeEntityType(item.name);
+    return token && ENTITY_TYPE_LABEL_KEYS.has(token)
+      ? translate(`archiveSearch.filters.entityTypeValue.${token}`, fallback)
+      : fallback;
+  }
   if (facetName === "case_type") {
     const key = getCaseTypeLabelKey(item.name);
     // Known type → localized label; unknown (e.g. scraped WRIT) → humanized raw
