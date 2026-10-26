@@ -86,11 +86,13 @@ function ClientPanel({ client }: Readonly<{ client: McpClient }>) {
               clients with nothing else on the panel that contains it. */}
           {pasteUrl ? (
             <TerminalWindow
-              className="mt-6"
+              // Indented to the step text, not the numbers: ml-12 is the
+              // ordinal column (w-8) plus the gap after it (gap-4).
+              className="ml-12 mt-6"
               label={t("mcp.endpoint.label")}
               action={<TerminalCopyButton value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />}
             >
-              <code className="block font-mono text-sm leading-6 text-foreground [overflow-wrap:anywhere]">
+              <code className="block font-mono text-[13px] leading-6 text-foreground [overflow-wrap:anywhere] sm:text-sm">
                 {MCP_URL}
               </code>
             </TerminalWindow>
