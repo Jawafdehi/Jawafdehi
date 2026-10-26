@@ -1,4 +1,5 @@
 import {
+  ArrowUpRight,
   CalendarDays,
   FileText,
   Landmark,
@@ -6,57 +7,21 @@ import {
   Search,
   Users,
 } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 import { Seo } from "@/components/Seo";
+import { CopyButton } from "@/components/mcp/copy-field";
+import { InstallPicker } from "@/components/mcp/install-picker";
+import { TerminalCommand } from "@/components/mcp/terminal-block";
+import { ToggleList, ToggleTrigger } from "@/components/mcp/toggle-tabs";
 import { ToolCarousel } from "@/components/mcp/tool-carousel";
-import {
-  TerminalCommand,
-  TerminalCopyButton,
-  TerminalWindow,
-} from "@/components/mcp/terminal-block";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHeroBackdrop } from "@/components/ui/page-hero";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
-
-// The canonical MCP endpoint, pinned rather than derived from API_BASE_URL.
-// API_BASE_URL resolves to "" during pre-render and to window.location.origin in
-// the browser when no build-time override is set, so deriving it would publish a
-// relative path in the pre-rendered HTML and then hydrate to the SPA's own
-// origin — neither of which is where the server lives. This string is the one
-// thing a reader copies off the page, so it is written out in full.
-const MCP_URL = "https://api.jawafdehi.org/mcp";
-
-// Split for display only — the path is set in the accent colour so the part
-// people get wrong stands out. MCP_URL above stays the single whole string that
-// is copied, so the two can't drift.
-const MCP_URL_ORIGIN = "https://api.jawafdehi.org";
-const MCP_URL_PATH = "/mcp";
-
-// One tab per client: where to paste the URL in the app, and the one-line
-// equivalent for its CLI. `command` is absent for clients with no CLI of their
-// own, and `terminalLabel` names the shell window that command belongs to.
-const CLIENTS = [
-  {
-    key: "claude",
-    terminalLabel: "claude-code",
-    command: `claude mcp add --transport http jawafdehi ${MCP_URL}`,
-  },
-  {
-    key: "openai",
-    terminalLabel: "codex",
-    command: `codex mcp add jawafdehi --url ${MCP_URL}`,
-  },
-  { key: "cursor", terminalLabel: undefined, command: undefined },
-  {
-    key: "vscode",
-    terminalLabel: "vscode",
-    command: `code --add-mcp '{"name":"jawafdehi","type":"http","url":"${MCP_URL}"}'`,
-  },
-  { key: "other", terminalLabel: undefined, command: undefined },
-] as const;
 
 // The six things the server can do, grouped by what a reader is looking for
 // rather than by which Django app serves them. The wire tool names are no
@@ -72,6 +37,11 @@ const CLIENTS = [
 // `to` is the page on this site that browses the same data by hand. Five of the
 // six have one; "dates and identity" has no page of its own and so carries no
 // link rather than a link that goes somewhere only loosely related.
+//
+// Each preview is a screenshot of that page on jawafdehi.org, not of an AI
+// answer: the data is what the tools read, and showing it as the site renders
+// it claims nothing the server did not say. "dates" shows a case's court
+// updates, where every date is printed in both calendars.
 const TOOL_GROUPS = [
   { key: "cases", icon: Scale, to: "/cases" },
   { key: "entities", icon: Users, to: "/entities" },
@@ -81,18 +51,89 @@ const TOOL_GROUPS = [
   { key: "dates", icon: CalendarDays, to: undefined },
 ] as const;
 
+// The agent skills live beside the server in Jawafdehi/mcp. These commands are
+// copied from that repo's README — change them there first.
+const SKILLS_REPO_URL = "https://github.com/Jawafdehi/mcp/tree/main/skills";
+// Everything but Claude Code installs through the same `skills` CLI, so those
+// tabs share one command; they are separate tabs so each reader finds the
+// name of the tool they actually use.
+const SKILLS_CLI = "npx skills add Jawafdehi/mcp --skill jawafdehi-archive";
+const SKILL_INSTALLS = [
+  {
+    key: "claudeCode",
+    label: "claude-code",
+    command: "/plugin install jawafdehi-archive --marketplace Jawafdehi/mcp",
+  },
+  { key: "codex", label: "skills", command: SKILLS_CLI },
+  { key: "cursor", label: "skills", command: SKILLS_CLI },
+  { key: "gemini", label: "skills", command: SKILLS_CLI },
+] as const;
+
+// First questions to try once connected. Each one is answerable from data
+// that is actually published — the Jumla licence cases, the Bhaktapur land
+// revenue bribery case and court case 081-CR-0113 are all live on the site.
+const EXAMPLE_PROMPTS = ["cases", "court", "entity"] as const;
+
+// 🚨 index.html declares <base href="/" />, so a bare href="#install" resolves
+// to the HOME page's #install, not this page's — which is exactly where the
+// hero buttons used to go. In-page links carry the path, normalised to the
+// trailing slash (the edge redirects "/mcp" there, and the pre-render must emit
+// the same href the hydrated page does). See OpenHouse.tsx for the same fix.
+const MCP_PATH = "/mcp/";
+
+function sectionHref(pathname: string, id: string): string {
+  const base = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  return `${base}#${id}`;
+}
+
+// A client-side arrival at "/mcp" (no slash) would make the href above a
+// cross-document navigation, so a plain left-click scrolls in place instead.
+// Modified clicks fall through to the real link.
+function scrollToSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
+  if (
+    event.defaultPrevented ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  ) {
+    return;
+  }
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  event.preventDefault();
+  const reduceMotion = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  target.scrollIntoView({
+    behavior: reduceMotion ? "auto" : "smooth",
+    block: "start",
+  });
+
+  // Move focus with the viewport, as a fragment link would, so the next Tab
+  // continues from the section rather than from the hero.
+  target.setAttribute("tabindex", "-1");
+  target.focus({ preventScroll: true });
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}#${id}`,
+  );
+}
 
 const SECTION_EYEBROW = "text-base md:text-lg [&>span]:h-3 [&>span]:w-3";
 
 const Mcp = () => {
   const { t, i18n } = useTranslation();
+  const { pathname } = useLocation();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
         title={`${t("mcp.meta.title")} | ${SITE_NAME}`}
         description={t("mcp.meta.description")}
-        canonicalUrl={`${SITE_URL}/mcp/`}
+        canonicalUrl={`${SITE_URL}${MCP_PATH}`}
         language={i18n.language}
       />
 
@@ -127,122 +168,133 @@ const Mcp = () => {
                 </p>
 
                 <div className="mt-8 flex flex-wrap gap-3 animate-hero-rise [animation-delay:320ms] motion-reduce:animate-none">
-                  <Button asChild className="font-semibold">
-                    <a href="#install">{t("mcp.hero.primaryCta")}</a>
+                  <Button asChild className="font-medium">
+                    <a
+                      href={sectionHref(pathname, "install")}
+                      onClick={(event) => scrollToSection(event, "install")}
+                    >
+                      {t("mcp.hero.primaryCta")}
+                    </a>
                   </Button>
-                  <Button asChild variant="outline" className="font-semibold">
-                    <a href="#tools">{t("mcp.hero.secondaryCta")}</a>
+                  <Button asChild variant="outline" className="font-medium">
+                    <a
+                      href={sectionHref(pathname, "tools")}
+                      onClick={(event) => scrollToSection(event, "tools")}
+                    >
+                      {t("mcp.hero.secondaryCta")}
+                    </a>
                   </Button>
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
-        {/* Installation — Sentry's tabbed client picker. One tab per client
-            shows the commands one at a time instead of as a wall of four. */}
-        <section id="install" className="py-12 md:py-14">
+        {/* Installation — one tab per client. scroll-mt clears the fixed
+            navbar when the hero buttons land here. */}
+        <section
+          id="install"
+          className="scroll-mt-24 py-12 outline-none md:py-16"
+        >
           <div className="layout-container">
-            <div>
+            <Eyebrow as="h2" className={SECTION_EYEBROW}>
+              {t("mcp.install.title")}
+            </Eyebrow>
+            <InstallPicker />
+          </div>
+        </section>
+
+        {/* Skills — the server gives an agent the tools; the skill teaches it
+            which tool answers which question. Sits right after install
+            because it is the second thing to set up, not a feature. */}
+        <section id="skills" className="scroll-mt-24 py-12 md:py-16">
+          <div className="layout-container">
+            {/* Title and repo link share a row; on a phone the link drops under
+                the title rather than squeezing it. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
               <Eyebrow as="h2" className={SECTION_EYEBROW}>
-                {t("mcp.install.title")}
+                {t("mcp.skills.title")}
               </Eyebrow>
-              <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
-                {t("mcp.install.body")}
-              </p>
-
-              {/* The URL sits at the head of the section that tells you
-                  where to paste it. On its own it was a centred band in a
-                  left-aligned page, orphaned from the only instructions
-                  that use it. */}
-              <div className="mt-6 max-w-2xl">
-                <TerminalWindow
-                  label={t("mcp.endpoint.label")}
-                  action={
-                    <TerminalCopyButton value={MCP_URL} label={t("mcp.endpoint.copyLabel")} />
-                  }
-                  bodyClassName="px-4 py-3.5"
+              <Button
+                asChild
+                variant="ghost"
+                className="-mx-4 font-medium sm:mx-0 sm:-mr-4"
+              >
+                <a
+                  href={SKILLS_REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <code className="block overflow-x-auto whitespace-nowrap font-mono text-base font-bold text-code-surface-foreground sm:text-lg">
-                    {MCP_URL_ORIGIN}
-                    <span className="text-code-surface-accent">{MCP_URL_PATH}</span>
-                  </code>
-                </TerminalWindow>
-
-                <p className="mt-3 font-paragraph font-paragraph-foreground text-sm">
-                  {t("mcp.endpoint.caption")}
-                </p>
-              </div>
-
-              <Tabs defaultValue="claude" className="mt-8">
-                {/* A capsule rail: the track is a pill, and the selected tab
-                    is a solid pill inside it. The shape carries the state, so
-                    the inactive tabs need no chrome of their own. */}
-                <TabsList className="h-auto flex-wrap justify-start gap-1 rounded-full border border-border bg-background p-1">
-                  {CLIENTS.map(({ key }) => (
-                    <TabsTrigger
-                      key={key}
-                      value={key}
-                      className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
-                    >
-                      {t(`mcp.clients.${key}.name`)}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-
-                {CLIENTS.map(({ key, command, terminalLabel }) => (
-                  <TabsContent
-                    key={key}
-                    value={key}
-                    className="mt-4 rounded-lg border border-border bg-background p-6 md:p-8"
-                  >
-                    <ol className="space-y-6">
-                      <li className="flex gap-4">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-sm font-bold text-accent">
-                          1
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-foreground">
-                            {t(`mcp.clients.${key}.appLabel`)}
-                          </p>
-                          <p className="mt-1 font-paragraph font-paragraph-foreground text-sm">
-                            {t(`mcp.clients.${key}.appSteps`)}
-                          </p>
-                        </div>
-                      </li>
-
-                      {command && terminalLabel ? (
-                        <li className="flex gap-4">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-sm font-bold text-accent">
-                            2
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-foreground">
-                              {t(`mcp.clients.${key}.cliLabel`)}
-                            </p>
-                            <div className="mt-2">
-                              <TerminalCommand
-                                command={command}
-                                label={terminalLabel}
-                                copyLabel={t("mcp.clients.copyCommand")}
-                              />
-                            </div>
-                          </div>
-                        </li>
-                      ) : null}
-                    </ol>
-                  </TabsContent>
-                ))}
-              </Tabs>
+                  {t("mcp.skills.repoCta")}
+                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </Button>
             </div>
+            <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
+              {t("mcp.skills.body")}
+            </p>
+
+            <Tabs defaultValue={SKILL_INSTALLS[0].key} className="mt-6 max-w-3xl">
+              <ToggleList>
+                {SKILL_INSTALLS.map(({ key }) => (
+                  <ToggleTrigger key={key} value={key}>
+                    {t(`mcp.skills.install.${key}`)}
+                  </ToggleTrigger>
+                ))}
+              </ToggleList>
+
+              {SKILL_INSTALLS.map(({ key, label, command }) => (
+                <TabsContent key={key} value={key} className="mt-4">
+                  <TerminalCommand
+                    command={command}
+                    label={label}
+                    copyLabel={t("mcp.clients.copyCommand")}
+                  />
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </section>
+
+        {/* What to type once it is connected — the step every other install
+            page leaves out, and the one that tells a reader it worked. */}
+        <section id="try" className="scroll-mt-24 py-12 md:py-16">
+          <div className="layout-container">
+            <Eyebrow as="h2" className={SECTION_EYEBROW}>
+              {t("mcp.prompts.title")}
+            </Eyebrow>
+            <p className="mt-3 max-w-2xl font-paragraph font-paragraph-foreground">
+              {t("mcp.prompts.body")}
+            </p>
+            <ul className="mt-6 grid gap-4 md:grid-cols-3">
+              {EXAMPLE_PROMPTS.map((key) => {
+                const prompt = t(`mcp.prompts.items.${key}`);
+                return (
+                  <li
+                    key={key}
+                    className="flex items-start gap-3 rounded-lg border border-border bg-background p-5"
+                  >
+                    <p className="min-w-0 flex-1 font-paragraph text-foreground">
+                      {prompt}
+                    </p>
+                    <CopyButton
+                      value={prompt}
+                      label={t("mcp.prompts.copyLabel")}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </section>
 
         {/* The example prompts used to repeat here as a static terminal. The
             hero marquee carries them now — printing the same six questions
             twice on one page read as padding. */}
-        <section id="tools" className="bg-muted/10 py-12 md:py-14">
+        <section
+          id="tools"
+          className="scroll-mt-24 bg-muted/10 py-12 outline-none md:py-14"
+        >
           <div className="layout-container">
             <div>
               {/* The eyebrow IS this section's heading, so it renders as h2
@@ -254,11 +306,14 @@ const Mcp = () => {
 
               <ToolCarousel
                 learnMore={t("mcp.tools.learnMore")}
-                learnMoreAbout={(name) => t("mcp.tools.learnMoreAbout", { name })}
+                learnMoreAbout={(name) =>
+                  t("mcp.tools.learnMoreAbout", { name })
+                }
                 slides={TOOL_GROUPS.map(({ key, icon, to }) => ({
                   key,
                   icon,
                   to,
+                  preview: `/assets/mcp/${key}.webp`,
                   name: t(`mcp.tools.groups.${key}.name`),
                   description: t(`mcp.tools.groups.${key}.description`),
                 }))}
@@ -266,7 +321,6 @@ const Mcp = () => {
             </div>
           </div>
         </section>
-
       </main>
     </div>
   );

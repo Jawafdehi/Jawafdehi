@@ -61,7 +61,8 @@ export function MarqueeTrack({
             aria-hidden={copy === 1 ? true : undefined}
           >
             {items.map((item, index) => (
-              <li key={itemKey(item as never, index)} className="shrink-0">
+              // flex so the item stretches to the tallest one in the row.
+              <li key={itemKey(item as never, index)} className="flex shrink-0">
                 {renderItem(item as never, index)}
               </li>
             ))}

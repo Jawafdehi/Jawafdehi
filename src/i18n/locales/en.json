@@ -2733,50 +2733,60 @@
   "mcp": {
     "meta": {
       "title": "Connect to Jawafdehi MCP",
-      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
+      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, then sign in with your Jawafdehi account."
     },
     "hero": {
-      "description": "Connect Claude, ChatGPT or any MCP client to 2,627 published cases, the people and offices behind them, and Nepal's court data. Read-only, and no account needed.",
+      "description": "Connect Claude, ChatGPT or any MCP client to 2,627 published cases, the people and offices behind them, and Nepal's court data.",
       "primaryCta": "Connect your AI tool",
       "secondaryCta": "See what it can read",
       "titleLine1": "Let your AI read",
       "titleLine2": "Nepal's corruption record."
     },
     "endpoint": {
-      "copyLabel": "Copy the server URL",
-      "caption": "A hosted, remote MCP server. Nothing to install, no API key to issue, no account to create — paste the URL and your AI tool can read the archive.",
-      "label": "mcp endpoint"
+      "label": "mcp endpoint",
+      "copyLabel": "Copy the server URL"
     },
     "clients": {
-      "title": "Add it to your AI tool",
+      "inApp": "In {{name}}",
+      "orInApp": "Or, in {{name}}",
+      "runCommand": "Run this in your terminal",
+      "orRunCommand": "Or run this in your terminal",
+      "addConfig": "Add this to",
+      "orAddConfig": "Or add this to",
       "copyCommand": "Copy the command",
+      "copyConfig": "Copy the config",
       "claude": {
         "name": "Claude",
-        "appLabel": "Claude app and claude.ai",
-        "appSteps": "Open Settings → Connectors, add a custom connector, and paste the server URL.",
-        "cliLabel": "Claude Code"
+        "steps": [
+          "Open Settings → Connectors on claude.ai or in the Claude desktop app.",
+          "Click Add custom connector.",
+          "Name it Jawafdehi, paste the server URL, and click Add.",
+          "Click Connect and sign in with your Jawafdehi account.",
+          "In a new chat, turn Jawafdehi on from the tools menu."
+        ]
       },
-      "openai": {
-        "name": "OpenAI",
-        "appLabel": "ChatGPT",
-        "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
-        "cliLabel": "Codex CLI"
+      "chatgpt": {
+        "name": "ChatGPT",
+        "steps": [
+          "Open Settings → Apps & Connectors → Advanced settings, and turn on Developer mode.",
+          "Back in Apps & Connectors, click Create.",
+          "Name it Jawafdehi, paste the server URL, set Authentication to OAuth, and save.",
+          "Sign in with your Jawafdehi account when ChatGPT asks.",
+          "In a new chat, pick Jawafdehi from the + menu."
+        ],
+        "note": "ChatGPT moves these menus often, and developer mode depends on your plan. If a step does not match, look for Connectors or Apps in Settings."
       },
-      "cursor": {
-        "name": "Cursor",
-        "appLabel": "Cursor",
-        "appSteps": "Open Settings → MCP → Add new global MCP server, and add jawafdehi as an HTTP server pointing at the URL above."
+      "claudeCode": {
+        "name": "Claude Code",
+        "signInHint": "Inside Claude Code, run /mcp, select jawafdehi, and choose Authenticate. A browser opens for you to sign in."
       },
-      "vscode": {
-        "name": "VS Code",
-        "appLabel": "GitHub Copilot in VS Code",
-        "appSteps": "Run MCP: Add Server from the Command Palette, choose HTTP, and paste the server URL.",
-        "cliLabel": "VS Code CLI"
+      "codex": {
+        "name": "Codex",
+        "signInHint": "A browser opens for you to sign in. The Codex CLI, the IDE extension and the ChatGPT desktop app share this config, so one sign-in covers all three."
       },
-      "other": {
-        "name": "Any other client",
-        "appLabel": "Any MCP client that speaks streamable HTTP",
-        "appSteps": "Add a remote MCP server and point it at the URL above. There is nothing to install, no key to issue, and no OAuth flow to complete for the public tools."
+      "gemini": {
+        "name": "Gemini CLI",
+        "signInHint": "Inside Gemini CLI. A browser opens for you to sign in with your Jawafdehi account."
       }
     },
     "tools": {
@@ -2813,8 +2823,31 @@
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
     "install": {
-      "title": "Install",
-      "body": "The server is remote, so there is nothing to download. Pick your tool and either paste the URL into its connector settings or run the one-line command."
+      "title": "Install"
+    },
+    "prompts": {
+      "title": "Try asking",
+      "body": "Start a new chat once it is connected, and ask about something real.",
+      "copyLabel": "Copy this question",
+      "items": {
+        "cases": "Find the corruption cases about driving licence exams at the Jumla transport office, and who was charged.",
+        "court": "What happened in Special Court case 081-CR-0113? Give the decision date in both Bikram Sambat and AD.",
+        "entity": "Which cases involve the Land Reform and Revenue Office in Bhaktapur, and how much was the alleged bribe?"
+      }
+    },
+    "signIn": {
+      "then": "Then sign in"
+    },
+    "skills": {
+      "title": "Skills",
+      "body": "The server gives your AI the tools; a skill teaches it to use them well — which tool answers which question, the order to call them in, and the traps in the data. Install it alongside the server.",
+      "install": {
+        "claudeCode": "Claude Code",
+        "codex": "Codex",
+        "cursor": "Cursor",
+        "gemini": "Gemini CLI"
+      },
+      "repoCta": "View on GitHub"
     }
   }
 }
