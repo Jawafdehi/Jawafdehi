@@ -32,6 +32,15 @@
  * Names and descriptions are content, not UI chrome, so they live here as
  * bilingual pairs (the API's BilingualText convention) rather than in the
  * i18n catalogues — one file owns a series' slug, tokens, tint and wording.
+ *
+ * ORDER IS RENDER ORDER: this array is the /materials grid, four cards to a row.
+ * The entries below alternate publisher instead of grouping by one, which is
+ * deliberate — the Auditor General's five shelves listed together filled two of
+ * the grid's three rows, so a page whose whole job is to show the archive's
+ * BREADTH read as a single institution. Spreading them is a layout fix with no
+ * cost: every shelf still appears, so nothing is made less discoverable to
+ * tidy the page up. Keep a new sibling away from its own kin for the same
+ * reason; a test pins it, so adding one in the wrong place fails loudly.
  */
 
 import type { MaterialsMetrics } from "@/types/jds";
@@ -76,47 +85,17 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
     },
     typeLabel: { ne: "अभियोगपत्र", en: "Charge sheets" },
   },
-  {
-    slug: "ciaa-press-releases",
-    source: "ciaa_press_release",
-    tint: 5,
-    name: { ne: "अख्तियारका प्रेस विज्ञप्ति", en: "CIAA press releases" },
-    description: {
-      ne: "अख्तियार दुरुपयोग अनुसन्धान आयोगले जारी गरेका प्रेस विज्ञप्तिहरू।",
-      en: "Press releases issued by the Commission for the Investigation of Abuse of Authority.",
-    },
-    typeLabel: { ne: "प्रेस विज्ञप्ति", en: "Press releases" },
-  },
-  {
-    slug: "kanun-patrika",
-    source: "kanun_patrika",
-    tint: 7,
-    name: { ne: "कानुन पत्रिका", en: "Kanun Patrika" },
-    description: {
-      ne: "नेपाल कानुन पत्रिकाका पूर्ण अंकहरूको संग्रह।",
-      en: "Full issues of the Nepal Kanun Patrika law journal.",
-    },
-    typeLabel: { ne: "पत्रिकाका अंक", en: "Journal issues" },
-  },
-  {
-    slug: "ciaa-annual-reports",
-    source: "ciaa_annual_report",
-    tint: 3,
-    name: { ne: "अख्तियारका वार्षिक प्रतिवेदन", en: "CIAA annual reports" },
-    description: {
-      ne: "अख्तियार दुरुपयोग अनुसन्धान आयोगका वार्षिक प्रतिवेदनहरू, आर्थिक वर्ष २०४७/४८ देखि।",
-      en: "Annual reports of the CIAA, from fiscal year 2047/48 BS onward.",
-    },
-    typeLabel: { ne: "वार्षिक प्रतिवेदन", en: "Annual reports" },
-  },
   // ---------------------------------------------------------------------
-  // The Office of the Auditor General, five shelves over ONE source token.
+  // The Office of the Auditor General: FIVE shelves over ONE source token,
+  // interleaved with the other publishers rather than listed as a block.
   //
   // The slug `auditor-general-reports` keeps its meaning narrowed rather than
   // retired: it is a published identity, and it now shows what its title always
-  // claimed. The four kinds named below plus the complement are a partition of
-  // `official_report` — the counts must sum to its by_source total, which
-  // `seriesCount` and its test depend on.
+  // claimed. Those four named kinds plus the complement (`oag-publications`,
+  // last) are a partition of `official_report` — the counts must sum to its
+  // by_source total, which `seriesCount` and its test depend on. The partition
+  // is a property of the SCOPES, not of adjacency, so spreading the five out
+  // costs it nothing; its test walks the whole registry.
   // ---------------------------------------------------------------------
   {
     slug: "auditor-general-reports",
@@ -131,6 +110,17 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
     typeLabel: { ne: "वार्षिक प्रतिवेदन", en: "Annual reports" },
   },
   {
+    slug: "ciaa-press-releases",
+    source: "ciaa_press_release",
+    tint: 5,
+    name: { ne: "अख्तियारका प्रेस विज्ञप्ति", en: "CIAA press releases" },
+    description: {
+      ne: "अख्तियार दुरुपयोग अनुसन्धान आयोगले जारी गरेका प्रेस विज्ञप्तिहरू।",
+      en: "Press releases issued by the Commission for the Investigation of Abuse of Authority.",
+    },
+    typeLabel: { ne: "प्रेस विज्ञप्ति", en: "Press releases" },
+  },
+  {
     slug: "province-audit-reports",
     source: "official_report",
     kind: "report_province-report",
@@ -143,6 +133,17 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
     typeLabel: { ne: "प्रदेश प्रतिवेदन", en: "Province reports" },
   },
   {
+    slug: "kanun-patrika",
+    source: "kanun_patrika",
+    tint: 7,
+    name: { ne: "कानुन पत्रिका", en: "Kanun Patrika" },
+    description: {
+      ne: "नेपाल कानुन पत्रिकाका पूर्ण अंकहरूको संग्रह।",
+      en: "Full issues of the Nepal Kanun Patrika law journal.",
+    },
+    typeLabel: { ne: "पत्रिकाका अंक", en: "Journal issues" },
+  },
+  {
     slug: "audit-journal",
     source: "official_report",
     kind: "publication_audit-journals",
@@ -153,6 +154,17 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
       en: "Issues of the Nepalese Journal of Government Auditing, published by the Office of the Auditor General.",
     },
     typeLabel: { ne: "पत्रिकाका अंक", en: "Journal issues" },
+  },
+  {
+    slug: "ciaa-annual-reports",
+    source: "ciaa_annual_report",
+    tint: 3,
+    name: { ne: "अख्तियारका वार्षिक प्रतिवेदन", en: "CIAA annual reports" },
+    description: {
+      ne: "अख्तियार दुरुपयोग अनुसन्धान आयोगका वार्षिक प्रतिवेदनहरू, आर्थिक वर्ष २०४७/४८ देखि।",
+      en: "Annual reports of the CIAA, from fiscal year 2047/48 BS onward.",
+    },
+    typeLabel: { ne: "वार्षिक प्रतिवेदन", en: "Annual reports" },
   },
   {
     slug: "audit-bulletin",
@@ -169,8 +181,9 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
   {
     slug: "oag-publications",
     source: "official_report",
-    // The complement of the four above. Stated as an exclusion so a kind this
-    // registry has never heard of still lands somewhere — see the file header.
+    // The complement of the four named Auditor General kinds above. Stated as
+    // an exclusion so a kind this registry has never heard of still lands
+    // somewhere — see the file header.
     kindExclude: [
       "report_annual-report",
       "report_province-report",
