@@ -99,4 +99,44 @@ describe("EntityRelatedCases", () => {
 
     await waitFor(() => expect(screen.getByText(/Jan 1, 2019/)).toBeTruthy());
   });
+
+  describe("the appeal pill on a case with several accused", () => {
+    const APPEAL = "https://jawafdehi.org/courtcase/supreme/081-cr-1949";
+    const OTHER = "https://jawafdehi.org/entity/person/hari-thapa";
+    const appealed = (parties: string[]) =>
+      relatedCase({
+        dates: {
+          stages: [
+            {
+              stage: "initial",
+              start: "2021-10-02",
+              end: "2023-06-09",
+              courtcase_iri: "https://jawafdehi.org/courtcase/special/081-cr-0060",
+            },
+            { stage: "appeal", start: "2023-09-01", end: "2026-06-02", courtcase_iri: APPEAL },
+          ],
+        },
+        entities: [
+          { nes_id: ENTITY, display_name: "Ram Shah", type: "accused", outcome: "convicted" },
+          { nes_id: OTHER, display_name: "Hari Thapa", type: "accused", outcome: "convicted" },
+        ],
+        appeal_verdicts: { [APPEAL]: "AFFIRMED" },
+        appeal_parties: { [APPEAL]: parties },
+      });
+
+    it("is shown when this person was on the appeal", async () => {
+      renderList([appealed([ENTITY, OTHER])]);
+
+      await waitFor(() =>
+        expect(screen.getByTestId("related-case-appeal").textContent).toBe("Supreme Court: upheld"),
+      );
+    });
+
+    it("is not shown when the appeal left this person out", async () => {
+      renderList([appealed([OTHER])]);
+
+      await waitFor(() => expect(screen.getByText("Special Court: convicted")).toBeTruthy());
+      expect(screen.queryByTestId("related-case-appeal")).toBeNull();
+    });
+  });
 });

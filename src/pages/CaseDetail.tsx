@@ -24,6 +24,7 @@ import { NotesSection } from "@/components/case-detail/notes-section";
 import { CaseByline } from "@/components/case-detail/case-byline";
 import { CaseStageDates } from "@/components/case-detail/case-stage-dates";
 import { caseStages, caseVerdictForum } from "@/utils/case-stages";
+import { accusedAppeal } from "@/utils/appeal-verdict";
 import { useIsLoggedIn } from "@/hooks/use-is-logged-in";
 import { CaseTimelineSection } from "@/components/case-detail/case-timeline-section";
 import { MobileShareExpander } from "@/components/case-detail/mobile-share-expander";
@@ -181,6 +182,18 @@ const CaseDetail = () => {
   const groupedEntities = caseData ? getGroupedEntities(caseData.entities) : {};
 
   const hasInvolvedParties = Object.keys(groupedEntities).length > 0;
+  // Each accused's card asks for its own appeal; see `accusedAppeal` for who gets one.
+  const appealFor = (entity: JawafEntity) =>
+    caseData
+      ? accusedAppeal(
+          entity,
+          caseData.entities,
+          caseData.dates,
+          caseData.appeal_verdicts,
+          caseData.appeal_parties,
+          currentLang,
+        )
+      : null;
   const hasTimeline = (caseData?.timeline || []).length > 0;
   const hasCourtCases = (caseData?.court_cases ?? []).length > 0;
   const hasEvidence = (caseData?.evidence ?? []).length > 0;
@@ -678,6 +691,7 @@ const CaseDetail = () => {
                           resolvedEntities={resolvedEntities}
                           title={t("caseDetail.partiesInvolved")}
                           forum={caseVerdictForum(caseData.dates, currentLang)}
+                          appealFor={appealFor}
                           translateRelation={(relationType) =>
                             t(`caseDetail.relationTypes.${relationType}`, {
                               defaultValue: t("caseDetail.relationTypes.unknown"),
