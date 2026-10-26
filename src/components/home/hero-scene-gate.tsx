@@ -6,7 +6,10 @@
 // gate passes:
 //
 //   1. mounted        — never during SSR/prerender (hydration stays identical)
-//   2. WebGL support  — probe a throwaway canvas; no context, no scene
+//   2. WebGL support  — probe a throwaway canvas for a WEBGL2 context (three.js
+//                      dropped WebGL1 at r163) and for a non-null
+//                      getShaderPrecisionFormat() at both shader stages and
+//                      both precisions; see hero-webgl-gate.ts
 //   3. reduced motion — prefers-reduced-motion keeps the static backdrop
 //   4. affordability  — Data Saver / 2g-3g / low-memory devices never download
 //                       the ~237 KB chunk at all (hero-connection-gate.ts)
@@ -18,6 +21,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { heroSceneAffordable, readConnectionSignals } from "./hero-connection-gate";
+import { webglSupported } from "./hero-webgl-gate";
 import { lazyChunk } from "@/lib/chunk-reload";
 
 const HeroScene = lazy(lazyChunk(() => import("./hero-scene"), (m) => m.default));
@@ -33,15 +37,6 @@ type HeroSceneGateProps = {
   scrollRef?: { current: number };
   onReady?: () => void;
 };
-
-function webglSupported(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
 
 export function HeroSceneGate({
   mapSrc,
