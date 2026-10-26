@@ -2747,12 +2747,8 @@
       "copyLabel": "Copy the server URL"
     },
     "clients": {
-      "inApp": "In {{name}}",
-      "orInApp": "Or, in {{name}}",
       "runCommand": "Run this in your terminal",
-      "orRunCommand": "Or run this in your terminal",
       "addConfig": "Add this to",
-      "orAddConfig": "Or add this to",
       "copyCommand": "Copy the command",
       "copyConfig": "Copy the config",
       "claude": {
@@ -2836,7 +2832,7 @@
       }
     },
     "signIn": {
-      "then": "Then sign in"
+      "step": "Sign in"
     },
     "skills": {
       "title": "Skills",
