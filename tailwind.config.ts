@@ -98,6 +98,7 @@ export default {
         "code-surface": {
           DEFAULT: "hsl(var(--code-surface))",
           foreground: "hsl(var(--code-surface-foreground))",
+          accent: "hsl(var(--code-surface-accent))",
         },
         // Fixed document/embed surface — see src/index.css. Same in both themes.
         paper: {
@@ -216,6 +217,22 @@ export default {
           from: { transform: "translate(-58%, 10%) rotate(0deg)" },
           to: { transform: "translate(0, 0) rotate(6deg)" },
         },
+        // /mcp hero entrance. Runs on load rather than on scroll, because the
+        // hero is above the fold and Reveal deliberately skips anything
+        // already on screen. The resting pose is the element's NORMAL state,
+        // so `motion-reduce:animate-none` lands on fully-visible content with
+        // no transform — same contract as Reveal's idle state.
+        "hero-rise": {
+          from: { opacity: "0", transform: "translateY(14px)", filter: "blur(5px)" },
+          to: { opacity: "1", transform: "translateY(0)", filter: "blur(0)" },
+        },
+        // Prompt marquee. The track holds the card list twice, so travelling
+        // exactly -50% lands the copy where the original began and the loop is
+        // seamless. Any other distance visibly jumps.
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -224,6 +241,10 @@ export default {
         "sheet-rise": "sheet-rise 600ms cubic-bezier(0.23, 1, 0.32, 1) 950ms forwards",
         "fan-out-left": "fan-out-left 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
         "fan-out-right": "fan-out-right 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
+        // `backwards` fill holds the from-pose through the stagger delay that
+        // callers add, so a late line does not flash in before its turn.
+        "hero-rise": "hero-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) backwards",
+        marquee: "marquee 46s linear infinite",
       },
     },
   },
