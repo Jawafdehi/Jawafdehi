@@ -4,9 +4,16 @@ import { CircleX, HeartHandshake, Headphones } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-const PAYPAL_DONATE_URL =
-  "https://www.paypal.com/donate/?hosted_button_id=ZYCQYYBFK7SDY";
-
+/**
+ * "Try donating again" used to deep-link a PayPal hosted button — a second
+ * PayPal destination, different from the fundraiser the donate page offered.
+ * It now returns to /donate, which is the only place that knows which rails are
+ * currently on (see SHOW_PAYPAL in donate/pay-card.tsx).
+ *
+ * This route is NOT guarded and is pre-rendered, so it is reachable by typing
+ * the URL, not only by a payment return. That is why the old link mattered:
+ * hiding PayPal on /donate left a live PayPal CTA one URL away.
+ */
 export default function PaymentCancelled() {
   return (
     <div className="min-h-screen bg-background">
@@ -45,14 +52,10 @@ export default function PaymentCancelled() {
                 size="lg"
                 className="font-button h-11 min-w-0 flex-1 rounded-full bg-accent px-2.5 text-accent-foreground shadow-md shadow-accent/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent/90 md:h-12 md:min-w-[15rem] md:px-7"
               >
-                <a
-                  href={PAYPAL_DONATE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Link to="/donate">
                   <HeartHandshake className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
                   Try donating again
-                </a>
+                </Link>
               </Button>
 
               <Button

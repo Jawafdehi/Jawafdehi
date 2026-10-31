@@ -216,6 +216,17 @@ export default {
           from: { transform: "translate(-58%, 10%) rotate(0deg)" },
           to: { transform: "translate(0, 0) rotate(6deg)" },
         },
+        // The /donate donor comb breathes rather than scrolls: each hexagon
+        // drifts a few pixels up and back on its own offset, so the wall reads
+        // as a crowd of people rather than a static grid.
+        //
+        // translateY ONLY, deliberately. A horizontal component would widen
+        // documentElement.scrollWidth, and /donate is gated on horizontal
+        // overflow down to a 320px viewport — it was 94px over once already.
+        "donor-float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -224,6 +235,9 @@ export default {
         "sheet-rise": "sheet-rise 600ms cubic-bezier(0.23, 1, 0.32, 1) 950ms forwards",
         "fan-out-left": "fan-out-left 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
         "fan-out-right": "fan-out-right 700ms cubic-bezier(0.23, 1, 0.32, 1) 250ms both",
+        // Base timing only — donor-comb.tsx overrides delay and duration
+        // per cell so the comb never pulses in unison.
+        "donor-float": "donor-float 4.5s ease-in-out infinite",
       },
     },
   },

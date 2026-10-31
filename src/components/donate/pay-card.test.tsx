@@ -14,12 +14,14 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-// Which rail comes first on the "from abroad" panel is an org decision, not a
-// styling detail: Zeffy is the primary international route and PayPal Giving
-// Fund the familiar secondary one. Nothing else about the panel enforces the
-// order, and a reordering reads as harmless in a diff.
-describe('the /donate abroad panel offers Zeffy first, PayPal second', () => {
-  it('renders the two outbound rails in that order', () => {
+// Which rails the "from abroad" panel offers is an org decision, not a styling
+// detail. Zeffy is the primary international route — 0% fee, the donation lands
+// with the org directly, so we hold the donor record and issue our own
+// 501(c)(3) receipt. PayPal Giving Fund was the familiar secondary one and is
+// now hidden behind `SHOW_PAYPAL`; a stray render of it reads as harmless in a
+// diff, which is why it is pinned here rather than left to review.
+describe('the /donate abroad panel offers Zeffy and nothing else', () => {
+  it('renders the Zeffy rail and no PayPal rail', () => {
     const { container } = render(<PayCard />);
     // Both panels stay mounted (the inactive one is `hidden`), so the abroad
     // rails are queryable while the Nepal tab is the active one.
@@ -27,17 +29,17 @@ describe('the /donate abroad panel offers Zeffy first, PayPal second', () => {
       container.querySelectorAll<HTMLAnchorElement>('a[href^="https://"]'),
     ).map((a) => a.getAttribute('href') ?? '');
 
-    const zeffy = outbound.findIndex((href) => href.includes('zeffy'));
-    const paypal = outbound.findIndex((href) => href.includes('paypal'));
-
-    expect(zeffy, 'no Zeffy rail rendered').toBeGreaterThanOrEqual(0);
-    expect(paypal, 'no PayPal rail rendered').toBeGreaterThanOrEqual(0);
     expect(
-      zeffy,
-      'PayPal now renders above Zeffy. Zeffy is the primary rail from abroad ' +
-        '— it is 0% fee and the donation lands with the org directly, so we ' +
-        'hold the donor record and issue our own 501(c)(3) receipt.',
-    ).toBeLessThan(paypal);
+      outbound.filter((href) => href.includes('zeffy')),
+      'no Zeffy rail rendered',
+    ).not.toHaveLength(0);
+    expect(
+      outbound.filter((href) => href.includes('paypal')),
+      'a PayPal rail is back on the abroad panel. If that is intended, flip ' +
+        'SHOW_PAYPAL and restore the ordering assertion — Zeffy must stay above ' +
+        'PayPal — plus the PayPal row in the CTA-wrap table in ' +
+        'tests/layout/no-horizontal-overflow.test.tsx.',
+    ).toHaveLength(0);
   });
 
   it('opens each rail in a new tab without leaking the referrer window', () => {
@@ -46,7 +48,7 @@ describe('the /donate abroad panel offers Zeffy first, PayPal second', () => {
       container.querySelectorAll<HTMLAnchorElement>('a[href^="https://"]'),
     ).filter((a) => /zeffy|paypal/.test(a.getAttribute('href') ?? ''));
 
-    expect(rails).toHaveLength(2);
+    expect(rails).toHaveLength(1);
     for (const rail of rails) {
       expect(rail.getAttribute('target')).toBe('_blank');
       expect(rail.getAttribute('rel')).toContain('noopener');

@@ -34,6 +34,20 @@ const ZEFFY_EMBED_URL =
   "https://www.zeffy.com/embed/donation-form/donate-to-change-lives-19421?modal=true";
 const PAYPAL_DONATE_URL =
   "https://www.paypal.com/us/fundraiser/charity/6001485";
+/**
+ * PayPal Giving Fund is hidden from the abroad panel, leaving Zeffy as the only
+ * rail. Hidden rather than deleted: the fundraiser, the URL and the `paypal`
+ * analytics method all still exist, so this is one line to reverse.
+ *
+ * `: boolean` is load-bearing — without it the literal type narrows to `false`
+ * and the rail below becomes statically dead code.
+ *
+ * `/donate/cancel` carried the other PayPal link on the site. It is an
+ * unguarded, pre-rendered route — reachable by typing the URL, not only by a
+ * payment return — so hiding the rail here left a live PayPal CTA one URL
+ * away. That page now points back at /donate instead of at a hosted button.
+ */
+const SHOW_PAYPAL: boolean = false;
 // Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
 const NEPALI_BANK_ACCOUNT_NUMBER = "04601000000088900197";
 
@@ -420,18 +434,18 @@ function AbroadPanel() {
           card at 12px, which needs 4.5). card-foreground/70 is 5.21:1 light
           and 7.83:1 dark.
 
-          NOTE: this names PayPal Giving Fund but now sits above BOTH rails,
-          so as written it describes only one of the two routes below it.
-          Left as-is deliberately — the wording was asked to be preserved —
-          but it wants either scoping to the PayPal rail or rewording to
-          cover Zeffy too. */}
+          Worded without naming a rail, so it stays true whether the panel
+          shows one route or both. It said "Either option" while two rails were
+          visible; with PayPal hidden that counted a route a donor cannot
+          see. */}
       <p className="mt-2 text-xs font-medium leading-5 text-card-foreground/70">
         {t("donate.ways.us.proceedsNote")}
       </p>
 
-      {/* Two rails, one visual weight each: Zeffy carries the filled button and
-          PayPal the outlined one, so the order reads as a recommendation
-          without a second line of copy explaining it. */}
+      {/* Zeffy carries the filled button. The outlined PayPal rail below it is
+          hidden (see SHOW_PAYPAL), so in practice this is a single rail — the
+          gap and column direction are kept so restoring PayPal needs no layout
+          work. */}
       <div className="mt-5 flex flex-col gap-5 border-t border-border/60 pt-5">
         <AbroadRail
           id="zeffy"
@@ -449,18 +463,20 @@ function AbroadPanel() {
             setZeffyOpen(true);
           }}
         />
-        <AbroadRail
-          id="paypal"
-          href={PAYPAL_DONATE_URL}
-          icon={
-            <SiPaypal
-              className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
-              aria-hidden="true"
-            />
-          }
-          brandClassName="text-[#003087] dark:text-[#6cb2ff]"
-          variant="outline"
-        />
+        {SHOW_PAYPAL ? (
+          <AbroadRail
+            id="paypal"
+            href={PAYPAL_DONATE_URL}
+            icon={
+              <SiPaypal
+                className="h-5 w-5 text-[#003087] dark:text-[#6cb2ff]"
+                aria-hidden="true"
+              />
+            }
+            brandClassName="text-[#003087] dark:text-[#6cb2ff]"
+            variant="outline"
+          />
+        ) : null}
       </div>
 
       <div className="mt-5 border-t border-border/60 pt-4">
