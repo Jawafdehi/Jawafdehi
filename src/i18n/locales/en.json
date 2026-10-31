@@ -545,7 +545,7 @@
       },
       "us": {
         "whoFor": "If you are giving from anywhere outside Nepal",
-        "proceedsNote": "Either option delivers your gift to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
+        "proceedsNote": "Your gift is delivered to Jawafdehi Initiative, Inc., a registered 501(c)(3) in the USA, EIN 42-3114954.",
         "capitalControlNote": "Nepal's capital control policies do not allow donations from abroad to be paid into our Nepal bank account. Jawafdehi Initiative, Inc. holds the approval to fund the project in Nepal, so this is the one route for a gift from outside the country.",
         "title": "From outside Nepal",
         "zeffy": {
@@ -606,7 +606,8 @@
       "you": "Your donation",
       "stageGive": "You give",
       "stageAllocated": "It covers",
-      "stageBecomes": "It becomes"
+      "stageBecomes": "It becomes",
+      "wallLabel": "People who fund this archive"
     }
   },
   "products": {

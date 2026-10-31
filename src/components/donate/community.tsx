@@ -9,7 +9,7 @@ export function Community() {
   return (
     <section
       id="donate-community"
-      className="overflow-hidden bg-background py-16 md:py-20"
+      className="overflow-hidden bg-background pb-16 pt-10 md:pb-20 md:pt-12"
       aria-labelledby="donate-community-title"
     >
       <div className="layout-container flex flex-col items-center text-center">

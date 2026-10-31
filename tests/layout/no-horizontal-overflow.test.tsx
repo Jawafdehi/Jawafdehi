@@ -52,11 +52,13 @@ function tsxFiles(dir: string): string[] {
   });
 }
 
-// Both rails on the "from abroad" panel, in the order they are shown. Each
-// carries a full Nepali sentence as its label, so each can floor the grid track.
+// The rails on the "from abroad" panel. Each carries a full Nepali sentence as
+// its label, so each can floor the grid track. PayPal is not in this table
+// because it is hidden behind `SHOW_PAYPAL` in pay-card.tsx — put the
+// `['PayPal', 'paypal']` row back if that rail is ever restored, because its
+// label is the longest of the two and was the original 94px overflow.
 describe.each([
   ['Zeffy', 'zeffy'],
-  ['PayPal', 'paypal'],
 ])('the /donate %s CTA can wrap its Nepali label', (name, hrefFragment) => {
   it('renders whitespace-normal, and tailwind-merge drops the base nowrap', () => {
     const { container } = render(<PayCard />);
