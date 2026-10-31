@@ -86,6 +86,26 @@ export default function ProposalQueue({
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(focused?.id ?? null);
 
+  // Following one notification link and then another keeps this component
+  // MOUNTED — same route, different param — so the initialisers above run once
+  // and the second link inherits the first proposal's filter and selection. That
+  // is the failure this component exists to prevent, arriving by a different
+  // door: the reviewer opens #342 and is shown #341, with a working approve
+  // button on it.
+  //
+  // Reset during render rather than in an effect. React documents this as the
+  // way to adjust state when a prop changes; an effect would paint the stale
+  // proposal first and correct it afterwards, which is a visible flash of the
+  // wrong case. CodeRabbit suggested `key={focusId}` on the caller instead,
+  // which also works — but it puts the invariant in whoever renders this, and
+  // the next caller will not know to pass it.
+  const [lastFocusId, setLastFocusId] = useState(focusId);
+  if (focusId !== lastFocusId) {
+    setLastFocusId(focusId);
+    setStatus(focused?.status ?? "pending");
+    setSelectedId(focused?.id ?? null);
+  }
+
   const pendingCount = useMemo(() => proposals.filter((p) => p.status === "pending").length, [proposals]);
 
   const filtered = useMemo(() => {

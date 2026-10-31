@@ -77,6 +77,26 @@ describe("ProposalQueue deep link", () => {
     expect(screen.queryAllByText("A pending one")).toHaveLength(0);
   });
 
+  it("follows a second link without keeping the first proposal's state", () => {
+    // Same route, different param, so the component stays mounted and the mount
+    // initialisers never run again. Without the reset the reviewer opens #342
+    // and is shown #341 — the exact failure this component exists to prevent,
+    // arriving through a door the first version left open.
+    const proposals = [
+      proposal({ id: "341", case_title: "The first link", status: "approved" }),
+      proposal({ id: "342", case_title: "The second link" }),
+    ];
+    const { rerender } = render(<ProposalQueue proposals={proposals} focusId="341" />);
+    expect(screen.getAllByText("The first link").length).toBeGreaterThan(1);
+
+    rerender(<ProposalQueue proposals={proposals} focusId="342" />);
+
+    expect(screen.getAllByText("The second link").length).toBeGreaterThan(1);
+    // And the status filter moved with it: #341 was approved, #342 is pending,
+    // so a retained filter would have excluded the one just asked for.
+    expect(screen.queryAllByText("The first link")).toHaveLength(0);
+  });
+
   it("says so when the linked proposal is not in the list", () => {
     render(<ProposalQueue proposals={[proposal({ id: "333" })]} focusId="999" />);
 
