@@ -1,10 +1,19 @@
 /**
  * Supporters shown on the donate page's community wall.
  *
- * A photo and a full name are personal data under the Individual Privacy Act
- * 2075, and this is an anti-corruption site, so an entry earns a `photo` only
- * once that person's opt-in is on file. Everyone else appears as their initials,
- * which is what someone who wants to be counted but not identified should get.
+ * Everything on this list is published: a photo where there is one, and the
+ * person's full name where there is not. Both are personal data under the
+ * Individual Privacy Act 2075, and this is an anti-corruption site, so nobody
+ * belongs here without having agreed to appear. `photo` is optional; that
+ * agreement is not.
+ *
+ * An earlier revision rendered initials for anyone without a photo, and this
+ * comment still described that when the names went in. It was wrong for a
+ * whole review cycle. Initials were dropped on request — "SM" identifies
+ * nobody and reads as a placeholder, which is the opposite of what a wall of
+ * supporters is for — and the privacy trade-off moved with them. A name is no
+ * longer the quiet option here, so adding an entry is a disclosure decision
+ * rather than a formatting one.
  *
  * This list is deliberately NOT derived from `team.ts`. Funding the archive and
  * serving on the board are separate facts, and joining or leaving one should
@@ -14,9 +23,11 @@
  * the wall does not read as a block of faces followed by a row of leftovers.
  */
 export interface Donor {
-  /** Full name. Read by assistive tech; the wall shows a photo or initials. */
+  /** Full name. Rendered in the cell when there is no photo, and the photo's
+   *  alt text when there is. Public either way. */
   name: string;
-  /** Path under `/assets`, set only for those who opted in to a photo. */
+  /** Path under `/assets`. Its absence changes how the entry renders, not
+   *  whether that person agreed to be listed. */
   photo?: string;
 }
 

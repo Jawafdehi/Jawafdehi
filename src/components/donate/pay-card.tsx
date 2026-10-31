@@ -42,9 +42,10 @@ const PAYPAL_DONATE_URL =
  * `: boolean` is load-bearing — without it the literal type narrows to `false`
  * and the rail below becomes statically dead code.
  *
- * `src/pages/PaymentCancelled.tsx` still links PayPal, deliberately. It is only
- * ever reached by a return URL from a payment already in flight, so emptying it
- * would strand someone mid-donation rather than hide anything.
+ * `/donate/cancel` carried the other PayPal link on the site. It is an
+ * unguarded, pre-rendered route — reachable by typing the URL, not only by a
+ * payment return — so hiding the rail here left a live PayPal CTA one URL
+ * away. That page now points back at /donate instead of at a hosted button.
  */
 const SHOW_PAYPAL: boolean = false;
 // Prime Commercial Bank, Pushpalal Chowk (Biratnagar) — Jawafdehi Initiative.
