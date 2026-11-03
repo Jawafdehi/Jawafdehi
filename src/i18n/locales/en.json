@@ -2861,7 +2861,6 @@
       "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
     },
     "title": "What's new in Jawafdehi",
-    "description": "The latest changes to the archive and the tools around it: new records, new features, and updates to the MCP and the API.",
     "lastUpdated": "Last updated {{date}}",
     "filterLabel": "Show updates for",
     "all": "All",
