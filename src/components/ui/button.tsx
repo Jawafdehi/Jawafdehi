@@ -16,6 +16,13 @@ const buttonVariants = cva(
         // The crimson call to action (report a case). White on --accent passes
         // AA on navy and on paper alike.
         accent: "bg-accent text-accent-foreground font-medium transition-colors duration-200 hover:bg-accent/90",
+        // A secondary call to action that sits beside a filled one without
+        // competing: a hairline border, no fill. quietOnDark is the same
+        // button on a navy surface.
+        quiet:
+          "border border-primary-surface/25 bg-transparent text-primary font-medium transition-colors duration-200 hover:border-primary-surface/50 hover:bg-primary-surface/5",
+        quietOnDark:
+          "border border-primary-foreground/30 bg-transparent text-primary-foreground font-medium transition-colors duration-200 hover:border-primary-foreground/60 hover:bg-primary-foreground/10",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-primary font-medium bg-background text-primary hover:bg-accent hover:text-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",

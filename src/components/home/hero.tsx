@@ -56,9 +56,10 @@ export function Hero({
     <section id="hero" className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <ShaderBackdrop design="diamond" />
-        {/* The pattern fades out toward the figures, so they sit on calm navy
-            without a box around them. */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface)/0.9)_14%,transparent_32%)]" />
+        {/* The pattern fades out at both edges: under the transparent navbar,
+            so its links always sit on plain navy, and toward the figures, so
+            they sit on calm navy without a box around them. */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px),linear-gradient(to_top,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface)/0.9)_14%,transparent_32%)]" />
       </div>
 
       {/* A solid panel cut out of the field, copy centred in it. */}
