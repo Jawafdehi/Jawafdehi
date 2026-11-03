@@ -435,7 +435,38 @@ interface Paginated<T> {
   results: T[];
 }
 
-/** Fetch a composite-key sub-resource list (hearings/entities), unwrapping pages. */
+/**
+ * Hard cap on pages followed for one sub-resource. The API pages at 20 and
+ * ignores `page_size`; the largest Supreme Court case holds under 100 hearing
+ * rows, so 50 pages (1,000 rows) is a runaway guard, not a real limit.
+ */
+export const MAX_SUB_RESOURCE_PAGES = 50;
+
+/**
+ * GET every page of a paginated list endpoint and concatenate the results.
+ *
+ * Pages are requested as `?page=N` on the SAME endpoint rather than by
+ * following the absolute `next` URL, so the request always goes through the
+ * shared client's base URL (and its SSR/prerender headers) whatever host the
+ * API writes into `next`. A non-paginated (bare array) response is returned
+ * as-is. Shared with entry-server.tsx so SSR and the client agree.
+ */
+export async function getAllPages<T>(
+  get: (url: string, config: { params?: Record<string, number> }) => Promise<{ data: unknown }>,
+  endpoint: string,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let page = 1; page <= MAX_SUB_RESOURCE_PAGES; page++) {
+    const { data } = await get(endpoint, page === 1 ? {} : { params: { page } });
+    if (Array.isArray(data)) return data as T[];
+    const body = (data ?? {}) as Partial<Paginated<T>>;
+    out.push(...(body.results ?? []));
+    if (!body.next) break;
+  }
+  return out;
+}
+
+/** Fetch a composite-key sub-resource list (hearings/entities), every page. */
 async function getCaseSubResource<T>(
   court: string,
   caseNumber: string,
@@ -443,9 +474,7 @@ async function getCaseSubResource<T>(
 ): Promise<T[]> {
   const endpoint = `/api/courtcases/${encodeURIComponent(court)}/${encodeURIComponent(caseNumber)}/${sub}`;
   try {
-    const response = await http.get<Paginated<T> | T[]>(endpoint);
-    const data = response.data;
-    return Array.isArray(data) ? data : (data.results ?? []);
+    return await getAllPages<T>((url, config) => http.get(url, config), endpoint);
   } catch (error) {
     handleDataLakeError(error, endpoint);
   }

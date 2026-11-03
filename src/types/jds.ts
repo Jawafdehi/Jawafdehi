@@ -260,6 +260,8 @@ export interface CourtCase {
   verdict_date_bs: string | null;
   verdict_date_ad: string | null;
   verdict_judge: string | null;
+  /** Structured outcome (the API filters it to its closed enum, else null). */
+  verdict_type?: string | null;
   status: string;
   // Sub-resources present only on the assembled "full" shape (getCourtCaseFull).
   // The composite-key core endpoint (getCourtCase) omits them entirely, so every
