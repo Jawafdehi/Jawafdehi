@@ -325,7 +325,16 @@ const DIR = arg("dir", "dist/client");
 // pre-renderer is hard-coded to `ne`, and English is opt-in and already applied
 // asynchronously. Deferring the English bundle is the biggest low-risk win
 // available and nobody has taken it.
-const MAX_INITIAL_JS_GZIP = 679_400;
+// 2026-11: 679_400 → 687_400 for the archive-first redesign (the ai-native/*
+// stack: home, /mcp, /whats-new, /likhit, shared shaders). Measured, not
+// estimated: main (e3ffefd) builds to 669,998 bytes and the top of the stack
+// to 686,827, so the stack costs 16,829 bytes gzip, about 2.5%. The cost is
+// pre-rendered page code and their strings in both languages, which the
+// split policy keeps eager; the shader library itself stays deferred (see
+// MUST_BE_DEFERRED). Taken deliberately and landed first, so every PR in the
+// stack is measured against the limit it will merge under. Deferring en.json
+// (above) remains the way to win it back several times over.
+const MAX_INITIAL_JS_GZIP = 687_400;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
