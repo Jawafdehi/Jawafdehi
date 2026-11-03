@@ -44,7 +44,7 @@ export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
         >
           <p
             className={cn(
-              "font-home-display text-[1.6rem] leading-tight tabular-nums sm:text-4xl xl:text-[2.75rem]",
+              "font-home-display text-2xl leading-tight tabular-nums sm:text-3xl xl:text-4xl",
               highlight ? "text-accent" : "text-primary",
             )}
           >

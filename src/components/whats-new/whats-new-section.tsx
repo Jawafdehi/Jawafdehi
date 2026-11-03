@@ -1,7 +1,7 @@
 // A short slice of the changelog as a page section: a heading, two entries
 // side by side, and a link to the full list on /whats-new. The home page shows
-// the latest across the platform (pinned entries first); a product page shows
-// its own tag.
+// the latest across the platform (pinned entries first), compact, after the
+// report band; a product page shows its own tag.
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -9,23 +9,25 @@ import { Link } from "react-router-dom";
 import { WhatsNewEntry } from "@/components/whats-new/whats-new-entry";
 import { Reveal } from "@/components/ui/reveal";
 import { entriesFor, type WhatsNewTag } from "@/data/whats-new";
+import { cn } from "@/lib/utils";
 
 export function WhatsNewSection({
   id,
   heading,
   tag,
   limit = 2,
-}: Readonly<{ id: string; heading: string; tag?: WhatsNewTag; limit?: number }>) {
+  compact = false,
+}: Readonly<{ id: string; heading: string; tag?: WhatsNewTag; limit?: number; compact?: boolean }>) {
   const { t } = useTranslation();
   const entries = entriesFor({ tag, limit, pinnedFirst: !tag });
   if (entries.length === 0) return null;
 
   return (
-    <section id={id} className="pb-4 pt-16 md:pt-24">
+    <section id={id} className={compact ? "py-12 md:py-16" : "pb-4 pt-16 md:pt-24"}>
       <div className="layout-container">
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <h2 className="font-home-section-title text-primary">{heading}</h2>
+            <h2 className={compact ? "font-home-display text-2xl text-primary md:text-3xl" : "font-home-section-title text-primary"}>{heading}</h2>
             <Link
               to={tag ? `/whats-new?tag=${tag}` : "/whats-new"}
               className="group inline-flex items-center gap-1.5 rounded text-base font-medium text-accent hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -36,11 +38,11 @@ export function WhatsNewSection({
           </div>
         </Reveal>
 
-        <ul className="mt-10 grid gap-x-14 gap-y-12 md:grid-cols-2">
+        <ul className={cn("grid gap-x-14 md:grid-cols-2", compact ? "mt-6 gap-y-8" : "mt-10 gap-y-12")}>
           {entries.map((entry, index) => (
             <li key={entry.id}>
               <Reveal delayMs={index * 80}>
-                <WhatsNewEntry entry={entry} />
+                <WhatsNewEntry entry={entry} size={compact ? "small" : "default"} />
               </Reveal>
             </li>
           ))}

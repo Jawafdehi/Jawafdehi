@@ -112,9 +112,6 @@ const Index = () => {
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
 
-        {/* ── What's new: the latest from the changelog (src/data/whats-new.ts),
-            pinned entries first, then the record itself. ── */}
-        <WhatsNewSection id="whats-new" heading={t("whatsNew.homeHeading")} />
 
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">
@@ -201,6 +198,8 @@ const Index = () => {
         {/* Partners after the report band: the white strip keeps the band's
             navy from running into the footer's. */}
         <ReportCaseCta />
+        {/* What's new, compact: the latest from the changelog (src/data/whats-new.ts). */}
+        <WhatsNewSection id="whats-new" heading={t("whatsNew.homeHeading")} compact />
         <SupportingPartner />
       </div>
     </div>

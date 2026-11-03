@@ -70,7 +70,7 @@ export const PRESS_KIT_COLOURS = [
  *
  * Noto is pinned for the same reason the headline faces are. It rode
  * `font-sans`, which resolves to --font-family-app and therefore leads with
- * Helvetica under lang="en" — so the one card whose caption names Noto showed
+ * Inter under lang="en" — so the one card whose caption names Noto showed
  * its Latin half in a system face to exactly the audience reading the English
  * press kit. (`font-sans` was worse still before tailwind.config.ts gained a
  * `sans` key: Tailwind's own `ui-sans-serif, system-ui, …`, i.e. the visitor's

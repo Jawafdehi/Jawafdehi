@@ -50,6 +50,22 @@ export default function ShaderBackdropImpl({
     );
   }
 
+  if (design === "diamondLight") {
+    return (
+      <Dithering
+        style={FILL}
+        colorBack={token("--background")}
+        colorFront={SHADER_TINTS.latticeOnLight}
+        shape="warp"
+        type="2x2"
+        size={4}
+        rotation={45}
+        scale={1.4}
+        speed={speed(0.18)}
+      />
+    );
+  }
+
   if (design === "diamond") {
     return (
       <Dithering

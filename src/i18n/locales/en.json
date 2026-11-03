@@ -2899,8 +2899,7 @@
           "value": "~220",
           "label": "Auditor General reports: federal, provincial, SOE"
         }
-      ],
-      "updated": "Updated 1 November 2026 · from api.jawafdehi.org"
+      ]
     },
     "questions": {
       "title": "Questions you can try asking",
@@ -2924,8 +2923,8 @@
       ]
     },
     "pilot": {
-      "eyebrow": "The pilot · November 2026",
-      "title": "Try it on a real story.",
+      "title": "Join the pilot",
+      "tagline": "Try it on a real story.",
       "body": "For a small group of journalists and researchers, in Claude or ChatGPT.",
       "steps": [
         "Free access during the pilot",
@@ -2933,8 +2932,10 @@
         "Use it on a real story for a few weeks",
         "Tell us what was useful and what was missing"
       ],
-      "join": "Join the pilot: write to",
-      "contactName": "Damodar Dahal, President"
+      "join": "Write to",
+      "contactName": "Damodar Dahal, President",
+      "youGet": "What you get",
+      "weAsk": "What we ask"
     },
     "demo": {
       "title": "See it in action",
@@ -2947,7 +2948,6 @@
       "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
     },
     "title": "What's new in Jawafdehi",
-    "description": "The latest changes to the archive and the tools around it: new records, new features, and updates to the MCP and the API.",
     "lastUpdated": "Last updated {{date}}",
     "filterLabel": "Show updates for",
     "all": "All",
