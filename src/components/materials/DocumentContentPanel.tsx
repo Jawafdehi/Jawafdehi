@@ -68,6 +68,7 @@ import { cn } from "@/lib/utils";
 import { useDebounced } from "@/hooks/use-debounced";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
 import { rememberListScroll } from "@/lib/contents-scroll";
+import { captionOr } from "@/lib/content-captions";
 
 /** The marker a reader sees beside any value that was read off a chart image. */
 const ESTIMATE_MARK = "≈";
@@ -83,8 +84,7 @@ const ESTIMATE_MARK = "≈";
 const TABLE_ROW_PREVIEW = 50;
 
 function nepaliSafe(value: string, fallback: string): string {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : fallback;
+  return captionOr(value, fallback);
 }
 
 function formatValue(value: number | null): string {
@@ -588,17 +588,22 @@ function FilterBox({
   );
 }
 
-/** A table's handle: its caption where the source printed one, else its number.
+/** A table's handle: its caption where the source printed a usable one, else its number.
  *
  * 89 of this document's 145 tables carry no caption upstream, so the fallback is
  * the common case rather than the exception. It is the ORDINAL — the table's
  * position as a reader counts them — because the row already carries the page
  * number on its right, and repeating that as the title says nothing twice.
  *
+ * 🛑 **A non-empty caption is not automatically a usable one.** This used to be
+ * `caption.trim() || …`, which let every sentence tail the extractor produced
+ * through: the list rendered rows titled `छ।` and `देहायबमोजिम रहेको छ:-`. See
+ * `isCaptionFragment` for what that is and how often it happens.
+ *
  * Display only. Addressing a table by ordinal is a bug (they are recomputed on
  * every ingest); that is what `key` is for. */
 function tableLabel(stub: ContentTableStub): string {
-  return stub.caption.trim() || `Table ${stub.ordinal}`;
+  return captionOr(stub.caption, `Table ${stub.ordinal}`);
 }
 
 function TableList({ tail, items }: { tail: string; items: ContentTableStub[] }) {
