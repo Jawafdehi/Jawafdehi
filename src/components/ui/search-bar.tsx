@@ -45,8 +45,10 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           ref={ref}
           className={cn(
             // 40px, down from 48. The bar is a control, not a banner, and at
-            // h-12 it was taller than every button beside it.
-            "h-10 rounded-full pl-10",
+            // h-12 it was taller than every button beside it. py-0: with the
+            // Input's py-2 the text box is taller than the line, and the text
+            // sat at its top; with no padding the browser centres it.
+            "h-10 rounded-full py-0 pl-10",
             !showSubmit ? "pr-4" : hasSubmitText ? "pr-36 sm:pr-44" : "pr-12",
             inputClassName,
           )}
