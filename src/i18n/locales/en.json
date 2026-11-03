@@ -2786,35 +2786,80 @@
       "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
     },
     "hero": {
-      "eyebrow": "Model Context Protocol",
-      "title": "Jawafdehi",
-      "titleAccent": "MCP",
-      "description": "Connect Nepal's permanent accountability archive to the AI tool you already use."
-    },
-    "endpoint": {
-      "copyLabel": "Copy the server URL"
-    },
-    "clients": {
-      "title": "Add it to your AI tool",
-      "copyCommand": "Copy the command",
-      "claude": {
-        "name": "Claude",
-        "appLabel": "Claude app and claude.ai",
-        "appSteps": "Open Settings → Connectors, add a custom connector, and paste the server URL.",
-        "cliLabel": "Claude Code"
-      },
-      "openai": {
-        "name": "OpenAI",
-        "appLabel": "ChatGPT",
-        "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
-        "cliLabel": "Codex CLI"
-      }
+      "back": "Back to the archive",
+      "title": "Nepal's accountability archive, inside your AI.",
+      "description": "Connect Claude, ChatGPT or any MCP client to the Jawafdehi archive. Your assistant can search cases, court records and documents, and cite every source it uses."
     },
     "tools": {
-      "title": "What your AI can read",
-      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only."
+      "eyebrow": "What your AI can do",
+      "title": "Seven things your assistant can look up",
+      "body": "Each card is one tool on the Jawafdehi MCP server. Your assistant picks the right one for the question.",
+      "items": {
+        "findCases": "Find corruption cases by name, place, office or amount",
+        "readCase": "Read a full case: allegations, people, timeline and sources",
+        "people": "Look up a politician, official or public body",
+        "history": "See how a person's record has changed over time",
+        "courts": "Search court cases and their hearing dates",
+        "documents": "Open the original documents",
+        "dates": "Convert Bikram Sambat dates to AD and back"
+      },
+      "readOnly": "Every public tool is read-only. Your assistant can read the archive, but it cannot change it."
     },
     "copied": "Copied",
-    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "connect": {
+      "title": "Add it to your AI tool",
+      "copy": "Copy",
+      "copyAddress": "Copy the server address",
+      "copyCommand": "Copy the command",
+      "clients": {
+        "claude": {
+          "name": "Claude",
+          "steps": [
+            "Open Settings → Connectors in the Claude app or on claude.ai.",
+            "Choose Add custom connector and name it Jawafdehi.",
+            "Paste the server address and save."
+          ]
+        },
+        "claudeCode": {
+          "name": "Claude Code",
+          "steps": [
+            "Run this in your terminal.",
+            "Start Claude Code and ask a question about the archive."
+          ]
+        },
+        "chatgpt": {
+          "name": "ChatGPT",
+          "steps": [
+            "Turn on developer mode in ChatGPT’s settings.",
+            "Open Settings → Connectors and add a new connector.",
+            "Paste the server address and save."
+          ]
+        },
+        "codex": {
+          "name": "Codex",
+          "steps": [
+            "Run this in your terminal.",
+            "Start Codex and ask a question about the archive."
+          ]
+        },
+        "other": {
+          "name": "Any other MCP client",
+          "steps": [
+            "In your client’s settings, add a remote MCP server with this address. It works over HTTP, with no API key.",
+            "Ask your assistant a question about the archive."
+          ]
+        }
+      }
+    },
+    "ask": {
+      "title": "Then try asking",
+      "prompts": [
+        "Was anyone paid bribes in Nepal Airlines’ wide-body aircraft purchase?",
+        "What did the Supreme Court decide about the Giribandhu tea estate land swap?",
+        "Which corruption cases has the CIAA filed in Jhapa?",
+        "Convert 2081-04-15 BS to AD."
+      ]
+    }
   }
 }
