@@ -1,4 +1,4 @@
-
+import { Notice, NoticeEmphasis } from "@/components/ui/notice";
 
 interface CaseDisclaimerBannerProps {
   children: string;
@@ -10,11 +10,7 @@ function renderDisclaimerText(text: string) {
 
   return text.split(highlightPattern).map((part, index) => {
     if (isHighlightedPhrase.test(part)) {
-      return (
-        <span key={`${part}-${index}`} className="font-semibold text-accent/90">
-          {part}
-        </span>
-      );
+      return <NoticeEmphasis key={`${part}-${index}`}>{part}</NoticeEmphasis>;
     }
 
     return part;
@@ -23,16 +19,8 @@ function renderDisclaimerText(text: string) {
 
 export function CaseDisclaimerBanner({ children }: Readonly<CaseDisclaimerBannerProps>) {
   return (
-    <aside
-      aria-label="Case information disclaimer"
-      className="no-print mb-5 rounded-lg bg-accent/5 px-4 py-3.5 sm:mb-6 sm:px-5"
-    >
-      <div className="flex items-start gap-3">
-        
-        <p className="text-base font-medium leading-relaxed tracking-wide text-primary/90">
-          {renderDisclaimerText(children)}
-        </p>
-      </div>
-    </aside>
+    <Notice aria-label="Case information disclaimer" className="no-print mb-5 sm:mb-6">
+      {renderDisclaimerText(children)}
+    </Notice>
   );
 }

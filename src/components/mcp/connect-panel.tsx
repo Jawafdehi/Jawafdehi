@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { chipVariants } from "@/components/ui/chip";
+import { Notice, NoticeEmphasis } from "@/components/ui/notice";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CopyBlock, CopyPill } from "@/components/copy-snippet";
 import { cn } from "@/lib/utils";
@@ -78,10 +79,9 @@ export function ConnectPanel() {
                         <p className="text-lg leading-8 text-foreground">{step}</p>
                         {i === copyAtStep ? <CopyTarget copy={copy} /> : null}
                         {i === steps.length - 1 && i18n.exists(`${base}.important`) ? (
-                          <p className="mt-4 border-l-2 border-accent pl-4 text-base leading-7 text-foreground/80">
-                            <span className="font-medium text-accent">{t("mcp.connect.importantLabel")}</span>{" "}
-                            {t(`${base}.important`)}
-                          </p>
+                          <Notice className="mt-4">
+                            <NoticeEmphasis>{t("mcp.connect.importantLabel")}</NoticeEmphasis> {t(`${base}.important`)}
+                          </Notice>
                         ) : null}
                       </Step>
                     ))}
