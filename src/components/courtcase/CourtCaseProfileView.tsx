@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CalendarDays,
   ExternalLink,
+  Gavel,
   IdCard,
   Landmark,
 } from "lucide-react";
@@ -18,7 +19,15 @@ import {
   courtStatusBadgeValue,
   courtStatusDisplay,
   formatCourtName,
+  type CourtStatusDisplay,
 } from "@/utils/court-case-format";
+import {
+  caseDecision,
+  caseIsDecided,
+  courtText,
+  hearingLabel,
+  VERDICT_LABELS,
+} from "@/utils/court-hearing-label";
 
 const INITIAL_VISIBLE_PARTIES = 3;
 
@@ -130,37 +139,28 @@ function getParties(courtCase?: CourtCase) {
 
 // ── Activity Badge Helper ────────────────────────────────────────────────
 
+// The label comes from the court's own status column (see
+// utils/court-hearing-label). A row with no status is a cause-list listing and
+// reads "Listed for hearing" — never "Order", which is what this used to default
+// to for ~236k Supreme Court rows that recorded no order at all.
 function getActivityBadgeText(
   hearing: CourtCaseHearing,
   translate: (key: string, defaultValue: string) => string,
-): string {
-  const dec = (hearing.decision_type || "").toLowerCase();
-  const status = (hearing.case_status || "").toLowerCase();
-
-  if (dec.includes("अन्तिम") || dec.includes("फैसला") || status.includes("फैसला")) {
-    return translate("courtCaseProfile.activity.finalOrder", "Final order");
-  }
-  if (dec.includes("धरौटी") || dec.includes("थुनछेक")) {
-    return translate("courtCaseProfile.activity.bailOrder", "Bail order");
-  }
-  if (
-    dec.includes("स्थगित") ||
-    status.includes("स्थगित") ||
-    dec.includes("नभ्याउने") ||
-    status.includes("नभ्याउने") ||
-    dec.includes("हेर्न नमिल्ने") ||
-    status.includes("हेर्न नमिल्ने")
-  ) {
-    return translate("courtCaseProfile.activity.adjourned", "Adjourned");
-  }
-  if (dec.includes("आदेश") || status.includes("आदेश")) {
-    return translate("courtCaseProfile.activity.order", "Order");
-  }
-  if (hearing.case_status?.trim()) {
-    return hearing.case_status.toUpperCase();
-  }
-  return translate("courtCaseProfile.activity.order", "Order");
+): { text: string; isOrder: boolean } {
+  const label = hearingLabel(hearing);
+  return {
+    text: label.labelKey ? translate(label.labelKey, label.labelFallback) : label.labelFallback,
+    isOrder: label.isOrder,
+  };
 }
+
+// The decided pill, for a case whose register status is empty but which our
+// record shows as decided (verdict date, verdict, or a sitting marked फैसला).
+const DECIDED_FALLBACK: CourtStatusDisplay = {
+  labelKey: "courtCaseDetail.status.decided",
+  labelFallback: "Decided",
+  detail: null,
+};
 
 // ── Component Props ──────────────────────────────────────────────────────
 
@@ -193,7 +193,21 @@ export function CourtCaseProfileView({
     courtCase?.court_identifier || courtIdentifier,
     language,
   );
-  const statusDisplay = courtStatusDisplay(courtCase?.case_status);
+  // The register's status when it has one. When it is empty (every Supreme
+  // Court row today) a decided case still says so; an undecided one shows no
+  // pill at all rather than claiming "Ongoing" on no evidence.
+  const registerStatus = courtStatusDisplay(courtCase?.case_status);
+  const decidedOnRecord = !registerStatus && courtCase ? caseIsDecided(courtCase) : false;
+  const statusDisplay = registerStatus ?? (decidedOnRecord ? DECIDED_FALLBACK : null);
+  const statusBadgeValue = registerStatus
+    ? courtStatusBadgeValue(courtCase?.case_status)
+    : "resolved";
+
+  const decisionOutcome = courtCase ? caseDecision(courtCase) : { outcome: null, source: null };
+  const decisionText =
+    decisionOutcome.source === "verdict_type" && decisionOutcome.outcome
+      ? VERDICT_LABELS[decisionOutcome.outcome][language === "ne" ? "ne" : "en"]
+      : decisionOutcome.outcome;
 
   // Court records are Nepal-first regardless of the interface language. Passing
   // "ne" makes the BS date primary and leaves AD as a parenthesised reference.
@@ -240,7 +254,7 @@ export function CourtCaseProfileView({
 
           {statusDisplay ? (
             <div className="flex shrink-0 flex-col items-start gap-1 pt-1 sm:items-end">
-              <CaseStatusBadge status={courtStatusBadgeValue(courtCase?.case_status)}>
+              <CaseStatusBadge status={statusBadgeValue}>
                 {t(statusDisplay.labelKey, statusDisplay.labelFallback)}
               </CaseStatusBadge>
               {statusDisplay.detail ? (
@@ -300,6 +314,18 @@ export function CourtCaseProfileView({
               </div>
             </div>
           ) : null}
+
+          {decisionText ? (
+            <div className="flex items-start gap-4">
+              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+                <Gavel className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
+                <span>{t("courtCaseProfile.labels.decision", "Decision")}</span>
+              </div>
+              <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+                {decisionText}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -327,7 +353,8 @@ export function CourtCaseProfileView({
         {hearings.length > 0 ? (
           <div className="relative mt-7 pl-1">
             {hearings.map((hearing, idx) => {
-              const badgeText = getActivityBadgeText(hearing, t);
+              const badge = getActivityBadgeText(hearing, t);
+              const decisionCell = courtText(hearing.decision_type);
               const dateAd = hearing.hearing_date_ad
                 ? formatDate(hearing.hearing_date_ad, "PP")
                 : "—";
@@ -376,7 +403,7 @@ export function CourtCaseProfileView({
                           variant="accent"
                           className="border-accent/20 text-xs font-semibold uppercase tracking-wide"
                         >
-                          {badgeText}
+                          {badge.text}
                         </Badge>
                       </div>
 
@@ -391,13 +418,15 @@ export function CourtCaseProfileView({
                         </div>
                       )}
 
-                      {hearing.decision_type && (
+                      {decisionCell && (
                         <div>
                           <div className="text-xs sm:text-sm font-medium text-muted-foreground">
-                            {t("courtCaseProfile.activity.order", "Order")}
+                            {badge.isOrder
+                              ? t("courtCaseProfile.activity.order", "Order")
+                              : t("courtCaseProfile.activity.details", "Details")}
                           </div>
                           <div className="text-base sm:text-lg font-medium text-foreground mt-0.5 leading-relaxed">
-                            {hearing.decision_type}
+                            {decisionCell}
                           </div>
                         </div>
                       )}

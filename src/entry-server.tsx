@@ -17,7 +17,7 @@ import {
 } from './queries/materials-landing';
 import { CASES_PAGE_SIZE } from './lib/cases-pagination';
 import { pickRecentMaterials } from './lib/materials-landing';
-import { getMaterial, materialTail } from './services/datalake-api';
+import { getAllPages, getMaterial, materialTail } from './services/datalake-api';
 import type { ArchiveSearchResponse } from './types/search';
 import { http } from './services/http';
 import { reportPrefetch } from './lib/ssr-prefetch';
@@ -298,8 +298,8 @@ async function prefetch(
         // getCourtCaseFull so SSR and client agree on cache shape).
         const core = await http.get(`${base}/`).then((r) => r.data);
         const [hearings, entities] = await Promise.all([
-          http.get(`${base}/hearings`).then((r) => r.data?.results ?? r.data ?? []).catch(() => []),
-          http.get(`${base}/entities`).then((r) => r.data?.results ?? r.data ?? []).catch(() => []),
+          getAllPages((u, c) => http.get(u, c), `${base}/hearings`).catch(() => []),
+          getAllPages((u, c) => http.get(u, c), `${base}/entities`).catch(() => []),
         ]);
         return { ...core, hearings, entities };
       },
