@@ -107,7 +107,7 @@ const Privacy = () => {
 
               <h3 id="accounts-and-sign-in">2.7 Accounts and Sign-In</h3>
               <p>
-                Most of the Platform needs no account. You need one only to use services that require sign-in: Jawafdehi Chat (chat.jawafdehi.org), the signed-in tools of our MCP connector (api.jawafdehi.org/mcp, which lets AI assistants such as Claude or ChatGPT read the archive), and, for our team, the caseworker portal. Sign-in is handled by our own sign-in service at auth.jawafdehi.org.
+                Most of the Platform needs no account. You need one only to use services that require sign-in: Jawafdehi Chat (chat.jawafdehi.org) and the signed-in tools of our MCP connector (api.jawafdehi.org/mcp, which lets AI assistants such as Claude or ChatGPT read the archive). Sign-in is handled by our own sign-in service at auth.jawafdehi.org. Our team also uses it to reach internal tools such as the caseworker portal; the staff notice covers those.
               </p>
               <p>
                 When you create an account, we collect your name, email address, and password (stored in a scrambled form we cannot read), and, if you turn it on, two-factor authentication details. If you sign in with Google instead, Google tells us your name, email address, and profile picture. We also keep a record of sign-ins (time, IP address, and browser) for security. We use this information only to let you sign in, decide what you are allowed to do, keep accounts secure, and contact you about your account.
