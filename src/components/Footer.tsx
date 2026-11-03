@@ -9,6 +9,7 @@ import { SiLinktree } from "react-icons/si";
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { API_BASE_URL } from "@/services/http";
 import { cn } from "@/lib/utils";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 
 type FooterLink = {
   label: string;
@@ -30,7 +31,7 @@ type FooterBadge = {
 };
 
 const linkClass =
-  "group -mx-3 inline-flex min-h-11 items-center justify-between gap-3 rounded-full px-3 text-sm text-[var(--footer-muted)] transition-all duration-200 hover:bg-[var(--footer-soft)] hover:text-[var(--footer-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "group -mx-3 inline-flex min-h-11 items-center justify-between gap-3 rounded-full px-3 text-base text-[var(--footer-muted)] transition-all duration-200 hover:bg-[var(--footer-soft)] hover:text-[var(--footer-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 const footerBadges: FooterBadge[] = [
   {
@@ -95,7 +96,7 @@ function FooterNavLink({ label, to, external }: Readonly<FooterLink>) {
 function FooterLinkGroup({ title, links }: Readonly<{ title: string; links: FooterLink[] }>) {
   return (
     <nav aria-label={title}>
-      <h3 className="mb-3 text-sm font-bold text-[var(--footer-fg)]">
+      <h3 className="mb-3 text-base font-medium text-[var(--footer-fg)]">
         {title}
       </h3>
       {/* No gap between rows: min-h-11 already gives each link 44px of vertical
@@ -168,7 +169,10 @@ export const Footer = () => {
   return (
     <footer
       className={cn(
-        "relative isolate overflow-hidden border-t bg-[var(--footer-bg)] text-[var(--footer-fg)]",
+        // No top border: the navy edge already separates the footer from light
+        // pages, and on the home page it would draw a seam between the report
+        // band and the footer, which share one navy.
+        "relative isolate overflow-hidden bg-[var(--footer-bg)] text-[var(--footer-fg)]",
         // --primary-surface, not --primary: a footer background is the *fill*
         // role. They are the same navy in light, but --primary becomes light ink
         // in dark, which would paint the footer cream. This is the divergence
@@ -180,7 +184,6 @@ export const Footer = () => {
         "[--footer-title:hsl(var(--accent-on-dark))]",
         "[--footer-soft:hsl(var(--primary-foreground)/0.10)] [--footer-soft-hover:hsl(var(--primary-foreground)/0.16)]",
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",
-        "border-[var(--footer-border)]",
         "dark:[--footer-bg:hsl(var(--card))] dark:[--footer-fg:hsl(var(--card-foreground))] dark:[--footer-muted:hsl(var(--card-foreground)/0.82)]",
         // Dark mode paints the footer with --card, a light cream, so the title
         // reverts to the ordinary accent; --accent-on-dark exists for the navy.
@@ -189,6 +192,14 @@ export const Footer = () => {
         "dark:[--footer-border:hsl(var(--border)/0.70)] dark:[--footer-border-hover:hsl(var(--foreground)/0.20)] dark:[--footer-dot:hsl(var(--border))]",
       )}
     >
+      {/* The home hero's diamond field, fading in across the right side and
+          washed out behind the links, so every page closes on the surface the
+          home page opens with. Light theme only: in dark mode the footer is
+          cream, where the navy shader would not belong. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 dark:hidden">
+        <ShaderBackdrop design="diamond" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--footer-bg)_45%,transparent_100%)]" />
+      </div>
       <div className="layout-container py-12 md:py-14">
         <div className="grid gap-10 lg:grid-cols-[minmax(280px,1.15fr)_minmax(0,1.85fr)] lg:gap-14">
           <div className="space-y-6">
@@ -215,12 +226,12 @@ export const Footer = () => {
               <p className="font-eyebrow font-eyebrow-display text-[var(--footer-title)]">
                 <em>{t("footer.accountabilityNoExpiry")}</em>
               </p>
-              <p className="text-sm leading-6 text-[var(--footer-muted)]">
+              <p className="text-base leading-7 text-[var(--footer-muted)]">
                 {t("footer.permanentArchive")}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-[var(--footer-muted)]">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[var(--footer-muted)]">
               {footerBadges.map(({ labelKey, icon: Icon, marker, iconClassName }, index) => (
                 <span
                   key={labelKey}
@@ -245,7 +256,7 @@ export const Footer = () => {
         </div>
 
         <div className="mt-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <p className="font-caption text-[var(--footer-muted)]">
+          <p className="text-sm leading-6 text-[var(--footer-muted)]">
             {t("footer.disclaimer")}
           </p>
 
@@ -269,7 +280,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2 text-xs text-[var(--footer-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-2 text-sm text-[var(--footer-muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>
             {t("footer.allDataPublicDomain")}
           </p>
@@ -284,7 +295,7 @@ export const Footer = () => {
         </div>
 
         <div className="mt-6 border-t border-[var(--footer-border)] pt-6">
-          <p className="text-xs text-[var(--footer-muted)]">
+          <p className="text-sm leading-6 text-[var(--footer-muted)]">
             {t("footer.legalEntity")}
           </p>
         </div>
