@@ -87,7 +87,7 @@ export function FeaturedCaseSpotlight({
       ref={glowRef}
       onMouseMove={handleGlowMove}
       className={cn(
-        "group relative grid overflow-hidden rounded-3xl bg-primary-surface text-primary-foreground",
+        "group relative grid grid-cols-1 overflow-hidden rounded-3xl bg-primary-surface text-primary-foreground",
         "shadow-[0_24px_60px_-28px_hsl(var(--primary-surface)/0.55)] transition-all duration-300",
         "md:grid-cols-[1.15fr_1fr]",
         caseSlug && "cursor-pointer hover:-translate-y-1 hover:shadow-[0_32px_70px_-30px_hsl(var(--primary-surface)/0.5)]",
