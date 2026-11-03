@@ -10,8 +10,9 @@ import type { WhatsNewEntry as Entry } from "@/data/whats-new";
 import { cn } from "@/lib/utils";
 import { formatDateForLanguage } from "@/utils/date";
 
-/** `large` on /whats-new itself; the default size for the home and /mcp slices. */
-export function WhatsNewEntry({ entry, size = "default" }: Readonly<{ entry: Entry; size?: "default" | "large" }>) {
+/** `large` on /whats-new itself, `default` for product pages, `small` for the
+ * home page's short list. */
+export function WhatsNewEntry({ entry, size = "default" }: Readonly<{ entry: Entry; size?: "small" | "default" | "large" }>) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language === "ne" ? "ne" : "en";
   const external = entry.href ? /^https?:\/\//.test(entry.href) : false;
@@ -38,10 +39,10 @@ export function WhatsNewEntry({ entry, size = "default" }: Readonly<{ entry: Ent
         <time dateTime={entry.date}>{formatDateForLanguage(entry.date, "PP", null, lang).primary}</time>
       </p>
       {/* leading last: cn() drops a leading-* that a later text-2xl overrides. */}
-      <h3 className={cn("font-home-display mt-3 text-primary", size === "large" ? "text-3xl md:text-[2.75rem]" : "text-2xl md:text-3xl", "leading-[1.12]")}>
+      <h3 className={cn("font-home-display mt-3 text-primary", size === "large" ? "text-3xl md:text-4xl" : size === "small" ? "text-xl md:text-2xl" : "text-2xl md:text-3xl", "leading-[1.12]")}>
         {entry.title[lang]}
       </h3>
-      <p className="mt-4 max-w-xl text-lg leading-8 text-foreground/70">{entry.body[lang]}</p>
+      <p className={cn("max-w-xl text-foreground/70", size === "small" ? "mt-2 text-base leading-7" : "mt-4 text-lg leading-8")}>{entry.body[lang]}</p>
       {entry.href && external ? (
         <a href={entry.href} target="_blank" rel="noreferrer" className={moreClass}>
           {more}
