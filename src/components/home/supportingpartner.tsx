@@ -2,7 +2,7 @@ export function SupportingPartner() {
   return (
     <section
       aria-labelledby="supporting-partners-title"
-      className="bg-background py-10 md:py-12"
+      className="py-10 md:py-12"
     >
       <div className="layout-container flex flex-col items-center">
         <h2
