@@ -182,7 +182,7 @@ All colors MUST be HSL.
        value shared by several semantic tokens is defined exactly once. To
        retheme the product, edit this block.
        --------------------------------------------------------------------- */
-    --base-white: 0 0% 100%;
+    --base-white: 0 0% 100%;           /* #FFFFFF */
     --base-cream: 36 100% 99%;
     --base-paper: 60 23.1% 97.5%;      /* #FAFAF7 */
     --base-paper-sunk: 60 10.3% 94.3%; /* #F2F2EF */
@@ -202,7 +202,9 @@ All colors MUST be HSL.
        independently changeable tomorrow (e.g. restyling --input must not
        restyle every --border).
        --------------------------------------------------------------------- */
-    --background: var(--base-paper);
+    /* The page is pure white (decided 2026-11-03); paper stays the tone of
+       sunk surfaces and popovers. */
+    --background: var(--base-white);
     --foreground: var(--base-ink);
 
     --card: var(--base-paper-sunk);
