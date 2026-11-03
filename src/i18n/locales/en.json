@@ -2780,79 +2780,158 @@
     },
     "hero": {
       "back": "Back to the archive",
-      "title": "Nepal's accountability archive, inside your AI.",
-      "description": "Connect Claude, ChatGPT or any MCP client to the Jawafdehi archive. Your assistant can search cases, court records and documents, and cite every source it uses."
-    },
-    "tools": {
-      "eyebrow": "What your AI can do",
-      "title": "Seven things your assistant can look up",
-      "body": "Each card is one tool on the Jawafdehi MCP server. Your assistant picks the right one for the question.",
-      "items": {
-        "findCases": "Find corruption cases by name, place, office or amount",
-        "readCase": "Read a full case: allegations, people, timeline and sources",
-        "people": "Look up a politician, official or public body",
-        "history": "See how a person's record has changed over time",
-        "courts": "Search court cases and their hearing dates",
-        "documents": "Open the original documents",
-        "dates": "Convert Bikram Sambat dates to AD and back"
-      },
-      "readOnly": "Every public tool is read-only. Your assistant can read the archive, but it cannot change it."
+      "title": "Nepal's accountability record, inside your favourite AI.",
+      "description": "Ask a question in plain language. Your AI assistant searches Nepal's corruption and audit records and answers with links to the original documents."
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
     "connect": {
-      "title": "Add it to your AI tool",
+      "title": "Set it up",
       "copy": "Copy",
       "copyAddress": "Copy the server address",
       "copyCommand": "Copy the command",
+      "copyConfig": "Copy the configuration",
+      "importantLabel": "Important:",
       "clients": {
         "claude": {
           "name": "Claude",
           "steps": [
-            "Open Settings → Connectors in the Claude app or on claude.ai.",
-            "Choose Add custom connector and name it Jawafdehi.",
-            "Paste the server address and save."
-          ]
-        },
-        "claudeCode": {
-          "name": "Claude Code",
-          "steps": [
-            "Run this in your terminal.",
-            "Start Claude Code and ask a question about the archive."
-          ]
+            "Open Customize → Connectors, then Add → Add custom connector.",
+            "Name it Jawafdehi, with this URL:",
+            "Authentication: Sign in now. Click Add, then Connect, and sign in with Google."
+          ],
+          "important": "Under OAuth client, choose Register automatically, not the “Recommended” option.",
+          "after": "Ask a question that mentions Jawafdehi; click Always allow when asked.",
+          "platforms": [
+            "Web",
+            "Desktop",
+            "Mobile"
+          ],
+          "plan": "The free plan works but runs out after about four research questions; Claude Pro removes that limit. Signing in unlocks tools that read long reports section by section."
         },
         "chatgpt": {
           "name": "ChatGPT",
           "steps": [
-            "Turn on developer mode in ChatGPT’s settings.",
-            "Open Settings → Connectors and add a new connector.",
-            "Paste the server address and save."
-          ]
+            "Open chatgpt.com/plugins, then Add → Add custom MCP server.",
+            "Name it Jawafdehi, with this server URL:",
+            "Authentication: No authentication. Tick I understand and want to continue, click Create as a plugin, then Connect Jawafdehi."
+          ],
+          "after": "In a chat, type @Jawafdehi before your question; click Always allow when asked.",
+          "platforms": [
+            "Web"
+          ],
+          "plan": "Works on a free ChatGPT account, with the 12 public tools. The tools that read long reports need sign-in, which works in Claude today."
+        },
+        "claudeCode": {
+          "name": "Claude Code",
+          "steps": [
+            "Run these in your terminal:",
+            "Sign in with Google when the browser opens."
+          ],
+          "platforms": [
+            "Terminal"
+          ],
+          "requirement": "Paid Claude plan"
         },
         "codex": {
           "name": "Codex",
           "steps": [
-            "Run this in your terminal.",
-            "Start Codex and ask a question about the archive."
-          ]
-        },
-        "other": {
-          "name": "Any other MCP client",
-          "steps": [
-            "In your client’s settings, add a remote MCP server with this address. It works over HTTP, with no API key.",
-            "Ask your assistant a question about the archive."
-          ]
+            "Add this to ~/.codex/config.toml:",
+            "Type /mcp in Codex to check it is connected. The ChatGPT desktop app shares this setting (Settings → MCP servers)."
+          ],
+          "platforms": [
+            "CLI",
+            "IDE",
+            "ChatGPT desktop app"
+          ],
+          "plan": "Codex is included in every ChatGPT plan, Free included."
         }
-      }
+      },
+      "worksIn": "Works in"
     },
-    "ask": {
-      "title": "Then try asking",
-      "prompts": [
-        "Was anyone paid bribes in Nepal Airlines’ wide-body aircraft purchase?",
-        "What did the Supreme Court decide about the Giribandhu tea estate land swap?",
-        "Which corruption cases has the CIAA filed in Jhapa?",
-        "Convert 2081-04-15 BS to AD."
+    "overview": {
+      "problemLabel": "The problem",
+      "problem": "The evidence on corruption in Nepal is public, but it is scattered. Auditor General reports run to a thousand pages of scanned Nepali; CIAA charge sheets sit on one website, verdicts on dozens of court websites, procurement notices on Bolpatra.",
+      "problemPoint": "Connecting one official, one project or one public body across all of it takes a reporter days.",
+      "whatLabel": "What it is",
+      "what": "Jawafdehi has gathered these records into one open database. The Jawafdehi MCP is a connector that plugs that database into Claude or ChatGPT.",
+      "whatPoint": "You ask; the assistant searches the records, reads the documents and answers with sources."
+    },
+    "inside": {
+      "title": "What's inside",
+      "stats": [
+        {
+          "value": "2,836",
+          "label": "published corruption and accountability cases"
+        },
+        {
+          "value": "Rs 23,383 cr",
+          "label": "alleged in those cases"
+        },
+        {
+          "value": "2.3 million",
+          "label": "court case records from 97 courts"
+        },
+        {
+          "value": "~100,000",
+          "label": "Attorney General charge-sheet records"
+        },
+        {
+          "value": "205,000",
+          "label": "procurement notices (Bolpatra)"
+        },
+        {
+          "value": "43,000",
+          "label": "court orders, plus 10,500 Supreme Court precedents"
+        },
+        {
+          "value": "3,500",
+          "label": "CIAA press releases"
+        },
+        {
+          "value": "~220",
+          "label": "Auditor General reports: federal, provincial, SOE"
+        }
+      ],
+      "updated": "Updated 1 November 2026 · from api.jawafdehi.org"
+    },
+    "questions": {
+      "title": "Questions you can try asking",
+      "items": [
+        {
+          "question": "Show me every corruption case involving Sugat Ratna Kansakar: the charge sheet, the hearings and the verdict.",
+          "answer": "Found the wide-body purchase case 080-CR-0145: the charges, all 24 Special Court hearings, his conviction, and the CIAA's pending Supreme Court appeal."
+        },
+        {
+          "question": "Pick one of the Auditor General's findings about Nepal Airlines and tell me whether anyone involved is also facing a corruption case.",
+          "answer": "Linked the audit's A330 loan finding to Special Court case 080-CR-0145: who was convicted and acquitted, and the pending appeal."
+        },
+        {
+          "question": "ललिता निवास जग्गा प्रकरणमा अख्तियारले कसकसलाई मुद्दा चलायो, र विशेष अदालतको फैसला के भयो?",
+          "answer": "Answered in Nepali: 175 defendants by group, who was convicted and acquitted, and the CIAA's appeal."
+        },
+        {
+          "question": "Which corruption cases did the Special Court decide in FY 2082/83, and how many ended in conviction?",
+          "answer": "103 decisions in the data: 24 full convictions, 35 partial, 41 acquittals, with a warning that the first half of the year is missing."
+        }
       ]
+    },
+    "pilot": {
+      "eyebrow": "The pilot · November 2026",
+      "title": "Try it on a real story.",
+      "body": "For a small group of journalists and researchers, in Claude or ChatGPT.",
+      "steps": [
+        "Free access during the pilot",
+        "A 20-minute setup and demo call",
+        "Use it on a real story for a few weeks",
+        "Tell us what was useful and what was missing"
+      ],
+      "join": "Join the pilot: write to",
+      "contactName": "Damodar Dahal, President"
+    },
+    "demo": {
+      "title": "See it in action",
+      "label": "A demo of the Jawafdehi MCP in Claude and ChatGPT"
     }
   },
   "whatsNew": {
