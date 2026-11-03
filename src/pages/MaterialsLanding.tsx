@@ -20,9 +20,9 @@ import {
   recentMaterialsQuery,
 } from "@/queries/materials-landing";
 import { getMaterial, materialTail } from "@/services/datalake-api";
+import { CHAT_URL } from "@/lib/external-links";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
-const CHAT_URL = "https://chat.jawafdehi.org";
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
 /** The three folders on the hero shelf — flagship series, front one linked. */

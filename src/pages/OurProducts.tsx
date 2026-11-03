@@ -7,6 +7,7 @@ import { PageHero } from "@/components/ui/page-hero";
 import { Seo } from "@/components/Seo";
 import { API_BASE_URL } from "@/services/http";
 import { SITE_URL } from "@/utils/seo";
+import { CHAT_URL } from "@/lib/external-links";
 
 type Product = {
   icon: typeof Code2;
@@ -50,7 +51,7 @@ const PRODUCTS: Product[] = [
   {
     icon: Bot,
     name: "AI Research Chat",
-    href: "https://chat.jawafdehi.org",
+    href: CHAT_URL,
     description:
       "A conversational research interface for asking questions about corruption cases, public entities, and accountability patterns in plain language.",
     tags: ["AI Research", "Case Search", "Public Access"],
