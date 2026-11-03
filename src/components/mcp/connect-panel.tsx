@@ -1,14 +1,15 @@
 // "Set it up": how to connect each assistant, one tab per client, following
-// the pilot flyer's tested steps. Each panel is a short numbered list; the one
-// thing to copy — the server address, the commands, or the config — sits in
-// the step that uses it. Steps are numbered like the key allegations on a case
-// page ("1." in the accent). Where it runs and what plan it needs sit at the top
-// of each panel, and the plan note at the bottom, inside the client it is about.
+// the pilot flyer's tested steps. Each panel is a quickstart-style stepper —
+// numbered markers, the one thing to copy (server address, commands
+// or config) inside the step that uses it, and a closing "try it" step — with
+// where it runs and what plan it needs in a quiet side column.
+import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { chipVariants } from "@/components/ui/chip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CopyBlock, CopyPill } from "@/components/copy-snippet";
+import { cn } from "@/lib/utils";
 
 // The canonical MCP endpoint, pinned rather than derived from API_BASE_URL:
 // that resolves to "" during pre-render and to the SPA's own origin in the
@@ -61,49 +62,79 @@ export function ConnectPanel() {
         {CLIENTS.map(({ key, copy, copyAtStep }) => {
           const base = `mcp.connect.clients.${key}`;
           const steps = t(`${base}.steps`, { returnObjects: true }) as string[];
+          const platforms = t(`${base}.platforms`, { returnObjects: true }) as string[];
+          const hasAfter = i18n.exists(`${base}.after`);
+          const plan = [
+            i18n.exists(`${base}.requirement`) ? t(`${base}.requirement`) : null,
+            i18n.exists(`${base}.plan`) ? t(`${base}.plan`) : null,
+          ].filter(Boolean);
           return (
-            <TabsContent key={key} value={key} className="mt-8 focus-visible:ring-offset-0">
-              <ul aria-label={t("mcp.connect.worksIn")} className="flex flex-wrap gap-2">
-                {(t(`${base}.platforms`, { returnObjects: true }) as string[]).map((platform) => (
-                  <li key={platform} className="rounded-full bg-muted px-3 py-1 text-sm text-foreground/75">
-                    {platform}
-                  </li>
-                ))}
-                {i18n.exists(`${base}.requirement`) ? (
-                  <li className="rounded-full bg-accent/10 px-3 py-1 text-sm text-accent">{t(`${base}.requirement`)}</li>
-                ) : null}
-              </ul>
-              <ol className="mt-6 max-w-3xl space-y-7">
-                {Array.isArray(steps) &&
-                  steps.map((step, i) => (
-                    <li key={step} className="flex items-start gap-4">
-                      <span aria-hidden="true" className="mt-px shrink-0 text-lg font-medium leading-8 text-accent">
-                        {i + 1}.
-                      </span>
-                      <div className="min-w-0">
+            <TabsContent key={key} value={key} className="mt-10 focus-visible:ring-offset-0">
+              <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:gap-16">
+                <ol className="relative">
+                  {Array.isArray(steps) &&
+                    steps.map((step, i) => (
+                      <Step key={step} marker={i + 1}>
                         <p className="text-lg leading-8 text-foreground">{step}</p>
                         {i === copyAtStep ? <CopyTarget copy={copy} /> : null}
-                      </div>
-                    </li>
-                  ))}
-              </ol>
-              {i18n.exists(`${base}.important`) ? (
-                <p className="mt-7 max-w-3xl rounded-2xl bg-accent/5 px-5 py-4 text-base leading-7 text-foreground">
-                  <span className="font-medium text-accent">{t("mcp.connect.importantLabel")}</span> {t(`${base}.important`)}
-                </p>
-              ) : null}
-              {i18n.exists(`${base}.after`) ? (
-                <p className="mt-6 max-w-3xl text-lg leading-8 text-foreground/75">{t(`${base}.after`)}</p>
-              ) : null}
-              {i18n.exists(`${base}.plan`) ? (
-                <p className="mt-8 max-w-3xl border-t border-border pt-6 text-base leading-7 text-foreground/65">{t(`${base}.plan`)}</p>
-              ) : null}
+                        {i === steps.length - 1 && i18n.exists(`${base}.important`) ? (
+                          <p className="mt-4 border-l-2 border-accent pl-4 text-base leading-7 text-foreground/80">
+                            <span className="font-medium text-accent">{t("mcp.connect.importantLabel")}</span>{" "}
+                            {t(`${base}.important`)}
+                          </p>
+                        ) : null}
+                      </Step>
+                    ))}
+                  {hasAfter ? (
+                    <Step marker="done">
+                      <p className="text-lg leading-8 text-foreground">{t(`${base}.after`)}</p>
+                    </Step>
+                  ) : null}
+                </ol>
+
+                <aside className="space-y-6 text-base leading-7">
+                  <div>
+                    <h3 className="text-sm text-muted-foreground">{t("mcp.connect.worksIn")}</h3>
+                    <p className="mt-1 text-foreground">{Array.isArray(platforms) ? platforms.join(" · ") : null}</p>
+                  </div>
+                  {plan.length > 0 ? (
+                    <div>
+                      <h3 className="text-sm text-muted-foreground">{t("mcp.connect.planLabel")}</h3>
+                      {plan.map((line) => (
+                        <p key={line} className="mt-1 text-foreground/80">{line}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                </aside>
+              </div>
             </TabsContent>
           );
         })}
       </Tabs>
-
     </>
+  );
+}
+
+/** One step of the setup: a numbered marker beside the instruction,
+ * docs-quickstart style. The closing step ("try it") gets a check in place of
+ * a number. */
+function Step({
+  marker,
+  children,
+}: Readonly<{ marker: number | "done"; children: React.ReactNode }>) {
+  return (
+    <li className="flex gap-5 pb-9 last:pb-0">
+      <span
+        aria-hidden="true"
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm tabular-nums",
+          marker === "done" ? "bg-primary-surface text-primary-foreground" : "border border-border bg-background text-primary",
+        )}
+      >
+        {marker === "done" ? <Check className="h-4 w-4" /> : marker}
+      </span>
+      <div className="min-w-0 flex-1 pt-px">{children}</div>
+    </li>
   );
 }
 

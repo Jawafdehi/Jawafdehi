@@ -2778,6 +2778,7 @@
       "copyCommand": "कमान्ड कपी गर्नुहोस्",
       "copyConfig": "कन्फिगरेसन कपी गर्नुहोस्",
       "importantLabel": "महत्त्वपूर्ण:",
+      "planLabel": "प्लान",
       "clients": {
         "claude": {
           "name": "क्लाउड",
