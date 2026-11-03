@@ -2,6 +2,7 @@
 // Jawafdehi MCP pilot flyer (November 2026): the problem, what the connector
 // is, what the archive holds, two real answers, questions that work today,
 // and the pilot. Setup lives in connect-panel.tsx.
+import { ArrowUpRight, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";
@@ -9,7 +10,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 
-const CARD = "rounded-3xl border border-border/60 bg-surface shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)]";
+const CARD = "rounded-3xl border border-border/60 bg-surface";
 
 function SectionHead({ title }: Readonly<{ title: string }>) {
   return (
@@ -47,41 +48,26 @@ export function McpInside() {
   const { t } = useTranslation();
   const stats = t("mcp.inside.stats", { returnObjects: true }) as Stat[];
   if (!Array.isArray(stats)) return null;
-  // The first two figures are the archive's headline (cases, and the money
-  // alleged in them) and stand on their own on the left; the six collections
-  // behind them sit in a quieter grid on the right.
-  const [cases, amount, ...sources] = stats;
-
+  // One grid, one size: the money alleged (the second figure) is the only
+  // one set apart, by colour alone.
   return (
     <section id="inside" className="pt-16 md:pt-24">
       <div className="layout-container">
         <SectionHead title={t("mcp.inside.title")} />
 
-        <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
-          <div className="space-y-8">
-            {[cases, amount].map((stat, index) => (
-              <Reveal key={stat.label} delayMs={index * 80}>
-                <p className={cn("font-home-display text-4xl tabular-nums md:text-5xl", index === 1 ? "text-accent" : "text-primary")}>
+        <ul className="mt-10 grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
+          {stats.map((stat, index) => (
+            <li key={stat.label}>
+              <Reveal delayMs={(index % 4) * 60}>
+                <p className={cn("font-home-display text-2xl tabular-nums md:text-3xl", index === 1 ? "text-accent" : "text-primary")}>
                   {stat.value}
                 </p>
-                <p className="mt-2 text-lg text-foreground/70">{stat.label}</p>
+                <p className="mt-2 text-base leading-6 text-foreground/65">{stat.label}</p>
               </Reveal>
-            ))}
-          </div>
+            </li>
+          ))}
+        </ul>
 
-          <ul className="grid grid-cols-2 gap-x-8 gap-y-8 md:grid-cols-3">
-            {sources.map((stat, index) => (
-              <li key={stat.label}>
-                <Reveal delayMs={(index % 3) * 60}>
-                  <p className="font-home-display text-2xl tabular-nums text-primary">{stat.value}</p>
-                  <p className="mt-1.5 text-base leading-6 text-foreground/65">{stat.label}</p>
-                </Reveal>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <p className="mt-10 text-sm text-muted-foreground">{t("mcp.inside.updated")}</p>
       </div>
     </section>
   );
@@ -144,43 +130,54 @@ export function McpQuestions() {
 export function McpPilot() {
   const { t } = useTranslation();
   const steps = t("mcp.pilot.steps", { returnObjects: true }) as string[];
+  // The flyer's four lines are two promises: what the pilot gives (free
+  // access, a setup call) and what it asks back (real use, honest feedback).
+  const groups = Array.isArray(steps)
+    ? [
+        { label: t("mcp.pilot.youGet"), items: steps.slice(0, 2) },
+        { label: t("mcp.pilot.weAsk"), items: steps.slice(2) },
+      ]
+    : [];
   return (
     <section id="pilot" className="relative isolate mt-16 overflow-hidden bg-primary-surface py-16 text-primary-foreground md:mt-24 md:py-24">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <GrainTexture className="absolute inset-0 opacity-70" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface))_35%,hsl(var(--primary-surface)/0.6)_70%,transparent)]" />
       </div>
-      <div className="layout-container grid gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16">
+      <div className="layout-container grid grid-cols-1 gap-12 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16">
+        {/* No button: joining means writing an email, so the address itself
+            is the call to action. */}
         <Reveal>
-          <p className="font-eyebrow font-eyebrow-display text-sm text-[hsl(var(--accent-on-dark))]">{t("mcp.pilot.eyebrow")}</p>
-          <h2 className="font-home-section-title mt-4">{t("mcp.pilot.title")}</h2>
-          <p className="mt-4 max-w-md text-lg leading-8 text-primary-foreground/80">{t("mcp.pilot.body")}</p>
-        </Reveal>
-        <div>
-          <ol className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
-            {Array.isArray(steps) &&
-              steps.map((step, index) => (
-                <li key={step} className="flex items-start gap-4">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground"
-                  >
-                    {index + 1}
-                  </span>
-                  <p className="pt-0.5 text-lg leading-7 text-primary-foreground/90">{step}</p>
-                </li>
-              ))}
-          </ol>
-          <p className="mt-10 text-lg text-primary-foreground/80">
-            {t("mcp.pilot.join")}{" "}
-            <a
-              href="mailto:inquiry@jawafdehi.org"
-              className="rounded text-[hsl(var(--accent-on-dark))] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
-            >
-              inquiry@jawafdehi.org
-            </a>
+          <h2 className="font-home-section-title text-[hsl(var(--accent-on-dark))]">{t("mcp.pilot.title")}</h2>
+          <p className="mt-4 max-w-md text-lg leading-8 text-primary-foreground/80 md:text-xl md:leading-9">
+            {t("mcp.pilot.tagline")} {t("mcp.pilot.body")}
           </p>
-          <p className="mt-2 text-base text-primary-foreground/60">{t("mcp.pilot.contactName")}</p>
+          <p className="mt-10 text-sm text-primary-foreground/60 md:text-base">{t("mcp.pilot.join")}</p>
+          <a
+            href="mailto:inquiry@jawafdehi.org"
+            className="font-home-display mt-2 inline-flex items-center gap-3 rounded text-2xl text-primary-foreground underline decoration-primary-foreground/30 underline-offset-[6px] transition-colors hover:decoration-[hsl(var(--accent-on-dark))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 md:text-3xl"
+          >
+            inquiry@jawafdehi.org
+            <ArrowUpRight aria-hidden="true" className="h-6 w-6 shrink-0 text-[hsl(var(--accent-on-dark))]" />
+          </a>
+          <p className="mt-3 text-base text-primary-foreground/60">{t("mcp.pilot.contactName")}</p>
+        </Reveal>
+        {/* Stretched to the left column's height with the two groups pushed
+            apart, so both columns start and end on the same lines. */}
+        <div className="flex flex-col gap-10 md:justify-between">
+          {groups.map((group, index) => (
+            <Reveal key={group.label} delayMs={index * 80}>
+              <h3 className="text-sm text-primary-foreground/60 md:text-base">{group.label}</h3>
+              <ul className="mt-4 space-y-3">
+                {group.items.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-lg leading-7 md:text-xl md:leading-8">
+                    <Check aria-hidden="true" className="mt-1.5 h-4 w-4 shrink-0 text-[hsl(var(--accent-on-dark))]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>
