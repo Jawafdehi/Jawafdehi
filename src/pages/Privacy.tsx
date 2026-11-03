@@ -214,8 +214,8 @@ const Privacy = () => {
                 <li><strong>Feedback submissions</strong>: up to 24 months, then deleted unless tied to a published case.</li>
                 <li><strong>Allegation reports</strong>: retained for the life of any resulting public record; otherwise purged when closed without action.</li>
                 <li><strong>Volunteer applications</strong>: until no longer needed or upon your request to withdraw.</li>
-                <li><strong>Accounts</strong>: deleted 1 year after you close your account, or after 1 year without use. You can ask us to delete your account sooner at any time.</li>
-                <li><strong>Emails and WhatsApp messages to us</strong>: kept for 1 year, then deleted.</li>
+                <li><strong>Accounts</strong>: deleted 1 year after you close your account, or after 1 year without use, unless we need to keep them longer for legal, accounting, or safety reasons. You can ask us to delete your account sooner at any time.</li>
+                <li><strong>Emails and WhatsApp messages to us</strong>: kept for 1 year, then deleted, unless we need to keep them longer for legal, accounting, or safety reasons (for example, records of donations, which we keep as long as tax law requires).</li>
                 <li><strong>Published case data</strong>: retained indefinitely as part of the permanent public-interest archive.</li>
                 <li><strong>Backups</strong>: deletions propagate as backups cycle out, within approximately 90 days.</li>
               </ul>
