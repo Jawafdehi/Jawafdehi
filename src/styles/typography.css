@@ -145,6 +145,30 @@
     max-inline-size: min(100%, var(--font-home-hero-measure));
   }
 
+  /* The homepage's display voice: Inter at regular weight, set large and
+     tight, as in the 2026-11 hero shader explorations. Nepali keeps the
+     heading family (Vesper) at medium weight with its own leading, since
+     Devanagari needs room for matras and must never be letterspaced tight. */
+  .font-home-display {
+    font-family: "Inter", var(--font-family-heading);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+  }
+
+  :root[lang="ne"] .font-home-display {
+    font-family: var(--font-family-heading);
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.28;
+  }
+
+  /* Section headings on the home page, one step down from the hero so the
+     sections below never compete with it. */
+  .font-home-section-title {
+    @apply font-home-display text-3xl md:text-[2.75rem];
+  }
+
   .font-hero-title {
     @apply text-3xl font-bold text-primary sm:text-5xl md:text-6xl;
     font-family: var(--font-family-heading);

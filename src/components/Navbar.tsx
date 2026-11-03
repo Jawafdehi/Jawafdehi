@@ -26,6 +26,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { CHAT_URL } from "@/lib/external-links";
 
 type NavItem = {
   key: string;
@@ -62,6 +63,9 @@ const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
       ? "bg-secondary/55 text-foreground/80"
       : "text-foreground/65 hover:bg-secondary/35 hover:text-foreground/80",
   );
+
+/** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
+const DARK_HERO_PATHS = new Set(["/"]);
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -148,12 +152,12 @@ export function Navbar() {
   const pillKey = hoveredKey ?? activeKey;
   const showPill = isScrolled && Boolean(pillKey);
 
-  // The home hero is a full-bleed navy stage, and at rest the header is
-  // transparent directly on top of it — where the navy logo and nav text
+  // The home and MCP heroes are full-bleed navy stages, and at rest the header
+  // is transparent directly on top of them — where the navy logo and nav text
   // would vanish. Every other page opens on a light surface. So the at-rest
-  // header is light-on-dark on "/" only, and snaps back to the normal navy-on-
-  // light treatment the moment it gains its opaque background (isScrolled).
-  const overDarkHero = !isScrolled && location.pathname === "/";
+  // header is light-on-dark on those routes only, and snaps back to the normal
+  // navy-on-light treatment the moment it gains its opaque background.
+  const overDarkHero = !isScrolled && DARK_HERO_PATHS.has(location.pathname);
 
   useIsomorphicLayoutEffect(() => {
     if (!showPill || !pillKey) {
@@ -473,7 +477,7 @@ export function Navbar() {
                   "bg-primary-foreground/10 text-primary-foreground ring-1 ring-inset ring-primary-foreground/25 hover:bg-primary-foreground/15",
               )}
             >
-              <a href="https://chat.jawafdehi.org" target="_blank" rel="noreferrer">
+              <a href={CHAT_URL} target="_blank" rel="noreferrer">
                 <MessageCircle className="h-4 w-4" />
                 {t("header.askAiAssistant")}
               </a>
@@ -601,7 +605,7 @@ export function Navbar() {
                     size="navSheet"
                     onClick={() => setIsOpen(false)}
                   >
-                    <a href="https://chat.jawafdehi.org" target="_blank" rel="noreferrer">
+                    <a href={CHAT_URL} target="_blank" rel="noreferrer">
                       <MessageCircle className="h-4 w-4" />
                       {t("header.askAiAssistant")}
                     </a>

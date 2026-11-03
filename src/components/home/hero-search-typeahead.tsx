@@ -134,7 +134,7 @@ export function HeroSearchTypeahead() {
   };
 
   return (
-    <form className="mt-8 w-full max-w-2xl" onSubmit={onSubmit}>
+    <form className="mt-8 w-full max-w-xl" onSubmit={onSubmit}>
       <label className="sr-only" htmlFor="hero-archive-search">
         {t("home.hero.searchLabel")}
       </label>

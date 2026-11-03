@@ -2,10 +2,9 @@ import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
+import { WhatsNew } from "@/components/home/whats-new";
 import { Reveal } from "@/components/ui/reveal";
-import { Faq } from "@/components/home/faq";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
-import { ShareOurVision } from "@/components/home/share-our-vision";
 import { SupportingPartner } from "@/components/home/supportingpartner";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -67,7 +66,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
-        title={`${SITE_NAME} — Nepal's Corruption Case Archive`}
+        title={`${SITE_NAME} — Nepal's Digital Accountability Archive`}
         description={SITE_DESCRIPTION}
         canonicalUrl={`${SITE_URL}/`}
       >
@@ -111,6 +110,10 @@ const Index = () => {
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
 
+        {/* ── What's new in the archive (the MCP, for now), then the record
+            itself. The MCP's own pitch lives on /mcp. ── */}
+        <WhatsNew />
+
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">
           <div className="layout-container">
@@ -129,7 +132,7 @@ const Index = () => {
         {/* ── Featured Cases ── */}
         {/* The `recent-cases` id is kept on purpose: nothing in src links to it,
             but external links to jawafdehi.org/#recent-cases would break. */}
-        <section id="recent-cases" className="py-12 md:py-16 bg-muted/20">
+        <section id="recent-cases" className="py-12 md:py-20">
           <div className="layout-container">
             <Reveal>
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
@@ -139,10 +142,10 @@ const Index = () => {
                       down from FaqSection's heading scale, matching the CTA
                       sections — the cards below carry this section, not the
                       heading. */}
-                  <h2 className="text-3xl font-bold leading-tight tracking-normal text-primary md:text-4xl">
+                  <h2 className="font-home-section-title text-primary">
                     {t("home.featuredCases.heading", "Featured Cases")}
                   </h2>
-                  <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
+                  <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/65 md:text-xl">
                     {t(
                       "home.featuredCases.subtitle",
                       "Recent high-impact corruption cases under public scrutiny",
@@ -182,10 +185,10 @@ const Index = () => {
 
             <Reveal>
               <div className="text-center mt-10 mb-4 flex justify-center">
-                <Button variant="primary" size="xl" asChild className="group">
+                <Button variant="primary" size="lg" asChild className="group">
                   <Link to="/search?type=case">
                     {t("home.featuredCases.viewAll", "View all cases")}{" "}
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
+                    <ArrowRight className="transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
                   </Link>
                 </Button>
               </div>
@@ -193,9 +196,9 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Partners after the report band: the white strip keeps the band's
+            navy from running into the footer's. */}
         <ReportCaseCta />
-        <Faq />
-        <ShareOurVision />
         <SupportingPartner />
       </div>
     </div>

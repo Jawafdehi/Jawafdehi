@@ -223,22 +223,24 @@
   "home": {
     "hero": {
       "eyebrow": "Accountability has no expiry.",
-      "titlePrefix": "Nepal's Permanent",
-      "titleHighlight": "Corruption Case",
-      "titleSuffix": "Archive",
-      "description": "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
-      "searchLabel": "Search the Jawafdehi archive",
-      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
-      "searchSubmit": "Search Jawafdehi",
-      "suggestionsLabel": "Case suggestions",
+      "description": "Corruption cases, court records and the documents behind them, in one open archive. Read it here, or connect it to your AI tool.",
       "stats": {
         "casesDocumented": "Corruption cases documented",
         "totalBigo": "Total embezzled amount",
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover",
-      "scrollCue": "Scroll"
+      "title": "Nepal's digital archive of public accountability.",
+      "caps": {
+        "line1": "Accountability",
+        "line2": "has no",
+        "line3": "expiry"
+      },
+      "searchArchive": "Search the archive",
+      "searchLabel": "Search the Jawafdehi archive",
+      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
+      "searchSubmit": "Search Jawafdehi",
+      "suggestionsLabel": "Case suggestions"
     },
     "featuredCases": {
       "heading": "Featured Cases",
@@ -271,6 +273,15 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
+    },
+    "whatsNew": {
+      "heading": "What's new",
+      "mcp": {
+        "title": "Jawafdehi MCP",
+        "body": "Connect the archive to Claude, ChatGPT or any AI agent. Ask about cases, court records and documents, and get answers that cite their sources.",
+        "cta": "Explore the MCP"
+      },
+      "badge": "New"
     }
   },
   "ourProcess": {
@@ -2578,6 +2589,16 @@
         "id": "using-data",
         "title": "Using the data",
         "questions": [
+          {
+            "id": "connect-ai",
+            "question": "How do I use the archive from Claude, ChatGPT or another AI tool?",
+            "answer": "Add the Jawafdehi MCP server, `https://api.jawafdehi.org/mcp`, to your AI tool. **MCP** (Model Context Protocol) is an open standard that lets AI assistants use outside tools and data. In Claude, open Settings → Connectors and add a custom connector; in ChatGPT, turn on developer mode first. In Claude Code, run `claude mcp add --transport http jawafdehi https://api.jawafdehi.org/mcp`. It is **free and read-only**, and needs no account. Step-by-step instructions are at jawafdehi.org/mcp."
+          },
+          {
+            "id": "ai-accuracy",
+            "question": "Can an AI assistant get our cases wrong?",
+            "answer": "Yes, it can. The MCP tools return the archive's own records together with links to the source documents, so every claim an assistant makes can be checked against the original. **Always check before you quote or publish.** The tools are read-only: an assistant can read the archive but cannot change it."
+          },
           {
             "id": "reuse-information",
             "question": "Can I reuse the information — for journalism, research, or advocacy?",

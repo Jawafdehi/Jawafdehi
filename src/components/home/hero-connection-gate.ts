@@ -1,15 +1,16 @@
-// Connection/device policy for the WebGL hero (PR #359 review, item 2).
+// Connection/device policy for the WebGL scenes (first written for the old
+// homepage hero, PR #359 review, item 2; now used by the /donate globe).
 //
 // The three.js chunk is ~237 KB of transfer that is pure decoration: the
-// static map backdrop is the designed fallback, not an error state. Readers
+// static fallback is the designed rendering, not an error state. Readers
 // who have turned on Data Saver, or who are on a 2g/3g-class connection, or
 // whose device reports little memory, should never pay for the download at
 // all — gating render alone (as the other gates do) still costs the bytes.
 //
 // Pure function so it can be unit-tested without stubbing `navigator`:
-// hero-scene-gate.tsx reads the live values and passes them in.
+// donate/globe-gate.tsx reads the live values and passes them in.
 //
-// Convention (shared with hero-particle-budget.ts): an UNDEFINED signal means
+// Convention: an UNDEFINED signal means
 // the browser does not expose the API, and we treat that as capable. Safari
 // and Firefox expose neither Network Information nor Device Memory; browsers
 // that DO expose them are exactly the Chromium-on-Android population the
