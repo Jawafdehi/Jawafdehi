@@ -270,6 +270,15 @@ export const SITE_ROUTES = [
     sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
   },
   {
+    path: "/whats-new",
+    chrome: "app",
+    titleKey: "whatsNew.meta.title",
+    descriptionKey: "searchCommand.descriptions.whatsNew",
+    keywords: ["what's new", "changelog", "release", "updates", "new features", "mcp", "api"],
+    icon: "Newspaper",
+    sitemapTitle: "What's new — Jawafdehi",
+  },
+  {
     path: "/openhouse",
     chrome: "app",
     titleKey: "nav.openHouse",
