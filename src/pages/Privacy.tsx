@@ -18,7 +18,7 @@ const Privacy = () => {
                 Jawafdehi Initiative Privacy Policy
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: July 18, 2026
+                Last updated: November 2, 2026
               </p>
             </div>
           </div>
@@ -27,16 +27,23 @@ const Privacy = () => {
         <section className="py-12 md:py-16">
           <div className="layout-container">
             <div className="font-paragraph content-prose max-w-3xl mx-auto">
-              {/*
-                NOTE FOR COUNSEL REVIEW (remove before publish):
-                - Confirm registered Michigan mailing address for CCPA/GDPR contact.
-                - Confirm whether an EU/UK Article 27 representative is required.
-                - Confirm CCPA applicability thresholds for a nonprofit.
-              */}
-
               <h2 id="overview">1. Overview</h2>
               <p>
-                This Privacy Policy explains how Jawafdehi Initiative Inc., a Michigan public benefit nonprofit corporation ("Jawafdehi", "we", "our", or "us"), collects, uses, shares, and protects information when you use the jawafdehi.org website and related services (the "Platform"). We believe in minimal data collection and maximum transparency — consistent with our mission as Nepal's open corruption accountability platform.
+                This Privacy Policy explains how Jawafdehi Initiative Inc., a Michigan public benefit nonprofit corporation ("Jawafdehi", "we", "our", or "us"), collects, uses, shares, and protects information when you use the jawafdehi.org website, any public website or service we run on a subdomain of jawafdehi.org, and related services (together, the "Platform"). We believe in minimal data collection and maximum transparency — consistent with our mission as Nepal's open corruption accountability platform.
+              </p>
+              <p>
+                This policy covers jawafdehi.org and all of its public subdomains, including:
+              </p>
+              <ul>
+                <li><strong>jawafdehi.org</strong>: the public case archive, search, and our forms.</li>
+                <li><strong>research.jawafdehi.org</strong>: our research on how corruption cases move through investigation, prosecution, the courts, and appeals.</li>
+                <li><strong>justice.jawafdehi.org</strong>: a summary of the work of the justices of the Supreme Court of Nepal.</li>
+                <li><strong>give.jawafdehi.org</strong>: information about supporting our work.</li>
+                <li><strong>auth.jawafdehi.org</strong>, <strong>chat.jawafdehi.org</strong>, and our MCP connector at <strong>api.jawafdehi.org/mcp</strong>: sign-in and the services that use it (see Section 2.7).</li>
+                <li>Any other public site we run under jawafdehi.org, now or later.</li>
+              </ul>
+              <p>
+                Wherever we say "the Platform" in this policy, we mean all of these. Our internal tools for staff and volunteers are not part of the Platform; they are covered by a separate staff notice.
               </p>
               <p>
                 We are the data controller for personal information processed through the Platform. If you have questions or wish to exercise your privacy rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a>.
@@ -51,6 +58,7 @@ const Privacy = () => {
               <ul>
                 <li>Your name (optional)</li>
                 <li>Email address (optional)</li>
+                <li>Your WhatsApp number, if you sign up for an event and choose to give it</li>
                 <li>Any information you choose to include in your submission</li>
               </ul>
               <p>
@@ -59,7 +67,7 @@ const Privacy = () => {
 
               <h3 id="automatically-collected-information">2.2 Automatically Collected Information</h3>
               <p>
-                When you visit jawafdehi.org, our infrastructure automatically collects standard server logs that may include:
+                When you visit any site on the Platform, our infrastructure automatically collects standard server logs that may include:
               </p>
               <ul>
                 <li>IP address (temporarily logged for security and debugging)</li>
@@ -70,7 +78,10 @@ const Privacy = () => {
 
               <h3 id="analytics-data">2.3 Analytics Data</h3>
               <p>
-                With your consent, we use Google Analytics 4 to understand how visitors use the Platform — for example, which pages are viewed and what visitors search for in the public archive. When you run a search, the words you type into the archive search box are recorded as part of an analytics event, together with the number of results returned. Because our archive concerns public corruption records, a search may include a person's name; if you would rather not have your search terms recorded, decline analytics in the cookie banner, and if you are concerned about your safety avoid entering identifying details (see Section 7). Google Analytics sets cookies and processes usage data. Google Analytics 4 does not log or store full IP addresses, and we do not use Google Analytics for advertising or cross-context behavioral tracking. Analytics do not load and no analytics cookies are set unless you opt in through our cookie banner. You can decline analytics at any time without affecting your use of the Platform (see Section 4).
+                <strong>Cloudflare Web Analytics (all sites).</strong> Every site on the Platform uses Cloudflare Web Analytics to count visits. It does not set cookies, does not store anything on your device, and does not build a profile of you or follow you across other websites. It records things like the page you viewed, how long the page took to load, the referring site, and your browser, device type, and country. We see only totals. Because it uses no cookies, it runs without asking for consent, and it is not affected by your choice in the cookie banner.
+              </p>
+              <p>
+                <strong>Google Analytics (jawafdehi.org only, with your consent).</strong> With your consent, we use Google Analytics 4 to understand how visitors use jawafdehi.org — for example, which pages are viewed and what visitors search for in the public archive. When you run a search, the words you type into the archive search box are recorded as part of an analytics event, together with the number of results returned. Because our archive concerns public corruption records, a search may include a person's name; if you would rather not have your search terms recorded, decline analytics in the cookie banner, and if you are concerned about your safety avoid entering identifying details (see Section 7). Google Analytics sets cookies and processes usage data. Google Analytics 4 does not log or store full IP addresses, and we do not use Google Analytics for advertising or cross-context behavioral tracking. Google Analytics does not load and no analytics cookies are set unless you opt in through our cookie banner. You can decline it at any time without affecting your use of the Platform (see Section 4). Our other sites do not use Google Analytics.
               </p>
 
               <h3 id="error-monitoring">2.4 Error Monitoring</h3>
@@ -83,13 +94,46 @@ const Privacy = () => {
                 To publish Jawafdehi Initiative's own content, we connect our organization's own social media accounts (including TikTok) to a self-hosted social media scheduling tool. Through a platform's official API, and only for accounts we ourselves own and connect, we may access basic profile information (such as account ID, display name, and avatar), account statistics (such as follower, like, and video counts), and the list of our own published videos, and we may upload videos we create as drafts for further editing and publishing on the platform. We do not access, collect, or store information belonging to any other users of those platforms. Information obtained through these integrations is used solely to manage our own accounts and is also subject to the terms and privacy policies of the relevant platform, including those of TikTok.
               </p>
 
+              <h3 id="research-and-data-sites">2.6 Our Research and Data Sites</h3>
+              <p>
+                research.jawafdehi.org, justice.jawafdehi.org, and give.jawafdehi.org are read-only websites. They have no accounts, no sign-in, and no forms, and they set no cookies. What they collect from you is limited to the server logs in Section 2.2 and the cookieless analytics in Section 2.3. research.jawafdehi.org remembers your language choice (English or Nepali) in your own browser; that setting is not sent to us. research.jawafdehi.org and give.jawafdehi.org load fonts from Google Fonts, so your browser connects to Google, which receives your IP address when the page loads.
+              </p>
+              <p>
+                The information these sites publish is about public life, not about visitors. It comes from public records: court records and decisions, records of the Commission for the Investigation of Abuse of Authority (CIAA) and other government bodies, and official biographies. It names public officials, including judges and people accused in corruption cases, in connection with their public roles. Much of what we show is aggregate statistics, such as how many cases a court or a justice has decided and how long cases take.
+              </p>
+              <p>
+                If you believe something on these sites is wrong, or you want to respond to what they say about you, contact us using the details in Section 14.
+              </p>
+
+              <h3 id="accounts-and-sign-in">2.7 Accounts and Sign-In</h3>
+              <p>
+                Most of the Platform needs no account. You need one only to use services that require sign-in: Jawafdehi Chat (chat.jawafdehi.org) and the signed-in tools of our MCP connector (api.jawafdehi.org/mcp, which lets AI assistants such as Claude or ChatGPT read the archive). Sign-in is handled by our own sign-in service at auth.jawafdehi.org. Our team also uses it to reach internal tools such as the caseworker portal; the staff notice covers those.
+              </p>
+              <p>
+                When you create an account, we collect your name, email address, and password (stored in a scrambled form we cannot read), and, if you turn it on, two-factor authentication details. If you sign in with Google instead, Google tells us your name, email address, and profile picture. We also keep a record of sign-ins (time, IP address, and browser) for security. We use this information only to let you sign in, decide what you are allowed to do, keep accounts secure, and contact you about your account.
+              </p>
+              <p>
+                You can use the MCP connector without an account, in which case you get read-only access to the same public data that is on our websites. When you are signed in, what you ask the connector to do is linked to your account in our logs.
+              </p>
+
+              <h3 id="contacting-us">2.8 When You Contact Us</h3>
+              <p>
+                If you email us (for example at <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a>, <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a>, or <a href="mailto:report@jawafdehi.org" className="text-primary hover:underline">report@jawafdehi.org</a>), we receive your email address, your name if you include it, and whatever you write. These addresses all reach the same small team.
+              </p>
+              <p>
+                If you message us on WhatsApp, we see your phone number, your WhatsApp profile name and picture, and your messages. WhatsApp is run by Meta, and your use of it is governed by WhatsApp's own terms and privacy policy, not ours. If you are concerned about your safety, consider whether WhatsApp is the right channel for you (see Section 7).
+              </p>
+              <p>
+                We use what you send us only to reply to you and to deal with what you raised.
+              </p>
+
               <h2 id="cookies">3. Cookies</h2>
               <p>
-                Jawafdehi.org uses the following cookies and similar technologies:
+                The Platform uses the following cookies and similar technologies:
               </p>
               <ul>
-                <li><strong>Essential cookies</strong>: A language preference cookie (English or Nepali) and, if you access the caseworker portal, a session cookie for authentication. These are necessary for the site to function and are not used for tracking.</li>
-                <li><strong>Analytics cookies (optional)</strong>: Set by Google Analytics only after you opt in. These help us understand site usage. They are never set if you decline.</li>
+                <li><strong>Essential cookies and browser storage</strong>: On jawafdehi.org and research.jawafdehi.org, your language preference (English or Nepali) is saved in your browser. jawafdehi.org also saves your cookie-banner choice and whether you have dismissed the newsletter prompt. If you sign in (Section 2.7), the sign-in service and the service you are using keep you signed in with a cookie or browser storage. On some services, Cloudflare sets a load-balancing cookie (<code>__cflb</code>) so that your visit stays on one server. These are necessary for the site to function and are not used for tracking.</li>
+                <li><strong>Analytics cookies (optional)</strong>: Set by Google Analytics on jawafdehi.org only after you opt in. These help us understand site usage. They are never set if you decline. Cloudflare Web Analytics (Section 2.3) sets no cookies.</li>
               </ul>
               <p>
                 We do not use advertising cookies or third-party advertising networks.
@@ -97,20 +141,21 @@ const Privacy = () => {
 
               <h2 id="consent">4. Your Consent Choices</h2>
               <p>
-                When you first visit the Platform, we ask whether you consent to analytics cookies. You may accept or decline, and declining does not limit your access to the Platform. You can change your decision later by clearing your browser storage for jawafdehi.org, which will prompt the consent banner again. Essential cookies do not require consent because the site cannot function without them.
+                When you first visit jawafdehi.org, we ask whether you consent to analytics cookies. You may accept or decline, and declining does not limit your access to the Platform. You can change your decision later by clearing your browser storage for jawafdehi.org, which will prompt the consent banner again. Essential cookies do not require consent because the site cannot function without them. Our other sites set no optional cookies, so they do not show a banner.
               </p>
 
               <h2 id="how-we-use-information">5. How We Use Information and Legal Bases</h2>
               <p>We use collected information to:</p>
               <ul>
                 <li>Process feedback, allegation reports, and volunteer submissions, and respond to inquiries</li>
+                <li>Provide and secure accounts for services that need sign-in</li>
                 <li>Operate, maintain, and improve the Platform</li>
                 <li>Monitor security and prevent abuse</li>
-                <li>Publish and maintain the public corruption case archive</li>
-                <li>Understand site usage (analytics), where you have consented</li>
+                <li>Publish and maintain the public corruption case archive and our research</li>
+                <li>Understand site usage: cookieless, aggregate counts on all sites, and Google Analytics on jawafdehi.org where you have consented</li>
               </ul>
               <p>
-                For visitors in the European Economic Area, United Kingdom, and other regions with similar laws, our legal bases for processing are: your <strong>consent</strong> (analytics cookies); our <strong>legitimate interests</strong> (operating and securing the Platform, error monitoring, preventing abuse, and responding to submissions you send us); and the performance of tasks carried out in the <strong>public interest</strong> (documenting and archiving publicly available corruption records).
+                For visitors in the European Economic Area, United Kingdom, and other regions with similar laws, our legal bases for processing are: your <strong>consent</strong> (analytics cookies); our <strong>legitimate interests</strong> (operating and securing the Platform and the accounts you ask us to create, error monitoring, preventing abuse, and responding to submissions and messages you send us); and the performance of tasks carried out in the <strong>public interest</strong> (documenting, archiving, and analysing publicly available corruption and court records).
               </p>
               <p>
                 We never sell, rent, or share personal information with third parties for commercial purposes.
@@ -126,12 +171,12 @@ const Privacy = () => {
 
               <h2 id="source-protection">7. Source and Whistleblower Protection</h2>
               <p>
-                We recognize that people who report corruption may face risk. You may submit allegation reports anonymously, and we do not require you to provide your name or email. We minimize the personal data we collect, limit access to submissions to authorized personnel, and do not publish the identity of a source without their informed consent. Server logs that may contain IP addresses are retained only briefly for security purposes (see Section 9). If you are concerned about your safety, we encourage you to avoid including identifying details in your submission and to use privacy-protective tools (such as the Tor Browser) when accessing the Platform.
+                We recognize that people who report corruption may face risk. You may submit allegation reports anonymously, and we do not require you to provide your name or email. We minimize the personal data we collect, limit access to submissions to authorized personnel, and do not publish the identity of a source without their informed consent. Server logs that may contain IP addresses are retained only briefly for security purposes (see Section 10). If you are concerned about your safety, we encourage you to avoid including identifying details in your submission and to use privacy-protective tools (such as the Tor Browser) when accessing the Platform.
               </p>
 
               <h2 id="data-storage-and-security">8. Data Storage, Security, and International Transfers</h2>
               <p>
-                The Platform runs on self-hosted infrastructure operated across multiple cloud providers (see Section 10), located primarily in the United States, with error-monitoring data processed in the European Union. We take reasonable technical and organizational measures to protect data against unauthorized access, alteration, or destruction.
+                The Platform runs on self-hosted infrastructure operated across multiple cloud providers (see Section 9), located primarily in the United States, with error-monitoring data processed in the European Union. We take reasonable technical and organizational measures to protect data against unauthorized access, alteration, or destruction.
               </p>
               <p>
                 Because we and our service providers operate internationally, your information may be transferred to and processed in countries other than your own, including the United States. Where required, such transfers are carried out under appropriate safeguards, such as the European Commission's Standard Contractual Clauses.
@@ -142,11 +187,15 @@ const Privacy = () => {
                 We rely on the following service providers, which may process limited data on our behalf:
               </p>
               <ul>
-                <li><strong>Cloudflare</strong>: DNS, CDN, DDoS protection, and object storage.</li>
+                <li><strong>Cloudflare</strong>: DNS, CDN, DDoS protection, object storage, hosting of our research and data sites, and cookieless web analytics.</li>
                 <li><strong>Oracle Cloud Infrastructure</strong> and <strong>Monal Cloud</strong>: compute hosting for the Platform.</li>
                 <li><strong>Amazon Web Services (AWS)</strong>: transactional and newsletter email delivery.</li>
+                <li><strong>Google Workspace</strong>: our email, including messages you send to our addresses.</li>
                 <li><strong>Google Cloud</strong>: supporting infrastructure services.</li>
-                <li><strong>Google Analytics</strong>: usage analytics (only with your consent).</li>
+                <li><strong>Google Analytics</strong>: usage analytics on jawafdehi.org (only with your consent).</li>
+                <li><strong>Google Fonts</strong>: web fonts on research.jawafdehi.org and give.jawafdehi.org.</li>
+                <li><strong>Google Sign-In</strong>: only if you choose to sign in with your Google account.</li>
+                <li><strong>WhatsApp (Meta)</strong>: only if you choose to message us on WhatsApp.</li>
                 <li><strong>Sentry</strong>: error and performance monitoring (EU region).</li>
                 <li><strong>Anthropic</strong>: AI processing of public case data and, where applicable, allegation reports (not used to train models).</li>
                 <li><strong>UptimeRobot</strong>: external uptime monitoring.</li>
@@ -165,6 +214,8 @@ const Privacy = () => {
                 <li><strong>Feedback submissions</strong>: up to 24 months, then deleted unless tied to a published case.</li>
                 <li><strong>Allegation reports</strong>: retained for the life of any resulting public record; otherwise purged when closed without action.</li>
                 <li><strong>Volunteer applications</strong>: until no longer needed or upon your request to withdraw.</li>
+                <li><strong>Accounts</strong>: deleted 1 year after you close your account, or after 1 year without use, unless we need to keep them longer for legal, accounting, or safety reasons. You can ask us to delete your account sooner at any time.</li>
+                <li><strong>Emails and WhatsApp messages to us</strong>: kept for 1 year, then deleted, unless we need to keep them longer for legal, accounting, or safety reasons (for example, records of donations, which we keep as long as tax law requires).</li>
                 <li><strong>Published case data</strong>: retained indefinitely as part of the permanent public-interest archive.</li>
                 <li><strong>Backups</strong>: deletions propagate as backups cycle out, within approximately 90 days.</li>
               </ul>
@@ -204,7 +255,7 @@ const Privacy = () => {
 
               <h2 id="contact">14. Contact</h2>
               <p>
-                For questions about this Privacy Policy or to exercise your rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or through our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>.
+                For questions about this Privacy Policy or to exercise your rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or through our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. For anything else, including our research and data sites, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or message us on <a href="https://api.whatsapp.com/send?phone=9779768630501" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WhatsApp at +977 976-8630501</a> (see Section 2.8).
               </p>
             </div>
           </div>

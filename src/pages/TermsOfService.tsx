@@ -18,7 +18,7 @@ const TermsOfService = () => {
                 Jawafdehi Initiative Terms of Service
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: July 18, 2026
+                Last updated: November 2, 2026
               </p>
             </div>
           </div>
@@ -29,7 +29,7 @@ const TermsOfService = () => {
             <div className="font-paragraph content-prose max-w-3xl mx-auto">
               <h2 id="acceptance">1. Acceptance of Terms</h2>
               <p>
-                By accessing or using jawafdehi.org ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.
+                By accessing or using jawafdehi.org or any public website or service we run on a subdomain of jawafdehi.org, including research.jawafdehi.org and justice.jawafdehi.org (together, "the Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.
               </p>
 
               <h2 id="about-jawafdehi">2. About Jawafdehi</h2>
