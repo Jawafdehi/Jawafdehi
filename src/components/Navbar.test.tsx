@@ -118,11 +118,16 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // check is derived from the menu now, and this covers it. /courtcases is the
   // control — without it, a test that stopped exercising the active state at
   // all would still pass.
-  it.each(["/mcp", "/courtcases"])("keeps the Archive trigger active on %s", (path) => {
+  //
+  // /mcp opens on a dark hero, where the at-rest header is light-on-dark, so
+  // its active state is the full-strength light text rather than /82 navy.
+  it.each([
+    ["/mcp", "text-primary-foreground"],
+    ["/courtcases", "text-foreground/82"],
+  ])("keeps the Archive trigger active on %s", (path, activeClass) => {
     renderNavbar(path);
 
-    expect(screen.getByRole("button", { name: /Archive/ }).className).toContain(
-      "text-foreground/82",
-    );
+    const classes = screen.getByRole("button", { name: /Archive/ }).className.split(/\s+/);
+    expect(classes).toContain(activeClass);
   });
 });

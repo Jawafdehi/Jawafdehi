@@ -65,7 +65,7 @@ const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
   );
 
 /** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
-const DARK_HERO_PATHS = new Set(["/"]);
+const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/"]);
 
 export function Navbar() {
   const { t } = useTranslation();
