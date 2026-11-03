@@ -150,8 +150,10 @@ export function HeroSearchTypeahead() {
             activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined
           }
           autoComplete="off"
-          inputClassName="h-14 rounded-full border-transparent bg-background text-base shadow-[0_24px_60px_-20px_hsl(var(--primary-foreground)/0.25)]"
-          buttonClassName="h-11 w-11 bg-accent text-accent-foreground hover:bg-accent/90"
+          // Height comes from SearchBar itself, as everywhere else; only the
+          // surface changes here, to read against the navy hero.
+          inputClassName="border-transparent bg-background shadow-[0_24px_60px_-20px_hsl(var(--primary-foreground)/0.25)]"
+          buttonClassName="bg-accent text-accent-foreground hover:bg-accent/90"
           onChange={(event) => {
             setQuery(event.target.value);
             setOpen(true);
