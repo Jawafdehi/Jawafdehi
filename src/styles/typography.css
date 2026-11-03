@@ -7,7 +7,9 @@
  */
 @layer base {
   :root {
-    --font-family-app: Helvetica, Arial, "Noto Sans Devanagari", sans-serif;
+    /* English reads in Inter throughout, body as well as headlines, so a page
+       never mixes Inter titles with a system or Noto Latin body. */
+    --font-family-app: "Inter", Helvetica, Arial, "Noto Sans Devanagari", sans-serif;
     /* Headlines are pinned to ONE face per locale — Inter in English, Vesper
        Libre in Nepali (see the [lang="ne"] block). Before this, headline roles
        were split three ways: some took --font-family-app (i.e. Helvetica, a
