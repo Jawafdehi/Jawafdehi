@@ -31,87 +31,32 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
   {
-    id: "likhit-careful-redaction",
-    date: "2026-11-02",
-    tags: ["likhit"],
-    title: {
-      en: "Likhit marks what it redacts",
-      ne: "लिखितले हटाएको ठाउँ अब देखिन्छ",
-    },
-    body: {
-      en: "A redacted spot in a PDF is now marked, not left blank, so a reader can tell something was removed. Driving licence numbers are no longer mistaken for phone numbers and removed.",
-      ne: "PDF मा हटाइएको ठाउँ अब खाली नछोडी चिन्ह लगाइन्छ, जसले केही हटाइएको छ भन्ने थाहा हुन्छ। सवारी चालक अनुमतिपत्रका नम्बरलाई अब फोन नम्बर ठानेर हटाइँदैन।",
-    },
-    href: "/likhit",
-  },
-  {
-    id: "appeal-results-on-cards",
-    date: "2026-10-26",
-    tags: ["archive"],
-    title: {
-      en: "Supreme Court appeal results on case cards",
-      ne: "मुद्दाका कार्डमा सर्वोच्च अदालतको पुनरावेदन फैसला",
-    },
-    body: {
-      en: "When a case has gone to appeal, each defendant's card now shows what the Supreme Court decided.",
-      ne: "मुद्दा पुनरावेदनमा गएको छ भने, अब हरेक प्रतिवादीको कार्डमा सर्वोच्च अदालतले के फैसला गर्‍यो भन्ने देखिन्छ।",
-    },
-    href: "/search?type=case",
-  },
-  {
-    id: "ai-sections-labelled",
-    date: "2026-10-26",
-    tags: ["archive"],
-    title: {
-      en: "AI-written sections are labelled",
-      ne: "एआईले लेखेका खण्डमा लेबल",
-    },
-    body: {
-      en: "Where AI drafted a case's overview, allegations or timeline and our team has not yet reviewed it, that section now says so.",
-      ne: "मुद्दाको सारांश, आरोप वा घटनाक्रम एआईले तयार गरेको र हाम्रो टोलीले अझै नजाँचेको भए, अब त्यो खण्डमा त्यसै लेखिएको हुन्छ।",
-    },
-  },
-  {
-    id: "search-by-district",
-    date: "2026-10-26",
-    tags: ["archive"],
-    title: {
-      en: "Search by district and province",
-      ne: "जिल्ला र प्रदेशअनुसार खोज्नुहोस्",
-    },
-    body: {
-      en: "Case and entity search can now be narrowed to a district or a province.",
-      ne: "मुद्दा र व्यक्ति/निकायको खोजलाई अब जिल्ला वा प्रदेशअनुसार साँघुरो बनाउन सकिन्छ।",
-    },
-    href: "/search?type=case",
-  },
-  {
-    id: "auditor-general-shelves",
-    date: "2026-10-19",
-    tags: ["archive"],
-    title: {
-      en: "Auditor General reports, sorted by kind",
-      ne: "महालेखा परीक्षकका प्रतिवेदन, प्रकारअनुसार",
-    },
-    body: {
-      en: "The Auditor General's documents are now five shelves, one per kind of document, and a document's contents open in a tab you expand.",
-      ne: "महालेखा परीक्षकका कागजात अब कागजातको प्रकारअनुसार पाँच दराजमा छन्, र कागजातको विषयसूची खोल्न मिल्ने ट्याबमा देखिन्छ।",
-    },
-    href: "/materials",
-  },
-  {
     id: "likhit-0-2-0",
     date: "2026-10-18",
     tags: ["likhit"],
     title: {
-      en: "Likhit 0.2.0 redacts PDFs",
-      ne: "लिखित ०.२.० ले PDF बाट व्यक्तिगत विवरण हटाउँछ",
+      en: "Likhit 0.2.0 redacts personal data",
+      ne: "लिखित ०.२.० ले व्यक्तिगत विवरण हटाउँछ",
     },
     body: {
-      en: "Likhit, our open-source reader for Nepali government documents, can now turn a PDF into a properly redacted one: personal details are removed from the text and the file, not just covered over. Converting a document now redacts by default.",
-      ne: "नेपाली सरकारी कागजात पढ्ने हाम्रो खुला स्रोत टुल लिखितले अब PDF लाई साँच्चै सम्पादित PDF मा बदल्छ: व्यक्तिगत विवरण छोपिने मात्र होइन, पाठ र फाइलबाटै हटाइन्छ। कागजात रूपान्तरण गर्दा अब पूर्वनिर्धारित रूपमा विवरण हटाइन्छ।",
+      en: "Likhit, our open-source reader for Nepali government documents, now removes personal details such as citizenship and phone numbers as it converts, and can turn a PDF into a properly redacted one.",
+      ne: "नेपाली सरकारी कागजात पढ्ने हाम्रो खुला स्रोत टुल लिखितले अब रूपान्तरण गर्दै नागरिकता र फोन नम्बरजस्ता व्यक्तिगत विवरण हटाउँछ, र PDF लाई साँच्चै सम्पादित PDF मा बदल्न सक्छ।",
     },
     href: "/likhit",
+  },
+  {
+    id: "mcp-document-tools",
+    date: "2026-10-13",
+    tags: ["mcp"],
+    title: {
+      en: "Your AI can now read long documents",
+      ne: "तपाईंको एआईले अब लामा कागजात पढ्न सक्छ",
+    },
+    body: {
+      en: "Four new MCP tools let an assistant open a document, see what is inside, and read one part at a time: a page range, a table or a figure, even in an Auditor General report hundreds of pages long.",
+      ne: "चार नयाँ MCP टुलले सहायकलाई कागजात खोल्न, भित्र के छ हेर्न, र एकपटकमा एउटा भाग पढ्न दिन्छन्: केही पाना, एउटा तालिका वा चित्र, सयौं पानाको महालेखा परीक्षकको प्रतिवेदनमा पनि।",
+    },
+    href: "/mcp",
   },
   {
     id: "mcp-connect-page",
@@ -137,24 +82,10 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       ne: "लिखितले आफ्नै प्रतिलिपि जाँच्छ",
     },
     body: {
-      en: "Likhit can now audit a transcript for damage, such as broken Devanagari, and find and redact personal data like citizenship and phone numbers.",
-      ne: "लिखितले अब प्रतिलिपिमा बिग्रिएको देवनागरीजस्ता त्रुटि जाँच्न, र नागरिकता तथा फोन नम्बरजस्ता व्यक्तिगत विवरण पत्ता लगाएर हटाउन सक्छ।",
+      en: "Likhit can now audit a converted document for damage, such as broken Devanagari, so a bad conversion is caught without reading every page.",
+      ne: "लिखितले अब रूपान्तरित कागजातमा बिग्रिएको देवनागरीजस्ता त्रुटि जाँच्न सक्छ, जसले हरेक पाना नपढी नराम्रो रूपान्तरण समात्छ।",
     },
     href: "/likhit",
-  },
-  {
-    id: "mcp-new-address",
-    date: "2026-08-11",
-    tags: ["mcp", "api"],
-    title: {
-      en: "The MCP has a new address",
-      ne: "MCP को नयाँ ठेगाना",
-    },
-    body: {
-      en: "The MCP server now lives at api.jawafdehi.org/mcp, inside the archive's own API. The old addresses keep working.",
-      ne: "MCP सर्भर अब अभिलेखकै API भित्र api.jawafdehi.org/mcp मा छ। पुराना ठेगाना पनि चलिरहन्छन्।",
-    },
-    href: "/mcp",
   },
   {
     id: "one-api",

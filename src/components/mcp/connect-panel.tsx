@@ -6,6 +6,7 @@
 // of each panel, and the plan note at the bottom, inside the client it is about.
 import { useTranslation } from "react-i18next";
 
+import { chipVariants } from "@/components/ui/chip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CopyBlock, CopyPill } from "@/components/copy-snippet";
 
@@ -50,7 +51,7 @@ export function ConnectPanel() {
             <TabsTrigger
               key={key}
               value={key}
-              className="rounded-full border border-border px-4 py-2 text-base font-normal text-foreground/75 hover:border-primary-surface/40 hover:text-foreground data-[state=active]:border-primary-surface data-[state=active]:bg-primary-surface data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
+              className={chipVariants()}
             >
               {t(`mcp.connect.clients.${key}.name`)}
             </TabsTrigger>
