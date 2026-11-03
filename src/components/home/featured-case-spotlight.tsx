@@ -87,10 +87,10 @@ export function FeaturedCaseSpotlight({
       ref={glowRef}
       onMouseMove={handleGlowMove}
       className={cn(
-        "group relative grid overflow-hidden rounded-3xl bg-primary text-primary-foreground",
-        "shadow-[0_24px_60px_-28px_hsl(var(--primary)/0.55)] transition-all duration-300",
+        "group relative grid overflow-hidden rounded-3xl bg-primary-surface text-primary-foreground",
+        "shadow-[0_24px_60px_-28px_hsl(var(--primary-surface)/0.55)] transition-all duration-300",
         "md:grid-cols-[1.15fr_1fr]",
-        caseSlug && "cursor-pointer hover:-translate-y-1 hover:shadow-[0_32px_70px_-30px_hsl(var(--primary)/0.5)]",
+        caseSlug && "cursor-pointer hover:-translate-y-1 hover:shadow-[0_32px_70px_-30px_hsl(var(--primary-surface)/0.5)]",
       )}
       onClick={handleCardClick}
     >
@@ -112,14 +112,13 @@ export function FeaturedCaseSpotlight({
 
         {/* NOTE: Dynamic case content (title, entity names) from the Entity API
             remains in English until API-side i18n lands — same as CaseCard. */}
-        {/* `font-display` rather than an inline family: it resolves to
-            --font-family-heading, so this headline follows the same per-locale
-            pin as every other one instead of being serif in both locales. */}
-        <h3 className="mt-5 font-display text-2xl font-bold leading-snug sm:text-3xl lg:text-4xl">
+        {/* The home page's display face (Inter in English, the heading family
+            in Nepali) at regular weight, matching the hero and section titles. */}
+        <h3 className="font-home-display mt-5 text-2xl sm:text-3xl lg:text-4xl">
           {caseSlug ? (
             <Link
               to={`/case/${caseSlug}`}
-              className="rounded-sm outline-none transition-colors hover:text-primary-foreground/85 focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary"
+              className="rounded-sm outline-none transition-colors hover:text-primary-foreground/85 focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary-surface"
               onClick={(e) => e.stopPropagation()}
             >
               {title}
@@ -129,7 +128,7 @@ export function FeaturedCaseSpotlight({
           )}
         </h3>
 
-        <div className="mt-5 space-y-2 text-sm text-primary-foreground/75">
+        <div className="mt-5 space-y-2 text-base text-primary-foreground/75">
           <p className="flex min-w-0 items-center">
             <User className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
             <span className="min-w-0 truncate">{entitySummary}</span>
@@ -161,7 +160,6 @@ export function FeaturedCaseSpotlight({
             asChild={Boolean(caseSlug)}
             disabled={!caseSlug}
             variant="primary"
-            className="rounded-2xl px-6"
           >
             {caseSlug ? (
               <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>
@@ -194,7 +192,7 @@ export function FeaturedCaseSpotlight({
         />
         {/* Blend the photograph into the navy panel: strong at the seam,
             clear at the far edge. Vertical on mobile (image below content). */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary/35 to-transparent md:bg-gradient-to-r" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary-surface via-primary-surface/35 to-transparent md:bg-gradient-to-r" />
       </div>
     </article>
   );
