@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
+import { ArchiveFigures } from "@/components/home/archive-figures";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Reveal } from "@/components/ui/reveal";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
@@ -103,7 +104,8 @@ const Index = () => {
       </Seo>
 
       <div className="flex-1">
-        <Hero
+        <Hero />
+        <ArchiveFigures
           casesDocumented={getStatValue(stats?.published_cases)}
           totalBigo={getStatValue(stats?.total_bigo, formatBigo)}
           materials={getStatValue(stats?.materials?.total)}

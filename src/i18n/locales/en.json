@@ -275,6 +275,9 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
+    },
+    "figures": {
+      "label": "The archive in figures"
     }
   },
   "ourProcess": {

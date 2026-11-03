@@ -58,7 +58,7 @@ const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 // One flat bar: links sit straight on the header with no pill behind them, and
 // the current page carries a short crimson underline.
 const NAV_ITEM_CLASS =
-  "relative inline-flex h-10 items-center justify-center px-3 text-center text-[15px] font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "relative inline-flex h-10 items-center justify-center px-3 text-center text-[17px] font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 const NAV_ACTIVE_CLASS =
   "after:absolute after:inset-x-3 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-accent after:content-['']";
 // Icon buttons (search, menu) are bare glyphs: no border, no fill at rest.
@@ -191,7 +191,7 @@ export function Navbar() {
   return (
     <>
       {/* Transparent at rest, over the navy heroes; once scrolled, one solid
-          white bar with a hairline and a soft shadow. It must be opaque, not
+          white bar, with no line or shadow under it. It must be opaque, not
           glass: translucency without blur let the hero headline through as a
           sharp ghost, and a full-width backdrop-filter repaints on every scroll
           frame on the low-end phones this site is built for. */}
@@ -199,7 +199,7 @@ export function Navbar() {
         className={cn(
           "sticky top-0 z-50 w-full transition-colors duration-200 ease-out",
           isScrolled
-            ? "bg-background shadow-[0_1px_0_hsl(var(--border)),0_10px_30px_-24px_hsl(var(--primary-surface)/0.45)]"
+            ? "bg-background"
             : "bg-transparent",
         )}
       >
