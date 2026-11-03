@@ -178,7 +178,8 @@
       "entityDetail": "Open a tracked person, office, or organization.",
       "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers.",
       "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
-      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol."
+      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
+      "whatsNew": "See the latest changes to the archive, the MCP and the API."
     }
   },
   "footer": {
@@ -218,7 +219,8 @@
       "linktree": "Linktree"
     },
     "pressKit": "Press Kit",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "whatsNew": "What's new"
   },
   "home": {
     "hero": {
@@ -273,15 +275,6 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
-    },
-    "whatsNew": {
-      "heading": "What's new",
-      "mcp": {
-        "title": "Jawafdehi MCP",
-        "body": "Connect the archive to Claude, ChatGPT or any AI agent. Ask about cases, court records and documents, and get answers that cite their sources.",
-        "cta": "Explore the MCP"
-      },
-      "badge": "New"
     }
   },
   "ourProcess": {
@@ -2861,5 +2854,28 @@
         "Convert 2081-04-15 BS to AD."
       ]
     }
+  },
+  "whatsNew": {
+    "meta": {
+      "title": "What's new",
+      "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
+    },
+    "title": "What's new in Jawafdehi",
+    "description": "The latest changes to the archive and the tools around it: new records, new features, and updates to the MCP and the API.",
+    "lastUpdated": "Last updated {{date}}",
+    "filterLabel": "Show updates for",
+    "all": "All",
+    "more": "More",
+    "seeAll": "Everything that's new",
+    "seeAllTagged": "All {{tag}} updates",
+    "tags": {
+      "archive": "Archive",
+      "mcp": "MCP",
+      "api": "API",
+      "likhit": "Likhit",
+      "chat": "Chat"
+    },
+    "homeHeading": "What's new",
+    "mcpHeading": "What's new in the MCP"
   }
 }

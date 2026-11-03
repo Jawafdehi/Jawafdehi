@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { ConnectPanel } from "@/components/mcp/connect-panel";
+import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Seo } from "@/components/Seo";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/ui/reveal";
@@ -80,6 +81,8 @@ const Mcp = () => {
             </ul>
           </div>
         </section>
+
+        <WhatsNewSection id="mcp-whats-new" heading={t("whatsNew.mcpHeading")} tag="mcp" />
 
         <section id="tools" className="pb-20 pt-4 md:pb-28">
           <div className="layout-container">

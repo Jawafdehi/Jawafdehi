@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
-import { WhatsNew } from "@/components/home/whats-new";
+import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Reveal } from "@/components/ui/reveal";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { SupportingPartner } from "@/components/home/supportingpartner";
@@ -110,9 +110,9 @@ const Index = () => {
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
 
-        {/* ── What's new in the archive (the MCP, for now), then the record
-            itself. The MCP's own pitch lives on /mcp. ── */}
-        <WhatsNew />
+        {/* ── What's new: the latest from the changelog (src/data/whats-new.ts),
+            pinned entries first, then the record itself. ── */}
+        <WhatsNewSection id="whats-new" heading={t("whatsNew.homeHeading")} />
 
         {/* ── What we're building ── */}
         {/* <section id="archive-intro" className="py-12 bg-muted/30 border-b border-border">
