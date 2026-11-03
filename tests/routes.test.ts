@@ -41,6 +41,7 @@ describe("the route table", () => {
       "/products",
       "/mcp",
       "/whats-new",
+      "/likhit",
       "/openhouse",
       "/saptahik",
       "/updates",

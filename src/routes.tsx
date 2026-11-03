@@ -36,6 +36,8 @@ import OurProducts from "./pages/OurProducts";
 // Pre-rendered, so it must stay eager — see the split policy above.
 import Mcp from "./pages/Mcp";
 import WhatsNew from "./pages/WhatsNew";
+// Pre-rendered, so it must stay eager — see the split policy above.
+import Likhit from "./pages/Likhit";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
 import OpenHouse from "./pages/OpenHouse";
 import FaqPage from "./pages/FaqPage";
@@ -158,6 +160,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/products": <OurProducts />,
   "/mcp": <Mcp />,
   "/whats-new": <WhatsNew />,
+  "/likhit": <Likhit />,
   "/saptahik": <WeeklyMeetings />,
   "/privacy": <Privacy />,
   "/terms": <TermsOfService />,

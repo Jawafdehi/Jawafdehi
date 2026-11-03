@@ -6,7 +6,9 @@
 // Kept apart from shader-backdrop-impl.tsx so importing a type or a colour
 // never pulls the lazily loaded shader library into the main bundle.
 
-export type ShaderDesign = "diamond" | "grain";
+/** diamond: the archive (home). grain: the MCP. lines: likhit, the document
+ * reader, as a wave dither that reads like ruled lines of text. */
+export type ShaderDesign = "diamond" | "grain" | "lines";
 
 /** Tints with no CSS token. */
 export const SHADER_TINTS = {

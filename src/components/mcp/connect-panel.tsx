@@ -4,11 +4,10 @@
 // the step that uses it. Steps are numbered like the key allegations on a case
 // page ("1." in the accent). Where it runs and what plan it needs sit at the top
 // of each panel, and the plan note at the bottom, inside the client it is about.
-import { Check, Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { CopyBlock, CopyPill } from "@/components/copy-snippet";
 
 // The canonical MCP endpoint, pinned rather than derived from API_BASE_URL:
 // that resolves to "" during pre-render and to the SPA's own origin in the
@@ -127,65 +126,5 @@ function CopyTarget({ copy }: Readonly<{ copy: Copyable }>) {
       label={t("mcp.connect.copyConfig")}
       lines={[{ text: copy.comment, muted: true }, ...copy.text.split("\n").map((text) => ({ text }))]}
     />
-  );
-}
-
-function CopyButton({ value, label }: Readonly<{ value: string; label: string }>) {
-  const { t } = useTranslation();
-  const { status, copy } = useCopyToClipboard(value);
-  return (
-    <>
-      <button
-        type="button"
-        onClick={copy}
-        aria-label={label}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-      >
-        {status === "copied" ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
-        {status === "copied" ? t("mcp.copied") : t("mcp.connect.copy")}
-      </button>
-      <span aria-live="polite" className="sr-only">
-        {status === "copied" ? t("mcp.copied") : ""}
-        {status === "failed" ? t("mcp.copyFailed") : ""}
-      </span>
-    </>
-  );
-}
-
-/** The address, as a rounded pill as wide as its text. */
-function CopyPill({ value, label }: Readonly<{ value: string; label: string }>) {
-  return (
-    <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-muted py-1 pl-5 pr-1">
-      <code className="min-w-0 overflow-x-auto whitespace-nowrap py-1.5 text-[15px] font-normal text-foreground [font-family:Inter,var(--font-family-app)]">
-        {value}
-      </code>
-      <CopyButton value={value} label={label} />
-    </div>
-  );
-}
-
-/** Commands or a config file: several lines in the mono face they are typed
- * in, as wide as the longest line, scrolling sideways on narrow screens. */
-function CopyBlock({
-  value,
-  label,
-  lines,
-}: Readonly<{ value: string; label: string; lines: ReadonlyArray<{ text: string; prompt?: boolean; muted?: boolean }> }>) {
-  return (
-    <div className="mt-3 inline-flex max-w-full items-start gap-3 rounded-3xl border border-border bg-muted py-3 pl-5 pr-2">
-      <pre className="min-w-0 overflow-x-auto whitespace-pre py-1 font-mono text-sm leading-7 text-foreground">
-        {lines.map(({ text, prompt, muted }) => (
-          <span key={text} className={muted ? "block text-muted-foreground" : "block"}>
-            {prompt ? (
-              <span aria-hidden="true" className="select-none text-accent">
-                ${" "}
-              </span>
-            ) : null}
-            {text}
-          </span>
-        ))}
-      </pre>
-      <CopyButton value={value} label={label} />
-    </div>
   );
 }

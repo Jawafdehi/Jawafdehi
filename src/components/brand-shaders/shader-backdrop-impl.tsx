@@ -4,6 +4,8 @@
 //
 //   diamond — the archive (home): a 2×2 Bayer dither over a warp field, like a
 //             register's grid. Cheap to run, so it suits the busiest page.
+//   lines   — likhit: a wave dither whose bands read like lines of text on a
+//             page. Same cost as diamond.
 //   grain   — the MCP product page: a grainy navy glow with a muted ember red.
 //             Heavier, so its resolution is capped and weak devices get a CSS
 //             texture instead (see shader-backdrop.tsx).
@@ -32,6 +34,21 @@ export default function ShaderBackdropImpl({
   // Both designs draw on --primary-surface: the same navy as the footer and
   // every other dark surface, so the dark sections read as one.
   const navy = token("--primary-surface");
+
+  if (design === "lines") {
+    return (
+      <Dithering
+        style={FILL}
+        colorBack={navy}
+        colorFront={SHADER_TINTS.lattice}
+        shape="wave"
+        type="4x4"
+        size={3}
+        scale={0.7}
+        speed={speed(0.12)}
+      />
+    );
+  }
 
   if (design === "diamond") {
     return (

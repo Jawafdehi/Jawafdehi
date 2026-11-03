@@ -67,7 +67,7 @@ const NAV_ICON_CLASS =
 const NAV_ICON_ON_DARK_CLASS = "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground";
 
 /** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
-const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/"]);
+const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/", "/likhit", "/likhit/"]);
 
 export function Navbar() {
   const { t } = useTranslation();

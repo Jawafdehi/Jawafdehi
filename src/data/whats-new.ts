@@ -42,7 +42,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "A redacted spot in a PDF is now marked, not left blank, so a reader can tell something was removed. Driving licence numbers are no longer mistaken for phone numbers and removed.",
       ne: "PDF मा हटाइएको ठाउँ अब खाली नछोडी चिन्ह लगाइन्छ, जसले केही हटाइएको छ भन्ने थाहा हुन्छ। सवारी चालक अनुमतिपत्रका नम्बरलाई अब फोन नम्बर ठानेर हटाइँदैन।",
     },
-    href: "https://github.com/Jawafdehi/likhit",
+    href: "/likhit",
   },
   {
     id: "appeal-results-on-cards",
@@ -111,7 +111,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "Likhit, our open-source reader for Nepali government documents, can now turn a PDF into a properly redacted one: personal details are removed from the text and the file, not just covered over. Converting a document now redacts by default.",
       ne: "नेपाली सरकारी कागजात पढ्ने हाम्रो खुला स्रोत टुल लिखितले अब PDF लाई साँच्चै सम्पादित PDF मा बदल्छ: व्यक्तिगत विवरण छोपिने मात्र होइन, पाठ र फाइलबाटै हटाइन्छ। कागजात रूपान्तरण गर्दा अब पूर्वनिर्धारित रूपमा विवरण हटाइन्छ।",
     },
-    href: "https://pypi.org/project/likhit/",
+    href: "/likhit",
   },
   {
     id: "mcp-connect-page",
@@ -140,7 +140,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "Likhit can now audit a transcript for damage, such as broken Devanagari, and find and redact personal data like citizenship and phone numbers.",
       ne: "लिखितले अब प्रतिलिपिमा बिग्रिएको देवनागरीजस्ता त्रुटि जाँच्न, र नागरिकता तथा फोन नम्बरजस्ता व्यक्तिगत विवरण पत्ता लगाएर हटाउन सक्छ।",
     },
-    href: "https://github.com/Jawafdehi/likhit",
+    href: "/likhit",
   },
   {
     id: "mcp-new-address",

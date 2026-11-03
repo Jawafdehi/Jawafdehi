@@ -5,11 +5,13 @@
 // shader fades in over it.
 //
 // Under reduced motion the shader renders one still frame. Grain is heavy, so
-// on a weak device or with Save-Data on, its CSS texture stands in.
+// on a weak device or with Save-Data on, its CSS texture stands in. Without
+// WebGL nothing mounts and the navy background is the design.
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import type { ShaderDesign } from "@/components/brand-shaders/palette";
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";
+import { webglSupported } from "@/components/home/hero-webgl-gate";
 import { lazyChunk } from "@/lib/chunk-reload";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +42,12 @@ export function ShaderBackdrop({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const reveal = () => setMode(design === "grain" && isConstrainedDevice() ? "css" : "webgl");
+    // Paper Shaders throws when WebGL is missing, so check first: without it
+    // the section's own navy shows, and grain falls back to its CSS texture.
+    const reveal = () => {
+      if (design === "grain" && (isConstrainedDevice() || !webglSupported())) setMode("css");
+      else if (webglSupported()) setMode("webgl");
+    };
 
     let io: IntersectionObserver | undefined;
     if (typeof IntersectionObserver === "undefined") {
@@ -58,10 +65,12 @@ export function ShaderBackdrop({
       io.observe(el);
     }
 
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncMotion = () => setAnimate(!motion.matches);
+    // matchMedia is missing in some embedded browsers (and jsdom): treat that
+    // as reduced motion, which is the safe default.
+    const motion = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    const syncMotion = () => setAnimate(motion ? !motion.matches : false);
     syncMotion();
-    motion.addEventListener("change", syncMotion);
+    motion?.addEventListener("change", syncMotion);
 
     const root = document.documentElement;
     const syncTheme = () => setTheme(root.className);
@@ -71,7 +80,7 @@ export function ShaderBackdrop({
 
     return () => {
       io?.disconnect();
-      motion.removeEventListener("change", syncMotion);
+      motion?.removeEventListener("change", syncMotion);
       themeObserver.disconnect();
     };
   }, [design]);

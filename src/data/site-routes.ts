@@ -4,6 +4,7 @@ export type SearchIconName =
   | "Bot"
   | "Building2"
   | "FileText"
+  | "FileType"
   | "HeartHandshake"
   | "Home"
   | "Info"
@@ -277,6 +278,15 @@ export const SITE_ROUTES = [
     keywords: ["what's new", "changelog", "release", "updates", "new features", "mcp", "api"],
     icon: "Newspaper",
     sitemapTitle: "What's new — Jawafdehi",
+  },
+  {
+    path: "/likhit",
+    chrome: "app",
+    titleKey: "likhit.meta.title",
+    descriptionKey: "searchCommand.descriptions.likhit",
+    keywords: ["likhit", "markdown", "pdf", "doc", "docx", "ocr", "devanagari", "nepali", "converter", "markitdown"],
+    icon: "FileType",
+    sitemapTitle: "likhit — Nepali documents to Markdown — Jawafdehi",
   },
   {
     path: "/openhouse",
