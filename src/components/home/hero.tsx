@@ -35,10 +35,12 @@ export function Hero() {
         <div className="w-full max-w-5xl bg-primary-surface px-6 py-12 text-center sm:px-12 md:py-16 lg:px-20">
           {/* Upright and one step up from the eyebrow default, so the motto
               reads at a comfortable size on navy (--accent-on-dark is 4.6:1). */}
-          <p className="font-eyebrow font-eyebrow-display text-sm text-[hsl(var(--accent-on-dark))] md:text-base">
+          <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
             {t("home.hero.eyebrow")}
           </p>
-          <h1 className="font-home-display mx-auto mt-5 max-w-[18ch] text-[clamp(2.3rem,5.2vw,4.5rem)] text-primary-foreground">
+          {/* Two lines in both languages: Devanagari runs wider per character,
+              so Nepali gets a wider measure and a slightly smaller top size. */}
+          <h1 className="font-home-display mx-auto mt-5 max-w-[18ch] text-[clamp(2.3rem,5.2vw,4.5rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[24ch] [:root[lang=ne]_&]:text-[clamp(2.3rem,4.4vw,4rem)]">
             {t("home.hero.title")}
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-foreground/75">
