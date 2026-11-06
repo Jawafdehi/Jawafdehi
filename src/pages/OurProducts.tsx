@@ -7,6 +7,7 @@ import { PageHero } from "@/components/ui/page-hero";
 import { Seo } from "@/components/Seo";
 import { API_BASE_URL } from "@/services/http";
 import { SITE_URL } from "@/utils/seo";
+import { CHAT_URL } from "@/lib/external-links";
 
 type Product = {
   icon: typeof Code2;
@@ -31,7 +32,10 @@ const PRODUCTS: Product[] = [
   {
     icon: FileType,
     name: "likhit",
-    href: "https://jawafdehi.github.io/likhit",
+    // Internal, for the same reason /mcp is: someone on this page wants to use
+    // the converter, and the benchmark is a worse first answer to that than the
+    // page with the install command on it. The benchmark is linked from there.
+    to: "/likhit",
     description:
       "A universal Markdown converter for Nepali documents, turning the PDFs and Word files public records arrive as into clean, structured text.",
     tags: ["Markdown", "Open Source", "Nepali Documents"],
@@ -50,7 +54,7 @@ const PRODUCTS: Product[] = [
   {
     icon: Bot,
     name: "AI Research Chat",
-    href: "https://chat.jawafdehi.org",
+    href: CHAT_URL,
     description:
       "A conversational research interface for asking questions about corruption cases, public entities, and accountability patterns in plain language.",
     tags: ["AI Research", "Case Search", "Public Access"],

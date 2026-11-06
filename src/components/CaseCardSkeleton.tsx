@@ -24,7 +24,7 @@ export const CaseCardSkeleton = () => {
         <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4 sm:px-5">
           {/* Mirrors <CaseCard>: no summary paragraph, just the meta rows
               (entity, location, बिगो) under the title. */}
-          <div className="mt-2 border-t border-border/70 pt-4 space-y-3">
+          <div className="mt-1 space-y-3">
             <div className="flex items-center gap-2">
               <Skeleton className="h-4 w-4 rounded-full" />
               <Skeleton className="h-4 w-32" />

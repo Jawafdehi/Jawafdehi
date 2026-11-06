@@ -48,7 +48,7 @@ export const LanguageToggle = ({ quiet = false, onDark = false }: LanguageToggle
       aria-label={`${t("common.changeLanguage")}: ${nextLanguageLabel}`}
       title={`${t("common.changeLanguage")}: ${nextLanguageLabel}`}
       className={cn(
-        "relative inline-flex h-9 w-[76px] shrink-0 items-center overflow-hidden rounded-full border px-1 text-sm font-semibold leading-none text-foreground transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "relative inline-flex h-9 w-[76px] shrink-0 items-center overflow-hidden rounded-full border px-1 text-sm font-medium leading-none text-foreground transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         quiet
           ? "border-transparent bg-transparent shadow-none hover:border-transparent hover:bg-secondary/30 hover:shadow-none"
           : "border-border/70 bg-background/70 shadow-sm shadow-foreground/5 hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-background hover:shadow-md",
@@ -66,7 +66,7 @@ export const LanguageToggle = ({ quiet = false, onDark = false }: LanguageToggle
       <span className="relative z-10 grid h-full w-full grid-cols-2 items-center">
         <span
           className={cn(
-            "grid h-full place-items-center text-center text-xs font-bold leading-none transition-colors",
+            "grid h-full place-items-center text-center text-xs font-medium leading-none transition-colors",
             currentLanguage === "en" ? "text-background" : "text-muted-foreground",
             onDark && (currentLanguage === "en" ? "text-primary" : "text-primary-foreground/65"),
           )}
@@ -75,7 +75,7 @@ export const LanguageToggle = ({ quiet = false, onDark = false }: LanguageToggle
         </span>
         <span
           className={cn(
-            "grid h-full place-items-center text-center text-xs font-bold leading-none transition-colors",
+            "grid h-full place-items-center text-center text-xs font-medium leading-none transition-colors",
             currentLanguage === "ne" ? "text-background" : "text-muted-foreground",
             onDark && (currentLanguage === "ne" ? "text-primary" : "text-primary-foreground/65"),
           )}

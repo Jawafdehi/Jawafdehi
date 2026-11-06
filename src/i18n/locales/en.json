@@ -178,7 +178,9 @@
       "entityDetail": "Open a tracked person, office, or organization.",
       "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers.",
       "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
-      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol."
+      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
+      "whatsNew": "See the latest changes to the archive, the MCP and the API.",
+      "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter."
     }
   },
   "footer": {
@@ -218,27 +220,31 @@
       "linktree": "Linktree"
     },
     "pressKit": "Press Kit",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "whatsNew": "What's new",
+    "likhit": "likhit"
   },
   "home": {
     "hero": {
       "eyebrow": "Accountability has no expiry.",
-      "titlePrefix": "Nepal's Permanent",
-      "titleHighlight": "Corruption Case",
-      "titleSuffix": "Archive",
-      "description": "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
-      "searchLabel": "Search the Jawafdehi archive",
-      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
-      "searchSubmit": "Search Jawafdehi",
-      "suggestionsLabel": "Case suggestions",
+      "description": "Corruption cases, court records and the documents behind them, in one open archive. Read it here, or connect it to your AI tool.",
       "stats": {
         "casesDocumented": "Corruption cases documented",
         "totalBigo": "Total embezzled amount",
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover",
-      "scrollCue": "Scroll"
+      "title": "Nepal's digital archive of public accountability.",
+      "caps": {
+        "line1": "Accountability",
+        "line2": "has no",
+        "line3": "expiry"
+      },
+      "searchArchive": "Search the archive",
+      "searchLabel": "Search the Jawafdehi archive",
+      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
+      "searchSubmit": "Search Jawafdehi",
+      "suggestionsLabel": "Case suggestions"
     },
     "featuredCases": {
       "heading": "Featured Cases",
@@ -271,6 +277,9 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
+    },
+    "figures": {
+      "label": "The archive in figures"
     }
   },
   "ourProcess": {
@@ -1118,7 +1127,10 @@
     "nameSummary": {
       "withOthers_one": "{{name}} with {{count}} other",
       "withOthers_other": "{{name}} with {{count}} others"
-    }
+    },
+    "copied": "Copied",
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "copy": "Copy"
   },
   "themeToggle": {
     "toggleTheme": "Toggle theme",
@@ -2591,6 +2603,16 @@
         "title": "Using the data",
         "questions": [
           {
+            "id": "connect-ai",
+            "question": "How do I use the archive from Claude, ChatGPT or another AI tool?",
+            "answer": "Add the Jawafdehi MCP server, `https://api.jawafdehi.org/mcp`, to your AI tool. **MCP** (Model Context Protocol) is an open standard that lets AI assistants use outside tools and data. In Claude, open Settings → Connectors and add a custom connector; in ChatGPT, turn on developer mode first. In Claude Code, run `claude mcp add --transport http jawafdehi https://api.jawafdehi.org/mcp`. It is **free and read-only**, and needs no account. Step-by-step instructions are at jawafdehi.org/mcp."
+          },
+          {
+            "id": "ai-accuracy",
+            "question": "Can an AI assistant get our cases wrong?",
+            "answer": "Yes, it can. The MCP tools return the archive's own records together with links to the source documents, so every claim an assistant makes can be checked against the original. **Always check before you quote or publish.** The tools are read-only: an assistant can read the archive but cannot change it."
+          },
+          {
             "id": "reuse-information",
             "question": "Can I reuse the information — for journalism, research, or advocacy?",
             "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
@@ -2777,35 +2799,284 @@
       "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
     },
     "hero": {
-      "eyebrow": "Model Context Protocol",
-      "title": "Jawafdehi",
-      "titleAccent": "MCP",
-      "description": "Connect Nepal's permanent accountability archive to the AI tool you already use."
-    },
-    "endpoint": {
-      "copyLabel": "Copy the server URL"
-    },
-    "clients": {
-      "title": "Add it to your AI tool",
-      "copyCommand": "Copy the command",
-      "claude": {
-        "name": "Claude",
-        "appLabel": "Claude app and claude.ai",
-        "appSteps": "Open Settings → Connectors, add a custom connector, and paste the server URL.",
-        "cliLabel": "Claude Code"
-      },
-      "openai": {
-        "name": "OpenAI",
-        "appLabel": "ChatGPT",
-        "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
-        "cliLabel": "Codex CLI"
-      }
-    },
-    "tools": {
-      "title": "What your AI can read",
-      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only."
+      "back": "Back to the archive",
+      "title": "Nepal's accountability record, inside your favourite AI.",
+      "description": "Ask a question in plain language. Your AI assistant searches Nepal's corruption and audit records and answers with links to the original documents."
     },
     "copied": "Copied",
-    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "connect": {
+      "title": "Set it up",
+      "copyAddress": "Copy the server address",
+      "copyCommand": "Copy the command",
+      "copyConfig": "Copy the configuration",
+      "importantLabel": "Important:",
+      "planLabel": "Plan",
+      "clients": {
+        "claude": {
+          "name": "Claude",
+          "steps": [
+            "Open Customize → Connectors, then Add → Add custom connector.",
+            "Name it Jawafdehi, with this URL:",
+            "Authentication: Sign in now. Click Add, then Connect, and sign in with Google."
+          ],
+          "important": "Under OAuth client, choose Register automatically, not the “Recommended” option.",
+          "after": "Ask a question that mentions Jawafdehi; click Always allow when asked.",
+          "platforms": [
+            "Web",
+            "Desktop",
+            "Mobile"
+          ],
+          "plan": "The free plan works but runs out after about four research questions; Claude Pro removes that limit. Signing in unlocks tools that read long reports section by section."
+        },
+        "chatgpt": {
+          "name": "ChatGPT",
+          "steps": [
+            "Open chatgpt.com/plugins, then Add → Add custom MCP server.",
+            "Name it Jawafdehi, with this server URL:",
+            "Authentication: No authentication. Tick I understand and want to continue, click Create as a plugin, then Connect Jawafdehi."
+          ],
+          "after": "In a chat, type @Jawafdehi before your question; click Always allow when asked.",
+          "platforms": [
+            "Web"
+          ],
+          "plan": "Works on a free ChatGPT account, with the 12 public tools. The tools that read long reports need sign-in, which works in Claude today."
+        },
+        "claudeCode": {
+          "name": "Claude Code",
+          "steps": [
+            "Run these in your terminal:",
+            "Sign in with Google when the browser opens."
+          ],
+          "platforms": [
+            "Terminal"
+          ],
+          "requirement": "Paid Claude plan"
+        },
+        "codex": {
+          "name": "Codex",
+          "steps": [
+            "Add this to ~/.codex/config.toml:",
+            "Type /mcp in Codex to check it is connected. The ChatGPT desktop app shares this setting (Settings → MCP servers)."
+          ],
+          "platforms": [
+            "CLI",
+            "IDE",
+            "ChatGPT desktop app"
+          ],
+          "plan": "Codex is included in every ChatGPT plan, Free included."
+        }
+      },
+      "worksIn": "Works in"
+    },
+    "overview": {
+      "problemLabel": "The problem",
+      "problem": "The evidence on corruption in Nepal is public, but it is scattered. Auditor General reports run to a thousand pages of scanned Nepali; CIAA charge sheets sit on one website, verdicts on dozens of court websites, procurement notices on Bolpatra.",
+      "problemPoint": "Connecting one official, one project or one public body across all of it takes a reporter days.",
+      "whatLabel": "What it is",
+      "what": "Jawafdehi has gathered these records into one open database. The Jawafdehi MCP is a connector that plugs that database into Claude or ChatGPT.",
+      "whatPoint": "You ask; the assistant searches the records, reads the documents and answers with sources."
+    },
+    "inside": {
+      "title": "What's inside",
+      "stats": [
+        {
+          "value": "2,836",
+          "label": "published corruption and accountability cases"
+        },
+        {
+          "value": "Rs 23,383 cr",
+          "label": "alleged in those cases"
+        },
+        {
+          "value": "2.3 million",
+          "label": "court case records from 97 courts"
+        },
+        {
+          "value": "~100,000",
+          "label": "Attorney General charge-sheet records"
+        },
+        {
+          "value": "205,000",
+          "label": "procurement notices (Bolpatra)"
+        },
+        {
+          "value": "43,000",
+          "label": "court orders, plus 10,500 Supreme Court precedents"
+        },
+        {
+          "value": "3,500",
+          "label": "CIAA press releases"
+        },
+        {
+          "value": "~220",
+          "label": "Auditor General reports: federal, provincial, SOE"
+        }
+      ]
+    },
+    "questions": {
+      "title": "Questions you can try asking",
+      "items": [
+        {
+          "question": "Show me every corruption case involving Sugat Ratna Kansakar: the charge sheet, the hearings and the verdict.",
+          "answer": "Found the wide-body purchase case 080-CR-0145: the charges, all 24 Special Court hearings, his conviction, and the CIAA's pending Supreme Court appeal."
+        },
+        {
+          "question": "Pick one of the Auditor General's findings about Nepal Airlines and tell me whether anyone involved is also facing a corruption case.",
+          "answer": "Linked the audit's A330 loan finding to Special Court case 080-CR-0145: who was convicted and acquitted, and the pending appeal."
+        },
+        {
+          "question": "ललिता निवास जग्गा प्रकरणमा अख्तियारले कसकसलाई मुद्दा चलायो, र विशेष अदालतको फैसला के भयो?",
+          "answer": "Answered in Nepali: 175 defendants by group, who was convicted and acquitted, and the CIAA's appeal."
+        },
+        {
+          "question": "Which corruption cases did the Special Court decide in FY 2082/83, and how many ended in conviction?",
+          "answer": "103 decisions in the data: 24 full convictions, 35 partial, 41 acquittals, with a warning that the first half of the year is missing."
+        }
+      ]
+    },
+    "pilot": {
+      "title": "Join the pilot",
+      "tagline": "Try it on a real story.",
+      "body": "For a small group of journalists and researchers, in Claude or ChatGPT.",
+      "steps": [
+        "Free access during the pilot",
+        "A 20-minute setup and demo call",
+        "Use it on a real story for a few weeks",
+        "Tell us what was useful and what was missing"
+      ],
+      "join": "Write to",
+      "contactName": "Damodar Dahal, President",
+      "youGet": "What you get",
+      "weAsk": "What we ask"
+    },
+    "demo": {
+      "title": "See it in action",
+      "label": "A demo of the Jawafdehi MCP in Claude and ChatGPT"
+    }
+  },
+  "whatsNew": {
+    "meta": {
+      "title": "What's new",
+      "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
+    },
+    "title": "What's new in Jawafdehi",
+    "lastUpdated": "Last updated {{date}}",
+    "filterLabel": "Show updates for",
+    "all": "All",
+    "more": "More",
+    "seeAll": "Everything that's new",
+    "seeAllTagged": "All {{tag}} updates",
+    "tags": {
+      "archive": "Archive",
+      "mcp": "MCP",
+      "api": "API",
+      "likhit": "Likhit",
+      "chat": "Chat"
+    },
+    "homeHeading": "What's new",
+    "mcpHeading": "What's new in the MCP"
+  },
+  "likhit": {
+    "meta": {
+      "title": "likhit — Nepali documents to Markdown",
+      "description": "likhit is Jawafdehi's open-source MarkItDown plugin for Nepali documents: Devanagari repair, layout-aware Markdown, optional OCR for scanned pages, and legacy .doc support."
+    },
+    "hero": {
+      "title": "Nepali documents, converted",
+      "titleAccent": "faithfully",
+      "benchmark": "Read the benchmark",
+      "source": "Source on GitHub",
+      "pypi": "PyPI"
+    },
+    "about": {
+      "title": "What is likhit?"
+    },
+    "install": {
+      "copyLabel": "Copy the install command",
+      "lede": "<name>likhit</name> is Jawafdehi's public <markitdown>MarkItDown</markitdown> plugin for Nepal-specific document support. It adds Nepali PDF repair, layout-aware Markdown assembly, optional OCR for image-dominant pages, and legacy <doc>.doc</doc> support. For PDFs it evaluates several extraction paths and returns the best result rather than trusting one fixed pipeline.",
+      "usage": "Then enable plugins when you convert: <api>MarkItDown(enable_plugins=True)</api>, or from the command line <cli>markitdown --use-plugins document.pdf</cli>."
+    },
+    "features": {
+      "repair": {
+        "name": "Devanagari repair",
+        "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."
+      },
+      "layout": {
+        "name": "Layout-aware Markdown",
+        "body": "Reconstructs reading order and tables instead of emitting a flat character dump."
+      },
+      "ocr": {
+        "name": "OCR when needed",
+        "body": "Falls back to a vision model on image-only pages, which no text layer can serve."
+      },
+      "legacy": {
+        "name": "Legacy formats",
+        "body": "Reads the .doc and Preeti-era files government archives are actually made of."
+      },
+      "title": "What it does"
+    },
+    "cli": {
+      "redactNote": "Since 0.2.0 this redacts as it converts, at the <tier>strict</tier> tier. Pass <opt>--redact none</opt> to write the transcript untouched.",
+      "title": "Convert from the command line",
+      "body": "The package installs <cmd>likhit-save</cmd>, a helper that runs MarkItDown with the plugin enabled and writes the Markdown out for you — no Python needed.",
+      "copyCommand": "Copy the command",
+      "one": "One file",
+      "many": "Many files",
+      "pages": "Page range"
+    },
+    "ocr": {
+      "title": "Turn on OCR for scanned pages",
+      "body": "Plenty of published records are page images with no usable text layer — nothing but a vision model can read them. likhit adds an OCR candidate when it finds such a page and OCR is configured. It talks to any endpoint that speaks the OpenAI chat API, so the same three variables cover a model on your own machine, Bedrock behind a gateway, or a hosted API.",
+      "note": "<baseUrl>OPENAI_BASE_URL</baseUrl> points at the endpoint, <apiKey>OPENAI_API_KEY</apiKey> authenticates to it, and <model>MARKITDOWN_OCR_MODEL</model> names the model. Leave them unset and likhit still converts — it just records that a page needed OCR and carries on with the text it could extract.",
+      "copyRecipe": "Copy the setup",
+      "local": {
+        "badge": "No API cost",
+        "name": "A model on your own machine",
+        "body": "Ollama, llama.cpp or vLLM — all three serve an OpenAI-compatible endpoint, and no page image leaves the machine."
+      },
+      "bedrock": {
+        "badge": "AWS",
+        "name": "Bedrock, through a gateway",
+        "body": "Bedrock does not speak the OpenAI API, so run a translating proxy in front of it. The proxy picks up your AWS credentials the usual way, and likhit only ever sees an OpenAI endpoint.",
+        "footnote": "Any vision-capable model your account has enabled will do — swap the model id for the one you have access to."
+      },
+      "hosted": {
+        "badge": "Hosted",
+        "name": "A hosted API",
+        "body": "Point at any OpenAI-compatible provider. For Gemini, set the Google key alone and likhit selects Google's OpenAI-compatible base URL for you."
+      }
+    },
+    "privacy": {
+      "title": "Taking personal data out",
+      "body": "A public accountability archive still has to keep citizenship numbers, dates of birth and phone numbers out of what it publishes. As of 0.2.0 <cmd>likhit-save</cmd> redacts at the widest tier by default, so the unredacted transcript is no longer written to disk first and cleaned up afterwards. <opt>--redact none</opt> restores the old behaviour exactly.",
+      "tiersTitle": "Four tiers, not a box of flags",
+      "tiersBody": "Precision is measured per removal rule against a real corpus, so a tier is a configuration that carries a number. A flag set would let every caller invent a combination nobody has measured.",
+      "tiers": {
+        "none": {
+          "name": "none",
+          "body": "Removes nothing; the output is byte-identical to the input. First-class on purpose — internal casework, the retained original and the research corpus all need it."
+        },
+        "identifiers": {
+          "name": "identifiers",
+          "body": "Citizenship numbers and dates of birth: the two classes adjudicated as unambiguously personal and of no research value."
+        },
+        "contact": {
+          "name": "contact",
+          "body": "Everything above, plus mobile numbers, landlines and email addresses."
+        },
+        "strict": {
+          "name": "strict",
+          "body": "Everything likhit can remove — contact plus bank account, age and passport. The default. Not PAN: a business registration number is public by design, so it is reported and left in place."
+        }
+      },
+      "commandsTitle": "Running it on its own",
+      "copyCommand": "Copy the command",
+      "scan": "Report what is there, write nothing",
+      "pdf": "Redact one PDF into a redacted PDF",
+      "tree": "Redact a whole tree into a staging copy"
+    },
+    "copy": "Copy",
+    "whatsNewHeading": "What's new in likhit"
   }
 }

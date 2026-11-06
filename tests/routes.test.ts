@@ -40,6 +40,8 @@ describe("the route table", () => {
       "/team",
       "/products",
       "/mcp",
+      "/whats-new",
+      "/likhit",
       "/openhouse",
       "/saptahik",
       "/updates",
