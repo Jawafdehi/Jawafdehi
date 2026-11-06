@@ -91,19 +91,12 @@ export GEMINI_MODEL=gemini-2.5-flash`,
   },
 ] as const;
 
-const CARD = "rounded-3xl border border-border/60 bg-surface shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)]";
+const CARD = "rounded-3xl border border-border/60 bg-surface";
 const EXTERNAL = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 /** Inline fixed-width text, for identifiers quoted inside a sentence. */
 const Code = ({ children }: Readonly<{ children?: ReactNode }>) => (
   <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground">{children}</code>
-);
-
-/** The same inline code, on the navy hero. */
-const CodeOnDark = ({ children }: Readonly<{ children?: ReactNode }>) => (
-  <code className="rounded-md bg-primary-foreground/10 px-1.5 py-0.5 font-mono text-[0.9em] text-primary-foreground">
-    {children}
-  </code>
 );
 
 /** Every line in a block, split for CopyBlock, with comments set muted. */
@@ -143,53 +136,61 @@ const Likhit = () => {
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px),linear-gradient(90deg,hsl(var(--primary-surface))_30%,hsl(var(--primary-surface)/0.75)_55%,transparent_90%)]" />
           </div>
 
-          <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center pb-20 pt-10">
-            <p className="font-eyebrow font-eyebrow-display text-sm text-[hsl(var(--accent-on-dark))] md:text-base">
-              {t("likhit.hero.eyebrow")}
-            </p>
-            <h1 id="likhit-title" className="font-home-display mt-5 max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground">
-              {t("likhit.hero.title")} <span className="text-[hsl(var(--accent-on-dark))]">{t("likhit.hero.titleAccent")}</span>
-            </h1>
-            <p className="mt-6 max-w-2xl text-xl leading-8 text-primary-foreground/80">
-              <Trans
-                i18nKey="likhit.install.lede"
-                components={{
-                  name: <strong className="font-medium text-primary-foreground" />,
-                  doc: <CodeOnDark />,
-                  markitdown: <a href={MARKITDOWN_URL} {...EXTERNAL} className="underline underline-offset-4 hover:text-primary-foreground" />,
-                }}
-              />
-            </p>
+          <div className="layout-container py-16 md:py-24">
+            <div>
+              <h1 id="likhit-title" className="font-home-display max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground">
+                {t("likhit.hero.title")} <span className="text-[hsl(var(--accent-on-dark))]">{t("likhit.hero.titleAccent")}</span>
+              </h1>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <CopyPill value={INSTALL_COMMAND} label={t("likhit.install.copyLabel")} mono />
-              <a
-                href={CHANGELOG_URL}
-                {...EXTERNAL}
-                className="rounded-full border border-primary-foreground/30 px-3 py-1 font-mono text-sm text-primary-foreground/85 transition-colors hover:border-primary-foreground/60"
-              >
-                v{VERSION}
-              </a>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
-              {[
-                { href: REPO_URL, Icon: Github, label: t("likhit.hero.source") },
-                { href: PYPI_URL, Icon: Package, label: t("likhit.hero.pypi") },
-                { href: BENCHMARK_URL, Icon: Globe, label: t("likhit.hero.benchmark") },
-              ].map(({ href, Icon, label }) => (
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <CopyPill value={INSTALL_COMMAND} label={t("likhit.install.copyLabel")} mono />
                 <a
-                  key={href}
-                  href={href}
+                  href={CHANGELOG_URL}
                   {...EXTERNAL}
-                  className="group inline-flex items-center gap-2 rounded text-base text-primary-foreground/80 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+                  className="rounded-full border border-primary-foreground/30 px-3 py-1 font-mono text-sm text-primary-foreground/85 transition-colors hover:border-primary-foreground/60"
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {label}
-                  <ArrowUpRight className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+                  v{VERSION}
                 </a>
-              ))}
+              </div>
+
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
+                {[
+                  { href: REPO_URL, Icon: Github, label: t("likhit.hero.source") },
+                  { href: PYPI_URL, Icon: Package, label: t("likhit.hero.pypi") },
+                  { href: BENCHMARK_URL, Icon: Globe, label: t("likhit.hero.benchmark") },
+                ].map(({ href, Icon, label }) => (
+                  <a
+                    key={href}
+                    href={href}
+                    {...EXTERNAL}
+                    className="group inline-flex items-center gap-2 rounded text-base text-primary-foreground/80 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {label}
+                    <ArrowUpRight className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── What is likhit ── */}
+        <section aria-labelledby="likhit-about-title" className="pt-16 md:pt-24">
+          <div className="layout-container">
+            <Reveal>
+              <SectionTitle id="likhit-about-title">{t("likhit.about.title")}</SectionTitle>
+              <p className="mt-4 max-w-3xl text-lg leading-8 text-foreground/70 md:text-xl md:leading-9">
+                <Trans
+                  i18nKey="likhit.install.lede"
+                  components={{
+                    name: <strong className="font-medium text-foreground" />,
+                    doc: <Code />,
+                    markitdown: <a href={MARKITDOWN_URL} {...EXTERNAL} className="text-accent underline-offset-4 hover:underline" />,
+                  }}
+                />
+              </p>
+            </Reveal>
           </div>
         </section>
 

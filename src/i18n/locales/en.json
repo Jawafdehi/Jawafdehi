@@ -2975,8 +2975,10 @@
       "titleAccent": "faithfully",
       "benchmark": "Read the benchmark",
       "source": "Source on GitHub",
-      "pypi": "PyPI",
-      "eyebrow": "likhit · open source"
+      "pypi": "PyPI"
+    },
+    "about": {
+      "title": "What is likhit?"
     },
     "install": {
       "copyLabel": "Copy the install command",
