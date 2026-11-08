@@ -186,7 +186,7 @@ const Privacy = () => {
 
               <h2 id="source-protection">7. Source and Whistleblower Protection</h2>
               <p>
-                We recognize that people who report corruption may face risk. You may submit allegation reports anonymously, and we do not require you to provide your name or email. We minimize the personal data we collect, limit access to submissions to authorized personnel, and do not publish the identity of a source without their informed consent. Server logs that may contain IP addresses are retained only briefly for security purposes (see Section 10). If you are concerned about your safety, we encourage you to avoid including identifying details in your submission and to use privacy-protective tools (such as the Tor Browser) when accessing the Platform.
+                We recognize that people who report corruption may face risk. You may submit allegation reports anonymously, and we do not require you to provide your name or email. We minimize the personal data we collect, limit access to submissions to authorized personnel, and do not publish the identity of a source without their informed consent. Server logs that may contain IP addresses are kept for up to a year (see Section 10). If you are concerned about your safety, we encourage you to avoid including identifying details in your submission and to use privacy-protective tools (such as the Tor Browser) when accessing the Platform.
               </p>
 
               <h2 id="data-storage-and-security">8. Data Storage, Security, and International Transfers</h2>
@@ -223,7 +223,7 @@ const Privacy = () => {
               <p>We retain information only as long as needed for the purposes described above:</p>
               <ul>
                 <li><strong>Edge and access logs</strong>: up to 30 days.</li>
-                <li><strong>Application and security logs</strong>: up to 90 days.</li>
+                <li><strong>Application and security logs</strong>: up to 1 year.</li>
                 <li><strong>Error-monitoring (Sentry) events</strong>: up to 90 days.</li>
                 <li><strong>Records of what is searched for and viewed (Section 2.9)</strong>: IP addresses kept for up to 1 year; the rest for up to 13 months.</li>
                 <li><strong>Analytics data</strong>: up to 14 months.</li>
