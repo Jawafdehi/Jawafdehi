@@ -138,7 +138,7 @@ const Privacy = () => {
                 We may also count how much data you use, for subscriptions. Any charge would be based only on the amount and type of data, never on what you searched.
               </p>
               <p>
-                We use these records only to protect the people in our archive, to stop misuse, and to improve our search. We never use them for advertising, and we don't sell or share them. Only a small number of Jawafdehi staff can see them. We delete IP addresses after 90 days and everything else after 13 months.
+                We use these records only to protect the people in our archive, to stop misuse, and to improve our search. We never use them for advertising, and we don't sell or share them. Only a small number of Jawafdehi staff can see them. We keep IP addresses for up to a year and everything else for up to 13 months.
               </p>
 
               <h2 id="cookies">3. Cookies</h2>
@@ -225,7 +225,7 @@ const Privacy = () => {
                 <li><strong>Edge and access logs</strong>: up to 30 days.</li>
                 <li><strong>Application and security logs</strong>: up to 90 days.</li>
                 <li><strong>Error-monitoring (Sentry) events</strong>: up to 90 days.</li>
-                <li><strong>Records of what is searched for and viewed (Section 2.9)</strong>: IP addresses deleted after 90 days; the rest deleted after 13 months.</li>
+                <li><strong>Records of what is searched for and viewed (Section 2.9)</strong>: IP addresses kept for up to 1 year; the rest for up to 13 months.</li>
                 <li><strong>Analytics data</strong>: up to 14 months.</li>
                 <li><strong>Feedback submissions</strong>: up to 24 months, then deleted unless tied to a published case.</li>
                 <li><strong>Allegation reports</strong>: retained for the life of any resulting public record; otherwise purged when closed without action.</li>
