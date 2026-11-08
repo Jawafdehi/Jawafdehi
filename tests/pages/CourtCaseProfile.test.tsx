@@ -290,6 +290,13 @@ describe("CourtCaseProfile — labels come from the court's own record", () => {
     renderPage("/courtcase/supreme/083-WH-0084");
 
     expect(await screen.findAllByText("Listed for hearing")).toHaveLength(2);
+    // A listing is neutral grey, not the crimson accent used for court actions.
+    for (const pill of screen.getAllByText("Listed for hearing")) {
+      expect(pill.dataset.tone).toBe("neutral");
+      expect(pill.className).toContain("bg-muted");
+      expect(pill.className).toContain("text-muted-foreground");
+      expect(pill.className).not.toContain("text-accent");
+    }
     expect(screen.queryByText("Order")).toBeNull();
     // No register status and no decision on record: no pill, rather than "Ongoing".
     expect(screen.queryByText("Ongoing")).toBeNull();
@@ -309,6 +316,7 @@ describe("CourtCaseProfile — labels come from the court's own record", () => {
     );
     renderPage("/courtcase/supreme/083-WH-0084");
     expect(await screen.findByText("Not reached")).toBeTruthy();
+    expect(screen.getByText("Not reached").dataset.tone).toBe("accent");
     expect(screen.queryByText("Order")).toBeNull();
   });
 

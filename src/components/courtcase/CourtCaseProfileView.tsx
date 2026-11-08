@@ -146,11 +146,14 @@ function getParties(courtCase?: CourtCase) {
 function getActivityBadgeText(
   hearing: CourtCaseHearing,
   translate: (key: string, defaultValue: string) => string,
-): { text: string; isOrder: boolean } {
+): { text: string; isOrder: boolean; neutral: boolean } {
   const label = hearingLabel(hearing);
   return {
     text: label.labelKey ? translate(label.labelKey, label.labelFallback) : label.labelFallback,
     isOrder: label.isOrder,
+    // A listing records nothing the court did, so it gets no colour: the
+    // crimson accent read as a warning on a row that is only "listed".
+    neutral: label.kind === "listed",
   };
 }
 
@@ -400,8 +403,13 @@ export function CourtCaseProfileView({
                     <div className="flex-1 min-w-0 space-y-3.5">
                       <div>
                         <Badge
-                          variant="accent"
-                          className="border-accent/20 text-xs font-semibold uppercase tracking-wide"
+                          variant={badge.neutral ? "outline" : "accent"}
+                          data-tone={badge.neutral ? "neutral" : "accent"}
+                          className={
+                            badge.neutral
+                              ? "border-border bg-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                              : "border-accent/20 text-xs font-semibold uppercase tracking-wide"
+                          }
                         >
                           {badge.text}
                         </Badge>
