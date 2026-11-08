@@ -18,7 +18,7 @@ const Privacy = () => {
                 Jawafdehi Initiative Privacy Policy
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: November 2, 2026
+                Last updated: November 8, 2026
               </p>
             </div>
           </div>
@@ -75,13 +75,16 @@ const Privacy = () => {
                 <li>Pages visited and time spent</li>
                 <li>Referring URL</li>
               </ul>
+              <p>
+                Our servers also keep a record of what is searched for and viewed about the people and organisations in our archive (see Section 2.9).
+              </p>
 
               <h3 id="analytics-data">2.3 Analytics Data</h3>
               <p>
                 <strong>Cloudflare Web Analytics (all sites).</strong> Every site on the Platform uses Cloudflare Web Analytics to count visits. It does not set cookies, does not store anything on your device, and does not build a profile of you or follow you across other websites. It records things like the page you viewed, how long the page took to load, the referring site, and your browser, device type, and country. We see only totals. Because it uses no cookies, it runs without asking for consent, and it is not affected by your choice in the cookie banner.
               </p>
               <p>
-                <strong>Google Analytics (jawafdehi.org only, with your consent).</strong> With your consent, we use Google Analytics 4 to understand how visitors use jawafdehi.org — for example, which pages are viewed and what visitors search for in the public archive. When you run a search, the words you type into the archive search box are recorded as part of an analytics event, together with the number of results returned. Because our archive concerns public corruption records, a search may include a person's name; if you would rather not have your search terms recorded, decline analytics in the cookie banner, and if you are concerned about your safety avoid entering identifying details (see Section 7). Google Analytics sets cookies and processes usage data. Google Analytics 4 does not log or store full IP addresses, and we do not use Google Analytics for advertising or cross-context behavioral tracking. Google Analytics does not load and no analytics cookies are set unless you opt in through our cookie banner. You can decline it at any time without affecting your use of the Platform (see Section 4). Our other sites do not use Google Analytics.
+                <strong>Google Analytics (jawafdehi.org only, with your consent).</strong> With your consent, we use Google Analytics 4 to understand how visitors use jawafdehi.org — for example, which pages are viewed and what visitors search for in the public archive. When you run a search, the words you type into the archive search box are recorded as part of an analytics event, together with the number of results returned. Because our archive concerns public corruption records, a search may include a person's name; if you are concerned about your safety, avoid entering identifying details (see Section 7). Declining analytics turns off Google Analytics, but our servers still keep the records described in Section 2.9. Google Analytics sets cookies and processes usage data. Google Analytics 4 does not log or store full IP addresses, and we do not use Google Analytics for advertising or cross-context behavioral tracking. Google Analytics does not load and no analytics cookies are set unless you opt in through our cookie banner. You can decline it at any time without affecting your use of the Platform (see Section 4). Our other sites do not use Google Analytics.
               </p>
 
               <h3 id="error-monitoring">2.4 Error Monitoring</h3>
@@ -113,7 +116,7 @@ const Privacy = () => {
                 When you create an account, we collect your name, email address, and password (stored in a scrambled form we cannot read), and, if you turn it on, two-factor authentication details. If you sign in with Google instead, Google tells us your name, email address, and profile picture. We also keep a record of sign-ins (time, IP address, and browser) for security. We use this information only to let you sign in, decide what you are allowed to do, keep accounts secure, and contact you about your account.
               </p>
               <p>
-                You can use the MCP connector without an account, in which case you get read-only access to the same public data that is on our websites. When you are signed in, what you ask the connector to do is linked to your account in our logs.
+                You can use the MCP connector without an account, in which case you get read-only access to the same public data that is on our websites. When you are signed in, what you ask the connector to do is linked to your account (see Section 2.9).
               </p>
 
               <h3 id="contacting-us">2.8 When You Contact Us</h3>
@@ -125,6 +128,17 @@ const Privacy = () => {
               </p>
               <p>
                 We use what you send us only to reply to you and to deal with what you raised.
+              </p>
+
+              <h3 id="keeping-people-safe">2.9 Keeping the People in Our Archive Safe</h3>
+              <p>
+                Jawafdehi is about real people and organisations. To help keep them safe, our servers may record what is searched for or viewed about them, and who the request came from: your IP address, and your account when you're signed in. This applies everywhere on the Platform, including jawafdehi.org, our public API and our MCP connector. These records are kept on our servers, not in cookies, so your cookie-banner choice doesn't change them.
+              </p>
+              <p>
+                We may also count how much data you use, for subscriptions. Any charge would be based only on the amount and type of data, never on what you searched.
+              </p>
+              <p>
+                We use these records only to protect the people in our archive, to stop misuse, and to improve our search. We never use them for advertising, and we don't sell or share them. Only a small number of Jawafdehi staff can see them. We delete IP addresses after 90 days and everything else after 13 months.
               </p>
 
               <h2 id="cookies">3. Cookies</h2>
@@ -151,11 +165,12 @@ const Privacy = () => {
                 <li>Provide and secure accounts for services that need sign-in</li>
                 <li>Operate, maintain, and improve the Platform</li>
                 <li>Monitor security and prevent abuse</li>
+                <li>Protect the people in our archive, stop misuse, and improve our search, using the records described in Section 2.9</li>
                 <li>Publish and maintain the public corruption case archive and our research</li>
                 <li>Understand site usage: cookieless, aggregate counts on all sites, and Google Analytics on jawafdehi.org where you have consented</li>
               </ul>
               <p>
-                For visitors in the European Economic Area, United Kingdom, and other regions with similar laws, our legal bases for processing are: your <strong>consent</strong> (analytics cookies); our <strong>legitimate interests</strong> (operating and securing the Platform and the accounts you ask us to create, error monitoring, preventing abuse, and responding to submissions and messages you send us); and the performance of tasks carried out in the <strong>public interest</strong> (documenting, archiving, and analysing publicly available corruption and court records).
+                For visitors in the European Economic Area, United Kingdom, and other regions with similar laws, our legal bases for processing are: your <strong>consent</strong> (analytics cookies); our <strong>legitimate interests</strong> (operating and securing the Platform and the accounts you ask us to create, error monitoring, preventing abuse, protecting the people in our archive from misuse and improving our search (Section 2.9), and responding to submissions and messages you send us); and the performance of tasks carried out in the <strong>public interest</strong> (documenting, archiving, and analysing publicly available corruption and court records).
               </p>
               <p>
                 We never sell, rent, or share personal information with third parties for commercial purposes.
@@ -210,6 +225,7 @@ const Privacy = () => {
                 <li><strong>Edge and access logs</strong>: up to 30 days.</li>
                 <li><strong>Application and security logs</strong>: up to 90 days.</li>
                 <li><strong>Error-monitoring (Sentry) events</strong>: up to 90 days.</li>
+                <li><strong>Records of what is searched for and viewed (Section 2.9)</strong>: IP addresses deleted after 90 days; the rest deleted after 13 months.</li>
                 <li><strong>Analytics data</strong>: up to 14 months.</li>
                 <li><strong>Feedback submissions</strong>: up to 24 months, then deleted unless tied to a published case.</li>
                 <li><strong>Allegation reports</strong>: retained for the life of any resulting public record; otherwise purged when closed without action.</li>
