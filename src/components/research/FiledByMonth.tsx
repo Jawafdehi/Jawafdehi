@@ -63,14 +63,14 @@ export function FiledByMonth({
               angle={-35}
               textAnchor="end"
               height={44}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
             />
             <YAxis
               width={36}
               domain={[0, maxY]}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
             />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.4 }}

@@ -269,7 +269,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
       <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
         <Link
           to="/materials/"
-          className="rounded-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+          className="inline-flex min-h-6 items-center rounded-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
         >
           ← {t("materialsLanding.series.backToArchive", "Back to the archive")}
         </Link>

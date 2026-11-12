@@ -54,13 +54,13 @@ export function FiledDecidedTrend({
             tickLine={false}
             axisLine={false}
             tickFormatter={(y: number) => fyLabel(y).slice(2)}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
             width={36}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <Tooltip
             labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}

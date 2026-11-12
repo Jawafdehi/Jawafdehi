@@ -70,7 +70,7 @@ export function RateTrend({
             tickLine={false}
             axisLine={false}
             tickFormatter={(y: number) => fyLabel(y).slice(2)}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
             width={40}
@@ -79,7 +79,7 @@ export function RateTrend({
             tickFormatter={(v: number) => `${v}%`}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <Tooltip
             labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
@@ -98,7 +98,7 @@ export function RateTrend({
                   ? {
                       value: refLabel,
                       position: "insideTopRight",
-                      fontSize: 10,
+                      fontSize: 12,
                       fill: "hsl(var(--muted-foreground))",
                     }
                   : undefined

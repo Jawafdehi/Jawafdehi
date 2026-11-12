@@ -33,7 +33,7 @@ export function CaseSectionJumpNav({
     <nav
       aria-label="Jump to case section"
       className={cn(
-        "no-print flex min-w-0 gap-5 overflow-x-auto pb-3 [scrollbar-width:none] lg:sticky lg:top-28 lg:flex-col lg:gap-3.5 lg:overflow-visible lg:pb-12",
+        "no-print flex min-w-0 gap-5 overflow-x-auto pb-3 [scrollbar-width:none] lg:sticky lg:top-28 lg:flex-col lg:gap-2.5 lg:overflow-visible lg:pb-12",
         className,
       )}
     >
@@ -46,7 +46,7 @@ export function CaseSectionJumpNav({
             aria-current={isActive ? "true" : undefined}
             onClick={onJump(section.id)}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-sm text-[15px] leading-[1.4] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:whitespace-normal",
+              "flex min-h-6 shrink-0 items-center whitespace-nowrap rounded-sm text-[15px] leading-[1.4] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:whitespace-normal",
               isActive ? "text-primary" : "text-muted-foreground hover:text-primary",
             )}
           >
