@@ -661,28 +661,18 @@
       "openSource": "Open source,",
       "freeToUse": "free to use"
     },
-    "source": "Source on GitHub",
-    "preview": {
-      "chatQuestion": "Which cases did the CIAA file at the Special Court this month?",
-      "sourceCharge": "Charge sheet",
-      "sourceCourt": "Special Court"
-    },
     "items": {
       "mcp": {
-        "kind": "MCP server",
-        "cta": "Connect your AI"
+        "kind": "MCP server"
       },
       "likhit": {
-        "kind": "Python library",
-        "cta": "Install likhit"
+        "kind": "Python library"
       },
       "api": {
-        "kind": "REST API",
-        "cta": "Read the API docs"
+        "kind": "REST API"
       },
       "chat": {
-        "kind": "Web app",
-        "cta": "Start a chat"
+        "kind": "Web app"
       }
     }
   },

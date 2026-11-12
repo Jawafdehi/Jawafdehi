@@ -661,28 +661,18 @@
       "openSource": "खुला स्रोत,",
       "freeToUse": "निःशुल्क प्रयोग"
     },
-    "source": "गिटहबमा स्रोत कोड",
-    "preview": {
-      "chatQuestion": "यो महिना अख्तियारले विशेष अदालतमा कुन कुन मुद्दा दायर गर्‍यो?",
-      "sourceCharge": "आरोपपत्र",
-      "sourceCourt": "विशेष अदालत"
-    },
     "items": {
       "mcp": {
-        "kind": "MCP सर्भर",
-        "cta": "आफ्नो AI जोड्नुहोस्"
+        "kind": "MCP सर्भर"
       },
       "likhit": {
-        "kind": "Python लाइब्रेरी",
-        "cta": "लिखित इन्स्टल गर्नुहोस्"
+        "kind": "Python लाइब्रेरी"
       },
       "api": {
-        "kind": "REST API",
-        "cta": "API कागजात पढ्नुहोस्"
+        "kind": "REST API"
       },
       "chat": {
-        "kind": "वेब एप",
-        "cta": "कुराकानी सुरु गर्नुहोस्"
+        "kind": "वेब एप"
       }
     }
   },

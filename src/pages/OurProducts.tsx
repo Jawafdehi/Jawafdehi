@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, ArrowUpRight, Github } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bot, Code2, FileType, SquareDashedBottomCode } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
@@ -14,146 +13,61 @@ type ProductKey = "mcp" | "likhit" | "api" | "chat";
 type Product = {
   key: ProductKey;
   name: string;
+  icon: typeof Code2;
   /** Where the product lives: a page here, or an external site (new tab). */
   to?: string;
   href?: string;
-  /** Its source, when it has a public repository of its own. */
-  repo?: string;
-  preview: () => ReactNode;
 };
 
-// ---------------------------------------------------------------------------
-// Previews: each product shown in use, in a small white window on a grey
-// well (the Speakeasy / GitBook product-card pattern). Every value in them is
-// real — the MCP exchange is the home page's, the API response is a trimmed
-// live record — or deliberately abstract (the chat answer is drawn as bars).
-// ---------------------------------------------------------------------------
-
-function Window({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
-  return (
-    <div aria-hidden="true" className="w-full max-w-[26rem] overflow-hidden md:w-[86%] rounded-2xl bg-surface shadow-[0_18px_40px_-24px_rgba(14,31,59,0.35)]">
-      <div className="flex items-center gap-1.5 border-b border-border/70 px-4 py-2.5">
-        <span className="h-2 w-2 rounded-full bg-border" />
-        <span className="h-2 w-2 rounded-full bg-border" />
-        <span className="h-2 w-2 rounded-full bg-border" />
-        <span className="ml-2 truncate font-mono text-[11px] text-muted-foreground">{title}</span>
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
-}
-
-function McpPreview() {
-  const { t } = useTranslation();
-  return (
-    <Window title="Claude · Jawafdehi">
-      <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-primary-surface px-3.5 py-2.5 text-[13px] leading-5 text-primary-foreground">
-        {t("home.bento.ask.question")}
-      </div>
-      <div className="mt-2.5 w-fit max-w-[90%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-[13px] leading-5 text-primary">
-        {t("home.bento.ask.answer")}
-      </div>
-    </Window>
-  );
-}
-
-function LikhitPreview() {
-  return (
-    <Window title="terminal">
-      <p className="font-mono text-[12px] leading-5 text-primary">
-        <span className="text-muted-foreground">$ </span>likhit-save notice.pdf --out notice.md
-      </p>
-      <div className="mt-3 rounded-xl bg-muted px-3.5 py-3 font-mono text-[12px] leading-6 text-primary/80">
-        <p># अख्तियार दुरुपयोग अनुसन्धान आयोग</p>
-        <p>## प्रेस विज्ञप्ति</p>
-        <p className="mt-1 h-2 w-[85%] rounded-full bg-border" />
-        <p className="mt-2 h-2 w-[70%] rounded-full bg-border" />
-      </div>
-    </Window>
-  );
-}
-
-function ApiPreview() {
-  return (
-    <Window title="GET /api/cases/">
-      <pre className="overflow-hidden font-mono text-[12px] leading-5 text-primary/80">
-        {"{\n"}
-        {"  "}<span className="text-primary">"slug"</span>: <span className="text-[hsl(var(--accent))]">"dilli-bahadur-wali-…"</span>,{"\n"}
-        {"  "}<span className="text-primary">"offence_type"</span>: <span className="text-[hsl(var(--accent))]">"CORRUPTION"</span>,{"\n"}
-        {"  "}<span className="text-primary">"status"</span>: <span className="text-[hsl(var(--accent))]">"ongoing"</span>,{"\n"}
-        {"  "}<span className="text-primary">"bigo"</span>: 1000000,{"\n"}
-        {"  "}<span className="text-primary">"court_cases"</span>: [<span className="text-[hsl(var(--accent))]">"…/special/083-cr-0055"</span>]{"\n"}
-        {"}"}
-      </pre>
-    </Window>
-  );
-}
-
-function ChatPreview() {
-  const { t } = useTranslation();
-  return (
-    <Window title="chat.jawafdehi.org">
-      <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-primary-surface px-3.5 py-2.5 text-[13px] leading-5 text-primary-foreground">
-        {t("products.preview.chatQuestion")}
-      </div>
-      <div className="mt-3 space-y-2">
-        <p className="h-2 w-[92%] rounded-full bg-border" />
-        <p className="h-2 w-[80%] rounded-full bg-border" />
-        <p className="h-2 w-[64%] rounded-full bg-border" />
-      </div>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-primary/75">{t("products.preview.sourceCharge")}</span>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-primary/75">{t("products.preview.sourceCourt")}</span>
-      </div>
-    </Window>
-  );
-}
-
 const PRODUCTS: Product[] = [
-  // Both /mcp and /likhit are internal: someone here wants to use the thing,
-  // and the page with the setup on it is a better first answer than a README.
-  { key: "mcp", name: "Jawafdehi MCP", to: "/mcp", repo: "https://github.com/Jawafdehi/jawafdehi-mcp", preview: McpPreview },
-  { key: "likhit", name: "likhit", to: "/likhit", repo: "https://github.com/Jawafdehi/likhit", preview: LikhitPreview },
-  { key: "api", name: "Jawafdehi API", href: `${API_BASE_URL}/api/swagger/`, repo: "https://github.com/Jawafdehi/JawafdehiAPI", preview: ApiPreview },
-  { key: "chat", name: "AI Research Chat", href: CHAT_URL, preview: ChatPreview },
+  // /mcp and /likhit are internal: the page with the setup on it is a better
+  // first answer than a README, and it links the source.
+  { key: "mcp", name: "Jawafdehi MCP", icon: SquareDashedBottomCode, to: "/mcp" },
+  { key: "likhit", name: "likhit", icon: FileType, to: "/likhit" },
+  { key: "api", name: "Jawafdehi API", icon: Code2, href: `${API_BASE_URL}/api/swagger/` },
+  { key: "chat", name: "AI Research Chat", icon: Bot, href: CHAT_URL },
 ];
 
-const LINK =
-  "group inline-flex items-center gap-1.5 rounded text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
+/**
+ * One product, and the whole card is the link: an icon on a grey tile, the
+ * name and what kind of thing it is, and a round arrow. Nothing else — each
+ * product's own page carries the detail.
+ */
 function ProductCard({ product }: Readonly<{ product: Product }>) {
   const { t } = useTranslation();
-  const { key, name, to, href, repo, preview: Preview } = product;
-  const cta = t(`products.items.${key}.cta`);
-  return (
-    <article className="flex h-full flex-col rounded-[28px] border border-border/70 bg-surface p-2">
-      <div className="flex min-h-[15rem] items-center justify-center rounded-[22px] bg-muted px-4 py-8 md:aspect-[16/10] md:py-0">
-        <Preview />
+  const { key, name, icon: Icon, to, href } = product;
+  const Arrow = href ? ArrowUpRight : ArrowRight;
+  const body = (
+    <>
+      <div className="flex h-40 items-center justify-center rounded-[22px] bg-muted">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface text-primary">
+          <Icon className="h-7 w-7" strokeWidth={1.5} aria-hidden="true" />
+        </span>
       </div>
-      <div className="flex flex-1 flex-col px-4 pb-4 pt-6 md:px-5">
-        <p className="text-sm text-muted-foreground">{t(`products.items.${key}.kind`)}</p>
-        <h2 className="mt-1 text-[26px] font-normal leading-tight tracking-[-0.01em] text-primary">{name}</h2>
-        <div className="mt-auto flex flex-wrap items-center gap-x-6 gap-y-2 pt-5">
-          {to ? (
-            <Link to={to} className={`${LINK} font-medium text-primary`}>
-              {cta}
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
-            </Link>
-          ) : (
-            <a href={href} target="_blank" rel="noopener noreferrer" className={`${LINK} font-medium text-primary`}>
-              {cta}
-              <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-            </a>
-          )}
-          {repo ? (
-            <a href={repo} target="_blank" rel="noopener noreferrer" className={`${LINK} text-muted-foreground hover:text-primary`}>
-              <Github className="h-4 w-4" aria-hidden="true" />
-              {t("products.source")}
-            </a>
-          ) : null}
+      <div className="flex items-center justify-between gap-4 px-4 pb-3 pt-4">
+        <div className="min-w-0">
+          <h2 className="text-[22px] font-normal leading-tight text-primary">{name}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t(`products.items.${key}.kind`)}</p>
         </div>
+        <span
+          aria-hidden="true"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-surface text-primary-foreground transition-transform duration-200 group-hover:translate-x-0.5"
+        >
+          <Arrow className="h-4 w-4" />
+        </span>
       </div>
-    </article>
+    </>
+  );
+  const shell =
+    "group block h-full rounded-[28px] border border-border/70 bg-surface p-2 transition-colors duration-200 hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  return to ? (
+    <Link to={to} className={shell}>
+      {body}
+    </Link>
+  ) : (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={shell}>
+      {body}
+    </a>
   );
 }
 
@@ -190,7 +104,7 @@ const OurProducts = () => {
         </section>
 
         <section id="stack" aria-label={t("products.hero.eyebrow")} className="pb-20 md:pb-28">
-          <ul className="layout-container grid grid-cols-1 gap-4 md:grid-cols-2">
+          <ul className="layout-container grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PRODUCTS.map((product) => (
               <li key={product.key}>
                 <ProductCard product={product} />
