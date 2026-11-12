@@ -95,18 +95,6 @@ describe("the likhit landing page", () => {
     expect(tiers.map((el) => el.textContent)).toEqual(["none", "identifiers", "contact", "strict"]);
   });
 
-  it("gives the likhit-redact example its required arguments", async () => {
-    await renderPage("en");
-
-    const section = screen.getByRole("region", { name: i18n.t("likhit.privacy.title") });
-    const command = [...section.querySelectorAll("code")]
-      .map((el) => el.textContent ?? "")
-      .find((text) => text.startsWith("likhit-redact "));
-    expect(command).toBeDefined();
-    expect(command).toContain("--out");
-    expect(command).toContain("--journal ");
-  });
-
   it("gives each command-line case its own copyable command", async () => {
     await renderPage("en");
 

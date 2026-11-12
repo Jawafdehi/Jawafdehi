@@ -40,8 +40,6 @@ const FEATURES = ["repair", "layout", "ocr", "legacy"] as const;
 // scanning for "what do I get by default" reaches `strict` last.
 const REDACTION_TIERS = ["none", "identifiers", "contact", "strict"] as const;
 
-/** One redaction example: a PDF in, a redacted PDF and its journal out. */
-const REDACT_COMMAND = "likhit-redact pdf charge-sheet.pdf --out redacted.pdf --journal redaction.jsonl";
 
 /** The command-line cases, one copyable command each. */
 const CLI_EXAMPLES = [
@@ -401,21 +399,17 @@ const Likhit = () => {
         {/* ── Redaction: the tiers at a glance ── */}
         <section aria-labelledby="likhit-privacy-title" className="pt-16 md:pt-24">
           <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <div>
+            <div className="flex flex-col">
               <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
               <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.privacy.short")}</p>
               <a
                 href={REPO_URL}
                 {...EXTERNAL}
-                className="mt-5 inline-flex items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mt-5 inline-flex w-fit items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
               >
                 {t("likhit.privacy.guide")}
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
-              <div className="mt-8">
-                <p className="text-sm text-muted-foreground">{t("likhit.privacy.redactPdf")}</p>
-                <CopyPill value={REDACT_COMMAND} label={t("likhit.privacy.copyCommand")} mono fullWidth />
-              </div>
             </div>
             <div className="min-w-0">
               <dl aria-labelledby="likhit-privacy-title" className="divide-y divide-border/70 rounded-[22px] bg-muted px-6">
