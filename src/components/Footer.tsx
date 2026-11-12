@@ -30,8 +30,13 @@ type FooterBadge = {
   iconClassName: string;
 };
 
+// Links at 14px in a dimmer white, on 32px rows: the Linear / Chronicle footer
+// measure. 32px clears WCAG 2.5.8's 24px minimum on its own. The rows were 44px
+// (2.5.5, AAA) and the column read as a stretched list; an invisible 44px
+// extension is no fix on a stacked list, because neighbouring rows' extensions
+// overlap and the lower link takes the shared band.
 const linkClass =
-  "group -mx-3 inline-flex min-h-11 items-center justify-between gap-3 rounded-full px-3 text-base text-[var(--footer-muted)] transition-all duration-200 hover:bg-[var(--footer-soft)] hover:text-[var(--footer-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "group inline-flex min-h-8 items-center gap-1.5 rounded text-sm text-[var(--footer-link)] transition-colors duration-200 hover:text-[var(--footer-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 const footerBadges: FooterBadge[] = [
   {
@@ -73,7 +78,7 @@ function FooterNavLink({ label, to, external }: Readonly<FooterLink>) {
     <>
       <span>{label}</span>
       {external && (
-        <ExternalLink className="h-3.5 w-3.5 opacity-0 transition-opacity duration-200 group-hover:opacity-55" />
+        <ExternalLink className="h-3 w-3 opacity-0 transition-opacity duration-200 group-hover:opacity-60" />
       )}
     </>
   );
@@ -96,14 +101,9 @@ function FooterNavLink({ label, to, external }: Readonly<FooterLink>) {
 function FooterLinkGroup({ title, links }: Readonly<{ title: string; links: FooterLink[] }>) {
   return (
     <nav aria-label={title}>
-      <h3 className="mb-3 text-base font-medium text-[var(--footer-fg)]">
+      <h3 className="mb-3 text-sm font-medium text-[var(--footer-fg)]">
         {title}
       </h3>
-      {/* No gap between rows: min-h-11 already gives each link 44px of vertical
-          room, and the rounded hover background separates one from the next. The
-          old `space-y-1` on top of a 44px row would have cost 8px of page height
-          per link across ~18 links on all 23 routes, against the 4px the taller
-          row costs on its own. */}
       <ul>
         {links.map((link) => (
           <li key={`${link.label}-${link.to}`}>
@@ -179,14 +179,14 @@ export const Footer = () => {
         // role. They are the same navy in light, but --primary becomes light ink
         // in dark, which would paint the footer cream. This is the divergence
         // this branch exists to fix.
-        "[--footer-bg:hsl(var(--primary-surface))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.78)]",
+        "[--footer-bg:hsl(var(--primary-surface))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.6)] [--footer-link:hsl(var(--primary-foreground)/0.72)]",
         // Was #FF000E on this branch — pure red, and a hex literal this branch's
         // own lint rule forbids. #285 replaced it with the token on main; taking
         // main's side, which also matches the dark override below.
         "[--footer-title:hsl(var(--accent-on-dark))]",
         "[--footer-soft:hsl(var(--primary-foreground)/0.10)] [--footer-soft-hover:hsl(var(--primary-foreground)/0.16)]",
         "[--footer-border:hsl(var(--primary-foreground)/0.16)] [--footer-border-hover:hsl(var(--primary-foreground)/0.28)] [--footer-dot:hsl(var(--primary-foreground)/0.30)]",
-        "dark:[--footer-bg:hsl(var(--card))] dark:[--footer-fg:hsl(var(--card-foreground))] dark:[--footer-muted:hsl(var(--card-foreground)/0.82)]",
+        "dark:[--footer-bg:hsl(var(--card))] dark:[--footer-fg:hsl(var(--card-foreground))] dark:[--footer-muted:hsl(var(--card-foreground)/0.7)] dark:[--footer-link:hsl(var(--card-foreground)/0.8)]",
         // Dark mode paints the footer with --card, a light cream, so the title
         // reverts to the ordinary accent; --accent-on-dark exists for the navy.
         "dark:[--footer-title:hsl(var(--accent))]",
@@ -228,12 +228,12 @@ export const Footer = () => {
               <p className="font-eyebrow font-eyebrow-display text-[var(--footer-title)]">
                 <em>{t("footer.accountabilityNoExpiry")}</em>
               </p>
-              <p className="text-base leading-7 text-[var(--footer-muted)]">
+              <p className="text-[15px] leading-6 text-[var(--footer-link)]">
                 {t("footer.permanentArchive")}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[var(--footer-muted)]">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-[var(--footer-muted)]">
               {footerBadges.map(({ labelKey, icon: Icon, marker, iconClassName }, index) => (
                 <span
                   key={labelKey}
@@ -250,15 +250,15 @@ export const Footer = () => {
 
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:gap-x-8">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:gap-x-10">
             <FooterLinkGroup title={t("footer.platform")} links={platformLinks} />
             <FooterLinkGroup title={t("nav.about")} links={aboutLinks} />
             <FooterLinkGroup title={t("footer.resources")} links={resourceLinks} />
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-sm leading-6 text-[var(--footer-muted)]">
+        <div className="mt-14 flex flex-col gap-6 border-t border-[var(--footer-border)] pt-8 lg:flex-row lg:items-center lg:justify-between">
+          <p className="max-w-2xl text-[13px] leading-5 text-[var(--footer-muted)]">
             {t("footer.disclaimer")}
           </p>
 
@@ -270,8 +270,11 @@ export const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--footer-border)] bg-[var(--footer-soft)] text-[var(--footer-muted)] shadow-sm shadow-foreground/5 transition-all duration-200",
-                  "hover:-translate-y-0.5 hover:border-[var(--footer-border-hover)] hover:bg-[var(--footer-soft-hover)] hover:text-[var(--footer-fg)] hover:shadow-md",
+                  // 36px drawn, 44px tappable: the pseudo-element reaches 4px past
+                  // each edge, and the 8px gap keeps neighbours from overlapping.
+                  // No border or shadow, a quiet disc that brightens on hover.
+                  "relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--footer-soft)] text-[var(--footer-link)] transition-colors duration-200 after:absolute after:-inset-1 after:content-['']",
+                  "hover:bg-[var(--footer-soft-hover)] hover:text-[var(--footer-fg)]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 )}
                 aria-label={label}
@@ -282,7 +285,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2 text-sm text-[var(--footer-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-2 text-[13px] text-[var(--footer-muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>
             {t("footer.allDataPublicDomain")}
           </p>
@@ -296,8 +299,8 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-6 border-t border-[var(--footer-border)] pt-6">
-          <p className="text-sm leading-6 text-[var(--footer-muted)]">
+        <div className="mt-3">
+          <p className="text-[13px] leading-5 text-[var(--footer-muted)]">
             {t("footer.legalEntity")}
           </p>
         </div>

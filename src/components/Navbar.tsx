@@ -35,32 +35,25 @@ type NavItem = {
   exact?: boolean;
 };
 
-const desktopNavWidthClass: Record<string, string> = {
-  home: "min-w-[4.5rem]",
-  process: "min-w-[7.25rem]",
-  cases: "min-w-[4.75rem]",
-  volunteer: "min-w-[6.25rem]",
-  faq: "min-w-[4.25rem]",
-  updates: "min-w-[5.5rem]",
-  commitment: "min-w-[8.75rem]",
-  about: "min-w-[5.75rem]",
-  archive: "min-w-[5.75rem]",
-};
 
 const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "rounded-2xl px-4 py-3 text-sm font-normal transition-all duration-200",
+    "rounded-2xl px-4 py-3 text-[15px] font-normal transition-colors duration-200",
     isActive
-      ? "bg-secondary/55 text-foreground/80"
-      : "text-foreground/65 hover:bg-secondary/35 hover:text-foreground/80",
+      ? "bg-muted text-primary"
+      : "text-primary/70 hover:bg-muted/60 hover:text-primary",
   );
 
-// One flat bar: links sit straight on the header with no pill behind them, and
-// the current page carries a short crimson underline.
+// The primary links sit in ONE soft pill (the Frontify / AngelList header):
+// 15px, regular, each a pill of its own inside it. The current page is a white
+// pill on the grey track — the site's switcher language — instead of a crimson
+// underline; crimson stays reserved for Donate. NAV_GROUP_* is the track.
 const NAV_ITEM_CLASS =
-  "relative inline-flex h-10 items-center justify-center px-3 text-center text-[17px] font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-const NAV_ACTIVE_CLASS =
-  "after:absolute after:inset-x-3 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-accent after:content-['']";
+  "relative inline-flex h-9 items-center justify-center rounded-full px-3.5 text-center text-[15px] font-normal text-primary/70 transition-colors duration-200 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+const NAV_ACTIVE_CLASS = "bg-surface text-primary shadow-[0_1px_2px_rgba(14,31,59,0.08)]";
+const NAV_ACTIVE_ON_DARK_CLASS = "bg-primary-foreground/15 text-primary-foreground shadow-none";
+const NAV_GROUP_CLASS = "rounded-full bg-muted p-1";
+const NAV_GROUP_ON_DARK_CLASS = "bg-primary-foreground/[0.08]";
 // Icon buttons (search, menu) are bare glyphs: no border, no fill at rest.
 const NAV_ICON_CLASS =
   "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none";
@@ -249,7 +242,11 @@ export function Navbar() {
 
           <nav
             aria-label="Primary"
-            className="relative hidden items-center justify-self-center xl:flex"
+            className={cn(
+              "relative hidden items-center gap-0.5 justify-self-center xl:flex",
+              NAV_GROUP_CLASS,
+              overDarkHero && NAV_GROUP_ON_DARK_CLASS,
+            )}
           >
 
             {homeNavItem ? (
@@ -259,10 +256,9 @@ export function Navbar() {
                 className={({ isActive }) =>
                   cn(
                     NAV_ITEM_CLASS,
-                    desktopNavWidthClass[homeNavItem.key],
-                    isActive && cn("text-foreground/82", NAV_ACTIVE_CLASS),
+                    isActive && NAV_ACTIVE_CLASS,
                     overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                    overDarkHero && isActive && "text-primary-foreground",
+                    overDarkHero && isActive && NAV_ACTIVE_ON_DARK_CLASS,
                   )
                 }
               >
@@ -276,11 +272,9 @@ export function Navbar() {
               <DropdownMenuTrigger
                 className={cn(
                   cn(NAV_ITEM_CLASS, "gap-1"),
-                  desktopNavWidthClass.archive,
-                  activeKey === "archive" && NAV_ACTIVE_CLASS,
-                  (activeKey === "archive" || archiveOpen) && "text-foreground/82",
+                  (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_CLASS,
                   overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "archive" || archiveOpen) && "text-primary-foreground",
+                  overDarkHero && (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_ON_DARK_CLASS,
                 )}
               >
                 {t("nav.archive", "Archive")}
@@ -311,10 +305,9 @@ export function Navbar() {
                 className={({ isActive }) =>
                   cn(
                     NAV_ITEM_CLASS,
-                    desktopNavWidthClass[item.key],
-                    isActive && cn("text-foreground/82", NAV_ACTIVE_CLASS),
+                    isActive && NAV_ACTIVE_CLASS,
                     overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                    overDarkHero && isActive && "text-primary-foreground",
+                    overDarkHero && isActive && NAV_ACTIVE_ON_DARK_CLASS,
                   )
                 }
               >
@@ -326,11 +319,9 @@ export function Navbar() {
               <DropdownMenuTrigger
                 className={cn(
                   cn(NAV_ITEM_CLASS, "gap-1"),
-                  desktopNavWidthClass.about,
-                  activeKey === "about" && NAV_ACTIVE_CLASS,
-                  (activeKey === "about" || aboutOpen) && "text-foreground/82",
+                  (activeKey === "about" || aboutOpen) && NAV_ACTIVE_CLASS,
                   overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "about" || aboutOpen) && "text-primary-foreground",
+                  overDarkHero && (activeKey === "about" || aboutOpen) && NAV_ACTIVE_ON_DARK_CLASS,
                 )}
               >
                 {t("nav.about")}
@@ -369,14 +360,25 @@ export function Navbar() {
                 <Search className="h-4 w-4" />
               </Button>
 
-            <Button asChild variant="accent">
+            <Button asChild variant="accent" className="text-[15px]">
               <Link to="/donate">
                 <HeartHandshake aria-hidden="true" />
                 {t("nav.donate")}
               </Link>
             </Button>
 
-            <Button asChild variant={overDarkHero ? "quietOnDark" : "quiet"}>
+            {/* Grey fill, no outline: the secondary action in the same voice as
+                the nav track and the search page's chips. */}
+            <Button
+              asChild
+              variant="ghost"
+              className={cn(
+                "text-[15px] font-normal",
+                overDarkHero
+                  ? "bg-primary-foreground/[0.08] text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+                  : "bg-muted text-primary hover:bg-primary/[0.08]",
+              )}
+            >
               <a href={CHAT_URL} target="_blank" rel="noreferrer">
                 <MessageCircle aria-hidden="true" />
                 {t("header.askAiAssistant")}

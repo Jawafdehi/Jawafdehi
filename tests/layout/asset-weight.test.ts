@@ -259,9 +259,15 @@ describe('touch target sizes', () => {
     }
   });
 
-  it('keeps footer nav rows and social icons at 44px', () => {
+  it('keeps footer nav rows at 32px and social icons tappable at 44px', () => {
     const footer = readFileSync(resolve(SRC, 'components/Footer.tsx'), 'utf8');
-    expect(footer).toContain('min-h-11');
+    // Rows: 32px, above WCAG 2.5.8's 24px. Social discs: drawn at 36px, the
+    // tap target reaches 44px through a pseudo-element 4px past each edge,
+    // with an 8px gap so neighbours never overlap.
+    expect(footer).toContain("min-h-8");
+    expect(footer).toContain("h-9 w-9");
+    expect(footer).toContain("gap-2");
+    expect(footer).toContain("after:-inset-1");
     expect(footer).not.toContain('min-h-9');
     // The social row is hand-rolled rather than a Button, so the `icon` variant
     // above does not reach it — it needs its own 44px.

@@ -641,9 +641,8 @@ export default function ArchiveSearch({
             <div className="flex-1 overflow-y-auto px-7 pb-6 pt-5">{searchFilters}</div>
             {/* Two equal pills, the pattern Fresha and H&M use: a quiet Clear
                 all beside the solid action. The filters already apply as you
-                tick them, so the action only closes the sheet — it says
-                "View results" and carries the live count as a tag, rather than
-                a sentence with a seven-digit number in the middle of it. */}
+                tick them, so the action only closes the sheet. It carries no
+                count: the page already shows one at the end of the tab row. */}
             <div className="grid grid-cols-2 gap-3 px-7 py-5">
               <Button
                 className="h-12 rounded-full bg-muted text-[15px] font-normal text-primary shadow-none hover:bg-primary/[0.08] disabled:text-muted-foreground"
@@ -660,16 +659,11 @@ export default function ArchiveSearch({
                 {t("archiveSearch.clearAll", "Clear all")}
               </Button>
               <Button
-                className="h-12 gap-2 rounded-full text-[15px] font-medium"
+                className="h-12 rounded-full text-[15px] font-medium"
                 onClick={() => setAllFiltersOpen(false)}
                 variant="primary"
               >
                 {t("archiveSearch.viewResults", "View results")}
-                {resultCountLabel !== null ? (
-                  <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[13px] font-normal tabular-nums">
-                    {formatIndianNumber(resultCount)}
-                  </span>
-                ) : null}
               </Button>
             </div>
           </SheetContent>
