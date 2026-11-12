@@ -474,7 +474,7 @@ const Likhit = () => {
               <a
                 href={REPO_URL}
                 {...EXTERNAL}
-                className="mt-5 inline-flex w-fit items-center gap-1.5 rounded text-base font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
+                className="mt-6 inline-flex w-fit items-center gap-1.5 self-end rounded text-base font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
               >
                 {t("likhit.privacy.guidePrefix")}
                 <Github className="h-4 w-4" aria-hidden="true" />
@@ -483,9 +483,9 @@ const Likhit = () => {
               </a>
             </div>
             <div className="min-w-0">
-              <dl aria-labelledby="likhit-privacy-title" className="divide-y divide-border/50 rounded-[22px] bg-muted/50 px-6">
+              <dl aria-labelledby="likhit-privacy-title" className="rounded-[22px] bg-muted/50 px-6 py-3">
                 {REDACTION_TIERS.map((key) => (
-                  <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-4">
+                  <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-3">
                     <dt>
                       <code className="font-mono text-[15px] text-accent">{key}</code>
                     </dt>
