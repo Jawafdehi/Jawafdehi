@@ -663,6 +663,16 @@
       "builtForCivicGood": "built for civic good",
       "description": "The components we build are open source and free to use. The full stack is public on GitHub — built by Nepali volunteers and made available to anyone who wants to build on top of it.",
       "github": "GitHub"
+    },
+    "stack": {
+      "lead": "Four tools.",
+      "rest": "One open archive behind them."
+    },
+    "cta": {
+      "mcp": "Connect your AI",
+      "likhit": "Install likhit",
+      "api": "Read the API docs",
+      "chat": "Start a chat"
     }
   },
   "team": {

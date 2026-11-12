@@ -17,7 +17,7 @@ export function Panel({ tone = "light", className, children, ...props }: PanelPr
     );
   }
   return (
-    <div className="rounded-[28px] border border-border/70 bg-surface p-2">
+    <div className="h-full rounded-[28px] border border-border/70 bg-surface p-2">
       <div className={cn("flex h-full flex-col rounded-[22px] bg-muted p-6", className)} {...props}>
         {children}
       </div>
