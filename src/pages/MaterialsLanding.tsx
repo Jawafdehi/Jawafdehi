@@ -217,21 +217,13 @@ export default function MaterialsLanding() {
           </div>
 
           {/* The holdings, stated: what a shelf of folders only implied. */}
-          <dl className="mt-16 grid max-w-2xl grid-cols-3 gap-6 border-t border-primary-foreground/15 pt-6 md:mt-20">
+          <dl className="mt-14 flex flex-wrap gap-x-16 gap-y-6 md:mt-16">
             <div>
               <dt className="text-sm text-primary-foreground/55">
                 {t("materialsLanding.stats.documents", "Documents")}
               </dt>
               <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
                 {materials ? formatArchiveCount(materials.total, language) : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-primary-foreground/55">
-                {t("materialsLanding.stats.series", "Series")}
-              </dt>
-              <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
-                {formatArchiveCount(MATERIAL_SERIES.length, language)}
               </dd>
             </div>
             <div>
