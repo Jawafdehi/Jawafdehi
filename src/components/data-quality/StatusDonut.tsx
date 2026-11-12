@@ -85,7 +85,7 @@ export function StatusDonut({
           <span className="text-2xl font-bold tabular-nums text-primary">
             {centerValue}
           </span>
-          <span className="text-xs text-muted-foreground">{centerLabel}</span>
+          <span className="text-sm text-muted-foreground">{centerLabel}</span>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export function StatusDonut({
         {segments.map((s) => {
           const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
           return (
-            <li key={s.key} className="flex items-center gap-2 text-sm">
+            <li key={s.key} className="flex items-center gap-2 text-base">
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: s.color }}

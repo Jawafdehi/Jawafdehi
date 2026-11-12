@@ -64,17 +64,17 @@ export function AccountabilityStages({
             </span>
             <div className="min-w-0 pt-1">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <h3 className={`text-base font-semibold ${s.noData ? "text-muted-foreground" : "text-foreground"}`}>
+                <h3 className={`text-xl font-normal ${s.noData ? "text-muted-foreground" : "text-primary"}`}>
                   {s.title}
                 </h3>
-                <span className="text-xs text-muted-foreground">{s.owner}</span>
+                <span className="text-sm text-muted-foreground">{s.owner}</span>
                 {s.noData && (
-                  <span className="rounded-full border border-dashed border-muted-foreground/50 px-2 py-0.5 text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground">
+                  <span className="rounded-full border border-dashed border-muted-foreground/50 px-2.5 py-0.5 text-sm text-muted-foreground">
                     {noDataLabel}
                   </span>
                 )}
               </div>
-              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{s.body}</p>
+              <p className="mt-2 text-lg leading-8 text-muted-foreground">{s.body}</p>
             </div>
           </li>
         );

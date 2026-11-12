@@ -124,7 +124,7 @@ export function RateTrend({
         </LineChart>
       </ResponsiveContainer>
       </ChartReveal>
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
         {series.map((s) => (
           <span key={s.key} className="inline-flex items-center gap-1.5">
             <span

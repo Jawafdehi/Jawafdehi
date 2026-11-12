@@ -409,10 +409,10 @@ const ResearchCorruption = () => {
 
             {/* The 37,026 figure is the one in circulation, so the page has to reconcile it. */}
             <div className="mt-6 rounded-[22px] bg-muted p-6">
-              <h3 className="text-lg font-normal text-primary">
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">
                 {t("research.corruption.funnel.workloadTitle", "Why this starts at {{intake}} and not {{workload}}", { intake: REPORT.ciaa.complaintsYear.toLocaleString(), workload: REPORT.ciaa.complaintsWorkloadYear.toLocaleString() })}
               </h3>
-              <p className="mt-2 text-base leading-7 text-muted-foreground">
+              <p className="mt-3 text-lg leading-8 text-muted-foreground">
                 {t("research.corruption.funnel.workloadBody", "You will more often see {{workload}} complaints quoted for FY2081/82, and that number is also the CIAA's own. It is the Commission's total workload: {{intake}} complaints newly registered during the year plus {{carried}} still open from previous years. Both appear in the same table of the 35th report. A funnel that starts at {{workload}} would count those {{carried}} a second time, having already counted them in an earlier year, so this one starts at new intake — which also makes the percentage at each stage smaller and more conservative than the headline version.", { workload: REPORT.ciaa.complaintsWorkloadYear.toLocaleString(), intake: REPORT.ciaa.complaintsYear.toLocaleString(), carried: carriedOver.toLocaleString() })}
               </p>
             </div>
@@ -428,7 +428,7 @@ const ResearchCorruption = () => {
           <section id="outcomes" className="scroll-mt-28">
             <Eyebrow>{t("research.corruption.outcomes.eyebrow", "Outcomes")}</Eyebrow>
             <SectionHeading>{t("research.corruption.outcomes.heading", "Fewer than half of decided prosecutions end in a clean conviction")}</SectionHeading>
-            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-12">
+            <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[17rem_minmax(0,1fr)] md:items-center md:gap-10">
               <StatusDonut
                 segments={outcomeSegments}
                 centerValue={decidedClean.toLocaleString()}
@@ -438,7 +438,7 @@ const ResearchCorruption = () => {
                 <p className="text-lg leading-8 text-foreground/80">
                   {t("research.corruption.outcomes.lead", "Of {{n}} decided cases with a clear verdict, {{conv}}% end in a full conviction, {{acq}}% in outright acquittal, and {{part}}% in partial conviction — so {{less}}% end in something less than a clean conviction.", { n: decidedClean.toLocaleString(), conv: convPct, acq: acqPct, part: partPct, less: lessThanFull })}
                 </p>
-                <p className="mt-4 text-base leading-7 text-muted-foreground">
+                <p className="mt-4 text-lg leading-8 text-muted-foreground">
                   {t("research.corruption.outcomes.note", "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. That figure is comparable to the top of our range, not the bottom: on the CIAA's own definition this archive gives {{incl}}%, higher than the Commission's number rather than lower. Set {{ciaa}}% against our {{full}}% and you are comparing two different definitions of the word.", { ciaa: REPORT.ciaa.successRatePct, incl: convPct + partPct, full: convPct })}{" "}
                   <Link to="/courtcases" className="inline-flex items-center gap-0.5 text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
                 </p>
@@ -447,16 +447,16 @@ const ResearchCorruption = () => {
 
             {/* Read this before quoting any conviction number. */}
             <div className="mt-8 rounded-[22px] bg-muted p-6">
-              <h3 className="text-lg font-normal text-primary">
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">
                 {t("research.corruption.outcomes.grainTitle", "What these numbers count, and what “partial” covers")}
               </h3>
-              <p className="mt-2 text-base leading-7 text-muted-foreground">
+              <p className="mt-3 text-lg leading-8 text-muted-foreground">
                 {t("research.corruption.outcomes.grainCases", "These are cases, not people. The court records one verdict per case and publishes no outcome for each accused separately, so nothing here is a per-person conviction rate and none of it should be read as the share of individuals convicted. A single case may have one accused or a dozen.")}
               </p>
-              <p className="mt-3 text-base leading-7 text-muted-foreground">
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">
                 {t("research.corruption.outcomes.grainPartial", "That is also why the middle category does two jobs at once. A partial verdict (आंशिक ठहर) covers a case where one accused was convicted on some charges and cleared of others, AND a case with several accused where some were convicted and others acquitted. The court's record does not distinguish the two, so neither can we. A partial verdict tells you the prosecution did not fail outright; it does not tell you how many people were convicted, or of what.")}
               </p>
-              <p className="mt-3 text-base leading-7 text-muted-foreground">
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">
                 {t("research.corruption.outcomes.grainFull", "“Full conviction” (ठहर) is the strict reading: the charge was upheld against the case as the court framed it. It is the one category that cannot be read two ways, which is why it anchors the low end of every range on this page — {{full}}% here, {{incl}}% once partial verdicts are counted as convictions too. Neither endpoint is the whole truth. Reporting only {{full}}% treats every mixed verdict as a failure; reporting only {{incl}}% treats a case where one junior official was convicted and everyone senior walked as a win. The court's record cannot tell those apart, so we give you both numbers and never a single one on its own.", { full: convPct, incl: convPct + partPct })}
               </p>
             </div>
@@ -467,7 +467,7 @@ const ResearchCorruption = () => {
             <Eyebrow>{t("research.corruption.volume.eyebrow", "The docket")}</Eyebrow>
             <SectionHeading>{t("research.corruption.volume.heading", "What the court is actually asked to try")}</SectionHeading>
             <div className="mt-8">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.volume.trendTitle", "Cases filed vs. decided, by year")}</h3>
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.volume.trendTitle", "Cases filed vs. decided, by year")}</h3>
               <p className="mb-5 mt-1.5 text-base leading-7 text-muted-foreground">{t("research.corruption.volume.trendSub", "Fiscal year. The filing peak (FY2076/77) precedes the decided peak (FY2080/81) by ~4 years.")}</p>
               <FiledDecidedTrend
                 years={REPORT.trend.years}
@@ -479,7 +479,7 @@ const ResearchCorruption = () => {
             </div>
 
             <div className="mt-6 md:mt-10">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.volume.mixByYearTitle", "How the charge mix shifted, by year")}</h3>
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.volume.mixByYearTitle", "How the charge mix shifted, by year")}</h3>
               <p className="mb-5 mt-1.5 text-base leading-7 text-muted-foreground">{t("research.corruption.volume.mixByYearSub", "Register cases by fiscal filing year — {{n}} of the {{corpus}}, money laundering excluded. “Other” folds together seven smaller charge families and the matters whose charge text could not be classified. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80, with a rebound in FY2080/81. The illegal-benefit charge was barely used before FY2078/79 (a single earlier case, in FY2069/70) and loss to government grew.", { n: mixTotal.toLocaleString(), corpus: REPORT.corpus.ciaaProsecutions.toLocaleString() })}</p>
               <ChargeMixByYear
                 data={REPORT.chargeMixByYear}
@@ -530,7 +530,7 @@ const ResearchCorruption = () => {
             </p>
 
             <div className="mt-8">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.overTime.rateTitle", "Outcome mix by verdict year")}</h3>
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.overTime.rateTitle", "Outcome mix by verdict year")}</h3>
               <p className="mb-5 mt-1.5 text-base leading-7 text-muted-foreground">{t("research.corruption.overTime.rateSub", "Share of decided cases by verdict fiscal year. Acquittals spike above full convictions in FY2078/79 and FY2080/81 — and edge ahead again in FY2082/83 — but they do not stay there.")}</p>
               <RateTrend
                 data={outcomePoints}
@@ -543,7 +543,7 @@ const ResearchCorruption = () => {
             </div>
 
             <div className="mt-6 md:mt-10">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.overTime.decompTitle", "Is the decline real? Easy wins vs. core graft")}</h3>
               <p className="mb-5 mt-1.5 text-base leading-7 text-muted-foreground">
                 {t("research.corruption.overTime.decompSub", "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft converts at much the same level now as it did then: {{coreEarly}}% across the first three years against {{coreRecent}}% across the last four. So the headline decline is mostly that change of mix — the easy wins leaving — not the court convicting serious graft any less. Read the dashed line as a level, not a trend: it swings from {{coreHigh}}% in FY{{coreHighYear}} to {{coreLow}}% in FY{{coreLowYear}} because in some years only a few dozen core-graft cases were decided.", { start: fakeShareStart, min: fakeShareMin, coreEarly: early.corePct, coreRecent: recent.corePct, coreHigh: Math.round(coreHigh.coreConvPct), coreHighYear: fyLabel(coreHigh.year), coreLow: Math.round(coreLow.coreConvPct), coreLowYear: fyLabel(coreLow.year) })}
               </p>
@@ -569,7 +569,7 @@ const ResearchCorruption = () => {
             <Eyebrow>{t("research.corruption.pace.eyebrow", "Pace")}</Eyebrow>
             <SectionHeading>{t("research.corruption.pace.heading", "How long a prosecution takes, and when they arrive")}</SectionHeading>
             <div className="mt-8">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.volume.paceTitle", "Time to verdict, and the backlog")}</h3>
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.volume.paceTitle", "Time to verdict, and the backlog")}</h3>
               <p className="mb-5 mt-1.5 text-base leading-7 text-muted-foreground">{t("research.corruption.volume.paceSub", "By filing cohort. Cohorts through FY2079/80 took a median {{peak}} months at their slowest (FY{{peakYear}}); {{pending}} cases filed since are still awaiting a verdict.", { peak: peakDelayMonths, peakYear: fyLabel(peakDelayYear), pending: REPORT.outcome.ongoing })}</p>
               <PipelineHealth
                 data={pipelinePoints}
@@ -580,7 +580,7 @@ const ResearchCorruption = () => {
             </div>
 
             <div className="mt-6 md:mt-10">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.volume.monthTitle", "When cases are filed, by Nepali month")}</h3>
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.volume.monthTitle", "When cases are filed, by Nepali month")}</h3>
               <p className="mb-5 mt-1.5 text-base leading-7 text-muted-foreground">{t("research.corruption.volume.monthSub", "Mean cases filed per Nepali month across FY2069/70–2082/83; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.")}</p>
               <FiledByMonth
                 data={REPORT.filedByMonth}
@@ -588,7 +588,7 @@ const ResearchCorruption = () => {
                 meanLabel={t("research.corruption.volume.monthMean", "Mean cases filed")}
                 sdLabel={t("research.corruption.volume.monthSd", "±1 SD")}
               />
-              <p className="mt-3 text-base leading-7 text-muted-foreground">{t("research.corruption.volume.monthCaption", "Bars are the mean across the 14 fiscal years FY2069/70–2082/83 — all complete for filings, which is what this chart measures; the most recent cases are filed but many are still awaiting a verdict. Whiskers are ±1 standard deviation, i.e. how much each month swings from year to year. Registration date from Special Court records.")}</p>
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("research.corruption.volume.monthCaption", "Bars are the mean across the 14 fiscal years FY2069/70–2082/83 — all complete for filings, which is what this chart measures; the most recent cases are filed but many are still awaiting a verdict. Whiskers are ±1 standard deviation, i.e. how much each month swings from year to year. Registration date from Special Court records.")}</p>
             </div>
           </section>
 
@@ -645,11 +645,11 @@ const ResearchCorruption = () => {
             </p>
 
             <div className="mt-8">
-              <h3 className="text-xl font-normal text-primary">{t("research.corruption.crossCheck.heading", "Do the two records agree?")}</h3>
-              <p className="mt-2 text-base leading-7 text-muted-foreground">
+              <h3 className="text-[1.375rem] font-normal leading-snug text-primary">{t("research.corruption.crossCheck.heading", "Do the two records agree?")}</h3>
+              <p className="mt-3 text-lg leading-8 text-muted-foreground">
                 {t("research.corruption.crossCheck.lead", "The CIAA's annual reports and the Special Court's register are independent accounts of the same events — the Commission deciding to prosecute, and the court opening a docket. Across {{years}} fiscal years they agree to {{gap}}%: {{ciaa}} filings the CIAA published against {{register}} comparable cases in the register, and no single year differs by more than {{worst}}. Where they diverge, one offence dominates. In the {{netYears}} years whose reports break filings down by offence, the register runs {{net}} cases ahead, and {{fake}} of those {{net}} are fake-credential cases alone.", { years: cc.yearsCompared, gap: agreementGapPct.toFixed(1), ciaa: cc.ciaaFiledTotal.toLocaleString(), register: cc.registerComparableTotal.toLocaleString(), worst: worstYearGap, netYears: cc.netDeltaYears, fake: cc.fakeCertDelta, net: cc.netDelta })}
               </p>
-              <p className="mt-3 text-base leading-7 text-muted-foreground">
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">
                 {t("research.corruption.crossCheck.caseLevelLead", "For the {{years}} years where the gap is widest we checked it case by case, matching the accused named in the reports' own filing tables against those named in the register. The divergence runs the opposite way to what a missing-records story would predict: every one of the {{listed}} cases the CIAA says it filed is in the register. What the register holds instead is {{surplus}} fake-credential cases those years' own filing tables never list.", { years: cc.yearsExamined, listed: cc.ciaaListed, surplus: cc.registerSurplus })}
               </p>
               <div className="mt-6">
@@ -697,7 +697,7 @@ const ResearchCorruption = () => {
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block text-lg text-primary">{source.label}</span>
-                      <span className="mt-0.5 block text-[15px] text-muted-foreground">{source.detail}</span>
+                      <span className="mt-0.5 block text-base text-muted-foreground">{source.detail}</span>
                     </span>
                     <ArrowUpRight
                       className="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"

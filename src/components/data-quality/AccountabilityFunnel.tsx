@@ -98,7 +98,7 @@ export function AccountabilityFunnel({
         return (
           <li key={stage.key} className="transition-opacity duration-200 group-hover/rows:opacity-45 hover:!opacity-100">
             {stage.note ? (
-              <div className="mb-1.5 flex items-center gap-1.5 pl-1 text-xs text-muted-foreground">
+              <div className="mb-2 flex items-center gap-1.5 pl-1 text-sm text-muted-foreground">
                 <svg viewBox="0 0 12 14" className="h-3.5 w-3 shrink-0 text-accent" aria-hidden="true">
                   <path d="M6 0v10M2.5 7L6 11l3.5-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -106,7 +106,7 @@ export function AccountabilityFunnel({
               </div>
             ) : null}
             <div className="mb-1 flex items-baseline justify-between gap-3">
-              <span className="text-sm font-medium text-foreground">{stage.label}</span>
+              <span className="text-base text-primary">{stage.label}</span>
               <span className="text-lg tabular-nums text-foreground">
                 {countLabel}
               </span>
@@ -125,7 +125,7 @@ export function AccountabilityFunnel({
                 />
               </div>
               <span
-                className={`${hasRange ? "w-40" : "w-28"} shrink-0 text-right text-xs tabular-nums text-muted-foreground`}
+                className={`${hasRange ? "w-40" : "w-28"} shrink-0 text-right text-sm tabular-nums text-muted-foreground`}
               >
                 {ofLabel(pctLabel)}
               </span>
