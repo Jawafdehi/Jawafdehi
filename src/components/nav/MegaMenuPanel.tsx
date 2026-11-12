@@ -1,6 +1,6 @@
 // The header's full-width menu panel (the Jasper header pattern): the group's
-// pages as a list of name-and-line links on the left, and on the right a navy
-// tile whose dither changes shape with the link under the pointer or focus.
+// pages as a list of name-and-line links on the left, and on the right a white
+// tile whose light dither changes shape with the link under the pointer or focus.
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -52,8 +52,7 @@ export function MegaMenuPanel({
     >
       <div className="layout-container grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 py-8">
         <div>
-          <p className="px-4 text-sm text-muted-foreground">{label}</p>
-          <ul className="mt-3 grid grid-cols-2 gap-1">
+          <ul aria-label={label} className="grid grid-cols-2 gap-1">
             {items.map((item) => {
               const isCurrent = activePath === item.to;
               return (

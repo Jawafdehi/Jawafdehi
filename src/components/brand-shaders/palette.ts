@@ -24,6 +24,8 @@ export const SHADER_TINTS = {
   /** The grain's red: a muted, darkened crimson, so the pattern leads and the
    * colour stays in the background. */
   ember: "#6B1F2A",
+  /** The ember on the white page (the header's mega-menu tile). */
+  emberOnLight: "#E7B3BB",
   /** mist's blush: the crimson thinned almost to white. */
   blush: "#F8E1E5",
   /** mist's pale blue. */

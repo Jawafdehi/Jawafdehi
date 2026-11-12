@@ -12,7 +12,7 @@ const FILL = { width: "100%", height: "100%" } as const;
 function token(name: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const [h, s, l] = value.split(/\s+/);
-  return h && s && l ? `hsl(${h}, ${s}, ${l})` : "hsl(217, 62%, 14%)";
+  return h && s && l ? `hsl(${h}, ${s}, ${l})` : "hsl(0, 0%, 100%)";
 }
 
 export default function MegaMenuArtImpl({
@@ -25,8 +25,8 @@ export default function MegaMenuArtImpl({
   return (
     <Dithering
       style={FILL}
-      colorBack={token("--primary-surface")}
-      colorFront={tone === "ember" ? SHADER_TINTS.ember : SHADER_TINTS.lattice}
+      colorBack={token("--surface")}
+      colorFront={tone === "ember" ? SHADER_TINTS.emberOnLight : SHADER_TINTS.latticeOnLight}
       shape={shape}
       type="4x4"
       size={3}

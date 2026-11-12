@@ -1,7 +1,8 @@
-// The picture on the right of the header's mega menu: a navy tile with one
-// dither field whose shape follows the link under the pointer, and that link's
-// name and line over it. Without WebGL the navy tile and the words are the
-// design; under reduced motion the field holds still.
+// The picture on the right of the header's mega menu: a white tile with one
+// light dither field (pale blue or blush) whose shape follows the link under
+// the pointer, and that link's name and line over it. Without WebGL the white
+// tile and the words are the design; under reduced motion the field holds
+// still.
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { webglSupported } from "@/components/home/hero-webgl-gate";
@@ -27,18 +28,18 @@ export function MegaMenuArt({
   }, []);
 
   return (
-    <div className="relative isolate flex h-full min-h-[15rem] flex-col justify-end overflow-hidden rounded-[22px] bg-primary-surface p-6">
+    <div className="relative isolate flex h-full min-h-[15rem] flex-col justify-end overflow-hidden rounded-[22px] border border-border/70 bg-surface p-6">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         {webgl ? (
           <Suspense fallback={null}>
             <MegaMenuArtImpl shape={shape} tone={tone} animate={animate} />
           </Suspense>
         ) : null}
-        {/* Navy pooled under the words so they always sit on plain colour. */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--primary-surface))_15%,transparent_70%)]" />
+        {/* White pooled under the words so they always sit on plain colour. */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--surface))_20%,transparent_70%)]" />
       </div>
-      <p className="text-xl leading-snug text-primary-foreground">{title}</p>
-      <p className="mt-1 text-[15px] leading-6 text-primary-foreground/70">{line}</p>
+      <p className="text-xl leading-snug text-primary">{title}</p>
+      <p className="mt-1 text-[15px] leading-6 text-muted-foreground">{line}</p>
     </div>
   );
 }
