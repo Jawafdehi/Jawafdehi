@@ -188,9 +188,21 @@ export default defineConfig(async ({ mode, isSsrBuild }) => {
       // tag here — doing so would load analytics before consent.
     ].filter(Boolean),
     resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
+      alias: [
+        // DEV ONLY: route "lucide-react" through the icon shim so the dev icon
+        // switch (src/dev/IconLibToggle.tsx) can preview other free libraries.
+        // The shim reaches the real package through "lucide-react-real".
+        ...(mode === "development" && !isSSR
+          ? [
+              { find: /^lucide-react$/, replacement: path.resolve(__dirname, "./src/dev/icon-shim.tsx") },
+              {
+                find: /^lucide-react-real$/,
+                replacement: path.resolve(__dirname, "./node_modules/lucide-react/dist/esm/lucide-react.js"),
+              },
+            ]
+          : []),
+        { find: "@", replacement: path.resolve(__dirname, "./src") },
+      ],
     },
     build: isSSR
       ? {
