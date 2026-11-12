@@ -8,7 +8,8 @@
 }
 .case-dossier-main { display: grid; min-width: 0; gap: 24px; }
 .case-dossier-facts { display: grid; gap: 18px; }
-.case-dossier-facts > div { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+.case-dossier-facts > div { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 16px; }
+.case-dossier-facts dd { margin: 0; }
 .case-dossier-facts > div > * { min-width: 0; overflow-wrap: anywhere; }
 
 /* The timeline occupies the dossier column. Steps start at its left edge;
@@ -139,11 +140,12 @@
 /* Print keeps the stacked label-left / value-right rows (see CaseStageDates'
    `compact` variant): a rail that scrolls has no meaning on paper. */
 .case-dossier-courts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 8px; }
+/* The byline is a column of the facts card, divided off by a hairline (above
+   it on a phone, beside it from 901px), not a grey box inside the card. */
 .case-dossier-sidebar {
   min-width: 0;
-  padding: 20px;
-  border-radius: 20px;
-  background: hsl(var(--muted) / .45);
+  padding-top: 20px;
+  border-top: 1px solid hsl(var(--border) / .7);
   overflow-wrap: anywhere;
 }
 .case-dossier-sidebar:empty { display: none; }
@@ -155,6 +157,7 @@
 .case-dossier-sidebar .case-byline > .uppercase { text-transform: none; letter-spacing: normal; }
 @media (min-width: 901px) {
   .case-dossier:has(.case-byline) { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
+  .case-dossier-sidebar { padding: 0 0 0 32px; border-top: 0; border-left: 1px solid hsl(var(--border) / .7); }
 }
 @media (max-width: 600px) {
   .case-dossier-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }

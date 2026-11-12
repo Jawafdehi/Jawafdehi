@@ -53,7 +53,7 @@ const renderBanner = (caseData: CaseDetail) =>
   );
 
 describe("CaseDetailBanner short_description deck (#6)", () => {
-  it("keeps actions with the case record and all three contributors in the independent sidebar", () => {
+  it("puts the actions in the hero and all three contributors in the record's byline column", () => {
     const authors = Array.from({ length: 3 }, (_, index) => ({
       display_name: `Contributor ${index + 1}`, slug: `contributor-${index}`,
       title: "Caseworker", photo_url: "", has_public_page: false,
@@ -64,20 +64,22 @@ describe("CaseDetailBanner short_description deck (#6)", () => {
     /></MemoryRouter>);
     const main = screen.getByTestId("case-dossier-main");
     const sidebar = screen.getByTestId("case-dossier-sidebar");
-    expect(main.contains(screen.getByRole("button", { name: "Submit information" }))).toBe(true);
+    const action = screen.getByRole("button", { name: "Submit information" });
+    expect(main.contains(action)).toBe(false);
+    expect(action.compareDocumentPosition(main)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(sidebar.querySelectorAll('[data-testid="author-card"]')).toHaveLength(3);
     expect(main.querySelector('[data-testid="case-byline"]')).toBeNull();
     expect(screen.getByTestId("case-byline-published").compareDocumentPosition(screen.getByTestId("case-byline-authors"))).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it("keeps the hero and metadata in the same centered page-width column", () => {
+  it("keeps the hero and the record in the same page-width container", () => {
     renderBanner(makeCase());
 
-    expect(screen.getByTestId("case-detail-hero").className).toContain("max-w-[1400px]");
-    expect(screen.getByTestId("case-detail-metadata").className).toContain("max-w-[1400px]");
+    expect(screen.getByTestId("case-detail-hero").closest(".layout-container")).not.toBeNull();
+    expect(screen.getByTestId("case-detail-metadata").className).toContain("layout-container");
   });
 
-  it("keeps the image standalone and places the title in the readable content block below", () => {
+  it("keeps the image standalone, framed beside the title rather than under it", () => {
     const { container } = renderBanner(makeCase());
     const heroImage = screen.getByTestId("case-detail-hero-image");
     const title = screen.getByRole("heading", { name: "Test case title" });
@@ -85,8 +87,9 @@ describe("CaseDetailBanner short_description deck (#6)", () => {
     expect(heroImage.className).not.toContain("absolute");
     expect(heroImage.getAttribute("width")).toBe("1400");
     expect(container.querySelector("[class*='bg-gradient']")).toBeNull();
+    // The title comes first in reading order; the picture follows it.
     expect(screen.getByTestId("case-detail-hero").compareDocumentPosition(title)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
+      Node.DOCUMENT_POSITION_PRECEDING,
     );
   });
 

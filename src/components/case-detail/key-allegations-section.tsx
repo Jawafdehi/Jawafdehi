@@ -13,28 +13,21 @@ export function KeyAllegationsSection({
   aiGenerated = false,
 }: Readonly<KeyAllegationsSectionProps>) {
   return (
-    <section id="allegations" className="mb-12 scroll-mt-28 max-w-4xl">
+    <section id="allegations" className="mb-16 scroll-mt-28">
       <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
-      <div className="text-primary/75">
-        <ul className="space-y-6">
-          {allegations.map((allegation, index) => (
-            <li key={index} className="flex items-start gap-4">
-              <span className="mt-1 shrink-0 text-lg font-bold leading-7 text-accent">
-                {index + 1}.
-              </span>
-              <p className="font-paragraph measure-prose">
-                {allegation}
-              </p>
-            </li>
-          ))}
-          {allegations.length === 0 && (
-            <li className="text-base italic leading-7 text-primary/75">
-              {emptyLabel}
-            </li>
-          )}
-        </ul>
-      </div>
+      {/* A hairline list, numbers in the mono face the site uses for figures. */}
+      <ol className="divide-y divide-border/70 border-y border-border/70">
+        {allegations.map((allegation, index) => (
+          <li key={index} className="flex items-start gap-4 py-5 sm:gap-6">
+            <span className="mt-1 w-7 shrink-0 font-mono text-sm tabular-nums text-accent">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <p className="measure-prose text-lg leading-8 text-primary/85">{allegation}</p>
+          </li>
+        ))}
+        {allegations.length === 0 && <li className="py-5 text-lg leading-8 text-muted-foreground">{emptyLabel}</li>}
+      </ol>
     </section>
   );
 }

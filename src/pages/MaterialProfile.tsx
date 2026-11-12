@@ -2,19 +2,16 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
-  AlertCircle,
-  ArrowLeft,
   Download,
   ExternalLink,
   FileText,
 } from "@/components/icons";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { humanizeEntityType } from "@/utils/entity-helpers";
@@ -153,7 +150,17 @@ const HANDLED_KEYS = new Set([
 
 // ─── page ───────────────────────────────────────────────────────────────────
 
+const CRUMB =
+  "shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+// The content switcher: grey pills, the active one white.
+const TAB =
+  "rounded-full px-4 py-2 text-[15px] text-muted-foreground transition-colors data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm";
+// The aside's downloads and actions: one column of grey pills.
+const ASIDE_ACTION =
+  "h-auto min-h-11 w-full justify-start gap-3 rounded-full bg-muted px-5 py-2.5 text-left text-[15px] font-normal text-primary hover:bg-primary/[0.08] hover:text-primary active:scale-[0.98]";
+
 export default function MaterialProfile() {
+  const { t } = useTranslation();
   const params = useParams();
   const tail = params["*"] || "";
   const { data, isLoading, isError } = useQuery({
@@ -251,7 +258,7 @@ export default function MaterialProfile() {
   return (
     <main
       id="main-content"
-      className="min-h-screen bg-background py-8 md:py-12"
+      className="min-h-screen bg-background pb-20 pt-8 md:pt-12"
     >
       <Helmet>
         <title>{materialMetaTitle(displayName)}</title>
@@ -273,39 +280,47 @@ export default function MaterialProfile() {
       </Helmet>
 
       <div className="layout-container">
-        <div className="mb-8 flex items-center justify-between gap-2">
-          <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link
-              to={series ? `/materials/?series=${series.slug}` : "/materials/"}
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-              {series ? `Back to ${series.name.en}` : "Back to materials"}
-            </Link>
-          </Button>
-        </div>
+        <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+          <Link to="/" className={CRUMB}>
+            {t("nav.home")}
+          </Link>
+          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
+          <Link to="/materials/" className={CRUMB}>
+            {t("materialProfile.breadcrumb", "Documents")}
+          </Link>
+          {series ? (
+            <>
+              <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
+              <Link to={`/materials/?series=${series.slug}`} className={cn(CRUMB, "min-w-0 truncate")}>
+                {series.name.en}
+              </Link>
+            </>
+          ) : null}
+        </nav>
 
         {isError ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              This material could not be found in the Jawafdehi governance
-              archive.
-            </AlertDescription>
-          </Alert>
+          <EmptyState
+            kind="notFound"
+            title={t("materialProfile.notFoundTitle", "Document not found")}
+            description={t("materialProfile.notFoundLine", "This material could not be found in the Jawafdehi governance archive.")}
+          />
         ) : isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-12 w-4/5" />
-            <Skeleton className="h-80 w-full" />
+          <div className="mt-8 space-y-4">
+            <Skeleton className="h-7 w-32 rounded-full" />
+            <Skeleton className="h-14 w-4/5 rounded-xl" />
+            <Skeleton className="h-80 w-full rounded-[24px]" />
           </div>
         ) : data ? (
           <article>
-            <header>
-              <h1 className="font-archive-hero-title max-w-4xl">
+            <header className="mt-8 md:mt-10">
+              <span className="inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
+                {typeLabel}
+              </span>
+              <h1 className="font-home-display mt-5 max-w-4xl text-balance break-words text-4xl text-primary sm:text-5xl lg:text-[3.5rem] [:root[lang=en]_&]:leading-[1.06]">
                 {displayName}
               </h1>
               {name.ne && name.ne !== displayName ? (
-                <p className="mt-3 text-lg text-muted-foreground">{name.ne}</p>
+                <p className="mt-3 text-xl text-muted-foreground">{name.ne}</p>
               ) : null}
             </header>
 
@@ -322,17 +337,19 @@ export default function MaterialProfile() {
             >
               <section className="min-w-0">
                 <Tabs value={tab} onValueChange={setTab} id="material-content-tab">
-                  <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
+                  {/* A switcher only when there is something to switch to. */}
+                  {fullTextStr || contentSummary ? (
+                  <TabsList className="h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-full bg-muted p-1 [scrollbar-width:none]">
                     <TabsTrigger
                       value="summary"
-                      className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                      className={TAB}
                     >
                       Summary
                     </TabsTrigger>
                     {fullTextStr ? (
                       <TabsTrigger
                         value="text"
-                        className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                        className={TAB}
                       >
                         Document text
                       </TabsTrigger>
@@ -340,46 +357,47 @@ export default function MaterialProfile() {
                     {contentSummary ? (
                       <TabsTrigger
                         value="content"
-                        className="rounded-none border-b-2 border-transparent px-5 py-3 data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                        className={TAB}
                       >
                         Contents
                       </TabsTrigger>
                     ) : null}
                   </TabsList>
+                  ) : null}
 
                   <TabsContent value="summary" className="mt-0">
-                    <Card className="rounded-none border border-t-0 bg-background shadow-none">
-                      <div className="p-5 md:p-8">
+                    <div className={fullTextStr || contentSummary ? "pt-8" : undefined}>
+                      <div>
                         {descText ? (
-                          <p className="mb-6 max-w-3xl text-base leading-7 text-foreground">
+                          <p className="mb-8 max-w-3xl text-lg leading-8 text-primary/85">
                             {descText}
                           </p>
                         ) : null}
-                        <dl className="divide-y divide-border/70">
-                          <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
-                            <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">
+                        <dl className="divide-y divide-border/70 border-y border-border/70">
+                          <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
+                            <dt className="text-[15px] text-muted-foreground">
                               Type
                             </dt>
-                            <dd className="min-w-0 break-words text-foreground">
+                            <dd className="min-w-0 break-words text-base text-primary">
                               {typeLabel}
                             </dd>
                           </div>
                           {detailRows.map((row) => (
                             <div
                               key={row.label}
-                              className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4"
+                              className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6"
                             >
-                              <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">
+                              <dt className="text-[15px] text-muted-foreground">
                                 {row.label}
                               </dt>
-                              <dd className="min-w-0 break-words text-foreground">
+                              <dd className="min-w-0 break-words text-base text-primary">
                                 {isHttpUrl(row.value) ? (
                                   <a
                                     href={row.value}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title={decodedUrl(row.value)}
-                                    className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:no-underline"
+                                    className="inline-flex items-center gap-1 text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary"
                                   >
                                     {hostLabel(row.value)}
                                     <ExternalLink
@@ -394,17 +412,17 @@ export default function MaterialProfile() {
                             </div>
                           ))}
                           {data.identifier ? (
-                            <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
-                              <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">
+                            <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
+                              <dt className="text-[15px] text-muted-foreground">
                                 Identifier
                               </dt>
-                              <dd className="min-w-0 break-words text-foreground">
+                              <dd className="min-w-0 break-words text-base text-primary">
                                 {data.identifier}
                               </dd>
                             </div>
                           ) : null}
-                          <div className="grid gap-1 py-3 md:grid-cols-[190px_minmax(0,1fr)] md:gap-4">
-                            <dt className="font-semibold text-foreground underline decoration-dotted underline-offset-4">
+                          <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
+                            <dt className="text-[15px] text-muted-foreground">
                               Canonical ID
                             </dt>
                             <dd className="min-w-0 break-all font-mono text-xs text-muted-foreground">
@@ -413,22 +431,22 @@ export default function MaterialProfile() {
                           </div>
                         </dl>
                       </div>
-                    </Card>
+                    </div>
                   </TabsContent>
 
                   {fullTextStr ? (
                     <TabsContent value="text" className="mt-0">
-                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
-                        <p className="whitespace-pre-wrap break-words p-5 text-sm leading-7 text-foreground md:p-8">
+                      <div className="mt-6 rounded-[24px] border border-border/70 bg-surface">
+                        <p className="whitespace-pre-wrap break-words p-6 text-base leading-8 text-primary/85 md:p-8">
                           {fullTextStr}
                         </p>
-                      </Card>
+                      </div>
                     </TabsContent>
                   ) : null}
 
                   {contentSummary ? (
                     <TabsContent value="content" className="mt-0">
-                      <Card className="rounded-none border border-t-0 bg-background shadow-none">
+                      <div className="mt-6 overflow-hidden rounded-[24px] border border-border/70 bg-surface">
                         {focusedTable ? (
                           <TableFocusView
                             tail={tail}
@@ -458,36 +476,32 @@ export default function MaterialProfile() {
                             summary={contentSummary}
                           />
                         </div>
-                      </Card>
+                      </div>
                     </TabsContent>
                   ) : null}
                 </Tabs>
               </section>
 
               {focused ? null : (
-              <aside className="space-y-8 lg:sticky lg:top-24">
+              <aside className="space-y-8 lg:sticky lg:top-28">
                 <section aria-labelledby="material-downloads-heading">
-                  <h2
-                    id="material-downloads-heading"
-                    className="text-lg font-semibold text-foreground"
-                  >
+                  <h2 id="material-downloads-heading" className="text-[15px] text-muted-foreground">
                     Downloads
                   </h2>
-                  <Separator className="mt-3" />
 
                   {/* `grid`, not `inline-grid`: an inline grid sizes itself to
                       its widest child, so these buttons were as wide as the
                       longest label while the transcript button below was
                       `w-full`. Every action in this list is now one column of
                       the aside, so they match whatever the labels say. */}
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-3 grid gap-2">
                     {links.map((link) =>
                     link.previewType ? (
                         <Button
                           key={link.href}
                           type="button"
                           variant="ghost"
-                          className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                          className={ASIDE_ACTION}
                           onClick={() =>
                             setPreviewDocument({
                               title: displayName,
@@ -507,7 +521,7 @@ export default function MaterialProfile() {
                         asChild
                         key={link.href}
                         variant="ghost"
-                        className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                        className={ASIDE_ACTION}
                       >
                         <a href={link.href} target="_blank" rel="noopener noreferrer">
                           <ExternalLink
@@ -522,7 +536,7 @@ export default function MaterialProfile() {
                           asChild
                           key={link.href}
                           variant="ghost"
-                          className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                          className={ASIDE_ACTION}
                         >
                           <a
                             href={link.href}
@@ -542,7 +556,7 @@ export default function MaterialProfile() {
                       <Button
                         asChild
                         variant="ghost"
-                        className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                        className={ASIDE_ACTION}
                       >
                         <a
                           href={data.url}
@@ -566,7 +580,7 @@ export default function MaterialProfile() {
                       <Button
                         type="button"
                         variant="ghost"
-                        className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
+                        className={ASIDE_ACTION}
                         onClick={() => setTranscriptOpen(true)}
                       >
                         <FileText
@@ -586,22 +600,18 @@ export default function MaterialProfile() {
                 </section>
 
                 <section aria-labelledby="material-actions-heading">
-                  <h2
-                    id="material-actions-heading"
-                    className="text-lg font-semibold text-foreground"
-                  >
+                  <h2 id="material-actions-heading" className="text-[15px] text-muted-foreground">
                     Actions
                   </h2>
-                  <Separator className="mt-3" />
 
-                  <div className="mt-4 inline-grid gap-2">
+                  <div className="mt-3 grid gap-2">
                     {tail ? (
                       <ViewJsonButton
                         data={data}
                         title={`${displayName} — JSON-LD`}
                         rawUrl={`${API_BASE_URL}/api/materials/${tail}`}
                         variant="ghost"
-                        className="h-11 justify-start gap-3 px-4"
+                        className={ASIDE_ACTION}
                       />
                     ) : null}
                     <ShareButton
@@ -611,7 +621,7 @@ export default function MaterialProfile() {
                       variant="ghost"
                       size="default"
                       showLabel
-                      className="h-11 justify-start gap-3 px-4 [&_span]:!mt-0 [&_span]:!inline"
+                      className={cn(ASIDE_ACTION, "[&_span]:!mt-0 [&_span]:!inline")}
                     />
                   </div>
                 </section>

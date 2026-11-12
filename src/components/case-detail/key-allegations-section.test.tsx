@@ -18,7 +18,7 @@ describe("KeyAllegationsSection", () => {
     const markers = Array.from(container.querySelectorAll("li > span")).map(
       (span) => span.textContent?.trim(),
     );
-    expect(markers).toEqual(["1.", "2."]);
+    expect(markers).toEqual(["01", "02"]);
     expect(container.textContent).not.toContain("#");
     expect(container.textContent).toContain("First allegation");
     expect(container.textContent).toContain("Second allegation");

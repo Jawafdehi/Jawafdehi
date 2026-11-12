@@ -1,5 +1,6 @@
 
 import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { CaseSectionHeading } from "@/components/case-detail/case-section-heading";
 
 interface MissingDetailsSectionProps {
   html: string | null | undefined;
@@ -13,11 +14,9 @@ export function MissingDetailsSection({
   if (!html) return null;
 
   return (
-    <section id="missing-details" className="mb-6 scroll-mt-28 border-t border-border pt-5 max-w-4xl">
-      <h2 className="font-subsection-title mb-4 flex items-center">
-        {title}
-      </h2>
-      <div className="font-paragraph measure-prose overflow-hidden">
+    <section id="missing-details" className="mb-16 scroll-mt-28">
+      <CaseSectionHeading>{title}</CaseSectionHeading>
+      <div className="measure-prose overflow-hidden text-lg leading-8 text-primary/85">
         <ResponsiveTable html={html} />
       </div>
     </section>

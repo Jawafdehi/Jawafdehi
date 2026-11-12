@@ -335,27 +335,28 @@ const CaseDetail = () => {
   }
 
   if (isLoading) {
+    // The shape of the page to come: the hero's pills, title and picture, then
+    // the facts card, so nothing jumps when the case arrives.
     return (
-      <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-        <div className="flex-1 py-6 md:py-12">
-          <div className="layout-container max-w-5xl">
-            <Skeleton className="mb-6 h-10 w-32" />
-
-            <div className="space-y-8">
-              <div>
-                <Skeleton className="mb-4 h-8 w-3/4" />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                </div>
+      <div className="flex min-h-screen flex-col overflow-x-clip bg-background" aria-busy="true">
+        <div className="layout-container pt-8 md:pt-12 lg:pl-24 min-[1536px]:pl-8">
+          <Skeleton className="h-4 w-48" />
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
+            <div className="space-y-5">
+              <div className="flex gap-2">
+                <Skeleton className="h-7 w-24 rounded-full" />
+                <Skeleton className="h-7 w-28 rounded-full" />
               </div>
-
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-12 w-11/12 rounded-xl" />
+              <Skeleton className="h-12 w-3/4 rounded-xl" />
+              <div className="flex gap-3 pt-2">
+                <Skeleton className="h-11 w-48 rounded-full" />
+                <Skeleton className="h-11 w-32 rounded-full" />
+              </div>
             </div>
+            <Skeleton className="aspect-[16/9] w-full rounded-[20px]" />
           </div>
+          <Skeleton className="mt-10 h-56 w-full rounded-[24px] md:mt-12" />
         </div>
       </div>
     );
@@ -364,25 +365,25 @@ const CaseDetail = () => {
   if (isError || !caseData) {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-        <div className="flex-1 py-6 md:py-12">
-          <div className="layout-container max-w-5xl">
-            <Button variant="ghost" asChild className="mb-6">
-              <Link to="/search?type=case">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+        <div className="layout-container flex-1">
+          <EmptyState
+            kind={isError ? "couldNotLoad" : "notFound"}
+            title={isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
+            description={
+              isError
+                ? t("caseDetail.failedToLoadLine", "Something went wrong on our side. Please try again in a moment.")
+                : t("caseDetail.notFoundLine", "It may have been moved or the link may be mistyped. Search the archive for it.")
+            }
+            actions={
+              <Link
+                to="/search?type=case"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 {t("caseDetail.backToCases")}
               </Link>
-            </Button>
-
-            <EmptyState
-              kind={isError ? "couldNotLoad" : "notFound"}
-              title={isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
-              description={
-                isError
-                  ? t("caseDetail.failedToLoadLine", "Something went wrong on our side. Please try again in a moment.")
-                  : t("caseDetail.notFoundLine", "It may have been moved or the link may be mistyped. Search the archive for it.")
-              }
-            />
-          </div>
+            }
+          />
         </div>
       </div>
     );
@@ -474,7 +475,7 @@ const CaseDetail = () => {
         }}
       />
 
-      <div className="flex-1 py-6 sm:py-8">
+      <div className="flex-1 pb-20 pt-10 md:pt-12">
         {/* lg:pl-24 reserves the left gutter the FloatingShareSidebar occupies.
             The rail is `fixed left-4` and 58px wide, so its right edge is at
             x=74 at EVERY width, while this container is capped at 1400px and
@@ -663,7 +664,9 @@ const CaseDetail = () => {
 
                 <Separator className="mb-8 hidden print:block" />
 
-                <div className="grid min-w-0 gap-6 print:block lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-12">
+                {/* The reading pages' body (see ReadingLayout): "on this page" in
+                    a 13rem column, the text at most 52rem wide beside it. */}
+                <div className="grid min-w-0 gap-6 print:block lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-x-16">
                   <aside className="hidden lg:block min-w-0 lg:col-start-1 lg:row-start-1">
                     <CaseSectionJumpNav
                       activeSection={activeSection}
@@ -672,7 +675,7 @@ const CaseDetail = () => {
                     />
                   </aside>
 
-                  <div className="min-w-0 w-full max-w-6xl lg:col-start-2 lg:pl-8 xl:pl-24">
+                  <div className="min-w-0 w-full max-w-[52rem] lg:col-start-2">
                     {/* Reveal entrances, one per section: fades + lifts as each
                         enters the viewport. Inert during pre-render/no-JS/
                         prefers-reduced-motion (content simply renders visible),

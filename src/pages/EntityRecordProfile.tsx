@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "@/components/icons";
+import { AlertTriangle, ArrowUpRight } from "@/components/icons";
 
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath, isEntityRecordTail } from "@/lib/entity-links";
@@ -15,8 +15,7 @@ import { EntityAvatar } from "@/components/EntityAvatar";
 import { EntityRelatedCases } from "@/components/EntityRelatedCases";
 import NotFound from "./NotFound";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 
@@ -184,11 +183,14 @@ const imageUrlOf = (rec: EntityRecord | undefined): string | undefined =>
   entityImageUrl(rec as Record<string, unknown> | undefined);
 
 // One fact in the About panel: small caps label over the value.
+const LINK_PILL =
+  "inline-flex h-10 items-center gap-1.5 rounded-full bg-muted px-4 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100";
+
 function Fact({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
     <div>
-      <dt className="font-meta uppercase tracking-wide">{label}</dt>
-      <dd className="mt-1 break-words text-sm text-foreground">{children}</dd>
+      <dt className="text-[15px] text-muted-foreground">{label}</dt>
+      <dd className="mt-1 break-words text-base text-primary">{children}</dd>
     </div>
   );
 }
@@ -200,7 +202,7 @@ function RelationFact({ label, refObj }: Readonly<{ label: string; refObj?: Json
   return (
     <Fact label={label}>
       {path ? (
-        <Link to={path} className="text-primary underline underline-offset-2 hover:no-underline">
+        <Link to={path} className="text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary">
           {iriLabel(iri)}
         </Link>
       ) : (
@@ -226,7 +228,7 @@ export default function EntityRecordProfile() {
   // page agree — otherwise the body would show an entity page's error state
   // under a 404.
   const isRecord = isEntityRecordTail(tail);
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["entity-record", tail],
     queryFn: async () => {
       const res = await http.get<EntityRecord>(`/api/entities/${tail}`);
@@ -333,7 +335,7 @@ export default function EntityRecordProfile() {
   if (!isRecord) return <NotFound />;
 
   return (
-    <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
+    <main id="main-content" className="min-h-screen bg-background pb-20 pt-8 md:pt-12">
       <Seo
         title={`${displayName} | Jawafdehi Entity Registry`}
         description={
@@ -353,141 +355,155 @@ export default function EntityRecordProfile() {
       />
 
       <div className="layout-container">
-        <div className="mb-6 flex items-center justify-between gap-2">
-          <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link to="/search?type=entity">
-              <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-              Back to entities
-            </Link>
-          </Button>
-        </div>
+        <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+          <Link to="/" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {t("nav.home")}
+          </Link>
+          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
+          <Link to="/search?type=entity" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {t("entityDetail.breadcrumb", "People & organizations")}
+          </Link>
+          {data ? (
+            <>
+              <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
+              <span className="min-w-0 truncate text-primary/80">{displayName}</span>
+            </>
+          ) : null}
+        </nav>
 
         {isError ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>This entity could not be found in the registry.</AlertDescription>
-          </Alert>
+          (error as { response?: { status?: number } } | null)?.response?.status === 404 ? (
+            <EmptyState
+              kind="notFound"
+              title={t("entityDetail.notFoundTitle", "Not in the registry")}
+              description={t("entityDetail.notFoundLine", "This person or organization could not be found in the registry.")}
+            />
+          ) : (
+            <EmptyState
+              kind="couldNotLoad"
+              title={t("entityDetail.errorTitle", "This profile didn't load")}
+              description={t("entityDetail.errorLine", "Something went wrong on our side. Please try again in a moment.")}
+            />
+          )
         ) : isLoading ? (
-          <div className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] xl:gap-14" aria-busy="true">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+          <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:gap-16" aria-busy="true">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
               <Skeleton className="h-32 w-32 shrink-0 rounded-full" />
               <div className="w-full space-y-3">
-                <Skeleton className="h-8 w-4/5" />
+                <Skeleton className="h-12 w-4/5 rounded-xl" />
                 <Skeleton className="h-5 w-1/2" />
               </div>
             </div>
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-[4.5rem] w-full rounded-xl" />
-              <Skeleton className="h-[4.5rem] w-full rounded-xl" />
+            <div className="space-y-3">
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="h-24 w-full rounded-[20px]" />
+              <Skeleton className="h-24 w-full rounded-[20px]" />
             </div>
           </div>
         ) : data ? (
-          <article>
-            <div className="grid items-start gap-10 lg:grid-cols-[3fr_2fr] xl:gap-14">
-              {/* Identity + details take the left 60%: avatar beside the name, the
-                  facts (when there are any beyond the type, which the identity
-                  line already states), and the actions. */}
-              <div className="min-w-0 space-y-8">
-                <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+          <article className="mt-8 md:mt-10">
+            <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:gap-16">
+              {/* Identity and details on the left: the portrait beside the name
+                  in the display face, what it is and since when, the two
+                  actions as pills; then the description, the facts card and
+                  the registry footnote. */}
+              <div className="min-w-0">
+                <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
                   <EntityAvatar kind={kind} src={imageUrl} size="xl" />
                   <div className="min-w-0">
-                    <h1 className="font-archive-section-title text-balance break-words">{displayName}</h1>
+                    <h1 className="font-home-display text-balance break-words text-4xl text-primary sm:text-5xl [:root[lang=en]_&]:leading-[1.08]">
+                      {displayName}
+                    </h1>
                     {name.ne && name.ne !== displayName ? (
-                      <p className="mt-2 text-lg text-muted-foreground">{name.ne}</p>
+                      <p className="mt-2 text-xl text-muted-foreground">{name.ne}</p>
                     ) : null}
                     <p className="mt-3 text-base text-muted-foreground">{identity.join(" · ")}</p>
                     {aliases.length > 0 ? (
-                      <p className="mt-1 text-sm text-muted-foreground">Also known as {aliases.join(", ")}</p>
+                      <p className="mt-1 text-[15px] text-muted-foreground">Also known as {aliases.join(", ")}</p>
                     ) : null}
                   </div>
                 </header>
 
+                <div className="mt-7 flex flex-wrap items-center gap-2 [&_a]:rounded-full [&_button]:rounded-full">
+                  {tail ? (
+                    <ViewJsonButton
+                      data={data}
+                      title={`${displayName} — JSON-LD`}
+                      rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
+                      variant="outline"
+                      className="h-11 gap-2.5 border-border px-5 active:scale-[0.97]"
+                    />
+                  ) : null}
+                  <ShareButton
+                    url={data["@id"]}
+                    title={displayName}
+                    description={descText}
+                    variant="ghost"
+                    size="default"
+                    showLabel
+                    className="h-11 gap-2.5 bg-muted px-5 hover:bg-primary/[0.08] active:scale-[0.97] [&_span]:!mt-0 [&_span]:!inline"
+                  />
+                </div>
+
                 {blacklisted ? (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>Blacklisted / debarred.</strong> {debarmentSummary()}
-                    </AlertDescription>
-                  </Alert>
+                  <div role="alert" className="mt-8 flex items-start gap-3 rounded-2xl bg-accent/[0.06] px-5 py-4">
+                    <AlertTriangle className="mt-1 h-[18px] w-[18px] shrink-0 text-accent" aria-hidden="true" />
+                    <p className="text-[15px] leading-7 text-primary">
+                      <strong className="font-medium text-accent">Blacklisted / debarred.</strong> {debarmentSummary()}
+                    </p>
+                  </div>
                 ) : null}
 
-                {descText ? <p className="max-w-3xl text-lg leading-8 text-foreground">{descText}</p> : null}
+                {descText ? <p className="mt-8 max-w-3xl text-lg leading-8 text-primary/85">{descText}</p> : null}
 
                 {hasFacts ? (
-                  <section aria-labelledby="entity-about-heading" className="rounded-2xl bg-muted/50 p-5">
-                    <h2 id="entity-about-heading" className="text-lg font-semibold text-foreground">
+                  <section
+                    aria-labelledby="entity-about-heading"
+                    className="mt-10 rounded-[24px] border border-border/70 bg-surface p-6 md:p-8"
+                  >
+                    <h2 id="entity-about-heading" className="font-home-display text-2xl text-primary md:text-[1.75rem]">
                       About
                     </h2>
-                    {facts.length > 0 ? <dl className="mt-4 grid gap-4 sm:grid-cols-2">{facts}</dl> : null}
+                    {facts.length > 0 ? <dl className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2">{facts}</dl> : null}
                     {hasLinks ? (
-                      <div className="mt-5 flex flex-wrap gap-2">
+                      <div className="mt-7 flex flex-wrap gap-2">
                         {data.url ? (
-                          <Button asChild variant="outline" size="sm">
-                            <a href={data.url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                              Official website
-                            </a>
-                          </Button>
+                          <a href={data.url} target="_blank" rel="noopener noreferrer" className={LINK_PILL}>
+                            Official website
+                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                          </a>
                         ) : null}
                         {data.sameAs ? (
-                          <Button asChild variant="outline" size="sm">
-                            <a href={data.sameAs} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                              Wikidata
-                            </a>
-                          </Button>
+                          <a href={data.sameAs} target="_blank" rel="noopener noreferrer" className={LINK_PILL}>
+                            Wikidata
+                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                          </a>
                         ) : null}
                       </div>
                     ) : null}
                   </section>
                 ) : null}
 
-                <section aria-labelledby="entity-actions-heading">
-                  <h2 id="entity-actions-heading" className="text-lg font-semibold text-foreground">
-                    Actions
-                  </h2>
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    {tail ? (
-                      <ViewJsonButton
-                        data={data}
-                        title={`${displayName} — JSON-LD`}
-                        rawUrl={`${API_BASE_URL}/api/entities/${tail}`}
-                        variant="outline"
-                        className="h-11 gap-3 px-4"
-                      />
-                    ) : null}
-                    <ShareButton
-                      url={data["@id"]}
-                      title={displayName}
-                      description={descText}
-                      variant="ghost"
-                      size="default"
-                      showLabel
-                      className="h-11 gap-3 px-4 [&_span]:!mt-0 [&_span]:!inline"
-                    />
-                  </div>
-                </section>
-
-                <section aria-labelledby="entity-record-heading" className="text-xs leading-5 text-muted-foreground">
-                  <h2 id="entity-record-heading" className="font-meta uppercase tracking-wide">
+                <section
+                  aria-labelledby="entity-record-heading"
+                  className="mt-10 border-t border-border/70 pt-6 text-sm leading-6 text-muted-foreground"
+                >
+                  <h2 id="entity-record-heading" className="text-[15px] text-primary">
                     Record
                   </h2>
-                  <p className="mt-2">
+                  <p className="mt-2 max-w-2xl">
                     Jawafdehi entity registry — a public registry of Nepal&apos;s people, organizations, and places.
                     {created ? ` Created ${created}.` : ""}
                     {revision ? ` Revision ${revision}` : ""}
                   </p>
-                  <p className="mt-2 break-all font-mono">{data["@id"]}</p>
+                  <p className="mt-2 break-all font-mono text-[13px]">{data["@id"]}</p>
                 </section>
               </div>
 
-              {/* Right 40%: the cases. On desktop the column is pinned where it
-                  first sits (under the 76px header, the page padding and the back
-                  link row — 11.25rem) and capped to the viewport with a 2rem
-                  margin, so it never runs below the fold; the heading stays and
-                  only the list scrolls. */}
-              <div className="min-w-0 lg:sticky lg:top-[11.25rem] lg:flex lg:max-h-[calc(100vh-13.25rem)] lg:flex-col">
+              {/* Right: the cases. On desktop the column is pinned where it
+                  first sits and capped to the viewport, so it never runs below
+                  the fold; the heading stays and only the list scrolls. */}
+              <div className="min-w-0 lg:sticky lg:top-28 lg:flex lg:max-h-[calc(100vh-9rem)] lg:flex-col">
                 {data["@id"] ? <EntityRelatedCases entityIri={data["@id"]} className="lg:min-h-0" /> : null}
               </div>
             </div>

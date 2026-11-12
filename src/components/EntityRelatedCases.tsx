@@ -85,8 +85,8 @@ export function EntityRelatedCases({
     return (
       <section aria-busy="true" className="space-y-3">
         <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-[4.5rem] w-full rounded-xl" />
-        <Skeleton className="h-[4.5rem] w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-[20px]" />
+        <Skeleton className="h-24 w-full rounded-[20px]" />
       </section>
     );
   }
@@ -115,10 +115,10 @@ export function EntityRelatedCases({
     // the heading and the "more" line stay put.
     <section aria-labelledby="related-cases-heading" className={cn("flex min-h-0 flex-col", className)}>
       <div className="flex shrink-0 items-baseline justify-between gap-3">
-        <h2 id="related-cases-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="related-cases-heading" className="font-home-display text-2xl text-primary md:text-[1.75rem]">
           {t("entityDetail.relatedCases")}
         </h2>
-        <span className="text-sm font-medium text-muted-foreground">
+        <span className="font-mono text-sm tabular-nums text-muted-foreground">
           {data.count} {t(data.count === 1 ? "entityDetail.caseOne" : "entityDetail.cases").toLowerCase()}
         </span>
       </div>
@@ -144,13 +144,13 @@ export function EntityRelatedCases({
           <Helmet>
             <meta name="robots" content="noindex, follow" />
           </Helmet>
-          <p className="mt-4 rounded-xl bg-muted/50 p-5 text-sm text-muted-foreground">
+          <p className="mt-5 rounded-[20px] border border-dashed border-border px-5 py-6 text-[15px] leading-7 text-muted-foreground">
             {t("entityDetail.noRelatedCases")}
           </p>
         </>
       ) : null}
 
-      <ul className="mt-4 min-h-0 space-y-4 overflow-y-auto pr-1 [scrollbar-width:thin]">
+      <ul className="mt-5 min-h-0 space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
         {cases.map((c) => {
           const { role, outcome } = roleFor(c, entityIri);
           const accused = isAccusedTier(role);
@@ -182,14 +182,15 @@ export function EntityRelatedCases({
           const row = (
             <div
               className={cn(
-                "group flex items-start gap-3 rounded-xl border bg-card p-5 transition-colors hover:bg-muted/40",
-                accused && "border-l-4 border-l-accent",
+                // Hairline cards; an accused role is marked by its crimson
+                // pill, not by a heavy left bar.
+                "group flex items-start gap-3 rounded-[20px] border border-border/70 bg-surface p-5 transition-[border-color,background-color] duration-200 ease-out hover:border-primary/25",
               )}
             >
               {/* Title leads: it is what a reader scans for. The role/verdict
                   badges and the type · date · amount meta sit under it. */}
               <div className="min-w-0 flex-1 space-y-3">
-                <h3 className="line-clamp-2 text-base font-semibold leading-snug text-primary group-hover:underline">
+                <h3 className="line-clamp-2 text-[17px] leading-snug text-primary">
                   {c.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
@@ -221,16 +222,16 @@ export function EntityRelatedCases({
                       {appealWithForumLabel(appeal, language)}
                     </Badge>
                   ) : null}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[13px] text-muted-foreground">
                     {[typeLabel, date].filter(Boolean).join(" · ")}
                   </span>
                 </div>
                 {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
                     amount — a missing bigo is not a zero-rupee case. */}
                 {c.bigo ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[13px] text-muted-foreground">
                     <span>{t("caseCard.bigo")}: </span>
-                    <span className="font-medium tabular-nums text-foreground">
+                    <span className="font-mono tabular-nums text-accent">
                       {formatBigo(c.bigo)}
                     </span>
                   </p>
@@ -238,7 +239,7 @@ export function EntityRelatedCases({
               </div>
               {href ? (
                 <ArrowRight
-                  className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                  className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5"
                   aria-hidden="true"
                 />
               ) : null}
@@ -250,7 +251,7 @@ export function EntityRelatedCases({
               {href ? (
                 <Link
                   to={href}
-                  className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="block rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {row}
                 </Link>

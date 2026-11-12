@@ -409,11 +409,10 @@
      the per-locale headline pin rather than a hardcoded serif. Sized like
      .font-subsection-title but bolded — Vesper reads lighter than the sans at
      equal weight, and the Nepali locale is the one this role was tuned on. */
+  /* Kept as a hook for print.css; the face and size now come from
+     .font-home-display on CaseSectionHeading, the reading pages' heading. */
   .font-case-section-title {
-    @apply text-xl font-bold text-primary md:text-2xl;
-    font-family: var(--font-family-heading);
-    letter-spacing: var(--font-heading-tracking);
-    line-height: var(--font-heading-leading);
+    line-height: 1.15;
   }
 
   .content-prose h2 {

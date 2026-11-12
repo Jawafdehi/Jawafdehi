@@ -103,7 +103,7 @@ export function CaseTimelineSection({
   return (
     <section
       id="timeline"
-      className={cn("scroll-mt-28 no-page-break max-w-4xl", className)}
+      className={cn("scroll-mt-28 no-page-break", className)}
       aria-label={title}
     >
       {/* Heading sits outside the collapsible: it is the section's label, not
