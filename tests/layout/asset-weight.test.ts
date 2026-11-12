@@ -254,7 +254,7 @@ describe('touch target sizes', () => {
     // /search fired the list button.
     for (const [file, marker] of [
       ['pages/Cases.tsx', 'flex gap-1 border rounded-md'],
-      ['pages/ArchiveSearch.tsx', 'flex items-center gap-1 rounded-full border p-0.5'],
+      ['pages/ArchiveSearch.tsx', 'flex items-center gap-1 rounded-full bg-muted p-1'],
     ]) {
       expect(readFileSync(resolve(SRC, file), 'utf8'), `${file} lost the toggle gap`).toContain(marker);
     }

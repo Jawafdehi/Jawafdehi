@@ -361,7 +361,7 @@ describe("ArchiveSearch", () => {
     const grid = tablist.parentElement!.parentElement!;
 
     expect(results.parentElement).toBe(grid);
-    expect(grid.className).toContain("lg:grid-cols-[250px_minmax(0,1fr)]");
+    expect(grid.className).toContain("lg:grid-cols-[300px_minmax(0,1fr)]");
     expect(tablist.parentElement!.className).toContain("lg:col-start-2");
     expect(tablist.parentElement!.className).toContain("lg:row-start-1");
     expect(results.className).toContain("lg:row-start-2");

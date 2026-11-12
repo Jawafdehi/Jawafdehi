@@ -144,7 +144,7 @@ export function DateRangeFilter({
 
   return (
     <fieldset aria-labelledby={labelId} className="min-w-0">
-      <legend className="mb-2 text-sm font-semibold text-foreground" id={labelId}>
+      <legend className="mb-2 text-sm text-muted-foreground" id={labelId}>
         {t("archiveSearch.filters.date", "Record date")}
       </legend>
 

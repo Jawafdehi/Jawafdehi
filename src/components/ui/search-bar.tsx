@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
       <div className={cn("relative w-full", className)}>
         <Search
           aria-hidden="true"
-          className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground"
         />
         <Input
           ref={ref}
@@ -48,7 +48,9 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
             // h-12 it was taller than every button beside it. py-0: with the
             // Input's py-2 the text box is taller than the line, and the text
             // sat at its top; with no padding the browser centres it.
-            "h-10 rounded-full py-0 pl-10",
+            // A white pill on a hairline border, the redesign's input shape;
+            // focus shows as a soft accent ring rather than a hard outline.
+            "h-10 rounded-full border-border/70 bg-surface py-0 pl-11 text-base shadow-none transition-colors placeholder:text-muted-foreground/80 hover:border-border focus-visible:border-primary/30 focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:ring-offset-0",
             !showSubmit ? "pr-4" : hasSubmitText ? "pr-36 sm:pr-44" : "pr-12",
             inputClassName,
           )}
@@ -58,13 +60,13 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           <Button
             aria-label={submitLabel}
             className={cn(
-              "absolute right-1 top-1/2 -translate-y-1/2 rounded-full",
+              "absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-primary-surface text-primary-foreground hover:bg-primary-surface/90",
               hasSubmitText ? "h-8 px-4 sm:min-w-[9rem]" : "h-8 w-8 p-0",
               buttonClassName,
             )}
             type="submit"
           >
-            {submitText || <Search aria-hidden="true" className="h-4 w-4" />}
+            {submitText || <ArrowRight aria-hidden="true" className="h-4 w-4" />}
           </Button>
         ) : null}
       </div>

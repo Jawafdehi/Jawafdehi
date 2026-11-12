@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
 import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
+import { ArchiveBento } from "@/components/home/archive-bento";
 import { ArchiveFigures } from "@/components/home/archive-figures";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Reveal } from "@/components/ui/reveal";
@@ -105,6 +106,7 @@ const Index = () => {
 
       <div className="flex-1">
         <Hero />
+        <ArchiveBento casesDocumented={getStatValue(stats?.published_cases)} />
         <ArchiveFigures
           casesDocumented={getStatValue(stats?.published_cases)}
           totalBigo={getStatValue(stats?.total_bigo, formatBigo)}

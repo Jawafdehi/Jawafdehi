@@ -472,10 +472,10 @@ export default function ArchiveSearch({
         */}
         <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
           <div className="max-w-3xl">
-            <h1 className="mt-3 text-3xl font-extrabold text-primary md:text-4xl">
+            <h1 className="font-home-display mt-3 text-4xl text-primary md:text-[3.25rem]">
               {heading || t("archiveSearch.heading", "Archive Search")}
             </h1>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
+            <p className="mt-3 max-w-2xl text-lg leading-snug text-muted-foreground">
               {description ||
                 t(
                   "archiveSearch.description",
@@ -484,7 +484,7 @@ export default function ArchiveSearch({
             </p>
           </div>
           <Link
-            className="group mt-3 inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            className="group mt-5 inline-flex shrink-0 items-center gap-2 text-base text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
             to="/data-quality"
           >
             <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -539,7 +539,8 @@ export default function ArchiveSearch({
             <div
               aria-label={t("archiveSearch.viewMode", "View mode")}
               className={cn(
-                "flex items-center gap-1 rounded-full border p-0.5",
+                // A segmented pill: a grey track, the current view a white pill.
+                "flex items-center gap-1 rounded-full bg-muted p-1",
                 // Materials render rows only (see effectiveViewMode above).
                 selectedRecordType === "material" && "hidden",
               )}
@@ -550,32 +551,46 @@ export default function ArchiveSearch({
               <Button
                 aria-label={t("archiveSearch.cardView", "Card view")}
                 aria-pressed={viewMode === "card"}
-                className="h-9 w-9 rounded-full"
+                className={cn(
+                  "h-8 w-8 rounded-full shadow-none",
+                  viewMode === "card" ? "bg-surface text-primary hover:bg-surface" : "text-muted-foreground hover:bg-transparent hover:text-primary",
+                )}
                 onClick={() => setViewMode("card")}
                 size="icon"
                 type="button"
-                variant={viewMode === "card" ? "secondary" : "ghost"}
+                variant="ghost"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
               <Button
                 aria-label={t("archiveSearch.listView", "List view")}
                 aria-pressed={viewMode === "list"}
-                className="h-9 w-9 rounded-full"
+                className={cn(
+                  "h-8 w-8 rounded-full shadow-none",
+                  viewMode === "list" ? "bg-surface text-primary hover:bg-surface" : "text-muted-foreground hover:bg-transparent hover:text-primary",
+                )}
                 onClick={() => setViewMode("list")}
                 size="icon"
                 type="button"
-                variant={viewMode === "list" ? "secondary" : "ghost"}
+                variant="ghost"
               >
                 <List className="h-4 w-4" />
               </Button>
             </div>
-            <label className="text-sm font-semibold text-muted-foreground" htmlFor="archive-sort">
+            <label className="sr-only" htmlFor="archive-sort">
               {t("archiveSearch.sort", "Sort")}
             </label>
             <Select onValueChange={(sort) => updateFilter("sort", sort)} value={params.sort}>
-              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-full px-4 sm:w-[160px] sm:flex-none" id="archive-sort">
-                <SelectValue />
+              <SelectTrigger
+                className="h-10 min-w-0 flex-1 gap-2 rounded-full border-border/70 bg-surface px-4 text-base shadow-none hover:border-border sm:w-[200px] sm:flex-none"
+                id="archive-sort"
+              >
+                <span aria-hidden="true" className="text-muted-foreground">
+                  {t("archiveSearch.sort", "Sort")}
+                </span>
+                <span className="mr-auto min-w-0 truncate text-primary">
+                  <SelectValue />
+                </span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="featured">Featured</SelectItem>
@@ -632,7 +647,7 @@ export default function ArchiveSearch({
         <div
           className={cn(
             "mt-5 grid items-start gap-x-7 gap-y-4 lg:mt-7",
-            showFilters && "lg:grid-cols-[250px_minmax(0,1fr)]",
+            showFilters && "lg:grid-cols-[300px_minmax(0,1fr)]",
             tabsAndFilters && "lg:grid-rows-[auto_minmax(0,1fr)]",
           )}
         >
@@ -899,10 +914,10 @@ function readParams(
 // the row with a 250px filter sidebar, so three columns there would be ~235px
 // each. At `xl` they are ~299px and by 1440px ~339px, which is the width
 // /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
-const cardGridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
+const cardGridClass = "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3";
 // Entity hits are compact avatar cards (see EntityResultCard), so a page of them
 // sits four across where the richer case cards need three.
-const entityCardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+const entityCardGridClass = "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 function ArchiveSearchResults({
   data,

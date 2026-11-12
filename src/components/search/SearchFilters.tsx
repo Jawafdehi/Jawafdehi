@@ -125,10 +125,10 @@ export function SearchFilters({
   return (
     <aside
       aria-label="Archive search filters"
-      className="space-y-4 rounded-xl bg-card p-4"
+      className="space-y-5 rounded-[22px] bg-muted p-5"
     >
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-sm font-bold tracking-tight text-foreground">
+        <h2 className="text-base text-primary">
           Filters
         </h2>
         <Button className="h-11 px-3 text-xs" onClick={onClear} variant="ghost">
@@ -275,7 +275,7 @@ export function SearchFiltersSkeleton({
   return (
     <aside
       aria-hidden="true"
-      className="space-y-4 rounded-xl bg-card p-4"
+      className="space-y-5 rounded-[22px] bg-muted p-5"
     >
       <div className="flex h-8 items-center justify-between gap-4">
         <Skeleton className="h-4 w-14" />
@@ -412,7 +412,7 @@ function FilterGroup({
     // min-w-0: <fieldset> defaults to min-width:min-content and ignores width
     // constraints, so a long facet name would overflow the viewport on mobile.
     <fieldset className="min-w-0 space-y-2">
-      <legend className="mb-1.5 text-sm font-semibold text-foreground">
+      <legend className="mb-1.5 text-sm text-muted-foreground">
         {title}
       </legend>
 

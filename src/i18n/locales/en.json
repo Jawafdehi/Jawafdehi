@@ -225,6 +225,42 @@
     "likhit": "likhit"
   },
   "home": {
+    "bento": {
+      "titleLead": "Nepal's accountability record,",
+      "titleRest": "in one open archive.",
+      "archive": {
+        "label": "The archive",
+        "title": "Every documented corruption case, searchable.",
+        "chips": [
+          "Bribery",
+          "Procurement",
+          "Cooperative fraud",
+          "Land",
+          "Abuse of authority",
+          "Audit findings",
+          "& more"
+        ],
+        "casesLabel": "cases",
+        "cta": "Browse cases"
+      },
+      "follow": {
+        "label": "Follow a case",
+        "title": "From charge sheet to verdict.",
+        "steps": {
+          "chargeSheet": "CIAA charge sheet",
+          "specialCourt": "Special Court hearings",
+          "supremeCourt": "Supreme Court appeal"
+        },
+        "body": "Charge sheets, hearings and verdicts are linked, so one case reads from start to finish."
+      },
+      "ask": {
+        "label": "Ask your AI",
+        "title": "The archive, inside Claude and ChatGPT.",
+        "question": "Show me every case involving Sugat Ratna Kansakar.",
+        "answer": "Found case 080-CR-0145: the charges, all 24 Special Court hearings, and the verdict.",
+        "cta": "Connect your AI"
+      }
+    },
     "hero": {
       "eyebrow": "Accountability has no expiry.",
       "description": "Corruption cases, court records and the documents behind them, in one open archive. Read it here, or connect it to your AI tool.",

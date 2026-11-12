@@ -185,7 +185,7 @@ export function BigoRangeFilter({
 
   return (
     <fieldset aria-labelledby={labelId} className="min-w-0">
-      <legend className="mb-2 text-sm font-semibold text-foreground" id={labelId}>
+      <legend className="mb-2 text-sm text-muted-foreground" id={labelId}>
         {t("archiveSearch.filters.bigo", "Embezzled amount")}
       </legend>
 
