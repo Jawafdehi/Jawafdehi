@@ -663,17 +663,26 @@
     },
     "items": {
       "mcp": {
-        "kind": "MCP server"
+        "kind": "MCP server",
+        "line": "Ask Claude or ChatGPT about any case, and get the record back with its sources."
       },
       "likhit": {
-        "kind": "Python library"
+        "kind": "Python library",
+        "line": "Nepali PDFs and scans in, clean Markdown out."
       },
       "api": {
-        "kind": "REST API"
+        "kind": "REST API",
+        "line": "Every case, entity and court record, open to your code."
       },
       "chat": {
-        "kind": "Web app"
+        "kind": "Web app",
+        "line": "Plain-language questions, answers that cite the record."
       }
+    },
+    "preview": {
+      "chatQuestion": "Which cases did the CIAA file at the Special Court this month?",
+      "sourceCharge": "Charge sheet",
+      "sourceCourt": "Special Court"
     }
   },
   "team": {
