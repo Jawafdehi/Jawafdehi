@@ -81,26 +81,32 @@ describe('the case canonical names the URL the page is pre-rendered at', () => {
   });
 });
 
-describe('the old case browse URLs', () => {
-  // /cases and /cases/page/:page folded into /search?type=case. They stay in the
-  // route table so the edge serves the SPA shell at 200 and React Router's
-  // <Navigate> takes the reader on — no page count, so no API call to make.
-  it.each(['/cases', '/cases/', '/cases/page/2', '/cases/page/9999'])(
-    'serves %s as the SPA shell without asking the API',
-    async (path) => {
-      const upstream = vi.fn();
-      vi.stubGlobal('fetch', upstream);
+describe('the retired browse URLs', () => {
+  // /cases, /cases/page/:page and /courtcases folded into the typed /search.
+  // The edge answers them with a 301 carrying the query string, so crawlers
+  // see a move rather than a duplicate and a bookmarked filter still works —
+  // and it does so without asking the API anything.
+  it.each([
+    ['/cases', '/search/?type=case'],
+    ['/cases/', '/search/?type=case'],
+    ['/cases/page/9999', '/search/?type=case'],
+    ['/cases?search=dahal', '/search/?type=case&q=dahal'],
+    ['/courtcases', '/search/?type=courtcase'],
+    ['/courtcases/?q=%E0%A4%B8&court=supreme', '/search/?type=courtcase&q=%E0%A4%B8&court=supreme'],
+  ])('301s %s to %s', async (path, location) => {
+    const upstream = vi.fn();
+    vi.stubGlobal('fetch', upstream);
 
-      const res = await worker.fetch(
-        new Request(`https://jawafdehi.org${path}`),
-        makeEnv() as never,
-        {} as never,
-      );
+    const res = await worker.fetch(
+      new Request(`https://jawafdehi.org${path}`),
+      makeEnv() as never,
+      {} as never,
+    );
 
-      expect(res.status).toBe(200);
-      expect(upstream).not.toHaveBeenCalled();
-    },
-  );
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe(location);
+    expect(upstream).not.toHaveBeenCalled();
+  });
 });
 
 describe('redirects into a case page', () => {

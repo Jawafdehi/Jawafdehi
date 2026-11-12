@@ -1,3 +1,4 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
@@ -165,17 +166,13 @@ export function CaseDetailBanner({
           and the actions on the left; the case's picture as a framed card on
           the right. On a phone the picture follows the words. */}
       <div className="layout-container pt-8 md:pt-12 lg:pl-24 min-[1536px]:pl-8">
-        <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {homeLabel || t("nav.home")}
-          </Link>
-          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-          <Link to="/search?type=case" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {casesLabel || t("nav.cases")}
-          </Link>
-          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-          <span className="min-w-0 truncate text-primary/80">{breadcrumbCase}</span>
-        </nav>
+        <PageBreadcrumb
+          items={[
+            { label: homeLabel || t("nav.home"), to: "/" },
+            { label: casesLabel || t("nav.cases"), to: "/search?type=case" },
+            { label: breadcrumbCase },
+          ]}
+        />
 
         <div className="mt-6 grid grid-cols-1 items-start gap-8 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
           <div className="min-w-0">
@@ -236,7 +233,9 @@ export function CaseDetailBanner({
               width={1400}
               height={788}
               className={cn(
-                "block aspect-[16/9] h-auto w-full rounded-[20px] border border-border/70 object-cover",
+                // Contained, not cropped: caseworkers upload portraits and scanned
+                // documents as well as 16:9 cards, and none of it may lose an edge.
+                "block aspect-[16/9] h-auto w-full rounded-[20px] border border-border/70 bg-muted object-contain",
                 isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
               )}
               data-testid="case-detail-hero-image"

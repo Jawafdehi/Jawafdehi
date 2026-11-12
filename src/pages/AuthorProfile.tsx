@@ -1,3 +1,4 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -67,8 +68,6 @@ function isSafeHref(value: string): boolean {
   }
 }
 
-const CRUMB =
-  "shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 // The author's email and links: grey circles, 44px so a thumb finds them.
 const ICON_PILL =
   "flex h-11 w-11 items-center justify-center rounded-full bg-muted text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -112,13 +111,13 @@ export default function AuthorProfile() {
         {/* A failed request is not a missing profile: only a 404 (or no data
             at all) says "not available". */}
         {isError && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
-          <EmptyState
+          <EmptyState headingLevel="h1"
             kind="couldNotLoad"
             title={t("author.errorTitle", "This profile didn't load")}
             description={t("author.error", "Something went wrong on our side. Please try again in a moment.")}
           />
         ) : (
-          <EmptyState kind="notFound" title={t("author.notFoundTitle", "Profile not found")} description={t("author.notFound")} />
+          <EmptyState headingLevel="h1" kind="notFound" title={t("author.notFoundTitle", "Profile not found")} description={t("author.notFound")} />
         )}
       </div>
     );
@@ -159,17 +158,13 @@ export default function AuthorProfile() {
         {/* The light hero: the trail, the portrait beside the name in the
             display face, the role, and the ways to reach them as grey pills. */}
         <section className="layout-container pt-8 md:pt-12">
-          <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className={CRUMB}>
-              {t("nav.home")}
-            </Link>
-            <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-            <Link to="/team" className={CRUMB}>
-              {t("nav.team", "Our team")}
-            </Link>
-            <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-            <span className="min-w-0 truncate text-primary/80">{name}</span>
-          </nav>
+          <PageBreadcrumb
+            items={[
+              { label: t("nav.home"), to: "/" },
+              { label: t("nav.team", "Our team"), to: "/team" },
+              { label: name },
+            ]}
+          />
           <div className="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-7">
             {photo ? (
               <img

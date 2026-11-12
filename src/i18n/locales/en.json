@@ -3208,6 +3208,8 @@
   "materialProfile": {
     "breadcrumb": "Documents",
     "notFoundTitle": "Document not found",
-    "notFoundLine": "This material could not be found in the Jawafdehi governance archive."
+    "notFoundLine": "This material could not be found in the Jawafdehi governance archive.",
+    "errorTitle": "This document didn't load",
+    "errorLine": "Something went wrong on our side. Please try again in a moment."
   }
 }

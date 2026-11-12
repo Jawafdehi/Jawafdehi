@@ -366,7 +366,7 @@ const CaseDetail = () => {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
         <div className="layout-container flex-1">
-          <EmptyState
+          <EmptyState headingLevel="h1"
             kind={isError ? "couldNotLoad" : "notFound"}
             title={isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
             description={

@@ -1,5 +1,6 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { useEffect, useState } from "react";
-import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
+import { useParams, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -150,8 +151,6 @@ const HANDLED_KEYS = new Set([
 
 // ─── page ───────────────────────────────────────────────────────────────────
 
-const CRUMB =
-  "shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 // The content switcher: grey pills, the active one white.
 const TAB =
   "rounded-full px-4 py-2 text-[15px] text-muted-foreground transition-colors data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm";
@@ -163,7 +162,7 @@ export default function MaterialProfile() {
   const { t } = useTranslation();
   const params = useParams();
   const tail = params["*"] || "";
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["datalake-material", tail],
     queryFn: () => getMaterial(tail),
     enabled: tail.length > 0,
@@ -255,6 +254,75 @@ export default function MaterialProfile() {
     ? materialJsonLd(data, displayName, materialDescriptionText(data))
     : null;
 
+  const summaryPanel = data ? (
+    <div className={fullTextStr || contentSummary ? "pt-8" : undefined}>
+      <div>
+        {descText ? (
+          <p className="mb-8 max-w-3xl text-lg leading-8 text-primary/85">
+            {descText}
+          </p>
+        ) : null}
+        <dl className="divide-y divide-border/70 border-y border-border/70">
+          <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
+            <dt className="text-[15px] text-muted-foreground">
+              Type
+            </dt>
+            <dd className="min-w-0 break-words text-base text-primary">
+              {typeLabel}
+            </dd>
+          </div>
+          {detailRows.map((row) => (
+            <div
+              key={row.label}
+              className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6"
+            >
+              <dt className="text-[15px] text-muted-foreground">
+                {row.label}
+              </dt>
+              <dd className="min-w-0 break-words text-base text-primary">
+                {isHttpUrl(row.value) ? (
+                  <a
+                    href={row.value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={decodedUrl(row.value)}
+                    className="inline-flex items-center gap-1 text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary"
+                  >
+                    {hostLabel(row.value)}
+                    <ExternalLink
+                      className="h-3.5 w-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
+                  </a>
+                ) : (
+                  row.value
+                )}
+              </dd>
+            </div>
+          ))}
+          {data.identifier ? (
+            <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
+              <dt className="text-[15px] text-muted-foreground">
+                Identifier
+              </dt>
+              <dd className="min-w-0 break-words text-base text-primary">
+                {data.identifier}
+              </dd>
+            </div>
+          ) : null}
+          <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
+            <dt className="text-[15px] text-muted-foreground">
+              Canonical ID
+            </dt>
+            <dd className="min-w-0 break-all font-mono text-xs text-muted-foreground">
+              {data["@id"]}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <main
       id="main-content"
@@ -280,30 +348,31 @@ export default function MaterialProfile() {
       </Helmet>
 
       <div className="layout-container">
-        <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/" className={CRUMB}>
-            {t("nav.home")}
-          </Link>
-          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-          <Link to="/materials/" className={CRUMB}>
-            {t("materialProfile.breadcrumb", "Documents")}
-          </Link>
-          {series ? (
-            <>
-              <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-              <Link to={`/materials/?series=${series.slug}`} className={cn(CRUMB, "min-w-0 truncate")}>
-                {series.name.en}
-              </Link>
-            </>
-          ) : null}
-        </nav>
+        <PageBreadcrumb
+          items={[
+            { label: t("nav.home"), to: "/" },
+            { label: t("materialProfile.breadcrumb", "Documents"), to: "/materials/" },
+            ...(series ? [{ label: series.name.en, to: `/materials/?series=${series.slug}` }] : []),
+          ]}
+        />
 
         {isError ? (
-          <EmptyState
-            kind="notFound"
-            title={t("materialProfile.notFoundTitle", "Document not found")}
-            description={t("materialProfile.notFoundLine", "This material could not be found in the Jawafdehi governance archive.")}
-          />
+          // Only a 404 says the record is missing; anything else is our fault.
+          (error as { statusCode?: number } | null)?.statusCode === 404 ? (
+            <EmptyState
+              kind="notFound"
+              headingLevel="h1"
+              title={t("materialProfile.notFoundTitle", "Document not found")}
+              description={t("materialProfile.notFoundLine", "This material could not be found in the Jawafdehi governance archive.")}
+            />
+          ) : (
+            <EmptyState
+              kind="couldNotLoad"
+              headingLevel="h1"
+              title={t("materialProfile.errorTitle", "This document didn't load")}
+              description={t("materialProfile.errorLine", "Something went wrong on our side. Please try again in a moment.")}
+            />
+          )
         ) : isLoading ? (
           <div className="mt-8 space-y-4">
             <Skeleton className="h-7 w-32 rounded-full" />
@@ -336,6 +405,9 @@ export default function MaterialProfile() {
               )}
             >
               <section className="min-w-0">
+                {/* One view needs no switcher, and a lone tab panel with no
+                    tab list would be announced as an unnamed panel. */}
+                {fullTextStr || contentSummary ? (
                 <Tabs value={tab} onValueChange={setTab} id="material-content-tab">
                   {/* A switcher only when there is something to switch to. */}
                   {fullTextStr || contentSummary ? (
@@ -366,72 +438,7 @@ export default function MaterialProfile() {
                   ) : null}
 
                   <TabsContent value="summary" className="mt-0">
-                    <div className={fullTextStr || contentSummary ? "pt-8" : undefined}>
-                      <div>
-                        {descText ? (
-                          <p className="mb-8 max-w-3xl text-lg leading-8 text-primary/85">
-                            {descText}
-                          </p>
-                        ) : null}
-                        <dl className="divide-y divide-border/70 border-y border-border/70">
-                          <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
-                            <dt className="text-[15px] text-muted-foreground">
-                              Type
-                            </dt>
-                            <dd className="min-w-0 break-words text-base text-primary">
-                              {typeLabel}
-                            </dd>
-                          </div>
-                          {detailRows.map((row) => (
-                            <div
-                              key={row.label}
-                              className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6"
-                            >
-                              <dt className="text-[15px] text-muted-foreground">
-                                {row.label}
-                              </dt>
-                              <dd className="min-w-0 break-words text-base text-primary">
-                                {isHttpUrl(row.value) ? (
-                                  <a
-                                    href={row.value}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={decodedUrl(row.value)}
-                                    className="inline-flex items-center gap-1 text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary"
-                                  >
-                                    {hostLabel(row.value)}
-                                    <ExternalLink
-                                      className="h-3.5 w-3.5 shrink-0"
-                                      aria-hidden="true"
-                                    />
-                                  </a>
-                                ) : (
-                                  row.value
-                                )}
-                              </dd>
-                            </div>
-                          ))}
-                          {data.identifier ? (
-                            <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
-                              <dt className="text-[15px] text-muted-foreground">
-                                Identifier
-                              </dt>
-                              <dd className="min-w-0 break-words text-base text-primary">
-                                {data.identifier}
-                              </dd>
-                            </div>
-                          ) : null}
-                          <div className="grid gap-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-6">
-                            <dt className="text-[15px] text-muted-foreground">
-                              Canonical ID
-                            </dt>
-                            <dd className="min-w-0 break-all font-mono text-xs text-muted-foreground">
-                              {data["@id"]}
-                            </dd>
-                          </div>
-                        </dl>
-                      </div>
-                    </div>
+                    {summaryPanel}
                   </TabsContent>
 
                   {fullTextStr ? (
@@ -480,6 +487,9 @@ export default function MaterialProfile() {
                     </TabsContent>
                   ) : null}
                 </Tabs>
+                ) : (
+                  summaryPanel
+                )}
               </section>
 
               {focused ? null : (

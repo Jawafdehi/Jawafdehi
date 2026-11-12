@@ -65,6 +65,6 @@ describe("UpdatePreview", () => {
 
     expect(getArticlePreview).not.toHaveBeenCalled();
     expect(screen.queryByText("Draft headline")).toBeNull();
-    expect(screen.getByText("notFound.title")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "This page isn't in the archive." })).toBeTruthy();
   });
 });

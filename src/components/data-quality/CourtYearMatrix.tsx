@@ -172,7 +172,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                     <td
                       key={year}
                       title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${bsYearWithAd(year, t)}: ${count.toLocaleString()}`}
-                      className="rounded px-2 py-2 text-center font-mono text-[11px] tabular-nums"
+                      className="rounded px-2 py-2 text-center font-mono text-xs tabular-nums"
                       style={{
                         backgroundColor:
                           count > 0

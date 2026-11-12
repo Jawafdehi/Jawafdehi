@@ -15,6 +15,7 @@ import {
   type MaterialMetaSource,
 } from './src/lib/material-meta';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
+import { archiveSearchUrl, retiredBrowseType } from './src/lib/archive-redirect';
 import {
   AUTHOR_CARD_HEIGHT,
   AUTHOR_CARD_WIDTH,
@@ -857,6 +858,23 @@ export default {
         status: 301,
         headers: {
           'Location': '/assets/social-preview.png',
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
+    // The retired browse pages → the typed archive search (301), query string
+    // carried across. These were in the sitemap until they folded into /search;
+    // a permanent redirect at the edge is what tells crawlers they MOVED (a 200
+    // shell with a client-side <Navigate> reads as a duplicate instead), and it
+    // keeps a bookmarked filter working without JavaScript.
+    const retiredType = retiredBrowseType(endpoint);
+    if (retiredType) {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': archiveSearchUrl(retiredType, url.search),
           'Cache-Control': 'public, max-age=86400',
           ...secHeaders,
         },

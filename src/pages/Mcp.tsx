@@ -70,7 +70,7 @@ function McpHero() {
       <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center pb-20 pt-10">
         <Link
           to="/"
-          className="group inline-flex w-fit items-center gap-2.5 rounded text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary-surface"
+          className="group inline-flex min-h-6 w-fit items-center gap-2.5 rounded text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary-surface"
         >
           <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
           {t("mcp.hero.back")}

@@ -24,7 +24,7 @@ const ContactIcon = ({ contact }: { contact: Contact }) => {
       href={href}
       target={contact.type !== "email" ? "_blank" : undefined}
       rel={contact.type !== "email" ? "noopener noreferrer" : undefined}
-      className="text-muted-foreground hover:text-primary transition-colors"
+      className="-m-2 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={contact.type}
     >
       {icon}

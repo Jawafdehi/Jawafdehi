@@ -49,14 +49,21 @@ describe("Materials view routing", () => {
 
   it("redirects a bare ?q= to /search, so existing deep links survive", async () => {
     renderAt("/materials/?q=corruption");
-    expect(await screen.findByText("SEARCH AT /search?type=material&q=corruption")).toBeTruthy();
+    expect(await screen.findByText("SEARCH AT /search/?type=material&q=corruption")).toBeTruthy();
   });
 
-  it("carries every search param across, and nothing else", async () => {
-    renderAt("/materials/?q=ujuri&tags=a&tags=b&sort=oldest&page=3&utm_source=x");
+  it("carries every param across, the type and date filters included", async () => {
+    renderAt("/materials/?q=ujuri&tags=a&tags=b&material_type=report&date_from=2080-01-01&date_to=2081-12-30&sort=oldest&page=3");
     expect(
-      await screen.findByText("SEARCH AT /search?type=material&q=ujuri&tags=a&tags=b&sort=oldest&page=3"),
+      await screen.findByText(
+        "SEARCH AT /search/?type=material&q=ujuri&tags=a&tags=b&material_type=report&date_from=2080-01-01&date_to=2081-12-30&sort=oldest&page=3",
+      ),
     ).toBeTruthy();
+  });
+
+  it("treats a filter alone as a search, not the landing", async () => {
+    renderAt("/materials/?material_type=report");
+    expect(await screen.findByText("SEARCH AT /search/?type=material&material_type=report")).toBeTruthy();
   });
 
   it("gives ?series= precedence over ?q=, which is the reverse of the old rule", async () => {

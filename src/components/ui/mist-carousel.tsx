@@ -120,7 +120,7 @@ export function MistCarousel({
             aria-pressed={key === active}
             aria-label={label}
             onClick={() => choose(key)}
-            className="group flex h-6 items-center rounded-full px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="group flex h-6 min-w-6 items-center justify-center rounded-full px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span
               className={cn(

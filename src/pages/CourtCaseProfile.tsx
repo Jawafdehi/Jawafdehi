@@ -1,5 +1,6 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { type MouseEvent, useEffect, useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -143,33 +144,25 @@ export default function CourtCaseProfile() {
       </Helmet>
 
       <div className="layout-container">
-        <nav aria-label="breadcrumb" className="mb-8 flex min-w-0 items-center gap-2 text-sm text-muted-foreground md:mb-10">
-          <Link to="/" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {t("nav.home")}
-          </Link>
-          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-          <Link to="/search?type=courtcase" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {t("nav.courtCases", "Court cases")}
-          </Link>
-          {parsed ? (
-            <>
-              <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-              <span className="min-w-0 truncate font-mono text-[13px] text-primary/80">{parsed.caseNumber}</span>
-            </>
-          ) : null}
-        </nav>
+        <PageBreadcrumb className="mb-8 md:mb-10"
+          items={[
+            { label: t("nav.home"), to: "/" },
+            { label: t("nav.courtCases", "Court cases"), to: "/search?type=courtcase" },
+            ...(parsed ? [{ label: parsed.caseNumber, mono: true }] : []),
+          ]}
+        />
 
         {!parsed || isError ? (
           // A failed request is not a missing record: only a bad reference or
           // a 404 says "not found".
           parsed && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
-            <EmptyState
+            <EmptyState headingLevel="h1"
               kind="couldNotLoad"
               title={t("courtCaseProfile.errorTitle", "This court case didn't load")}
               description={t("courtCaseProfile.error", "Something went wrong on our side. Please try again in a moment.")}
             />
           ) : (
-            <EmptyState
+            <EmptyState headingLevel="h1"
               kind="notFound"
               title={t("courtCaseProfile.notFoundTitle", "Court case not found")}
               description={t("courtCaseProfile.notFound", "This court case could not be found in the Jawafdehi governance archive.")}

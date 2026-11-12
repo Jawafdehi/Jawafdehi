@@ -56,7 +56,7 @@ export function BreakdownBar({
   // every bar into a thin strip on the right. Shrink the gutter and the tick
   // size below the breakpoint so the bars keep real width.
   const effectiveLabelWidth = narrow ? Math.min(labelWidth, 96) : labelWidth;
-  const tickFontSize = narrow ? 11 : 12;
+  const tickFontSize = 12;
 
   // The right margin has to reserve room for the widest end-label, or recharts
   // paints it past the SVG edge and it gets clipped mid-number ("11,399" -> "11,39").

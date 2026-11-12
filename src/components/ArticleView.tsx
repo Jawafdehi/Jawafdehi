@@ -1,3 +1,4 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Calendar, ArrowRight } from "@/components/icons";
@@ -11,9 +12,6 @@ import type { Article } from "@/types/cms";
  * Wagtail headless preview. Keeping a single component guarantees editors
  * preview the article exactly as it renders live (desktop, tablet, mobile).
  */
-const CRUMB =
-    "shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 export const ArticleView = ({ article }: { article: Article }) => {
     const { t } = useTranslation();
 
@@ -27,15 +25,12 @@ export const ArticleView = ({ article }: { article: Article }) => {
         <div className="min-h-screen flex flex-col bg-background">
             <main id="main-content" className="flex-1 pb-20 pt-8 md:pt-12">
                 <div className="layout-container">
-                    <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-                        <Link to="/" className={CRUMB}>
-                            {t("nav.home")}
-                        </Link>
-                        <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-                        <Link to="/updates" className={CRUMB}>
-                            {t("nav.updates", "Updates")}
-                        </Link>
-                    </nav>
+                    <PageBreadcrumb
+                      items={[
+                        { label: t("nav.home"), to: "/" },
+                        { label: t("nav.updates", "Updates"), to: "/updates" },
+                      ]}
+                    />
 
                     {/* One reading column, 48rem: the category pill, the title in
                         the display face, the date; the picture framed at the

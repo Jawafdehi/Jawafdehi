@@ -54,6 +54,7 @@ import ResearchCorruption from "./pages/ResearchCorruption";
 // to be eager — the ?series= browse is lazy() in Materials.tsx, and the old ?q=
 // search view is now a redirect into /search.
 import Materials from "./pages/Materials";
+import { ArchiveRedirect } from "@/components/ArchiveRedirect";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,
 // so per the policy above they must be eager. They were lazy() until 2026-08-11
 // and pre-rendered to exactly what that policy predicts: an empty <title> and no
@@ -165,9 +166,9 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/information": <Navigate to="/faq" replace />,
   "/moderation": <Navigate to="/admin/moderation" replace />,
   // The case and court-case browse pages folded into /search.
-  "/cases": <Navigate to="/search?type=case" replace />,
-  "/cases/page/:page": <Navigate to="/search?type=case" replace />,
-  "/courtcases": <Navigate to="/search?type=courtcase" replace />,
+  "/cases": <ArchiveRedirect type="case" />,
+  "/cases/page/:page": <ArchiveRedirect type="case" />,
+  "/courtcases": <ArchiveRedirect type="courtcase" />,
 };
 
 /** The <Route> elements for one chrome, in table order. */

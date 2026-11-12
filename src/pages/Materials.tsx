@@ -1,3 +1,4 @@
+import { archiveSearchUrl } from "@/lib/archive-redirect";
 import { lazy, Suspense } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 
@@ -29,16 +30,10 @@ const MaterialSeriesBrowse = lazy(lazyChunk(() => import("./MaterialSeriesBrowse
  * Query-param views (not new paths) keep the edge Worker serving 200s via the
  * one known /materials route, and keep this page pre-rendered as the landing.
  */
-const SEARCH_PARAMS = ["q", "tags", "case_type", "sort", "page"] as const;
-
-/** The /search URL for a /materials search deep link, carrying its params. */
-function materialsSearchUrl(searchParams: URLSearchParams): string {
-  const next = new URLSearchParams({ type: "material" });
-  for (const param of SEARCH_PARAMS) {
-    for (const value of searchParams.getAll(param)) next.append(param, value);
-  }
-  return `/search?${next.toString()}`;
-}
+// Any of these means the visitor came for a search (an old deep link into the
+// materials-locked search view, which now lives on /search). The redirect then
+// carries EVERY param across, not just these, so filters survive the move.
+const SEARCH_PARAMS = ["q", "tags", "case_type", "sort", "page", "material_type", "date_from", "date_to"] as const;
 
 export default function Materials() {
   const [searchParams] = useSearchParams();
@@ -55,7 +50,7 @@ export default function Materials() {
   }
 
   if (hasSearchIntent) {
-    return <Navigate to={materialsSearchUrl(searchParams)} replace />;
+    return <Navigate to={archiveSearchUrl("material", searchParams)} replace />;
   }
 
   return <MaterialsLanding />;

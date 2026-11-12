@@ -64,25 +64,14 @@ export default function ReportCase() {
         description={t("report.description")}
       />
 
-      {/* The form on the left in a hairline card; on the right, sticky on a
-          desktop, what to read first, the other ways to reach us and the
-          templates. On a phone the guidance comes first: someone about to
-          describe a live case should read it before they start typing. */}
+      {/* What to read first, the other ways to reach us and the templates come
+          FIRST in the document, so a screen reader and the Tab key meet the
+          safety guidance before the form, as a phone shows it; a desktop
+          places them in a sticky right column (scrolling within itself when
+          taller than the window) beside the form in its hairline card. */}
       <div className="layout-container grid grid-cols-1 items-start gap-10 pb-20 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
-        <section
-          aria-labelledby="report-form-heading"
-          className="order-2 min-w-0 rounded-[24px] border border-border/70 bg-surface p-6 sm:p-8 lg:order-1 lg:p-10"
-        >
-          <h2 id="report-form-heading" className="font-home-display text-3xl text-primary md:text-4xl">
-            {t("report.page.formTitle")}
-          </h2>
-          <p className="mt-3 max-w-xl text-lg leading-8 text-muted-foreground">{t("report.page.formDescription")}</p>
-          <div className="mt-8">
-            <CaseReportForm />
-          </div>
-        </section>
 
-        <aside className="order-1 min-w-0 space-y-8 lg:sticky lg:top-28 lg:order-2">
+        <aside className="min-w-0 space-y-8 lg:sticky lg:top-28 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]">
           <section aria-labelledby="report-safety-heading" className="rounded-[24px] bg-muted/60 p-6">
             <div className="flex items-center gap-2.5">
               <ShieldAlert className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
@@ -153,6 +142,19 @@ export default function ReportCase() {
             </div>
           </section>
         </aside>
+
+        <section
+          aria-labelledby="report-form-heading"
+          className="min-w-0 rounded-[24px] border border-border/70 bg-surface p-6 sm:p-8 lg:col-start-1 lg:row-start-1 lg:p-10"
+        >
+          <h2 id="report-form-heading" className="font-home-display text-3xl text-primary md:text-4xl">
+            {t("report.page.formTitle")}
+          </h2>
+          <p className="mt-3 max-w-xl text-lg leading-8 text-muted-foreground">{t("report.page.formDescription")}</p>
+          <div className="mt-8">
+            <CaseReportForm />
+          </div>
+        </section>
       </div>
     </div>
   );

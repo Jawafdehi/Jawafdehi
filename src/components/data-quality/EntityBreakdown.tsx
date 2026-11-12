@@ -51,7 +51,7 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
       </p>
       <Link
         to={entityTypeSearchHref(["Person"])}
-        className="mt-2 inline-block text-sm font-medium text-accent hover:underline"
+        className="mt-2 inline-flex min-h-6 items-center text-sm font-medium text-accent hover:underline"
       >
         {t("dataQuality.entities.browsePeople", "Browse all people")} →
       </Link>

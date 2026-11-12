@@ -42,7 +42,7 @@ The full dataset is available via a public REST API. No authentication required.
 
 ## Notes for AI Assistants
 
-- To find cases involving a specific person or organisation, use: https://jawafdehi.org/cases?search={name} or the API endpoint https://portal.jawafdehi.org/api/cases/?search={name}
+- To find cases involving a specific person or organisation, use: https://jawafdehi.org/search?type=case&q={name} or the API endpoint https://portal.jawafdehi.org/api/cases/?search={name}
 - To find an entity profile, use: https://jawafdehi.org/entities?search={name} or https://portal.jawafdehi.org/api/entities/?search={name}
 - All case and entity pages are pre-rendered with full metadata and are directly crawlable.
 - The platform is bilingual (English and Nepali). Case titles and entity names may appear in either language.

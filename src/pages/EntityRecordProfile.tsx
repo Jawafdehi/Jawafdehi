@@ -1,3 +1,4 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -355,31 +356,23 @@ export default function EntityRecordProfile() {
       />
 
       <div className="layout-container">
-        <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {t("nav.home")}
-          </Link>
-          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-          <Link to="/search?type=entity" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {t("entityDetail.breadcrumb", "People & organizations")}
-          </Link>
-          {data ? (
-            <>
-              <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
-              <span className="min-w-0 truncate text-primary/80">{displayName}</span>
-            </>
-          ) : null}
-        </nav>
+        <PageBreadcrumb
+          items={[
+            { label: t("nav.home"), to: "/" },
+            { label: t("entityDetail.breadcrumb", "People & organizations"), to: "/search?type=entity" },
+            ...(data ? [{ label: displayName }] : []),
+          ]}
+        />
 
         {isError ? (
           (error as { response?: { status?: number } } | null)?.response?.status === 404 ? (
-            <EmptyState
+            <EmptyState headingLevel="h1"
               kind="notFound"
               title={t("entityDetail.notFoundTitle", "Not in the registry")}
               description={t("entityDetail.notFoundLine", "This person or organization could not be found in the registry.")}
             />
           ) : (
-            <EmptyState
+            <EmptyState headingLevel="h1"
               kind="couldNotLoad"
               title={t("entityDetail.errorTitle", "This profile didn't load")}
               description={t("entityDetail.errorLine", "Something went wrong on our side. Please try again in a moment.")}

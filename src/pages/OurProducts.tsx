@@ -95,10 +95,10 @@ function ChatPreview() {
         <p className="h-1.5 w-[92%] rounded-full bg-border" />
         <p className="mt-2 h-1.5 w-[74%] rounded-full bg-border" />
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-primary/75">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-primary/75">
             {t("products.preview.sourceCharge")}
           </span>
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-primary/75">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-primary/75">
             {t("products.preview.sourceCourt")}
           </span>
         </div>
