@@ -123,8 +123,9 @@ describe("CourtCaseProfile (redesigned layout)", () => {
 
     renderPage();
 
-    // Back to search link
-    expect(screen.getByText("Back to search")).toBeTruthy();
+    // The breadcrumb leads back to the court cases in search.
+    const crumb = screen.getByRole("navigation", { name: "breadcrumb" });
+    expect(crumb.querySelector('a[href="/search?type=courtcase"]')).not.toBeNull();
 
     // The record title sits above compact, inline metadata rows.
     expect(await screen.findByRole("heading", { level: 1, name: "सहकारी ठगी" })).toBeTruthy();
@@ -157,13 +158,14 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(screen.getByText("नारद अवस्थी")).toBeTruthy();
     expect(screen.getByText("कुन्ता भाट")).toBeTruthy();
     expect(screen.getByText("कुन्ता भाट").closest("ul")?.className).toContain("font-medium");
-    expect(screen.getByText("Back to search").closest(".layout-container")?.className).not.toContain("max-w-4xl");
+    expect(screen.getByRole("navigation", { name: "breadcrumb" }).closest(".layout-container")?.className).not.toContain("max-w-4xl");
 
     // Case Activity section
     const activityPill = screen.getByText("Bail order");
     expect(activityPill).toBeTruthy();
-    expect(activityPill.className).toContain("text-accent");
-    expect(activityPill.className).toContain("bg-accent/10");
+    // A grey pill in sentence case: a hearing's outcome is a label, not an alarm.
+    expect(activityPill.className).toContain("bg-muted");
+    expect(activityPill.className).not.toContain("uppercase");
     expect(screen.getByText("Judge")).toBeTruthy();
     expect(screen.getByText("माननीय जिल्ला न्यायाधीश श्री महेन्द्रबहादुर थापा क्षेत्री")).toBeTruthy();
     expect(screen.getByText("Order")).toBeTruthy();

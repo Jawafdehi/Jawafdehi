@@ -235,7 +235,7 @@ export function CourtCaseProfileView({
     <article className="space-y-10 text-foreground">
       <section id="case-summary" aria-labelledby="case-summary-heading" className="scroll-mt-28">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <h1 id="case-summary-heading" className="font-page-title max-w-4xl text-pretty">
+          <h1 id="case-summary-heading" className="font-home-display max-w-4xl text-pretty text-4xl text-primary sm:text-5xl [:root[lang=en]_&]:leading-[1.08]">
             {displayTitle}
           </h1>
 
@@ -251,7 +251,7 @@ export function CourtCaseProfileView({
           ) : null}
         </div>
 
-        <h2 className="mt-10 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+        <h2 className="font-home-display mt-12 text-3xl text-primary md:text-4xl">
           {t("courtCaseProfile.summary", "Case summary")}
         </h2>
 
@@ -307,7 +307,7 @@ export function CourtCaseProfileView({
       <section id="parties" aria-labelledby="parties-heading" className="scroll-mt-28">
         <h2
           id="parties-heading"
-          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+          className="font-home-display text-3xl text-primary md:text-4xl"
         >
           {t("courtCaseProfile.parties", "Parties")}
         </h2>
@@ -320,7 +320,7 @@ export function CourtCaseProfileView({
       <section id="activity" aria-labelledby="activity-heading" className="scroll-mt-28">
         <h2
           id="activity-heading"
-          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+          className="font-home-display text-3xl text-primary md:text-4xl"
         >
           {t("courtCaseProfile.activity.heading", "Case activity")}
         </h2>
@@ -353,7 +353,7 @@ export function CourtCaseProfileView({
 
                   {/* Dot */}
                   <div className="relative z-10 mt-1.5 flex h-3 w-3 shrink-0 items-center justify-center">
-                    <div className="h-2.5 w-2.5 rounded-full bg-success-strong ring-4 ring-background" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                   </div>
 
                   {/* Hearing Content: Date + Activity card */}
@@ -374,8 +374,8 @@ export function CourtCaseProfileView({
                     <div className="flex-1 min-w-0 space-y-3.5">
                       <div>
                         <Badge
-                          variant="accent"
-                          className="border-accent/20 text-xs font-semibold uppercase tracking-wide"
+                          variant="outline"
+                          className="rounded-full border-transparent bg-muted px-3 py-1 text-[13px] font-normal text-primary"
                         >
                           {badgeText}
                         </Badge>
@@ -432,7 +432,7 @@ export function CourtCaseProfileView({
       <section id="source" aria-labelledby="source-heading" className="scroll-mt-28">
         <h2
           id="source-heading"
-          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+          className="font-home-display text-3xl text-primary md:text-4xl"
         >
           {t("courtCaseProfile.source.heading", "Source")}
         </h2>

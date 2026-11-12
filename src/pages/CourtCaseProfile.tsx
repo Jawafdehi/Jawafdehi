@@ -3,9 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, ArrowLeft } from "@/components/icons";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileView";
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
@@ -145,13 +143,21 @@ export default function CourtCaseProfile() {
       </Helmet>
 
       <div className="layout-container">
-        <Link
-          to="/search?type=courtcase"
-          className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" />
-          <span>{t("courtCaseProfile.backToSearch", "Back to search")}</span>
-        </Link>
+        <nav aria-label="breadcrumb" className="mb-8 flex min-w-0 items-center gap-2 text-sm text-muted-foreground md:mb-10">
+          <Link to="/" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {t("nav.home")}
+          </Link>
+          <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
+          <Link to="/search?type=courtcase" className="shrink-0 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {t("nav.courtCases", "Court cases")}
+          </Link>
+          {parsed ? (
+            <>
+              <span aria-hidden="true" className="shrink-0 opacity-50">/</span>
+              <span className="min-w-0 truncate font-mono text-[13px] text-primary/80">{parsed.caseNumber}</span>
+            </>
+          ) : null}
+        </nav>
 
         {!parsed || isError ? (
           // A failed request is not a missing record: only a bad reference or
@@ -170,11 +176,10 @@ export default function CourtCaseProfile() {
             />
           )
         ) : (
-          <div className="min-w-0 space-y-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:space-y-0 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-12">
-            <div className="py-5 lg:hidden">
-              <h2 className="mb-3 text-sm font-semibold text-foreground">
-                {t("courtCaseProfile.contents", "Contents")}
-              </h2>
+          // The reading pages' body: "on this page" in a 13rem column, the
+          // text at most 52rem wide beside it; on a phone, a scrolling row.
+          <div className="min-w-0 space-y-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-x-16 lg:space-y-0">
+            <div className="lg:hidden">
               <CaseSectionJumpNav
                 activeSection={activeSection}
                 onJump={handleJumpToSection}
@@ -183,10 +188,7 @@ export default function CourtCaseProfile() {
             </div>
 
             <aside className="hidden min-w-0 lg:block">
-              <div className="sticky top-28">
-                <h2 className="mb-4 text-sm font-semibold text-foreground">
-                  {t("courtCaseProfile.contents", "Contents")}
-                </h2>
+              <div className="sticky top-28 pt-2">
                 <CaseSectionJumpNav
                   activeSection={activeSection}
                   onJump={handleJumpToSection}
@@ -195,7 +197,7 @@ export default function CourtCaseProfile() {
               </div>
             </aside>
 
-            <div className="min-w-0 space-y-12">
+            <div className="min-w-0 max-w-[52rem] space-y-16">
               <CourtCaseProfileView
                 courtCase={data}
                 caseNumber={caseNumber.toUpperCase()}
