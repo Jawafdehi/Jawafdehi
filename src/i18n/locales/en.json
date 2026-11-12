@@ -3135,7 +3135,6 @@
       "title": "Taking personal data out",
       "copyCommand": "Copy the command",
       "short": "Citizenship numbers, dates of birth and phone numbers come out before anything is written. Four tiers; strict is the default.",
-      "guide": "Full redaction guide on GitHub",
       "tiersShort": {
         "none": "Removes nothing.",
         "identifiers": "Citizenship numbers and dates of birth.",
@@ -3143,7 +3142,8 @@
         "strict": "Adds bank accounts, age and passports."
       },
       "redactPdf": "Redact a PDF",
-      "default": "Default"
+      "default": "Default",
+      "guidePrefix": "Full redaction guide on"
     },
     "copy": "Copy",
     "whatsNewHeading": "What's new in likhit",

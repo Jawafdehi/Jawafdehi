@@ -474,10 +474,11 @@ const Likhit = () => {
               <a
                 href={REPO_URL}
                 {...EXTERNAL}
-                className="mt-5 inline-flex w-fit items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
+                className="mt-5 inline-flex w-fit items-center gap-1.5 rounded text-base font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
               >
+                {t("likhit.privacy.guidePrefix")}
                 <Github className="h-4 w-4" aria-hidden="true" />
-                {t("likhit.privacy.guide")}
+                GitHub
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>

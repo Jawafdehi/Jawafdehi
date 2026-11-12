@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Calendar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { CaseTagBadge } from "@/components/CaseBadge";
 import { Seo } from "@/components/Seo";
 import { chipVariants } from "@/components/ui/chip";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -19,29 +20,36 @@ type Filter = "ALL" | ArticleCategory;
 const FILTERS: Filter[] = ["ALL", "NEWS", "UPDATE"];
 
 /**
- * The feed's grid. Three columns on desktop, two on a tablet, one on a phone;
- * `grid-flow-dense` lets the short tiles fill in beside the tall lead story.
+ * The feed's grid. Three columns on desktop, two on a tablet, one on a phone.
+ * The lead spans two columns of one row, so its picture keeps 16:9 like the
+ * rest; `grid-flow-dense` lets text panels fill any gaps.
  */
 const FEED_GRID = "grid grid-flow-dense grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3";
 
 /**
  * One story in the bento. Three shapes, chosen by the story rather than by a
  * toggle:
- *   - the LEAD (newest): two columns by two rows, the picture large;
+ *   - the LEAD (newest): two columns wide, the picture large;
  *   - a story WITH a picture: the image on top, the title under it;
  *   - a story WITHOUT one: a grey text panel, where the excerpt has room.
- * The whole tile is the link. Hover lifts only the picture's zoom; press scales
- * the tile to 0.99.
+ * Pictures always keep 16:9, whatever the tile's size, so no photo is ever
+ * cropped to a strip or stretched; only the text panels flex to fill the
+ * grid. The category is the case cards' tag pill, the date sits opposite it
+ * with a calendar, and "Read more" closes the tile on the right. The whole
+ * tile is the link; press scales it to 0.99.
  */
 function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListItem; lead?: boolean }>) {
   const { t } = useTranslation();
   const image = article.thumbnail?.url;
   const meta = (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <Eyebrow tone={article.category === "NEWS" ? "accent" : "primary"} className="text-xs">
+    <div className="flex items-center justify-between gap-3">
+      <CaseTagBadge className={cn("px-3 py-1 text-sm", !image && "bg-surface")}>
         {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
-      </Eyebrow>
-      <span className="text-[13px] text-muted-foreground">{formatPublicationDate(article.date)}</span>
+      </CaseTagBadge>
+      <span className="inline-flex items-center gap-1.5 text-[15px] text-muted-foreground">
+        <Calendar className="h-4 w-4" aria-hidden="true" />
+        {formatPublicationDate(article.date)}
+      </span>
     </div>
   );
 
@@ -51,13 +59,11 @@ function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListIte
       data-shape={lead ? "lead" : image ? "picture" : "text"}
       className={cn(
         "group flex h-full flex-col rounded-[28px] p-2 transition-[transform,border-color] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100",
-        image || lead ? "border border-border/70 bg-surface hover:border-border" : "bg-muted",
+        image ? "border border-border/70 bg-surface hover:border-border" : "bg-muted",
       )}
     >
       {image ? (
-        // The lead's picture grows to fill its two rows, so the tile has no
-        // dead band under the text; the others keep 16:9.
-        <div className={cn("relative overflow-hidden rounded-[22px] bg-muted", lead ? "aspect-[16/10] lg:aspect-auto lg:min-h-[18rem] lg:flex-1" : "aspect-video")}>
+        <div className="relative aspect-video overflow-hidden rounded-[22px] bg-muted">
           <img
             src={image}
             alt={article.thumbnail?.alt || ""}
@@ -66,11 +72,11 @@ function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListIte
           />
         </div>
       ) : null}
-      <div className={cn("flex flex-col", lead && image ? "lg:flex-none" : "flex-1", image ? "px-4 pb-4 pt-5" : "p-5 md:p-6")}>
+      <div className={cn("flex flex-1 flex-col", image ? "px-4 pb-4 pt-5" : "p-5 md:p-6")}>
         {meta}
         <h2
           className={cn(
-            "mt-3 font-normal text-primary",
+            "mt-4 font-normal text-primary",
             lead ? "text-[28px] leading-tight tracking-[-0.01em] md:text-[32px]" : "text-[19px] leading-snug",
             !lead && "line-clamp-3",
           )}
@@ -85,7 +91,7 @@ function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListIte
         >
           {article.excerpt}
         </p>
-        <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[15px] font-medium text-primary">
+        <span className="mt-auto inline-flex items-center gap-1.5 self-end pt-5 text-[15px] font-medium text-primary">
           {t("updates.readMore")}
           <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
@@ -106,10 +112,10 @@ function FeedSkeleton() {
           data-skeleton=""
           className={cn(
             "rounded-[28px] border border-border/70 p-2",
-            index === 0 && "md:col-span-2 lg:row-span-2",
+            index === 0 && "md:col-span-2",
           )}
         >
-          <Skeleton className={cn("w-full rounded-[22px]", index === 0 ? "aspect-[16/10]" : "aspect-video")} />
+          <Skeleton className="aspect-video w-full rounded-[22px]" />
           <div className="space-y-3 px-4 pb-4 pt-5">
             <Skeleton className="h-3 w-28" />
             <Skeleton className="h-5 w-4/5" />
@@ -186,7 +192,7 @@ const Updates = () => {
             ) : (
               <ul className={FEED_GRID}>
                 {shown.map((article, index) => (
-                  <li key={article.id} className={cn(index === 0 && "md:col-span-2 lg:row-span-2")}>
+                  <li key={article.id} className={cn(index === 0 && "md:col-span-2")}>
                     <StoryTile article={article} lead={index === 0} />
                   </li>
                 ))}
