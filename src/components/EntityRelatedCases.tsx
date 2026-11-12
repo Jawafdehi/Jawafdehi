@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 
 import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";

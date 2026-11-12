@@ -1,4 +1,4 @@
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "@/components/icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 

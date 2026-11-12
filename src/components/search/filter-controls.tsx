@@ -4,7 +4,7 @@
 // amount and date presets) mark with a dot, multi-choice ones with a box; a
 // "Custom range" or "Show all" row sits in the same list with a chevron where
 // the marker would be. Typed bounds open beneath as hairline fields.
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "@/components/icons";
 import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";

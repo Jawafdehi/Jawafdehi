@@ -49,7 +49,7 @@ import {
   ChevronDown,
   FileSpreadsheet,
   Maximize2,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";

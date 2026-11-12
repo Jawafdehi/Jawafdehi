@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Code2, Flag, ArrowRight } from "lucide-react";
+import { Code2, Flag, ArrowRight } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import {

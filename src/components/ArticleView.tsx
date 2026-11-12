@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Calendar, ArrowRight } from "lucide-react";
+import { ArrowLeft, Calendar, ArrowRight } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { StreamField } from "@/components/StreamField";

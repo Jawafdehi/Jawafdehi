@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { Info } from "lucide-react";
+import { Info } from "@/components/icons";
 
 import { REPORT, CITATIONS, verdictYearRates, fyLabel } from "@/data/research-corruption";
 import { AccountabilityFunnel, type FunnelStage } from "@/components/data-quality/AccountabilityFunnel";

@@ -34,7 +34,7 @@ import {
   RefreshCw,
   Undo2,
   X,
-} from "lucide-react";
+} from "@/components/icons";
 
 type Row = Record<string, unknown>;
 const str = (v: unknown): string => (v == null ? "" : String(v));

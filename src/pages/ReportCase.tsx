@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import { FileDown, Mail, ShieldAlert } from "lucide-react";
+import { FileDown, Mail, ShieldAlert } from "@/components/icons";
 import { FaDiscord, FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
 import { FaTiktok, FaXTwitter } from "react-icons/fa6";
 import { SiLinktree } from "react-icons/si";

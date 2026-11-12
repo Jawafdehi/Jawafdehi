@@ -8,7 +8,7 @@ import {
   Download,
   ExternalLink,
   FileText,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

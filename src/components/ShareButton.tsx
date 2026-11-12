@@ -29,7 +29,7 @@ import {
   Phone,
   ChevronDown,
   ChevronUp
-} from "lucide-react";
+} from "@/components/icons";
 import { toast } from "sonner";
 import { LazyQRCode } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/ui/pagination";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, AlertCircle, LayoutGrid, List, X } from "lucide-react";
+import { Search, AlertCircle, LayoutGrid, List, X } from "@/components/icons";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 import {

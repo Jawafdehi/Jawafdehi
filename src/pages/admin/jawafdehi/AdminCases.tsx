@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search } from "@/components/icons";
 import { fmtDate } from "@/lib/casework-ui";
 
 type Row = Record<string, unknown>;

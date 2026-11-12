@@ -9,7 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search } from "@/components/icons";
 
 // A case as returned by GET /api/cases/ (only the fields the picker needs).
 interface CaseHit {

@@ -1,4 +1,4 @@
-import { Mail } from "lucide-react";
+import { Mail } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import { JAWAFDEHI_EMAIL } from "@/config/constants";

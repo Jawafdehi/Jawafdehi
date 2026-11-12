@@ -3,7 +3,7 @@
 // grain shader, warmer than the home page's diamond field. The content follows
 // the pilot flyer (November 2026); the sections are in mcp-sections.tsx and
 // connect-panel.tsx.
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 

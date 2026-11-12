@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";

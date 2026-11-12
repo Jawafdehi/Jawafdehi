@@ -11,7 +11,7 @@ import {
   radarChartSvg,
   mdToHtml,
 } from "@/lib/casework-ui";
-import { Loader2, ChevronDown, FileText } from "lucide-react";
+import { Loader2, ChevronDown, FileText } from "@/components/icons";
 
 type Filter = "all" | "needs" | "llm" | "deterministic" | "gates";
 

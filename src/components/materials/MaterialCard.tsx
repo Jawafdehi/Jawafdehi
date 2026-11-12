@@ -1,4 +1,4 @@
-import { Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 import type { MaterialSourceLink } from "@/lib/material-links";
 
@@ -30,7 +30,7 @@ export type MaterialCardViewMode = "list" | "card";
  * as a per-record picture.
  */
 export interface MaterialMetaRow {
-  icon: LucideIcon;
+  icon: IconComponent;
   label: string;
   /** ReactNode so a value can carry search highlights. */
   value: ReactNode;

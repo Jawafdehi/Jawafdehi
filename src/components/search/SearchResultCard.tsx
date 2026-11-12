@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Calendar, Landmark, Library } from "lucide-react";
+import { ArrowRight, Calendar, Landmark, Library } from "@/components/icons";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 

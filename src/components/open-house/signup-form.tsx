@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 

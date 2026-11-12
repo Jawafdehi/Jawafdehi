@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getCaseById } from "@/services/jds-api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
+import { Calendar, ExternalLink, MapPin, User } from "@/components/icons";
 import { formatCaseDateRange } from "@/utils/date";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { JawafEntity } from "@/types/jds";

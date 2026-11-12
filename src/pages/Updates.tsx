@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight, Calendar } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";

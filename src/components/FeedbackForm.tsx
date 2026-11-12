@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Mail, Phone, MessageCircle, HelpCircle, Loader2, AlertCircle, Plus, X, Instagram, Facebook, Paperclip, Clock } from "lucide-react";
+import { Mail, Phone, MessageCircle, HelpCircle, Loader2, AlertCircle, Plus, X, Instagram, Facebook, Paperclip, Clock } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

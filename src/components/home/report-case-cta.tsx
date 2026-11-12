@@ -3,7 +3,7 @@
 // the home page closes on the surface it opened with.
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { FilePlus2 } from "lucide-react";
+import { FilePlus2 } from "@/components/icons";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Button } from "@/components/ui/button";

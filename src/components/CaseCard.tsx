@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CaseTagBadge } from "@/components/CaseBadge";
-import { Coins, MapPin, User } from "lucide-react";
+import { Coins, MapPin, User } from "@/components/icons";
 import { entityPath } from "@/lib/entity-links";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";

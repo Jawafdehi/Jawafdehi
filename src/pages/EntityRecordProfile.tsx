@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
+import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink } from "@/components/icons";
 
 import { http, API_BASE_URL } from "@/services/http";
 import { entityPath, isEntityRecordTail } from "@/lib/entity-links";

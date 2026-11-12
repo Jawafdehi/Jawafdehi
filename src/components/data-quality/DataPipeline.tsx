@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   ChevronRight,
   ArrowRight,
-} from "lucide-react";
+} from "@/components/icons";
 
 /**
  * "Where this comes from." A plain, conceptual flow diagram answering the

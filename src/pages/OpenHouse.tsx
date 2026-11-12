@@ -10,8 +10,8 @@ import {
   UserPlus,
   Users,
   Video,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
 
 import { Seo } from "@/components/Seo";
 import { OpenHouseSignupForm } from "@/components/open-house/signup-form";
@@ -52,7 +52,7 @@ function signupHref(pathname: string): string {
 }
 
 type Topic = {
-  icon: LucideIcon;
+  icon: IconComponent;
   titleKey: string;
   descKey: string;
 };
@@ -76,7 +76,7 @@ const topics: Topic[] = [
 ];
 
 type NextStep = {
-  icon: LucideIcon;
+  icon: IconComponent;
   to: string;
   labelKey: string;
   descKey: string;

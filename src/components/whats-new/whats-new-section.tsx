@@ -2,7 +2,7 @@
 // side by side, and a link to the full list on /whats-new. The home page shows
 // the latest across the platform (pinned entries first), compact, after the
 // report band; a product page shows its own tag.
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 

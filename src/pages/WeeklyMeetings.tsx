@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PauseCircle, Play, Youtube } from "lucide-react";
+import { PauseCircle, Play, Youtube } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

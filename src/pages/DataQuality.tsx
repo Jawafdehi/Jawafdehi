@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@/components/icons";
 
 import { getStatistics } from "@/services/jds-api";
 import { formatFreshness } from "@/lib/data-quality";

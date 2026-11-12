@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { Mail } from "@/components/icons";
 import { FaFacebook, FaWhatsapp } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 

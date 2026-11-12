@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ExternalLink, Unlock } from "lucide-react";
+import { ExternalLink, Unlock } from "@/components/icons";
 import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin, FaDiscord, FaWhatsapp } from "react-icons/fa";
 import { FaXTwitter, FaTiktok } from "react-icons/fa6";
 import { SiLinktree } from "react-icons/si";

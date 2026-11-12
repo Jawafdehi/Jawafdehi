@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertCircle, FileText, Building2, User, Mail, Phone, Globe } from 'lucide-react';
+import { AlertCircle, FileText, Building2, User, Mail, Phone, Globe } from "@/components/icons";
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from '@/utils/entity-helpers';

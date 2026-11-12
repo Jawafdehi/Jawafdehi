@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { unsubscribeFromNewsletter } from "@/services/jds-api";

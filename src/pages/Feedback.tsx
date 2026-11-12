@@ -1,4 +1,4 @@
-import { ArrowUpRight, Github, Mail } from "lucide-react";
+import { ArrowUpRight, Github, Mail } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { FaDiscord } from "react-icons/fa";
 

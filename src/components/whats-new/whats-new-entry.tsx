@@ -2,7 +2,7 @@
 // a large title in the display face, a sentence or two, and "More" when the
 // entry has somewhere to go. Used on /whats-new, the home page and /mcp, so the
 // three read as the same list.
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 

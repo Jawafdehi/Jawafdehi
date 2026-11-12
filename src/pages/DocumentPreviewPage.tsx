@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 
 import {
   DocumentPreviewViewer,

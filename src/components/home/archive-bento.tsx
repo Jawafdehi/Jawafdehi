@@ -2,7 +2,7 @@
 // AI assistant (the one navy panel), what is in it, and how a case is followed
 // from charge sheet to verdict. Each panel shows its idea with a small
 // piece of interface rather than a paragraph.
-import { FileText, Gavel, Landmark } from "lucide-react";
+import { FileText, Gavel, Landmark } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import { ArrowLink } from "@/components/ui/arrow-link";

@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy } from "@/components/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 

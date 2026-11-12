@@ -1,4 +1,4 @@
-import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "lucide-react";
+import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { usBoard, nepalBoard, members, pastMembers } from "@/data/team";
 import type { Contact } from "@/data/team";

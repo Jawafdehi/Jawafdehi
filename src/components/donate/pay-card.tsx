@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink, HeartHandshake } from "lucide-react";
+import { Check, Copy, ExternalLink, HeartHandshake } from "@/components/icons";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";

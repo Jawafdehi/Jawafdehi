@@ -1,4 +1,4 @@
-import { Mic2, Youtube } from "lucide-react";
+import { Mic2, Youtube } from "@/components/icons";
 import type { ElementType } from "react";
 import { useTranslation } from "react-i18next";
 import { BsCameraReelsFill } from "react-icons/bs";

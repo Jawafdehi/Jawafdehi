@@ -16,7 +16,7 @@ import {
   Search,
   ShieldCheck,
   Users,
-} from "lucide-react";
+} from "@/components/icons";
 
 import {
   buildFallbackSearchIndexEntries,

@@ -11,12 +11,12 @@ import {
   Laptop,
   Mail,
   Scale,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
 import { SITE_URL } from "@/utils/seo";
 
 type VolunteerProfile = {
-  icon: LucideIcon;
+  icon: IconComponent;
   titleKey: string;
   descKey: string;
 };

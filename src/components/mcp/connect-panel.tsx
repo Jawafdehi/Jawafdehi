@@ -3,7 +3,7 @@
 // numbered markers, the one thing to copy (server address, commands
 // or config) inside the step that uses it, and a closing "try it" step — with
 // where it runs and what plan it needs in a quiet side column.
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import { chipVariants } from "@/components/ui/chip";

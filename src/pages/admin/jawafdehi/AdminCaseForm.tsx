@@ -68,7 +68,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Trash2 } from "@/components/icons";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
 // An image-library id read back off a loaded case. Null for "no image", which is

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "@/components/icons";
 import { Helmet } from "react-helmet-async";
 
 import { Button } from "@/components/ui/button";

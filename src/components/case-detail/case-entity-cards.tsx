@@ -11,7 +11,7 @@
 import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 
 import { Badge } from "@/components/ui/badge";
 import { EntityIdentity } from "@/components/EntityIdentity";

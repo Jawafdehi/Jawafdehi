@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight } from "lucide-react";
+import { AlertCircle, ArrowRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 

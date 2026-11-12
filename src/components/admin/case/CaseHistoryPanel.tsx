@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import { getCaseHistory, type CaseStateChange } from "@/services/admin-api";
 import { fmtDate } from "@/lib/casework-ui";
 import { Badge } from "@/components/ui/badge";
-import { History, Loader2 } from "lucide-react";
+import { History, Loader2 } from "@/components/icons";
 
 // F7 — case workflow history / author feedback loop. Shows who moved the case
 // between states, when, and (crucially) any reason a moderator left when

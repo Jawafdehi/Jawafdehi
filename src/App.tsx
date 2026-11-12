@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -23,9 +23,6 @@ const RouteLoadingFallback = () => (
   </div>
 );
 
-// DEV ONLY: the icon-library switch; compiled out of production builds.
-const IconLibToggle = import.meta.env.DEV ? lazy(() => import("@/dev/IconLibToggle")) : null;
-
 const App = () => (
   <Sentry.ErrorBoundary fallback={({ error, resetError }) => <SentryErrorFallback error={error} resetError={resetError} />}>
     <TooltipProvider>
@@ -33,11 +30,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <CookieConsentBanner />
-        {IconLibToggle ? (
-          <Suspense fallback={null}>
-            <IconLibToggle />
-          </Suspense>
-        ) : null}
       </ClientOnly>
       <Suspense fallback={<RouteLoadingFallback />}>
         <ScrollToTop />

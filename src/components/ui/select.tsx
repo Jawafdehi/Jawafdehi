@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp } from "@/components/icons";
 
 import { cn } from "@/lib/utils";
 import { MENU_ITEM, MENU_LABEL, OVERLAY_SURFACE } from "@/components/ui/overlay-styles";

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { PanelLeft } from "lucide-react";
+import { PanelLeft } from "@/components/icons";
 
 import { cn } from "@/lib/utils";
 

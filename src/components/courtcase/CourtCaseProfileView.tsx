@@ -7,7 +7,7 @@ import {
   ExternalLink,
   IdCard,
   Landmark,
-} from "lucide-react";
+} from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";

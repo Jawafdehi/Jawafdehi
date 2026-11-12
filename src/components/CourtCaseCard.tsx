@@ -8,8 +8,8 @@ import {
   Landmark,
   Scale,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
 import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -101,7 +101,7 @@ function CourtCaseMetaRow({
   translate,
   children,
 }: Readonly<{
-  icon: LucideIcon;
+  icon: IconComponent;
   className?: string;
   valueClassName?: string;
   translate?: "no";
@@ -140,7 +140,7 @@ function CourtCasePartyRow({
   labelFallback,
   party,
 }: Readonly<{
-  icon: LucideIcon;
+  icon: IconComponent;
   labelKey: string;
   labelFallback: string;
   party?: NameGroup | null;

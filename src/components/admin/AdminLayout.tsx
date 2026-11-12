@@ -29,7 +29,7 @@ import {
   Gavel,
   ScrollText,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/icons";
 
 // The unified admin panel mounts at /admin (folds in the old /portal casework
 // pages). Auth: OIDC + an internal role. The API is the authorization

@@ -11,7 +11,7 @@ import {
   Mail,
   Twitter,
   User,
-} from "lucide-react";
+} from "@/components/icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getAuthorProfile } from "@/services/jds-api";

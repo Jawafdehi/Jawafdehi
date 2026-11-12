@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare } from "@/components/icons";
 import { lazyChart } from "@/components/charts/lazy";
 
 // disqus-react, deferred out of the initial payload. The embed is already

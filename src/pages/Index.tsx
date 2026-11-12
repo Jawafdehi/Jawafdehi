@@ -8,7 +8,7 @@ import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Reveal } from "@/components/ui/reveal";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { SupportingPartner } from "@/components/home/supportingpartner";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { useQuery } from "@tanstack/react-query";

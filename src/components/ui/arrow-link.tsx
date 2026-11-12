@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "@/components/icons";
 import type { MouseEventHandler, ReactNode } from "react";
 import { Link } from "react-router-dom";
 

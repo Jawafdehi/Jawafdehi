@@ -2,7 +2,7 @@
 // Jawafdehi MCP pilot flyer (November 2026): the problem, what the connector
 // is, what the archive holds, two real answers, questions that work today,
 // and the pilot. Setup lives in connect-panel.tsx.
-import { ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight, Check } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";

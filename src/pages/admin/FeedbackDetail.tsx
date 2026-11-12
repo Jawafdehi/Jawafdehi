@@ -7,7 +7,7 @@ import type { FeedbackSubmissionRow } from "@/types/feedback";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { FormError } from "@/components/admin/FormError";
 import FeedbackCard from "@/components/admin/feedback/FeedbackCard";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "@/components/icons";
 
 // One submission, addressed directly. This is what the case-report notification
 // email links to (``FRONTEND_BASE_URL/admin/feedback/<id>``), so it has to

@@ -1,4 +1,4 @@
-import { Archive, Download, ExternalLink, FileText, Files, Link as LinkIcon } from "lucide-react";
+import { Archive, Download, ExternalLink, FileText, Files, Link as LinkIcon } from "@/components/icons";
 import { useState } from "react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";

@@ -6,7 +6,7 @@
 //
 // The popovers hold the SAME controls as the "All filters" sheet (FilterGroup,
 // the amount presets, the date range); this component only arranges them.
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "@/components/icons";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 

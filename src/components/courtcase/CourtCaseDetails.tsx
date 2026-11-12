@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -9,7 +9,7 @@ import { FormError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, RefreshCw, Search } from "lucide-react";
+import { Loader2, RefreshCw, Search } from "@/components/icons";
 
 const PAGE_SIZE = 50;
 

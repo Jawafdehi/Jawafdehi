@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Mail, MessageCircle, AlertCircle } from "lucide-react";
+import { Mail, MessageCircle, AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,

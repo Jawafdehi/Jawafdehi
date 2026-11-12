@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search } from "@/components/icons";
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 

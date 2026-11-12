@@ -11,7 +11,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, FileSearch } from "lucide-react";
+import { ArrowRight, FileSearch } from "@/components/icons";
 
 import { SearchBar } from "@/components/ui/search-bar";
 import { searchArchive } from "@/services/search-api";

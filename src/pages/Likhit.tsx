@@ -6,7 +6,7 @@
 //
 // Content first came from PR #444 (which typeset the page in likhit's own
 // benchmark design); this version keeps that content on the site's system.
-import { ArrowRight, ArrowUpRight, Github, Globe, Package } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Github, Globe, Package } from "@/components/icons";
 import { useEffect, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 

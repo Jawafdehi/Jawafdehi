@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "@/components/icons";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileView";

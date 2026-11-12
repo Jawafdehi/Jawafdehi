@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "@/components/icons";
 import { Link } from "react-router-dom";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";

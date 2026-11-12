@@ -3,7 +3,7 @@
 // each with an icon-only Copy button (named for screen readers by
 // `label`, with the same text as its tooltip). Shared by /mcp and /likhit. Both are as
 // wide as their text and scroll sideways rather than wrap on narrow screens.
-import { Check, Copy } from "lucide-react";
+import { Check, Copy } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";

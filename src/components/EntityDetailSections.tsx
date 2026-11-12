@@ -15,7 +15,7 @@ import {
   Tag,
   Vote,
   ExternalLink,
-} from 'lucide-react';
+} from "@/components/icons";
 import type { Entity, Candidacy } from '@/types/entity';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';

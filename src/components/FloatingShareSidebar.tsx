@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link2, Check, Share2, QrCode, Printer, Download } from "lucide-react";
+import { Link2, Check, Share2, QrCode, Printer, Download } from "@/components/icons";
 import { toast } from "sonner";
 import { LazyQRCode } from "@/components/LazyQRCode";
 import { buildShareLinks } from "@/utils/share";

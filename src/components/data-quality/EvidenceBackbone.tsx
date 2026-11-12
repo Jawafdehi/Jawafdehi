@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Gavel, Landmark } from "lucide-react";
+import { Gavel, Landmark } from "@/components/icons";
 
 import { AnimatedCount } from "@/components/ui/animated-count";
 import type { DataLakeMetrics } from "@/types/jds";

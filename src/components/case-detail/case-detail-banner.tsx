@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowUpRight, Share2 } from "lucide-react";
+import { ArrowUpRight, Share2 } from "@/components/icons";
 import { CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";

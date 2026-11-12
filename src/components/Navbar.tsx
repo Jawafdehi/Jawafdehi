@@ -7,7 +7,7 @@ import {
   Menu,
   MessageCircle,
   Search,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { AppSearchCommand } from "@/components/AppSearchCommand";
 import { LanguageToggle } from "@/components/LanguageToggle";

@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   AlertCircle,
   SquarePen,
-} from "lucide-react";
+} from "@/components/icons";
 import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
 import { CaseDisclaimerBanner } from "@/components/case-detail/case-disclaimer-banner";

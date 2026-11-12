@@ -1,4 +1,4 @@
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { Download, ExternalLink, FileText } from "@/components/icons";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 

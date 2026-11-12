@@ -4,7 +4,7 @@ import { FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X } from "@/components/icons";
 
 // An upload is always the primary document: the link-role vocabulary describes
 // what kind of URL an entry is (PERMALINK = the source's own canonical page,

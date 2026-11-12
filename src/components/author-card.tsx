@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { User } from "lucide-react";
+import { User } from "@/components/icons";
 import type { CaseAuthorCredit } from "@/types/jds";
 import { cn } from "@/lib/utils";
 

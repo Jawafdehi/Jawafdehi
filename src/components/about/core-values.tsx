@@ -1,9 +1,9 @@
-import { FileCheck2, FileSearch, Handshake, Scale, type LucideIcon } from "lucide-react";
+import { FileCheck2, FileSearch, Handshake, Scale, type IconComponent } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 type CoreValue = {
   key: "integrity" | "transparency" | "accuracy" | "publicService";
-  icon: LucideIcon;
+  icon: IconComponent;
 };
 
 const coreValues: CoreValue[] = [

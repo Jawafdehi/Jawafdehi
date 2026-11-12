@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { MapPin, User } from "lucide-react";
+import { MapPin, User } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import {

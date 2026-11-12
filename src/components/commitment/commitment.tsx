@@ -3,16 +3,16 @@ import {
   CheckCircle2,
   GitBranch,
   Globe,
-  Infinity as InfinityIcon,
+  InfinityIcon,
   Scale,
   Sparkles,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 type CommitmentItem = {
-  icon: LucideIcon;
+  icon: IconComponent;
   titleKey: string;
   bodyKey: string;
 };
