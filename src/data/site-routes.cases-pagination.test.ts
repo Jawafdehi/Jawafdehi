@@ -33,8 +33,10 @@ describe("the case browse pages are registered as routes", () => {
     // The number of pages depends on how many cases exist, so these URLs are
     // generated from the live count by scripts/sitemap.ts instead.
     const paged = SITE_ROUTES.find((route) => route.path === routePath);
-    expect(paged?.sitemapTitle).toBeUndefined();
-    expect(paged?.titleKey).toBeUndefined();
+    expect(paged).toBeDefined();
+    // `in`, not a property read: the route's literal type has no such keys.
+    expect("sitemapTitle" in (paged ?? {})).toBe(false);
+    expect("titleKey" in (paged ?? {})).toBe(false);
   });
 
   it("matches the URLs casesPagePath builds", () => {

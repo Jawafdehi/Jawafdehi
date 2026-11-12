@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { PayCard } from "@/components/donate/pay-card";
 import { JAWAFDEHI_EMAIL, JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { getStatistics } from "@/services/jds-api";
-import { trackEvent } from "@/utils/analytics";
+import { trackEvent, type DonateMethod } from "@/utils/analytics";
 
 /** The channels a donor can actually reach a human on. Email is the record
  * channel for receipts and donation questions; Facebook and WhatsApp are where
@@ -15,10 +15,10 @@ import { trackEvent } from "@/utils/analytics";
  * write an email still has a way in. Labels reuse the footer's channel names,
  * which are already translated. */
 const CONTACT_CHANNELS: readonly {
-  id: string;
+  id: DonateMethod;
   href: string;
   labelKey: string;
-  icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon: ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
   external?: boolean;
 }[] = [
   {

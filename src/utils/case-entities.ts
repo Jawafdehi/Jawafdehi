@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 // Helpers for selecting and labelling a case's subject entities.
 //
 // Not every case type names an "accused" party. CORRUPTION cases do; others
@@ -129,9 +131,12 @@ export function getCaseTypeLabelKey(
 export function getFacetItemLabel(
   facetName: string,
   item: { name: string; display_name?: string },
-  translate: (key: string, fallback?: string) => string,
+  // i18next's TFunction (whose overloads no plain signature matches) or the
+  // plain stand-in tests pass; both are called as (key, fallback?) here.
+  translateFn: TFunction | ((key: string, fallback?: string) => string),
   language = "en",
 ): string {
+  const translate = translateFn as (key: string, fallback?: string) => string;
   const humanize = (v: string) => v.replaceAll("_", " ").replaceAll("-", " ");
   // Entity type. The bucket value is a raw schema.org `@type` — see
   // ENTITY_TYPE_LABEL_KEYS for why reading it verbatim is the bug.

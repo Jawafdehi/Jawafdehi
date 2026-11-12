@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { trackEvent } from "@/utils/analytics";
+import { trackEvent, type DonateAction, type DonateMethod } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
 // same entity; they differ only in what the donor sees at checkout.
@@ -149,8 +149,8 @@ function CopyRow({
   display: string;
   copyText: string;
   copyAria: string;
-  action: string;
-  trackMethod: string;
+  action: DonateAction;
+  trackMethod: DonateMethod;
   mono?: boolean;
 }) {
   const { t } = useTranslation();
@@ -221,7 +221,7 @@ function CopyRow({
 // AbroadPanel). `trackMethod` names the context in analytics. Every row is
 // copyable — donors paste each field into their banking app — and each row owns
 // its feedback state independently.
-function BankDetails({ trackMethod }: { trackMethod: string }) {
+function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   const { t } = useTranslation();
 
   return (

@@ -261,6 +261,8 @@ export interface CourtCase {
   verdict_date_ad: string | null;
   verdict_judge: string | null;
   status: string;
+  /** The court document this record was read from (a /material/ IRI or path). */
+  material_id?: string | null;
   // Sub-resources present only on the assembled "full" shape (getCourtCaseFull).
   // The composite-key core endpoint (getCourtCase) omits them entirely, so every
   // reader must treat them as optional and default to [].

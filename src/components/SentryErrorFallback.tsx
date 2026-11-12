@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 
 interface SentryErrorFallbackProps {
-  error?: Error;
+  // Sentry hands over whatever was thrown, which need not be an Error.
+  error?: unknown;
   resetError?: () => void;
 }
 
