@@ -1179,7 +1179,24 @@
     "attachment": "संलग्नक",
     "attachmentOptional": "वैकल्पिक",
     "attachmentMaxSize": "अधिकतम फाइल साइज: १० MB",
-    "attachmentTooLarge": "फाइल धेरै ठूलो छ। अधिकतम साइज १० MB हो।"
+    "attachmentTooLarge": "फाइल धेरै ठूलो छ। अधिकतम साइज १० MB हो।",
+    "eyebrow": "प्रतिक्रिया",
+    "other": {
+      "title": "हामीसम्म पुग्ने अरू बाटा",
+      "line": "मुद्दाको सुधार, सूचना वा लामो कुराकानीका लागि।",
+      "email": {
+        "name": "इमेल",
+        "line": "report@jawafdehi.org"
+      },
+      "discord": {
+        "name": "डिस्कर्ड",
+        "line": "टोली र स्वयंसेवकसँग कुरा गर्नुहोस्"
+      },
+      "github": {
+        "name": "गिटहब इस्यु",
+        "line": "खुला रूपमा त्रुटि जानकारी दिनुहोस्"
+      }
+    }
   },
   "notFound": {
     "title": "४०४",

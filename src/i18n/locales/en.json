@@ -1179,7 +1179,24 @@
     "attachment": "Attachment",
     "attachmentOptional": "optional",
     "attachmentMaxSize": "Maximum file size: 10 MB",
-    "attachmentTooLarge": "File is too large. Maximum size is 10 MB."
+    "attachmentTooLarge": "File is too large. Maximum size is 10 MB.",
+    "eyebrow": "Feedback",
+    "other": {
+      "title": "Other ways to reach us",
+      "line": "For a correction to a case, a lead, or a longer conversation.",
+      "email": {
+        "name": "Email",
+        "line": "report@jawafdehi.org"
+      },
+      "discord": {
+        "name": "Discord",
+        "line": "Talk to the team and volunteers"
+      },
+      "github": {
+        "name": "GitHub issues",
+        "line": "Report a bug in the open"
+      }
+    }
   },
   "notFound": {
     "title": "404",

@@ -1,10 +1,24 @@
+import { ArrowUpRight, Github, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
+import { FaDiscord } from "react-icons/fa";
+
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { Seo } from "@/components/Seo";
+import { LightHero } from "@/components/ui/light-hero";
+import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
+const OTHER_WAYS = [
+  { key: "email", href: "mailto:report@jawafdehi.org", Icon: Mail, external: false },
+  { key: "discord", href: JAWAFDEHI_SOCIALS.discord, Icon: FaDiscord, external: true },
+  { key: "github", href: "https://github.com/Jawafdehi/Jawafdehi/issues", Icon: Github, external: true },
+] as const;
+
+/**
+ * Feedback in the site's light page shape: the light hero, the form in one
+ * hairline card, and beside it a grey panel with the other ways to reach the
+ * team, for anything a form is the wrong place for.
+ */
 export default function Feedback() {
   const { t } = useTranslation();
 
@@ -17,25 +31,55 @@ export default function Feedback() {
       />
 
       <main id="main-content" className="flex-1">
-        <div className="layout-container py-8 md:py-12 max-w-2xl">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-6 w-6 text-primary" />
-                <CardTitle className="text-3xl">{t("feedback.title")}</CardTitle>
-              </div>
-              <CardDescription className="text-base">
-                {t("feedback.titleDescription")}
-              </CardDescription>
-            </CardHeader>
+        <LightHero
+          id="feedback-title"
+          eyebrow={t("feedback.eyebrow", "Feedback")}
+          title={t("feedback.title")}
+          description={t("feedback.titleDescription")}
+        />
 
-            <CardContent>
+        <section aria-label={t("feedback.title")} className="pb-20 md:pb-28">
+          <div className="layout-container grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:gap-8">
+            <div className="rounded-[28px] border border-border/70 bg-surface p-6 md:p-8">
               <FeedbackForm />
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            </div>
 
+            <aside className="lg:self-start">
+              <div className="rounded-[28px] bg-muted p-6 md:p-8">
+                <h2 className="text-xl font-normal leading-snug text-primary">
+                  {t("feedback.other.title", "Other ways to reach us")}
+                </h2>
+                <p className="mt-2 text-[15px] leading-6 text-muted-foreground">
+                  {t("feedback.other.line", "For a correction to a case, a lead, or a longer conversation.")}
+                </p>
+                <ul className="mt-6 space-y-2">
+                  {OTHER_WAYS.map(({ key, href, Icon, external }) => (
+                    <li key={key}>
+                      <a
+                        href={href}
+                        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        className="group flex items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 transition-colors hover:bg-surface/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
+                          <Icon className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[15px] text-primary">{t(`feedback.other.${key}.name`)}</span>
+                          <span className="block truncate text-sm text-muted-foreground">{t(`feedback.other.${key}.line`)}</span>
+                        </span>
+                        <ArrowUpRight
+                          className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                          aria-hidden="true"
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
