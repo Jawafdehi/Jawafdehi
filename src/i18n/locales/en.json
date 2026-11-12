@@ -2439,17 +2439,6 @@
       "browseAllLine": "Search every document",
       "lede": "Shelved by publisher."
     },
-    "capabilities": {
-      "title": "The archive works for you",
-      "lede": "Read it, question it, or take all of it — the records stay public either way.",
-      "downloadTitle": "Download everything",
-      "downloadLine": "Open any series and follow every document to its source file.",
-      "askTitle": "Ask the AI assistant",
-      "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
-      "analyzeTitle": "Analyze in bulk",
-      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub.",
-      "short": "Read it, ask it, take it all."
-    },
     "recent": {
       "title": "Recently added",
       "slice": "The {{shown}} newest of {{total}} documents in the archive.",

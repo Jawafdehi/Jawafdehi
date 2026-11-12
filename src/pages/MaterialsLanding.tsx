@@ -1,5 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUpRight, Download, FileSearch, MessagesSquare } from "lucide-react";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -8,7 +8,6 @@ import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
-import { Panel } from "@/components/ui/panel";
 import { SplitHeading } from "@/components/ui/split-heading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesCount } from "@/data/material-series";
@@ -25,27 +24,6 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
-/** The three ways to use the archive, in the capabilities bento. */
-const CAPABILITIES = [
-  {
-    key: "download",
-    icon: Download,
-    titleFallback: "Download everything",
-    lineFallback: "Open any series and follow every document to its source file.",
-  },
-  {
-    key: "ask",
-    icon: MessagesSquare,
-    titleFallback: "Ask the AI assistant",
-    lineFallback: "Put a question to the archive in Nepali or English and get cited answers.",
-  },
-  {
-    key: "analyze",
-    icon: FileSearch,
-    titleFallback: "Analyze in bulk",
-    lineFallback: "The structured data is open (CC BY-NC) — build on it from our GitHub.",
-  },
-] as const;
 
 export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
@@ -88,7 +66,6 @@ export default function MaterialsLanding() {
   });
 
   const gridRef = useRevealOnScroll<HTMLElement>();
-  const capabilitiesRef = useRevealOnScroll<HTMLElement>();
   const recentRef = useRevealOnScroll<HTMLElement>();
 
 
@@ -259,38 +236,6 @@ export default function MaterialsLanding() {
               <BrowseAllFolderCard />
             </li>
           </ul>
-        </div>
-      </section>
-
-      {/* Capabilities, in the home page's bento kit: a two-tone heading over
-          three grey panels, one per way to use the archive. */}
-      <section ref={capabilitiesRef} aria-labelledby="capabilities-heading">
-        <div className="layout-container pb-16 md:pb-24">
-          <SplitHeading
-            id="capabilities-heading"
-            lead={`${t("materialsLanding.capabilities.title", "The archive works for you")}.`}
-            rest={t("materialsLanding.capabilities.short", "Read it, ask it, take it all.")}
-          />
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {CAPABILITIES.map(({ key, icon: Icon, titleFallback, lineFallback }) => (
-              <Panel key={key} className="min-h-[15rem] justify-between gap-10">
-                <span
-                  aria-hidden="true"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-primary"
-                >
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-xl font-normal text-primary">
-                    {t(`materialsLanding.capabilities.${key}Title`, titleFallback)}
-                  </h3>
-                  <p className="mt-2 text-[15px] leading-6 text-muted-foreground">
-                    {t(`materialsLanding.capabilities.${key}Line`, lineFallback)}
-                  </p>
-                </div>
-              </Panel>
-            ))}
-          </div>
         </div>
       </section>
 
