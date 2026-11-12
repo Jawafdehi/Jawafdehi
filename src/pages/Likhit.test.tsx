@@ -88,39 +88,54 @@ describe("the likhit landing page", () => {
   });
 
   it("names all four redaction tiers, least-removed first", async () => {
-    const { container } = await renderPage("en");
+    await renderPage("en");
 
-    const tiers = [...container.querySelectorAll("#likhit-tiers-title ~ dl dt code")];
+    const section = screen.getByRole("region", { name: i18n.t("likhit.privacy.title") });
+    const tiers = [...section.querySelectorAll("dl dt code")];
     expect(tiers.map((el) => el.textContent)).toEqual(["none", "identifiers", "contact", "strict"]);
   });
 
-  it("gives every likhit-redact command its required arguments", async () => {
+  it("gives the likhit-redact example its required arguments", async () => {
     await renderPage("en");
 
-    const group = screen.getByRole("group", { name: i18n.t("likhit.privacy.commandsTitle") });
-    const commands = [...group.querySelectorAll("code")].map((el) => el.textContent ?? "");
-    expect(commands).toHaveLength(3);
-    for (const command of commands) {
-      expect(command.startsWith("likhit-redact ")).toBe(true);
-      expect(command).toContain("--out");
-      if (!command.includes(" scan ")) expect(command).toContain("--journal ");
-    }
+    const section = screen.getByRole("region", { name: i18n.t("likhit.privacy.title") });
+    const command = [...section.querySelectorAll("code")]
+      .map((el) => el.textContent ?? "")
+      .find((text) => text.startsWith("likhit-redact "));
+    expect(command).toBeDefined();
+    expect(command).toContain("--out");
+    expect(command).toContain("--journal ");
   });
 
-  it("gives every OCR recipe a card with a copyable setup", async () => {
+  it("puts the command-line usage in one copyable block", async () => {
+    await renderPage("en");
+
+    const section = screen.getByRole("region", { name: i18n.t("likhit.cli.title") });
+    expect(within(section).getAllByRole("button", { name: i18n.t("likhit.cli.copyCommand") })).toHaveLength(1);
+    expect(section.textContent).toContain("likhit-save notice.pdf --out notice.md");
+    expect(section.textContent).toContain("--redact none");
+  });
+
+  it("switches between the three OCR recipes, one at a time", async () => {
     await renderPage("en");
 
     const section = screen.getByRole("region", { name: i18n.t("likhit.ocr.title") });
-    const cards = within(section).getAllByRole("article");
-    expect(cards).toHaveLength(3);
-    expect(cards.map((card) => card.querySelector("p")?.textContent)).toEqual([
-      i18n.t("likhit.ocr.local.badge"),
-      i18n.t("likhit.ocr.bedrock.badge"),
-      i18n.t("likhit.ocr.hosted.badge"),
-    ]);
-    expect(within(section).getAllByRole("button", { name: i18n.t("likhit.ocr.copyRecipe") })).toHaveLength(3);
+    const pills = within(section).getAllByRole("button", { pressed: false }).concat(
+      within(section).getAllByRole("button", { pressed: true }),
+    );
+    expect(pills).toHaveLength(3);
+    expect(within(section).getAllByRole("button", { name: i18n.t("likhit.ocr.copyRecipe") })).toHaveLength(1);
     expect(section.textContent).toContain("ollama pull qwen2.5vl:7b");
+
+    act(() => {
+      within(section).getByRole("button", { name: i18n.t("likhit.ocr.bedrock.name") }).click();
+    });
     expect(section.textContent).toContain("litellm --model bedrock");
+    expect(section.textContent).not.toContain("ollama pull");
+
+    act(() => {
+      within(section).getByRole("button", { name: i18n.t("likhit.ocr.hosted.name") }).click();
+    });
     expect(section.textContent).toContain("GEMINI_API_KEY");
   });
 

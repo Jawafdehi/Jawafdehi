@@ -7,13 +7,14 @@
 // Content first came from PR #444 (which typeset the page in likhit's own
 // benchmark design); this version keeps that content on the site's system.
 import { ArrowRight, ArrowUpRight, Github, Globe, Package } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { CopyBlock, CopyButton, CopyPill } from "@/components/copy-snippet";
 import { Seo } from "@/components/Seo";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { chipVariants } from "@/components/ui/chip";
+import { Panel } from "@/components/ui/panel";
 import { Reveal } from "@/components/ui/reveal";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
@@ -23,7 +24,6 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 const REPO_URL = "https://github.com/Jawafdehi/likhit";
 const PYPI_URL = "https://pypi.org/project/likhit/";
 const BENCHMARK_URL = "https://jawafdehi.github.io/likhit/";
-const MARKITDOWN_URL = "https://github.com/microsoft/markitdown";
 const CHANGELOG_URL = `${REPO_URL}/blob/main/CHANGELOG.md`;
 
 // Hand-maintained: bump when a release goes out. Nothing here reads PyPI at
@@ -40,17 +40,24 @@ const FEATURES = ["repair", "layout", "ocr", "legacy"] as const;
 // scanning for "what do I get by default" reaches `strict` last.
 const REDACTION_TIERS = ["none", "identifiers", "contact", "strict"] as const;
 
-const REDACT_COMMANDS = [
-  { key: "scan", command: "likhit-redact scan transcripts/ --out report.json" },
-  { key: "pdf", command: "likhit-redact pdf charge-sheet.pdf --out redacted.pdf --journal redaction.jsonl" },
-  { key: "tree", command: "likhit-redact redact transcripts/ --out-tree redacted/ --journal redaction.jsonl" },
-] as const;
+/** One redaction example: a PDF in, a redacted PDF and its journal out. */
+const REDACT_COMMAND = "likhit-redact pdf charge-sheet.pdf --out redacted.pdf --journal redaction.jsonl";
 
-const CLI_EXAMPLES = [
-  { key: "one", command: "likhit-save notice.pdf --out notice.md" },
-  { key: "many", command: "likhit-save a.pdf b.pdf --out-dir converted/" },
-  { key: "pages", command: "likhit-save report.pdf --pages 2-4 --out pages.md" },
-] as const;
+/** The command-line usage as ONE copyable block, each case a comment. */
+const CLI_BLOCK = `# one file
+likhit-save notice.pdf --out notice.md
+
+# many files
+likhit-save a.pdf b.pdf --out-dir converted/
+
+# a page range
+likhit-save report.pdf --pages 2-4 --out pages.md
+
+# redacts personal data by default; keep everything with
+likhit-save notice.pdf --redact none --out notice.md
+
+# or as a MarkItDown plugin
+markitdown --use-plugins document.pdf`;
 
 // One recipe per place the OCR endpoint can live. They differ only in the
 // three environment variables, which is the point the section makes, so the
@@ -91,7 +98,6 @@ export GEMINI_MODEL=gemini-2.5-flash`,
   },
 ] as const;
 
-const CARD = "rounded-3xl border border-border/60 bg-surface";
 const EXTERNAL = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 /** Inline fixed-width text, for identifiers quoted inside a sentence. */
@@ -116,6 +122,32 @@ function InstallLine() {
         {INSTALL_COMMAND}
       </code>
       <CopyButton value={INSTALL_COMMAND} label={t("likhit.install.copyLabel")} />
+    </div>
+  );
+}
+
+/** The three OCR setups behind the site's switcher pills, one shown at a time. */
+function OcrRecipes() {
+  const { t } = useTranslation();
+  const [active, setActive] = useState<(typeof OCR_RECIPES)[number]["key"]>("local");
+  const recipe = OCR_RECIPES.find(({ key }) => key === active) ?? OCR_RECIPES[0];
+  return (
+    <div className="min-w-0">
+      <div role="group" aria-label={t("likhit.ocr.title")} className="flex flex-wrap gap-1">
+        {OCR_RECIPES.map(({ key }) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={key === active}
+            onClick={() => setActive(key)}
+            className={chipVariants({ active: key === active })}
+          >
+            {t(`likhit.ocr.${key}.name`)}
+          </button>
+        ))}
+      </div>
+      <p className="mt-4 text-[15px] leading-6 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
+      <CopyBlock value={recipe.commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(recipe.commands)} />
     </div>
   );
 }
@@ -198,44 +230,23 @@ const Likhit = () => {
           </div>
         </section>
 
-        {/* ── What is likhit ── */}
-        <section aria-labelledby="likhit-about-title" className="pt-16 md:pt-24">
-          <div className="layout-container">
-            <Reveal>
-              <SectionTitle id="likhit-about-title">{t("likhit.about.title")}</SectionTitle>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-foreground/70 md:text-xl md:leading-9">
-                <Trans
-                  i18nKey="likhit.install.lede"
-                  components={{
-                    name: <strong className="font-medium text-foreground" />,
-                    doc: <Code />,
-                    markitdown: <a href={MARKITDOWN_URL} {...EXTERNAL} className="text-accent underline-offset-4 hover:underline" />,
-                  }}
-                />
-              </p>
-            </Reveal>
-          </div>
-        </section>
+        {/* The page used to explain itself in six long sections. It now
+            leaves the explaining to the hero, the launch video and the README,
+            and keeps only what a visitor acts on: what it fixes, the commands,
+            the redaction tiers at a glance, and the OCR setup they need. */}
 
         {/* ── What it does ── */}
         <section aria-labelledby="likhit-features-title" className="pt-16 md:pt-24">
           <div className="layout-container">
-            <Reveal>
-              <SectionTitle id="likhit-features-title">{t("likhit.features.title")}</SectionTitle>
-              <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-                <Trans i18nKey="likhit.install.usage" components={{ api: <Code />, cli: <Code /> }} />
-              </p>
-            </Reveal>
-            <ul className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <SectionTitle id="likhit-features-title">{t("likhit.features.title")}</SectionTitle>
+            <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map((key, index) => (
                 <li key={key}>
                   <Reveal className="h-full" delayMs={(index % 4) * 70}>
-                    <article className={`${CARD} h-full p-6`}>
-                      <h3 className="font-home-display text-xl leading-snug text-primary md:text-2xl">
-                        {t(`likhit.features.${key}.name`)}
-                      </h3>
-                      <p className="mt-3 text-base leading-7 text-foreground/70">{t(`likhit.features.${key}.body`)}</p>
-                    </article>
+                    <Panel className="min-h-[11rem] justify-end">
+                      <h3 className="text-xl font-normal leading-snug text-primary">{t(`likhit.features.${key}.name`)}</h3>
+                      <p className="mt-2 text-[15px] leading-6 text-muted-foreground">{t(`likhit.features.${key}.body`)}</p>
+                    </Panel>
                   </Reveal>
                 </li>
               ))}
@@ -243,112 +254,60 @@ const Likhit = () => {
           </div>
         </section>
 
-        {/* ── Command line ── */}
+        {/* ── Command line: one block, the commands commented ── */}
         <section aria-labelledby="likhit-cli-title" className="pt-16 md:pt-24">
-          <div className="layout-container grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <Reveal>
+          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <div>
               <SectionTitle id="likhit-cli-title">{t("likhit.cli.title")}</SectionTitle>
-              <p className="mt-4 text-lg leading-8 text-foreground/70">
-                <Trans i18nKey="likhit.cli.body" components={{ cmd: <Code /> }} />
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">
+                <Trans i18nKey="likhit.cli.short" components={{ cmd: <Code /> }} />
               </p>
-              {/* These commands changed behaviour in 0.2.0 and look identical,
-                  so the page has to say so. */}
-              <p className="mt-5 rounded-2xl bg-accent/5 px-5 py-4 text-base leading-7 text-foreground">
-                <Trans i18nKey="likhit.cli.redactNote" components={{ tier: <Code />, opt: <Code /> }} />
-              </p>
-            </Reveal>
-            <ul className="space-y-6">
-              {CLI_EXAMPLES.map(({ key, command }) => (
-                <li key={key}>
-                  <p className="text-base font-medium text-foreground">{t(`likhit.cli.${key}`)}</p>
-                  <CopyPill value={command} label={t("likhit.cli.copyCommand")} mono />
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* ── Redaction ── */}
-        <section aria-labelledby="likhit-privacy-title" className="pt-16 md:pt-24">
-          <div className="layout-container">
-            <Reveal>
-              <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-foreground/70">
-                <Trans i18nKey="likhit.privacy.body" components={{ cmd: <Code />, opt: <Code /> }} />
-              </p>
-            </Reveal>
-
-            <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-              <div aria-labelledby="likhit-tiers-title" role="group">
-                <h3 id="likhit-tiers-title" className="font-home-display text-2xl text-primary">
-                  {t("likhit.privacy.tiersTitle")}
-                </h3>
-                <p className="mt-3 text-base leading-7 text-foreground/70">{t("likhit.privacy.tiersBody")}</p>
-                <dl className="mt-6 space-y-5">
-                  {REDACTION_TIERS.map((key) => (
-                    <div key={key} className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-4">
-                      <dt>
-                        <code className="font-mono text-base text-accent">{t(`likhit.privacy.tiers.${key}.name`)}</code>
-                      </dt>
-                      <dd className="text-base leading-7 text-foreground/75">{t(`likhit.privacy.tiers.${key}.body`)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-
-              <div aria-labelledby="likhit-redact-title" role="group">
-                <h3 id="likhit-redact-title" className="font-home-display text-2xl text-primary">
-                  {t("likhit.privacy.commandsTitle")}
-                </h3>
-                <ul className="mt-6 space-y-6">
-                  {REDACT_COMMANDS.map(({ key, command }) => (
-                    <li key={key}>
-                      <p className="text-base font-medium text-foreground">{t(`likhit.privacy.${key}`)}</p>
-                      <CopyPill value={command} label={t("likhit.privacy.copyCommand")} mono />
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            </div>
+            <div className="min-w-0">
+              <CopyBlock value={CLI_BLOCK} label={t("likhit.cli.copyCommand")} lines={blockLines(CLI_BLOCK)} />
             </div>
           </div>
         </section>
 
-        {/* ── OCR ── */}
-        <section aria-labelledby="likhit-ocr-title" className="pt-16 md:pt-24">
-          <div className="layout-container">
-            <Reveal>
-              <SectionTitle id="likhit-ocr-title">{t("likhit.ocr.title")}</SectionTitle>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-foreground/70">{t("likhit.ocr.body")}</p>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-foreground/70">
-                <Trans i18nKey="likhit.ocr.note" components={{ baseUrl: <Code />, apiKey: <Code />, model: <Code /> }} />
-              </p>
-            </Reveal>
+        {/* ── Redaction: the tiers at a glance ── */}
+        <section aria-labelledby="likhit-privacy-title" className="pt-16 md:pt-24">
+          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <div>
+              <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.privacy.short")}</p>
+              <a
+                href={REPO_URL}
+                {...EXTERNAL}
+                className="mt-5 inline-flex items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t("likhit.privacy.guide")}
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+            <div className="min-w-0">
+              <dl aria-labelledby="likhit-privacy-title" className="divide-y divide-border/70 rounded-[22px] bg-muted px-6">
+                {REDACTION_TIERS.map((key) => (
+                  <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-4">
+                    <dt>
+                      <code className="font-mono text-[15px] text-primary">{key}</code>
+                    </dt>
+                    <dd className="text-[15px] leading-6 text-muted-foreground">{t(`likhit.privacy.tiersShort.${key}`)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <CopyPill value={REDACT_COMMAND} label={t("likhit.privacy.copyCommand")} mono />
+            </div>
+          </div>
+        </section>
 
-            {/* One recipe per row: the description beside the full commands,
-                so no line of the setup is cut off. */}
-            <ul className="mt-10 space-y-6">
-              {OCR_RECIPES.map(({ key, commands }, index) => (
-                <li key={key}>
-                  <Reveal delayMs={index * 80}>
-                    <article className={`${CARD} grid grid-cols-1 gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-10`}>
-                      <div>
-                        <Eyebrow className="text-sm">{t(`likhit.ocr.${key}.badge`)}</Eyebrow>
-                        <h3 className="font-home-display mt-3 text-xl leading-snug text-primary md:text-2xl">
-                          {t(`likhit.ocr.${key}.name`)}
-                        </h3>
-                        <p className="mt-3 text-base leading-7 text-foreground/70">{t(`likhit.ocr.${key}.body`)}</p>
-                        {key === "bedrock" ? (
-                          <p className="mt-4 text-sm leading-6 text-muted-foreground">{t("likhit.ocr.bedrock.footnote")}</p>
-                        ) : null}
-                      </div>
-                      <div className="min-w-0">
-                        <CopyBlock value={commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(commands)} />
-                      </div>
-                    </article>
-                  </Reveal>
-                </li>
-              ))}
-            </ul>
+        {/* ── OCR: one recipe at a time, chosen with the site's switcher ── */}
+        <section aria-labelledby="likhit-ocr-title" className="pt-16 md:pt-24">
+          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <div>
+              <SectionTitle id="likhit-ocr-title">{t("likhit.ocr.title")}</SectionTitle>
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.ocr.short")}</p>
+            </div>
+            <OcrRecipes />
           </div>
         </section>
 
