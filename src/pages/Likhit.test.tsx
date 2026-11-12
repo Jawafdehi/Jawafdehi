@@ -82,7 +82,7 @@ describe("the likhit landing page", () => {
   it("shows the released version, and links it to the changelog", async () => {
     await renderPage("en");
 
-    const version = screen.getByRole("link", { name: "v0.2.0" });
+    const version = screen.getByRole("link", { name: /likhit v0\.2\.0/ });
     expect(version.getAttribute("href")).toBe("https://github.com/Jawafdehi/likhit/blob/main/CHANGELOG.md");
     expect(version.getAttribute("target")).toBe("_blank");
   });

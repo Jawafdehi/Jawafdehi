@@ -3040,7 +3040,9 @@
       "titleAccent": "faithfully",
       "benchmark": "Read the benchmark",
       "source": "Source on GitHub",
-      "pypi": "PyPI"
+      "pypi": "PyPI",
+      "whatsNew": "What's new",
+      "lede": "<name>likhit</name> is Jawafdehi's open-source converter for Nepali documents: PDFs, scans and old .doc files in, clean Markdown out."
     },
     "about": {
       "title": "What is likhit?"

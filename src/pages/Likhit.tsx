@@ -6,12 +6,12 @@
 //
 // Content first came from PR #444 (which typeset the page in likhit's own
 // benchmark design); this version keeps that content on the site's system.
-import { ArrowUpRight, Github, Globe, Package } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Github, Globe, Package } from "lucide-react";
 import type { ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
-import { CopyBlock, CopyPill } from "@/components/copy-snippet";
+import { CopyBlock, CopyButton, CopyPill } from "@/components/copy-snippet";
 import { Seo } from "@/components/Seo";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/ui/reveal";
@@ -104,6 +104,22 @@ function blockLines(text: string) {
   return text.split("\n").map((line) => ({ text: line || " ", muted: line.startsWith("#") }));
 }
 
+/** The install command as one terminal line on navy: prompt, command, copy. */
+function InstallLine() {
+  const { t } = useTranslation();
+  return (
+    <div className="inline-flex h-12 items-center gap-3 rounded-full bg-surface py-1 pl-5 pr-1.5">
+      <code className="whitespace-nowrap font-mono text-[15px] text-primary">
+        <span aria-hidden="true" className="select-none text-muted-foreground">
+          ${" "}
+        </span>
+        {INSTALL_COMMAND}
+      </code>
+      <CopyButton value={INSTALL_COMMAND} label={t("likhit.install.copyLabel")} />
+    </div>
+  );
+}
+
 function SectionTitle({ id, children }: Readonly<{ id: string; children: ReactNode }>) {
   return (
     <h2 id={id} className="font-home-section-title text-primary">
@@ -136,41 +152,48 @@ const Likhit = () => {
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px),linear-gradient(90deg,hsl(var(--primary-surface))_30%,hsl(var(--primary-surface)/0.75)_55%,transparent_90%)]" />
           </div>
 
-          <div className="layout-container py-16 md:py-24">
-            <div>
-              <h1 id="likhit-title" className="font-home-display max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground">
-                {t("likhit.hero.title")} <span className="text-[hsl(var(--accent-on-dark))]">{t("likhit.hero.titleAccent")}</span>
-              </h1>
+          {/* The hero names the product before it sells it (the incident.io /
+              Subframe pattern): an announcement pill that is also the release
+              badge, the promise, then one line saying what likhit IS — the
+              headline alone never mentioned it. The install command is the
+              primary action, set as a terminal line; the places to read more
+              sit beside it as quieter pills of the same height. */}
+          <div className="layout-container flex min-h-[min(780px,calc(100svh-76px))] flex-col justify-center pb-20 pt-12">
+            <a
+              href={CHANGELOG_URL}
+              {...EXTERNAL}
+              className="group inline-flex w-fit items-center gap-2.5 rounded-full bg-primary-foreground/10 py-1 pl-1 pr-3.5 text-sm text-primary-foreground/85 transition-colors hover:bg-primary-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+            >
+              <span className="rounded-full bg-surface px-2.5 py-0.5 font-mono text-[13px] text-primary">likhit v{VERSION}</span>
+              {t("likhit.hero.whatsNew")}
+              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
+            </a>
 
-              <div className="mt-10 flex flex-wrap items-center gap-4">
-                <CopyPill value={INSTALL_COMMAND} label={t("likhit.install.copyLabel")} mono />
+            <h1 id="likhit-title" className="font-home-display mt-8 max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground">
+              {t("likhit.hero.title")} <span className="text-[hsl(var(--accent-on-dark))]">{t("likhit.hero.titleAccent")}</span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-xl leading-8 text-primary-foreground/80 md:text-2xl md:leading-9">
+              <Trans i18nKey="likhit.hero.lede" components={{ name: <strong className="font-medium text-primary-foreground" /> }} />
+            </p>
+
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <InstallLine />
+              {[
+                { href: REPO_URL, Icon: Github, label: t("likhit.hero.source") },
+                { href: PYPI_URL, Icon: Package, label: t("likhit.hero.pypi") },
+                { href: BENCHMARK_URL, Icon: Globe, label: t("likhit.hero.benchmark") },
+              ].map(({ href, Icon, label }) => (
                 <a
-                  href={CHANGELOG_URL}
+                  key={href}
+                  href={href}
                   {...EXTERNAL}
-                  className="rounded-full border border-primary-foreground/30 px-3 py-1 font-mono text-sm text-primary-foreground/85 transition-colors hover:border-primary-foreground/60"
+                  className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-foreground/10 px-4 text-[15px] text-primary-foreground/85 transition-colors hover:bg-primary-foreground/15 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
                 >
-                  v{VERSION}
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {label}
+                  <ArrowUpRight className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
                 </a>
-              </div>
-
-              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
-                {[
-                  { href: REPO_URL, Icon: Github, label: t("likhit.hero.source") },
-                  { href: PYPI_URL, Icon: Package, label: t("likhit.hero.pypi") },
-                  { href: BENCHMARK_URL, Icon: Globe, label: t("likhit.hero.benchmark") },
-                ].map(({ href, Icon, label }) => (
-                  <a
-                    key={href}
-                    href={href}
-                    {...EXTERNAL}
-                    className="group inline-flex items-center gap-2 rounded text-base text-primary-foreground/80 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    {label}
-                    <ArrowUpRight className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
-                  </a>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </section>
