@@ -1,7 +1,7 @@
-// The picture on the right of the header's mega menu: a white tile with one
+// The picture on the right of the header's mega menu: no card, just one
 // light dither field (pale blue or blush) whose shape follows the link under
-// the pointer, and that link's name and line over it. Without WebGL the white
-// tile and the words are the design; under reduced motion the field holds
+// the pointer, fading into the panel, and that link's name and line over it.
+// Without WebGL the words alone are the design; under reduced motion the field holds
 // still.
 import { lazy, Suspense, useEffect, useState } from "react";
 
@@ -28,8 +28,12 @@ export function MegaMenuArt({
   }, []);
 
   return (
-    <div className="relative isolate flex h-full min-h-[15rem] flex-col justify-end overflow-hidden rounded-[22px] border border-border/70 bg-surface p-6">
-      <div aria-hidden="true" className="absolute inset-0 -z-10">
+    <div className="relative isolate flex h-full min-h-[15rem] flex-col justify-end overflow-hidden p-2">
+      {/* No card: the field fades out at its edges into the panel instead. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_60%_35%,#000_35%,transparent_75%)]"
+      >
         {webgl ? (
           <Suspense fallback={null}>
             <MegaMenuArtImpl shape={shape} tone={tone} animate={animate} />

@@ -48,10 +48,13 @@ export function MegaMenuPanel({
   return (
     <div
       id={id}
-      className="absolute inset-x-0 top-full border-b border-border/70 bg-background animate-in fade-in slide-in-from-top-1 duration-150 ease-out motion-reduce:animate-none"
+      className="absolute inset-x-0 top-full pt-1 animate-in fade-in slide-in-from-top-1 duration-150 ease-out motion-reduce:animate-none"
     >
-      <div className="layout-container grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 py-8">
-        <div>
+      {/* As wide as the page's content, not the window: a white panel inside
+          the layout container, the links and the picture split by a hairline. */}
+      <div className="layout-container">
+        <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] rounded-[28px] border border-border/70 bg-background p-3 shadow-[0_16px_40px_-24px_rgba(14,31,59,0.25)]">
+        <div className="border-r border-border/70 p-3 pr-6">
           <ul aria-label={label} className="grid grid-cols-2 gap-1">
             {items.map((item) => {
               const isCurrent = activePath === item.to;
@@ -68,10 +71,7 @@ export function MegaMenuPanel({
                       hovered === item.key ? "bg-muted" : "hover:bg-muted",
                     )}
                   >
-                    <span className="flex items-center gap-2 text-[17px] leading-6 text-primary">
-                      {item.label}
-                      {isCurrent ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" /> : null}
-                    </span>
+                    <span className="block text-[17px] leading-6 text-primary">{item.label}</span>
                     <span className="mt-0.5 block text-sm leading-5 text-muted-foreground">
                       {t(`nav.desc.${item.key}`, "")}
                     </span>
@@ -81,12 +81,15 @@ export function MegaMenuPanel({
             })}
           </ul>
         </div>
-        <MegaMenuArt
-          shape={art.shape}
-          tone={art.tone}
-          title={current?.label ?? ""}
-          line={t(`nav.desc.${current?.key ?? ""}`, "")}
-        />
+        <div className="p-3 pl-6">
+          <MegaMenuArt
+            shape={art.shape}
+            tone={art.tone}
+            title={current?.label ?? ""}
+            line={t(`nav.desc.${current?.key ?? ""}`, "")}
+          />
+        </div>
+        </div>
       </div>
     </div>
   );
