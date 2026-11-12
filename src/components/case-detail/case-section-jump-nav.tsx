@@ -15,10 +15,11 @@ interface CaseSectionJumpNavProps {
 
 /**
  * "On this page", the justice.jawafdehi.org way: plain links in the reading
- * column's grey, the section in view in navy, nothing else. Sticky at 112px
- * from the top in a 13rem column on desktop; a sideways-scrolling row on a
- * phone. Every reading page (cases, court cases, research, the FAQ, terms
- * and privacy) uses this one list.
+ * column's grey, the section in view in navy, nothing else. Its first link
+ * sits on the line of the first heading beside it, and it sticks 112px from
+ * the top once scrolled there: a 13rem column on desktop, a sideways-scrolling
+ * row on a phone. Every reading page (cases, court cases, research, the FAQ,
+ * terms and privacy) uses this one list.
  */
 export function CaseSectionJumpNav({
   activeSection,
@@ -32,7 +33,7 @@ export function CaseSectionJumpNav({
     <nav
       aria-label="Jump to case section"
       className={cn(
-        "no-print flex min-w-0 gap-5 overflow-x-auto pb-3 [scrollbar-width:none] lg:sticky lg:top-28 lg:flex-col lg:gap-3.5 lg:overflow-visible lg:pb-12 lg:pt-11",
+        "no-print flex min-w-0 gap-5 overflow-x-auto pb-3 [scrollbar-width:none] lg:sticky lg:top-28 lg:flex-col lg:gap-3.5 lg:overflow-visible lg:pb-12",
         className,
       )}
     >

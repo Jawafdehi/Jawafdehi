@@ -11,7 +11,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ReadingHeader, ReadingLayout } from "@/components/reading-layout";
+import { ReadingLayout } from "@/components/reading-layout";
+import { LightHero } from "@/components/ui/light-hero";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
 import { Seo } from "@/components/Seo";
@@ -53,18 +54,16 @@ export default function FaqPage() {
       />
 
       <main id="main-content">
+        <LightHero
+          id="faq-title"
+          eyebrow={t("faqPage.hero.eyebrow")}
+          title={t("faqPage.hero.title")}
+          description={t("faqPage.hero.description")}
+          shader={false}
+        />
+
         <section className="pb-20 md:pb-28">
-          <ReadingLayout
-            sections={jumpSections}
-            header={
-              <ReadingHeader
-                id="faq-title"
-                eyebrow={t("faqPage.hero.eyebrow")}
-                title={t("faqPage.hero.title")}
-                description={t("faqPage.hero.description")}
-              />
-            }
-          >
+          <ReadingLayout sections={jumpSections} navClassName="lg:pt-3">
               <div className="space-y-12 md:space-y-16">
                 {sections.map((section) => (
                   <section
