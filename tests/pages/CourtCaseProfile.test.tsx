@@ -204,7 +204,7 @@ describe("CourtCaseProfile (redesigned layout)", () => {
   });
 
   it("renders not-found alert when the API returns error", async () => {
-    vi.mocked(getCourtCaseFull).mockRejectedValueOnce(new Error("Not found"));
+    vi.mocked(getCourtCaseFull).mockRejectedValueOnce(Object.assign(new Error("Not found"), { statusCode: 404 }));
 
     renderPage();
 
@@ -213,6 +213,15 @@ describe("CourtCaseProfile (redesigned layout)", () => {
         "This court case could not be found in the Jawafdehi governance archive.",
       ),
     ).toBeTruthy();
+  });
+
+  it("says the case didn't load, not that it is missing, when the request fails", async () => {
+    vi.mocked(getCourtCaseFull).mockRejectedValueOnce(Object.assign(new Error("Server error"), { statusCode: 500 }));
+
+    renderPage();
+
+    expect(await screen.findByText("This court case didn't load")).toBeTruthy();
+    expect(screen.queryByText("This court case could not be found in the Jawafdehi governance archive.")).toBeNull();
   });
 
   it("reveals long party lists only when requested", async () => {

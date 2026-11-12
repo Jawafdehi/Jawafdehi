@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Reveal } from "@/components/ui/reveal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -372,12 +373,15 @@ const CaseDetail = () => {
               </Link>
             </Button>
 
-            <Alert variant="destructive" className="items-start">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <AlertDescription className="break-words">
-                {isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
-              </AlertDescription>
-            </Alert>
+            <EmptyState
+              kind={isError ? "couldNotLoad" : "notFound"}
+              title={isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
+              description={
+                isError
+                  ? t("caseDetail.failedToLoadLine", "Something went wrong on our side. Please try again in a moment.")
+                  : t("caseDetail.notFoundLine", "It may have been moved or the link may be mistyped. Search the archive for it.")
+              }
+            />
           </div>
         </div>
       </div>

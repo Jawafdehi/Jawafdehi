@@ -169,10 +169,18 @@ describe("AuthorProfile", () => {
   });
 
   it("shows a not-found message when the profile is unavailable", async () => {
-    vi.mocked(getAuthorProfile).mockRejectedValue(new Error("404"));
+    vi.mocked(getAuthorProfile).mockRejectedValue(Object.assign(new Error("404"), { statusCode: 404 }));
     renderPage();
 
     await waitFor(() => expect(screen.getByText("author.notFound")).toBeTruthy());
+  });
+
+  it("says the profile didn't load, not that it is missing, when the request fails", async () => {
+    vi.mocked(getAuthorProfile).mockRejectedValue(Object.assign(new Error("boom"), { statusCode: 500 }));
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText(/^author\.errorTitle/)).toBeTruthy());
+    expect(screen.queryByText("author.notFound")).toBeNull();
   });
 
   it("keeps the English name for an English reader even when a Nepali one exists", async () => {

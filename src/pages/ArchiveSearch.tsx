@@ -33,6 +33,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { CourtCaseCardSkeleton } from "@/components/CourtCaseCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/ui/pagination";
 import { SearchBar } from "@/components/ui/search-bar";
@@ -976,12 +977,11 @@ function ArchiveSearchResults({
 
   if (!data?.results.length) {
     return (
-      <div className="rounded-xl border border-dashed p-10 text-center">
-        <h2 className="text-lg font-bold text-foreground">No archive records found</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Try a broader term or remove one of the filters.
-        </p>
-      </div>
+      <EmptyState
+        kind="noResults"
+        title={t("archiveSearch.empty.title", "No archive records found")}
+        description={t("archiveSearch.empty.line", "Try a broader term or remove one of the filters.")}
+      />
     );
   }
 

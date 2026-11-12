@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw } from "@/components/icons";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { getStatistics } from "@/services/jds-api";
 import { formatFreshness } from "@/lib/data-quality";
@@ -67,9 +68,11 @@ const DataQuality = () => {
           <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
           {isError && !data && (
-            <p className="text-muted-foreground">
-              {t("dataQuality.error", "Metrics are temporarily unavailable. Please try again later.")}
-            </p>
+            <EmptyState
+              kind="couldNotLoad"
+              title={t("dataQuality.errorTitle", "The figures didn't load")}
+              description={t("dataQuality.error", "Metrics are temporarily unavailable. Please try again later.")}
+            />
           )}
 
           {/* Who we track: 88% people, then the institutions (live nes.by_type). */}

@@ -9,6 +9,7 @@ import { CaseTagBadge } from "@/components/CaseBadge";
 import { Seo } from "@/components/Seo";
 import { chipVariants } from "@/components/ui/chip";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getArticles } from "@/services/cms-api";
 import type { ArticleCategory, ArticleListItem } from "@/types/cms";
@@ -157,11 +158,19 @@ const Updates = () => {
             </div>
 
             {isError ? (
-              <p className="text-muted-foreground">{t("updates.error", "We couldn't load updates right now. Please try again later.")}</p>
+              <EmptyState
+                kind="couldNotLoad"
+                title={t("updates.errorTitle", "Updates didn't load")}
+                description={t("updates.error", "We couldn't load updates right now. Please try again later.")}
+              />
             ) : isLoading ? (
               <FeedSkeleton />
             ) : shown.length === 0 ? (
-              <p className="text-muted-foreground">{t("updates.empty", "No updates have been published yet.")}</p>
+              <EmptyState
+                kind="nothingYet"
+                title={t("updates.emptyTitle", "Nothing here yet")}
+                description={t("updates.empty", "No updates have been published yet.")}
+              />
             ) : (
               <ul className={FEED_GRID}>
                 {shown.map((article) => (

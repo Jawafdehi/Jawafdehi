@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { AlertCircle, ArrowLeft } from "@/components/icons";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileView";
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
@@ -33,7 +34,7 @@ export default function CourtCaseProfile() {
   const parsed = parseTail(tail);
   const [activeSection, setActiveSection] = useState("case-summary");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["datalake-courtcase", parsed?.court, parsed?.caseNumber],
     queryFn: () => getCourtCaseFull(parsed!.court, parsed!.caseNumber),
     enabled: Boolean(parsed),
@@ -153,12 +154,21 @@ export default function CourtCaseProfile() {
         </Link>
 
         {!parsed || isError ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {t("courtCaseProfile.notFound", "This court case could not be found in the Jawafdehi governance archive.")}
-            </AlertDescription>
-          </Alert>
+          // A failed request is not a missing record: only a bad reference or
+          // a 404 says "not found".
+          parsed && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
+            <EmptyState
+              kind="couldNotLoad"
+              title={t("courtCaseProfile.errorTitle", "This court case didn't load")}
+              description={t("courtCaseProfile.error", "Something went wrong on our side. Please try again in a moment.")}
+            />
+          ) : (
+            <EmptyState
+              kind="notFound"
+              title={t("courtCaseProfile.notFoundTitle", "Court case not found")}
+              description={t("courtCaseProfile.notFound", "This court case could not be found in the Jawafdehi governance archive.")}
+            />
+          )
         ) : (
           <div className="min-w-0 space-y-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:space-y-0 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-12">
             <div className="py-5 lg:hidden">

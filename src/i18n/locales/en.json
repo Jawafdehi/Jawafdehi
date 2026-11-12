@@ -859,7 +859,9 @@
       "label": "AI-generated",
       "explanation": "This section was written by AI from sources the Jawafdehi team has received. It may contain errors. If you spot an error, please let us know.",
       "explainLabel": "What does AI-generated mean?"
-    }
+    },
+    "failedToLoadLine": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundLine": "It may have been moved or the link may be mistyped. Search the archive for it."
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
@@ -1388,7 +1390,9 @@
       "UPDATE": "Update"
     },
     "error": "We couldn't load updates right now. Please try again later.",
-    "empty": "No updates have been published yet."
+    "empty": "No updates have been published yet.",
+    "errorTitle": "Updates didn't load",
+    "emptyTitle": "Nothing here yet"
   },
   "share": {
     "share": "Share",
@@ -1466,14 +1470,18 @@
       "order": "Order",
       "judge": "Judge",
       "remarks": "Remarks",
-      "empty": "No hearings or activity recorded yet for this court case."
+      "empty": "No hearings or activity recorded yet for this court case.",
+      "emptyTitle": "No hearings yet"
     },
     "source": {
       "heading": "Source",
       "title": "Jawafdehi Governance Archive",
       "description": "Court listings, hearings and orders harvested from Nepal's public court records.",
       "view": "View source"
-    }
+    },
+    "errorTitle": "This court case didn't load",
+    "error": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundTitle": "Court case not found"
   },
   "research": {
     "corruption": {
@@ -1979,7 +1987,8 @@
         "manuscript": "Manuscripts",
         "other": "Other"
       }
-    }
+    },
+    "errorTitle": "The figures didn't load"
   },
   "admin": {
     "common": {
@@ -2460,6 +2469,10 @@
       "entity": "Search people, offices and places",
       "material": "Search documents",
       "courtcase": "Search court cases by name or number"
+    },
+    "empty": {
+      "title": "No archive records found",
+      "line": "Try a broader term or remove one of the filters."
     }
   },
   "materialsPage": {
@@ -2815,7 +2828,10 @@
       "github": "GitHub",
       "website": "their website",
       "twitter": "X"
-    }
+    },
+    "errorTitle": "This profile didn't load",
+    "error": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundTitle": "Profile not found"
   },
   "pressKit": {
     "meta": {

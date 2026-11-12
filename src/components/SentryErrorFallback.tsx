@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface SentryErrorFallbackProps {
   // Sentry hands over whatever was thrown, which need not be an Error.
@@ -8,23 +9,19 @@ interface SentryErrorFallbackProps {
 
 export function SentryErrorFallback({ error, resetError }: SentryErrorFallbackProps) {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground"
-      role="alert"
-    >
-      <div className="max-w-md text-center">
-        <h1 className="mb-2 text-2xl font-bold text-foreground">
-          Something went wrong
-        </h1>
-        <p className="mb-6 text-muted-foreground">
-          An unexpected error occurred. Please try again.
-        </p>
-        {resetError && (
-          <Button onClick={resetError} variant="default">
-            Try again
-          </Button>
-        )}
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground" role="alert">
+      <EmptyState
+        kind="somethingBroke"
+        title="Something went wrong"
+        description="An unexpected error occurred. Please try again."
+        actions={
+          resetError ? (
+            <Button onClick={resetError} variant="default" className="rounded-full">
+              Try again
+            </Button>
+          ) : null
+        }
+      />
     </div>
   );
 }

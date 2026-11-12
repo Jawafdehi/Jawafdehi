@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Filter } from "@/components/icons";
 import { useMemo } from "react";
@@ -406,18 +407,21 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
           ) : null}
 
           {!documentsQuery.isLoading && documents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-surface-2/50 px-6 py-12 text-center">
-              <p className="font-page-lede">
-                {query || activeDateFilterCount
+            <EmptyState
+              kind={query || activeDateFilterCount ? "noResults" : "nothingYet"}
+              title={
+                query || activeDateFilterCount
                   ? t("materialsLanding.filters.noMatches", "No documents match these filters.")
-                  : t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
-              </p>
-              {query || activeDateFilterCount ? (
-                <Button variant="outline" className="mt-5" onClick={clearAllFilters}>
-                  {t("materialsLanding.filters.clear", "Clear filters")}
-                </Button>
-              ) : null}
-            </div>
+                  : t("materialsLanding.series.empty", "No documents are visible in this series right now.")
+              }
+              actions={
+                query || activeDateFilterCount ? (
+                  <Button variant="outline" className="rounded-full" onClick={clearAllFilters}>
+                    {t("materialsLanding.filters.clear", "Clear filters")}
+                  </Button>
+                ) : null
+              }
+            />
           ) : null}
 
           {documents.length > 0 ? (

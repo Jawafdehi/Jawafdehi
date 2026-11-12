@@ -17,6 +17,7 @@ import remarkGfm from "remark-gfm";
 import { getAuthorProfile } from "@/services/jds-api";
 import { Seo } from "@/components/Seo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CaseTypeBadge } from "@/components/CaseBadge";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
@@ -77,6 +78,7 @@ export default function AuthorProfile() {
     data: author,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["author-profile", slug],
     queryFn: () => getAuthorProfile(slug as string),
@@ -101,11 +103,18 @@ export default function AuthorProfile() {
 
   if (isError || !author) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{t("author.notFound")}</AlertDescription>
-        </Alert>
+      <div className="layout-container">
+        {/* A failed request is not a missing profile: only a 404 (or no data
+            at all) says "not available". */}
+        {isError && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
+          <EmptyState
+            kind="couldNotLoad"
+            title={t("author.errorTitle", "This profile didn't load")}
+            description={t("author.error", "Something went wrong on our side. Please try again in a moment.")}
+          />
+        ) : (
+          <EmptyState kind="notFound" title={t("author.notFoundTitle", "Profile not found")} description={t("author.notFound")} />
+        )}
       </div>
     );
   }

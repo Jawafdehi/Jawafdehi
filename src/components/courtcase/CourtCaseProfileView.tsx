@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -419,9 +420,12 @@ export function CourtCaseProfileView({
             })}
           </div>
         ) : (
-          <p className="text-sm sm:text-base text-muted-foreground">
-            {t("courtCaseProfile.activity.empty", "No hearings or activity recorded yet for this court case.")}
-          </p>
+          <EmptyState
+            compact
+            kind="waiting"
+            title={t("courtCaseProfile.activity.emptyTitle", "No hearings yet")}
+            description={t("courtCaseProfile.activity.empty", "No hearings or activity recorded yet for this court case.")}
+          />
         )}
       </section>
 
