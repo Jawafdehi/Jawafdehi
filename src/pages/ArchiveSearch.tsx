@@ -22,6 +22,7 @@ import {
 } from "@/components/search/SearchFilters";
 import {
   SearchResultCard,
+  EntityResultCardSkeleton,
   SearchResultCardSkeleton,
 } from "@/components/search/SearchResultCard";
 import { SearchFilterBar } from "@/components/search/SearchFilterBar";
@@ -146,7 +147,12 @@ export default function ArchiveSearch({
   // The "All filters" sheet: every group the tab offers, at once.
   const [allFiltersOpen, setAllFiltersOpen] = useState(false);
 
-  useEffect(() => setQuery(params.q || ""), [params.q]);
+  // Follow the URL (back/forward, a chip, a suggestion), but leave the field
+  // alone when it already says the same words: the debounced commit trims, and
+  // writing that back would eat the space the reader just typed.
+  useEffect(() => {
+    setQuery((current) => (current.trim() === (params.q || "") ? current : params.q || ""));
+  }, [params.q]);
   useEffect(() => {
     const normalized = normalizeArchiveSearchParams(searchParams);
     if (normalized.toString() !== searchParams.toString()) {
@@ -260,13 +266,30 @@ export default function ArchiveSearch({
   // See the note at the bottom of public/robots.txt.
   const isFilteredResultSet = Boolean(params.q) || params.page > 1;
 
-  const updateParams = (updates: Record<string, string | number | undefined>) => {
+  const updateParams = (
+    updates: Record<string, string | number | undefined>,
+    options?: { replace?: boolean },
+  ) => {
     let next = new URLSearchParams(searchParams);
     Object.entries(updates).forEach(([name, value]) => {
       next = setArchiveSearchParam(next, name, value);
     });
-    setSearchParams(next);
+    setSearchParams(next, options);
   };
+
+  // Search as you type: once the words have been still for 300ms they become
+  // the query. `replace`, so typing a word is one history entry, not one per
+  // letter; Enter still commits at once through submitSearch.
+  const updateParamsRef = useRef(updateParams);
+  updateParamsRef.current = updateParams;
+  useEffect(() => {
+    const next = query.trim();
+    if (next === (params.q ?? "")) return;
+    const timer = window.setTimeout(() => {
+      updateParamsRef.current({ q: next || undefined, page: 1 }, { replace: true });
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query, params.q]);
 
   const updateFilter = (name: string, value?: string) => {
     updateParams({ [name]: value, page: 1 });
@@ -910,14 +933,19 @@ function ArchiveSearchResults({
   if (isLoading) {
     if (viewMode === "card") {
       return (
-        <output aria-label={searchingLabel} className={cardGridClass}>
-          {Array.from({ length: archiveSearchPageSize }, (_, index) => (
+        // Each tab loads in its own card's shape: entities are the small
+        // four-across avatar cards, court cases their outlined card, and Cases
+        // and All the case card with its banner.
+        <output aria-label={searchingLabel} className={resultType === "entity" ? entityCardGridClass : cardGridClass}>
+          {Array.from({ length: archiveSearchPageSize }, (_, index) =>
             resultType === "courtcase" ? (
               <CourtCaseCardSkeleton key={index} />
+            ) : resultType === "entity" ? (
+              <EntityResultCardSkeleton key={index} />
             ) : (
               <CaseCardSkeleton key={index} />
-            )
-          ))}
+            ),
+          )}
         </output>
       );
     }
@@ -938,10 +966,7 @@ function ArchiveSearchResults({
         role="status"
       >
         {Array.from({ length: archiveSearchPageSize }, (_, index) => (
-          <SearchResultCardSkeleton
-            key={index}
-            showTags={index % 2 === 1}
-          />
+          <SearchResultCardSkeleton key={index} />
         ))}
       </div>
     );

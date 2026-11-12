@@ -272,7 +272,7 @@ function CaseResultCard({
   // flight. If it settles with no data (e.g. the request failed), fall through
   // to the generic card instead of getting stuck on the skeleton forever.
   if (isFetching) {
-    return viewMode === "card" ? <CaseCardSkeleton /> : <SearchResultCardSkeleton showTags />;
+    return viewMode === "card" ? <CaseCardSkeleton /> : <SearchResultCardSkeleton />;
   }
   return <GenericResultCard result={result} viewMode={viewMode} />;
 }
@@ -452,36 +452,41 @@ function useEntityImage(result: ArchiveSearchResult, kind: ReturnType<typeof ent
   return fromIndex ?? entityImageUrl(data);
 }
 
-// Compact generic list-row skeleton. ArchiveSearch selects the dedicated case
-// or court-case skeleton while one of those record types is active.
-export function SearchResultCardSkeleton({
-  showTags = false,
-}: Readonly<{ showTags?: boolean }>) {
+// The entity tab's card while it loads: the same white hairline card as
+// EntityResultCard, the round avatar, a name and one grey line.
+export function EntityResultCardSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="relative overflow-hidden rounded-xl bg-card p-4"
+      className="flex h-full flex-row items-start gap-4 rounded-2xl border border-border/70 bg-surface p-5 sm:min-h-[7.5rem]"
     >
-      <div className="relative z-10 flex min-h-20 items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-3 w-20" />
+      <Skeleton className="h-12 w-12 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1 space-y-2 pt-1">
+        <Skeleton className="h-5 w-4/5" />
+        <Skeleton className="h-4 w-3/5" />
+        <Skeleton className="h-4 w-1/3" />
+      </div>
+    </div>
+  );
+}
+
+// The documents tab's row while it loads: the material card's white hairline
+// box, a title, the series / source / date rows with their icons, and the
+// share button's slot at the top right.
+export function SearchResultCardSkeleton() {
+  return (
+    <div aria-hidden="true" className="rounded-2xl border border-border/70 bg-surface p-5">
+      <div className="flex items-start gap-4">
+        <Skeleton className="h-5 w-3/5" />
+        <Skeleton className="ml-auto h-5 w-5 shrink-0 rounded-full" />
+      </div>
+      <div className="mt-4 space-y-2.5">
+        {["w-32", "w-56", "w-36"].map((width) => (
+          <div key={width} className="flex items-center gap-2">
+            <Skeleton className="h-3.5 w-3.5 shrink-0 rounded" />
+            <Skeleton className={`h-3.5 ${width}`} />
           </div>
-          <Skeleton className="h-5 w-4/5 max-w-xl" />
-          <div className="mt-2 space-y-1.5">
-            <Skeleton className="h-3.5 w-full max-w-2xl" />
-            <Skeleton className="h-3.5 w-3/5 max-w-md" />
-          </div>
-          <Skeleton className="mt-3 h-3 w-2/5 max-w-xs" />
-          {showTags ? (
-            <div className="mt-3 flex gap-2">
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-          ) : null}
-        </div>
-        <Skeleton className="mt-2 h-4 w-4 shrink-0" />
+        ))}
       </div>
     </div>
   );
