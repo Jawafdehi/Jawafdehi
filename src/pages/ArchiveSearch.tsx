@@ -2,14 +2,15 @@ import {
   FormEvent,
   MouseEvent,
   ReactNode,
+  Suspense,
+  lazy,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, ChevronDown, LayoutGrid, List, X } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -23,7 +24,11 @@ import {
   SearchResultCard,
   SearchResultCardSkeleton,
 } from "@/components/search/SearchResultCard";
+import { SearchFilterBar } from "@/components/search/SearchFilterBar";
+import { cn } from "@/lib/utils";
+import { formatIndianNumber } from "@/utils/number";
 import { SearchTabs } from "@/components/search/SearchTabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { CourtCaseCardSkeleton } from "@/components/CourtCaseCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -48,7 +53,6 @@ import type {
   ArchiveSearchSort,
   ArchiveSearchType,
 } from "@/types/search";
-import { cn } from "@/lib/utils";
 import { describeBigoRange, readBigoBounds } from "@/lib/bigo-range";
 import {
   describeDateRange,
@@ -60,7 +64,6 @@ import {
   setArchiveSearchParam,
   toggleArchiveSearchParam,
 } from "@/utils/archive-search-params";
-import { getFacetItemLabel } from "@/utils/case-entities";
 import { trackEvent } from "@/utils/analytics";
 import { sendSearchClick } from "@/utils/searchClick";
 import { Seo } from "@/components/Seo";
@@ -69,8 +72,6 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 // "bigo" and "date" are refinements for pill/clear purposes only — each is one
 // removable range, not a list of facet tokens, so neither joins the `selected`
 // record the checkbox groups are driven from.
-type RefinementName = SidebarFilterName | "type";
-type PillName = RefinementName | "bigo" | "date";
 
 const validSorts = new Set<ArchiveSearchSort>([
   "relevance",
@@ -137,20 +138,13 @@ export default function ArchiveSearch({
     [searchParams, selectedRecordType],
   );
   const [query, setQuery] = useState(params.q || "");
-  // Card (grid) view is the default: results lead with the case artwork, status,
-  // entities and बिगो rather than a text row. The choice is intentionally NOT
-  // persisted across visits or mirrored into the URL — that's a separate change.
-  const [viewMode, setViewMode] = useState<"list" | "card">("card");
-  // Materials have one canonical presentation — the full-width document row
-  // shared with the /materials series browse (title left, download/source/share
-  // actions right). A grid tile would just be that row squeezed into a third of
-  // the width, so the tab forces rows and hides the view toggle instead of
-  // offering a mode that renders the same thing worse.
-  const effectiveViewMode = selectedRecordType === "material" ? "list" : viewMode;
-  // Mobile-only disclosure state for the filter panel. Above `lg` the panel is
-  // shown unconditionally by CSS, so this is ignored there (see the panel below).
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const filtersPanelId = useId();
+  // Results are cards. Materials have one canonical presentation — the
+  // full-width document row shared with the /materials series browse (title
+  // left, download/source/share actions right) — so they keep it; there is no
+  // card/list toggle.
+  const effectiveViewMode = selectedRecordType === "material" ? "list" : "card";
+  // The "All filters" sheet: every group the tab offers, at once.
+  const [allFiltersOpen, setAllFiltersOpen] = useState(false);
 
   useEffect(() => setQuery(params.q || ""), [params.q]);
   useEffect(() => {
@@ -160,6 +154,7 @@ export default function ArchiveSearch({
     }
   }, [searchParams, setSearchParams]);
 
+  const stressMode = import.meta.env.DEV ? readStressParam(searchParams.get("data")) : null;
   const {
     data,
     isError,
@@ -168,8 +163,17 @@ export default function ArchiveSearch({
     isPlaceholderData,
     refetch,
   } = useQuery({
-    queryKey: ["archive-search", params],
-    queryFn: () => searchArchive(params),
+    queryKey: ["archive-search", params, stressMode],
+    queryFn: async () => {
+      const response = await searchArchive(params);
+      // DEV ONLY: ?data=worst|empty|one swaps in the stress fixture at this
+      // boundary. The branch is compiled out of production builds.
+      if (import.meta.env.DEV && stressMode) {
+        const { applyStress } = await import("@/dev/archive-search-stress");
+        return applyStress(stressMode, response);
+      }
+      return response;
+    },
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
   });
@@ -203,12 +207,19 @@ export default function ArchiveSearch({
   const isRefreshing = isFetching && !isInitialLoading;
   const showError = isError && !isFetching;
   const showFilters = isInitialLoading || Boolean(displayData);
+  // "2,836 results", grouped the way the rest of the page writes numbers. The
+  // locale strings carry the plural; the digits are swapped for the grouped form.
+  const resultCount = displayData?.count || 0;
+  const resultCountLabel =
+    isInitialLoading || isRefreshing || showError
+      ? null
+      : t("archiveSearch.results", "{{count}} results", { count: resultCount }).replace(
+          String(resultCount),
+          formatIndianNumber(resultCount),
+        );
   // The locked single-type pages (/materials, /court-cases) pin the record type
   // by route, so there is nothing for the tabs to switch between.
   const showTypeTabs = !lockedType;
-  // Only when BOTH are on screen is there a two-column grid to place the tabs,
-  // the sidebar and the results into by hand.
-  const tabsAndFilters = showTypeTabs && showFilters;
 
   // Share metadata. This component backs three routes — /search, /materials and
   // /courtcases (see Materials.tsx and CourtCases.tsx, which pass heading,
@@ -267,6 +278,14 @@ export default function ArchiveSearch({
     );
   };
 
+  // A filter chip's ×: every value of that one group goes in one edit.
+  const clearRefinementGroup = (name: SidebarFilterName) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(name);
+    next.delete("page");
+    setSearchParams(next);
+  };
+
   const updateRecordType = (type?: ArchiveSearchType) => {
     let next = setArchiveSearchParam(searchParams, "type", type || "all");
     next = setArchiveSearchParam(next, "page", 1);
@@ -277,9 +296,12 @@ export default function ArchiveSearch({
     // Court facets are scoped like entity_type: keeping them after switching
     // away would narrow a different record type through invisible controls.
     if (type !== "courtcase") {
-      (["court", "court_type", "district", "province"] as const).forEach(
-        (name) => next.delete(name),
-      );
+      (["court", "court_type"] as const).forEach((name) => next.delete(name));
+    }
+    // District/Province travel between the tabs that share subject geography,
+    // and clear on the way to one that has none.
+    if (!hasSubjectGeography(type ?? "all")) {
+      (["district", "province"] as const).forEach((name) => next.delete(name));
     }
     // Same for the बिगो range, which only renders while browsing Cases. readParams
     // already declines to send a stale bound, but dropping it from the URL keeps
@@ -331,27 +353,13 @@ export default function ArchiveSearch({
     setSearchParams(normalizeArchiveSearchParams(next));
   };
 
-  const removeRefinement = (name: PillName, value: string) => {
-    if (name === "type") {
-      updateRecordType(undefined);
-      return;
-    }
-    if (name === "bigo") {
-      updateBigoRange({});
-      return;
-    }
-    if (name === "date") {
-      updateDateRange({});
-      return;
-    }
-    toggleRefinement(name, value);
-  };
-
+  // Clears the FILTERS, not the tab: the record type is where the reader is,
+  // not a refinement of it. Deleting `type` here sent "Clear all" on the Cases
+  // tab back to All records.
   const clearRefinements = () => {
     const next = new URLSearchParams(searchParams);
     (
       [
-        "type",
         "entity_type",
         "case_type",
         "tags",
@@ -425,11 +433,6 @@ export default function ArchiveSearch({
     (bigoPill ? 1 : 0) +
     (datePill ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
-  const selectedItems = [
-    ...getSelectedItems(facets, selectedRefinements, t, i18n.language),
-    ...(bigoPill ? [bigoPill] : []),
-    ...(datePill ? [datePill] : []),
-  ];
   const searchFilters = showFilters ? (
     isInitialLoading ? (
       <SearchFiltersSkeleton selectedType={selectedRecordType} />
@@ -447,6 +450,7 @@ export default function ArchiveSearch({
         onToggle={toggleRefinement}
         selected={selectedSidebarFilters}
         selectedType={selectedRecordType}
+        variant="sheet"
       />
     )
   ) : null;
@@ -472,10 +476,10 @@ export default function ArchiveSearch({
         */}
         <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
           <div className="max-w-3xl">
-            <h1 className="font-home-display mt-3 text-4xl text-primary md:text-[3.25rem]">
+            <h1 className="font-home-display mt-3 text-4xl font-medium tracking-[-0.04em] text-primary md:text-[3.25rem]">
               {heading || t("archiveSearch.heading", "Archive Search")}
             </h1>
-            <p className="mt-3 max-w-2xl text-lg leading-snug text-muted-foreground">
+            <p className="mt-5 max-w-2xl text-lg leading-snug text-muted-foreground">
               {description ||
                 t(
                   "archiveSearch.description",
@@ -484,7 +488,7 @@ export default function ArchiveSearch({
             </p>
           </div>
           <Link
-            className="group mt-5 inline-flex shrink-0 items-center gap-2 text-base text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            className="group mt-5 inline-flex shrink-0 items-center gap-2 text-base text-primary transition-colors hover:text-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
             to="/data-quality"
           >
             <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 group-hover:after:scale-x-100">
@@ -497,242 +501,186 @@ export default function ArchiveSearch({
           </Link>
         </header>
 
-        <form
-          className="mt-5 flex w-full flex-col gap-3 lg:flex-row lg:items-center"
-          onSubmit={submitSearch}
-        >
-          <label className="sr-only" htmlFor="archive-search">
-            {t("archiveSearch.searchLabel", "Search the Jawafdehi archive")}
-          </label>
-          <SearchBar
-            className="lg:max-w-[min(64rem,calc(100%-16rem))]"
-            id="archive-search"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={
-              placeholder ||
-              t(
-                "archiveSearch.placeholder",
-                "Search cases, people, offices, locations, or allegations",
-              )
-            }
-            submitLabel={t("archiveSearch.submit", "Search archive")}
-            value={query}
-          />
-          <div className="flex w-full flex-wrap items-center gap-3 lg:ml-auto lg:w-auto lg:flex-nowrap lg:justify-end">
+        {showTypeTabs ? (
+          // The count sits at the right end of the tab row, over the sort it
+          // answers to. Inside the selected pill it changed the pill's width
+          // on every click and every load, nudging the tabs after it.
+          <div className="mt-10 flex items-center justify-between gap-6">
+            <SearchTabs activeType={selectedRecordType} onChange={updateRecordType} />
             <div
-              aria-live="polite"
-              className="flex min-h-5 w-full items-center text-sm font-medium text-muted-foreground sm:mr-auto sm:w-auto sm:whitespace-nowrap lg:mr-1"
+              aria-hidden="true"
+              className="hidden shrink-0 whitespace-nowrap text-[15px] tabular-nums text-muted-foreground sm:block"
             >
-              {isInitialLoading || isRefreshing ? (
-                <>
-                  <span className="sr-only">
-                    {t("archiveSearch.searching", "Searching archive")}
-                  </span>
-                  <Skeleton aria-hidden="true" className="h-4 w-20" />
-                </>
-              ) : showError ? null : (
-                t("archiveSearch.results", "{{count}} results", {
-                  count: displayData?.count || 0,
-                })
-              )}
+              {resultCountLabel}
             </div>
-            <div
-              aria-label={t("archiveSearch.viewMode", "View mode")}
-              className={cn(
-                // A segmented pill: a grey track, the current view a white pill.
-                "flex items-center gap-1 rounded-full bg-muted p-1",
-                // Materials render rows only (see effectiveViewMode above).
-                selectedRecordType === "material" && "hidden",
-              )}
-              role="group"
-            >
-              {/* Card first, then list — the toggle reads in the same order as
-                  the defaults, with the default view in the leading position. */}
-              <Button
-                aria-label={t("archiveSearch.cardView", "Card view")}
-                aria-pressed={viewMode === "card"}
-                className={cn(
-                  "h-8 w-8 rounded-full shadow-none",
-                  viewMode === "card" ? "bg-surface text-primary hover:bg-surface" : "text-muted-foreground hover:bg-transparent hover:text-primary",
-                )}
-                onClick={() => setViewMode("card")}
-                size="icon"
-                type="button"
-                variant="ghost"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                aria-label={t("archiveSearch.listView", "List view")}
-                aria-pressed={viewMode === "list"}
-                className={cn(
-                  "h-8 w-8 rounded-full shadow-none",
-                  viewMode === "list" ? "bg-surface text-primary hover:bg-surface" : "text-muted-foreground hover:bg-transparent hover:text-primary",
-                )}
-                onClick={() => setViewMode("list")}
-                size="icon"
-                type="button"
-                variant="ghost"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-            <label className="sr-only" htmlFor="archive-sort">
-              {t("archiveSearch.sort", "Sort")}
-            </label>
-            <Select onValueChange={(sort) => updateFilter("sort", sort)} value={params.sort}>
-              <SelectTrigger
-                className="h-10 min-w-0 flex-1 gap-2 rounded-full border-border/70 bg-surface px-4 text-base shadow-none hover:border-border sm:w-[200px] sm:flex-none"
-                id="archive-sort"
-              >
-                <span aria-hidden="true" className="text-muted-foreground">
-                  {t("archiveSearch.sort", "Sort")}
-                </span>
-                <span className="mr-auto min-w-0 truncate text-primary">
-                  <SelectValue />
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="featured">Featured</SelectItem>
-                <SelectItem value="relevance">Relevance</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </form>
-
-        {selectedItems.length ? (
-          <div
-            aria-label="Selected filters"
-            className="mt-3 flex flex-wrap gap-2"
-          >
-            {selectedItems.map((item) => (
-              <button
-                className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-full border border-primary/20 bg-primary-surface/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary-surface/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                key={`${item.name}-${item.value}`}
-                onClick={() => removeRefinement(item.name, item.value)}
-                type="button"
-              >
-                <span className="truncate">{item.label}</span>
-                <X aria-hidden="true" className="h-3 w-3 shrink-0" />
-              </button>
-            ))}
           </div>
         ) : null}
 
         {/*
-          One grid, one copy of the filter markup. The panel used to be rendered
-          twice — once in a mobile <details>, once in the desktop sidebar — so
-          both subtrees sat in the DOM at every viewport, doubling the pre-rendered
-          payload, the hydration cost, the reconciliation work on every refinement,
-          and the "Archive search filters" landmark. Now `display` alone decides
-          where the single copy lands: the disclosure button is a grid item only
-          below `lg`, so above it the panel takes column 1 and the results column 2.
+          The search bar and the filters are ONE sticky header. They are used
+          together — a reader refines the words and the filters in turn — so
+          they pin together under the navbar (76px) rather than the filters
+          staying put while the search bar scrolls away.
         */}
-        {/*
-          The row template is load-bearing. The sidebar below spans BOTH rows,
-          and CSS Grid sizes a spanning item by distributing its excess
-          contribution EQUALLY over the auto tracks it spans — so with two
-          implicit `auto` rows, a facet panel taller than the cards pushed half
-          its surplus into row 1, whose only content is a 45px tab bar. That
-          inflated row 1 to 745px on "All records" and 1773px on Court cases:
-          ~700px and ~1730px of blank space between the tabs and the first card
-          (and as much again below the last card, the section being
-          `self-start`). Naming the tracks fixes it, and row 2 must stay
-          FLEXIBLE: the algorithm skips distributing a span into intrinsic
-          tracks once a flexible one is in range, so `auto auto` would not.
-        */}
-        <div
-          className={cn(
-            "mt-5 grid items-start gap-x-7 gap-y-4 lg:mt-7",
-            showFilters && "lg:grid-cols-[300px_minmax(0,1fr)]",
-            tabsAndFilters && "lg:grid-rows-[auto_minmax(0,1fr)]",
-          )}
-        >
-          {/*
-            The type tabs are a grid item in the RESULTS column, not a full-width
-            row above the grid. They scope the cards, so they belong over the
-            cards rather than stretching across the filter sidebar too — and the
-            underline now measures the column it applies to.
-
-            Putting them in row 1 is also what lifts the sidebar: it spans both
-            rows, so it starts level with the tabs instead of below them.
-
-            Both placements are gated on `tabsAndFilters` because an explicitly
-            placed row 1 with nothing in it still contributes `gap-y`, which would
-            drop the sidebar 16px out of line with the results on the locked
-            single-type pages (/materials, /court-cases) that render no tabs.
-
-            `order-first` is for the single-column layout below `lg`, where the
-            explicit placement does not apply and the tabs would otherwise sort
-            after the Filters disclosure button rather than above it.
-          */}
-          {showTypeTabs ? (
-            <div
-              className={cn(
-                "order-first min-w-0",
-                tabsAndFilters && "lg:col-start-2 lg:row-start-1",
-              )}
-            >
-              <SearchTabs
-                activeType={selectedRecordType}
-                onChange={updateRecordType}
-              />
-            </div>
-          ) : null}
-
-          {showFilters ? (
-            <>
-              {/*
-                Replaces a native <details>: a <details> cannot be forced open with
-                CSS across browsers, so the desktop sidebar could not reuse it.
-              */}
-              <button
-                aria-controls={filtersPanelId}
-                aria-expanded={filtersOpen}
-                className="flex min-h-11 w-full items-center justify-between rounded-xl bg-card px-4 py-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:hidden"
-                onClick={() => setFiltersOpen((open) => !open)}
-                type="button"
-              >
-                <span>
-                  Filters{activeRefinementCount ? ` (${activeRefinementCount})` : ""}
-                </span>
-                <ChevronDown
-                  aria-hidden="true"
-                  className={cn(
-                    "h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none",
-                    filtersOpen && "rotate-180",
-                  )}
+        <div className="sticky top-[76px] z-30 -mx-4 mt-3 bg-background px-4 py-3 sm:mx-0 sm:px-0">
+          <form
+            className="flex flex-col gap-3 xl:flex-row xl:items-center"
+            onSubmit={submitSearch}
+          >
+            <label className="sr-only" htmlFor="archive-search">
+              {t("archiveSearch.searchLabel", "Search the Jawafdehi archive")}
+            </label>
+            <SearchBar
+              className="xl:w-[420px] xl:flex-none"
+              clearLabel={t("archiveSearch.clear", "Clear search")}
+              enterKeyHint="search"
+              id="archive-search"
+              // White on a hairline, against the grey chips: the one place
+              // you type, so it is the one control that is not a pill of grey.
+              onChange={(event) => setQuery(event.target.value)}
+              onClear={() => {
+                setQuery("");
+                updateParams({ q: undefined, page: 1 });
+              }}
+              placeholder={
+                placeholder ||
+                t(
+                  "archiveSearch.placeholder",
+                  "Search cases, people, offices, locations, or allegations",
+                )
+              }
+              showSubmit={false}
+              value={query}
+            />
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {showFilters ? (
+                <SearchFilterBar
+                  activeCount={activeRefinementCount}
+                  bigoExtent={displayData?.extents?.bigo}
+                  bigoLabel={bigoPill?.label}
+                  bigoMax={params.bigo_max}
+                  bigoMin={params.bigo_min}
+                  className="min-w-0 flex-1"
+                  dateFrom={params.date_from}
+                  dateLabel={datePill?.label}
+                  dateTo={params.date_to}
+                  facets={facets}
+                  onBigoCommit={updateBigoRange}
+                  onClearGroup={clearRefinementGroup}
+                  onDateCommit={updateDateRange}
+                  onOpenAll={() => setAllFiltersOpen(true)}
+                  onToggle={toggleRefinement}
+                  selected={selectedSidebarFilters}
+                  selectedType={selectedRecordType}
                 />
-              </button>
-              {/*
-                `lg:block` outranks `hidden` on source order at >=1024px, so the
-                desktop sidebar ignores `filtersOpen` entirely and no breakpoint
-                hook is needed — which keeps the pre-rendered markup and the first
-                client render identical.
-              */}
+              ) : (
+                <div className="flex-1" />
+              )}
+            </div>
+            <div className="flex items-center gap-3">
               <div
+                aria-live="polite"
+                // With the type tabs on screen the count is shown at the end of
+                // the tab row; this copy stays the live region, and the visible
+                // one on phones, where that row has no room for it.
                 className={cn(
-                  filtersOpen ? "block" : "hidden",
-                  "self-start lg:block",
-                  tabsAndFilters && "lg:col-start-1 lg:row-span-2 lg:row-start-1",
+                  "mr-auto flex min-h-5 items-center whitespace-nowrap text-sm tabular-nums text-muted-foreground xl:mr-0",
+                  showTypeTabs && "sm:sr-only",
                 )}
-                id={filtersPanelId}
               >
-                {searchFilters}
+                {isInitialLoading || isRefreshing ? (
+                  <>
+                    <span className="sr-only">
+                      {t("archiveSearch.searching", "Searching archive")}
+                    </span>
+                    <Skeleton aria-hidden="true" className="h-4 w-20" />
+                  </>
+                ) : (
+                  resultCountLabel
+                )}
               </div>
-            </>
-          ) : null}
+              <label className="sr-only" htmlFor="archive-sort">
+                {t("archiveSearch.sort", "Sort")}
+              </label>
+              <Select onValueChange={(sort) => updateFilter("sort", sort)} value={params.sort}>
+                <SelectTrigger
+                  className="ml-auto h-10 w-[190px] gap-2 rounded-full border-transparent bg-muted px-4 text-[15px] shadow-none hover:bg-primary/[0.08]"
+                  id="archive-sort"
+                >
+                  <span aria-hidden="true" className="text-muted-foreground">
+                    {t("archiveSearch.sort", "Sort")}
+                  </span>
+                  <span className="mr-auto min-w-0 truncate text-primary">
+                    <SelectValue />
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="featured">Featured</SelectItem>
+                  <SelectItem value="relevance">Relevance</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </form>
+        </div>
 
+        {StressToggle ? (
+          <Suspense fallback={null}>
+            <StressToggle />
+          </Suspense>
+        ) : null}
+
+        <Sheet onOpenChange={setAllFiltersOpen} open={allFiltersOpen}>
+          <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md" side="right">
+            <SheetHeader className="space-y-0 px-7 pb-0 pt-6 text-left">
+              <SheetTitle className="text-2xl font-medium tracking-[-0.02em] text-primary">
+                {t("archiveSearch.allFilters", "All filters")}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-7 pb-6 pt-5">{searchFilters}</div>
+            {/* Two equal pills, the pattern Fresha and H&M use: a quiet Clear
+                all beside the solid action. The filters already apply as you
+                tick them, so the action only closes the sheet — it says
+                "View results" and carries the live count as a tag, rather than
+                a sentence with a seven-digit number in the middle of it. */}
+            <div className="grid grid-cols-2 gap-3 px-7 py-5">
+              <Button
+                className="h-12 rounded-full bg-muted text-[15px] font-normal text-primary shadow-none hover:bg-primary/[0.08] disabled:text-muted-foreground"
+                disabled={activeRefinementCount === 0}
+                onClick={() => {
+                  // Clearing is the end of the job: close the sheet so the
+                  // reader lands back on the unfiltered results.
+                  clearRefinements();
+                  setAllFiltersOpen(false);
+                }}
+                type="button"
+                variant="ghost"
+              >
+                {t("archiveSearch.clearAll", "Clear all")}
+              </Button>
+              <Button
+                className="h-12 gap-2 rounded-full text-[15px] font-medium"
+                onClick={() => setAllFiltersOpen(false)}
+                variant="primary"
+              >
+                {t("archiveSearch.viewResults", "View results")}
+                {resultCountLabel !== null ? (
+                  <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[13px] font-normal tabular-nums">
+                    {formatIndianNumber(resultCount)}
+                  </span>
+                ) : null}
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <div className="mt-4">
           <section
             aria-busy={isInitialLoading || isRefreshing}
             aria-label="Archive search results"
-            className={cn(
-              "min-w-0 self-start",
-              tabsAndFilters && "lg:col-start-2 lg:row-start-2",
-            )}
+            className="min-w-0"
           >
             {showError ? (
               <Alert className="mb-5" variant="destructive">
@@ -807,6 +755,11 @@ export default function ArchiveSearch({
   );
 }
 
+/** The tabs whose records carry a district and province. */
+function hasSubjectGeography(type: ArchiveSearchType) {
+  return type === "courtcase" || type === "case" || type === "entity";
+}
+
 function readRecordType(searchParams: URLSearchParams): ArchiveSearchType {
   const requestedType = searchParams.get("type");
   return ["all", "entity", "material", "courtcase", "case"].includes(
@@ -856,10 +809,17 @@ function readParams(
       selectedRecordType === "courtcase"
         ? searchParams.getAll("court_type")
         : [],
-    district:
-      selectedRecordType === "courtcase" ? searchParams.getAll("district") : [],
-    province:
-      selectedRecordType === "courtcase" ? searchParams.getAll("province") : [],
+    // District and Province carry SUBJECT geography, which court cases,
+    // Jawafdehi cases and entities all populate, so they apply on exactly the
+    // tabs that show the control (filterGroupsFor). Reading them only on Court
+    // cases ignored a ticked province on the Cases tab while the control showed
+    // it as applied.
+    district: hasSubjectGeography(selectedRecordType)
+      ? searchParams.getAll("district")
+      : [],
+    province: hasSubjectGeography(selectedRecordType)
+      ? searchParams.getAll("province")
+      : [],
     // Document type is material-scoped and CLOSED on the API side, so a stale
     // token is not merely a filter through an invisible control — it is a 400,
     // which this page renders as the red "could not be loaded" alert. Gating it
@@ -914,9 +874,19 @@ function readParams(
 // the row with a 250px filter sidebar, so three columns there would be ~235px
 // each. At `xl` they are ~299px and by 1440px ~339px, which is the width
 // /cases already runs the same CaseCard at (3-up from `lg`, full-bleed).
-const cardGridClass = "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3";
+// Three across at most. Four squeezed a case card to ~320px: titles broke after
+// two words and every metadata line ended in an ellipsis.
+const cardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
 // Entity hits are compact avatar cards (see EntityResultCard), so a page of them
 // sits four across where the richer case cards need three.
+// DEV ONLY: the worst-case data switch (see src/dev/archive-search-stress.ts).
+// Lazy and gated, so neither the switch nor the fixture reaches production.
+const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;
+function readStressParam(value: string | null) {
+  return value === "worst" || value === "empty" || value === "one" ? value : null;
+}
+
+const listGridClass = "grid grid-cols-1 gap-3 lg:grid-cols-2";
 const entityCardGridClass = "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 function ArchiveSearchResults({
@@ -963,7 +933,7 @@ function ArchiveSearchResults({
       <div
         aria-label={searchingLabel}
         aria-live="polite"
-        className="space-y-3"
+        className={listGridClass}
         role="status"
       >
         {Array.from({ length: archiveSearchPageSize }, (_, index) => (
@@ -1012,8 +982,11 @@ function ArchiveSearchResults({
     );
   }
 
+  // Materials, the one list-shaped result. Two columns once the page is wide
+  // enough: a document row stretched across 1,300px leaves its title on the
+  // left and a field of white to the right.
   return (
-    <div className="space-y-3">
+    <div className={listGridClass}>
       {data.results.map((result, index) => (
         <TrackedSearchResult
           key={`${result.type}-${result.id}`}
@@ -1063,32 +1036,9 @@ function TrackedSearchResult({
   // `h-full` keeps card-grid cell heights consistent (inner card stretches to
   // fill); list view needs no wrapper sizing.
   return (
-    <div className={viewMode === "card" ? "h-full" : undefined} onClick={handleClick}>
+    <div className="h-full" onClick={handleClick}>
       {children}
     </div>
   );
 }
 
-function getSelectedItems(
-  facets: ArchiveSearchFacets,
-  selected: Record<RefinementName, string[]>,
-  translate: (key: string, fallback?: string) => string,
-  language: string,
-) {
-  // Selected-filter pill labels are localized via getFacetItemLabel. The "type"
-  // refinement has no facet group (it's the record-type radio), so it falls back
-  // to a humanized value. `facets` carries {name, count} under the unified contract.
-  return (Object.keys(selected) as RefinementName[]).flatMap((name) =>
-    selected[name].map((value) => {
-      const facetItem =
-        name === "type"
-          ? { name: value }
-          : facets[name].find((item) => item.name === value) ?? { name: value };
-      return {
-        name,
-        value,
-        label: getFacetItemLabel(name, facetItem, translate, language),
-      };
-    }),
-  );
-}

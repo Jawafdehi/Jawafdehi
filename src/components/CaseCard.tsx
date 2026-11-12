@@ -81,11 +81,17 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
 
   const cardLayout = viewMode === "list" ? "flex-col sm:flex-row h-auto" : "flex-col h-full";
   const articleLayout = viewMode === "list" ? "flex-col sm:flex-row" : "flex-col";
-  const imageContainerClass = viewMode === "list" ? "h-48 sm:h-auto sm:w-1/3 shrink-0" : "h-52";
+  // The grid image takes the banners' own 16:9 shape rather than a fixed
+  // height: at h-52 a narrow column cropped the case banners' left-aligned
+  // titles ("रवि लामिछाने" lost its first letter).
+  const imageContainerClass = viewMode === "list" ? "h-48 sm:h-auto sm:w-1/3 shrink-0" : "aspect-video shrink-0";
 
   return (
     <Card
-      className={`group relative flex overflow-hidden rounded-3xl border border-border/60 bg-surface shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-within:border-accent/40 cursor-pointer ${cardLayout}`}
+      // The archive's card shell — white on a hairline, no shadow, no lift — so a
+      // case sits in the same family as the entity, document and court-case
+      // cards beside it in search.
+      className={`group relative flex cursor-pointer overflow-hidden rounded-2xl border border-border/70 bg-surface transition-colors duration-200 hover:border-border focus-within:border-primary/30 ${cardLayout}`}
       onClick={handleCardClick}
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
@@ -132,7 +138,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
             <CaseCardTags tags={tags} onTagClick={onTagClick} />
             {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                 remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
-            <h3 className="line-clamp-2 text-xl font-medium leading-snug text-foreground">
+            <h3 className="line-clamp-2 text-[19px] font-normal leading-snug text-primary">
               {caseSlug ? (
                 <Link
                   to={`/case/${caseSlug}`}
@@ -140,7 +146,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
                   // animating background-size, so it wraps correctly across
                   // the clamped two lines (a pseudo-element underline would
                   // only sit under the last line's box). Keyboard focus only —
-                  // the card already signals hover by lifting.
+                  // the card signals hover with its border.
                   className="rounded-sm bg-gradient-to-r from-accent to-accent bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 outline-none transition-[background-size,color] duration-300 hover:text-primary group-focus-within:bg-[length:100%_2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -159,7 +165,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
               {/* This meta block is deliberately NOT branched on `viewMode` —
                   grid and list differ only in the outer layout, so every field
                   added here shows up in both /search views and on /cases. */}
-              <div className="space-y-1.5 text-base leading-6 text-muted-foreground">
+              <div className="space-y-1.5 text-[15px] leading-6 text-muted-foreground">
                 <EntityRow icon={User} label={entitySummary} title={entity} ids={entityIds} />
                 <EntityRow icon={MapPin} label={location} ids={locationIds} />
                 <BigoRow amount={bigo} />

@@ -287,10 +287,10 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="center"
-                className="mt-3 w-52 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+                className="mt-3 w-52 p-2"
               >
                 {archiveNavItems.map((item) => (
-                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
+                  <DropdownMenuItem key={item.key} asChild>
                     <Link to={item.to}>{item.label}</Link>
                   </DropdownMenuItem>
                 ))}
@@ -337,10 +337,10 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="center"
-                className="mt-3 w-56 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
+                className="mt-3 w-56 p-2"
               >
                 {aboutNavItems.map((item) => (
-                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
+                  <DropdownMenuItem key={item.key} asChild>
                     <Link to={item.to}>{item.label}</Link>
                   </DropdownMenuItem>
                 ))}

@@ -108,8 +108,8 @@ function CourtCaseMetaRow({
   children: ReactNode;
 }>) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-2.5 sm:gap-3", className)}>
-      <Icon aria-hidden="true" className="h-5 w-5 shrink-0 text-primary/80" />
+    <div className={cn("flex min-w-0 items-center gap-2.5", className)}>
+      <Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
       <span
         className={cn("min-w-0 break-words [overflow-wrap:anywhere]", valueClassName)}
         translate={translate}
@@ -153,7 +153,7 @@ function CourtCasePartyRow({
     <CourtCaseMetaRow icon={icon}>
       {/* Same label treatment as the court-case detail page's parties row, so
           the two surfaces read as the same field. */}
-      <span className="font-medium text-primary/90">{t(labelKey, labelFallback)}:</span>{" "}
+      <span className="text-foreground/85">{t(labelKey, labelFallback)}:</span>{" "}
       {summary}
     </CourtCaseMetaRow>
   );
@@ -189,7 +189,10 @@ export function CourtCaseCard({
     <Link
       aria-label={`${viewCaseLabel}: ${title}`}
       className={cn(
-        "group block h-full bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] ring-1 ring-border/40 transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none",
+        // The search page's card shell: white on a hairline, no shadow and no
+        // lift, so court cases sit in the same family as entities and
+        // documents. The court tier still tints the top of the card.
+        "group block h-full border border-border/70 bg-surface transition-colors duration-200 hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         courtTypeGradientClass(courtTier),
         isCard
           // The floor used to be 17rem/19rem, which is 272-304px, against a
@@ -200,8 +203,8 @@ export function CourtCaseCard({
           // cards are grid items with `h-full` and the default `stretch`, so
           // every card in a row already matches the tallest one in that row.
           // The floor only has to stop a sparse card collapsing into a stub.
-          ? "min-h-[13rem] rounded-2xl p-4 motion-safe:hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] sm:rounded-3xl sm:p-5 xl:p-6"
-          : "min-h-40 rounded-2xl p-4 hover:bg-muted/20 sm:p-5",
+          ? "min-h-[13rem] rounded-2xl p-5"
+          : "min-h-40 rounded-2xl p-4 sm:p-5",
       )}
       to={url}
     >
@@ -223,10 +226,10 @@ export function CourtCaseCard({
 
         <h3
           className={cn(
-            "break-words text-pretty font-semibold text-primary",
-            statusDisplay ? "mt-4 sm:mt-5" : "mt-1",
+            "break-words text-pretty font-normal text-primary",
+            statusDisplay ? "mt-4" : "mt-1",
             isCard
-              ? "line-clamp-3 text-lg leading-6 sm:text-xl sm:leading-7"
+              ? "line-clamp-3 text-[17px] leading-6"
               : "line-clamp-2 text-base leading-5",
           )}
         >
@@ -236,15 +239,14 @@ export function CourtCaseCard({
         <div
           className={cn(
             "space-y-3 text-sm leading-5 text-muted-foreground",
-            isCard ? "mt-5 sm:mt-6" : "mt-5 lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0",
+            isCard ? "mt-4 space-y-2" : "mt-5 lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0",
           )}
         >
           {caseNumber ? (
             <CourtCaseMetaRow
-              className="text-foreground"
+              className="text-foreground/85"
               icon={FileText}
               translate="no"
-              valueClassName="font-medium"
             >
               {caseNumber}
             </CourtCaseMetaRow>
@@ -276,11 +278,11 @@ export function CourtCaseCard({
           />
         </div>
 
-        <div className="mt-auto flex items-center justify-end gap-2 pt-5 text-sm font-semibold text-success-strong sm:pt-6">
+        <div className="mt-auto flex items-center justify-end gap-1.5 pt-5 text-sm text-primary">
           {viewCaseLabel}
           <ArrowRight
             aria-hidden="true"
-            className="h-5 w-5 transition-transform group-hover:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none"
+            className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none"
           />
         </div>
       </article>
@@ -296,11 +298,11 @@ export function CourtCaseCardSkeleton({
     <div
       aria-hidden="true"
       className={cn(
-        "flex h-full flex-col bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] ring-1 ring-border/40",
+        "flex h-full flex-col border border-border/70 bg-surface",
         isCard
           // Tracks the live card's floor (see the note there) so the grid does
           // not jump when the skeleton is swapped out for real results.
-          ? "min-h-[13rem] rounded-2xl p-4 sm:rounded-3xl sm:p-5 xl:p-6"
+          ? "min-h-[13rem] rounded-2xl p-5"
           : "min-h-40 rounded-2xl p-4 sm:p-5",
       )}
       data-court-case-card-skeleton=""

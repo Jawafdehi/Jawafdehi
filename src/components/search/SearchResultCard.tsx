@@ -38,6 +38,8 @@ import {
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 import { EntityIdentity } from "@/components/EntityIdentity";
+import { entityImageUrl } from "@/lib/entity-jsonld";
+import { http } from "@/services/http";
 
 // Both the /search list and card views render the same components; `viewMode`
 // only decides whether the shared <CaseCard> lays out horizontally (list) or as
@@ -315,7 +317,7 @@ function GenericResultCard({
       className={cn(
         "group relative flex flex-col overflow-hidden bg-card transition-all",
         isCard
-          ? "h-full rounded-3xl border border-border/70 p-5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)]"
+          ? "h-full rounded-2xl border border-border/70 bg-surface p-5 duration-200 hover:border-border hover:bg-muted/30"
           : "min-h-20 rounded-xl p-4 hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
       )}
     >
@@ -329,8 +331,8 @@ function GenericResultCard({
             at the same heading level instead of h2-for-generic / h3-for-case. */}
         <h3
           className={cn(
-            "line-clamp-2 break-words font-semibold text-foreground group-hover:text-primary",
-            isCard ? "text-lg leading-8" : "text-base leading-6",
+            "line-clamp-2 break-words font-normal text-primary",
+            isCard ? "text-[17px] leading-6" : "text-base leading-6",
           )}
         >
           <Link
@@ -394,21 +396,27 @@ function EntityResultCard({
   const humanized = humanizeEntityType(result.extra.type);
   const kindLabel = GENERIC_KIND_LABELS.has(humanized) ? t(`entityDetail.${kind}`) : humanized;
   const supporting = [kindLabel, simpleMetadata(result)].filter(Boolean).join(" · ");
+  const image = useEntityImage(result, kind);
 
   return (
+    // A white card on a hairline, left-aligned: the avatar, then the name in
+    // a light 17px and one grey line of what it is. The search page's cards
+    // share this shell (materials and court cases read the same way), so a
+    // results grid is one family whatever the tab.
     <article
       className={cn(
-        "group relative flex overflow-hidden transition-colors duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-        // The same tinted, borderless surface as the party cards on the case page.
+        "group relative flex overflow-hidden border border-border/70 bg-surface transition-colors duration-200 hover:border-border hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
         isCard
-          ? "h-full min-h-[15rem] flex-col items-center justify-center gap-3 rounded-2xl bg-muted/50 p-4 text-center hover:bg-muted/70"
-          : "min-h-20 flex-row items-center gap-4 rounded-xl bg-card p-4 hover:bg-muted/35",
+          ? "h-full flex-row items-start gap-4 rounded-2xl p-5 sm:min-h-[7.5rem]"
+          : "min-h-20 flex-row items-center gap-4 rounded-xl p-4",
       )}
     >
       <EntityIdentity
         kind={kind}
-        layout={isCard ? "tile" : "row"}
+        src={image}
+        layout="row"
         nameAs="h3"
+        nameClassName="text-[17px] font-normal leading-6"
         alternate={alternate}
         name={
           <Link
@@ -420,10 +428,28 @@ function EntityResultCard({
           </Link>
         }
       >
-        <p className={cn("font-meta break-words", isCard ? "mt-2" : "mt-1")}>{supporting}</p>
+        <p className="mt-1.5 break-words text-sm leading-5 text-muted-foreground">{supporting}</p>
       </EntityIdentity>
     </article>
   );
+}
+
+// The entity's picture, for the avatar. The search index does not carry it yet,
+// so a person or organisation card reads the record itself — under the SAME
+// query key as the entity page, so opening the card then renders from cache.
+// Places never have a picture and skip the request; so does any hit whose index
+// document already names one.
+function useEntityImage(result: ArchiveSearchResult, kind: ReturnType<typeof entityKindFor>) {
+  const tail = result.url.startsWith("/entity/") ? result.url.slice("/entity/".length) : "";
+  const fromIndex = result.extra.image;
+  const { data } = useQuery({
+    queryKey: ["entity-record", tail],
+    queryFn: async () => (await http.get<Record<string, unknown>>(`/api/entities/${tail}`)).data,
+    enabled: !fromIndex && Boolean(tail) && kind !== "location",
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  return fromIndex ?? entityImageUrl(data);
 }
 
 // Compact generic list-row skeleton. ArchiveSearch selects the dedicated case

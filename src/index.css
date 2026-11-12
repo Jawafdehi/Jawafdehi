@@ -203,14 +203,16 @@ All colors MUST be HSL.
        restyle every --border).
        --------------------------------------------------------------------- */
     /* The page is pure white (decided 2026-11-03); paper stays the tone of
-       sunk surfaces and popovers. */
+       sunk surfaces. */
     --background: var(--base-white);
     --foreground: var(--base-ink);
 
     --card: var(--base-paper-sunk);
     --card-foreground: var(--base-ink);
 
-    --popover: var(--base-paper);
+    /* White, like the cards and the page: the warm paper tone made every
+       menu and popover look like it belonged to another site. */
+    --popover: var(--base-white);
     --popover-foreground: var(--base-ink);
 
     /* --primary is the *text* role (headings, stat values, ledes — 325 uses).

@@ -217,7 +217,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           <button
             type="button"
             onClick={() => setShowAllYears((v) => !v)}
-            className="rounded-md px-1 font-medium text-foreground underline underline-offset-2 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-md px-1 font-medium text-foreground underline underline-offset-2 hover:text-primary/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {showAllYears
               ? t("dataQuality.courtCases.showRecentYears", "Show recent years only")

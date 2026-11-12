@@ -2321,8 +2321,6 @@
       },
       "bigoMinField": "Min (Rs)",
       "bigoMaxField": "Max (Rs)",
-      "bigoNote_one": "Filtering by amount includes only the {{count}} case with a recorded amount.",
-      "bigoNote_other": "Filtering by amount includes only the {{count}} cases with a recorded amount.",
       "bigoMinThumb": "Minimum amount",
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
@@ -2331,7 +2329,6 @@
       "date": "Record date",
       "dateFromField": "From (AD)",
       "dateToField": "To (AD)",
-      "dateNote": "Filtering by date includes only documents with a recorded date.",
       "dateRange": {
         "any": "Any date",
         "between": "{{from}} – {{to}}",
@@ -2358,7 +2355,16 @@
         "MetropolitanCity": "Metropolitan cities",
         "SubMetropolitanCity": "Sub-metropolitan cities",
         "Place": "Places"
-      }
+      },
+      "bigoCustom": "Custom range",
+      "bigoPresets": {
+        "under1cr": "Under Rs 1 crore",
+        "1to10cr": "Rs 1 – 10 crore",
+        "10to100cr": "Rs 10 – 100 crore",
+        "1to10arab": "Rs 1 – 10 arab",
+        "over10arab": "Over Rs 10 arab"
+      },
+      "bigoChip": "Amount"
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",
@@ -2366,7 +2372,15 @@
     "filterLess": "Less",
     "filterNoMatch": "No matches",
     "materialSource": "Source",
-    "materialDate": "Date"
+    "materialDate": "Date",
+    "filterShowAll": "Show all {{count}}",
+    "filterShowFewer": "Show fewer",
+    "allFilters": "All filters",
+    "clearAll": "Clear all",
+    "filtersLabel": "Filters",
+    "clearFilter": "Clear {{filter}}",
+    "clear": "Clear search",
+    "viewResults": "View results"
   },
   "materialsPage": {
     "heading": "Documents & other materials",

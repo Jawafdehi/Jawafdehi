@@ -197,6 +197,10 @@ export interface SearchResultExtra {
   // it is present from the moment the kind was ingested, not only after a
   // reindex. Absent on every material that carries no kind at all.
   dataset_bucket?: string;
+  // Entity-only: the record's picture (schema.org image/logo), once the indexer
+  // carries it. Until then the card fetches the record for persons and
+  // organisations — see EntityResultCard.
+  image?: string;
 }
 
 // One result hit — the common envelope every type shares. Rich per-result

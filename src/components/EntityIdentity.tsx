@@ -29,6 +29,8 @@ interface EntityIdentityProps {
   nameAs?: "h3" | "span";
   /** Lines below the alternate name — a caption, a badge row. */
   children?: ReactNode;
+  /** Overrides for the name's type, e.g. the search card's lighter 17px name. */
+  nameClassName?: string;
 }
 
 export function EntityIdentity({
@@ -39,6 +41,7 @@ export function EntityIdentity({
   layout,
   nameAs = "span",
   children,
+  nameClassName,
 }: Readonly<EntityIdentityProps>) {
   const tile = layout === "tile";
   const Name = nameAs;
@@ -54,6 +57,7 @@ export function EntityIdentity({
             "block break-words text-base font-medium leading-snug text-primary",
             // A tile has room for the whole name; a row must stay compact.
             tile ? "text-balance" : "line-clamp-2",
+            nameClassName,
           )}
         >
           {name}

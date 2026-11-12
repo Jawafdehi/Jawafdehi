@@ -52,7 +52,7 @@ export function PressKitUsage() {
               </p>
               <a
                 href={`mailto:${contact.address}`}
-                className="mt-2 inline-flex items-center gap-2 font-bold text-primary underline-offset-4 hover:text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="mt-2 inline-flex items-center gap-2 font-bold text-primary underline-offset-4 hover:text-primary/70 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 {contact.address}

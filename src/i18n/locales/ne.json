@@ -2300,8 +2300,6 @@
       },
       "bigoMinField": "न्यूनतम (रु)",
       "bigoMaxField": "अधिकतम (रु)",
-      "bigoNote_one": "रकमबाट छान्दा बिगो उल्लेख भएको {{count}} मुद्दा मात्र समावेश हुन्छ।",
-      "bigoNote_other": "रकमबाट छान्दा बिगो उल्लेख भएका {{count}} मुद्दा मात्र समावेश हुन्छन्।",
       "bigoMinThumb": "न्यूनतम रकम",
       "bigoMaxThumb": "अधिकतम रकम",
       "bigoNoMin": "न्यूनतम छैन",
@@ -2310,7 +2308,6 @@
       "date": "अभिलेखको मिति",
       "dateFromField": "देखि (ई.सं.)",
       "dateToField": "सम्म (ई.सं.)",
-      "dateNote": "मिति अनुसार छान्दा मिति उल्लेख भएका कागजातहरू मात्र समेटिन्छन्।",
       "dateRange": {
         "any": "कुनै पनि मिति",
         "between": "{{from}} – {{to}}",
@@ -2337,7 +2334,16 @@
         "MetropolitanCity": "महानगरपालिका",
         "SubMetropolitanCity": "उपमहानगरपालिका",
         "Place": "स्थान"
-      }
+      },
+      "bigoCustom": "आफ्नै दायरा",
+      "bigoPresets": {
+        "under1cr": "रु १ करोडभन्दा कम",
+        "1to10cr": "रु १ – १० करोड",
+        "10to100cr": "रु १० – १०० करोड",
+        "1to10arab": "रु १ – १० अर्ब",
+        "over10arab": "रु १० अर्बभन्दा बढी"
+      },
+      "bigoChip": "रकम"
     },
     "materialSeries": "श्रृंखला",
     "filterSearch": "{{filter}} खोज्नुहोस्",
@@ -2345,7 +2351,15 @@
     "filterLess": "थोरै",
     "filterNoMatch": "कुनै मेल भएन",
     "materialSource": "स्रोत",
-    "materialDate": "मिति"
+    "materialDate": "मिति",
+    "filterShowAll": "सबै {{count}} हेर्नुहोस्",
+    "filterShowFewer": "थोरै देखाउनुहोस्",
+    "allFilters": "सबै फिल्टर",
+    "clearAll": "सबै हटाउनुहोस्",
+    "filtersLabel": "फिल्टर",
+    "clearFilter": "{{filter}} हटाउनुहोस्",
+    "clear": "खोज हटाउनुहोस्",
+    "viewResults": "नतिजा हेर्नुहोस्"
   },
   "materialsPage": {
     "heading": "कागजात तथा अन्य सामग्री",

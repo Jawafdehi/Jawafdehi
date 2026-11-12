@@ -24,7 +24,7 @@ const buttonVariants = cva(
         quietOnDark:
           "border border-primary-foreground/30 bg-transparent text-primary-foreground font-medium transition-colors duration-200 hover:border-primary-foreground/60 hover:bg-primary-foreground/10",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-primary font-medium bg-background text-primary hover:bg-accent hover:text-foreground",
+        outline: "border border-primary font-medium bg-background text-primary hover:bg-muted",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         // Hover colours the LABEL, not a block behind it. A ghost button has
         // no border and no fill, so painting its whole box on hover draws a
@@ -92,12 +92,12 @@ const buttonVariants = cva(
       {
         variant: "ghost",
         size: "icon",
-        class: "hover:bg-accent hover:text-accent-foreground",
+        class: "hover:bg-muted hover:text-primary",
       },
       {
         variant: "ghost",
         size: "navMenuIcon",
-        class: "hover:bg-accent hover:text-accent-foreground",
+        class: "hover:bg-muted hover:text-primary",
       },
     ],
     defaultVariants: {

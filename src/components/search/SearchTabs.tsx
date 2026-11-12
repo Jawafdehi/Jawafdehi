@@ -54,7 +54,10 @@ export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) 
   return (
     <div
       aria-label="Record type"
-      className="flex gap-6 overflow-x-auto border-b border-border sm:gap-8"
+      // -m-1 p-1: the row scrolls sideways, and a scroller clips whatever
+      // spills past its box, which cut the focus ring off every pill. The
+      // padding gives the ring room; the negative margin keeps alignment.
+      className="-m-1 flex min-w-0 gap-1 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
     >
       {tabs.map((tab, index) => {
@@ -62,11 +65,15 @@ export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) 
         return (
           <button
             aria-selected={isActive}
+            // Grey pills, set at the filter chips' size and weight so the
+            // header reads as one family. The selected type is the filled
+            // pill; the rest are plain text that take a fainter fill on hover
+            // — navy and grey only, never the crimson accent.
             className={cn(
-              "relative inline-flex min-h-11 shrink-0 items-center px-0.5 text-sm transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-center after:bg-accent after:transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isActive
-                ? "font-semibold text-primary after:scale-x-100"
-                : "font-medium text-muted-foreground after:scale-x-0 hover:text-primary",
+                ? "bg-muted text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-primary",
             )}
             key={tab.type}
             onClick={() => onChange(typeParam(tab.type))}

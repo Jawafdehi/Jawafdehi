@@ -51,7 +51,7 @@ function LogoCard({ src, alt, label, use, dark, downloads }: Readonly<LogoCardPr
               key={file.href}
               href={file.href}
               download
-              className="rounded border border-primary px-2.5 py-1 text-xs font-bold text-primary transition-colors hover:bg-accent hover:border-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="rounded border border-primary px-2.5 py-1 text-xs font-bold text-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               {file.label}
             </a>

@@ -19,7 +19,7 @@ export function CopyButton({ value, label }: Readonly<{ value: string; label: st
         onClick={copy}
         aria-label={label}
         title={label}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-foreground shadow-sm transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-foreground shadow-sm transition-colors hover:text-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {status === "copied" ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
       </button>

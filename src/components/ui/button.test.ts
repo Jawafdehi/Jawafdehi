@@ -16,10 +16,12 @@ describe("the ghost button's hover state", () => {
 
   it("keeps the block on an icon-only ghost, which has no label to colour", () => {
     // 16 of the 67 ghost call sites are icon-only. A 16px glyph changing hue
-    // is not a hover state, so these keep the only affordance they have.
+    // is not a hover state, so these keep the only affordance they have — a
+    // grey block, never the crimson accent, which reads as an alarm.
     for (const size of ["icon", "navMenuIcon"] as const) {
       const classes = buttonVariants({ variant: "ghost", size });
-      expect(classes).toContain("hover:bg-accent");
+      expect(classes).toContain("hover:bg-muted");
+      expect(classes).not.toContain("hover:bg-accent");
     }
   });
 
