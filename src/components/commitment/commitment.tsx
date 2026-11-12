@@ -11,6 +11,8 @@ import {
 } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
+import { Panel } from "@/components/ui/panel";
+
 type CommitmentItem = {
   icon: IconComponent;
   titleKey: string;
@@ -62,35 +64,27 @@ const COMMITMENTS: CommitmentItem[] = [
 
 export function CommitmentList() {
   const { t } = useTranslation();
+  // Eight promises as the redesign's grey panels, four across.
   return (
-    <section id="commitments" className="py-12 md:py-16">
+    <section id="commitments" aria-labelledby="commitments-title" className="pb-20 pt-16 md:pb-28 md:pt-24">
       <div className="layout-container">
-        <h2 className="mb-10 text-center text-3xl font-extrabold tracking-normal text-primary md:text-4xl">
+        <h2 id="commitments-title" className="font-home-section-title text-primary">
           {t("commitment.title")}
         </h2>
 
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-6">
-          {COMMITMENTS.map(({ icon: Icon, titleKey, bodyKey }, index) => (
-            <div
-              key={titleKey}
-              className={[
-                "flex flex-col items-center text-center lg:col-span-2",
-                index === 6 ? "lg:col-start-2" : "",
-                index === 7 ? "lg:col-start-4" : "",
-              ].join(" ")}
-            >
-              <div>
-                <div className="mb-2 flex items-center justify-center gap-2">
-                  <Icon className="h-5 w-5 flex-shrink-0 text-accent" aria-hidden="true" />
-                  <h3 className="text-lg font-semibold text-foreground">{t(titleKey)}</h3>
-                </div>
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  {t(bodyKey)}
-                </p>
-              </div>
-            </div>
+        <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {COMMITMENTS.map(({ icon: Icon, titleKey, bodyKey }) => (
+            <li key={titleKey}>
+              <Panel>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-accent">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <h3 className="mt-6 text-xl font-normal leading-snug text-primary">{t(titleKey)}</h3>
+                <p className="mt-2 text-base leading-7 text-muted-foreground">{t(bodyKey)}</p>
+              </Panel>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
