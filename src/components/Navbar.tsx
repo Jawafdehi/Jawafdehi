@@ -21,6 +21,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { usePageDarkHero } from "@/lib/dark-hero";
 import { CHAT_URL } from "@/lib/external-links";
 
 type NavItem = {
@@ -72,6 +73,8 @@ export function Navbar() {
   // delay and leaving the header closes it after a grace period, so a pointer
   // crossing the bar on its way somewhere does not flash the panel.
   const [menu, setMenu] = useState<"archive" | "about" | null>(null);
+  // A page with no fixed path (the 404) can still declare a navy hero.
+  const pageDarkHero = usePageDarkHero();
   const archiveOpen = menu === "archive";
   const aboutOpen = menu === "about";
   const menuTimer = useRef<number | undefined>(undefined);
@@ -155,7 +158,8 @@ export function Navbar() {
   // navy-on-light treatment the moment it gains its opaque background.
   const overDarkHero =
     !isScrolled &&
-    (DARK_HERO_PATHS.has(location.pathname) ||
+    (pageDarkHero ||
+      DARK_HERO_PATHS.has(location.pathname) ||
       (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
 
   const [homeNavItem, ...secondaryNavItems] = navItems;

@@ -9,6 +9,7 @@
 //   grain   — the MCP product page: a grainy navy glow with a muted ember red.
 //             Heavier, so its resolution is capped and weak devices get a CSS
 //             texture instead (see shader-backdrop.tsx).
+//   vortex  — the 404: the home hero's navy dither as a swirl.
 //   silk    — the MCP page's light cards: the mist colours as warped streaks.
 //   mist    — light cards: a slow white mesh with a crimson blush and a pale
 //             blue wash. Never on navy, so it is unlike the footer's diamond.
@@ -62,6 +63,21 @@ export default function ShaderBackdropImpl({
         distortion={0.6}
         swirl={0.15}
         speed={speed(0.15)}
+      />
+    );
+  }
+
+  if (design === "vortex") {
+    return (
+      <Dithering
+        style={FILL}
+        colorBack={navy}
+        colorFront={SHADER_TINTS.lattice}
+        shape="swirl"
+        type="4x4"
+        size={3}
+        scale={0.9}
+        speed={speed(0.35)}
       />
     );
   }
