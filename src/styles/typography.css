@@ -169,6 +169,10 @@
      sections below never compete with it. */
   .font-home-section-title {
     @apply font-home-display text-3xl md:text-[2.75rem];
+    /* The display face's hero leading (1.05) is for one-line heroes; a section
+       title wraps, and at 1.05 its second line touched the first. Each
+       language's heading leading instead: 1.2 in English, 1.35 in Nepali. */
+    line-height: var(--font-heading-leading);
   }
 
   .font-hero-title {

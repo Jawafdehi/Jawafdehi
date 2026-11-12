@@ -1,202 +1,202 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Seo } from "@/components/Seo";
-import { getArticles } from "@/services/cms-api";
-import { UpdateCardSkeleton } from "@/components/UpdateCardSkeleton";
-import type { ArticleListItem } from "@/types/cms";
-import { cn } from "@/lib/utils";
-import { formatPublicationDate } from "@/utils/date";
-import {
-    CalendarIcon,
-    ChevronRight,
-    FileText,
-    LayoutGrid,
-    List,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { Seo } from "@/components/Seo";
+import { chipVariants } from "@/components/ui/chip";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { getArticles } from "@/services/cms-api";
+import type { ArticleCategory, ArticleListItem } from "@/types/cms";
+import { formatPublicationDate } from "@/utils/date";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
-type ViewMode = "cards" | "list";
+type Filter = "ALL" | ArticleCategory;
+const FILTERS: Filter[] = ["ALL", "NEWS", "UPDATE"];
 
-// Shared by the loaded grid and its skeleton so the two can't drift out of step —
-// the placeholder has to occupy the same layout the articles land in.
-//
-// `auto-rows-fr` is what keeps card heights consistent: a plain grid only
-// equalises cells *within* a row, so a row of short excerpts renders visibly
-// shorter cards than the row above it. Sizing every implicit row to the same
-// fraction makes the whole grid uniform, and <UpdateCard>'s `min-h-full` +
-// `justify-between` then fill the cell and pin "Read More" to the bottom edge.
-//
-// Breakpoints follow /cases (`md` → 2 columns, `lg` → 3), which is the canonical
-// content-card grid on the site. List view stays single-column, so it must NOT
-// get `auto-rows-fr` — the excerpt is unclamped there and equalising rows would
-// pad every short entry out to the tallest one.
-const gridClass = (isCardView: boolean) =>
-    isCardView ? "grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3" : "grid gap-5";
+/**
+ * The feed's grid. Three columns on desktop, two on a tablet, one on a phone;
+ * `grid-flow-dense` lets the short tiles fill in beside the tall lead story.
+ */
+const FEED_GRID = "grid grid-flow-dense grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3";
 
-// Enough placeholders to fill the fold without over-promising how much is coming:
-// two rows of the desktop card grid, or three of the much taller list rows.
-const SKELETON_COUNT = { cards: 6, list: 3 } as const;
+/**
+ * One story in the bento. Three shapes, chosen by the story rather than by a
+ * toggle:
+ *   - the LEAD (newest): two columns by two rows, the picture large;
+ *   - a story WITH a picture: the image on top, the title under it;
+ *   - a story WITHOUT one: a grey text panel, where the excerpt has room.
+ * The whole tile is the link. Hover lifts only the picture's zoom; press scales
+ * the tile to 0.99.
+ */
+function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListItem; lead?: boolean }>) {
+  const { t } = useTranslation();
+  const image = article.thumbnail?.url;
+  const meta = (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <Eyebrow tone={article.category === "NEWS" ? "accent" : "primary"} className="text-xs">
+        {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
+      </Eyebrow>
+      <span className="text-[13px] text-muted-foreground">{formatPublicationDate(article.date)}</span>
+    </div>
+  );
 
-type UpdateCardProps = {
-    article: ArticleListItem;
-    viewMode: ViewMode;
-};
-
-const UpdateCard = ({ article, viewMode }: UpdateCardProps) => {
-    const { t } = useTranslation();
-    const isList = viewMode === "list";
-
-    return (
-        <Link
-            to={`/updates/${article.meta.slug}`}
-            className="group flex min-h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:data-[view=list]:flex-row"
-            data-view={viewMode}
+  return (
+    <Link
+      to={`/updates/${article.meta.slug}`}
+      data-shape={lead ? "lead" : image ? "picture" : "text"}
+      className={cn(
+        "group flex h-full flex-col rounded-[28px] p-2 transition-[transform,border-color] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100",
+        image || lead ? "border border-border/70 bg-surface hover:border-border" : "bg-muted",
+      )}
+    >
+      {image ? (
+        // The lead's picture grows to fill its two rows, so the tile has no
+        // dead band under the text; the others keep 16:9.
+        <div className={cn("relative overflow-hidden rounded-[22px] bg-muted", lead ? "aspect-[16/10] lg:aspect-auto lg:min-h-[18rem] lg:flex-1" : "aspect-video")}>
+          <img
+            src={image}
+            alt={article.thumbnail?.alt || ""}
+            loading={lead ? "eager" : "lazy"}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          />
+        </div>
+      ) : null}
+      <div className={cn("flex flex-col", lead && image ? "lg:flex-none" : "flex-1", image ? "px-4 pb-4 pt-5" : "p-5 md:p-6")}>
+        {meta}
+        <h2
+          className={cn(
+            "mt-3 font-normal text-primary",
+            lead ? "text-[28px] leading-tight tracking-[-0.01em] md:text-[32px]" : "text-[19px] leading-snug",
+            !lead && "line-clamp-3",
+          )}
         >
-            {article.thumbnail?.url ? (
-                <div className="aspect-video overflow-hidden border-b border-border/70 bg-muted md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:self-start md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
-                    <img
-                        src={article.thumbnail.url}
-                        alt={article.thumbnail.alt || ""}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                    />
-                </div>
-            ) : (
-                <div className="flex aspect-video items-center justify-center border-b border-border/70 bg-gradient-to-br from-secondary via-muted to-background text-primary md:data-[view=list]:w-80 md:data-[view=list]:shrink-0 md:data-[view=list]:self-start md:data-[view=list]:border-b-0 md:data-[view=list]:border-r" data-view={viewMode}>
-                    <div className="grid h-16 w-16 place-items-center rounded-2xl border border-primary/15 bg-background shadow-sm">
-                        <FileText className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                </div>
-            )}
+          {article.title}
+        </h2>
+        <p
+          className={cn(
+            "mt-3 text-[15px] leading-6 text-muted-foreground",
+            lead ? "line-clamp-3 max-w-2xl" : image ? "line-clamp-2" : "line-clamp-5",
+          )}
+        >
+          {article.excerpt}
+        </p>
+        <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[15px] font-medium text-primary">
+          {t("updates.readMore")}
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" aria-hidden="true" />
+        </span>
+      </div>
+    </Link>
+  );
+}
 
-            <div className="flex flex-1 flex-col justify-between gap-5 p-4 sm:p-5">
-                <div>
-                    <div className="mb-3 flex items-center gap-2 text-sm leading-5 text-muted-foreground">
-                        <CalendarIcon className="h-4 w-4" aria-hidden="true" />
-                        <span>{formatPublicationDate(article.date)}</span>
-                    </div>
-                    <h2 className="line-clamp-2 text-lg font-semibold leading-8 tracking-normal text-foreground transition-colors group-hover:text-primary">
-                        {article.title}
-                    </h2>
-                    <p className={isList ? "mt-4 max-w-3xl text-sm leading-7 text-muted-foreground" : "mt-4 line-clamp-3 text-sm leading-7 text-muted-foreground"}>
-                        {article.excerpt}
-                    </p>
-                </div>
-
-                <span className="inline-flex items-center text-sm font-semibold text-primary">
-                    {t("updates.readMore")}
-                    <ChevronRight className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
-                </span>
-            </div>
-        </Link>
-    );
-};
+/** The feed while it loads: the same bento, as quiet blocks. */
+function FeedSkeleton() {
+  const { t } = useTranslation();
+  return (
+    <output aria-label={t("updates.loading", "Loading updates")} className={FEED_GRID}>
+      {Array.from({ length: 6 }, (_, index) => (
+        <div
+          key={index}
+          aria-hidden="true"
+          data-skeleton=""
+          className={cn(
+            "rounded-[28px] border border-border/70 p-2",
+            index === 0 && "md:col-span-2 lg:row-span-2",
+          )}
+        >
+          <Skeleton className={cn("w-full rounded-[22px]", index === 0 ? "aspect-[16/10]" : "aspect-video")} />
+          <div className="space-y-3 px-4 pb-4 pt-5">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-4/5" />
+            <Skeleton className="h-4 w-3/5" />
+          </div>
+        </div>
+      ))}
+    </output>
+  );
+}
 
 const Updates = () => {
-    const { t } = useTranslation();
-    const [viewMode, setViewMode] = useState<ViewMode>("cards");
-    const isCardView = viewMode === "cards";
+  const { t } = useTranslation();
+  const [filter, setFilter] = useState<Filter>("ALL");
 
-    const { data: articles, isLoading, isError } = useQuery({
-        queryKey: ["cms-articles"],
-        queryFn: () => getArticles(),
-    });
+  const { data: articles, isLoading, isError } = useQuery({
+    queryKey: ["cms-articles"],
+    queryFn: () => getArticles(),
+  });
 
-    return (
-        <div className="min-h-screen flex flex-col bg-background">
-            <Seo
-                title={`Updates | ${SITE_NAME}`}
-                description="Latest news, announcements, and updates from the Jawafdehi team on Nepal's corruption accountability platform."
-                canonicalUrl={`${SITE_URL}/updates/`}
-            />
+  const shown = (articles ?? []).filter((article) => filter === "ALL" || article.category === filter);
 
-            <main id="main-content" className="flex-1">
-                <section className="relative isolate bg-background py-8 md:py-12 lg:py-16">
-                    <div
-                        aria-hidden="true"
-                        className="absolute inset-0 -z-10 opacity-[0.24] [background-image:radial-gradient(hsl(var(--foreground)/0.14)_0.75px,transparent_0.75px)] [background-size:18px_18px]"
-                    />
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Seo
+        title={`Updates | ${SITE_NAME}`}
+        description="Latest news, announcements, and updates from the Jawafdehi team on Nepal's corruption accountability platform."
+        canonicalUrl={`${SITE_URL}/updates/`}
+      />
 
-                    <div className="layout-container space-y-8 animate-fade-in">
-                        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-                            <div className="max-w-3xl">
-                                <h1 className="text-4xl font-extrabold leading-tight tracking-normal text-primary md:text-5xl">
-                                    {t("updates.title")}
-                                </h1>
-                                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg md:leading-8">
-                                    {t("updates.description")}
-                                </p>
-                            </div>
+      <main id="main-content" className="flex-1">
+        {/* A light hero like /whats-new and /products: the archive's diamond
+            field inverted onto the white page, the site's eyebrow, the title. */}
+        <section aria-labelledby="updates-title" className="relative isolate overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="absolute inset-y-0 right-0 -z-10 w-full md:w-2/3 [mask-image:linear-gradient(to_left,#000_35%,transparent)]"
+          >
+            <ShaderBackdrop design="diamondLight" />
+          </div>
+          <div className="layout-container py-16 md:py-24">
+            <Eyebrow>{t("updates.eyebrow", "From the team")}</Eyebrow>
+            <h1 id="updates-title" className="font-home-display mt-4 text-4xl text-primary sm:text-5xl md:text-6xl">
+              {t("updates.title")}
+            </h1>
+            <p className="mt-4 max-w-xl text-lg leading-7 text-muted-foreground">{t("updates.description")}</p>
+          </div>
+        </section>
 
-                            <fieldset
-                                aria-label="Choose updates layout"
-                                className="relative inline-flex h-10 w-[92px] shrink-0 items-center overflow-hidden rounded-full border border-border/70 bg-background/70 px-1 text-sm font-semibold leading-none text-foreground shadow-sm shadow-foreground/5 transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-background hover:shadow-md"
-                            >
-                                <span
-                                    aria-hidden="true"
-                                    className={cn(
-                                        "absolute top-1/2 h-8 w-10 -translate-y-1/2 rounded-full bg-foreground shadow-sm transition-transform duration-200 motion-reduce:transition-none",
-                                        isCardView ? "translate-x-0" : "translate-x-[42px]",
-                                    )}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode("cards")}
-                                    aria-pressed={isCardView}
-                                    aria-label="Card view"
-                                    title="Card view"
-                                    className={cn(
-                                        "relative z-10 grid h-full flex-1 place-items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                        isCardView ? "text-background" : "text-muted-foreground hover:text-foreground",
-                                    )}
-                                >
-                                    <LayoutGrid className="h-4 w-4" aria-hidden="true" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode("list")}
-                                    aria-pressed={!isCardView}
-                                    aria-label="List view"
-                                    title="List view"
-                                    className={cn(
-                                        "relative z-10 grid h-full flex-1 place-items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                        isCardView ? "text-muted-foreground hover:text-foreground" : "text-background",
-                                    )}
-                                >
-                                    <List className="h-4 w-4" aria-hidden="true" />
-                                </button>
-                            </fieldset>
-                        </div>
+        <section aria-labelledby="updates-title" className="pb-20 md:pb-28">
+          <div className="layout-container">
+            <div role="group" aria-label={t("updates.filterLabel", "Show")} className="mb-8 flex flex-wrap gap-1">
+              {FILTERS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={filter === option}
+                  onClick={() => setFilter(option)}
+                  className={chipVariants({ active: filter === option })}
+                >
+                  {option === "ALL"
+                    ? t("updates.all", "All")
+                    : t(`updates.filter.${option}`, option === "NEWS" ? "News" : "Updates")}
+                </button>
+              ))}
+            </div>
 
-                        {isError ? (
-                            <p className="text-muted-foreground">
-                                We couldn't load updates right now. Please try again later.
-                            </p>
-                        ) : isLoading ? (
-                            <output
-                                aria-label={t("updates.loading", "Loading updates")}
-                                className={gridClass(isCardView)}
-                            >
-                                {Array.from({ length: SKELETON_COUNT[viewMode] }, (_, index) => (
-                                    <UpdateCardSkeleton key={index} viewMode={viewMode} />
-                                ))}
-                            </output>
-                        ) : !articles || articles.length === 0 ? (
-                            <p className="text-muted-foreground">No updates have been published yet.</p>
-                        ) : (
-                            <div className={gridClass(isCardView)}>
-                                {articles.map((article) => (
-                                    <UpdateCard key={article.id} article={article} viewMode={viewMode} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </section>
-            </main>
-        </div>
-    );
+            {isError ? (
+              <p className="text-muted-foreground">{t("updates.error", "We couldn't load updates right now. Please try again later.")}</p>
+            ) : isLoading ? (
+              <FeedSkeleton />
+            ) : shown.length === 0 ? (
+              <p className="text-muted-foreground">{t("updates.empty", "No updates have been published yet.")}</p>
+            ) : (
+              <ul className={FEED_GRID}>
+                {shown.map((article, index) => (
+                  <li key={article.id} className={cn(index === 0 && "md:col-span-2 lg:row-span-2")}>
+                    <StoryTile article={article} lead={index === 0} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 };
 
 export default Updates;

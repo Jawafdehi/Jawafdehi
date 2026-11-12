@@ -1,12 +1,12 @@
-// The archive in three panels, under the hero: what is in it (the one navy
-// panel), how a case is followed from charge sheet to verdict, and the MCP
-// that brings it into an AI assistant. Each panel shows its idea with a small
+// The archive in three panels, under the hero: the MCP that brings it into an
+// AI assistant (the one navy panel), what is in it, and how a case is followed
+// from charge sheet to verdict. Each panel shows its idea with a small
 // piece of interface rather than a paragraph.
 import { FileText, Gavel, Landmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { ArrowLink } from "@/components/ui/arrow-link";
-import { Panel, PanelLabel } from "@/components/ui/panel";
+import { PanelLabel } from "@/components/ui/panel";
 import { Reveal } from "@/components/ui/reveal";
 import { SplitHeading } from "@/components/ui/split-heading";
 
@@ -28,12 +28,35 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
           <SplitHeading id="archive-bento-title" lead={t("home.bento.titleLead")} rest={t("home.bento.titleRest")} />
         </Reveal>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)]">
-          {/* What is in it: the featured navy panel. */}
+        {/* Three panels, no borders, three different surfaces: the MCP on a
+            softened navy (the one highlight), the archive on grey, the case
+            flow on a dotted field. */}
+        <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)]">
+          {/* The MCP: the featured panel. The navy is lifted toward its top
+              corner, so it reads as depth rather than a flat dark block. */}
           <Reveal className="h-full">
-            <Panel tone="dark" className="h-full min-h-[440px]">
-              <PanelLabel onDark>{t("home.bento.archive.label")}</PanelLabel>
-              <h3 className={PANEL_TITLE}>{t("home.bento.archive.title")}</h3>
+            <div className="flex h-full min-h-[440px] flex-col rounded-[28px] bg-primary-surface bg-[radial-gradient(120%_90%_at_100%_0%,hsl(214_42%_30%)_0%,hsl(var(--primary-surface))_60%)] p-7 text-primary-foreground">
+              <PanelLabel onDark>{t("home.bento.ask.label")}</PanelLabel>
+              <h3 className={PANEL_TITLE}>{t("home.bento.ask.title")}</h3>
+              <div aria-hidden="true" className="mt-6 flex flex-1 flex-col justify-center gap-3">
+                <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-6 text-primary">
+                  {t("home.bento.ask.question")}
+                </p>
+                <p className="max-w-[90%] rounded-2xl rounded-bl-md bg-primary-foreground/10 px-4 py-3 text-sm leading-6 text-primary-foreground/90">
+                  {t("home.bento.ask.answer")}
+                </p>
+              </div>
+              <ArrowLink to="/mcp" tone="light" className="mt-6 w-full">
+                {t("home.bento.ask.cta")}
+              </ArrowLink>
+            </div>
+          </Reveal>
+
+          {/* What is in it: grey, the count and the way in. */}
+          <Reveal className="h-full" delayMs={80}>
+            <div className="flex h-full min-h-[440px] flex-col rounded-[28px] bg-muted p-7">
+              <PanelLabel>{t("home.bento.archive.label")}</PanelLabel>
+              <h3 className={`${PANEL_TITLE} text-primary`}>{t("home.bento.archive.title")}</h3>
               {Array.isArray(chips) ? (
                 <ul className="mt-6 flex flex-wrap gap-2">
                   {chips.map((chip, i) => (
@@ -41,7 +64,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                       key={chip}
                       className={
                         i === chips.length - 1
-                          ? "rounded-full border border-primary-foreground/30 px-3.5 py-1 text-sm text-primary-foreground/70"
+                          ? "rounded-full px-1 py-1 text-sm text-muted-foreground"
                           : "rounded-full bg-surface px-3.5 py-1 text-sm text-primary"
                       }
                     >
@@ -50,25 +73,23 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                   ))}
                 </ul>
               ) : null}
-              <p className="mt-auto pt-10 font-home-display text-5xl tabular-nums">
+              <p className="mt-auto pt-10 font-home-display text-5xl tabular-nums text-primary">
                 {casesDocumented}
-                <span className="ml-3 font-sans text-lg text-primary-foreground/60">{t("home.bento.archive.casesLabel")}</span>
+                <span className="ml-3 font-sans text-lg text-muted-foreground">{t("home.bento.archive.casesLabel")}</span>
               </p>
-              <ArrowLink to="/search?type=case" tone="light" className="mt-6 w-full">
+              <ArrowLink to="/search?type=case" className="mt-6 w-full">
                 {t("home.bento.archive.cta")}
               </ArrowLink>
-            </Panel>
+            </div>
           </Reveal>
 
-          {/* How a case is followed: a small flow on a dotted grid. */}
-          <Reveal className="h-full" delayMs={80}>
-            <Panel className="h-full min-h-[440px]">
+          {/* How a case is followed: the flow on a dotted field that fills the
+              whole panel, so it has shape without a border or a fill. */}
+          <Reveal className="h-full" delayMs={160}>
+            <div className="flex h-full min-h-[440px] flex-col rounded-[28px] bg-muted/40 bg-[radial-gradient(hsl(var(--border))_1.2px,transparent_1.2px)] p-7 [background-size:16px_16px]">
               <PanelLabel>{t("home.bento.follow.label")}</PanelLabel>
               <h3 className={`${PANEL_TITLE} text-primary`}>{t("home.bento.follow.title")}</h3>
-              <div
-                aria-hidden="true"
-                className="relative mt-6 flex-1 rounded-2xl bg-[radial-gradient(hsl(var(--border))_1.2px,transparent_1.2px)] [background-size:16px_16px]"
-              >
+              <div aria-hidden="true" className="relative mt-6 flex-1">
                 {/* Each step sits a step further in; a thin elbow joins it to
                     the one before. Sizes are in container units of the list. */}
                 <ol className="relative flex h-full flex-col justify-center gap-5 py-4 [container-type:inline-size]">
@@ -81,7 +102,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                           style={{ left: "calc(-16cqw + 18px)", width: "calc(16cqw - 18px)", height: "calc(100% + 1.25rem)" }}
                         />
                       ) : null}
-                      <span className="relative flex items-center gap-2.5 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-primary">
+                      <span className="relative flex items-center gap-2.5 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-primary shadow-[0_1px_2px_rgba(14,31,59,0.06)]">
                         <Icon className={i === 2 ? "h-4 w-4 text-accent" : "h-4 w-4 text-muted-foreground"} />
                         {label}
                       </span>
@@ -90,26 +111,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                 </ol>
               </div>
               <p className="mt-6 text-base leading-7 text-muted-foreground">{t("home.bento.follow.body")}</p>
-            </Panel>
-          </Reveal>
-
-          {/* The MCP: a two-line exchange. */}
-          <Reveal className="h-full" delayMs={160}>
-            <Panel className="h-full min-h-[440px]">
-              <PanelLabel>{t("home.bento.ask.label")}</PanelLabel>
-              <h3 className={`${PANEL_TITLE} text-primary`}>{t("home.bento.ask.title")}</h3>
-              <div aria-hidden="true" className="mt-6 flex flex-1 flex-col justify-center gap-3">
-                <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary-surface px-4 py-3 text-sm leading-6 text-primary-foreground">
-                  {t("home.bento.ask.question")}
-                </p>
-                <p className="max-w-[90%] rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm leading-6 text-foreground">
-                  {t("home.bento.ask.answer")}
-                </p>
-              </div>
-              <ArrowLink to="/mcp" className="mt-6 w-full">
-                {t("home.bento.ask.cta")}
-              </ArrowLink>
-            </Panel>
+            </div>
           </Reveal>
         </div>
       </div>

@@ -256,8 +256,8 @@
       "ask": {
         "label": "Ask your AI",
         "title": "The archive, inside Claude and ChatGPT.",
-        "question": "Show me every case involving Sugat Ratna Kansakar.",
-        "answer": "Found case 080-CR-0145: the charges, all 24 Special Court hearings, and the verdict.",
+        "question": "How many corruption cases did the CIAA file in 2081/82?",
+        "answer": "Here are the CIAA's 2081/82 filings, each linked to its charge sheet, Special Court hearings and verdict.",
         "cta": "Connect your AI"
       }
     },
@@ -1334,7 +1334,20 @@
     "documentsAndResources": "Documents & Resources",
     "view": "View",
     "loading": "Loading updates",
-    "loadingUpdate": "Loading update"
+    "loadingUpdate": "Loading update",
+    "eyebrow": "From the team",
+    "all": "All",
+    "filterLabel": "Show",
+    "filter": {
+      "NEWS": "News",
+      "UPDATE": "Updates"
+    },
+    "category": {
+      "NEWS": "News",
+      "UPDATE": "Update"
+    },
+    "error": "We couldn't load updates right now. Please try again later.",
+    "empty": "No updates have been published yet."
   },
   "share": {
     "share": "Share",

@@ -33,10 +33,6 @@ const renderPage = () => {
   );
 };
 
-// One skeleton card = one aria-hidden root carrying the view mode.
-const skeletonCards = (root: HTMLElement, viewMode: "cards" | "list") =>
-  root.querySelectorAll(`[aria-hidden='true'][data-view='${viewMode}']`).length;
-
 const loadingStatus = () => screen.getByRole("status", { name: "Loading updates" });
 
 beforeEach(() => {
@@ -45,97 +41,74 @@ beforeEach(() => {
   getArticles.mockReturnValue(new Promise(() => {}));
 });
 
+const article = (
+  id: number,
+  over: Partial<ArticleListItem> = {},
+): ArticleListItem => ({
+  id,
+  meta: { type: "content.ArticlePage", slug: `story-${id}`, first_published_at: null },
+  title: `Story ${id}`,
+  category: "UPDATE",
+  date: "2026-06-24",
+  excerpt: `Excerpt ${id}.`,
+  thumbnail: null,
+  ...over,
+});
+
+const picture = { url: "https://cms.example.test/p.jpg", width: 800, height: 450, alt: "" };
+
 describe("Updates loading state", () => {
-  it("renders card skeletons instead of a bare loading string", () => {
-    const { container } = renderPage();
-
-    expect(screen.queryByText(/^Loading updates…$/)).toBeNull();
-    expect(skeletonCards(loadingStatus(), "cards")).toBe(6);
-    // The shapes pulse via the shared <Skeleton> primitive.
-    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
-  });
-
-  it("swaps to list-shaped skeletons when the list view is selected", () => {
+  it("shows a bento-shaped skeleton, announced once", () => {
     renderPage();
-
-    fireEvent.click(screen.getByRole("button", { name: "List view" }));
-
-    expect(skeletonCards(loadingStatus(), "list")).toBe(3);
-    expect(skeletonCards(loadingStatus(), "cards")).toBe(0);
-  });
-
-  it("announces the load once and hides the decorative shapes", () => {
-    renderPage();
-
     const status = loadingStatus();
-    // The status node carries the announcement; the placeholder cards inside it
-    // are hidden so a screen reader doesn't walk an empty card tree.
-    expect(status.getAttribute("aria-hidden")).toBeNull();
-    expect(skeletonCards(status, "cards")).toBe(6);
-  });
-
-  it("keeps the skeleton grid on the same layout as the loaded grid", () => {
-    renderPage();
-
-    expect(loadingStatus().className).toContain("md:grid-cols-2");
+    const tiles = status.querySelectorAll("[data-skeleton]");
+    expect(tiles.length).toBe(6);
+    // The first placeholder takes the lead story's two-by-two cell.
+    expect(tiles[0].className).toContain("lg:row-span-2");
+    expect(status.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
 });
 
-describe("Updates card grid sizing", () => {
-  const article = (id: number, excerpt: string): ArticleListItem => ({
-    id,
-    meta: { type: "content.ArticlePage", slug: `story-${id}`, first_published_at: null },
-    title: `Story ${id}`,
-    category: "UPDATE",
-    date: "2026-06-24",
-    excerpt,
-    thumbnail: null,
+describe("Updates bento feed", () => {
+  it("leads with the newest story across two columns and two rows", async () => {
+    getArticles.mockResolvedValue([article(1, { thumbnail: picture }), article(2), article(3)]);
+    renderPage();
+
+    const lead = (await screen.findByText("Story 1")).closest("a");
+    expect(lead?.getAttribute("data-shape")).toBe("lead");
+    expect(lead?.parentElement?.className).toContain("md:col-span-2");
+    expect(lead?.parentElement?.className).toContain("lg:row-span-2");
   });
 
-  // Deliberately uneven copy: this is the input that used to produce short cards
-  // in one row and tall ones in the next.
-  const articles = [
-    article(1, "Short."),
-    article(2, "A considerably longer excerpt that wraps onto several lines in the card grid."),
-    article(3, "Medium length excerpt."),
-  ];
-
-  // The results grid, not the `grid place-items-center` icon box inside a
-  // thumbnail-less card (and not the loading <output>, which isn't a div).
-  const grid = (container: HTMLElement) =>
-    container.querySelector<HTMLElement>("div.grid.gap-6, div.grid.gap-5");
-
-  it("equalises every row in card view, not just the cells within one row", async () => {
-    getArticles.mockResolvedValue(articles);
-
-    const { container } = renderPage();
+  it("gives a story with a picture an image tile and one without a text panel", async () => {
+    getArticles.mockResolvedValue([article(1), article(2, { thumbnail: picture }), article(3)]);
+    renderPage();
 
     await screen.findByText("Story 1");
-    // `auto-rows-fr` is what makes rows uniform; without it a grid only equalises
-    // cells inside a single row.
-    expect(grid(container)?.className).toContain("auto-rows-fr");
+    expect(screen.getByText("Story 2").closest("a")?.getAttribute("data-shape")).toBe("picture");
+    expect(screen.getByText("Story 3").closest("a")?.getAttribute("data-shape")).toBe("text");
+  });
+
+  it("filters to news or updates with the switcher pills", async () => {
+    getArticles.mockResolvedValue([article(1), article(2, { category: "NEWS" })]);
+    renderPage();
+
+    await screen.findByText("Story 1");
+    fireEvent.click(screen.getByRole("button", { name: "News" }));
+    expect(screen.queryByText("Story 1")).toBeNull();
+    expect(screen.getByText("Story 2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(screen.getByText("Story 1")).toBeTruthy();
   });
 
   it("uses the canonical /cases breakpoints", async () => {
-    getArticles.mockResolvedValue(articles);
-
+    getArticles.mockResolvedValue([article(1), article(2), article(3)]);
     const { container } = renderPage();
 
     await screen.findByText("Story 1");
-    const className = grid(container)?.className ?? "";
+    const className = container.querySelector("ul.grid")?.className ?? "";
     expect(className).toContain("md:grid-cols-2");
     expect(className).toContain("lg:grid-cols-3");
-    expect(className).not.toContain("xl:grid-cols-3");
-  });
-
-  it("leaves list view alone — equal rows there would pad out short entries", async () => {
-    getArticles.mockResolvedValue(articles);
-
-    const { container } = renderPage();
-
-    await screen.findByText("Story 1");
-    fireEvent.click(screen.getByRole("button", { name: "List view" }));
-
-    expect(grid(container)?.className).not.toContain("auto-rows-fr");
   });
 });
