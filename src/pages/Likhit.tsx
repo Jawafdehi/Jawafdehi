@@ -466,10 +466,14 @@ const Likhit = () => {
         {/* ── Redaction: the tiers at a glance ── */}
         <section aria-labelledby="likhit-privacy-title" className="pt-16 md:pt-24">
           <div className="layout-container">
-            {/* One hairline card, like the OCR setups below: the tiers on the
-                left, the title, line and guide link on the right. */}
-            <div className="grid grid-cols-1 gap-8 rounded-[28px] border border-border/70 bg-surface p-3 md:p-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
-              <div className="flex flex-col p-3 md:p-5 lg:order-last lg:pl-0">
+            {/* The OCR card's twin: the same mist shader, padding and height,
+                the tiers on white on the left, the title, line and guide link
+                on the right. */}
+            <div className="relative isolate grid grid-cols-1 gap-8 overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 md:p-10 lg:min-h-[25rem] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+              <div aria-hidden="true" className="absolute inset-0 -z-10">
+                <ShaderBackdrop design="mist" />
+              </div>
+              <div className="flex flex-col lg:order-last">
                 <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
                 <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.privacy.short")}</p>
                 <a
@@ -484,7 +488,7 @@ const Likhit = () => {
                 </a>
               </div>
               <div className="min-w-0">
-                <dl aria-labelledby="likhit-privacy-title" className="rounded-[22px] bg-muted/50 px-6 py-3">
+                <dl aria-labelledby="likhit-privacy-title" className="flex h-full flex-col justify-center rounded-3xl border border-border/60 bg-surface/90 px-6 py-4 backdrop-blur-sm">
                   {REDACTION_TIERS.map((key) => (
                     <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-3">
                       <dt>

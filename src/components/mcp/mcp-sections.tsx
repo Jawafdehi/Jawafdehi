@@ -2,9 +2,10 @@
 // Jawafdehi MCP pilot flyer (November 2026): the problem, what the connector
 // is, what the archive holds, two real answers, questions that work today,
 // and the pilot. Setup lives in connect-panel.tsx.
-import { ArrowUpRight, Check } from "@/components/icons";
+import { ArrowUpRight, Check, Github } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/ui/reveal";
@@ -200,30 +201,44 @@ export function McpSkill() {
   const { t } = useTranslation();
   return (
     <section id="skill" aria-labelledby="mcp-skill-title" className="scroll-mt-24 pt-16 md:pt-24">
-      <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-        <div>
-          <h2 id="mcp-skill-title" className="font-home-section-title text-primary">
-            {t("mcp.skill.title")}
-          </h2>
-          <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("mcp.skill.body")}</p>
-          <a
-            href={SKILL_REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            github.com/Jawafdehi/mcp
-            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-          </a>
+      <div className="layout-container">
+        {/* The likhit OCR card's shape: one hairline card on the mist shader,
+            the words on the left, the install commands on white on the right. */}
+        <div className="relative isolate grid grid-cols-1 gap-8 overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 md:p-10 lg:min-h-[22rem] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
+          <div aria-hidden="true" className="absolute inset-0 -z-10">
+            <ShaderBackdrop design="mist" />
+          </div>
+          <div>
+            <h2 id="mcp-skill-title" className="font-home-section-title text-primary">
+              {t("mcp.skill.title")}
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("mcp.skill.body")}</p>
+            <a
+              href={SKILL_REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-1.5 rounded text-base font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Github className="h-4 w-4" aria-hidden="true" />
+              github.com/Jawafdehi/mcp
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+          <ul className="min-w-0 space-y-5">
+            {SKILL_INSTALLS.map(({ key, command }) => (
+              <li key={key}>
+                <p className="text-sm text-muted-foreground">{t(`mcp.skill.${key}`)}</p>
+                <CopyPill
+                  value={command}
+                  label={t("mcp.skill.copy")}
+                  mono
+                  fullWidth
+                  className="bg-surface/90 backdrop-blur-sm"
+                />
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="min-w-0 space-y-5">
-          {SKILL_INSTALLS.map(({ key, command }) => (
-            <li key={key}>
-              <p className="text-sm text-muted-foreground">{t(`mcp.skill.${key}`)}</p>
-              <CopyPill value={command} label={t("mcp.skill.copy")} mono fullWidth />
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

@@ -38,11 +38,25 @@ export function CopyPill({
   label,
   mono = false,
   fullWidth = false,
-}: Readonly<{ value: string; label: string; mono?: boolean; /** Fill the column, so a list of commands shares one right edge. */ fullWidth?: boolean }>) {
+  className,
+}: Readonly<{
+  value: string;
+  label: string;
+  mono?: boolean;
+  /** Fill the column, so a list of commands shares one right edge. */
+  fullWidth?: boolean;
+  className?: string;
+}>) {
   return (
     // A long command wraps rather than scrolling behind a scrollbar; the box
     // grows to two lines, which is why its corners are 20px, not a full pill.
-    <div className={cn("mt-2 max-w-full items-center gap-3 rounded-[20px] border border-border/60 bg-muted/50 py-1 pl-5 pr-1", fullWidth ? "flex w-full" : "inline-flex")}>
+    <div
+      className={cn(
+        "mt-2 max-w-full items-center gap-3 rounded-[20px] border border-border/60 bg-muted/50 py-1 pl-5 pr-1",
+        fullWidth ? "flex w-full" : "inline-flex",
+        className,
+      )}
+    >
       <code
         className={cn(
           "min-w-0 flex-1 py-1.5 text-[15px] font-normal text-foreground [overflow-wrap:anywhere]",
