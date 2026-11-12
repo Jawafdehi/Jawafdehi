@@ -31,11 +31,14 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
         {/* Three panels, no borders, three different surfaces: the MCP on a
             softened navy (the one highlight), the archive on grey, the case
             flow on a dotted field. */}
-        <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        {/* Three across only from xl: at lg (1024px) three columns left each
+            panel ~300px and the archive's chips, count and the case flow all
+            wrapped. Below xl the MCP spans the row and the other two pair up. */}
+        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)]">
           {/* The MCP: the featured panel. The navy is lifted toward its top
               corner, so it reads as depth rather than a flat dark block. */}
-          <Reveal className="h-full">
-            <div className="flex h-full min-h-[440px] flex-col rounded-[28px] bg-primary-surface bg-[radial-gradient(120%_90%_at_100%_0%,hsl(214_42%_30%)_0%,hsl(var(--primary-surface))_60%)] p-7 text-primary-foreground">
+          <Reveal className="h-full md:col-span-2 xl:col-span-1">
+            <div className="flex h-full min-h-[360px] flex-col rounded-[28px] bg-primary-surface xl:min-h-[440px] bg-[radial-gradient(120%_90%_at_100%_0%,hsl(214_42%_30%)_0%,hsl(var(--primary-surface))_60%)] p-7 text-primary-foreground">
               <PanelLabel onDark>{t("home.bento.ask.label")}</PanelLabel>
               <h3 className={PANEL_TITLE}>{t("home.bento.ask.title")}</h3>
               <div aria-hidden="true" className="mt-6 flex flex-1 flex-col justify-center gap-3">
@@ -73,11 +76,15 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                   ))}
                 </ul>
               ) : null}
-              <p className="mt-auto pt-10 font-home-display text-5xl tabular-nums text-primary">
+              {/* The label keeps body tracking (the display face's -0.035em ran
+                  "corruption cases" together) and wraps as one unit. */}
+              <p className="mt-auto flex flex-wrap items-baseline gap-x-3 pt-10 font-home-display text-5xl tabular-nums text-primary">
                 {casesDocumented}
-                <span className="ml-3 font-sans text-lg text-muted-foreground">{t("home.bento.archive.casesLabel")}</span>
+                <span className="whitespace-nowrap font-sans text-lg tracking-normal text-muted-foreground">
+                  {t("home.bento.archive.casesLabel")}
+                </span>
               </p>
-              <ArrowLink to="/search?type=case" className="mt-6 w-full">
+              <ArrowLink to="/search" className="mt-6 w-full">
                 {t("home.bento.archive.cta")}
               </ArrowLink>
             </div>
@@ -102,7 +109,10 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                           style={{ left: "calc(-16cqw + 18px)", width: "calc(16cqw - 18px)", height: "calc(100% + 1.25rem)" }}
                         />
                       ) : null}
-                      <span className="relative flex items-center gap-2.5 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-primary shadow-[0_1px_2px_rgba(14,31,59,0.06)]">
+                      {/* z-10: each elbow belongs to the step after it and is
+                          painted later, so without this it ran across the chip
+                          above. The chips sit over every line. */}
+                      <span className="relative z-10 flex items-center gap-2.5 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-primary shadow-[0_1px_2px_rgba(14,31,59,0.06)]">
                         <Icon className={i === 2 ? "h-4 w-4 text-accent" : "h-4 w-4 text-muted-foreground"} />
                         {label}
                       </span>

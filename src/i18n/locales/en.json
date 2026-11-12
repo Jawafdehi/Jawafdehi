@@ -230,18 +230,17 @@
       "titleRest": "in one open archive.",
       "archive": {
         "label": "The archive",
-        "title": "Every documented corruption case, searchable.",
+        "title": "Every case, court record and public document, searchable.",
         "chips": [
-          "Bribery",
-          "Procurement",
-          "Cooperative fraud",
-          "Land",
-          "Abuse of authority",
+          "Corruption cases",
+          "Court cases",
+          "People & offices",
+          "Government documents",
           "Audit findings",
           "& more"
         ],
-        "casesLabel": "cases",
-        "cta": "Browse cases"
+        "casesLabel": "corruption cases",
+        "cta": "Browse the archive"
       },
       "follow": {
         "label": "Follow a case",

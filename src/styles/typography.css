@@ -169,10 +169,11 @@
      sections below never compete with it. */
   .font-home-section-title {
     @apply font-home-display text-3xl md:text-[2.75rem];
-    /* The display face's hero leading (1.05) is for one-line heroes; a section
-       title wraps, and at 1.05 its second line touched the first. Each
-       language's heading leading instead: 1.2 in English, 1.35 in Nepali. */
-    line-height: var(--font-heading-leading);
+    /* The display face's 1.02 is for one-line heroes; a section title wraps,
+       and at 1.02 its second line touched the first. 1.1 in English. Nepali
+       keeps the display face's own 1.28 (:root[lang="ne"] .font-home-display,
+       below), which its matras and conjuncts need. */
+    line-height: 1.1;
   }
 
   .font-hero-title {
