@@ -117,7 +117,7 @@ export default function MaterialsLanding() {
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px)]" />
         </div>
 
-        <div className="layout-container flex min-h-[min(760px,calc(100svh-76px))] flex-col justify-center pb-16 pt-12 md:pb-20">
+        <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center pb-16 pt-12 md:pb-20">
           <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
             {t("materialsLanding.heroEyebrow", "The archive's documents")}
           </p>
@@ -175,10 +175,16 @@ export default function MaterialsLanding() {
         className="scroll-mt-24"
       >
         <div className="layout-container py-16 md:py-24">
-          <h2 id="series-heading" className="font-home-section-title text-primary">
+          {/* A smaller title than a page section's, with one line under it:
+              the folders are the content, the heading only names the shelf. */}
+          <h2 id="series-heading" className="font-home-display text-3xl text-primary md:text-4xl">
             {t("materialsLanding.grid.title", "Browse by series")}
           </h2>
-          <ul className="mt-12 grid list-none grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 lg:grid-cols-4">
+          <p className="mt-3 max-w-2xl text-lg leading-8 text-muted-foreground">
+            {t("materialsLanding.grid.subtitle", "Each series is one kind of record, from the body that published it.")}
+          </p>
+          {/* Nine series and the way out: five across makes two even rows. */}
+          <ul className="mt-10 grid list-none grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-5">
             {MATERIAL_SERIES.map((series) => (
               <li key={series.slug}>
                 <FolderCard series={series} count={seriesCount(series, materials)} />

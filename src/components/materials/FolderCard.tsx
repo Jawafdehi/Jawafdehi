@@ -37,9 +37,11 @@ interface FolderCardProps {
  * (public/assets/materials/covers/, made by
  * scripts/make-series-covers.py), so the folder shows what is
  * in it rather than standing for "a folder". It rests muted (35% saturation)
- * so nine covers read as one shelf; on hover the colour comes up, the page
- * rises 6px and the front panel tips forward 10° on its bottom edge. Under
- * reduced motion only the colour changes.
+ * so nine covers read as one shelf. On hover the page is pulled out of the
+ * folder (Codrops' "Folder Preview Ideas"): it slides up and to the right,
+ * turns 4° and takes a shadow, its colour comes up, and the front panel tips
+ * forward 18° on its bottom edge. Under reduced motion only the colour
+ * changes.
  */
 export function FolderGlyph({ cover, className }: Readonly<{ cover?: string; className?: string }>) {
   return (
@@ -53,14 +55,14 @@ export function FolderGlyph({ cover, className }: Readonly<{ cover?: string; cla
           alt=""
           loading="lazy"
           decoding="async"
-          className="absolute inset-x-[8%] top-[3%] h-[88%] w-[84%] -rotate-2 rounded-[3px] bg-surface object-cover object-top shadow-[0_1px_3px_rgba(14,31,59,0.18)] saturate-[.35] transition-[transform,filter] duration-300 ease-out group-hover:-translate-y-1.5 group-hover:saturate-100 motion-reduce:transition-[filter] motion-reduce:group-hover:translate-y-0"
+          className="absolute inset-x-[8%] top-[3%] h-[88%] w-[84%] origin-bottom-left -rotate-2 rounded-[3px] bg-surface object-cover object-top shadow-[0_1px_3px_rgba(14,31,59,0.18)] saturate-[.35] transition-[transform,filter,box-shadow] duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:[transform:translate(10%,-18%)_rotate(4deg)] group-hover:shadow-[0_10px_24px_-8px_rgba(14,31,59,0.35)] group-hover:saturate-100 motion-reduce:transition-[filter] motion-reduce:group-hover:[transform:rotate(-2deg)]"
         />
       ) : (
-        <div className="absolute inset-x-[10%] top-[16%] h-[60%] -rotate-2 rounded-[4px] bg-surface shadow-[0_1px_2px_rgba(14,31,59,0.08)] transition-transform duration-200 ease-out group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0" />
+        <div className="absolute inset-x-[10%] top-[16%] h-[60%] -rotate-2 rounded-[4px] bg-surface shadow-[0_1px_2px_rgba(14,31,59,0.08)] transition-transform duration-200 ease-out group-hover:[transform:translate(10%,-18%)_rotate(4deg)] motion-reduce:transition-none motion-reduce:group-hover:[transform:rotate(-2deg)]" />
       )}
       {/* Front panel, a shade lighter so the folder has depth without a
           shadow. It tips toward the reader on hover, hinged at the bottom. */}
-      <div className="absolute inset-x-0 bottom-0 top-[60%] origin-bottom rounded-[10px] bg-[hsl(215_18%_87%)] transition-transform duration-200 ease-out group-hover:[transform:rotateX(-10deg)] motion-reduce:transition-none motion-reduce:group-hover:[transform:none]" />
+      <div className="absolute inset-x-0 bottom-0 top-[60%] origin-bottom rounded-[10px] bg-[hsl(215_18%_87%)] transition-transform duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:[transform:rotateX(-18deg)] motion-reduce:transition-none motion-reduce:group-hover:[transform:none]" />
     </div>
   );
 }
