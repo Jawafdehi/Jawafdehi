@@ -11,6 +11,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { CopyBlock, CopyButton, CopyPill } from "@/components/copy-snippet";
 import { Seo } from "@/components/Seo";
 import { Panel } from "@/components/ui/panel";
@@ -304,6 +305,40 @@ function PitchCard() {
   );
 }
 
+/**
+ * The art at the top of each feature card: a dithered field of dots, dense at
+ * one corner and thinning out, in crimson or the archive's blue by turn. Pure
+ * CSS (a dot grid under a radial mask), so four cards cost no WebGL.
+ */
+const DITHER_ART = [
+  { color: "hsl(var(--accent))", at: "100% 0%" },
+  { color: "hsl(214 65% 52%)", at: "0% 0%" },
+  { color: "hsl(var(--accent))", at: "50% 0%" },
+  { color: "hsl(214 65% 52%)", at: "100% 0%" },
+] as const;
+
+function FeatureDither({ index }: Readonly<{ index: number }>) {
+  const { color, at } = DITHER_ART[index % DITHER_ART.length];
+  // Two masks multiplied: the corner bloom, and a fade to nothing before the
+  // text, so the dots never sit under a word.
+  const mask = `radial-gradient(circle at ${at}, #000 0%, rgba(0,0,0,0.5) 35%, transparent 75%), linear-gradient(#000 30%, transparent 100%)`;
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-x-0 top-0 -z-10 h-[55%]"
+      style={{
+        backgroundImage: `radial-gradient(${color} 1.5px, transparent 2px), radial-gradient(${color} 1.5px, transparent 2px)`,
+        backgroundSize: "8px 8px, 8px 8px",
+        backgroundPosition: "0 0, 4px 4px",
+        maskImage: mask,
+        WebkitMaskImage: mask,
+        maskComposite: "intersect",
+        WebkitMaskComposite: "source-in",
+      }}
+    />
+  );
+}
+
 function SectionTitle({ id, children }: Readonly<{ id: string; children: ReactNode }>) {
   return (
     <h2 id={id} className="font-home-section-title text-primary">
@@ -395,7 +430,8 @@ const Likhit = () => {
               {FEATURES.map((key, index) => (
                 <li key={key}>
                   <Reveal className="h-full" delayMs={(index % 4) * 70}>
-                    <Panel className="min-h-[11rem] justify-end">
+                    <Panel className="relative isolate min-h-[15rem] justify-end overflow-hidden">
+                      <FeatureDither index={index} />
                       <h3 className="text-xl font-normal leading-snug text-primary">{t(`likhit.features.${key}.name`)}</h3>
                       <p className="mt-2 text-[15px] leading-6 text-muted-foreground">{t(`likhit.features.${key}.body`)}</p>
                     </Panel>
@@ -429,8 +465,10 @@ const Likhit = () => {
 
         {/* ── Redaction: the tiers at a glance ── */}
         <section aria-labelledby="likhit-privacy-title" className="pt-16 md:pt-24">
-          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <div className="flex flex-col">
+          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
+            {/* The tiers on the left this time, so the section does not repeat
+                the command line's shape above it. */}
+            <div className="flex flex-col lg:order-last">
               <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
               <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.privacy.short")}</p>
               <a
@@ -438,12 +476,13 @@ const Likhit = () => {
                 {...EXTERNAL}
                 className="mt-5 inline-flex w-fit items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
               >
+                <Github className="h-4 w-4" aria-hidden="true" />
                 {t("likhit.privacy.guide")}
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
             <div className="min-w-0">
-              <dl aria-labelledby="likhit-privacy-title" className="divide-y divide-border/70 rounded-[22px] bg-muted px-6">
+              <dl aria-labelledby="likhit-privacy-title" className="divide-y divide-border/50 rounded-[22px] bg-muted/50 px-6">
                 {REDACTION_TIERS.map((key) => (
                   <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-4">
                     <dt>
@@ -464,11 +503,16 @@ const Likhit = () => {
           </div>
         </section>
 
-        {/* ── OCR: the title, then the setups as one card. ── */}
+        {/* ── OCR: an eyebrow, then the setups as one card. ── */}
         <section aria-labelledby="likhit-ocr-title" className="pt-16 md:pt-24">
           <div className="layout-container">
-            <SectionTitle id="likhit-ocr-title">{t("likhit.ocr.title")}</SectionTitle>
-            <div className="mt-8">
+            {/* An eyebrow, not a section title: the slide titles inside the
+                card are the headline here, so a second large title above them
+                would compete. */}
+            <h2 id="likhit-ocr-title">
+              <Eyebrow>{t("likhit.ocr.title")}</Eyebrow>
+            </h2>
+            <div className="mt-5">
               <OcrRecipes />
             </div>
           </div>
