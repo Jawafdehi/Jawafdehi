@@ -1,7 +1,7 @@
 import { useRef, type KeyboardEvent } from "react";
 
 import type { ArchiveSearchType } from "@/types/search";
-import { cn } from "@/lib/utils";
+import { chipVariants } from "@/components/ui/chip";
 
 type SearchTabsProps = {
   activeType: ArchiveSearchType;
@@ -65,16 +65,9 @@ export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) 
         return (
           <button
             aria-selected={isActive}
-            // Grey pills, set at the filter chips' size and weight so the
-            // header reads as one family. The selected type is the filled
-            // pill; the rest are plain text that take a fainter fill on hover
-            // — navy and grey only, never the crimson accent.
-            className={cn(
-              "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isActive
-                ? "bg-muted text-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-primary",
-            )}
+            // The shared switcher pill (ui/chip), so these tabs and every
+            // other pill group on the site are one component.
+            className={chipVariants({ active: isActive })}
             key={tab.type}
             onClick={() => onChange(typeParam(tab.type))}
             onKeyDown={(event) => handleKeyDown(event, index)}

@@ -542,12 +542,11 @@ export default function ArchiveSearch({
                 setQuery("");
                 updateParams({ q: undefined, page: 1 });
               }}
+              // Names what THIS tab searches ("Search cases", "Search
+              // documents"), so the field says where the words will go.
               placeholder={
                 placeholder ||
-                t(
-                  "archiveSearch.placeholder",
-                  "Search cases, people, offices, locations, or allegations",
-                )
+                t(`archiveSearch.placeholders.${selectedRecordType}`, PLACEHOLDER_FALLBACK[selectedRecordType])
               }
               showSubmit={false}
               value={query}
@@ -879,6 +878,14 @@ function readParams(
 const cardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
 // Entity hits are compact avatar cards (see EntityResultCard), so a page of them
 // sits four across where the richer case cards need three.
+const PLACEHOLDER_FALLBACK: Record<ArchiveSearchType, string> = {
+  all: "Search the archive",
+  case: "Search cases",
+  entity: "Search people, offices and places",
+  material: "Search documents",
+  courtcase: "Search court cases by name or number",
+};
+
 // DEV ONLY: the worst-case data switch (see src/dev/archive-search-stress.ts).
 // Lazy and gated, so neither the switch nor the fixture reaches production.
 const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;

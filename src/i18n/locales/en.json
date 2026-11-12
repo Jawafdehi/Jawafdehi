@@ -2291,7 +2291,6 @@
     "heading": "Archive Search",
     "description": "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
     "searchLabel": "Search the Jawafdehi archive",
-    "placeholder": "Search cases, people, offices, locations, or allegations",
     "submit": "Search archive",
     "coverageLink": "See what we cover",
     "searching": "Searching archive",
@@ -2380,7 +2379,14 @@
     "filtersLabel": "Filters",
     "clearFilter": "Clear {{filter}}",
     "clear": "Clear search",
-    "viewResults": "View results"
+    "viewResults": "View results",
+    "placeholders": {
+      "all": "Search the archive",
+      "case": "Search cases",
+      "entity": "Search people, offices and places",
+      "material": "Search documents",
+      "courtcase": "Search court cases by name or number"
+    }
   },
   "materialsPage": {
     "heading": "Documents & other materials",

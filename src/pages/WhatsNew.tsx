@@ -71,7 +71,7 @@ const WhatsNew = () => {
 
         <section className="pb-20 md:pb-28">
           <div className="layout-container">
-            <div role="group" aria-label={t("whatsNew.filterLabel")} className="flex flex-wrap gap-2">
+            <div role="group" aria-label={t("whatsNew.filterLabel")} className="flex flex-wrap gap-1">
               <button type="button" aria-pressed={!tag} onClick={() => choose()} className={filterClass(!tag)}>
                 {t("whatsNew.all")}
               </button>

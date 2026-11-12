@@ -138,7 +138,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
             <CaseCardTags tags={tags} onTagClick={onTagClick} />
             {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                 remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
-            <h3 className="line-clamp-2 text-[19px] font-normal leading-snug text-primary">
+            <h3 className="line-clamp-2 text-[17px] font-normal leading-6 text-primary">
               {caseSlug ? (
                 <Link
                   to={`/case/${caseSlug}`}
@@ -165,7 +165,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
               {/* This meta block is deliberately NOT branched on `viewMode` —
                   grid and list differ only in the outer layout, so every field
                   added here shows up in both /search views and on /cases. */}
-              <div className="space-y-1.5 text-[15px] leading-6 text-muted-foreground">
+              <div className="space-y-1.5 text-sm leading-6 text-muted-foreground">
                 <EntityRow icon={User} label={entitySummary} title={entity} ids={entityIds} />
                 <EntityRow icon={MapPin} label={location} ids={locationIds} />
                 <BigoRow amount={bigo} />

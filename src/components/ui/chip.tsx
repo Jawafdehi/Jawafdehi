@@ -1,20 +1,24 @@
-// The rounded filter / switcher pill. One size everywhere it appears: the
-// /whats-new tag filter and the /mcp client tabs. A chip is "on" either through
-// `active` (a plain button) or through Radix's data-state="active" (a
-// TabsTrigger), so both read the same.
+// The rounded switcher pill, one look everywhere it appears: the archive search
+// tabs, the /whats-new tag filter, the /mcp client tabs and the /materials
+// presets. The chosen pill fills grey; the rest are plain text that take a
+// fainter grey on hover — navy and grey only, never the crimson accent. 15px
+// regular, the same size as the search page's filter chips.
+//
+// A chip is "on" either through `active` (a plain button) or through Radix's
+// data-state="active" (a TabsTrigger), so both read the same.
 import { cva } from "class-variance-authority";
 
 export const chipVariants = cva(
   [
-    "inline-flex items-center rounded-full border px-3.5 py-1 text-sm font-normal transition-colors",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-    "border-border text-foreground/75 hover:border-primary-surface/40 hover:text-foreground",
-    "data-[state=active]:border-primary-surface data-[state=active]:bg-primary-surface data-[state=active]:text-primary-foreground data-[state=active]:shadow-none data-[state=active]:hover:border-primary-surface data-[state=active]:hover:text-primary-foreground",
+    "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-normal transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    "text-muted-foreground hover:bg-muted/60 hover:text-primary",
+    "data-[state=active]:bg-muted data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:hover:bg-muted",
   ],
   {
     variants: {
       active: {
-        true: "border-primary-surface bg-primary-surface text-primary-foreground hover:border-primary-surface hover:text-primary-foreground",
+        true: "bg-muted text-primary hover:bg-muted",
         false: "",
       },
     },
