@@ -12,6 +12,7 @@ import { Trans, useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { DotDither } from "@/components/ui/dot-dither";
 import { MistCarousel } from "@/components/ui/mist-carousel";
 import { CopyBlock, CopyButton, CopyPill } from "@/components/copy-snippet";
 import { Seo } from "@/components/Seo";
@@ -210,39 +211,6 @@ function PitchCard() {
   );
 }
 
-/**
- * The art at the top of each feature card: a dithered field of dots, dense at
- * one corner and thinning out, in crimson or the archive's blue by turn. Pure
- * CSS (a dot grid under a radial mask), so four cards cost no WebGL.
- */
-const DITHER_ART = [
-  { color: "hsl(var(--accent))", at: "100% 0%" },
-  { color: "hsl(214 65% 52%)", at: "0% 0%" },
-  { color: "hsl(var(--accent))", at: "50% 0%" },
-  { color: "hsl(214 65% 52%)", at: "100% 0%" },
-] as const;
-
-function FeatureDither({ index }: Readonly<{ index: number }>) {
-  const { color, at } = DITHER_ART[index % DITHER_ART.length];
-  // Two masks multiplied: the corner bloom, and a fade to nothing before the
-  // text, so the dots never sit under a word.
-  const mask = `radial-gradient(circle at ${at}, #000 0%, rgba(0,0,0,0.5) 35%, transparent 75%), linear-gradient(#000 30%, transparent 100%)`;
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-x-0 top-0 -z-10 h-[55%]"
-      style={{
-        backgroundImage: `radial-gradient(${color} 1.5px, transparent 2px), radial-gradient(${color} 1.5px, transparent 2px)`,
-        backgroundSize: "8px 8px, 8px 8px",
-        backgroundPosition: "0 0, 4px 4px",
-        maskImage: mask,
-        WebkitMaskImage: mask,
-        maskComposite: "intersect",
-        WebkitMaskComposite: "source-in",
-      }}
-    />
-  );
-}
 
 function SectionTitle({ id, children }: Readonly<{ id: string; children: ReactNode }>) {
   return (
@@ -336,7 +304,7 @@ const Likhit = () => {
                 <li key={key}>
                   <Reveal className="h-full" delayMs={(index % 4) * 70}>
                     <Panel className="relative isolate min-h-[15rem] justify-end overflow-hidden">
-                      <FeatureDither index={index} />
+                      <DotDither index={index} />
                       <h3 className="text-xl font-normal leading-snug text-primary">{t(`likhit.features.${key}.name`)}</h3>
                       <p className="mt-2 text-[15px] leading-6 text-muted-foreground">{t(`likhit.features.${key}.body`)}</p>
                     </Panel>

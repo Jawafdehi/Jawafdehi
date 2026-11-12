@@ -117,8 +117,9 @@ export function McpQuestions() {
           <MistCarousel
             ariaLabel={t("mcp.questions.title")}
             dwellMs={7000}
-            titleClassName="text-[clamp(1.5rem,2.2vw,2rem)] leading-snug"
-            columnsClassName="lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]"
+            design="silk"
+            titleClassName="text-xl leading-8 md:text-2xl md:leading-9"
+            columnsClassName="lg:grid-cols-2 lg:items-center"
             slides={items.map((item, index) => ({
               key: String(index),
               label: item.question,
@@ -219,7 +220,7 @@ export function McpSkill() {
             the words on the left, the install commands on white on the right. */}
         <div className="relative isolate grid grid-cols-1 gap-8 overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 md:p-10 lg:min-h-[22rem] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
           <div aria-hidden="true" className="absolute inset-0 -z-10">
-            <ShaderBackdrop design="mist" />
+            <ShaderBackdrop design="silk" />
           </div>
           <div>
             <h2 id="mcp-skill-title" className="font-home-section-title text-primary">

@@ -1,6 +1,7 @@
 import { Mail } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
+import { DotDither } from "@/components/ui/dot-dither";
 import { JAWAFDEHI_EMAIL } from "@/config/constants";
 
 const RULE_KEYS = ["background", "clearSpace", "minSize", "dont"] as const;
@@ -36,8 +37,11 @@ export function PressKitUsage() {
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("pressKit.contact.note")}</p>
 
         <ul className="mt-10 grid gap-3 md:grid-cols-3">
-          {CONTACTS.map((contact) => (
-            <li key={contact.address} className="rounded-[22px] border border-border/70 bg-surface p-5">
+          {CONTACTS.map((contact, index) => (
+            // The likhit "What it does" cards' dot dither, laid along the right
+            // so it never sits under the address.
+            <li key={contact.address} className="relative isolate overflow-hidden rounded-[22px] bg-muted p-6">
+              <DotDither index={index} placement="right" />
               <p className="text-sm text-muted-foreground">
                 {t(`pressKit.contact.${contact.key}`)}
               </p>

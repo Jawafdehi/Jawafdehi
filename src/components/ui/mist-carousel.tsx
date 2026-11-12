@@ -30,12 +30,15 @@ export function MistCarousel({
   dwellMs = 6000,
   titleClassName,
   columnsClassName = "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]",
+  design = "mist",
 }: Readonly<{
   slides: MistSlide[];
   ariaLabel: string;
   dwellMs?: number;
   titleClassName?: string;
   columnsClassName?: string;
+  /** The light shader behind the card: mist (likhit) or silk (the MCP page). */
+  design?: "mist" | "silk";
 }>) {
   const [active, setActive] = useState(slides[0]?.key);
   const [paused, setPaused] = useState(false);
@@ -71,7 +74,7 @@ export function MistCarousel({
     >
       <div className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface">
         <div aria-hidden="true" className="absolute inset-0 -z-10">
-          <ShaderBackdrop design="mist" />
+          <ShaderBackdrop design={design} />
         </div>
         <div className="grid p-6 md:p-10">
           {slides.map(({ key, title, body, aside }) => {

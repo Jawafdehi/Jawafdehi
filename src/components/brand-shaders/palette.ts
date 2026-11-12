@@ -10,8 +10,9 @@
  * blue on the white page with no navy (/whats-new). grain: the MCP. lines:
  * likhit, a wave dither that reads like ruled lines of text. mist: a soft
  * white mesh with a blush of crimson and a wash of pale blue, for light cards
- * (likhit's OCR setups). */
-export type ShaderDesign = "diamond" | "diamondLight" | "grain" | "lines" | "mist";
+ * (likhit's OCR setups). silk: the same three colours drawn as soft warped
+ * streaks rather than mist's blobs, for the MCP page's light cards. */
+export type ShaderDesign = "diamond" | "diamondLight" | "grain" | "lines" | "mist" | "silk";
 
 /** Tints with no CSS token. */
 export const SHADER_TINTS = {

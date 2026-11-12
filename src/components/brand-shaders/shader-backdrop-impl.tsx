@@ -9,9 +9,10 @@
 //   grain   — the MCP product page: a grainy navy glow with a muted ember red.
 //             Heavier, so its resolution is capped and weak devices get a CSS
 //             texture instead (see shader-backdrop.tsx).
+//   silk    — the MCP page's light cards: the mist colours as warped streaks.
 //   mist    — light cards: a slow white mesh with a crimson blush and a pale
 //             blue wash. Never on navy, so it is unlike the footer's diamond.
-import { Dithering, GrainGradient, MeshGradient } from "@paper-design/shaders-react";
+import { Dithering, GrainGradient, MeshGradient, Warp } from "@paper-design/shaders-react";
 
 import { SHADER_TINTS, type ShaderDesign } from "@/components/brand-shaders/palette";
 
@@ -61,6 +62,24 @@ export default function ShaderBackdropImpl({
         distortion={0.6}
         swirl={0.15}
         speed={speed(0.15)}
+      />
+    );
+  }
+
+  if (design === "silk") {
+    const white = token("--surface");
+    return (
+      <Warp
+        style={FILL}
+        colors={[white, SHADER_TINTS.haze, white, SHADER_TINTS.blush]}
+        proportion={0.45}
+        softness={1}
+        shape="stripes"
+        shapeScale={0.2}
+        distortion={0.2}
+        swirl={0.6}
+        swirlIterations={8}
+        speed={speed(0.1)}
       />
     );
   }
