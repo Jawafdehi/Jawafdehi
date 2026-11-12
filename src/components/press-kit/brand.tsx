@@ -102,9 +102,8 @@ export function PressKitBrand() {
 
         <h2 className="font-home-section-title mb-10 mt-16 text-primary md:mt-24">{t("pressKit.type.title")}</h2>
 
-        {/* Four faces since the headline role split per locale, so the 3-col
-            grid would leave an orphan: 2 columns from sm, 4 from lg. */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Three faces: Inter (English), Vesper Libre and Noto (Nepali). */}
+        <div className="grid gap-3 sm:grid-cols-3">
           {PRESS_KIT_TYPEFACES.map((face) => {
             // A face is documented either by an explicit family — pinned to
             // the face the caption names, which is all but the mono card — or

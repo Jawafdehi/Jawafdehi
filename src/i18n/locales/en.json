@@ -2879,11 +2879,10 @@
     },
     "type": {
       "title": "Typography",
-      "displayRoleNepali": "Headlines — Nepali",
-      "displayRoleLatin": "Headlines — English",
-      "bodyRole": "Body and UI",
-      "monoRole": "Figures, dates, case references",
-      "note": "Headlines are pinned to one face per language: Vesper Libre for Nepali, Inter for English. Vesper Libre covers both Latin and Devanagari, so a bilingual Nepali headline stays in one typeface. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics."
+      "displayRoleNepali": "Titles — Nepali",
+      "bodyRole": "Body — Nepali",
+      "note": "English reads in Inter throughout, titles and body alike. Nepali titles are set in Vesper Libre and Nepali body text in Noto Sans Devanagari. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics.",
+      "latinRole": "Titles and body — English"
     },
     "contact": {
       "title": "Contact",
