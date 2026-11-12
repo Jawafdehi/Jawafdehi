@@ -26,7 +26,6 @@ import {
   SearchResultCardSkeleton,
 } from "@/components/search/SearchResultCard";
 import { SearchFilterBar } from "@/components/search/SearchFilterBar";
-import { cn } from "@/lib/utils";
 import { formatIndianNumber } from "@/utils/number";
 import { SearchTabs } from "@/components/search/SearchTabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -51,7 +50,6 @@ import type {
   ArchiveSearchParams,
   ArchiveSearchResponse,
   ArchiveSearchResult,
-  ArchiveSearchResultType,
   ArchiveSearchSort,
   ArchiveSearchType,
 } from "@/types/search";
@@ -109,31 +107,15 @@ const emptyFacets: ArchiveSearchFacets = {
   material_type: [],
 };
 
-// When `lockedType` is set the page is a single-type browse view (e.g. the data-lake
-// Materials / Court-cases landing pages reuse this component): the record-type is
-// pinned, the type tabs are hidden, and the heading/SEO are overridden.
-export interface ArchiveSearchProps {
-  lockedType?: ArchiveSearchResultType;
-  heading?: string;
-  description?: string;
-  // Type-specific search input placeholder for locked-type browse pages
-  // (materials/court cases). Falls back to the generic archive placeholder.
-  placeholder?: string;
-  canonicalPath?: string;
-}
-
-export default function ArchiveSearch({
-  lockedType,
-  heading,
-  description,
-  placeholder,
-  canonicalPath,
-}: ArchiveSearchProps = {}) {
+// The one search page. /cases, /courtcases and /entities redirect here with
+// `?type=` set, and /materials sends its old ?q= deep links here too, so the
+// record type always comes from the URL.
+export default function ArchiveSearch() {
   const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedRecordType = useMemo(
-    () => lockedType ?? readRecordType(searchParams),
-    [searchParams, lockedType],
+    () => readRecordType(searchParams),
+    [searchParams],
   );
   const params = useMemo(
     () => readParams(searchParams, selectedRecordType),
@@ -224,40 +206,26 @@ export default function ArchiveSearch({
           String(resultCount),
           formatIndianNumber(resultCount),
         );
-  // The locked single-type pages (/materials, /court-cases) pin the record type
-  // by route, so there is nothing for the tabs to switch between.
-  const showTypeTabs = !lockedType;
-
-  // Share metadata. This component backs three routes — /search, /materials and
-  // /courtcases (see Materials.tsx and CourtCases.tsx, which pass heading,
-  // description and canonicalPath) — so all three inherit whatever is set here.
-  // Until now that was a title, a description and a canonical, and no og: tags
-  // at all: a share of any of the three rendered as a bare link with no card.
+  // Share metadata. Until 2026-08 this was a title, a description and a
+  // canonical, and no og: tags at all: a share rendered as a bare link with no
+  // card.
   //
   // The fallbacks come from i18n rather than being hardcoded English, so the
   // <title> matches the <h1> the page actually renders. The previous literals
   // were a third paraphrase of the archive description, alongside the two in
   // en.json and ne.json.
-  const pageHeading = heading || t("archiveSearch.heading", "Archive Search");
-  const pageDescription =
-    description ||
-    t(
+  const pageHeading = t("archiveSearch.heading", "Archive Search");
+  const pageDescription = t(
       "archiveSearch.description",
       "Search Jawafdehi's public accountability archive across cases, people, offices, locations, charges, and evidence documents.",
     );
 
-  // Every URL on this site 307s to its trailing-slash form, so a canonical
-  // without one points at a redirect. Materials and CourtCases both pass a path
-  // with no trailing slash; normalise here rather than in the callers, so a
-  // future caller cannot reintroduce it.
-  const canonicalUrl = useMemo(() => {
-    const path = canonicalPath || "/search/";
-    return `${SITE_URL}${path.endsWith("/") ? path : `${path}/`}`;
-  }, [canonicalPath]);
+  // Every URL on this site 307s to its trailing-slash form, so the canonical
+  // carries one.
+  const canonicalUrl = `${SITE_URL}/search/`;
 
-  // A result set is not a landing page. The bare browse view of each of these
-  // three routes is worth indexing; the same view narrowed by a query or paged
-  // past the first is thin, near-duplicate content, and Google's own guidance is
+  // A result set is not a landing page. The bare browse view is worth
+  // indexing; the same view narrowed by a query or paged past the first is thin, near-duplicate content, and Google's own guidance is
   // to keep internal search results out of the index. `follow` is deliberate —
   // the crawler should still walk through to the records themselves.
   //
@@ -501,14 +469,13 @@ export default function ArchiveSearch({
         <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
           <div className="max-w-3xl">
             <h1 className="font-home-display mt-3 text-4xl font-medium tracking-[-0.04em] text-primary md:text-[3.25rem]">
-              {heading || t("archiveSearch.heading", "Archive Search")}
+              {pageHeading}
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-snug text-muted-foreground">
-              {description ||
-                t(
-                  "archiveSearch.description",
-                  "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
-                )}
+              {t(
+                "archiveSearch.description",
+                "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
+              )}
             </p>
           </div>
           <Link
@@ -525,20 +492,20 @@ export default function ArchiveSearch({
           </Link>
         </header>
 
-        {showTypeTabs ? (
-          // The count sits at the right end of the tab row, over the sort it
-          // answers to. Inside the selected pill it changed the pill's width
-          // on every click and every load, nudging the tabs after it.
-          <div className="mt-10 flex items-center justify-between gap-6">
-            <SearchTabs activeType={selectedRecordType} onChange={updateRecordType} />
-            <div
-              aria-hidden="true"
-              className="hidden shrink-0 whitespace-nowrap text-[15px] tabular-nums text-muted-foreground sm:block"
-            >
-              {resultCountLabel}
-            </div>
+        {/*
+          The count sits at the right end of the tab row, over the sort it
+          answers to. Inside the selected pill it changed the pill's width
+          on every click and every load, nudging the tabs after it.
+        */}
+        <div className="mt-10 flex items-center justify-between gap-6">
+          <SearchTabs activeType={selectedRecordType} onChange={updateRecordType} />
+          <div
+            aria-hidden="true"
+            className="hidden shrink-0 whitespace-nowrap text-[15px] tabular-nums text-muted-foreground sm:block"
+          >
+            {resultCountLabel}
           </div>
-        ) : null}
+        </div>
 
         {/*
           The search bar and the filters are ONE sticky header. They are used
@@ -568,10 +535,10 @@ export default function ArchiveSearch({
               }}
               // Names what THIS tab searches ("Search cases", "Search
               // documents"), so the field says where the words will go.
-              placeholder={
-                placeholder ||
-                t(`archiveSearch.placeholders.${selectedRecordType}`, PLACEHOLDER_FALLBACK[selectedRecordType])
-              }
+              placeholder={t(
+                `archiveSearch.placeholders.${selectedRecordType}`,
+                PLACEHOLDER_FALLBACK[selectedRecordType],
+              )}
               showSubmit={false}
               value={query}
             />
@@ -603,13 +570,10 @@ export default function ArchiveSearch({
             <div className="flex items-center gap-3">
               <div
                 aria-live="polite"
-                // With the type tabs on screen the count is shown at the end of
-                // the tab row; this copy stays the live region, and the visible
-                // one on phones, where that row has no room for it.
-                className={cn(
-                  "mr-auto flex min-h-5 items-center whitespace-nowrap text-sm tabular-nums text-muted-foreground xl:mr-0",
-                  showTypeTabs && "sm:sr-only",
-                )}
+                // The count is shown at the end of the tab row; this copy stays
+                // the live region, and the visible one on phones, where that
+                // row has no room for it.
+                className="mr-auto flex min-h-5 items-center whitespace-nowrap text-sm tabular-nums text-muted-foreground xl:mr-0 sm:sr-only"
               >
                 {isInitialLoading || isRefreshing ? (
                   <>

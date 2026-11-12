@@ -246,19 +246,6 @@ describe('touch target sizes', () => {
     expect(icon).not.toMatch(/after:h-11|after:w-11/);
   });
 
-  it('gives the zero-gap segmented control the clearance the ring needs', () => {
-    // The /cases toggle puts two `size="icon"` buttons flush against each other, so
-    // without 4px between them one button's ring covers the other's PAINTED pixels
-    // and a tap on a visible pixel activates the wrong control. Measured before the
-    // gap: the last 2px of "grid view" on /cases and the last 4px of "card view" on
-    // /search fired the list button.
-    for (const [file, marker] of [
-      ['pages/Cases.tsx', 'flex gap-1 border rounded-md'],
-    ]) {
-      expect(readFileSync(resolve(SRC, file), 'utf8'), `${file} lost the toggle gap`).toContain(marker);
-    }
-  });
-
   it('keeps footer nav rows at 32px and social icons tappable at 44px', () => {
     const footer = readFileSync(resolve(SRC, 'components/Footer.tsx'), 'utf8');
     // Rows: 32px, above WCAG 2.5.8's 24px. Social discs: drawn at 36px, the

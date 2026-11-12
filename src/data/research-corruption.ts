@@ -138,7 +138,7 @@ export const CITATIONS = {
   /** AG abhiyog-patra (charge sheets, 99,783). */
   chargeSheets: "https://jawafdehi.org/search?type=material&q=charge%20sheet",
   /** The Special Court record base. */
-  courtRecords: "https://jawafdehi.org/courtcases",
+  courtRecords: "https://jawafdehi.org/search?type=courtcase",
   /** Representative decided cases (verify each resolves logged-out). */
   caseBriberyConvicted: "https://jawafdehi.org/courtcase/special/081-CR-0077",
   caseLossAcquitted: "https://jawafdehi.org/courtcase/special/082-CR-0011",

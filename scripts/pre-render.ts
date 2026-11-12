@@ -13,7 +13,6 @@ import {
   type SearchIndexFile,
   type SearchIndexLine,
 } from '../src/data/site-routes.ts';
-import { CASES_PAGE_SIZE, caseBrowsePagePaths } from './case-browse-pages.ts';
 import {
   summarisePrefetchFailures,
   type PrefetchReport,
@@ -830,76 +829,6 @@ async function main() {
       if (err instanceof Error) console.error(err.stack);
       process.exit(1);
     }
-  }
-
-  // Render pages 2..N of the case browse. Page 1 is `/cases`, already rendered
-  // above as a static route.
-  //
-  // These are the crawl path into the archive, and they are the reason this
-  // block is NOT gated on RENDER_ENTITY_PAGES. The whole set is one render and
-  // one search call per page — 220 of each against 2,629 cases on 2026-10-19 —
-  // so a static-scope PR check can afford them, and it should: pagination that
-  // silently stopped emitting pages is exactly the regression that would
-  // otherwise reach production unnoticed and re-orphan every case page after the
-  // break.
-  //
-  // The affordability claim above was written at 38 pages and is now 220.
-  // Rendered serially that was ~209 s — the single largest phase of a preview
-  // build — so the loop below is concurrent. Sampling it would have been the
-  // cheaper edit and the wrong one: it gives up exactly the coverage this
-  // comment is defending.
-  //
-  // ⚠️ The page count comes from caseBrowsePagePaths(), NOT from `cases.length`.
-  // That is deliberate — see scripts/case-browse-pages.ts: the DB list count and
-  // the search index count are different systems, and writing the wrong one
-  // emits 404s into the build. It matters twice as much now that `static` scope
-  // only samples the case list, where `cases.length` is 200 and meaningless.
-  //
-  // This whole block stays gated on `apiReachable` so that
-  // PRERENDER_ALLOW_EMPTY_PREFETCH still produces a build when the API is down:
-  // caseBrowsePagePaths() throws rather than guessing, and there is no try/catch
-  // here to absorb it.
-  if (apiReachable) {
-    const casePagePaths = (await caseBrowsePagePaths(API_BASE)).slice(1);
-    // Concurrent, like the three other render loops in this file. Serially this
-    // was ~0.95 s per page and 209 s of a 496 s preview build — the largest
-    // single phase — because each page makes its own search call and then
-    // renders. withConcurrency keeps every page rendered in every scope; it only
-    // stops them queueing behind each other.
-    //
-    // A failure here is still fatal: a missing listing page breaks the chain
-    // that reaches every page after it. Record the first ordinary error, let the
-    // pool drain, then exit — rather than calling process.exit() from inside a
-    // worker while other renders are mid-write.
-    //
-    // SuspenseStubError is the exception and still rejects the pool immediately,
-    // which can leave a sibling render mid-write. That matches what the other
-    // three concurrent loops in this file already do, and the condition is a
-    // code-level mistake (a lazy() route that must be eager) rather than
-    // something a build can be left half-finished by in practice.
-    let browseFailure: { path: string; err: unknown } | null = null;
-    await withConcurrency(casePagePaths, CONCURRENCY, async (path) => {
-      if (browseFailure) return;
-      const outFile = join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
-      try {
-        const result = await render(path);
-        await writeHtml(outFile, injectIntoTemplate(template, result));
-        notePrefetch(path, result);
-        console.log(`[pre-render] ✓ ${path}`);
-      } catch (err) {
-        if (err instanceof SuspenseStubError) throw err;
-        browseFailure ??= { path, err };
-      }
-    });
-    if (browseFailure) {
-      console.error(`[pre-render] ERROR rendering ${browseFailure.path}:`, browseFailure.err);
-      if (browseFailure.err instanceof Error) console.error(browseFailure.err.stack);
-      process.exit(1);
-    }
-    console.log(
-      `[pre-render] Case browse: ${casePagePaths.length + 1} pages ` +
-      `(${CASES_PAGE_SIZE} per page)`,
-    );
   }
 
   // Render update detail routes (static data — IDs are known at build time)

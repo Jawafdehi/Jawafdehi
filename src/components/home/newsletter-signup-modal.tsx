@@ -29,13 +29,14 @@ export const OPEN_DELAY_MS = 60000;
 
 /**
  * Routes the prompt may appear on: the home page and the content pages an
- * engaged reader is most likely to land on from social/search — case pages and
- * the updates feed. Other routes (about, privacy, admin, …) never arm it.
+ * engaged reader is most likely to land on from social/search — case pages,
+ * the archive search (where the old /cases browse now lands) and the updates
+ * feed. Other routes (about, privacy, admin, …) never arm it.
  */
 function isEligiblePath(path: string): boolean {
   return (
     path === "/" ||
-    path === "/cases" ||
+    path === "/search" ||
     path.startsWith("/case/") ||
     path === "/updates" ||
     path.startsWith("/updates/")

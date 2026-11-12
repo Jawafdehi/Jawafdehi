@@ -14,7 +14,7 @@ export function BrowseAllFolderCard() {
 
   return (
     <Link
-      to="/materials/?q="
+      to="/search?type=material"
       className="group block h-full rounded-[20px] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
     >
       <div className="flex aspect-[4/5] items-center justify-center rounded-[20px] bg-muted transition-colors duration-200 group-hover:bg-[hsl(215_20%_93%)]">

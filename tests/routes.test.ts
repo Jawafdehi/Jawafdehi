@@ -25,7 +25,6 @@ describe("the route table", () => {
   it("derives the pre-rendered subset from rows carrying page metadata", () => {
     expect(PRE_RENDERED_STATIC_ROUTES.map((route) => route.path)).toEqual([
       "/",
-      "/cases",
       "/search",
       "/faq",
       "/research/corruption-accountability",
@@ -50,7 +49,6 @@ describe("the route table", () => {
       "/privacy",
       "/terms",
       "/materials",
-      "/courtcases",
     ]);
   });
 

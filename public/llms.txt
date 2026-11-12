@@ -6,9 +6,9 @@ Jawafdehi (jawafdehi.org) is a civic technology platform built by Nepali volunte
 
 ## Browsing Cases
 
-- All cases: https://jawafdehi.org/cases
+- All cases: https://jawafdehi.org/search?type=case
 - Individual case: https://jawafdehi.org/case/{id} (e.g. https://jawafdehi.org/case/208)
-- Search cases by name, entity, or keyword: https://jawafdehi.org/cases?search={query}
+- Search cases by name, entity, or keyword: https://jawafdehi.org/search?type=case&q={query}
 
 ## Browsing Entities (Officials & Organisations)
 

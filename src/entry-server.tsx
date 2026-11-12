@@ -8,10 +8,8 @@ import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
-import { searchArchive } from './services/search-api';
 import { featuredCasesQuery } from './queries/home';
 import { archiveStatisticsQuery } from './queries/materials-landing';
-import { CASES_PAGE_SIZE } from './lib/cases-pagination';
 import { http } from './services/http';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
@@ -98,26 +96,6 @@ async function prefetch(
   // pre-rendered HTML carries the real archive figures.
   if (/^\/materials\/?(?:#|$)/.test(url)) {
     await queryClient.prefetchQuery(archiveStatisticsQuery());
-    return;
-  }
-
-  // Cases list page: OpenSearch-backed case browse, via Django /api/search proxy.
-  //
-  // `/cases` is page one and `/cases/page/N` is the rest. Prefetching the page
-  // actually being rendered is the whole point of pre-rendering these: without
-  // it every page in the sequence would ship the same empty cache, so a crawler
-  // would see 39 URLs whose bodies are identical chrome and conclude — correctly
-  // — that 38 of them are duplicates.
-  //
-  // The key must match the one Cases.tsx builds, `page` included, or the client
-  // hydrates nothing and refetches on mount.
-  const casesMatch = url.match(/^\/cases(?:\/page\/(\d+))?\/?(?:[?#]|$)/);
-  if (casesMatch) {
-    const page = casesMatch[1] ? Number(casesMatch[1]) : 1;
-    await queryClient.prefetchQuery({
-      queryKey: ['cases-search', { search: '', status: 'all', page }],
-      queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: CASES_PAGE_SIZE, page }),
-    });
     return;
   }
 

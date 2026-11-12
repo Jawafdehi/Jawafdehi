@@ -76,9 +76,9 @@ function resolveModule(specifier: string, fromDir: string): string | null {
 
 /**
  * Does this component render <Seo>, itself or via a component it delegates the
- * whole page to? Materials and CourtCases are thin wrappers around ArchiveSearch
- * and hold no metadata of their own, which is correct — one page's metadata
- * should live in one place.
+ * whole page to? Materials holds no metadata of its own — it routes to
+ * MaterialsLanding or MaterialSeriesBrowse — which is correct: one page's
+ * metadata should live in one place.
  */
 function reachesSeo(file: string, depth = 0): boolean {
   const source = readFileSync(file, 'utf8');

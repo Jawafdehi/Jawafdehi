@@ -33,7 +33,7 @@ export default function NewsletterConfirmed() {
           </div>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild>
-              <Link to="/cases">{t("newsletter.confirmed.exploreCases")}</Link>
+              <Link to="/search?type=case">{t("newsletter.confirmed.exploreCases")}</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/">{t("newsletter.confirmed.home")}</Link>

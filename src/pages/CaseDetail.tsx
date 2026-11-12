@@ -367,7 +367,7 @@ const CaseDetail = () => {
         <div className="flex-1 py-6 md:py-12">
           <div className="layout-container max-w-5xl">
             <Button variant="ghost" asChild className="mb-6">
-              <Link to="/cases">
+              <Link to="/search?type=case">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t("caseDetail.backToCases")}
               </Link>

@@ -326,7 +326,7 @@ const ResearchCorruption = () => {
     { href: CITATIONS.ciaaReports, label: t("research.corruption.sources.ciaaReportsName", "CIAA annual reports"), detail: t("research.corruption.sources.ciaaReportsDetail", "Complaints, prosecutions filed, amounts claimed") },
     { href: CITATIONS.ciaaPressReleases, label: t("research.corruption.sources.pressReleasesName", "CIAA charge-sheet announcements"), detail: t("research.corruption.sources.pressReleasesDetail", "Press releases announcing each filing") },
     { href: CITATIONS.chargeSheets, label: t("research.corruption.sources.chargeSheetsName", "Charge sheets"), detail: t("research.corruption.sources.chargeSheetsDetail", "Abhiyog patra filed at the Special Court") },
-    { href: "/courtcases", label: t("research.corruption.sources.courtRecordsName", "Special Court records"), detail: t("research.corruption.sources.courtRecordsDetail", "Outcomes, charge types, verdict dates") },
+    { href: "/search?type=courtcase", label: t("research.corruption.sources.courtRecordsName", "Special Court records"), detail: t("research.corruption.sources.courtRecordsDetail", "Outcomes, charge types, verdict dates") },
     { href: "/data-quality", label: t("research.corruption.sources.dataQualityName", "Live coverage counts"), detail: t("research.corruption.sources.dataQualityDetail", "How much of each record set the archive holds today") },
   ];
 
@@ -440,7 +440,7 @@ const ResearchCorruption = () => {
                 </p>
                 <p className="mt-4 text-lg leading-8 text-muted-foreground">
                   {t("research.corruption.outcomes.note", "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. That figure is comparable to the top of our range, not the bottom: on the CIAA's own definition this archive gives {{incl}}%, higher than the Commission's number rather than lower. Set {{ciaa}}% against our {{full}}% and you are comparing two different definitions of the word.", { ciaa: REPORT.ciaa.successRatePct, incl: convPct + partPct, full: convPct })}{" "}
-                  <Link to="/courtcases" className="inline-flex items-center gap-0.5 text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
+                  <Link to="/search?type=courtcase" className="inline-flex items-center gap-0.5 text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
                 </p>
               </div>
             </div>
@@ -560,7 +560,7 @@ const ResearchCorruption = () => {
 
             <p className="mt-5 text-base leading-7 text-muted-foreground">
               {t("research.corruption.overTime.caption", "Full-conviction rate by verdict fiscal year, case-grain, from Special Court records.")}{" "}
-              <Link to="/courtcases" className="inline-flex items-center gap-0.5 text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
+              <Link to="/search?type=courtcase" className="inline-flex items-center gap-0.5 text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
             </p>
           </section>
 

@@ -91,12 +91,12 @@ export function Navbar() {
     [t],
   );
 
-  // Unified public archive: full search + the data-lake single-type browse views.
+  // Unified public archive. Every search lives on /search (court cases, cases and
+  // entities included, via ?type=), so the menu carries no per-type browse links.
   const archiveNavItems = useMemo<NavItem[]>(
     () => [
       { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
-      { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
       { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
       { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
     ],
@@ -132,11 +132,10 @@ export function Navbar() {
     // Derived from archiveNavItems for the same reason as the group above —
     // and this list had already drifted: it was a copy of the menu's paths, so
     // /mcp went into the menu while the trigger stayed unmarked on that page. The
-    // extra entries below are the ones with no menu item of their own: /cases
-    // (reached from the header, not this menu) and the detail-page prefixes.
+    // extra entries below are the ones with no menu item of their own: the
+    // detail-page prefixes.
     if (
       archiveNavItems.some((item) => item.to === path) ||
-      path === "/cases" ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
       path.startsWith("/courtcase/") ||

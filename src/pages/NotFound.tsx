@@ -8,9 +8,9 @@ import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 
 const WAYS_ON = [
   { key: "home", to: "/", Icon: Home },
-  { key: "cases", to: "/cases", Icon: Scale },
+  { key: "cases", to: "/search?type=case", Icon: Scale },
   { key: "materials", to: "/materials", Icon: FileText },
-  { key: "courtcases", to: "/courtcases", Icon: Gavel },
+  { key: "courtcases", to: "/search?type=courtcase", Icon: Gavel },
   { key: "updates", to: "/updates", Icon: Newspaper },
 ] as const;
 

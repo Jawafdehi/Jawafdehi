@@ -114,7 +114,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // The menu entry and the active-state path check were two lists of the same
   // paths, and they drifted the moment /mcp was added to only one: the entry
   // appeared, and the Archive trigger went dark on the page it led to. The
-  // check is derived from the menu now, and this covers it. /courtcases is the
+  // check is derived from the menu now, and this covers it. /search is the
   // control — without it, a test that stopped exercising the active state at
   // all would still pass.
   //
@@ -123,7 +123,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // header is light-on-dark.
   it.each([
     ["/mcp", "text-primary-foreground"],
-    ["/courtcases", "bg-surface"],
+    ["/search", "bg-surface"],
   ])("keeps the Archive trigger active on %s", (path, activeClass) => {
     renderNavbar(path);
 

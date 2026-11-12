@@ -149,7 +149,7 @@ export function AccountabilityGap({
             </p>
             {published > 0 && (
               <Link
-                to="/cases"
+                to="/search?type=case"
                 className="mt-3 inline-block text-sm font-medium text-accent hover:underline"
               >
                 {t("dataQuality.corruptionCases.browsePublished", "Browse published cases")} →
