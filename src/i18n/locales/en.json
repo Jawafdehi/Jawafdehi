@@ -2440,12 +2440,7 @@
       "lede": "Shelved by publisher."
     },
     "recent": {
-      "title": "Recently added",
-      "slice": "The {{shown}} newest of {{total}} documents in the archive.",
-      "browseAll": "Browse all documents",
-      "untitled": "Untitled document",
-      "previous": "Previous documents",
-      "next": "Next documents"
+      "untitled": "Untitled document"
     },
     "sourceDescriptions": {
       "ag": "Charge sheets filed by the Office of the Attorney General.",

@@ -10,15 +10,8 @@ import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { searchArchive } from './services/search-api';
 import { featuredCasesQuery } from './queries/home';
-import {
-  RECENT_MATERIALS_COUNT,
-  archiveStatisticsQuery,
-  recentMaterialsQuery,
-} from './queries/materials-landing';
+import { archiveStatisticsQuery } from './queries/materials-landing';
 import { CASES_PAGE_SIZE } from './lib/cases-pagination';
-import { pickRecentMaterials } from './lib/materials-landing';
-import { getMaterial, materialTail } from './services/datalake-api';
-import type { ArchiveSearchResponse } from './types/search';
 import { http } from './services/http';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
@@ -100,31 +93,11 @@ async function prefetch(
   }
 
   // Materials landing page (BARE /materials only — ?series= and ?q= views are
-  // client-rendered). The query factories are the SHARED definitions
-  // (queries/materials-landing.ts), so keys and params match the page exactly
-  // and the pre-rendered HTML carries the real archive figures. After the
-  // recents resolve, the four shown documents are prefetched too — their own
-  // records carry the descriptions the cards render (search snippets are
-  // empty when browsing).
+  // client-rendered). The query factory is the SHARED definition
+  // (queries/materials-landing.ts), so the key matches the page exactly and the
+  // pre-rendered HTML carries the real archive figures.
   if (/^\/materials\/?(?:#|$)/.test(url)) {
-    const recentsQuery = recentMaterialsQuery();
-    await Promise.allSettled([
-      queryClient.prefetchQuery(archiveStatisticsQuery()),
-      queryClient.prefetchQuery(recentsQuery),
-    ]);
-    const recents = queryClient.getQueryData<ArchiveSearchResponse>(recentsQuery.queryKey);
-    if (recents) {
-      const picks = pickRecentMaterials(recents.results, RECENT_MATERIALS_COUNT);
-      await Promise.allSettled(
-        picks.map(({ result }) => {
-          const tail = materialTail(result.id);
-          return queryClient.prefetchQuery({
-            queryKey: ['datalake-material', tail],
-            queryFn: () => getMaterial(tail),
-          });
-        }),
-      );
-    }
+    await queryClient.prefetchQuery(archiveStatisticsQuery());
     return;
   }
 

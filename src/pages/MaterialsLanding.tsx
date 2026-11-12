@@ -1,24 +1,16 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { FolderCard } from "@/components/materials/FolderCard";
-import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
 import { SplitHeading } from "@/components/ui/split-heading";
-import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesCount } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
-import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
-import {
-  RECENT_MATERIALS_COUNT,
-  archiveStatisticsQuery,
-  recentMaterialsQuery,
-} from "@/queries/materials-landing";
-import { getMaterial, materialTail } from "@/services/datalake-api";
+import { formatArchiveCount } from "@/lib/materials-landing";
+import { archiveStatisticsQuery } from "@/queries/materials-landing";
 import { CHAT_URL } from "@/lib/external-links";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
@@ -30,7 +22,6 @@ export default function MaterialsLanding() {
   const language = i18n.language;
 
   const { data: statistics } = useQuery({ ...archiveStatisticsQuery(), staleTime: 5 * 60 * 1000 });
-  const { data: recentResponse } = useQuery({ ...recentMaterialsQuery(), staleTime: 5 * 60 * 1000 });
 
   // Counts come from `seriesCount` rather than a by_source lookup here: a shelf
   // can now be narrower than its source token (five of them scope
@@ -38,35 +29,7 @@ export default function MaterialsLanding() {
   // registry that defines it.
   const materials = statistics?.materials;
 
-  const recents = recentResponse
-    ? pickRecentMaterials(recentResponse.results, RECENT_MATERIALS_COUNT)
-    : null;
-
-  // Each recent card shows ITS OWN document's description — search hits carry
-  // none when browsing. Four ~1KB fetches, on the same query key the document
-  // page uses, so clicking through hits a warm cache.
-  const recentDetails = useQueries({
-    queries: (recents ?? []).map(({ result }) => {
-      const tail = materialTail(result.id);
-      return {
-        queryKey: ["datalake-material", tail] as const,
-        queryFn: () => getMaterial(tail),
-        staleTime: 5 * 60 * 1000,
-      };
-    }),
-  });
-  const descriptions: Record<string, { ne?: string | null; en?: string | null }> = {};
-  (recents ?? []).forEach(({ result }, index) => {
-    const detail = recentDetails[index]?.data;
-    if (!detail?.description) return;
-    descriptions[result.id] =
-      typeof detail.description === "string"
-        ? { ne: detail.description, en: detail.description }
-        : detail.description;
-  });
-
   const gridRef = useRevealOnScroll<HTMLElement>();
-  const recentRef = useRevealOnScroll<HTMLElement>();
 
 
   const title = `${t("materialsLanding.title", "Documents & other materials — Nepal's public records")} | ${SITE_NAME}`;
@@ -236,61 +199,6 @@ export default function MaterialsLanding() {
               <BrowseAllFolderCard />
             </li>
           </ul>
-        </div>
-      </section>
-
-      {/* Recently added. */}
-      <section
-        ref={recentRef}
-        aria-labelledby="recent-heading"
-      >
-        <div className="layout-container py-16 md:py-24">
-          {recents ? (
-            <RecentMaterialsCarousel
-              materials={recents}
-              descriptions={descriptions}
-              heading={
-                <div>
-                  <h2 id="recent-heading" className="font-home-section-title text-primary">
-                    {t("materialsLanding.recent.title", "Recently added")}
-                  </h2>
-                  {/* Four cards with nothing around them read as the whole
-                      holding — a reviewer counted three news items here and
-                      asked why we only have those three. Say what the slice is
-                      and where the rest live. */}
-                  {materials && (
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      <span className="tabular-nums">
-                        {t("materialsLanding.recent.slice", {
-                          shown: formatArchiveCount(recents.length, language),
-                          total: formatArchiveCount(materials.total, language),
-                          defaultValue:
-                            "The {{shown}} newest of {{total}} documents in the archive.",
-                        })}
-                      </span>{" "}
-                      <Link
-                        to="/materials/?sort=newest"
-                        className="font-medium text-primary underline underline-offset-4 hover:text-primary/75"
-                      >
-                        {t("materialsLanding.recent.browseAll", "Browse all documents")}
-                      </Link>
-                    </p>
-                  )}
-                </div>
-              }
-            />
-          ) : (
-            <>
-              <h2 id="recent-heading" className="font-home-section-title pb-10 text-primary">
-                {t("materialsLanding.recent.title", "Recently added")}
-              </h2>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <Skeleton key={index} className="min-h-[300px] w-full rounded-2xl" />
-                ))}
-              </div>
-            </>
-          )}
         </div>
       </section>
 
