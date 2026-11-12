@@ -1,20 +1,18 @@
 import { useTranslation } from "react-i18next";
 
-import { PageHero } from "@/components/ui/page-hero";
+import { LightHero } from "@/components/ui/light-hero";
 
 export function PressKitHero() {
   const { t } = useTranslation();
 
   return (
-    <PageHero
+    <LightHero
       id="press-kit-hero"
       eyebrow={t("pressKit.hero.eyebrow")}
       description={t("pressKit.hero.description")}
-      descriptionClassName="max-w-3xl"
       title={
         <>
-          {t("pressKit.hero.title")}{" "}
-          <span className="text-accent">{t("pressKit.hero.titleAccent")}</span>
+          {t("pressKit.hero.title")} <span className="text-accent">{t("pressKit.hero.titleAccent")}</span>
         </>
       }
     />

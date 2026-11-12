@@ -14,7 +14,7 @@ type LogoCardProps = {
 
 function LogoCard({ src, alt, label, use, dark, downloads }: Readonly<LogoCardProps>) {
   return (
-    <figure className="flex flex-col overflow-hidden rounded-lg border border-border bg-background">
+    <figure className="flex flex-col rounded-[28px] border border-border/70 bg-surface p-2">
       <div
         // Both preview fields must hold their lightness in BOTH themes: each one
         // demonstrates a wordmark that disappears against the opposite field, so
@@ -29,8 +29,8 @@ function LogoCard({ src, alt, label, use, dark, downloads }: Readonly<LogoCardPr
         // always-light token, and #FAFAF7 is the documented page background.
         className={
           dark
-            ? "flex min-h-[150px] flex-1 items-center justify-center bg-primary-surface p-8"
-            : "flex min-h-[150px] flex-1 items-center justify-center bg-[#FAFAF7] p-8"
+            ? "flex min-h-[180px] flex-1 items-center justify-center rounded-[22px] bg-primary-surface p-8"
+            : "flex min-h-[180px] flex-1 items-center justify-center rounded-[22px] bg-[#FAFAF7] p-8"
         }
       >
         <img
@@ -41,17 +41,17 @@ function LogoCard({ src, alt, label, use, dark, downloads }: Readonly<LogoCardPr
         />
       </div>
 
-      <figcaption className="border-t border-border p-4">
-        <p className="font-bold text-primary">{label}</p>
+      <figcaption className="px-4 pb-4 pt-5">
+        <p className="text-[17px] text-primary">{label}</p>
         <p className="mt-0.5 text-sm text-muted-foreground">{use}</p>
 
-        <p className="mt-3 flex flex-wrap gap-2">
+        <p className="mt-4 flex flex-wrap gap-2">
           {downloads.map((file) => (
             <a
               key={file.href}
               href={file.href}
               download
-              className="rounded border border-primary px-2.5 py-1 text-xs font-bold text-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-primary transition-colors hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {file.label}
             </a>
@@ -66,16 +66,12 @@ export function PressKitLogos() {
   const { t } = useTranslation();
 
   return (
-    <section id="logo" className="py-12 md:py-16">
+    <section id="logo" className="pt-16 md:pt-24">
       <div className="layout-container">
-        <h2 className="mb-3 text-center text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
-          {t("pressKit.logo.title")}
-        </h2>
-        <p className="mx-auto mb-8 max-w-3xl text-center font-paragraph font-paragraph-foreground">
-          {t("pressKit.logo.intro")}
-        </p>
+        <h2 className="font-home-section-title text-primary">{t("pressKit.logo.title")}</h2>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("pressKit.logo.intro")}</p>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
           <LogoCard
             src={PRESS_KIT_LOGOS.navyPng}
             alt={t("pressKit.logo.navyLabel")}
