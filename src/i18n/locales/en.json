@@ -2403,7 +2403,9 @@
     "grid": {
       "title": "Browse by series",
       "documents": "documents",
-      "browseAll": "Browse all series"
+      "browseAll": "Browse all series",
+      "browseAllLine": "Search every document",
+      "lede": "Shelved by publisher."
     },
     "capabilities": {
       "title": "The archive works for you",
@@ -2413,7 +2415,8 @@
       "askTitle": "Ask the AI assistant",
       "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
       "analyzeTitle": "Analyze in bulk",
-      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub."
+      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub.",
+      "short": "Read it, ask it, take it all."
     },
     "recent": {
       "title": "Recently added",
@@ -2473,6 +2476,12 @@
         "6-months": "Last 6 months",
         "1-year": "Last year"
       }
+    },
+    "heroEyebrow": "The archive's documents",
+    "stats": {
+      "documents": "Documents",
+      "series": "Series",
+      "licence": "Licence"
     }
   },
   "courtCasesPage": {

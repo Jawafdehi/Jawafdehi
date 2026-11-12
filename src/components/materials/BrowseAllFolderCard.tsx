@@ -1,30 +1,36 @@
-import { Archive } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-/** The final folder on the series shelf leads to the full materials search. */
+/**
+ * The last card on the series shelf: the way out to the whole archive. Same
+ * shell as a FolderCard, so it sits in the grid as a peer; its well is navy
+ * and holds the arrow, which is what marks it as the action rather than one
+ * more series.
+ */
 export function BrowseAllFolderCard() {
   const { t } = useTranslation();
 
   return (
     <Link
       to="/materials/?q="
-      className="font-material-folder group relative block rounded-2xl outline-none shadow-elev-md transition-[transform,box-shadow] duration-200 ease-out-strong hover:-translate-y-1 hover:shadow-elev-lg focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group block h-full rounded-[24px] border border-border/70 bg-surface p-2 outline-none transition-colors duration-200 hover:border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      <div
-        aria-hidden="true"
-        className="absolute -top-[18px] left-0 h-[26px] w-[38%] rounded-t-[8px] bg-card [transform:skewX(-8deg)] [transform-origin:bottom_left]"
-      />
-      <div className="relative flex aspect-[11/10] flex-col items-center justify-center gap-7 overflow-hidden rounded-2xl rounded-tl-none border border-border/60 bg-card p-5 text-center">
-        <div
+      <div className="flex aspect-[16/10] items-center justify-center rounded-[18px] bg-primary-surface">
+        <span
           aria-hidden="true"
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-surface text-muted-foreground"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-primary transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
         >
-          <Archive className="h-9 w-9 stroke-[1.35]" />
-        </div>
-        <h3 className="text-2xl font-medium leading-tight text-primary">
+          <ArrowRight className="h-5 w-5" />
+        </span>
+      </div>
+      <div className="px-2 pb-1.5 pt-3.5">
+        <h3 className="text-[17px] font-normal leading-6 text-primary">
           {t("materialsLanding.grid.browseAll", "Browse all series")}
         </h3>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {t("materialsLanding.grid.browseAllLine", "Search every document")}
+        </p>
       </div>
     </Link>
   );

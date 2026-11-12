@@ -1,17 +1,17 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { ArrowDown, ArrowUpRight, Download, FileSearch, MessagesSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
-import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
-import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/eyebrow";
-import { PageHeroBackdrop } from "@/components/ui/page-hero";
+import { Panel } from "@/components/ui/panel";
+import { SplitHeading } from "@/components/ui/split-heading";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MATERIAL_SERIES, seriesBySlug, seriesCount } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesCount } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
 import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
 import {
@@ -25,9 +25,27 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
-/** The three folders on the hero shelf — flagship series, front one linked. */
-const SHELF_BACK_SLUGS = ["kanun-patrika", "charge-sheets"] as const;
-const SHELF_FRONT_SLUG = "ciaa-annual-reports";
+/** The three ways to use the archive, in the capabilities bento. */
+const CAPABILITIES = [
+  {
+    key: "download",
+    icon: Download,
+    titleFallback: "Download everything",
+    lineFallback: "Open any series and follow every document to its source file.",
+  },
+  {
+    key: "ask",
+    icon: MessagesSquare,
+    titleFallback: "Ask the AI assistant",
+    lineFallback: "Put a question to the archive in Nepali or English and get cited answers.",
+  },
+  {
+    key: "analyze",
+    icon: FileSearch,
+    titleFallback: "Analyze in bulk",
+    lineFallback: "The structured data is open (CC BY-NC) — build on it from our GitHub.",
+  },
+] as const;
 
 export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
@@ -73,8 +91,6 @@ export default function MaterialsLanding() {
   const capabilitiesRef = useRevealOnScroll<HTMLElement>();
   const recentRef = useRevealOnScroll<HTMLElement>();
 
-  const shelfFront = seriesBySlug(SHELF_FRONT_SLUG);
-  const shelfBack = SHELF_BACK_SLUGS.map((slug) => seriesBySlug(slug));
 
   const title = `${t("materialsLanding.title", "Documents & other materials — Nepal's public records")} | ${SITE_NAME}`;
   const description = t(
@@ -147,71 +163,84 @@ export default function MaterialsLanding() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Seo>
 
-      {/* Hero: a centered stack — stat eyebrow, title, lede, CTA pair — with
-          the folder shelf as the big visual beneath, over the site's shared
-          hero backdrop (the same accent blobs as /about and /team). The
-          -mt/pt pair slides the glow behind the transparent navbar. */}
-      <header className="relative isolate -mt-[76px] overflow-hidden bg-background pt-[76px]">
-        <PageHeroBackdrop />
-        <div className="layout-container relative z-10 pb-16 pt-14 text-center md:pb-24 md:pt-20">
-        {materials && (
-          <Eyebrow className="tabular-nums">
-            {formatArchiveCount(materials.total, language)}{" "}
-            {t("materialsLanding.grid.documents", "documents")}
-          </Eyebrow>
-        )}
-        <h1 className="font-archive-hero-title mx-auto mt-4 max-w-3xl">
-          {t("materialsLanding.heroTitle", "Nepal's public records. One archive.")}
-        </h1>
-        <p className="font-page-lede mx-auto mt-5 max-w-xl">
-          {t(
-            "materialsLanding.heroLede",
-            "Documents collected from government bodies — searchable, citable, always open.",
-          )}
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg" className="active:scale-[0.98]">
-            <a href="#series">{t("materialsLanding.ctaBrowse", "Browse the archive")}</a>
-          </Button>
-          <Button asChild variant="secondary" size="lg" className="active:scale-[0.98]">
-            <a href={CHAT_URL} target="_blank" rel="noopener noreferrer">
-              {t("materialsLanding.ctaAsk", "Ask the AI assistant")} →
-            </a>
-          </Button>
+      {/* Hero: the archive's own navy stage with the home page's diamond field
+          — /materials is the archive, so it wears the archive's shader; the
+          products (MCP, likhit) keep theirs. Left-aligned like /mcp, with the
+          holdings stated underneath instead of a decorative shelf. The -mt/pt
+          pair slides the navy behind the transparent navbar. */}
+      <header className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <ShaderBackdrop design="diamond" />
+          {/* Navy pooled behind the copy column and under the navbar, so the
+              text always sits on plain navy. */}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface)/0.9)_40%,transparent_75%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px)]" />
         </div>
 
-        {/* The shelf, pure scenery: three textless folders that load stacked
-            behind the front one and fan out. Base classes are the FINAL pose
-            (what no-JS and reduced-motion get); the fan-out keyframes must
-            end on the same pose. */}
-        <div className="relative mx-auto mt-16 hidden w-full max-w-xl sm:block md:mt-20">
-          {shelfBack[0] && (
-            <FolderCard
-              decorative
-              series={shelfBack[0]}
-              count={null}
-              className="absolute -left-2 top-2 w-[46%] -rotate-[6deg] animate-fan-out-left motion-reduce:animate-none"
-            />
-          )}
-          {shelfBack[1] && (
-            <FolderCard
-              decorative
-              series={shelfBack[1]}
-              count={null}
-              className="absolute -right-2 top-2 w-[46%] rotate-[6deg] animate-fan-out-right motion-reduce:animate-none"
-            />
-          )}
-          {shelfFront && (
-            <FolderCard
-              decorative
-              series={shelfFront}
-              count={null}
-              elevation="lg"
-              heroSheets
-              className="relative mx-auto mt-10 w-[54%]"
-            />
-          )}
-        </div>
+        <div className="layout-container flex min-h-[min(760px,calc(100svh-76px))] flex-col justify-center pb-16 pt-12 md:pb-20">
+          <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
+            {t("materialsLanding.heroEyebrow", "The archive's documents")}
+          </p>
+          <h1 className="font-home-display mt-5 max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[20ch]">
+            {t("materialsLanding.heroTitle", "Nepal's public records. One archive.")}
+          </h1>
+          <p className="mt-6 max-w-2xl text-xl leading-8 text-primary-foreground/80 md:text-2xl md:leading-9">
+            {t(
+              "materialsLanding.heroLede",
+              "Documents collected from government bodies — searchable, citable, always open.",
+            )}
+          </p>
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+            {/* The redesign's pill with the round arrow (ui/arrow-link), as an
+                in-page anchor rather than a route. */}
+            <a
+              href="#series"
+              className="group inline-flex items-center justify-between gap-6 rounded-full bg-surface py-1.5 pl-5 pr-1.5 text-base text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-surface"
+            >
+              {t("materialsLanding.ctaBrowse", "Browse the archive")}
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-surface text-primary-foreground transition-transform duration-200 group-hover:translate-y-0.5"
+              >
+                <ArrowDown className="h-4 w-4" />
+              </span>
+            </a>
+            <a
+              href={CHAT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded text-base text-primary-foreground/80 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+            >
+              {t("materialsLanding.ctaAsk", "Ask the AI assistant")}
+              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+            </a>
+          </div>
+
+          {/* The holdings, stated: what a shelf of folders only implied. */}
+          <dl className="mt-16 grid max-w-2xl grid-cols-3 gap-6 border-t border-primary-foreground/15 pt-6 md:mt-20">
+            <div>
+              <dt className="text-sm text-primary-foreground/55">
+                {t("materialsLanding.stats.documents", "Documents")}
+              </dt>
+              <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
+                {materials ? formatArchiveCount(materials.total, language) : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-primary-foreground/55">
+                {t("materialsLanding.stats.series", "Series")}
+              </dt>
+              <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
+                {formatArchiveCount(MATERIAL_SERIES.length, language)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-primary-foreground/55">
+                {t("materialsLanding.stats.licence", "Licence")}
+              </dt>
+              <dd className="mt-1 text-2xl text-primary-foreground md:text-3xl">CC BY-NC</dd>
+            </div>
+          </dl>
         </div>
       </header>
 
@@ -220,75 +249,55 @@ export default function MaterialsLanding() {
         ref={gridRef}
         id="series"
         aria-labelledby="series-heading"
-        className="scroll-mt-24 border-t border-border"
+        className="scroll-mt-24"
       >
         <div className="layout-container py-16 md:py-24">
-          <h2 id="series-heading" className="font-archive-section-title">
-            {t("materialsLanding.grid.title", "Browse by series")}
-          </h2>
-          <ul className="mt-12 grid list-none grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <SplitHeading
+            id="series-heading"
+            lead={`${t("materialsLanding.grid.title", "Browse by series")}.`}
+            rest={t("materialsLanding.grid.lede", "Shelved by publisher.")}
+          />
+          <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {MATERIAL_SERIES.map((series) => (
-              <li key={series.slug} className="pt-4">
+              <li key={series.slug}>
                 <FolderCard series={series} count={seriesCount(series, materials)} />
               </li>
             ))}
-            <li className="pt-4">
+            <li>
               <BrowseAllFolderCard />
             </li>
           </ul>
         </div>
       </section>
 
-      {/* Capabilities, on the navy fill with its one sanctioned wash. */}
-      <section
-        ref={capabilitiesRef}
-        aria-labelledby="capabilities-heading"
-        className="relative isolate overflow-hidden border-t border-border bg-primary-surface"
-      >
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(120%_120%_at_20%_-10%,hsl(var(--primary-surface))_45%,hsl(var(--navy-deep))_100%)]"
-        />
-        <div className="layout-container grid gap-10 py-16 md:py-24 lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-4">
-            <h2
-              id="capabilities-heading"
-              className="font-archive-section-title font-archive-title-inverse"
-            >
-              {t("materialsLanding.capabilities.title", "The archive works for you")}
-            </h2>
-            <p className="mt-4 max-w-sm leading-relaxed text-primary-foreground/70">
-              {t(
-                "materialsLanding.capabilities.lede",
-                "Read it, question it, or take all of it — the records stay public either way.",
-              )}
-            </p>
-          </div>
-          <div className="divide-y divide-primary-foreground/15 lg:col-span-8">
-            <CapabilityRow
-              index={1}
-              title={t("materialsLanding.capabilities.downloadTitle", "Download everything")}
-              line={t(
-                "materialsLanding.capabilities.downloadLine",
-                "Open any series and follow every document to its source file.",
-              )}
-            />
-            <CapabilityRow
-              index={2}
-              title={t("materialsLanding.capabilities.askTitle", "Ask the AI assistant")}
-              line={t(
-                "materialsLanding.capabilities.askLine",
-                "Put a question to the archive in Nepali or English and get cited answers.",
-              )}
-            />
-            <CapabilityRow
-              index={3}
-              title={t("materialsLanding.capabilities.analyzeTitle", "Analyze in bulk")}
-              line={t(
-                "materialsLanding.capabilities.analyzeLine",
-                "The structured data is open (CC BY-NC) — build on it from our GitHub.",
-              )}
-            />
+      {/* Capabilities, in the home page's bento kit: a two-tone heading over
+          three grey panels, one per way to use the archive. */}
+      <section ref={capabilitiesRef} aria-labelledby="capabilities-heading">
+        <div className="layout-container pb-16 md:pb-24">
+          <SplitHeading
+            id="capabilities-heading"
+            lead={`${t("materialsLanding.capabilities.title", "The archive works for you")}.`}
+            rest={t("materialsLanding.capabilities.short", "Read it, ask it, take it all.")}
+          />
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            {CAPABILITIES.map(({ key, icon: Icon, titleFallback, lineFallback }) => (
+              <Panel key={key} className="min-h-[15rem] justify-between gap-10">
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-primary"
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-xl font-normal text-primary">
+                    {t(`materialsLanding.capabilities.${key}Title`, titleFallback)}
+                  </h3>
+                  <p className="mt-2 text-[15px] leading-6 text-muted-foreground">
+                    {t(`materialsLanding.capabilities.${key}Line`, lineFallback)}
+                  </p>
+                </div>
+              </Panel>
+            ))}
           </div>
         </div>
       </section>
@@ -297,7 +306,6 @@ export default function MaterialsLanding() {
       <section
         ref={recentRef}
         aria-labelledby="recent-heading"
-        className="border-t border-border"
       >
         <div className="layout-container py-16 md:py-24">
           {recents ? (
@@ -306,7 +314,7 @@ export default function MaterialsLanding() {
               descriptions={descriptions}
               heading={
                 <div>
-                  <h2 id="recent-heading" className="font-archive-section-title">
+                  <h2 id="recent-heading" className="font-home-section-title text-primary">
                     {t("materialsLanding.recent.title", "Recently added")}
                   </h2>
                   {/* Four cards with nothing around them read as the whole
@@ -336,12 +344,12 @@ export default function MaterialsLanding() {
             />
           ) : (
             <>
-              <h2 id="recent-heading" className="font-archive-section-title pb-10">
+              <h2 id="recent-heading" className="font-home-section-title pb-10 text-primary">
                 {t("materialsLanding.recent.title", "Recently added")}
               </h2>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {Array.from({ length: 4 }, (_, index) => (
-                  <Skeleton key={index} className="min-h-[320px] w-full rounded-xl" />
+                  <Skeleton key={index} className="min-h-[300px] w-full rounded-2xl" />
                 ))}
               </div>
             </>

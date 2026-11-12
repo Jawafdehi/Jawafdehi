@@ -68,6 +68,9 @@ const NAV_ICON_ON_DARK_CLASS = "text-primary-foreground/80 hover:bg-primary-fore
 
 /** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
 const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/", "/likhit", "/likhit/"]);
+// /materials opens on the navy landing only when it has no query: ?series= and
+// the search params render light pages on the same path (pages/Materials.tsx).
+const MATERIALS_PATHS = new Set(["/materials", "/materials/"]);
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -149,7 +152,10 @@ export function Navbar() {
   // would vanish. Every other page opens on a light surface. So the at-rest
   // header is light-on-dark on those routes only, and snaps back to the normal
   // navy-on-light treatment the moment it gains its opaque background.
-  const overDarkHero = !isScrolled && DARK_HERO_PATHS.has(location.pathname);
+  const overDarkHero =
+    !isScrolled &&
+    (DARK_HERO_PATHS.has(location.pathname) ||
+      (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
 
   const [homeNavItem, ...secondaryNavItems] = navItems;
 

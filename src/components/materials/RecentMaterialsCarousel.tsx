@@ -131,9 +131,10 @@ export function RecentMaterialsCarousel({
         {heading}
         <div className="flex shrink-0 gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full active:scale-[0.97]"
+            // Grey round buttons, the search page's chip fill.
+            className="h-10 w-10 rounded-full bg-muted text-primary hover:bg-primary/[0.08] active:scale-[0.97] disabled:opacity-40"
             aria-label={t("materialsLanding.recent.previous", "Previous documents")}
             disabled={atStart}
             onClick={() => scrollByCard(-1)}
@@ -141,9 +142,10 @@ export function RecentMaterialsCarousel({
             <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full active:scale-[0.97]"
+            // Grey round buttons, the search page's chip fill.
+            className="h-10 w-10 rounded-full bg-muted text-primary hover:bg-primary/[0.08] active:scale-[0.97] disabled:opacity-40"
             aria-label={t("materialsLanding.recent.next", "Next documents")}
             disabled={atEnd}
             onClick={() => scrollByCard(1)}
@@ -202,15 +204,14 @@ export function RecentMaterialsCarousel({
               <Link
                 to={result.url}
                 className={[
-                  "group/card flex min-h-[320px] w-full flex-col rounded-xl bg-surface p-6 shadow-elev-md",
-                  "touch-manipulation transition-[transform,box-shadow] duration-200 ease-out-strong",
-                  "hover:-translate-y-0.5 hover:shadow-elev-lg active:scale-[0.99]",
-                  "outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+                  // The site's card shell: white on a hairline, no shadow.
+                  "group/card flex min-h-[300px] w-full flex-col rounded-2xl border border-border/70 bg-surface p-6",
+                  "touch-manipulation transition-colors duration-200 hover:border-border active:scale-[0.99]",
+                  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 ].join(" ")}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="line-clamp-3 min-w-0 text-xl font-medium leading-snug text-foreground">
+                  <h3 className="line-clamp-3 min-w-0 text-[17px] font-normal leading-6 text-primary">
                     {title}
                   </h3>
                   {/* Decorative: the whole card is the link, so the arrow is an
@@ -225,12 +226,12 @@ export function RecentMaterialsCarousel({
                     {snippet}
                   </p>
                 )}
-                <div className="mt-auto space-y-2 pt-6 text-xs font-medium text-muted-foreground">
+                <div className="mt-auto space-y-2 pt-6 text-[13px] text-muted-foreground">
                   <p className="flex items-center gap-2">
                     <SourceIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{seriesLabel}</span>
                   </p>
-                  <p className="flex items-center gap-2 font-mono text-sm tabular-nums">
+                  <p className="flex items-center gap-2 tabular-nums">
                     <Calendar aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                     {formatLedgerDate(date, language)}
                   </p>

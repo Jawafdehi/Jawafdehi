@@ -1,138 +1,85 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-import {
-  folderTintClass,
-  formatArchiveCount,
-  pickLocalized,
-} from "@/lib/materials-landing";
+import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
 import { cn } from "@/lib/utils";
 
 import type { MaterialSeries } from "@/data/material-series";
 
 /**
- * The fanned white sheets peeking out of the folder. Rest pose is authored
- * here; hover lifts each sheet 6px with a 40ms stagger. Sheets start well
- * below the folder's top edge (the tint must frame them) and run far behind
- * the frosted panel, so their lower halves read as paper through the blur.
+ * A series as a folder, in the redesign's card kit (the Customer.io / Canva
+ * asset-library pattern): a white card on a hairline holding a grey well, a
+ * quiet folder drawn in it, and the series name and count beneath — the same
+ * 17px name and 14px grey line as every other card on the site.
+ *
+ * No colour per series any more. Nine pastel folders read as a toy box; one
+ * grey folder repeated reads as a shelf, and the names do the telling apart.
+ * The papers inside rise a few pixels on hover — the one moving part.
  */
-const SHEETS = [
-  { className: "left-[16%] right-[20%] top-[16%] -rotate-2", delay: "delay-0" },
-  { className: "left-[20%] right-[14%] top-[13%] rotate-1", delay: "delay-[40ms]" },
-  { className: "left-[13%] right-[17%] top-[11%] -rotate-1", delay: "delay-[80ms]" },
-  { className: "left-[18%] right-[12%] top-[9%] rotate-2", delay: "delay-[120ms]" },
-];
-
 interface FolderCardProps {
   series: MaterialSeries;
   /** Real document count from /api/statistics/ by_source; null while loading. */
   count: number | null;
-  /** Hero shelf front folder: sheets settle upward once on load. */
+  /** Kept for callers that still pass it; the folder has one rest pose now. */
   heroSheets?: boolean;
-  /**
-   * Render as a non-interactive div — the hero shelf's back folders are
-   * scenery, and scenery must not add tab stops.
-   */
+  /** Render as a non-interactive div with no text: scenery adds no tab stops. */
   decorative?: boolean;
-  /** Resting elevation; the hero shelf's front folder sits at `lg`. */
+  /** Kept for callers that still pass it; the card has no shadow now. */
   elevation?: "md" | "lg";
   className?: string;
 }
 
-export function FolderCard({
-  series,
-  count,
-  heroSheets = false,
-  decorative = false,
-  elevation = "md",
-  className,
-}: Readonly<FolderCardProps>) {
+/** The drawn folder: back panel, two sheets, front panel. Pure decoration. */
+export function FolderGlyph({ className }: Readonly<{ className?: string }>) {
+  return (
+    <div aria-hidden="true" className={cn("relative aspect-[5/4] w-[46%]", className)}>
+      {/* Back panel with its tab. */}
+      <div className="absolute inset-x-0 bottom-0 top-[8%] rounded-[10px] bg-[hsl(215_16%_80%)]" />
+      <div className="absolute left-0 top-0 h-[16%] w-[42%] rounded-t-[8px] bg-[hsl(215_16%_80%)]" />
+      {/* Sheets: lift on hover, staggered. */}
+      <div className="absolute inset-x-[10%] top-[16%] h-[60%] -rotate-2 rounded-[4px] bg-surface shadow-[0_1px_2px_rgba(14,31,59,0.08)] transition-transform duration-200 ease-out group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0" />
+      <div className="absolute inset-x-[14%] top-[20%] h-[60%] rotate-1 rounded-[4px] bg-surface shadow-[0_1px_2px_rgba(14,31,59,0.08)] transition-transform delay-[40ms] duration-200 ease-out group-hover:-translate-y-1 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0" />
+      {/* Front panel, a shade lighter so the folder has depth without a shadow. */}
+      <div className="absolute inset-x-0 bottom-0 top-[38%] rounded-[10px] bg-[hsl(215_18%_87%)]" />
+    </div>
+  );
+}
+
+export function FolderCard({ series, count, decorative = false, className }: Readonly<FolderCardProps>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const tintClass = folderTintClass(series.tint);
   const name = pickLocalized(series.name, language);
 
-  const shellClassName = cn(
-    "relative block rounded-2xl outline-none",
-    elevation === "lg" ? "shadow-elev-lg" : "shadow-elev-md",
-    !decorative && [
-      "transition-[transform,box-shadow] duration-200 ease-out-strong",
-      "hover:-translate-y-1 hover:shadow-elev-lg active:scale-[0.99] active:duration-100",
-      "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-      "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
-    ],
-  );
-
-  const folder = (
+  const body = (
     <>
-      {/* Folder tab — part of the silhouette, so it moves with the card. */}
-      <div
-        aria-hidden="true"
-        className={cn(
-          "absolute -top-[18px] left-0 h-[26px] w-[38%] rounded-t-[8px]",
-          "[transform:skewX(-8deg)] [transform-origin:bottom_left]",
-          tintClass,
-        )}
-      />
-      {/* Folder body. isolate keeps the sheet/glass stack local. */}
-      <div
-        className={cn(
-          "relative isolate aspect-[11/10] overflow-hidden rounded-2xl rounded-tl-none",
-          tintClass,
-        )}
-      >
-        {/* The one sanctioned tint gradient: a barely-there vertical light. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-b from-surface/25 via-transparent to-primary/5"
-        />
-        {/* Fanned sheets. */}
-        {SHEETS.map((sheet, index) => (
-          <div
-            key={sheet.className}
-            aria-hidden="true"
-            className={cn(
-              "absolute rounded-[3px] border border-border/60 bg-surface shadow-elev-xs",
-              "h-[40%] transition-transform duration-200 ease-out-strong",
-              sheet.className,
-              sheet.delay,
-              "group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0",
-              heroSheets && index === SHEETS.length - 1 && "animate-sheet-rise motion-reduce:animate-none",
-            )}
-          />
-        ))}
-        {/* Frosted front panel over the lower part of the folder. Decorative
-            shelf folders keep the glass but carry no text — scenery stays
-            quiet behind the one labelled folder. */}
-        <div className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col justify-between rounded-b-2xl rounded-t-md border border-surface/60 bg-surface/55 p-4 backdrop-blur-[12px]">
-          {!decorative && (
-            <div>
-              <h3 className="text-xl font-medium leading-tight text-primary">{name}</h3>
-              <p className="mt-4 text-xl font-semibold tabular-nums text-primary">
-                {count === null ? "—" : formatArchiveCount(count, language)}
-                <span className="ml-1.5 align-baseline text-xs font-medium text-foreground/70">
-                  {t("materialsLanding.grid.documents", "documents")}
-                </span>
-              </p>
-            </div>
-          )}
-        </div>
+      <div className="flex aspect-[16/10] items-center justify-center rounded-[18px] bg-muted">
+        <FolderGlyph />
       </div>
+      {decorative ? null : (
+        <div className="px-2 pb-1.5 pt-3.5">
+          <h3 className="text-[17px] font-normal leading-6 text-primary">{name}</h3>
+          <p className="mt-0.5 text-sm tabular-nums text-muted-foreground">
+            {count === null ? "—" : formatArchiveCount(count, language)}{" "}
+            {t("materialsLanding.grid.documents", "documents")}
+          </p>
+        </div>
+      )}
     </>
   );
 
+  const shell =
+    "group block h-full rounded-[24px] border border-border/70 bg-surface p-2 outline-none transition-colors duration-200 hover:border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+  if (decorative) {
+    return (
+      <div aria-hidden="true" className={cn(shell, className)}>
+        {body}
+      </div>
+    );
+  }
   return (
-    <div
-      className={cn("font-material-folder group relative", className)}
-      aria-hidden={decorative || undefined}
-    >
-      {decorative ? (
-        <div className={shellClassName}>{folder}</div>
-      ) : (
-        <Link to={`/materials/?series=${series.slug}`} className={shellClassName}>
-          {folder}
-        </Link>
-      )}
-    </div>
+    <Link to={`/materials/?series=${series.slug}`} className={cn(shell, className)}>
+      {body}
+    </Link>
   );
 }
