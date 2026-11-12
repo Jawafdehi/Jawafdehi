@@ -3,22 +3,21 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { ArrowRight } from "@/components/icons";
-import { Eyebrow } from "@/components/ui/eyebrow";
 import { SearchBar } from "@/components/ui/search-bar";
 
 const WAYS_ON = [
-  { key: "search", to: "/search" },
+  { key: "home", to: "/" },
   { key: "cases", to: "/cases" },
   { key: "materials", to: "/materials" },
   { key: "courtcases", to: "/courtcases" },
+  { key: "updates", to: "/updates" },
 ] as const;
 
 /**
- * The 404: a light page that owns the miss and points back into the archive.
- * The "404" itself is drawn in the archive's dot dither (a dot grid clipped to
- * the numerals), large and quiet behind the words. Below the line, a search
- * straight into the archive and the four places most links were heading.
+ * The 404, after Orchid's and Apple's: one quiet centred column. A small
+ * "404" over the title, one line, a search straight into the archive, and
+ * plain links to where most visitors were heading. Nothing decorative: the
+ * reader came for something else, and the page's job is to hand it back.
  */
 const NotFound = () => {
   const { t } = useTranslation();
@@ -37,32 +36,24 @@ const NotFound = () => {
   };
 
   return (
-    <main id="main-content" className="relative isolate flex-1 overflow-hidden bg-background">
+    <main id="main-content" className="flex flex-1 bg-background">
       <Helmet>
         <title>Page Not Found | Jawafdehi</title>
       </Helmet>
 
-      {/* The numerals, in dots: crimson fading to the archive's blue. */}
-      <p
-        aria-hidden="true"
-        className="font-home-display pointer-events-none absolute -right-6 top-8 -z-10 select-none text-[clamp(10rem,32vw,26rem)] leading-none tracking-tight text-transparent [-webkit-background-clip:text] [background-clip:text] [background-image:radial-gradient(hsl(var(--accent))_1.6px,transparent_2.1px),linear-gradient(transparent,transparent)] [background-size:8px_8px] [mask-image:linear-gradient(to_bottom_left,#000_30%,transparent_85%)] md:right-4 md:top-12"
-      >
-        {t("notFound.title")}
-      </p>
-
-      <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center py-16 md:py-24">
-        <Eyebrow>{t("notFound.eyebrow", "Page not found")}</Eyebrow>
-        <h1 className="font-home-display mt-4 max-w-3xl text-4xl text-primary sm:text-5xl md:text-6xl">
+      <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col items-center justify-center py-16 text-center">
+        <p className="text-sm tracking-[0.2em] text-muted-foreground tabular-nums">{t("notFound.title")}</p>
+        <h1 className="font-home-display mt-5 max-w-2xl text-balance text-4xl text-primary sm:text-5xl md:text-6xl">
           {t("notFound.heading", "This page isn't in the archive.")}
         </h1>
-        <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">
+        <p className="mt-5 max-w-lg text-lg leading-8 text-muted-foreground">
           {t(
             "notFound.line",
             "The link may be old or mistyped. The case, person or document you wanted is probably still here — search for it.",
           )}
         </p>
 
-        <form onSubmit={search} className="mt-8 w-full max-w-xl" role="search">
+        <form onSubmit={search} className="mt-9 w-full max-w-lg" role="search">
           <label htmlFor="not-found-search" className="sr-only">
             {t("notFound.searchLabel", "Search the archive")}
           </label>
@@ -72,33 +63,24 @@ const NotFound = () => {
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("notFound.searchPlaceholder", "Search cases, people and documents")}
             submitLabel={t("notFound.searchLabel", "Search the archive")}
-            className="[&_input]:h-12"
+            inputClassName="h-12 text-left"
           />
         </form>
 
-        <ul className="mt-10 flex max-w-2xl flex-wrap gap-2">
-          {WAYS_ON.map(({ key, to }) => (
-            <li key={key}>
-              <Link
-                to={to}
-                className="group inline-flex h-10 items-center gap-1.5 rounded-full bg-muted px-4 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100"
-              >
-                {t(`notFound.ways.${key}`)}
-                <ArrowRight
-                  className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        <Link
-          to="/"
-          className="mt-8 w-fit rounded text-base text-muted-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {t("notFound.returnHome")}
-        </Link>
+        <nav aria-label={t("notFound.waysLabel", "Elsewhere on Jawafdehi")} className="mt-8">
+          <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {WAYS_ON.map(({ key, to }) => (
+              <li key={key}>
+                <Link
+                  to={to}
+                  className="rounded text-[15px] text-primary underline decoration-primary/25 underline-offset-[6px] transition-colors hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {t(`notFound.ways.${key}`)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </main>
   );
