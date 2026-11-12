@@ -51,7 +51,9 @@ export function AccountabilityGap({
       key: "investigating",
       label: t("dataQuality.cases.status.investigating", "Under investigation"),
       count: inReviewProvided ? draftOnly : investigating,
-      color: "hsl(var(--alert))",
+      // The brand's two colours carry the status: crimson for what is still
+      // open, navy for what reached a finding, grey for what was closed.
+      color: "hsl(var(--accent))",
     },
     ...(inReviewProvided
       ? [
@@ -59,7 +61,7 @@ export function AccountabilityGap({
             key: "in_review",
             label: t("dataQuality.gap.stage.inReview", "In review (being prepared)"),
             count: inReview,
-            color: "hsl(var(--accent))",
+            color: "hsl(var(--accent) / 0.45)",
           } as FunnelStage,
         ]
       : []),
@@ -67,7 +69,7 @@ export function AccountabilityGap({
       key: "published",
       label: t("dataQuality.gap.stage.published", "Reached a published finding"),
       count: published,
-      color: "hsl(var(--success))",
+      color: "hsl(var(--primary))",
     },
     {
       key: "closed",
@@ -83,7 +85,7 @@ export function AccountabilityGap({
       key: "ciaa",
       label: t("dataQuality.corruptionCases.ciaaLabel", "CIAA prosecutions"),
       value: ciaa,
-      color: "hsl(var(--accent))",
+      color: "hsl(var(--primary))",
     },
     {
       key: "non_ciaa",
@@ -95,10 +97,10 @@ export function AccountabilityGap({
 
   return (
     <section>
-      <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">
+      <p className="mb-4 inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
         {t("dataQuality.corruptionCases.eyebrow", "The core finding")}
       </p>
-      <h2 className="font-display text-[1.9rem] font-bold leading-tight tracking-tight text-foreground md:text-[2.5rem]">
+      <h2 className="font-home-display text-4xl text-primary md:text-5xl">
         {t("dataQuality.corruptionCases.heading", "Corruption cases")}
       </h2>
       <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
@@ -123,10 +125,10 @@ export function AccountabilityGap({
                 header so it never reads as a peer of its own components. */}
             {!isLoading && (
               <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-border pb-3">
-                <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="text-[15px] text-muted-foreground">
                   {t("dataQuality.gap.totalLabel", "Documented cases")}
                 </span>
-                <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
+                <span className="font-mono text-2xl font-medium tabular-nums text-foreground">
                   <AnimatedCount end={documented} duration={1.2} />
                 </span>
               </div>

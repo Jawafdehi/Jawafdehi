@@ -39,7 +39,7 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
 
   return (
     <section>
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
+      <h2 className="font-home-display text-3xl text-primary md:text-4xl">
         {t("dataQuality.entities.heading", "Who we hold to account")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -58,7 +58,7 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
 
       {groups.length > 0 && (
         <>
-          <p className="mt-6 mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mt-6 mb-1 text-[13px] text-muted-foreground">
             {t("dataQuality.entities.institutionsLabel", "Institutions we track")}
           </p>
           <BreakdownBar
@@ -98,7 +98,7 @@ function PersonsBySector({
 
   return (
     <div className="mt-8">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="mb-2 text-[13px] text-muted-foreground">
         {t("dataQuality.entities.sectorHeading", "What positions the people hold")}
       </p>
       <BreakdownBar

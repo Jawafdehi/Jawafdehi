@@ -7,7 +7,7 @@ import {
   DocumentPreviewViewer,
   type PreviewDocument,
 } from "@/components/DocumentPreviewDialog";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TranscriptReader } from "@/components/materials/TranscriptReader";
 
 /**
@@ -72,19 +72,22 @@ export default function DocumentPreviewPage() {
 
   if (!document) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-code-surface px-4 text-white">
-        <div className="max-w-md rounded-xl border border-white/10 bg-white/5 p-6 text-center shadow-2xl">
-          <h1 className="text-lg font-semibold">{t("documentPreview.unavailableTitle")}</h1>
-          <p className="mt-2 text-sm text-white/65">
-            {t("documentPreview.unavailableDescription")}
-          </p>
-          <Button asChild variant="outline" className="mt-5">
-            <Link to="/">
+      <main className="flex min-h-screen items-center justify-center bg-background px-4">
+        <EmptyState
+          kind="couldNotLoad"
+          headingLevel="h1"
+          title={t("documentPreview.unavailableTitle")}
+          description={t("documentPreview.unavailableDescription")}
+          actions={
+            <Link
+              to="/"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               {t("documentPreview.backToJawafdehi")}
             </Link>
-          </Button>
-        </div>
+          }
+        />
       </main>
     );
   }

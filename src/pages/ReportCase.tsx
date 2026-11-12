@@ -7,7 +7,7 @@ import { SiLinktree } from "react-icons/si";
 
 import { CaseReportForm } from "@/components/CaseReportForm";
 import { Seo } from "@/components/Seo";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LightHero } from "@/components/ui/light-hero";
 import { JAWAFDEHI_SOCIALS, JAWAFDEHI_WHATSAPP_NUMBER } from "@/config/constants";
 import { SITE_URL } from "@/utils/seo";
 
@@ -49,149 +49,110 @@ export default function ReportCase() {
   // No <main> wrapper here: AppLayout already renders one around <Outlet />.
   // Most sibling pages nest a second <main id="main-content"> inside it, which
   // duplicates the id the skip link targets — this page does not repeat that.
+  const pill =
+    "inline-flex min-h-11 items-center gap-2 rounded-full bg-muted px-4 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100";
+
   return (
     <div className="bg-background">
       <Seo title={title} description={description} canonicalUrl={PAGE_URL} />
 
-      <div className="layout-container max-w-3xl py-8 md:py-12">
-        <header className="mb-8 space-y-3">
-          <h1 className="text-3xl font-extrabold tracking-normal text-primary md:text-4xl">
-            {t("report.title")}
-          </h1>
-          <p className="text-base leading-7 text-foreground/70">{t("report.description")}</p>
-        </header>
+      <LightHero
+        id="report-title"
+        shader={false}
+        eyebrow={t("report.page.eyebrow", "Report")}
+        title={t("report.title")}
+        description={t("report.description")}
+      />
 
-        {/* Safety guidance sits above the form deliberately: someone about to
-            describe a live case should read it before they start typing. */}
+      {/* The form on the left in a hairline card; on the right, sticky on a
+          desktop, what to read first, the other ways to reach us and the
+          templates. On a phone the guidance comes first: someone about to
+          describe a live case should read it before they start typing. */}
+      <div className="layout-container grid grid-cols-1 items-start gap-10 pb-20 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
         <section
-          aria-labelledby="report-safety-heading"
-          className="mb-8 rounded-2xl border border-accent/20 bg-accent/[0.06] p-5 sm:p-6"
+          aria-labelledby="report-form-heading"
+          className="order-2 min-w-0 rounded-[24px] border border-border/70 bg-surface p-6 sm:p-8 lg:order-1 lg:p-10"
         >
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
-            <div className="space-y-3">
-              <h2 id="report-safety-heading" className="text-base font-bold text-accent">
-                {t("report.page.safetyTitle")}
-              </h2>
-              <p className="text-sm leading-6 text-foreground/75">{t("report.page.safetyIntro")}</p>
-              <ul className="space-y-2 text-sm leading-6 text-foreground/75">
-                {safetyPoints.map((point) => (
-                  <li key={point} className="flex gap-2">
-                    <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <h2 id="report-form-heading" className="font-home-display text-3xl text-primary md:text-4xl">
+            {t("report.page.formTitle")}
+          </h2>
+          <p className="mt-3 max-w-xl text-lg leading-8 text-muted-foreground">{t("report.page.formDescription")}</p>
+          <div className="mt-8">
+            <CaseReportForm />
           </div>
         </section>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">{t("report.page.formTitle")}</CardTitle>
-            <CardDescription className="text-base">{t("report.page.formDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CaseReportForm />
-          </CardContent>
-        </Card>
+        <aside className="order-1 min-w-0 space-y-8 lg:sticky lg:top-28 lg:order-2">
+          <section aria-labelledby="report-safety-heading" className="rounded-[24px] bg-muted/60 p-6">
+            <div className="flex items-center gap-2.5">
+              <ShieldAlert className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
+              <h2 id="report-safety-heading" className="text-lg text-primary">
+                {t("report.page.safetyTitle")}
+              </h2>
+            </div>
+            <p className="mt-3 text-[15px] leading-7 text-muted-foreground">{t("report.page.safetyIntro")}</p>
+            <ul className="mt-4 space-y-3 text-[15px] leading-7 text-primary/85">
+              {safetyPoints.map((point) => (
+                <li key={point} className="flex gap-3">
+                  <span aria-hidden="true" className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-        <section aria-labelledby="report-channels-heading" className="mb-8 space-y-5">
-          <div className="space-y-2">
-            <h2 id="report-channels-heading" className="text-2xl font-bold text-primary">
+          <section aria-labelledby="report-channels-heading">
+            <h2 id="report-channels-heading" className="text-lg text-primary">
               {t("report.page.channelsTitle")}
             </h2>
-            <p className="text-sm leading-6 text-foreground/70">{t("report.page.channelsDescription")}</p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <a
-              href={`mailto:${REPORT_EMAIL}`}
-              className="group flex min-h-14 items-center gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors group-hover:bg-accent">
-                <Mail className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("report.page.emailLabel")}
-                </span>
-                <span className="block truncate text-sm font-semibold text-primary">{REPORT_EMAIL}</span>
-              </span>
-            </a>
-
-            <a
-              href={JAWAFDEHI_SOCIALS.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex min-h-14 items-center gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white transition-colors group-hover:bg-[#1fbd59]">
-                <FaWhatsapp className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("report.page.whatsappLabel")}
-                </span>
-                <span className="block truncate text-sm font-semibold text-primary">
-                  {JAWAFDEHI_WHATSAPP_NUMBER}
-                </span>
-              </span>
-            </a>
-          </div>
-
-          <div className="space-y-3 rounded-2xl bg-muted/45 p-5">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-foreground">{t("report.page.socialTitle")}</h3>
-              <p className="text-xs leading-5 text-muted-foreground">{t("report.page.socialDescription")}</p>
+            <p className="mt-1.5 text-[15px] leading-7 text-muted-foreground">{t("report.page.channelsDescription")}</p>
+            <div className="mt-4 grid gap-2">
+              <a href={`mailto:${REPORT_EMAIL}`} className={pill}>
+                <Mail className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                <span className="sr-only">{t("report.page.emailLabel")}: </span>
+                <span className="truncate">{REPORT_EMAIL}</span>
+              </a>
+              <a href={JAWAFDEHI_SOCIALS.whatsapp} target="_blank" rel="noopener noreferrer" className={pill}>
+                <FaWhatsapp className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                <span className="sr-only">{t("report.page.whatsappLabel")}: </span>
+                <span className="font-mono text-sm tabular-nums">{JAWAFDEHI_WHATSAPP_NUMBER}</span>
+              </a>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <h3 className="mt-6 text-[15px] text-muted-foreground">{t("report.page.socialTitle")}</h3>
+            <div className="mt-3 flex flex-wrap gap-2">
               {socialChannels.map(({ label, href, icon: Icon }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border/70 bg-background px-4 text-sm font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label={label}
+                  title={label}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {label}
+                  <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </a>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section
-          aria-labelledby="report-templates-heading"
-          className="flex flex-col gap-3 rounded-2xl bg-muted/45 p-5 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="space-y-1">
-            <h2 id="report-templates-heading" className="text-sm font-bold text-foreground">
+          <section aria-labelledby="report-templates-heading" className="border-t border-border/70 pt-6">
+            <h2 id="report-templates-heading" className="text-lg text-primary">
               {t("report.templateDownload.title")}
             </h2>
-            <p className="text-xs leading-5 text-muted-foreground">{t("report.page.templatesDescription")}</p>
-          </div>
-
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <a
-              href="/case-entry-template/case-entry-template.docx"
-              download
-              className="inline-flex h-9 min-w-20 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-bold tracking-wide text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <FileDown className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("report.templateDownload.downloadDocx")}
-            </a>
-            <a
-              href="/case-entry-template/case-entry-template.md"
-              download
-              className="inline-flex h-9 min-w-20 items-center justify-center gap-1.5 rounded-md bg-accent px-3 text-xs font-bold tracking-wide text-accent-foreground shadow-sm transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <FileDown className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("report.templateDownload.downloadMd")}
-            </a>
-          </div>
-        </section>
+            <p className="mt-1.5 text-[15px] leading-7 text-muted-foreground">{t("report.page.templatesDescription")}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a href="/case-entry-template/case-entry-template.docx" download className={pill}>
+                <FileDown className="h-[18px] w-[18px]" aria-hidden="true" />
+                {t("report.templateDownload.downloadDocx")}
+              </a>
+              <a href="/case-entry-template/case-entry-template.md" download className={pill}>
+                <FileDown className="h-[18px] w-[18px]" aria-hidden="true" />
+                {t("report.templateDownload.downloadMd")}
+              </a>
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
   );

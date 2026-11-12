@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2 } from "@/components/icons";
 import { Helmet } from "react-helmet-async";
 
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+
+const PILL_DARK =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary-surface px-5 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const PILL =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Landing page SendPulse redirects to after a subscriber clicks the double
@@ -15,31 +19,28 @@ export default function NewsletterConfirmed() {
   const { t } = useTranslation();
 
   return (
-    <main className="bg-background py-16 md:py-24">
+    <main className="bg-background py-8 md:py-12">
       <Helmet>
         <title>{t("newsletter.confirmed.title")} — Jawafdehi</title>
         <meta name="robots" content="noindex" />
       </Helmet>
-      <div className="layout-container max-w-xl text-center">
-        <div className="space-y-6">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-success" aria-hidden="true" />
-          <div className="space-y-3">
-            <h1 className="text-3xl font-bold text-primary md:text-4xl">
-              {t("newsletter.confirmed.title")}
-            </h1>
-            <p className="text-base leading-7 text-muted-foreground">
-              {t("newsletter.confirmed.message")}
-            </p>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button asChild>
-              <Link to="/search?type=case">{t("newsletter.confirmed.exploreCases")}</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/">{t("newsletter.confirmed.home")}</Link>
-            </Button>
-          </div>
-        </div>
+      <div className="layout-container">
+        <EmptyState
+          kind="celebrate"
+          headingLevel="h1"
+          title={t("newsletter.confirmed.title")}
+          description={t("newsletter.confirmed.message")}
+          actions={
+            <>
+              <Link to="/search?type=case" className={PILL_DARK}>
+                {t("newsletter.confirmed.exploreCases")}
+              </Link>
+              <Link to="/" className={PILL}>
+                {t("newsletter.confirmed.home")}
+              </Link>
+            </>
+          }
+        />
       </div>
     </main>
   );

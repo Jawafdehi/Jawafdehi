@@ -25,7 +25,7 @@ export function UseThisData() {
 
   return (
     <section className="border-t border-border pt-10">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
+      <h2 className="font-home-display text-3xl text-primary md:text-4xl">
         {t("dataQuality.useData.heading", "Use this data")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -37,7 +37,7 @@ export function UseThisData() {
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Query the API */}
-        <div className="flex flex-col rounded-xl border border-border bg-muted/20 p-5">
+        <div className="flex flex-col rounded-[20px] border border-border/70 bg-surface p-5">
           <Code2 className="h-6 w-6 text-accent" aria-hidden="true" />
           <h3 className="mt-3 text-base font-semibold text-foreground">
             {t("dataQuality.useData.api.title", "Query the API")}
@@ -60,7 +60,7 @@ export function UseThisData() {
         </div>
 
         {/* Spot something wrong? — relocated report-an-error card */}
-        <div className="flex flex-col rounded-xl border border-border bg-muted/20 p-5">
+        <div className="flex flex-col rounded-[20px] border border-border/70 bg-surface p-5">
           <Flag className="h-6 w-6 text-accent" aria-hidden="true" />
           <h3 className="mt-3 text-base font-semibold text-foreground">
             {t("dataQuality.methodology.report.heading", "Spot something wrong?")}

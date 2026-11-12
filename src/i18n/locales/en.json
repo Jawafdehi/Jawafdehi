@@ -1124,7 +1124,8 @@
       "whatsappLabel": "WhatsApp",
       "socialTitle": "Our social accounts",
       "socialDescription": "These are the only accounts we run. A social message is public or semi-public — do not put case details in one; ask us to move to email or WhatsApp instead.",
-      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp."
+      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp.",
+      "eyebrow": "Report"
     },
     "submitAnother": "Submit another report",
     "howToReachYou": "How we can reach you"
@@ -1367,7 +1368,12 @@
     "member": "Member",
     "representative": "Representative",
     "federalParliament": "Federal Parliament",
-    "viewSource": "View Source"
+    "viewSource": "View Source",
+    "breadcrumb": "People & organizations",
+    "notFoundTitle": "Not in the registry",
+    "notFoundLine": "This person or organization could not be found in the registry.",
+    "errorTitle": "This profile didn't load",
+    "errorLine": "Something went wrong on our side. Please try again in a moment."
   },
   "updates": {
     "title": "Updates & News",
@@ -1988,7 +1994,8 @@
         "other": "Other"
       }
     },
-    "errorTitle": "The figures didn't load"
+    "errorTitle": "The figures didn't load",
+    "eyebrow": "Open data"
   },
   "admin": {
     "common": {
@@ -3197,5 +3204,10 @@
       "body": "likhit repairs broken Devanagari, keeps the tables, reads the scans, and takes personal details out before anything is written.",
       "redacted": "# citizenship numbers: redacted"
     }
+  },
+  "materialProfile": {
+    "breadcrumb": "Documents",
+    "notFoundTitle": "Document not found",
+    "notFoundLine": "This material could not be found in the Jawafdehi governance archive."
   }
 }

@@ -42,6 +42,7 @@ export function EmptyState({
   actions,
   compact = false,
   className,
+  headingLevel: Heading = "h2",
 }: Readonly<{
   kind: EmptyStateKind;
   title: ReactNode;
@@ -49,6 +50,8 @@ export function EmptyState({
   actions?: ReactNode;
   compact?: boolean;
   className?: string;
+  /** h1 when the state is the whole page (a confirmation, an unsubscribe). */
+  headingLevel?: "h1" | "h2";
 }>) {
   return (
     <div
@@ -69,14 +72,14 @@ export function EmptyState({
         height={768}
         className={cn("h-auto w-full dark:opacity-80", compact ? "max-w-[13rem]" : "max-w-[20rem]")}
       />
-      <h2
+      <Heading
         className={cn(
           "font-home-display text-balance text-primary",
           compact ? "mt-4 text-xl" : "mt-6 text-2xl md:text-3xl",
         )}
       >
         {title}
-      </h2>
+      </Heading>
       {description ? (
         <p className={cn("text-muted-foreground", compact ? "mt-2 text-base leading-7" : "mt-3 text-lg leading-8")}>
           {description}
