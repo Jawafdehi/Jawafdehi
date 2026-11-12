@@ -1,0 +1,8 @@
+dist/
+coverage/
+node_modules/
+public/
+playwright-report/
+test-results/
+bun.lock
+*.md
