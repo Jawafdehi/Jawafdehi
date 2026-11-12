@@ -58,36 +58,26 @@ const article = (
 const picture = { url: "https://cms.example.test/p.jpg", width: 800, height: 450, alt: "" };
 
 describe("Updates loading state", () => {
-  it("shows a bento-shaped skeleton, announced once", () => {
+  it("shows a grid of skeleton stories, announced once", () => {
     renderPage();
     const status = loadingStatus();
-    const tiles = status.querySelectorAll("[data-skeleton]");
-    expect(tiles.length).toBe(6);
-    // The first placeholder takes the lead story's two-column cell.
-    expect(tiles[0].className).toContain("md:col-span-2");
+    expect(status.querySelectorAll("[data-skeleton]").length).toBe(6);
     expect(status.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
 });
 
-describe("Updates bento feed", () => {
-  it("leads with the newest story across two columns of one row", async () => {
-    getArticles.mockResolvedValue([article(1, { thumbnail: picture }), article(2), article(3)]);
-    renderPage();
-
-    const lead = (await screen.findByText("Story 1")).closest("a");
-    expect(lead?.getAttribute("data-shape")).toBe("lead");
-    expect(lead?.parentElement?.className).toContain("md:col-span-2");
-    // One row only: a two-row cell stretched the lead's picture out of 16:9.
-    expect(lead?.parentElement?.className).not.toContain("row-span");
-  });
-
-  it("gives a story with a picture an image tile and one without a text panel", async () => {
+describe("Updates feed", () => {
+  it("gives every story the same cell, with or without a picture", async () => {
     getArticles.mockResolvedValue([article(1), article(2, { thumbnail: picture }), article(3)]);
     renderPage();
 
     await screen.findByText("Story 1");
     expect(screen.getByText("Story 2").closest("a")?.getAttribute("data-shape")).toBe("picture");
     expect(screen.getByText("Story 3").closest("a")?.getAttribute("data-shape")).toBe("text");
+    // An even grid: no story spans more than one cell.
+    for (const item of document.querySelectorAll("ul.grid > li")) {
+      expect(item.className).not.toContain("span");
+    }
   });
 
   it("filters to news or updates with the switcher pills", async () => {

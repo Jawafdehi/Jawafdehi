@@ -10,7 +10,6 @@ import { Seo } from "@/components/Seo";
 import { chipVariants } from "@/components/ui/chip";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { getArticles } from "@/services/cms-api";
 import type { ArticleCategory, ArticleListItem } from "@/types/cms";
 import { formatPublicationDate } from "@/utils/date";
@@ -19,79 +18,58 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 type Filter = "ALL" | ArticleCategory;
 const FILTERS: Filter[] = ["ALL", "NEWS", "UPDATE"];
 
-/**
- * The feed's grid. Three columns on desktop, two on a tablet, one on a phone.
- * The lead spans two columns of one row, so its picture keeps 16:9 like the
- * rest; `grid-flow-dense` lets text panels fill any gaps.
- */
-const FEED_GRID = "grid grid-flow-dense grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3";
+/** The feed's grid: three across on desktop, two on a tablet, one on a phone. */
+const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols-3";
 
 /**
- * One story in the bento. Three shapes, chosen by the story rather than by a
- * toggle:
- *   - the LEAD (newest): two columns wide, the picture large;
- *   - a story WITH a picture: the image on top, the title under it;
- *   - a story WITHOUT one: a grey text panel, where the excerpt has room.
- * Pictures always keep 16:9, whatever the tile's size, so no photo is ever
- * cropped to a strip or stretched; only the text panels flex to fill the
- * grid. The category is the case cards' tag pill, the date sits opposite it
- * with a calendar, and "Read more" closes the tile on the right. The whole
- * tile is the link; press scales it to 0.99.
+ * One story, in the AngelList / Beside / Lightdash listing shape: no card
+ * frame, just a rounded 16:9 picture, the category pill and the date under
+ * it, the title, one line of excerpt, and "Read more" on the right. A story
+ * with no picture gets a quiet patterned tile of the same size, so the grid
+ * stays even. The whole story is the link; press scales it to 0.99.
  */
-function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListItem; lead?: boolean }>) {
+function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
   const { t } = useTranslation();
   const image = article.thumbnail?.url;
-  const meta = (
-    <div className="flex items-center justify-between gap-3">
-      <CaseTagBadge className={cn("px-3 py-1 text-sm", !image && "bg-surface")}>
-        {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
-      </CaseTagBadge>
-      <span className="inline-flex items-center gap-1.5 text-[15px] text-muted-foreground">
-        <Calendar className="h-4 w-4" aria-hidden="true" />
-        {formatPublicationDate(article.date)}
-      </span>
-    </div>
-  );
 
   return (
     <Link
       to={`/updates/${article.meta.slug}`}
-      data-shape={lead ? "lead" : image ? "picture" : "text"}
-      className={cn(
-        "group flex h-full flex-col rounded-[28px] p-2 transition-[transform,border-color] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100",
-        image ? "border border-border/70 bg-surface hover:border-border" : "bg-muted",
-      )}
+      data-shape={image ? "picture" : "text"}
+      className="group flex h-full flex-col rounded-[22px] transition-transform duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 motion-reduce:active:scale-100"
     >
-      {image ? (
-        <div className="relative aspect-video overflow-hidden rounded-[22px] bg-muted">
+      <div className="relative aspect-video overflow-hidden rounded-[22px] bg-muted">
+        {image ? (
           <img
             src={image}
             alt={article.thumbnail?.alt || ""}
-            loading={lead ? "eager" : "lazy"}
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
+        ) : (
+          // No picture: the archive's dot field in pale blue, fading out, with
+          // the wordmark — a placeholder that still reads as Jawafdehi.
+          <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 [background-image:radial-gradient(hsl(214_45%_70%)_1.2px,transparent_1.7px)] [background-size:9px_9px] [mask-image:radial-gradient(ellipse_at_70%_30%,#000_10%,transparent_70%)]" />
+            <img src="/assets/logo.svg" alt="" className="relative h-7 w-auto opacity-40 dark:hidden" />
+          </div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <CaseTagBadge className="px-3 py-1 text-sm">
+            {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
+          </CaseTagBadge>
+          <span className="inline-flex items-center gap-1.5 text-[15px] text-muted-foreground">
+            <Calendar className="h-4 w-4" aria-hidden="true" />
+            {formatPublicationDate(article.date)}
+          </span>
         </div>
-      ) : null}
-      <div className={cn("flex flex-1 flex-col", image ? "px-4 pb-4 pt-5" : "p-5 md:p-6")}>
-        {meta}
-        <h2
-          className={cn(
-            "mt-4 font-normal text-primary",
-            lead ? "text-[28px] leading-tight tracking-[-0.01em] md:text-[32px]" : "text-[19px] leading-snug",
-            !lead && "line-clamp-3",
-          )}
-        >
+        <h2 className="mt-4 line-clamp-2 text-xl font-normal leading-snug text-primary underline-offset-4 decoration-primary/30 group-hover:underline">
           {article.title}
         </h2>
-        <p
-          className={cn(
-            "mt-3 text-[15px] leading-6 text-muted-foreground",
-            lead ? "line-clamp-3 max-w-2xl" : image ? "line-clamp-2" : "line-clamp-5",
-          )}
-        >
-          {article.excerpt}
-        </p>
-        <span className="mt-auto inline-flex items-center gap-1.5 self-end pt-5 text-[15px] font-medium text-primary">
+        <p className="mt-2 line-clamp-2 text-[15px] leading-6 text-muted-foreground">{article.excerpt}</p>
+        <span className="mt-auto inline-flex items-center gap-1.5 self-end pt-4 text-[15px] font-medium text-primary">
           {t("updates.readMore")}
           <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
@@ -100,24 +78,19 @@ function StoryTile({ article, lead = false }: Readonly<{ article: ArticleListIte
   );
 }
 
-/** The feed while it loads: the same bento, as quiet blocks. */
+/** The feed while it loads: the same grid, as quiet blocks. */
 function FeedSkeleton() {
   const { t } = useTranslation();
   return (
     <output aria-label={t("updates.loading", "Loading updates")} className={FEED_GRID}>
       {Array.from({ length: 6 }, (_, index) => (
-        <div
-          key={index}
-          aria-hidden="true"
-          data-skeleton=""
-          className={cn(
-            "rounded-[28px] border border-border/70 p-2",
-            index === 0 && "md:col-span-2",
-          )}
-        >
+        <div key={index} aria-hidden="true" data-skeleton="">
           <Skeleton className="aspect-video w-full rounded-[22px]" />
-          <div className="space-y-3 px-4 pb-4 pt-5">
-            <Skeleton className="h-3 w-28" />
+          <div className="space-y-3 pt-5">
+            <div className="flex justify-between">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-4 w-28" />
+            </div>
             <Skeleton className="h-5 w-4/5" />
             <Skeleton className="h-4 w-3/5" />
           </div>
@@ -191,9 +164,9 @@ const Updates = () => {
               <p className="text-muted-foreground">{t("updates.empty", "No updates have been published yet.")}</p>
             ) : (
               <ul className={FEED_GRID}>
-                {shown.map((article, index) => (
-                  <li key={article.id} className={cn(index === 0 && "md:col-span-2")}>
-                    <StoryTile article={article} lead={index === 0} />
+                {shown.map((article) => (
+                  <li key={article.id}>
+                    <StoryTile article={article} />
                   </li>
                 ))}
               </ul>
