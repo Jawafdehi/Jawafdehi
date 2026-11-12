@@ -46,9 +46,11 @@ const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 const NAV_ITEM_CLASS =
   "relative inline-flex h-9 items-center justify-center rounded-full px-3.5 text-center text-[15px] font-normal text-primary/70 transition-colors duration-200 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 const NAV_ACTIVE_CLASS = "bg-surface text-primary shadow-[0_1px_2px_rgba(14,31,59,0.08)]";
-const NAV_ACTIVE_ON_DARK_CLASS = "bg-primary-foreground/15 text-primary-foreground shadow-none";
+const NAV_ACTIVE_ON_DARK_CLASS = "bg-transparent text-primary-foreground shadow-none";
 const NAV_GROUP_CLASS = "rounded-full bg-muted p-1";
-const NAV_GROUP_ON_DARK_CLASS = "bg-primary-foreground/[0.08]";
+// On the navy heroes the track and the pills have no fill at all: the bar is
+// part of the hero, and the current page is told by its full-white text.
+const NAV_GROUP_ON_DARK_CLASS = "bg-transparent";
 // Icon buttons (search, menu) are bare glyphs: no border, no fill at rest.
 const NAV_ICON_CLASS =
   "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none";
@@ -153,7 +155,6 @@ export function Navbar() {
   // navy-on-light treatment the moment it gains its opaque background.
   const overDarkHero =
     !isScrolled &&
-    menu === null &&
     (DARK_HERO_PATHS.has(location.pathname) ||
       (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
 
@@ -246,7 +247,7 @@ export function Navbar() {
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-colors duration-200 ease-out",
-          isScrolled || menu !== null
+          isScrolled
             ? "bg-background"
             : "bg-transparent",
         )}
@@ -413,7 +414,7 @@ export function Navbar() {
               className={cn(
                 "text-[15px] font-normal",
                 overDarkHero
-                  ? "bg-primary-foreground/[0.08] text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+                  ? "bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   : "bg-muted text-primary hover:bg-primary/[0.08]",
               )}
             >
@@ -552,20 +553,10 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* The open group's full-width panel, desktop only, with a light scrim
-            over the page: pointing at the scrim (it sits inside the header, so
-            leaving the panel onto it is not a pointerleave) or clicking it
-            closes the menu. */}
+        {/* The open group's panel, desktop only: no scrim, and the bar keeps
+            its own background, so opening a menu changes nothing but the panel. */}
         {menu !== null ? (
           <div className="hidden xl:block">
-            <div
-              aria-hidden="true"
-              className="fixed inset-x-0 bottom-0 top-[76px] -z-10 bg-primary/10 animate-in fade-in duration-150 motion-reduce:animate-none"
-              onPointerEnter={(event) => {
-                if (event.pointerType === "mouse") schedule(null, 160);
-              }}
-              onClick={() => setMenu(null)}
-            />
             <MegaMenuPanel
               key={menu}
               id={`nav-menu-${menu}`}

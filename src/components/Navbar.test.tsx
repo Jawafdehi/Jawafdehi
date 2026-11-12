@@ -119,10 +119,10 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // all would still pass.
   //
   // The active item is a pill inside the nav track: white on light pages,
-  // translucent white on the dark heroes (/mcp), where the at-rest header is
-  // light-on-dark.
+  // full-white text with no fill on the dark heroes (/mcp), where the at-rest
+  // header is light-on-dark.
   it.each([
-    ["/mcp", "bg-primary-foreground/15"],
+    ["/mcp", "text-primary-foreground"],
     ["/courtcases", "bg-surface"],
   ])("keeps the Archive trigger active on %s", (path, activeClass) => {
     renderNavbar(path);
