@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { FolderCard } from "@/components/materials/FolderCard";
-import { SplitHeading } from "@/components/ui/split-heading";
+import { ArrowLink } from "@/components/ui/arrow-link";
 import { MATERIAL_SERIES, seriesCount } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
 import { formatArchiveCount } from "@/lib/materials-landing";
@@ -131,20 +131,11 @@ export default function MaterialsLanding() {
             )}
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-            {/* The redesign's pill with the round arrow (ui/arrow-link), as an
-                in-page anchor rather than a route. */}
-            <a
-              href="#series"
-              className="group inline-flex items-center justify-between gap-6 rounded-full bg-surface py-1.5 pl-5 pr-1.5 text-base text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-surface"
-            >
+            {/* The redesign's pill with the round arrow (ui/arrow-link): straight
+                into archive search, on its Materials tab. */}
+            <ArrowLink to="/search?type=material" tone="light">
               {t("materialsLanding.ctaBrowse", "Browse the archive")}
-              <span
-                aria-hidden="true"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-surface text-primary-foreground transition-transform duration-200 group-hover:translate-y-0.5"
-              >
-                <ArrowDown className="h-4 w-4" />
-              </span>
-            </a>
+            </ArrowLink>
             <a
               href={CHAT_URL}
               target="_blank"
@@ -184,12 +175,10 @@ export default function MaterialsLanding() {
         className="scroll-mt-24"
       >
         <div className="layout-container py-16 md:py-24">
-          <SplitHeading
-            id="series-heading"
-            lead={`${t("materialsLanding.grid.title", "Browse by series")}.`}
-            rest={t("materialsLanding.grid.lede", "Shelved by publisher.")}
-          />
-          <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <h2 id="series-heading" className="font-home-section-title text-primary">
+            {t("materialsLanding.grid.title", "Browse by series")}
+          </h2>
+          <ul className="mt-12 grid list-none grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 lg:grid-cols-4">
             {MATERIAL_SERIES.map((series) => (
               <li key={series.slug}>
                 <FolderCard series={series} count={seriesCount(series, materials)} />

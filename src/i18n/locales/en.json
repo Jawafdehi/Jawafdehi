@@ -2436,8 +2436,7 @@
       "title": "Browse by series",
       "documents": "documents",
       "browseAll": "Browse all series",
-      "browseAllLine": "Search every document",
-      "lede": "Shelved by publisher."
+      "browseAllLine": "Search every document"
     },
     "recent": {
       "untitled": "Untitled document"

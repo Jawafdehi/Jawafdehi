@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 /**
- * The last card on the series shelf: the way out to the whole archive. Same
- * shell as a FolderCard, so it sits in the grid as a peer; its well is navy
+ * The last tile on the series shelf: the way out to the whole archive. The
+ * same tall tile as a FolderCard, so it sits in the grid as a peer; it is navy
  * and holds the arrow, which is what marks it as the action rather than one
  * more series.
  */
@@ -14,9 +14,9 @@ export function BrowseAllFolderCard() {
   return (
     <Link
       to="/materials/?q="
-      className="group block h-full rounded-[24px] border border-border/70 bg-surface p-2 outline-none transition-colors duration-200 hover:border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="group block h-full rounded-[20px] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
     >
-      <div className="flex aspect-[16/10] items-center justify-center rounded-[18px] bg-primary-surface">
+      <div className="flex aspect-[4/5] items-center justify-center rounded-[20px] bg-primary-surface">
         <span
           aria-hidden="true"
           className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-primary transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
@@ -24,7 +24,7 @@ export function BrowseAllFolderCard() {
           <ArrowRight className="h-5 w-5" />
         </span>
       </div>
-      <div className="px-2 pb-1.5 pt-3.5">
+      <div className="pt-3">
         <h3 className="text-[17px] font-normal leading-6 text-primary">
           {t("materialsLanding.grid.browseAll", "Browse all series")}
         </h3>
