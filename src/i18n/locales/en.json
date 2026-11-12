@@ -1200,8 +1200,18 @@
   },
   "notFound": {
     "title": "404",
-    "message": "Oops! Page not found",
-    "returnHome": "Return to Home"
+    "returnHome": "Or go back to the home page",
+    "eyebrow": "Page not found",
+    "heading": "This page isn't in the archive.",
+    "line": "The link may be old or mistyped. The case, person or document you wanted is probably still here — search for it.",
+    "searchLabel": "Search the archive",
+    "searchPlaceholder": "Search cases, people and documents",
+    "ways": {
+      "search": "Search the archive",
+      "cases": "Cases",
+      "materials": "Documents",
+      "courtcases": "Court cases"
+    }
   },
   "common": {
     "changeLanguage": "Change language",
