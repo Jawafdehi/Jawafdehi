@@ -2596,6 +2596,11 @@
             "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
           },
           {
+            "id": "court-party-names",
+            "question": "Can I look up who is party to a court case?",
+            "answer": "Yes, one case at a time. Look up a case by its number and you'll see its parties — the same names the court publishes on its own website.\n\nWhen you **browse, search or query** court records in bulk, party names are shown only for **corruption-related cases** (the Special Court, corruption charges in any court, and cases cited by a published Jawafdehi case). For other cases — ordinary civil and criminal matters, writs — names are replaced with placeholders such as “plaintiff-1”, so the archive can't be used to list everyone who has ever been in court. In sensitive cases (sexual offences, domestic violence, divorce, trafficking) names are never shown in lists, searches or queries, even when the case would otherwise qualify; people the court itself has anonymised stay anonymised everywhere.\n\nSearching every court party by name is limited to Jawafdehi staff, and staff searches are logged."
+          },
+          {
             "id": "free-forever",
             "question": "Is it free? Will it ever have a paywall?",
             "answer": "It's **free, forever** — no subscriptions, no paywalls, no premium tiers, no ads. Public accountability infrastructure should be free to everyone who needs it."
@@ -2774,7 +2779,7 @@
   "mcp": {
     "meta": {
       "title": "Connect to Jawafdehi MCP",
-      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
+      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL; sign in with a free Jawafdehi account."
     },
     "hero": {
       "eyebrow": "Model Context Protocol",
@@ -2803,7 +2808,8 @@
     },
     "tools": {
       "title": "What your AI can read",
-      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only."
+      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, read-only queries over the court records, and a Bikram Sambat date converter. Every public tool is read-only.",
+      "courtNames": "Court records: anyone can look up a single case by its number and see its parties, as on the court's own website. In lists, searches and queries, party names are shown for corruption-related cases; for other cases they are replaced with placeholders such as “plaintiff-1”. Searching every court party by name is for Jawafdehi staff only."
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
