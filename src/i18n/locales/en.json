@@ -3115,6 +3115,12 @@
       }
     },
     "copy": "Copy",
-    "whatsNewHeading": "What's new in likhit"
+    "whatsNewHeading": "What's new in likhit",
+    "pitch": {
+      "titleA": "Nepali PDFs in.",
+      "titleB": "Clean Markdown out.",
+      "body": "likhit repairs broken Devanagari, keeps the tables, reads the scans, and takes personal details out before anything is written.",
+      "redacted": "# citizenship numbers: redacted"
+    }
   }
 }

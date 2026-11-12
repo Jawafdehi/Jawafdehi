@@ -152,6 +152,65 @@ function OcrRecipes() {
   );
 }
 
+/**
+ * The closing pitch, in the poster-card form (a framed card: art on the left
+ * holding a small code window, the promise on the right, the product mark and
+ * its URL at the foot). The art is likhit's own lines shader on navy, so the
+ * card belongs to this page; the window shows one real run and its output.
+ */
+function PitchCard() {
+  const { t } = useTranslation();
+  return (
+    <section aria-labelledby="likhit-pitch-title" className="pt-16 md:pt-24">
+      <div className="layout-container">
+        <div className="grid grid-cols-1 gap-4 rounded-[32px] border border-border/70 bg-surface p-3 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] md:p-4">
+          <div className="relative isolate flex min-h-[22rem] items-center justify-center overflow-hidden rounded-[24px] bg-primary-surface p-6 md:min-h-[30rem] md:p-10">
+            <div aria-hidden="true" className="absolute inset-0 -z-10">
+              <ShaderBackdrop design="lines" />
+            </div>
+            <div aria-hidden="true" className="w-full max-w-md rounded-xl bg-surface p-5 font-mono text-[12px] leading-6 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.5)] md:text-[13px]">
+              <p className="text-primary">
+                <span className="select-none text-muted-foreground">$ </span>pip install likhit
+              </p>
+              <p className="text-primary">
+                <span className="select-none text-muted-foreground">$ </span>likhit-save notice.pdf --out notice.md
+              </p>
+              <p className="mt-3 text-muted-foreground"># notice.md</p>
+              <p className="text-accent"># अख्तियार दुरुपयोग अनुसन्धान आयोग</p>
+              <p className="text-primary">## प्रेस विज्ञप्ति</p>
+              <p className="mt-2 h-1.5 w-[85%] rounded-full bg-border" />
+              <p className="mt-2 h-1.5 w-[70%] rounded-full bg-border" />
+              <p className="mt-3 text-muted-foreground">{t("likhit.pitch.redacted")}</p>
+            </div>
+          </div>
+          <div className="flex flex-col p-4 md:p-8">
+            <h2
+              id="likhit-pitch-title"
+              className="font-home-display text-[clamp(2.2rem,3.6vw,3.25rem)] leading-[1.05] text-primary [:root[lang=ne]_&]:leading-[1.25]"
+            >
+              {t("likhit.pitch.titleA")}
+              <br />
+              {t("likhit.pitch.titleB")}
+            </h2>
+            <p className="mt-auto max-w-md pt-12 text-lg leading-8 text-muted-foreground md:text-xl">{t("likhit.pitch.body")}</p>
+            <div className="mt-8 flex items-center justify-between gap-6">
+              <span className="font-home-display text-2xl text-primary">likhit</span>
+              <a
+                href={PYPI_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                pypi.org/project/likhit
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SectionTitle({ id, children }: Readonly<{ id: string; children: ReactNode }>) {
   return (
     <h2 id={id} className="font-home-section-title text-primary">
@@ -310,6 +369,8 @@ const Likhit = () => {
             <OcrRecipes />
           </div>
         </section>
+
+        <PitchCard />
 
         <WhatsNewSection id="likhit-whats-new" heading={t("likhit.whatsNewHeading")} tag="likhit" />
         <div className="pb-16 md:pb-24" />
