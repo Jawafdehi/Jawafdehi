@@ -659,14 +659,7 @@
     "hero": {
       "eyebrow": "Our Products",
       "openSource": "Open source,",
-      "freeToUse": "free to use",
-      "builtForCivicGood": "built for civic good",
-      "description": "The components we build are open source and free to use. The full stack is public on GitHub — built by Nepali volunteers and made available to anyone who wants to build on top of it.",
-      "github": "GitHub"
-    },
-    "stack": {
-      "lead": "Four tools.",
-      "rest": "One open archive behind them."
+      "freeToUse": "free to use"
     },
     "source": "Source on GitHub",
     "preview": {
@@ -677,22 +670,18 @@
     "items": {
       "mcp": {
         "kind": "MCP server",
-        "description": "Lets Claude, ChatGPT and other AI tools search the case archive, the people and offices we track, and court records.",
         "cta": "Connect your AI"
       },
       "likhit": {
         "kind": "Python library",
-        "description": "Turns Nepali PDFs, scans and old Word files into clean Markdown.",
         "cta": "Install likhit"
       },
       "api": {
         "kind": "REST API",
-        "description": "The cases, entities and court records behind the site, open to read from your own code.",
         "cta": "Read the API docs"
       },
       "chat": {
         "kind": "Web app",
-        "description": "Ask about cases, people and patterns in plain language, and get answers that cite the record.",
         "cta": "Start a chat"
       }
     }

@@ -5,8 +5,6 @@ import { Link } from "react-router-dom";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Seo } from "@/components/Seo";
-import { ArrowLink } from "@/components/ui/arrow-link";
-import { SplitHeading } from "@/components/ui/split-heading";
 import { CHAT_URL } from "@/lib/external-links";
 import { API_BASE_URL } from "@/services/http";
 import { SITE_URL } from "@/utils/seo";
@@ -135,8 +133,7 @@ function ProductCard({ product }: Readonly<{ product: Product }>) {
       <div className="flex flex-1 flex-col px-4 pb-4 pt-6 md:px-5">
         <p className="text-sm text-muted-foreground">{t(`products.items.${key}.kind`)}</p>
         <h2 className="mt-1 text-[26px] font-normal leading-tight tracking-[-0.01em] text-primary">{name}</h2>
-        <p className="mt-2 max-w-lg text-[15px] leading-6 text-muted-foreground">{t(`products.items.${key}.description`)}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-x-6 gap-y-2 pt-6">
+        <div className="mt-auto flex flex-wrap items-center gap-x-6 gap-y-2 pt-5">
           {to ? (
             <Link to={to} className={`${LINK} font-medium text-primary`}>
               {cta}
@@ -171,59 +168,35 @@ const OurProducts = () => {
       />
 
       <main id="main-content" className="flex-1">
-        {/* Hero: the navy stage and diamond field the home page opens on, left-
-            aligned like /mcp and /materials. The navbar is light-on-dark over
-            it (Navbar.tsx, DARK_HERO_PATHS). */}
-        <section
-          id="products-hero"
-          aria-labelledby="products-title"
-          className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]"
-        >
-          <div aria-hidden="true" className="absolute inset-0 -z-10">
-            <ShaderBackdrop design="diamond" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface)/0.9)_40%,transparent_75%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px)]" />
+        {/* A light hero like /whats-new: the archive's diamond field inverted
+            onto the white page and faded toward the title, one short label and
+            one line. The products below say the rest. */}
+        <section aria-labelledby="products-title" className="relative isolate overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="absolute inset-y-0 right-0 -z-10 w-full md:w-2/3 [mask-image:linear-gradient(to_left,#000_35%,transparent)]"
+          >
+            <ShaderBackdrop design="diamondLight" />
           </div>
-
-          <div className="layout-container flex min-h-[min(640px,calc(100svh-76px))] flex-col justify-center pb-16 pt-12 md:pb-20">
-            <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
+          <div className="layout-container py-16 md:py-24">
+            <p className="text-sm uppercase tracking-wider text-muted-foreground [:root[lang=ne]_&]:normal-case [:root[lang=ne]_&]:tracking-normal">
               {t("products.hero.eyebrow")}
             </p>
-            <h1
-              id="products-title"
-              className="font-home-display mt-5 max-w-[18ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[22ch]"
-            >
+            <h1 id="products-title" className="font-home-display mt-4 text-4xl text-primary sm:text-5xl md:text-6xl">
               {t("products.hero.openSource")}{" "}
-              <span className="text-[hsl(var(--accent-on-dark))]">{t("products.hero.freeToUse")}</span>{" "}
-              {t("products.hero.builtForCivicGood")}
+              <span className="text-accent">{t("products.hero.freeToUse")}</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-xl leading-8 text-primary-foreground/80 md:text-2xl md:leading-9">
-              {t("products.hero.description")}
-            </p>
-            <div className="mt-10">
-              <ArrowLink href="https://github.com/Jawafdehi" tone="light">
-                {t("products.hero.github")}
-              </ArrowLink>
-            </div>
           </div>
         </section>
 
-        {/* The products, each shown in use. */}
-        <section id="stack" aria-labelledby="stack-heading" className="py-16 md:py-24">
-          <div className="layout-container">
-            <SplitHeading
-              id="stack-heading"
-              lead={t("products.stack.lead")}
-              rest={t("products.stack.rest")}
-            />
-            <ul className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {PRODUCTS.map((product) => (
-                <li key={product.key}>
-                  <ProductCard product={product} />
-                </li>
-              ))}
-            </ul>
-          </div>
+        <section id="stack" aria-label={t("products.hero.eyebrow")} className="pb-20 md:pb-28">
+          <ul className="layout-container grid grid-cols-1 gap-4 md:grid-cols-2">
+            {PRODUCTS.map((product) => (
+              <li key={product.key}>
+                <ProductCard product={product} />
+              </li>
+            ))}
+          </ul>
         </section>
       </main>
     </div>
