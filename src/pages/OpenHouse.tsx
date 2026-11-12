@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import {
+  ArrowRight,
   Clock,
   FileWarning,
   HandHeart,
@@ -16,6 +17,8 @@ import {
 import { Seo } from "@/components/Seo";
 import { OpenHouseSignupForm } from "@/components/open-house/signup-form";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { Panel } from "@/components/ui/panel";
 import { PageHero } from "@/components/ui/page-hero";
 import { JAWAFDEHI_OPEN_HOUSE } from "@/config/constants";
 import { SITE_URL } from "@/utils/seo";
@@ -170,14 +173,13 @@ const OpenHouse = () => {
           eyebrow={t("openHouse.hero.eyebrow")}
           title={t("openHouse.hero.title")}
           description={t("openHouse.hero.description")}
-          actionsClassName="flex flex-col items-center justify-center gap-3 sm:flex-row"
           actions={
             <>
               {/* Register leads, because most arrivals are between sessions and
                   the useful thing for them is getting told about the next one
                   for their region. A plain in-page anchor, so it works before
                   hydration and is a real link for keyboard and screen readers. */}
-              <Button asChild size="lg" className="font-semibold">
+              <Button asChild size="lg">
                 <a href={signupHref(pathname)} onClick={scrollToSignup}>
                   <UserPlus className="h-5 w-5" aria-hidden="true" />
                   {t("openHouse.hero.register")}
@@ -187,7 +189,7 @@ const OpenHouse = () => {
                   whose link is permanent, so this stays reachable at all times:
                   someone arriving mid-session needs it, and between sessions
                   Zoom itself says the host has not started the meeting. */}
-              <Button asChild size="lg" variant="secondary" className="font-semibold">
+              <Button asChild size="lg" variant="secondary">
                 <a
                   href={JAWAFDEHI_OPEN_HOUSE.zoomUrl}
                   target="_blank"
@@ -201,111 +203,91 @@ const OpenHouse = () => {
           }
         />
 
-        {/* When it runs. The time moves every week, so the page deliberately
-            promises no fixed schedule — see the requirements note in meta. */}
-        <section id="when" className="bg-muted/10 py-12 md:py-14">
-          <div className="layout-container">
-            <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
-              <Clock className="h-8 w-8 text-primary" aria-hidden="true" />
-              <h2 className="text-2xl font-bold text-foreground md:text-3xl">
-                {t("openHouse.when.title")}
-              </h2>
-              <p className="text-base leading-7 text-foreground/70">
-                {t("openHouse.when.description")}
-              </p>
-              <p className="text-base leading-7 text-foreground/70">
-                {t("openHouse.when.waitingRoom")}
-              </p>
+        {/* When it runs, and the sign-up beside it. The time moves every week,
+            so the page deliberately promises no fixed schedule — see the
+            requirements note in meta. The form pairs with the always-live Join
+            button above: it serves someone who wants to be told about the next
+            session for their region. scroll-mt clears the sticky navbar when
+            the hero's Register button jumps here. */}
+        <section className="pt-8 md:pt-12">
+          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <div id="when">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-primary">
+                <Clock className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <h2 className="font-home-section-title mt-6 text-primary">{t("openHouse.when.title")}</h2>
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("openHouse.when.description")}</p>
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("openHouse.when.waitingRoom")}</p>
             </div>
-          </div>
-        </section>
-
-        {/* Express interest. Paired with the always-live Join button above:
-            the page serves both someone arriving mid-session and someone who
-            wants to be told about the next one for their region. */}
-        {/* scroll-mt clears the sticky navbar, which would otherwise cover the
-            eyebrow and heading when the hero's Register button jumps here. */}
-        <section id="signup" className="scroll-mt-24 py-12 md:py-14">
-          <div className="layout-container">
-            <div className="mx-auto max-w-xl">
-              <div className="text-center">
-                <p className="font-eyebrow mb-3">{t("openHouse.signup.eyebrow")}</p>
-                <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-                  {t("openHouse.signup.title")}
-                </h2>
-                <p className="mt-4 text-base leading-7 text-foreground/70">
-                  {t("openHouse.signup.description")}
-                </p>
-              </div>
-              <div className="mt-8 rounded-lg border border-border bg-card p-6 md:p-8">
+            <div id="signup" className="scroll-mt-24 rounded-[28px] border border-border/70 bg-surface p-6 md:p-8">
+              <Eyebrow>{t("openHouse.signup.eyebrow")}</Eyebrow>
+              <h2 className="font-home-display mt-4 text-3xl text-primary md:text-4xl">{t("openHouse.signup.title")}</h2>
+              <p className="mt-3 text-lg leading-8 text-muted-foreground">{t("openHouse.signup.description")}</p>
+              <div className="mt-6">
                 <OpenHouseSignupForm />
               </div>
             </div>
           </div>
         </section>
 
-        {/* What we talk about */}
-        <section id="topics" className="bg-muted/10 py-12 md:py-14">
+        {/* What we talk about: the redesign's grey panels. */}
+        <section id="topics" aria-labelledby="topics-title" className="pt-16 md:pt-24">
           <div className="layout-container">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="font-eyebrow mb-3">{t("openHouse.topics.eyebrow")}</p>
-              <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-                {t("openHouse.topics.title")}
-              </h2>
-            </div>
-            <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-3">
+            <Eyebrow>{t("openHouse.topics.eyebrow")}</Eyebrow>
+            <h2 id="topics-title" className="font-home-section-title mt-4 text-primary">
+              {t("openHouse.topics.title")}
+            </h2>
+            <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
               {topics.map((topic) => {
                 const Icon = topic.icon;
                 return (
-                  <div
-                    key={topic.titleKey}
-                    className="rounded-lg border border-border bg-card p-6"
-                  >
-                    <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
-                    <h3 className="mt-4 text-lg font-semibold text-foreground">
-                      {t(topic.titleKey)}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-foreground/70">
-                      {t(topic.descKey)}
-                    </p>
-                  </div>
+                  <li key={topic.titleKey}>
+                    <Panel className="min-h-[13rem]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-primary">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <h3 className="mt-auto pt-8 text-xl font-normal leading-snug text-primary">{t(topic.titleKey)}</h3>
+                      <p className="mt-2 text-base leading-7 text-muted-foreground">{t(topic.descKey)}</p>
+                    </Panel>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
         </section>
 
-        {/* Donate / volunteer / report */}
-        <section id="next-steps" className="py-12 md:py-14">
+        {/* Donate / volunteer / report: hairline link cards with an arrow. */}
+        <section id="next-steps" aria-labelledby="next-steps-title" className="pb-20 pt-16 md:pb-28 md:pt-24">
           <div className="layout-container">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-                {t("openHouse.nextSteps.title")}
-              </h2>
-              <p className="mt-4 text-base leading-7 text-foreground/70">
-                {t("openHouse.nextSteps.description")}
-              </p>
-            </div>
-            <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-3">
+            <h2 id="next-steps-title" className="font-home-section-title text-primary">
+              {t("openHouse.nextSteps.title")}
+            </h2>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("openHouse.nextSteps.description")}</p>
+            <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
               {nextSteps.map((step) => {
                 const Icon = step.icon;
                 return (
-                  <Link
-                    key={step.to}
-                    to={step.to}
-                    className="flex flex-col items-center rounded-lg border border-border bg-card p-6 text-center transition-colors hover:border-primary"
-                  >
-                    <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
-                    <span className="mt-4 text-lg font-semibold text-foreground">
-                      {t(step.labelKey)}
-                    </span>
-                    <span className="mt-2 text-sm leading-6 text-foreground/70">
-                      {t(step.descKey)}
-                    </span>
-                  </Link>
+                  <li key={step.to}>
+                    <Link
+                      to={step.to}
+                      className="group flex h-full flex-col rounded-[28px] border border-border/70 bg-surface p-6 transition-[transform,border-color] duration-150 ease-out hover:border-border active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100"
+                    >
+                      <span className="flex items-center justify-between">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-primary">
+                          <Icon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <ArrowRight
+                          className="h-5 w-5 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-primary"
+                          aria-hidden="true"
+                        />
+                      </span>
+                      <span className="mt-8 text-xl text-primary">{t(step.labelKey)}</span>
+                      <span className="mt-2 text-base leading-7 text-muted-foreground">{t(step.descKey)}</span>
+                    </Link>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
         </section>
       </main>
