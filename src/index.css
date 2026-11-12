@@ -647,3 +647,9 @@ All colors MUST be HSL.
     display: none;
   }
 }
+
+/* The likhit OCR switcher's progress bar: fills its dot over the dwell time. */
+@keyframes ocr-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}

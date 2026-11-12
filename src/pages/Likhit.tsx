@@ -7,7 +7,7 @@
 // Content first came from PR #444 (which typeset the page in likhit's own
 // benchmark design); this version keeps that content on the site's system.
 import { ArrowRight, ArrowUpRight, Github, Globe, Package } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
@@ -54,6 +54,9 @@ const CLI_EXAMPLES = [
 // One recipe per place the OCR endpoint can live. They differ only in the
 // three environment variables, which is the point the section makes, so the
 // commands are written out in full.
+/** How long each OCR setup shows before the switcher moves on. */
+const OCR_DWELL_MS = 6000;
+
 const OCR_RECIPES = [
   {
     key: "local",
@@ -126,9 +129,35 @@ function InstallLine() {
 function OcrRecipes() {
   const { t } = useTranslation();
   const [active, setActive] = useState<(typeof OCR_RECIPES)[number]["key"]>("local");
+  // Advances on its own every OCR_DWELL_MS; hover or focus pauses it, a click
+  // hands it to the reader for good, and reduced motion never starts it.
+  const [paused, setPaused] = useState(false);
+  const [manual, setManual] = useState(false);
+  const [reduced] = useState(
+    () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const auto = !manual && !paused && !reduced;
+  useEffect(() => {
+    if (!auto) return;
+    const id = window.setTimeout(() => {
+      const i = OCR_RECIPES.findIndex(({ key }) => key === active);
+      setActive(OCR_RECIPES[(i + 1) % OCR_RECIPES.length].key);
+    }, OCR_DWELL_MS);
+    return () => window.clearTimeout(id);
+  }, [active, auto]);
+  const choose = (key: (typeof OCR_RECIPES)[number]["key"]) => {
+    setManual(true);
+    setActive(key);
+  };
   const recipe = OCR_RECIPES.find(({ key }) => key === active) ?? OCR_RECIPES[0];
   return (
-    <div className="min-w-0">
+    <div
+      className="min-w-0"
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       <div
         role="group"
         aria-label={t("likhit.ocr.title")}
@@ -139,7 +168,7 @@ function OcrRecipes() {
             key={key}
             type="button"
             aria-pressed={key === active}
-            onClick={() => setActive(key)}
+            onClick={() => choose(key)}
             className={cn(
               "h-10 rounded-full px-4 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               key === active
@@ -154,6 +183,34 @@ function OcrRecipes() {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-10">
         <p className="text-[15px] leading-7 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
         <CopyBlock value={recipe.commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(recipe.commands)} />
+      </div>
+      {/* Progress: the active dot stretches into a bar that fills over the dwell
+          time while it advances on its own, and sits full once the reader has
+          taken over. Each dot also jumps to its setup. */}
+      <div aria-hidden="true" className="mt-6 flex items-center justify-center gap-2">
+        {OCR_RECIPES.map(({ key }) => (
+          <button
+            key={key}
+            type="button"
+            tabIndex={-1}
+            onClick={() => choose(key)}
+            className={cn(
+              "relative h-1.5 overflow-hidden rounded-full bg-border transition-[width] duration-300 ease-out",
+              key === active ? "w-8" : "w-1.5 hover:bg-muted-foreground/40",
+            )}
+          >
+            {key === active ? (
+              <span
+                key={`${active}-${auto}`}
+                className={cn(
+                  "absolute inset-y-0 left-0 rounded-full bg-primary-surface",
+                  auto ? "animate-[ocr-progress_linear_forwards]" : "w-full",
+                )}
+                style={auto ? { animationDuration: `${OCR_DWELL_MS}ms` } : undefined}
+              />
+            ) : null}
+          </button>
+        ))}
       </div>
     </div>
   );
