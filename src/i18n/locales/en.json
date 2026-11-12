@@ -1211,7 +1211,15 @@
       "courtcases": "Court cases",
       "updates": "Updates"
     },
-    "waysLabel": "Elsewhere on Jawafdehi"
+    "waysLabel": "Elsewhere on Jawafdehi",
+    "eyebrow": "Error 404",
+    "card": {
+      "archive": "Archive record",
+      "number": "Record no.",
+      "status": "Status",
+      "missing": "Not on file",
+      "path": "Requested"
+    }
   },
   "common": {
     "changeLanguage": "Change language",
