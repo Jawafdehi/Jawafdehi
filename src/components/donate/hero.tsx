@@ -49,10 +49,10 @@ const CONTACT_CHANNELS: readonly {
 function Stat({ value, label }: Readonly<{ value?: number; label: string }>) {
   return (
     <div>
-      <div className="text-2xl font-bold text-primary-foreground">
+      <div className="font-home-display text-3xl tabular-nums text-primary-foreground">
         {typeof value === "number" ? value.toLocaleString() : "—"}
       </div>
-      <div className="mt-0.5 text-xs font-medium uppercase tracking-wide text-primary-foreground/60">
+      <div className="mt-1 text-sm text-primary-foreground/60">
         {label}
       </div>
     </div>
@@ -87,7 +87,7 @@ export function DonateHero() {
           <div>
             <h1
               id="donate-hero-title"
-              className="text-4xl font-bold leading-[1.08] text-primary-foreground md:text-5xl"
+              className="font-home-display text-4xl leading-[1.08] text-primary-foreground md:text-[3.5rem]"
             >
               {/* Three slots so the amber emphasis can sit mid-sentence in
                   either language. Nepali needs no lead-in — its verb phrase
