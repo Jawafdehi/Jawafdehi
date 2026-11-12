@@ -120,19 +120,24 @@ function InstallLine() {
 }
 
 /**
- * The three OCR setups, one shown at a time, chosen with a segmented control: a
- * grey track with the chosen setup raised white, which reads as "pick one"
- * where loose text pills did not. The setup's line sits beside its commands.
+ * The three OCR setups as a slow carousel (the Wild and Retool step pattern):
+ * a light card on the mist shader, the setup's name as a title with its line
+ * under it on the left and its commands on white on the right, and the
+ * progress dots under the card.
  */
 function OcrRecipes() {
   const { t } = useTranslation();
-  const [active, setActive] = useState<(typeof OCR_RECIPES)[number]["key"]>("local");
+  const [active, setActive] =
+    useState<(typeof OCR_RECIPES)[number]["key"]>("local");
   // Advances on its own every OCR_DWELL_MS; hover or focus pauses it, a click
   // hands it to the reader for good, and reduced motion never starts it.
   const [paused, setPaused] = useState(false);
   const [manual, setManual] = useState(false);
   const [reduced] = useState(
-    () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () =>
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const auto = !manual && !paused && !reduced;
   useEffect(() => {
@@ -147,66 +152,92 @@ function OcrRecipes() {
     setManual(true);
     setActive(key);
   };
-  const recipe = OCR_RECIPES.find(({ key }) => key === active) ?? OCR_RECIPES[0];
   return (
     <div
-      className="min-w-0"
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
+      <div className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface">
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <ShaderBackdrop design="mist" />
+        </div>
+        {/* All three setups sit in the same grid cell and only the active one is
+          shown, so the card is always as tall as the tallest and never jumps
+          when it moves on. */}
+        <div className="grid p-6 md:p-10">
+          {OCR_RECIPES.map(({ key, commands }) => {
+            const shown = key === active;
+            return (
+              <div
+                key={key}
+                data-active={shown}
+                aria-hidden={!shown}
+                // React 18's types predate `inert`; the DOM takes it as an attribute.
+                {...((shown ? {} : { inert: "" }) as Record<string, string>)}
+                className={cn(
+                  "col-start-1 row-start-1 grid grid-cols-1 gap-8 transition-opacity duration-300 ease-out motion-reduce:transition-none lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-12",
+                  shown ? "opacity-100" : "invisible opacity-0",
+                )}
+              >
+                <div className="min-w-0">
+                  <h3 className="font-home-display text-[clamp(1.9rem,3vw,2.75rem)] leading-[1.08] text-primary [:root[lang=ne]_&]:leading-[1.28]">
+                    {t(`likhit.ocr.${key}.name`)}
+                  </h3>
+                  <p className="mt-4 max-w-md text-lg leading-8 text-muted-foreground">
+                    {t(`likhit.ocr.${key}.body`)}
+                  </p>
+                </div>
+                <CopyBlock
+                  value={commands}
+                  label={t("likhit.ocr.copyRecipe")}
+                  lines={blockLines(commands)}
+                  className="mt-0 self-stretch border-border/60 bg-surface/90 backdrop-blur-sm [&_pre]:text-[15px] [&_pre]:leading-8 lg:w-full"
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {/* Progress, under the card: the active dot stretches into a bar that
+        fills over the dwell time while it advances on its own, and sits full
+        once the reader has taken over. Each dot jumps to its setup. */}
       <div
         role="group"
         aria-label={t("likhit.ocr.title")}
-        className="inline-flex max-w-full flex-wrap gap-1 rounded-full bg-muted p-1"
+        className="mt-5 flex items-center justify-center gap-1"
       >
         {OCR_RECIPES.map(({ key }) => (
           <button
             key={key}
             type="button"
             aria-pressed={key === active}
+            aria-label={t(`likhit.ocr.${key}.name`)}
             onClick={() => choose(key)}
-            className={cn(
-              "h-10 rounded-full px-4 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              key === active
-                ? "bg-surface text-primary shadow-[0_1px_3px_rgba(14,31,59,0.14)]"
-                : "text-muted-foreground hover:text-primary",
-            )}
+            className="group flex h-6 items-center rounded-full px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {t(`likhit.ocr.${key}.name`)}
-          </button>
-        ))}
-      </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-10">
-        <p className="text-base leading-7 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
-        <CopyBlock value={recipe.commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(recipe.commands)} />
-      </div>
-      {/* Progress: the active dot stretches into a bar that fills over the dwell
-          time while it advances on its own, and sits full once the reader has
-          taken over. Each dot also jumps to its setup. */}
-      <div aria-hidden="true" className="mt-6 flex items-center justify-center gap-2">
-        {OCR_RECIPES.map(({ key }) => (
-          <button
-            key={key}
-            type="button"
-            tabIndex={-1}
-            onClick={() => choose(key)}
-            className={cn(
-              "relative h-1.5 overflow-hidden rounded-full bg-border transition-[width] duration-300 ease-out",
-              key === active ? "w-8" : "w-1.5 hover:bg-muted-foreground/40",
-            )}
-          >
-            {key === active ? (
-              <span
-                key={`${active}-${auto}`}
-                className={cn(
-                  "absolute inset-y-0 left-0 rounded-full bg-accent",
-                  auto ? "animate-[ocr-progress_linear_forwards]" : "w-full",
-                )}
-                style={auto ? { animationDuration: `${OCR_DWELL_MS}ms` } : undefined}
-              />
-            ) : null}
+            <span
+              className={cn(
+                "relative block h-1.5 overflow-hidden rounded-full bg-accent/15 transition-[width,background-color] duration-300 ease-out",
+                key === active ? "w-8" : "w-1.5 group-hover:bg-accent/30",
+              )}
+            >
+              {key === active ? (
+                <span
+                  key={`${active}-${auto}`}
+                  className={cn(
+                    "absolute inset-y-0 left-0 rounded-full bg-accent/50",
+                    auto ? "animate-[ocr-progress_linear_forwards]" : "w-full",
+                  )}
+                  style={
+                    auto
+                      ? { animationDuration: `${OCR_DWELL_MS}ms` }
+                      : undefined
+                  }
+                />
+              ) : null}
+            </span>
           </button>
         ))}
       </div>
@@ -433,13 +464,11 @@ const Likhit = () => {
           </div>
         </section>
 
-        {/* ── OCR: a different shape from the two sections above: the title
-            and its line across the top, then the setups full width. ── */}
+        {/* ── OCR: the title, then the setups as one card. ── */}
         <section aria-labelledby="likhit-ocr-title" className="pt-16 md:pt-24">
           <div className="layout-container">
             <SectionTitle id="likhit-ocr-title">{t("likhit.ocr.title")}</SectionTitle>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("likhit.ocr.short")}</p>
-            <div className="mt-8 rounded-[28px] border border-border/70 p-5 md:p-7">
+            <div className="mt-8">
               <OcrRecipes />
             </div>
           </div>

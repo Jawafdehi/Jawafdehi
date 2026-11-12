@@ -113,18 +113,21 @@ describe("the likhit landing page", () => {
     );
     expect(pills).toHaveLength(3);
     expect(within(section).getAllByRole("button", { name: i18n.t("likhit.ocr.copyRecipe") })).toHaveLength(1);
-    expect(section.textContent).toContain("ollama pull qwen2.5vl:7b");
+    // Every setup is rendered (so the card keeps one size); only the active
+    // one is exposed.
+    const shown = () => section.querySelector('[data-active="true"]')?.textContent ?? "";
+    expect(shown()).toContain("ollama pull qwen2.5vl:7b");
 
     act(() => {
       within(section).getByRole("button", { name: i18n.t("likhit.ocr.bedrock.name") }).click();
     });
-    expect(section.textContent).toContain("litellm --model bedrock");
-    expect(section.textContent).not.toContain("ollama pull");
+    expect(shown()).toContain("litellm --model bedrock");
+    expect(shown()).not.toContain("ollama pull");
 
     act(() => {
       within(section).getByRole("button", { name: i18n.t("likhit.ocr.hosted.name") }).click();
     });
-    expect(section.textContent).toContain("GEMINI_API_KEY");
+    expect(shown()).toContain("GEMINI_API_KEY");
   });
 
   // A <Trans> tag that the locale file spells differently from the page's

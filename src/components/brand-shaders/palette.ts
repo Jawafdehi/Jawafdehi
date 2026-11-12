@@ -8,8 +8,10 @@
 
 /** diamond: the archive (home). diamondLight: the same field inverted, light
  * blue on the white page with no navy (/whats-new). grain: the MCP. lines:
- * likhit, a wave dither that reads like ruled lines of text. */
-export type ShaderDesign = "diamond" | "diamondLight" | "grain" | "lines";
+ * likhit, a wave dither that reads like ruled lines of text. mist: a soft
+ * white mesh with a blush of crimson and a wash of pale blue, for light cards
+ * (likhit's OCR setups). */
+export type ShaderDesign = "diamond" | "diamondLight" | "grain" | "lines" | "mist";
 
 /** Tints with no CSS token. */
 export const SHADER_TINTS = {
@@ -22,4 +24,8 @@ export const SHADER_TINTS = {
   /** The grain's red: a muted, darkened crimson, so the pattern leads and the
    * colour stays in the background. */
   ember: "#6B1F2A",
+  /** mist's blush: the crimson thinned almost to white. */
+  blush: "#F8E1E5",
+  /** mist's pale blue. */
+  haze: "#DDE7F6",
 } as const;

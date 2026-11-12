@@ -62,9 +62,15 @@ export function CopyBlock({
   value,
   label,
   lines,
-}: Readonly<{ value: string; label: string; lines: ReadonlyArray<{ text: string; prompt?: boolean; muted?: boolean }> }>) {
+  className,
+}: Readonly<{
+  value: string;
+  label: string;
+  lines: ReadonlyArray<{ text: string; prompt?: boolean; muted?: boolean }>;
+  className?: string;
+}>) {
   return (
-    <div className="mt-3 inline-flex max-w-full items-start gap-3 rounded-3xl border border-border bg-muted py-3 pl-5 pr-2">
+    <div className={cn("mt-3 inline-flex max-w-full items-start gap-3 rounded-3xl border border-border bg-muted py-3 pl-5 pr-2", className)}>
       <pre className="min-w-0 flex-1 overflow-x-auto whitespace-pre py-1 font-mono text-sm leading-7 text-foreground">
         {lines.map(({ text, prompt, muted }, index) => (
           // Lines repeat (blank ones above all), so the index is the key.

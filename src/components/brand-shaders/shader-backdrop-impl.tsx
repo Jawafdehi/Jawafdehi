@@ -9,7 +9,9 @@
 //   grain   — the MCP product page: a grainy navy glow with a muted ember red.
 //             Heavier, so its resolution is capped and weak devices get a CSS
 //             texture instead (see shader-backdrop.tsx).
-import { Dithering, GrainGradient } from "@paper-design/shaders-react";
+//   mist    — light cards: a slow white mesh with a crimson blush and a pale
+//             blue wash. Never on navy, so it is unlike the footer's diamond.
+import { Dithering, GrainGradient, MeshGradient } from "@paper-design/shaders-react";
 
 import { SHADER_TINTS, type ShaderDesign } from "@/components/brand-shaders/palette";
 
@@ -46,6 +48,19 @@ export default function ShaderBackdropImpl({
         size={3}
         scale={0.7}
         speed={speed(0.12)}
+      />
+    );
+  }
+
+  if (design === "mist") {
+    const white = token("--surface");
+    return (
+      <MeshGradient
+        style={FILL}
+        colors={[white, SHADER_TINTS.blush, white, SHADER_TINTS.haze]}
+        distortion={0.6}
+        swirl={0.15}
+        speed={speed(0.15)}
       />
     );
   }
