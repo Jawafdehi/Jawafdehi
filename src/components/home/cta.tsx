@@ -2,7 +2,7 @@ import { Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FaDiscord } from "react-icons/fa";
 
-import { Button } from "@/components/ui/button";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
@@ -10,69 +10,44 @@ type CtaProps = {
   className?: string;
 };
 
+/**
+ * The "come and help" close on /volunteer and /team: one light card on the
+ * mist shader (white with a blush of crimson and a wash of blue, the likhit
+ * OCR card's ground), a display title, one line, and two pills: Discord in
+ * navy, email in white on a hairline.
+ */
 export function Cta({ className }: Readonly<CtaProps>) {
   const { t } = useTranslation();
   return (
-    <section
-      id="contribute"
-      className={cn(
-        "layout-container border-b border-border bg-background py-14 md:py-18 lg:py-20",
-        className,
-      )}
-      aria-labelledby="contribute-title"
-    >
-      <div className="relative isolate overflow-hidden rounded-lg bg-[linear-gradient(135deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface))_34%,hsl(var(--accent))_100%)] px-6 py-10 shadow-xl shadow-accent/10 dark:bg-[linear-gradient(135deg,hsl(215_70%_12%)_0%,hsl(220_38%_18%)_42%,hsl(354_66%_37%)_100%)] sm:px-10 md:px-12 md:py-12">
-        <div
-          aria-hidden="true"
-          className="absolute -right-20 -top-28 -z-10 h-80 w-80 rounded-full bg-secondary/30 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_20%,hsl(var(--secondary)/0.24),transparent_34%),linear-gradient(135deg,hsl(var(--primary-surface)/0.3)_0%,transparent_48%,hsl(var(--accent)/0.2)_100%)]"
-        />
-
-        <div className="flex max-w-3xl flex-col items-start">
-
-          <h2
-            id="contribute-title"
-            className="mt-4 max-w-2xl text-3xl font-extrabold leading-tight tracking-normal text-white md:text-4xl"
+    <section id="contribute" className={cn("layout-container py-16 md:py-24", className)} aria-labelledby="contribute-title">
+      <div className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface px-6 py-12 md:px-12 md:py-16">
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <ShaderBackdrop design="mist" />
+        </div>
+        <h2
+          id="contribute-title"
+          className="font-home-display max-w-2xl text-3xl leading-tight text-primary md:text-[2.75rem]"
+        >
+          {t("cta.title")}
+        </h2>
+        <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">{t("cta.description")}</p>
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <a
+            href={JAWAFDEHI_SOCIALS.discord}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-surface px-6 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100"
           >
-            {t("cta.title")}
-          </h2>
-
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/90 md:text-base">
-            {t("cta.description")}
-          </p>
-
-          <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Button
-              asChild
-              variant="primary"
-              size="lg"
-              className="bg-white text-primary shadow-lg shadow-black/10 hover:bg-white/90 dark:bg-white dark:text-primary-surface dark:hover:bg-white/90"
-            >
-              <a
-                href={JAWAFDEHI_SOCIALS.discord}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaDiscord className="mr-2 h-5 w-5 text-[#5865F2]" aria-hidden="true" />
-                {t("cta.discord")}
-              </a>
-            </Button>
-
-            <Button
-              asChild
-              variant="secondary"
-              size="lg"
-              className="border border-white/20 bg-white/10 text-white hover:bg-white/18 hover:text-white dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/18"
-            >
-              <a href="mailto:report@jawafdehi.org">
-                <Mail className="h-4 w-4" aria-hidden="true" />
-                {t("cta.email")}
-              </a>
-            </Button>
-          </div>
+            <FaDiscord className="h-[18px] w-[18px]" aria-hidden="true" />
+            {t("cta.discord")}
+          </a>
+          <a
+            href="mailto:report@jawafdehi.org"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-surface/80 px-6 text-[15px] text-primary ring-1 ring-border/70 transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100"
+          >
+            <Mail className="h-4 w-4" aria-hidden="true" />
+            {t("cta.email")}
+          </a>
         </div>
       </div>
     </section>

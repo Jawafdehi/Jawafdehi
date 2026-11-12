@@ -6,33 +6,14 @@ import { ArrowLink } from "@/components/ui/arrow-link";
 import { LightHero } from "@/components/ui/light-hero";
 import { Panel } from "@/components/ui/panel";
 import {
-  BookOpen,
   BriefcaseBusiness,
-  FlaskConical,
-  Globe,
   GraduationCap,
   Laptop,
   Mail,
-  Megaphone,
   Scale,
-  Search,
   type LucideIcon,
 } from "lucide-react";
 import { SITE_URL } from "@/utils/seo";
-
-type TeamEntry = {
-  icon: LucideIcon;
-  nameKey: string;
-  responsibilityKeys: string[];
-};
-
-const teamConfigs: Array<{ icon: LucideIcon; nameKey: string; respKey: string }> = [
-  { icon: Search, nameKey: "volunteer.teams.dataScraping", respKey: "volunteer.teams.dataScrapingResponsibilities" },
-  { icon: Megaphone, nameKey: "volunteer.teams.outreach", respKey: "volunteer.teams.outreachResponsibilities" },
-  { icon: Globe, nameKey: "volunteer.teams.platformDevelopment", respKey: "volunteer.teams.platformDevelopmentResponsibilities" },
-  { icon: BookOpen, nameKey: "volunteer.teams.corruptionCompilation", respKey: "volunteer.teams.corruptionCompilationResponsibilities" },
-  { icon: FlaskConical, nameKey: "volunteer.teams.corruptionResearch", respKey: "volunteer.teams.corruptionResearchResponsibilities" },
-];
 
 type VolunteerProfile = {
   icon: LucideIcon;
@@ -65,11 +46,6 @@ const getProfiles = (): VolunteerProfile[] => [
 
 const Volunteer = () => {
   const { t } = useTranslation();
-  const teams: TeamEntry[] = teamConfigs.map((cfg) => ({
-    icon: cfg.icon,
-    nameKey: cfg.nameKey,
-    responsibilityKeys: t(cfg.respKey, { returnObjects: true }) as string[],
-  }));
   const profiles = getProfiles();
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -148,36 +124,6 @@ const Volunteer = () => {
                 {t("volunteer.globalCommunity.description")}
               </p>
             </div>
-          </div>
-        </section>
-
-        {/* Teams: hairline cards, the responsibilities as crimson-dotted rows. */}
-        <section id="volunteer-teams" aria-labelledby="volunteer-teams-title" className="pb-20 pt-16 md:pb-28 md:pt-24">
-          <div className="layout-container">
-            <h2 id="volunteer-teams-title" className="font-home-section-title text-primary">
-              {t("volunteer.teams.title")}
-            </h2>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("volunteer.teams.description")}</p>
-            <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {teams.map(({ icon: Icon, nameKey, responsibilityKeys }) => (
-                <li key={nameKey} className="rounded-[28px] border border-border/70 bg-surface p-6 md:p-7">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
-                      <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.6} />
-                    </span>
-                    <h3 className="text-xl font-normal leading-snug text-primary">{t(nameKey)}</h3>
-                  </div>
-                  <ul className="mt-6 space-y-3">
-                    {responsibilityKeys.map((item) => (
-                      <li key={item} className="flex items-start gap-3 text-[15px] leading-6 text-muted-foreground">
-                        <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
 
