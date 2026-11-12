@@ -13,6 +13,8 @@ import {
 import type { MonthFiling } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
+import { ChartReveal } from "@/components/charts/chart-reveal";
+import { chartMotion } from "@/lib/chart-motion";
 
 /**
  * Cases filed per Nepali month — mean bar with ±1 SD error bars across complete
@@ -49,6 +51,7 @@ export function FiledByMonth({
   return (
     <div className="w-full" role="img" aria-label={ariaLabel}>
       <div style={{ height }}>
+        <ChartReveal>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data as MonthFiling[]} margin={{ top: 8, right: 12, bottom: 22, left: 4 }}>
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -78,7 +81,8 @@ export function FiledByMonth({
                 meanLabel,
               ]}
             />
-            <Bar dataKey="mean" name={meanLabel} radius={[3, 3, 0, 0]} isAnimationActive={false}>
+            <Bar dataKey="mean" name={meanLabel} radius={[3, 3, 0, 0]} isAnimationActive={chartMotion()}
+            animationDuration={900}>
               {data.map((d) => (
                 // Lighter blue than navy so the dark error whiskers stay legible
                 // against the fill; the fiscal year-end peak is accented in crimson.
@@ -94,6 +98,7 @@ export function FiledByMonth({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        </ChartReveal>
       </div>
     </div>
   );

@@ -12,6 +12,8 @@ import {
 import { fyLabel, type ChargeMixYear } from "@/data/research-corruption";
 import { MONO_STACK } from "@/lib/data-quality";
 import { SERIES, rowTotal, type MixKey } from "./charge-mix-series";
+import { ChartReveal } from "@/components/charts/chart-reveal";
+import { chartMotion } from "@/lib/chart-motion";
 
 /**
  * The recharts body of ChargeMixByYear, in its own chunk.
@@ -34,6 +36,7 @@ export function ChargeMixByYearBars({
   percent: boolean;
 }) {
   return (
+    <ChartReveal>
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
         data={data as ChargeMixYear[]}
@@ -77,10 +80,12 @@ export function ChargeMixByYearBars({
             stroke="hsl(var(--background))"
             strokeWidth={1}
             radius={!percent && i === SERIES.length - 1 ? [3, 3, 0, 0] : 0}
-            isAnimationActive={false}
+            isAnimationActive={chartMotion()}
+            animationDuration={900}
           />
         ))}
       </BarChart>
     </ResponsiveContainer>
+    </ChartReveal>
   );
 }

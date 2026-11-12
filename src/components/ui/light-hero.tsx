@@ -14,7 +14,16 @@ export function LightHero({
   title,
   description,
   actions,
-}: Readonly<{ id: string; eyebrow: ReactNode; title: ReactNode; description?: ReactNode; actions?: ReactNode }>) {
+  children,
+}: Readonly<{
+  id: string;
+  eyebrow: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+  /** Anything further under the line: a note, a link, a notice. */
+  children?: ReactNode;
+}>) {
   return (
     <section aria-labelledby={id} className="relative isolate overflow-hidden">
       <div
@@ -30,6 +39,7 @@ export function LightHero({
         </h1>
         {description ? <p className="mt-4 max-w-xl text-lg leading-7 text-muted-foreground">{description}</p> : null}
         {actions ? <div className="mt-8 flex flex-wrap items-center gap-3">{actions}</div> : null}
+        {children}
       </div>
     </section>
   );

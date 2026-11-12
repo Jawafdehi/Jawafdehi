@@ -12,6 +12,8 @@ import {
 import { fyLabel } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
+import { ChartReveal } from "@/components/charts/chart-reveal";
+import { chartMotion } from "@/lib/chart-motion";
 
 export type RateSeries = {
   /** Data key present on every row. */
@@ -59,6 +61,7 @@ export function RateTrend({
 
   return (
     <div className="w-full" style={{ height }} role="img" aria-label={ariaLabel}>
+      <ChartReveal>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -113,12 +116,14 @@ export function RateTrend({
               strokeDasharray={s.dashed ? "5 4" : undefined}
               dot={{ r: 2.5, fill: s.color, strokeWidth: 0 }}
               activeDot={{ r: 4.5 }}
-              isAnimationActive={false}
+              isAnimationActive={chartMotion()}
+            animationDuration={900}
               connectNulls
             />
           ))}
         </LineChart>
       </ResponsiveContainer>
+      </ChartReveal>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         {series.map((s) => (
           <span key={s.key} className="inline-flex items-center gap-1.5">

@@ -77,7 +77,7 @@ export function AccountabilityFunnel({
   }
 
   return (
-    <ul className="space-y-4">
+    <ul className="group/rows space-y-4">
       {stages.map((stage) => {
         const share = (stage.count / base) * 100;
         // Keep a hairline of fill even at ~0% so the row never looks empty.
@@ -96,7 +96,7 @@ export function AccountabilityFunnel({
             : `${stage.count.toLocaleString()}–${stage.countUpper.toLocaleString()}`;
 
         return (
-          <li key={stage.key}>
+          <li key={stage.key} className="transition-opacity duration-200 group-hover/rows:opacity-45 hover:!opacity-100">
             {stage.note ? (
               <div className="mb-1.5 flex items-center gap-1.5 pl-1 text-xs text-muted-foreground">
                 <svg viewBox="0 0 12 14" className="h-3.5 w-3 shrink-0 text-accent" aria-hidden="true">
@@ -107,7 +107,7 @@ export function AccountabilityFunnel({
             ) : null}
             <div className="mb-1 flex items-baseline justify-between gap-3">
               <span className="text-sm font-medium text-foreground">{stage.label}</span>
-              <span className="font-mono text-lg font-bold tabular-nums text-foreground">
+              <span className="text-lg tabular-nums text-foreground">
                 {countLabel}
               </span>
             </div>
@@ -115,17 +115,17 @@ export function AccountabilityFunnel({
               <div className="relative h-3 flex-1 overflow-hidden rounded-full bg-muted">
                 {upperWidth == null ? null : (
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full opacity-40 transition-[width] duration-700 ease-out"
+                    className="bar-grow absolute inset-y-0 left-0 rounded-full opacity-40 transition-[width] duration-700 ease-out"
                     style={{ width: `${upperWidth}%`, backgroundColor: stage.color }}
                   />
                 )}
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
+                  className="bar-grow absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
                   style={{ width: `${width}%`, backgroundColor: stage.color }}
                 />
               </div>
               <span
-                className={`${hasRange ? "w-40" : "w-28"} shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground`}
+                className={`${hasRange ? "w-40" : "w-28"} shrink-0 text-right text-xs tabular-nums text-muted-foreground`}
               >
                 {ofLabel(pctLabel)}
               </span>

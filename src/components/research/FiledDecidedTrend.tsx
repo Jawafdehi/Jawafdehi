@@ -11,6 +11,8 @@ import {
 import { fyLabel } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
+import { ChartReveal } from "@/components/charts/chart-reveal";
+import { chartMotion } from "@/lib/chart-motion";
 
 /**
  * Cases filed vs. decided, by fiscal year — the one genuinely temporal view.
@@ -43,6 +45,7 @@ export function FiledDecidedTrend({
 
   return (
     <div className="w-full" style={{ height }} role="img" aria-label={ariaLabel}>
+      <ChartReveal>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -72,7 +75,8 @@ export function FiledDecidedTrend({
             strokeWidth={2}
             dot={{ r: 2.5, fill: "hsl(var(--primary-surface))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
-            isAnimationActive={false}
+            isAnimationActive={chartMotion()}
+            animationDuration={900}
           />
           <Line
             type="monotone"
@@ -82,10 +86,12 @@ export function FiledDecidedTrend({
             strokeWidth={2}
             dot={{ r: 2.5, fill: "hsl(var(--accent))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
-            isAnimationActive={false}
+            isAnimationActive={chartMotion()}
+            animationDuration={900}
           />
         </LineChart>
       </ResponsiveContainer>
+      </ChartReveal>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary-surface))" }} aria-hidden="true" />

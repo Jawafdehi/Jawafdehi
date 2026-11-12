@@ -45,13 +45,13 @@ export function ConvictionByCharge({
 
   return (
     <div role="img" aria-label={ariaLabel}>
-      <ul className="space-y-3">
+      <ul className="group/rows space-y-3">
         {rows.map((row) => {
           const convPct = outcomePct(row, "convicted");
           return (
             <li
               key={row.label}
-              className="grid grid-cols-[8.5rem_1fr_2.75rem] items-center gap-3 sm:grid-cols-[12rem_1fr_2.75rem]"
+              className="grid grid-cols-[8.5rem_1fr_2.75rem] items-center gap-3 transition-opacity duration-200 group-hover/rows:opacity-45 hover:!opacity-100 sm:grid-cols-[12rem_1fr_2.75rem]"
             >
               <div className="min-w-0 text-right leading-tight">
                 <div className="truncate text-[13px] font-medium text-foreground">{row.label}</div>
@@ -61,8 +61,8 @@ export function ConvictionByCharge({
               </div>
 
               {/* Track */}
-              <div className="relative h-7 overflow-hidden rounded-md bg-muted">
-                <div className="flex h-full w-full">
+              <div className="relative h-7 overflow-hidden rounded-full bg-muted">
+                <div className="bar-grow flex h-full w-full">
                   {segs.map((seg, i) => {
                     const pct = outcomePct(row, seg.key);
                     if (pct <= 0) return null;
@@ -78,7 +78,7 @@ export function ConvictionByCharge({
                       >
                         {pct >= 11 && (
                           <span
-                            className="font-mono text-[11px] font-semibold tabular-nums"
+                            className="text-[11px] font-medium tabular-nums"
                             style={{ color: seg.text }}
                           >
                             {Math.round(pct)}%
@@ -96,7 +96,7 @@ export function ConvictionByCharge({
                 />
               </div>
 
-              <span className="text-right font-mono text-[13px] font-bold tabular-nums text-foreground">
+              <span className="text-right text-[13px] font-medium tabular-nums text-foreground">
                 {Math.round(convPct)}%
               </span>
             </li>

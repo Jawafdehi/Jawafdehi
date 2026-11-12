@@ -649,6 +649,24 @@ All colors MUST be HSL.
 }
 
 /* The likhit OCR switcher's progress bar: fills its dot over the dwell time. */
+/* Research bars grow in as they scroll into view: a scroll-driven animation,
+   so it needs no JavaScript and leaves the pre-rendered HTML alone. Where
+   view timelines are unsupported, or motion is reduced, the bars just show. */
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-grow {
+      transform-origin: left center;
+      animation: bar-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+}
+
 @keyframes ocr-progress {
   from { width: 0%; }
   to { width: 100%; }
