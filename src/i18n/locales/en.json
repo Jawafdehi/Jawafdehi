@@ -3125,9 +3125,10 @@
         "none": "Removes nothing.",
         "identifiers": "Citizenship numbers and dates of birth.",
         "contact": "Adds phone numbers and email addresses.",
-        "strict": "Adds bank accounts, age and passports. The default."
+        "strict": "Adds bank accounts, age and passports."
       },
-      "redactPdf": "Redact a PDF"
+      "redactPdf": "Redact a PDF",
+      "default": "Default"
     },
     "copy": "Copy",
     "whatsNewHeading": "What's new in likhit",

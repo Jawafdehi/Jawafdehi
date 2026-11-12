@@ -179,7 +179,7 @@ function OcrRecipes() {
         ))}
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-10">
-        <p className="text-[15px] leading-7 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
+        <p className="text-base leading-7 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
         <CopyBlock value={recipe.commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(recipe.commands)} />
       </div>
       {/* Progress: the active dot stretches into a bar that fills over the dwell
@@ -201,7 +201,7 @@ function OcrRecipes() {
               <span
                 key={`${active}-${auto}`}
                 className={cn(
-                  "absolute inset-y-0 left-0 rounded-full bg-primary-surface",
+                  "absolute inset-y-0 left-0 rounded-full bg-accent",
                   auto ? "animate-[ocr-progress_linear_forwards]" : "w-full",
                 )}
                 style={auto ? { animationDuration: `${OCR_DWELL_MS}ms` } : undefined}
@@ -416,9 +416,16 @@ const Likhit = () => {
                 {REDACTION_TIERS.map((key) => (
                   <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-4">
                     <dt>
-                      <code className="font-mono text-[15px] text-primary">{key}</code>
+                      <code className="font-mono text-[15px] text-accent">{key}</code>
                     </dt>
-                    <dd className="text-[15px] leading-6 text-muted-foreground">{t(`likhit.privacy.tiersShort.${key}`)}</dd>
+                    <dd className="text-[15px] leading-6 text-muted-foreground">
+                      {t(`likhit.privacy.tiersShort.${key}`)}
+                      {key === "strict" ? (
+                        <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">
+                          {t("likhit.privacy.default")}
+                        </span>
+                      ) : null}
+                    </dd>
                   </div>
                 ))}
               </dl>
