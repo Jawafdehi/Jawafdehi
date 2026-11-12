@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import type { MouseEvent } from "react";
+import { useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
@@ -12,8 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CaseSectionJumpNav } from "@/components/case-detail/case-section-jump-nav";
-import { LightHero } from "@/components/ui/light-hero";
+import { ReadingHeader, ReadingLayout } from "@/components/reading-layout";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
 import { Seo } from "@/components/Seo";
@@ -27,52 +25,7 @@ export default function FaqPage() {
     ? rawSections.filter(isFaqPageSection)
     : [];
 
-  // The active section follows the reading position, the way the case and
-  // court-case pages' contents do: the last section whose top has passed the
-  // middle of the viewport, or the last one once the page bottoms out.
-  const [activeSection, setActiveSection] = useState("");
-  useEffect(() => {
-    const elements = sections
-      .map((section) => document.getElementById(section.id))
-      .filter((element): element is HTMLElement => Boolean(element));
-    if (elements.length === 0) return;
-
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const readingLine = window.innerHeight * 0.5;
-      let next = elements[0].id;
-      for (const element of elements) {
-        if (element.getBoundingClientRect().top <= readingLine) next = element.id;
-        else break;
-      }
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8) {
-        next = elements[elements.length - 1].id;
-      }
-      setActiveSection((current) => (current === next ? current : next));
-    };
-    const schedule = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-    };
-    // `sections` is rebuilt every render from t(); its ids are what matter.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sections.map((section) => section.id).join("|")]);
-
   const jumpSections = sections.map((section) => ({ id: section.id, label: section.title }));
-  const handleJump = (sectionId: string) => (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    // Keep the URL shareable without a router navigation (and its scroll reset).
-    window.history.replaceState(null, "", `${location.pathname}${location.search}#${sectionId}`);
-  };
 
   // Smooth-scroll deep links (e.g. arriving at /faq#reporting). In-page anchor
   // clicks are handled natively by the browser.
@@ -100,26 +53,18 @@ export default function FaqPage() {
       />
 
       <main id="main-content">
-        <LightHero
-          id="faq-title"
-          eyebrow={t("faqPage.hero.eyebrow")}
-          title={t("faqPage.hero.title")}
-          description={t("faqPage.hero.description")}
-        />
-
         <section className="pb-20 md:pb-28">
-          <div className="layout-container">
-            <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-14">
-              {/* The reading pages' contents list: a line marker that
-                  lengthens beside the section in view, sticky on desktop and a
-                  sideways-scrolling row on a phone. */}
-              <aside className="min-w-0 lg:self-start">
-                <div className="lg:sticky lg:top-28">
-                  <h2 className="mb-4 text-sm text-muted-foreground">{t("faqPage.browseLabel")}</h2>
-                  <CaseSectionJumpNav activeSection={activeSection} onJump={handleJump} sections={jumpSections} />
-                </div>
-              </aside>
-
+          <ReadingLayout
+            sections={jumpSections}
+            header={
+              <ReadingHeader
+                id="faq-title"
+                eyebrow={t("faqPage.hero.eyebrow")}
+                title={t("faqPage.hero.title")}
+                description={t("faqPage.hero.description")}
+              />
+            }
+          >
               <div className="space-y-12 md:space-y-16">
                 {sections.map((section) => (
                   <section
@@ -159,10 +104,8 @@ export default function FaqPage() {
                     </Accordion>
                   </section>
                 ))}
-
               </div>
-            </div>
-          </div>
+          </ReadingLayout>
         </section>
       </main>
     </div>

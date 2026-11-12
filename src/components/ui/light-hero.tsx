@@ -15,6 +15,7 @@ export function LightHero({
   description,
   actions,
   children,
+  shader = true,
 }: Readonly<{
   id: string;
   eyebrow: ReactNode;
@@ -23,15 +24,19 @@ export function LightHero({
   actions?: ReactNode;
   /** Anything further under the line: a note, a link, a notice. */
   children?: ReactNode;
+  /** The diamond field behind the title; off on the plain reading pages. */
+  shader?: boolean;
 }>) {
   return (
     <section aria-labelledby={id} className="relative isolate overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="absolute inset-y-0 right-0 -z-10 w-full md:w-2/3 [mask-image:linear-gradient(to_left,#000_35%,transparent)]"
-      >
-        <ShaderBackdrop design="diamondLight" />
-      </div>
+      {shader ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 right-0 -z-10 w-full md:w-2/3 [mask-image:linear-gradient(to_left,#000_35%,transparent)]"
+        >
+          <ShaderBackdrop design="diamondLight" />
+        </div>
+      ) : null}
       <div className="layout-container py-16 md:py-24">
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 id={id} className="font-home-display mt-4 max-w-4xl text-4xl text-primary sm:text-5xl md:text-6xl">

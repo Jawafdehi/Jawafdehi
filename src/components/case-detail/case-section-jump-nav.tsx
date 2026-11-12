@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
 export type CaseJumpSection = {
@@ -14,82 +13,46 @@ interface CaseSectionJumpNavProps {
   sections: CaseJumpSection[];
 }
 
+/**
+ * "On this page", the justice.jawafdehi.org way: plain links in the reading
+ * column's grey, the section in view in navy, nothing else. Sticky at 112px
+ * from the top in a 13rem column on desktop; a sideways-scrolling row on a
+ * phone. Every reading page (cases, court cases, research, the FAQ, terms
+ * and privacy) uses this one list.
+ */
 export function CaseSectionJumpNav({
   activeSection,
   className,
   onJump,
   sections,
 }: Readonly<CaseSectionJumpNavProps>) {
-  const navRef = useRef<HTMLElement | null>(null);
-  const [navHeight, setNavHeight] = useState(240);
-
-  useEffect(() => {
-    const node = navRef.current;
-    if (!node) return;
-
-    const updateHeight = () => setNavHeight(node.offsetHeight);
-
-    updateHeight();
-
-    // JSDOM and a few embedded browsers do not implement ResizeObserver. The
-    // measured default is still a usable sticky position there; skip only the
-    // enhancement that recalculates it after a resize.
-    if (typeof ResizeObserver === "undefined") return;
-
-    const resizeObserver = new ResizeObserver(updateHeight);
-    resizeObserver.observe(node);
-
-    return () => resizeObserver.disconnect();
-  }, [sections.length]);
-
   if (sections.length === 0) return null;
-
-  const stickyStyle = {
-    "--case-jump-sticky-top": `max(7rem, calc(50vh - ${Math.round(navHeight / 2)}px))`,
-  } as CSSProperties;
 
   return (
     <nav
-      ref={navRef}
       aria-label="Jump to case section"
       className={cn(
-        "no-print min-w-0 lg:sticky lg:top-[var(--case-jump-sticky-top)] lg:pb-12",
-        className
+        "no-print flex min-w-0 gap-5 overflow-x-auto pb-3 [scrollbar-width:none] lg:sticky lg:top-28 lg:flex-col lg:gap-3.5 lg:overflow-visible lg:pb-12 lg:pt-11",
+        className,
       )}
-      style={stickyStyle}
     >
-      <div className="flex gap-5 overflow-x-auto pb-3 lg:flex lg:flex-col lg:gap-1.5 lg:overflow-visible lg:pb-0">
-        {sections.map((section) => {
-          const isActive = section.id === activeSection;
-
-          return (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              aria-current={isActive ? "true" : undefined}
-              onClick={onJump(section.id)}
-              className={cn(
-                "group flex items-start gap-2.5 max-w-48 whitespace-nowrap text-base font-medium leading-7 transition-all duration-300 lg:max-w-none lg:whitespace-normal",
-                isActive
-                  ? "lg:my-3 text-primary"
-                  : "lg:my-0 text-primary/55 hover:text-primary"
-              )}
-            >
-              <span className="flex h-7 w-8 shrink-0 items-center">
-                <span
-                  className={cn(
-                    "h-[1.5px] transition-all duration-300",
-                    isActive
-                      ? "w-6 bg-primary-surface"
-                      : "w-3 bg-primary-surface/20 group-hover:bg-primary-surface/40"
-                  )}
-                />
-              </span>
-              <span className="truncate lg:overflow-visible lg:whitespace-normal">{section.label}</span>
-            </a>
-          );
-        })}
-      </div>
+      {sections.map((section) => {
+        const isActive = section.id === activeSection;
+        return (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            aria-current={isActive ? "true" : undefined}
+            onClick={onJump(section.id)}
+            className={cn(
+              "shrink-0 whitespace-nowrap rounded-sm text-[15px] leading-[1.4] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:whitespace-normal",
+              isActive ? "text-primary" : "text-muted-foreground hover:text-primary",
+            )}
+          >
+            {section.label}
+          </a>
+        );
+      })}
     </nav>
   );
 }
