@@ -63,21 +63,22 @@ describe("Updates loading state", () => {
     const status = loadingStatus();
     const tiles = status.querySelectorAll("[data-skeleton]");
     expect(tiles.length).toBe(6);
-    // The first placeholder takes the lead story's two-by-two cell.
-    expect(tiles[0].className).toContain("lg:row-span-2");
+    // The first placeholder takes the lead story's two-column cell.
+    expect(tiles[0].className).toContain("md:col-span-2");
     expect(status.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
 });
 
 describe("Updates bento feed", () => {
-  it("leads with the newest story across two columns and two rows", async () => {
+  it("leads with the newest story across two columns of one row", async () => {
     getArticles.mockResolvedValue([article(1, { thumbnail: picture }), article(2), article(3)]);
     renderPage();
 
     const lead = (await screen.findByText("Story 1")).closest("a");
     expect(lead?.getAttribute("data-shape")).toBe("lead");
     expect(lead?.parentElement?.className).toContain("md:col-span-2");
-    expect(lead?.parentElement?.className).toContain("lg:row-span-2");
+    // One row only: a two-row cell stretched the lead's picture out of 16:9.
+    expect(lead?.parentElement?.className).not.toContain("row-span");
   });
 
   it("gives a story with a picture an image tile and one without a text panel", async () => {
