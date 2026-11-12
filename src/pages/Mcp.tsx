@@ -35,12 +35,15 @@ const Mcp = () => {
         <McpDemo />
         <McpQuestions />
 
+        {/* Setup, as its own hairline card: the client tabs and the steps. */}
         <section id="clients" className="scroll-mt-24 pt-16 md:pt-24">
           <div className="layout-container">
-            <Reveal>
-              <h2 className="font-home-section-title text-primary">{t("mcp.connect.title")}</h2>
-            </Reveal>
-            <ConnectPanel />
+            <div className="rounded-[28px] border border-border/70 bg-surface p-6 md:p-10">
+              <Reveal>
+                <h2 className="font-home-section-title text-primary">{t("mcp.connect.title")}</h2>
+              </Reveal>
+              <ConnectPanel />
+            </div>
           </div>
         </section>
 

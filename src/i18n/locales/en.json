@@ -3032,7 +3032,8 @@
           "question": "Which corruption cases did the Special Court decide in FY 2082/83, and how many ended in conviction?",
           "answer": "103 decisions in the data: 24 full convictions, 35 partial, 41 acquittals, with a warning that the first half of the year is missing."
         }
-      ]
+      ],
+      "answerLabel": "Jawafdehi MCP"
     },
     "pilot": {
       "title": "Join the pilot",

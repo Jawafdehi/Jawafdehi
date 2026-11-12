@@ -8,11 +8,10 @@ import { useTranslation } from "react-i18next";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { MistCarousel } from "@/components/ui/mist-carousel";
 import { Reveal } from "@/components/ui/reveal";
 import { CopyPill } from "@/components/copy-snippet";
 import { cn } from "@/lib/utils";
-
-const CARD = "rounded-3xl border border-border/60 bg-surface";
 
 function SectionHead({ title }: Readonly<{ title: string }>) {
   return (
@@ -107,23 +106,37 @@ type Question = { question: string; answer: string };
 export function McpQuestions() {
   const { t } = useTranslation();
   const items = t("mcp.questions.items", { returnObjects: true }) as Question[];
+  if (!Array.isArray(items) || items.length === 0) return null;
+  // The likhit OCR card's carousel: one question at a time as the title, and
+  // what the assistant came back with beside it, on white, moving on its own.
   return (
     <section id="questions" className="pt-16 md:pt-24">
       <div className="layout-container">
         <SectionHead title={t("mcp.questions.title")} />
-        <ul className="mt-10 grid gap-6 md:grid-cols-2">
-          {Array.isArray(items) &&
-            items.map((item, index) => (
-              <li key={item.question}>
-                <Reveal className="h-full" delayMs={(index % 2) * 80}>
-                  <article className={`${CARD} h-full p-6 md:p-7`}>
-                    <h3 className="font-home-display text-xl leading-snug text-primary md:text-2xl">“{item.question}”</h3>
-                    <p className="mt-4 text-lg leading-8 text-foreground/70">{item.answer}</p>
-                  </article>
-                </Reveal>
-              </li>
-            ))}
-        </ul>
+        <div className="mt-10">
+          <MistCarousel
+            ariaLabel={t("mcp.questions.title")}
+            dwellMs={7000}
+            titleClassName="text-[clamp(1.5rem,2.2vw,2rem)] leading-snug"
+            columnsClassName="lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]"
+            slides={items.map((item, index) => ({
+              key: String(index),
+              label: item.question,
+              title: <>“{item.question}”</>,
+              aside: (
+                <div className="flex h-full flex-col justify-center rounded-3xl border border-border/60 bg-surface/90 p-6 backdrop-blur-sm md:p-8">
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/10 text-accent">
+                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    {t("mcp.questions.answerLabel", "Jawafdehi MCP")}
+                  </p>
+                  <p className="mt-4 text-lg leading-8 text-primary">{item.answer}</p>
+                </div>
+              ),
+            }))}
+          />
+        </div>
       </div>
     </section>
   );
