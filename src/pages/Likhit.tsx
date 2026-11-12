@@ -13,10 +13,10 @@ import { Trans, useTranslation } from "react-i18next";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { CopyBlock, CopyButton, CopyPill } from "@/components/copy-snippet";
 import { Seo } from "@/components/Seo";
-import { chipVariants } from "@/components/ui/chip";
 import { Panel } from "@/components/ui/panel";
 import { Reveal } from "@/components/ui/reveal";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
+import { cn } from "@/lib/utils";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 // The two places likhit actually lives. Both are outside this site — the package
@@ -43,22 +43,14 @@ const REDACTION_TIERS = ["none", "identifiers", "contact", "strict"] as const;
 /** One redaction example: a PDF in, a redacted PDF and its journal out. */
 const REDACT_COMMAND = "likhit-redact pdf charge-sheet.pdf --out redacted.pdf --journal redaction.jsonl";
 
-/** The command-line usage as ONE copyable block, each case a comment. */
-const CLI_BLOCK = `# one file
-likhit-save notice.pdf --out notice.md
-
-# many files
-likhit-save a.pdf b.pdf --out-dir converted/
-
-# a page range
-likhit-save report.pdf --pages 2-4 --out pages.md
-
-# redacts personal data by default; keep everything with
-likhit-save notice.pdf --redact none --out notice.md
-
-# or as a MarkItDown plugin
-markitdown --use-plugins document.pdf`;
-
+/** The command-line cases, one copyable command each. */
+const CLI_EXAMPLES = [
+  { key: "one", command: "likhit-save notice.pdf --out notice.md" },
+  { key: "many", command: "likhit-save a.pdf b.pdf --out-dir converted/" },
+  { key: "pages", command: "likhit-save report.pdf --pages 2-4 --out pages.md" },
+  { key: "keep", command: "likhit-save notice.pdf --redact none --out notice.md" },
+  { key: "plugin", command: "markitdown --use-plugins document.pdf" },
+] as const;
 // One recipe per place the OCR endpoint can live. They differ only in the
 // three environment variables, which is the point the section makes, so the
 // commands are written out in full.
@@ -126,28 +118,43 @@ function InstallLine() {
   );
 }
 
-/** The three OCR setups behind the site's switcher pills, one shown at a time. */
+/**
+ * The three OCR setups, one shown at a time, chosen with a segmented control: a
+ * grey track with the chosen setup raised white, which reads as "pick one"
+ * where loose text pills did not. The setup's line sits beside its commands.
+ */
 function OcrRecipes() {
   const { t } = useTranslation();
   const [active, setActive] = useState<(typeof OCR_RECIPES)[number]["key"]>("local");
   const recipe = OCR_RECIPES.find(({ key }) => key === active) ?? OCR_RECIPES[0];
   return (
     <div className="min-w-0">
-      <div role="group" aria-label={t("likhit.ocr.title")} className="flex flex-wrap gap-1">
+      <div
+        role="group"
+        aria-label={t("likhit.ocr.title")}
+        className="inline-flex max-w-full flex-wrap gap-1 rounded-full bg-muted p-1"
+      >
         {OCR_RECIPES.map(({ key }) => (
           <button
             key={key}
             type="button"
             aria-pressed={key === active}
             onClick={() => setActive(key)}
-            className={chipVariants({ active: key === active })}
+            className={cn(
+              "h-10 rounded-full px-4 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              key === active
+                ? "bg-surface text-primary shadow-[0_1px_3px_rgba(14,31,59,0.14)]"
+                : "text-muted-foreground hover:text-primary",
+            )}
           >
             {t(`likhit.ocr.${key}.name`)}
           </button>
         ))}
       </div>
-      <p className="mt-4 text-[15px] leading-6 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
-      <CopyBlock value={recipe.commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(recipe.commands)} />
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-10">
+        <p className="text-[15px] leading-7 text-muted-foreground">{t(`likhit.ocr.${recipe.key}.body`)}</p>
+        <CopyBlock value={recipe.commands} label={t("likhit.ocr.copyRecipe")} lines={blockLines(recipe.commands)} />
+      </div>
     </div>
   );
 }
@@ -322,9 +329,15 @@ const Likhit = () => {
                 <Trans i18nKey="likhit.cli.short" components={{ cmd: <Code /> }} />
               </p>
             </div>
-            <div className="min-w-0">
-              <CopyBlock value={CLI_BLOCK} label={t("likhit.cli.copyCommand")} lines={blockLines(CLI_BLOCK)} />
-            </div>
+            {/* One command per row, each with its own label and copy button. */}
+            <ul className="min-w-0 space-y-5">
+              {CLI_EXAMPLES.map(({ key, command }) => (
+                <li key={key}>
+                  <p className="text-sm text-muted-foreground">{t(`likhit.cli.cases.${key}`)}</p>
+                  <CopyPill value={command} label={t("likhit.cli.copyCommand")} mono fullWidth />
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -342,6 +355,10 @@ const Likhit = () => {
                 {t("likhit.privacy.guide")}
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
+              <div className="mt-8">
+                <p className="text-sm text-muted-foreground">{t("likhit.privacy.redactPdf")}</p>
+                <CopyPill value={REDACT_COMMAND} label={t("likhit.privacy.copyCommand")} mono fullWidth />
+              </div>
             </div>
             <div className="min-w-0">
               <dl aria-labelledby="likhit-privacy-title" className="divide-y divide-border/70 rounded-[22px] bg-muted px-6">
@@ -354,19 +371,19 @@ const Likhit = () => {
                   </div>
                 ))}
               </dl>
-              <CopyPill value={REDACT_COMMAND} label={t("likhit.privacy.copyCommand")} mono />
             </div>
           </div>
         </section>
 
-        {/* ── OCR: one recipe at a time, chosen with the site's switcher ── */}
+        {/* ── OCR: a different shape from the two sections above: the title
+            and its line across the top, then the setups full width. ── */}
         <section aria-labelledby="likhit-ocr-title" className="pt-16 md:pt-24">
-          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <div>
-              <SectionTitle id="likhit-ocr-title">{t("likhit.ocr.title")}</SectionTitle>
-              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.ocr.short")}</p>
+          <div className="layout-container">
+            <SectionTitle id="likhit-ocr-title">{t("likhit.ocr.title")}</SectionTitle>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("likhit.ocr.short")}</p>
+            <div className="mt-8 rounded-[28px] border border-border/70 p-5 md:p-7">
+              <OcrRecipes />
             </div>
-            <OcrRecipes />
           </div>
         </section>
 

@@ -33,12 +33,19 @@ export function CopyButton({ value, label }: Readonly<{ value: string; label: st
 
 /** One line, as a rounded pill as wide as its text: an address in Inter, a
  * command in the mono face it is typed in. */
-export function CopyPill({ value, label, mono = false }: Readonly<{ value: string; label: string; mono?: boolean }>) {
+export function CopyPill({
+  value,
+  label,
+  mono = false,
+  fullWidth = false,
+}: Readonly<{ value: string; label: string; mono?: boolean; /** Fill the column, so a list of commands shares one right edge. */ fullWidth?: boolean }>) {
   return (
-    <div className="mt-3 inline-flex max-w-full items-center gap-3 rounded-full border border-border bg-muted py-1 pl-5 pr-1">
+    // A long command wraps rather than scrolling behind a scrollbar; the box
+    // grows to two lines, which is why its corners are 20px, not a full pill.
+    <div className={cn("mt-2 max-w-full items-center gap-3 rounded-[20px] border border-border bg-muted py-1 pl-5 pr-1", fullWidth ? "flex w-full" : "inline-flex")}>
       <code
         className={cn(
-          "min-w-0 overflow-x-auto whitespace-nowrap py-1.5 text-[15px] font-normal text-foreground",
+          "min-w-0 flex-1 py-1.5 text-[15px] font-normal text-foreground [overflow-wrap:anywhere]",
           mono ? "font-mono" : "[font-family:Inter,var(--font-family-app)]",
         )}
       >
@@ -58,7 +65,7 @@ export function CopyBlock({
 }: Readonly<{ value: string; label: string; lines: ReadonlyArray<{ text: string; prompt?: boolean; muted?: boolean }> }>) {
   return (
     <div className="mt-3 inline-flex max-w-full items-start gap-3 rounded-3xl border border-border bg-muted py-3 pl-5 pr-2">
-      <pre className="min-w-0 overflow-x-auto whitespace-pre py-1 font-mono text-sm leading-7 text-foreground">
+      <pre className="min-w-0 flex-1 overflow-x-auto whitespace-pre py-1 font-mono text-sm leading-7 text-foreground">
         {lines.map(({ text, prompt, muted }, index) => (
           // Lines repeat (blank ones above all), so the index is the key.
           <span key={index} className={muted ? "block text-muted-foreground" : "block"}>

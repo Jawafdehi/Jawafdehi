@@ -3083,7 +3083,14 @@
     "cli": {
       "title": "Convert from the command line",
       "copyCommand": "Copy the command",
-      "short": "<cmd>likhit-save</cmd> runs MarkItDown with the plugin on and writes the Markdown for you. No Python needed."
+      "short": "<cmd>likhit-save</cmd> runs MarkItDown with the plugin on and writes the Markdown for you. No Python needed.",
+      "cases": {
+        "one": "One file",
+        "many": "Many files",
+        "pages": "A page range",
+        "keep": "Keep personal data in",
+        "plugin": "As a MarkItDown plugin"
+      }
     },
     "ocr": {
       "title": "Turn on OCR for scanned pages",
@@ -3112,7 +3119,8 @@
         "identifiers": "Citizenship numbers and dates of birth.",
         "contact": "Adds phone numbers and email addresses.",
         "strict": "Adds bank accounts, age and passports. The default."
-      }
+      },
+      "redactPdf": "Redact a PDF"
     },
     "copy": "Copy",
     "whatsNewHeading": "What's new in likhit",

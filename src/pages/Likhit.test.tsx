@@ -107,11 +107,11 @@ describe("the likhit landing page", () => {
     expect(command).toContain("--journal ");
   });
 
-  it("puts the command-line usage in one copyable block", async () => {
+  it("gives each command-line case its own copyable command", async () => {
     await renderPage("en");
 
     const section = screen.getByRole("region", { name: i18n.t("likhit.cli.title") });
-    expect(within(section).getAllByRole("button", { name: i18n.t("likhit.cli.copyCommand") })).toHaveLength(1);
+    expect(within(section).getAllByRole("button", { name: i18n.t("likhit.cli.copyCommand") })).toHaveLength(5);
     expect(section.textContent).toContain("likhit-save notice.pdf --out notice.md");
     expect(section.textContent).toContain("--redact none");
   });
