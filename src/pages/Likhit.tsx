@@ -465,41 +465,43 @@ const Likhit = () => {
 
         {/* ── Redaction: the tiers at a glance ── */}
         <section aria-labelledby="likhit-privacy-title" className="pt-16 md:pt-24">
-          <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
-            {/* The tiers on the left this time, so the section does not repeat
-                the command line's shape above it. */}
-            <div className="flex flex-col lg:order-last">
-              <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
-              <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.privacy.short")}</p>
-              <a
-                href={REPO_URL}
-                {...EXTERNAL}
-                className="mt-6 inline-flex w-fit items-center gap-1.5 self-end rounded text-base font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
-              >
-                {t("likhit.privacy.guidePrefix")}
-                <Github className="h-4 w-4" aria-hidden="true" />
-                GitHub
-                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-              </a>
-            </div>
-            <div className="min-w-0">
-              <dl aria-labelledby="likhit-privacy-title" className="rounded-[22px] bg-muted/50 px-6 py-3">
-                {REDACTION_TIERS.map((key) => (
-                  <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-3">
-                    <dt>
-                      <code className="font-mono text-[15px] text-accent">{key}</code>
-                    </dt>
-                    <dd className="text-[15px] leading-6 text-muted-foreground">
-                      {t(`likhit.privacy.tiersShort.${key}`)}
-                      {key === "strict" ? (
-                        <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">
-                          {t("likhit.privacy.default")}
-                        </span>
-                      ) : null}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+          <div className="layout-container">
+            {/* One hairline card, like the OCR setups below: the tiers on the
+                left, the title, line and guide link on the right. */}
+            <div className="grid grid-cols-1 gap-8 rounded-[28px] border border-border/70 bg-surface p-3 md:p-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+              <div className="flex flex-col p-3 md:p-5 lg:order-last lg:pl-0">
+                <SectionTitle id="likhit-privacy-title">{t("likhit.privacy.title")}</SectionTitle>
+                <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("likhit.privacy.short")}</p>
+                <a
+                  href={REPO_URL}
+                  {...EXTERNAL}
+                  className="mt-6 inline-flex w-fit items-center gap-1.5 self-end rounded text-base font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:mt-auto"
+                >
+                  {t("likhit.privacy.guidePrefix")}
+                  <Github className="h-4 w-4" aria-hidden="true" />
+                  GitHub
+                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
+              <div className="min-w-0">
+                <dl aria-labelledby="likhit-privacy-title" className="rounded-[22px] bg-muted/50 px-6 py-3">
+                  {REDACTION_TIERS.map((key) => (
+                    <div key={key} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-4 py-3">
+                      <dt>
+                        <code className="font-mono text-[15px] text-accent">{key}</code>
+                      </dt>
+                      <dd className="text-[15px] leading-6 text-muted-foreground">
+                        {t(`likhit.privacy.tiersShort.${key}`)}
+                        {key === "strict" ? (
+                          <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">
+                            {t("likhit.privacy.default")}
+                          </span>
+                        ) : null}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           </div>
         </section>
