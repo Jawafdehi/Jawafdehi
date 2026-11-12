@@ -23,7 +23,21 @@
     "courtCases": "Court cases",
     "research": "Research",
     "faq": "FAQ",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "desc": {
+      "search": "Every case, person and document in one search.",
+      "materials": "Reports, charge sheets and notices, by series.",
+      "courtcases": "Corruption cases through the Special Court.",
+      "research": "What the prosecution record tells us.",
+      "mcp": "The archive inside your AI assistant.",
+      "about": "Who we are and why the archive exists.",
+      "openhouse": "Come meet the team and see the work.",
+      "process": "How a case goes from document to record.",
+      "commitment": "The promises we hold ourselves to.",
+      "team": "The people who build and keep the archive.",
+      "products": "Open tools built on the archive.",
+      "faq": "Short answers to common questions."
+    }
   },
   "weeklyMeetings": {
     "eyebrow": "Currently on pause",

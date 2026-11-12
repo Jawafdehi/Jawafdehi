@@ -58,13 +58,12 @@ describe("Navbar — the Open House entry", () => {
   it("appears in the desktop about dropdown", async () => {
     renderNavbar();
 
-    // Opened by keyboard, not click: Radix's trigger reacts to pointerdown, so
-    // fireEvent.click never opens it. Enter also exercises the keyboard path.
+    // Opened by keyboard: Enter exercises the keyboard path of the mega menu.
     fireEvent.keyDown(screen.getByRole("button", { name: /nav\.about/ }), { key: "Enter" });
 
     await waitFor(() => {
       const link = screen
-        .getAllByRole("menuitem")
+        .getAllByRole("link")
         .find((el) => el.getAttribute("href") === "/openhouse");
       expect(link).toBeTruthy();
       expect(link?.textContent).toContain("nav.openHouse");
@@ -94,7 +93,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
 
     await waitFor(() => {
       const link = screen
-        .getAllByRole("menuitem")
+        .getAllByRole("link")
         .find((el) => el.getAttribute("href") === "/mcp");
       expect(link).toBeTruthy();
       expect(link?.textContent).toContain("Jawafdehi MCP");

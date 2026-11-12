@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,13 +11,8 @@ import {
 
 import { AppSearchCommand } from "@/components/AppSearchCommand";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { MegaMenuPanel } from "@/components/nav/MegaMenuPanel";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -71,8 +66,19 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const [archiveOpen, setArchiveOpen] = useState(false);
+  // The open mega-menu group, if any. Hover opens it after a short intent
+  // delay and leaving the header closes it after a grace period, so a pointer
+  // crossing the bar on its way somewhere does not flash the panel.
+  const [menu, setMenu] = useState<"archive" | "about" | null>(null);
+  const archiveOpen = menu === "archive";
+  const aboutOpen = menu === "about";
+  const menuTimer = useRef<number | undefined>(undefined);
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const schedule = useCallback((next: "archive" | "about" | null, delay: number) => {
+    window.clearTimeout(menuTimer.current);
+    menuTimer.current = window.setTimeout(() => setMenu(next), delay);
+  }, []);
+  const cancelClose = useCallback(() => window.clearTimeout(menuTimer.current), []);
 
   const navItems = useMemo<NavItem[]>(
     () => [
@@ -147,6 +153,7 @@ export function Navbar() {
   // navy-on-light treatment the moment it gains its opaque background.
   const overDarkHero =
     !isScrolled &&
+    menu === null &&
     (DARK_HERO_PATHS.has(location.pathname) ||
       (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
 
@@ -162,6 +169,48 @@ export function Navbar() {
     window.addEventListener("scroll", updateScrolled, { passive: true });
     return () => window.removeEventListener("scroll", updateScrolled);
   }, []);
+
+  useEffect(() => {
+    setMenu(null);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (menu === null) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      triggerRefs.current[menu]?.focus();
+      setMenu(null);
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [menu]);
+
+  useEffect(() => () => window.clearTimeout(menuTimer.current), []);
+
+  const triggerProps = (group: "archive" | "about") => ({
+    ref: (el: HTMLButtonElement | null) => {
+      triggerRefs.current[group] = el;
+    },
+    type: "button" as const,
+    "aria-expanded": menu === group,
+    "aria-controls": `nav-menu-${group}`,
+    onPointerEnter: (event: React.PointerEvent) => {
+      if (event.pointerType === "mouse") schedule(group, menu === null ? 90 : 0);
+    },
+    onClick: () => {
+      cancelClose();
+      setMenu((open) => (open === group ? null : group));
+    },
+    onKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+        event.preventDefault();
+        cancelClose();
+        setMenu(group);
+      }
+    },
+  });
+  // Moving onto a plain link in the bar closes any open panel.
+  const closeOnEnter = () => schedule(null, 0);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -197,10 +246,17 @@ export function Navbar() {
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-colors duration-200 ease-out",
-          isScrolled
+          isScrolled || menu !== null
             ? "bg-background"
             : "bg-transparent",
         )}
+        onPointerEnter={cancelClose}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse") schedule(null, 160);
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenu(null);
+        }}
       >
         <a
           href="#main-content"
@@ -253,6 +309,7 @@ export function Navbar() {
               <NavLink
                 to={homeNavItem.to}
                 end={homeNavItem.exact}
+                onPointerEnter={closeOnEnter}
                 className={({ isActive }) =>
                   cn(
                     NAV_ITEM_CLASS,
@@ -268,40 +325,31 @@ export function Navbar() {
 
             {/* Archive sits directly after Home: the public archive is what most
                 visitors come for, so it leads and About closes the row. */}
-            <DropdownMenu open={archiveOpen} onOpenChange={setArchiveOpen}>
-              <DropdownMenuTrigger
+            <button
+              {...triggerProps("archive")}
+              className={cn(
+                cn(NAV_ITEM_CLASS, "gap-1"),
+                (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_CLASS,
+                overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                overDarkHero && (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_ON_DARK_CLASS,
+              )}
+            >
+              {t("nav.archive", "Archive")}
+              <ChevronDown
+                aria-hidden="true"
                 className={cn(
-                  cn(NAV_ITEM_CLASS, "gap-1"),
-                  (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_CLASS,
-                  overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_ON_DARK_CLASS,
+                  "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                  archiveOpen && "rotate-180",
                 )}
-              >
-                {t("nav.archive", "Archive")}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    archiveOpen && "rotate-180",
-                  )}
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                className="mt-3 w-52 p-2"
-              >
-                {archiveNavItems.map((item) => (
-                  <DropdownMenuItem key={item.key} asChild>
-                    <Link to={item.to}>{item.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              />
+            </button>
 
             {secondaryNavItems.map((item) => (
               <NavLink
                 key={item.key}
                 to={item.to}
                 end={item.exact}
+                onPointerEnter={closeOnEnter}
                 className={({ isActive }) =>
                   cn(
                     NAV_ITEM_CLASS,
@@ -315,34 +363,24 @@ export function Navbar() {
               </NavLink>
             ))}
 
-            <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
-              <DropdownMenuTrigger
+            <button
+              {...triggerProps("about")}
+              className={cn(
+                cn(NAV_ITEM_CLASS, "gap-1"),
+                (activeKey === "about" || aboutOpen) && NAV_ACTIVE_CLASS,
+                overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                overDarkHero && (activeKey === "about" || aboutOpen) && NAV_ACTIVE_ON_DARK_CLASS,
+              )}
+            >
+              {t("nav.about")}
+              <ChevronDown
+                aria-hidden="true"
                 className={cn(
-                  cn(NAV_ITEM_CLASS, "gap-1"),
-                  (activeKey === "about" || aboutOpen) && NAV_ACTIVE_CLASS,
-                  overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "about" || aboutOpen) && NAV_ACTIVE_ON_DARK_CLASS,
+                  "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                  aboutOpen && "rotate-180",
                 )}
-              >
-                {t("nav.about")}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    aboutOpen && "rotate-180",
-                  )}
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                className="mt-3 w-56 p-2"
-              >
-                {aboutNavItems.map((item) => (
-                  <DropdownMenuItem key={item.key} asChild>
-                    <Link to={item.to}>{item.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              />
+            </button>
           </nav>
 
           <div className="hidden items-center justify-end gap-2 justify-self-end xl:flex">
@@ -513,6 +551,31 @@ export function Navbar() {
             </Sheet>
           </div>
         </div>
+
+        {/* The open group's full-width panel, desktop only, with a light scrim
+            over the page: pointing at the scrim (it sits inside the header, so
+            leaving the panel onto it is not a pointerleave) or clicking it
+            closes the menu. */}
+        {menu !== null ? (
+          <div className="hidden xl:block">
+            <div
+              aria-hidden="true"
+              className="fixed inset-x-0 bottom-0 top-[76px] -z-10 bg-primary/10 animate-in fade-in duration-150 motion-reduce:animate-none"
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse") schedule(null, 160);
+              }}
+              onClick={() => setMenu(null)}
+            />
+            <MegaMenuPanel
+              key={menu}
+              id={`nav-menu-${menu}`}
+              label={menu === "archive" ? t("nav.archive", "Archive") : t("nav.about")}
+              items={menu === "archive" ? archiveNavItems : aboutNavItems}
+              activePath={location.pathname}
+              onNavigate={() => setMenu(null)}
+            />
+          </div>
+        ) : null}
       </header>
       <AppSearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </>
