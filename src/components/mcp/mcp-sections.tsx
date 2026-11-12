@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/ui/reveal";
+import { CopyPill } from "@/components/copy-snippet";
 import { cn } from "@/lib/utils";
 
 const CARD = "rounded-3xl border border-border/60 bg-surface";
@@ -179,6 +180,50 @@ export function McpPilot() {
             </Reveal>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+const SKILL_REPO_URL = "https://github.com/Jawafdehi/mcp";
+const SKILL_INSTALLS = [
+  { key: "claudeCode", command: "/plugin install jawafdehi-archive --marketplace Jawafdehi/mcp" },
+  { key: "others", command: "npx skills add Jawafdehi/mcp --skill jawafdehi-archive" },
+] as const;
+
+/**
+ * The jawafdehi-archive skill (github.com/Jawafdehi/mcp): connecting gives an
+ * AI the tools; the skill teaches it to use them well. Two install routes,
+ * as the repo's README gives them.
+ */
+export function McpSkill() {
+  const { t } = useTranslation();
+  return (
+    <section id="skill" aria-labelledby="mcp-skill-title" className="scroll-mt-24 pt-16 md:pt-24">
+      <div className="layout-container grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+        <div>
+          <h2 id="mcp-skill-title" className="font-home-section-title text-primary">
+            {t("mcp.skill.title")}
+          </h2>
+          <p className="mt-4 text-lg leading-8 text-muted-foreground">{t("mcp.skill.body")}</p>
+          <a
+            href={SKILL_REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center gap-1.5 rounded text-base text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            github.com/Jawafdehi/mcp
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+        </div>
+        <ul className="min-w-0 space-y-5">
+          {SKILL_INSTALLS.map(({ key, command }) => (
+            <li key={key}>
+              <p className="text-sm text-muted-foreground">{t(`mcp.skill.${key}`)}</p>
+              <CopyPill value={command} label={t("mcp.skill.copy")} mono fullWidth />
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

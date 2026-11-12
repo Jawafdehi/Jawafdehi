@@ -3020,6 +3020,13 @@
     "demo": {
       "title": "See it in action",
       "label": "A demo of the Jawafdehi MCP in Claude and ChatGPT"
+    },
+    "skill": {
+      "title": "Teach your AI the archive",
+      "body": "Connecting gives your AI the tools; the jawafdehi-archive skill teaches it to use them well: which tool answers which question, keeping the accused apart from the convicted, and citing a source for every claim.",
+      "claudeCode": "Claude Code",
+      "others": "Cursor, Codex and other agents",
+      "copy": "Copy the install command"
     }
   },
   "whatsNew": {

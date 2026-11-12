@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { ConnectPanel } from "@/components/mcp/connect-panel";
-import { McpDemo, McpInside, McpOverview, McpPilot, McpQuestions } from "@/components/mcp/mcp-sections";
+import { McpDemo, McpInside, McpOverview, McpPilot, McpQuestions, McpSkill } from "@/components/mcp/mcp-sections";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Seo } from "@/components/Seo";
 import { Reveal } from "@/components/ui/reveal";
@@ -44,6 +44,7 @@ const Mcp = () => {
           </div>
         </section>
 
+        <McpSkill />
         <McpPilot />
         <WhatsNewSection id="mcp-whats-new" heading={t("whatsNew.mcpHeading")} tag="mcp" />
         <div className="pb-16 md:pb-24" />
