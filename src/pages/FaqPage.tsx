@@ -11,7 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { LightHero } from "@/components/ui/light-hero";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
 import { Seo } from "@/components/Seo";
@@ -63,29 +63,20 @@ export default function FaqPage() {
       />
 
       <main id="main-content">
-        <section className="relative overflow-hidden py-10 md:py-14 lg:py-16">
-          <div className="layout-container">
-            <div className="max-w-3xl">
-              <Eyebrow className="mb-4">{t("faqPage.hero.eyebrow")}</Eyebrow>
-              <h1 className="font-page-title">
-                {t("faqPage.hero.title")}
-              </h1>
-              <p className="font-page-lede mt-4 max-w-2xl">
-                {t("faqPage.hero.description")}
-              </p>
-            </div>
-          </div>
-        </section>
+        <LightHero
+          id="faq-title"
+          eyebrow={t("faqPage.hero.eyebrow")}
+          title={t("faqPage.hero.title")}
+          description={t("faqPage.hero.description")}
+        />
 
-        <section className="pb-12 md:pb-16">
+        <section className="pb-20 md:pb-28">
           <div className="layout-container">
             <div className="grid gap-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14">
               <aside className="lg:sticky lg:top-24 lg:self-start">
-                <div className="rounded-lg bg-card p-3">
-                  <Eyebrow tone="primary" className="mb-3 px-3 py-2">
-                    {t("faqPage.browseLabel")}
-                  </Eyebrow>
-                  <nav aria-label="FAQ categories" className="space-y-1">
+                <div className="rounded-[28px] bg-muted p-2">
+                  <p className="px-4 pb-2 pt-3 text-sm text-muted-foreground">{t("faqPage.browseLabel")}</p>
+                  <nav aria-label="FAQ categories" className="space-y-0.5">
                     {sections.map((section) => {
                       const isActive = activeSection === section.id;
                       return (
@@ -99,7 +90,7 @@ export default function FaqPage() {
                           key={section.id}
                           href={`${location.pathname}${location.search}#${section.id}`}
                           aria-current={isActive ? "location" : undefined}
-                          className="block rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=location]:bg-background aria-[current=location]:font-semibold aria-[current=location]:text-primary"
+                          className="block rounded-full px-4 py-2.5 text-[15px] text-primary/70 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=location]:bg-surface aria-[current=location]:text-primary aria-[current=location]:shadow-[0_1px_2px_rgba(14,31,59,0.08)]"
                         >
                           {section.title}
                         </a>
@@ -109,7 +100,7 @@ export default function FaqPage() {
                 </div>
               </aside>
 
-              <div className="space-y-8 md:space-y-12">
+              <div className="space-y-12 md:space-y-16">
                 {sections.map((section) => (
                   <section
                     key={section.id}
@@ -117,28 +108,28 @@ export default function FaqPage() {
                     className="scroll-mt-24"
                     aria-labelledby={`${section.id}-title`}
                   >
-                    <div className="mb-3">
+                    <div className="mb-5">
                       <h2
                         id={`${section.id}-title`}
-                        className="font-section-title"
+                        className="font-home-display text-3xl text-primary md:text-4xl"
                       >
                         {section.title}
                       </h2>
                     </div>
 
-                    <Accordion type="single" collapsible className="divide-y divide-border/65">
+                    <Accordion type="single" collapsible className="space-y-2">
                       {section.questions.map((item) => (
-                        <AccordionItem key={item.id} value={item.id} className="border-0">
-                          <AccordionTrigger className="group gap-6 py-5 text-left text-base font-medium leading-7 text-foreground no-underline hover:text-primary hover:no-underline md:text-lg [&>svg]:hidden">
+                        <AccordionItem key={item.id} value={item.id} className="rounded-[22px] border-0 bg-muted/60 px-5 transition-colors data-[state=open]:bg-muted md:px-6">
+                          <AccordionTrigger className="group gap-6 py-5 text-left text-[17px] font-normal leading-7 text-primary no-underline hover:no-underline md:text-lg [&>svg]:hidden">
                             <span>{item.question}</span>
                             <span
-                              className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors group-hover:text-primary group-data-[state=open]:text-primary"
+                              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-muted-foreground transition-colors group-hover:text-primary group-data-[state=open]:text-accent"
                               aria-hidden="true"
                             >
                               <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                             </span>
                           </AccordionTrigger>
-                          <AccordionContent className="pb-6 pr-0 text-sm font-normal leading-7 text-muted-foreground md:pr-16 md:text-base">
+                          <AccordionContent className="pb-6 pr-0 text-base font-normal leading-7 text-muted-foreground md:pr-16">
                             <Markdown components={faqMarkdownComponents} remarkPlugins={[remarkGfm]}>
                               {item.answer}
                             </Markdown>

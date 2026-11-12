@@ -453,7 +453,8 @@
       "record": "record",
       "description": "Jawafdehi runs entirely on volunteer effort. Whether you are a technology enthusiast, a working professional, a legal expert, or a student, if you believe corruption should not be forgotten, there is a place for you here.",
       "github": "Find us on GitHub",
-      "email": "Email us"
+      "email": "Email us",
+      "eyebrow": "Volunteer"
     },
     "whoCanJoin": {
       "eyebrow": "Who can join",
