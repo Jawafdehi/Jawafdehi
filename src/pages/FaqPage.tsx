@@ -75,7 +75,7 @@ export default function FaqPage() {
                     <div className="mb-5">
                       <h2
                         id={`${section.id}-title`}
-                        className="font-home-display text-3xl text-primary md:text-4xl"
+                        className="font-case-section-title"
                       >
                         {section.title}
                       </h2>
