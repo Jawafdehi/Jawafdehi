@@ -94,7 +94,7 @@ export function AccountabilityGap({
   ];
 
   return (
-    <section>
+    <section className="border-t border-border pt-10">
       <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">
         {t("dataQuality.corruptionCases.eyebrow", "The core finding")}
       </p>

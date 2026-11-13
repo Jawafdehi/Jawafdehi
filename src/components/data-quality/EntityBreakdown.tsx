@@ -38,7 +38,7 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
   }
 
   return (
-    <section>
+    <section className="border-t border-border pt-10">
       <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
         {t("dataQuality.entities.heading", "Who we hold to account")}
       </h2>
