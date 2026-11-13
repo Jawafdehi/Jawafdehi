@@ -263,6 +263,8 @@ export interface CourtCase {
   /** Structured outcome (the API filters it to its closed enum, else null). */
   verdict_type?: string | null;
   status: string;
+  /** The court document this record was read from (a /material/ IRI or path). */
+  material_id?: string | null;
   // Sub-resources present only on the assembled "full" shape (getCourtCaseFull).
   // The composite-key core endpoint (getCourtCase) omits them entirely, so every
   // reader must treat them as optional and default to [].

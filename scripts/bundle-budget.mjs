@@ -325,7 +325,19 @@ const DIR = arg("dir", "dist/client");
 // pre-renderer is hard-coded to `ne`, and English is opt-in and already applied
 // asynchronously. Deferring the English bundle is the biggest low-risk win
 // available and nobody has taken it.
-const MAX_INITIAL_JS_GZIP = 679_400;
+// 2026-11: 679_400 → 692_000 for the archive-first redesign (the ai-native/*
+// stack: home, /mcp, /whats-new, /likhit, shared shaders). Measured in CI, the
+// number that gates: main (e3ffefd) builds to 657.3 KB and the top of the
+// stack to 674.5 KB, so the stack costs 17.2 KB gzip, about 2.6%. The cost is
+// pre-rendered page code and their strings in both languages, which the split
+// policy keeps eager; the shader library itself stays deferred (see
+// MUST_BE_DEFERRED). Taken deliberately and landed first, so every PR in the
+// stack is measured against the limit it will merge under.
+//
+// Measure in CI, not locally: a local build on Node 26 gzips the same files
+// 3–4 KB smaller (670.7 vs 674.5 KB here), so a limit set from a local number
+// fails CI. Deferring en.json (above) remains the way to win this back.
+const MAX_INITIAL_JS_GZIP = 692_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
@@ -348,11 +360,20 @@ const MUST_BE_DEFERRED = [
   {
     marker: "THREE.WebGLRenderer",
     why:
-      "three.js + @react-three/fiber are ~250 KB gzip and the homepage hero " +
-      "scene is the only consumer. The initial payload sits ~1 KB under the " +
+      "three.js + @react-three/fiber are ~250 KB gzip and the /donate globe " +
+      "is the only consumer. The initial payload sits ~1 KB under the " +
       "limit, so a single static import of the 3D stack blows the budget. " +
       "Load it only through the React.lazy() dynamic import in " +
-      "src/components/home/hero-scene-gate.tsx.",
+      "src/components/donate/globe-gate.tsx.",
+  },
+  {
+    marker: "u_colorFront",
+    why:
+      "@paper-design/shaders-react draws the home and /mcp hero backdrops and " +
+      "is pure decoration. Load it only through the React.lazy() dynamic " +
+      "import in src/components/brand-shaders/shader-backdrop.tsx; import " +
+      "types and colours from brand-shaders/palette.ts, never from " +
+      "shader-backdrop-impl.tsx.",
   },
 ];
 

@@ -1,13 +1,13 @@
 import type { ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { Mail } from "@/components/icons";
 import { FaFacebook, FaWhatsapp } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 import { PayCard } from "@/components/donate/pay-card";
 import { JAWAFDEHI_EMAIL, JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { getStatistics } from "@/services/jds-api";
-import { trackEvent } from "@/utils/analytics";
+import { trackEvent, type DonateMethod } from "@/utils/analytics";
 
 /** The channels a donor can actually reach a human on. Email is the record
  * channel for receipts and donation questions; Facebook and WhatsApp are where
@@ -15,10 +15,10 @@ import { trackEvent } from "@/utils/analytics";
  * write an email still has a way in. Labels reuse the footer's channel names,
  * which are already translated. */
 const CONTACT_CHANNELS: readonly {
-  id: string;
+  id: DonateMethod;
   href: string;
   labelKey: string;
-  icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon: ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
   external?: boolean;
 }[] = [
   {
@@ -49,10 +49,10 @@ const CONTACT_CHANNELS: readonly {
 function Stat({ value, label }: Readonly<{ value?: number; label: string }>) {
   return (
     <div>
-      <div className="text-2xl font-bold text-primary-foreground">
+      <div className="font-home-display text-3xl tabular-nums text-primary-foreground">
         {typeof value === "number" ? value.toLocaleString() : "—"}
       </div>
-      <div className="mt-0.5 text-xs font-medium uppercase tracking-wide text-primary-foreground/60">
+      <div className="mt-1 text-sm text-primary-foreground/60">
         {label}
       </div>
     </div>
@@ -87,7 +87,7 @@ export function DonateHero() {
           <div>
             <h1
               id="donate-hero-title"
-              className="text-4xl font-bold leading-[1.08] text-primary-foreground md:text-5xl"
+              className="font-home-display text-4xl leading-[1.08] text-primary-foreground md:text-[3.5rem]"
             >
               {/* Three slots so the amber emphasis can sit mid-sentence in
                   either language. Nepali needs no lead-in — its verb phrase

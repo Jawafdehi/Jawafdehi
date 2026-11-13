@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 
 import { getCasesCitingCourtCase } from "@/services/jds-api";
-import { Badge } from "@/components/ui/badge";
+import { CaseTypeBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/date";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
@@ -52,11 +52,11 @@ export function CourtCaseRelatedCases({ courtCaseIri }: { courtCaseIri: string }
       <div className="flex items-baseline justify-between gap-3">
         <h2
           id="courtcase-related-cases-heading"
-          className="text-xl font-semibold tracking-tight text-primary"
+          className="font-case-section-title"
         >
           {t("courtCaseDetail.relatedCases")}
         </h2>
-        <span className="text-sm font-medium text-muted-foreground">{data.count}</span>
+        <span className="text-[15px] tabular-nums text-muted-foreground">{data.count}</span>
       </div>
 
       <ul className="space-y-3">
@@ -68,23 +68,23 @@ export function CourtCaseRelatedCases({ courtCaseIri }: { courtCaseIri: string }
           const href = c.slug ? `/case/${c.slug}` : undefined;
 
           const row = (
-            <div className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40">
-              <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="group flex items-start gap-3 rounded-[20px] border border-border/70 bg-surface p-5 transition-[border-color] duration-200 ease-out hover:border-primary/25">
+              <div className="min-w-0 flex-1 space-y-2.5">
                 {typeLabel ? (
-                  <Badge variant="secondary" className="shrink-0">
+                  <CaseTypeBadge caseType={offenceType} className="shrink-0 px-3 py-1 text-sm">
                     {typeLabel}
-                  </Badge>
+                  </CaseTypeBadge>
                 ) : null}
-                <h3 className="line-clamp-2 text-base font-medium leading-snug text-primary group-hover:underline">
+                <h3 className="line-clamp-2 text-[17px] leading-snug text-primary">
                   {c.title}
                 </h3>
                 {date ? (
-                  <p className="text-xs text-muted-foreground">{date}</p>
+                  <p className="text-sm tabular-nums text-muted-foreground">{date}</p>
                 ) : null}
               </div>
               {href ? (
                 <ArrowRight
-                  className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                  className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5"
                   aria-hidden="true"
                 />
               ) : null}
@@ -96,7 +96,7 @@ export function CourtCaseRelatedCases({ courtCaseIri }: { courtCaseIri: string }
               {href ? (
                 <Link
                   to={href}
-                  className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="block rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {row}
                 </Link>

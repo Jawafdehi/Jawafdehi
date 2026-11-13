@@ -15,7 +15,7 @@ import {
   Tag,
   Vote,
   ExternalLink,
-} from 'lucide-react';
+} from "@/components/icons";
 import type { Entity, Candidacy } from '@/types/entity';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -103,11 +103,14 @@ function formatAttributeValue(value: unknown): string | Record<string, unknown> 
   // Handle objects
   if (typeof value === 'object' && value !== null) {
     const obj = value as Record<string, unknown>;
-    
+    // A LangText structure: en / ne, each { value }.
+    const en = obj.en as { value?: string } | undefined;
+    const ne = obj.ne as { value?: string } | undefined;
+
     // Check if it's a LangText structure (has en/ne with value)
-    if (obj.en?.value || obj.ne?.value) {
-      const enValue = obj.en?.value;
-      const neValue = obj.ne?.value;
+    if (en?.value || ne?.value) {
+      const enValue = en?.value;
+      const neValue = ne?.value;
       
       // Show both if they exist and are different
       if (enValue && neValue && enValue !== neValue) {

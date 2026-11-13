@@ -1,5 +1,6 @@
+import { seriesBySlug, seriesScope } from "@/data/material-series";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
 import {
   MemoryRouter,
@@ -200,6 +201,26 @@ function renderSearch(initialEntry = "/search") {
   );
 }
 
+// The filters live in the chip row's "All filters" sheet (and each chip's
+// popover); a test that ticks a box opens the sheet first, as a reader would.
+function openAllFilters() {
+  fireEvent.click(screen.getByRole("button", { name: /All filters/ }));
+  return screen.getByRole("dialog");
+}
+
+// While the sheet is open the rest of the page is hidden from the
+// accessibility tree, as it should be; close it to reach the tabs and results.
+function closeAllFilters() {
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+}
+
+/** Tick one facet box the way a reader does: open, tick, close. */
+function tick(name: string) {
+  openAllFilters();
+  fireEvent.click(screen.getByRole("checkbox", { name }));
+  closeAllFilters();
+}
+
 describe("ArchiveSearch", () => {
   beforeEach(() => {
     getCaseByIdMock.mockReset();
@@ -221,11 +242,9 @@ describe("ArchiveSearch", () => {
     expect(
       screen.getByRole("status", { name: "Searching archive" }),
     ).toBeTruthy();
-    // One skeleton, not one per viewport: the filter panel is rendered once and
-    // positioned with CSS, so the loading placeholder is single too.
-    expect(document.querySelectorAll('aside[aria-hidden="true"]').length).toBe(
-      1,
-    );
+    // The filter row is up before the first response: "All filters" is
+    // there to press while the facets load.
+    expect(screen.getByRole("button", { name: /All filters/ })).toBeTruthy();
     expect(
       document.querySelector('div[aria-live="polite"] [aria-hidden="true"]'),
     ).toBeTruthy();
@@ -263,20 +282,13 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Original result");
 
-    fireEvent.click(
-      screen.getByRole("checkbox", {
-        name: "CIAA: 6 results",
-      }),
-    );
+    tick("CIAA: 6 results");
 
+    // The Tags chip names the value in force.
     await waitFor(() => {
-      expect(
-        screen
-          .getByRole("checkbox", { name: "CIAA: 6 results" })
-          .getAttribute("data-state"),
-      ).toBe("checked");
+      expect(screen.getByRole("button", { name: "CIAA" })).toBeTruthy();
     });
-    expect(screen.getAllByText("Filters").length).toBeGreaterThan(0);
+    expect(screen.getByRole("group", { name: "Filters" })).toBeTruthy();
     expect(
       screen.getByRole("status", { name: "Searching archive" }),
     ).toBeTruthy();
@@ -340,50 +352,25 @@ describe("ArchiveSearch", () => {
     );
   });
 
-  it("puts the tabs in the results column, not in a row above the whole grid", async () => {
-    // The tabs scope the CARDS, so they belong over the cards. As a full-width
-    // row above the grid their underline also ran across the filter sidebar,
-    // implying it scoped the facets too, and it pushed the sidebar a whole tab
-    // row down the page.
+  it("keeps the search bar and the filters in one sticky header", async () => {
+    // They are used together — a reader refines the words and the filters in
+    // turn — so they pin together under the navbar. A sticky filter sidebar
+    // with a search bar that scrolled away split them.
     //
-    // jsdom has no layout engine, so this asserts the two things that PRODUCE
-    // the layout: the tablist is a sibling of the results section inside the
-    // grid (not an earlier element outside it), and it is placed in column 2 /
-    // row 1 with the sidebar spanning both rows so it starts level with them.
+    // jsdom has no layout engine, so this asserts what PRODUCES the layout:
+    // the search field and the filter row share one sticky container, and the
+    // tabs sit above it rather than inside.
     searchArchiveMock.mockResolvedValue(baseResponse);
     renderSearch();
     await screen.findByText("Original result");
 
-    const tablist = screen.getByRole("tablist");
-    const results = screen.getByRole("region", {
-      name: "Archive search results",
-    });
-    const grid = tablist.parentElement!.parentElement!;
-
-    expect(results.parentElement).toBe(grid);
-    expect(grid.className).toContain("lg:grid-cols-[250px_minmax(0,1fr)]");
-    expect(tablist.parentElement!.className).toContain("lg:col-start-2");
-    expect(tablist.parentElement!.className).toContain("lg:row-start-1");
-    expect(results.className).toContain("lg:row-start-2");
-    // The sidebar spans both rows, which is what lifts it to the tab row.
-    const sidebarCell = screen.getByRole("complementary", {
-      name: "Archive search filters",
-    }).parentElement!;
-    expect(sidebarCell.className).toContain("lg:row-span-2");
-    // ...and the row template is what stops that span from inflating row 1.
-    // Two implicit `auto` rows let the sidebar push half its surplus height
-    // into the tab row: on /search (All records) that was 745px of row for a
-    // 45px tab bar, i.e. ~700px of blank space before the first card. Row 2
-    // must stay FLEXIBLE — that is what makes the sizing algorithm skip row 1
-    // when distributing the spanning sidebar. `auto auto` would not fix it.
-    expect(grid.className).toContain("lg:grid-rows-[auto_minmax(0,1fr)]");
-    // Still ahead of the mobile Filters disclosure in DOM order, so the
-    // single-column layout below `lg` keeps the tabs above it.
-    const filtersToggle = screen.getByRole("button", { name: /^Filters/ });
-    expect(
-      tablist.compareDocumentPosition(filtersToggle) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    const search = screen.getByRole("textbox", { name: "Search the Jawafdehi archive" });
+    const filterRow = screen.getByRole("group", { name: "Filters" });
+    const header = search.closest(".sticky");
+    expect(header).toBeTruthy();
+    expect(header!.className).toContain("top-[76px]");
+    expect(header!.contains(filterRow)).toBe(true);
+    expect(header!.contains(screen.getByRole("tablist"))).toBe(false);
   });
 
   it("shows the Entity type filter only while browsing Entities", async () => {
@@ -403,9 +390,11 @@ describe("ArchiveSearch", () => {
     await waitFor(() => {
       expect(screen.getByText("Entity type")).toBeTruthy();
     });
+    openAllFilters();
     expect(
       screen.getByRole("checkbox", { name: "Person: 4 results" }),
     ).toBeTruthy();
+    closeAllFilters();
 
     fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
@@ -419,9 +408,7 @@ describe("ArchiveSearch", () => {
     renderSearch("/search?type=entity");
     await screen.findByText("Original result");
 
-    fireEvent.click(
-      screen.getByRole("checkbox", { name: "Person: 4 results" }),
-    );
+    tick("Person: 4 results");
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -458,11 +445,7 @@ describe("ArchiveSearch", () => {
     renderSearch("/search?type=courtcase");
     await screen.findByText("Court level");
 
-    fireEvent.click(
-      screen.getByRole("checkbox", {
-        name: "District Court: 14307 results",
-      }),
-    );
+    tick("District Court: 14307 results");
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
@@ -477,25 +460,36 @@ describe("ArchiveSearch", () => {
     );
   });
 
-  it("drops court filters when switching to another record type", async () => {
+  it("drops court filters when switching tabs, and keeps location where it applies", async () => {
+    // Court level and Court only exist on Court cases. District and Province
+    // are SUBJECT geography, which cases and entities carry too, so they travel
+    // to those tabs and clear only on the way to one without them.
     searchArchiveMock.mockResolvedValue(courtFacetResponse);
-    renderSearch("/search?type=courtcase&province=Bagmati");
-    await screen.findByText("Court level");
+    renderSearch("/search?type=courtcase&court_type=district&province=Bagmati");
 
-    expect(searchArchiveMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ province: ["Bagmati"], type: "courtcase" }),
-    );
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ court_type: ["district"], province: ["Bagmati"], type: "courtcase" }),
+      );
+    });
 
     fireEvent.click(screen.getByRole("tab", { name: "Cases" }));
 
     await waitFor(() => {
       expect(searchArchiveMock).toHaveBeenLastCalledWith(
-        expect.objectContaining({ province: [], type: "case" }),
+        expect.objectContaining({ court_type: [], province: ["Bagmati"], type: "case" }),
       );
     });
-    expect(screen.getByTestId("location-search").textContent).not.toContain(
-      "province",
-    );
+    expect(screen.getByTestId("location-search").textContent).not.toContain("court_type");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Materials" }));
+
+    await waitFor(() => {
+      expect(searchArchiveMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ province: [], type: "material" }),
+      );
+    });
+    expect(screen.getByTestId("location-search").textContent).not.toContain("province");
   });
 
   it("ignores a court filter carried in by a non-court URL", async () => {
@@ -563,26 +557,26 @@ describe("ArchiveSearch", () => {
     );
   });
 
-  it("shows the active बिगो range as one removable pill", async () => {
+  it("shows the active बिगो range on the Amount chip, cleared by its ×", async () => {
     searchArchiveMock.mockResolvedValue(withBigoExtent);
     renderSearch("/search?type=case&bigo_min=10000000");
     await screen.findByText("Original result");
 
-    // A range is never applied invisibly, and it is ONE pill rather than one per
-    // bound, because it is a single removable refinement.
+    // A range is never applied invisibly: the Amount chip names it, and ONE ×
+    // clears it, because it is a single refinement however many bounds it has.
     //
-    // Asserted on the pill's identity and behaviour, not its wording: this suite
-    // does not initialise i18next, so `t` hands back the raw default with
-    // `{{min}}` uninterpolated. The formatted label is covered where a `t` that
-    // interpolates exists — describeBigoRange's unit tests and
-    // SearchFilters.test.tsx.
-    const pills = await screen.findByLabelText("Selected filters");
-    const bigoPill = Array.from(pills.querySelectorAll("button")).filter(
+    // Asserted on identity and behaviour, not wording: this suite does not
+    // initialise i18next, so `t` hands back the raw default with `{{min}}`
+    // uninterpolated. The formatted label is covered where a `t` that
+    // interpolates exists — describeBigoRange's unit tests.
+    const row = await screen.findByRole("group", { name: "Filters" });
+    const amountChip = Array.from(row.querySelectorAll("button")).filter(
       (button) => button.textContent?.includes("above"),
     );
-    expect(bigoPill).toHaveLength(1);
+    expect(amountChip).toHaveLength(1);
 
-    fireEvent.click(bigoPill[0]);
+    const clearButton = amountChip[0].nextElementSibling as HTMLButtonElement;
+    fireEvent.click(clearButton);
 
     await waitFor(() => {
       expect(screen.getByTestId("location-search").textContent).not.toContain(
@@ -672,28 +666,19 @@ describe("ArchiveSearch", () => {
     expect(getCaseByIdMock).not.toHaveBeenCalled();
   });
 
-  it("opens in card view", async () => {
+  it("always renders results as cards, with no view toggle", async () => {
+    // The card/list switch is gone: cards for cases, entities and court cases,
+    // and the document row for materials, which is that record's one format.
     searchArchiveMock.mockResolvedValue(baseResponse);
     renderSearch();
     await screen.findByText("Original result");
 
-    expect(
-      screen.getByRole("button", { name: "Card view" }).getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(
-      screen.getByRole("button", { name: "List view" }).getAttribute("aria-pressed"),
-    ).toBe("false");
-
-    // Card sits first in the toggle, so the default view leads.
-    const toggles = Array.from(
-      screen
-        .getByRole("group", { name: "View mode" })
-        .querySelectorAll("button"),
-    ).map((button) => button.getAttribute("aria-label"));
-    expect(toggles).toEqual(["Card view", "List view"]);
+    expect(screen.queryByRole("button", { name: "Card view" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "List view" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "View mode" })).toBeNull();
   });
 
-  it("shows बिगो on case cards in both views, and omits it when there is no amount", async () => {
+  it("shows बिगो on case cards, and omits it when there is no amount", async () => {
     searchArchiveMock.mockResolvedValue({
       ...baseResponse,
       results: [
@@ -706,21 +691,13 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Case with an amount");
 
-    // Card view (the default).
     expect(screen.getByText("Rs 2.49 Crore")).toBeTruthy();
     // A 0/null amount means "no amount recorded", not "nothing was embezzled" —
     // rendering formatBigo(0) as "Rs 0" would assert a finding the case doesn't make.
     expect(screen.queryByText("Rs 0")).toBeNull();
-
-    // Same field in list view: <CaseCard>'s meta block is not mode-branched, so
-    // one mapping fix surfaces बिगो in both.
-    fireEvent.click(screen.getByRole("button", { name: "List view" }));
-
-    expect(screen.getByText("Rs 2.49 Crore")).toBeTruthy();
-    expect(screen.queryByText("Rs 0")).toBeNull();
   });
 
-  it("shows the same fields for a non-case result in both views", async () => {
+  it("shows every field on a court-case card", async () => {
     searchArchiveMock.mockResolvedValue({
       ...baseResponse,
       results: [
@@ -748,8 +725,7 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Special Court 081-CR-0060");
 
-    // Court cases use the dedicated reusable card in both view modes. The field
-    // set stays the same while the shell becomes more compact in list view.
+    // Court cases use the dedicated reusable card.
     const renderedFields = () => ({
       status: screen.getByText("Ongoing").textContent,
       title: screen.getByText("Special Court 081-CR-0060").textContent,
@@ -760,24 +736,23 @@ describe("ArchiveSearch", () => {
       // prerender) — so the card takes `date_bs` over `date`, as it should for a
       // Nepali reader. The labels stay English because an unresolved i18next
       // returns each `t()` call's default value. What this assertion is for is
-      // that the field appears identically in both views, which is
-      // language-independent either way.
+      // that each field appears, which is language-independent either way.
       court: screen.getByText("विशेष अदालत").textContent,
       registered: screen.getByText("Registered: 2081-09-26").textContent,
       cta: screen.getByText("View case").textContent,
     });
 
-    const cardView = renderedFields();
-    fireEvent.click(screen.getByRole("button", { name: "List view" }));
-    const listView = renderedFields();
-
-    expect(listView).toEqual(cardView);
-    // The title keeps the same semantic level and clamp in both shells.
-    const heading = () =>
-      screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" });
-    expect(heading().className).toContain("line-clamp-2");
-    fireEvent.click(screen.getByRole("button", { name: "Card view" }));
-    expect(heading().className).toContain("line-clamp-3");
+    expect(renderedFields()).toEqual({
+      status: "Ongoing",
+      title: "Special Court 081-CR-0060",
+      caseNumber: "081-CR-0060",
+      court: "विशेष अदालत",
+      registered: "Registered: 2081-09-26",
+      cta: "View case",
+    });
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Special Court 081-CR-0060" }).className,
+    ).toContain("line-clamp-3");
   });
 
   it("renders materials as shared document rows, fed only by the index", async () => {
@@ -803,11 +778,8 @@ describe("ArchiveSearch", () => {
     renderSearch("/search?type=material");
     await screen.findByText("Charge sheet filed against nine officials");
 
-    // Materials have one canonical presentation (the /materials series row),
-    // so the card/list toggle is hidden on this tab.
-    expect(
-      screen.getByRole("group", { name: "View mode" }).className,
-    ).toContain("hidden");
+    // Materials have one canonical presentation (the /materials series row).
+    expect(screen.queryByRole("group", { name: "View mode" })).toBeNull();
 
     const title = screen.getByRole("link", {
       name: "Charge sheet filed against nine officials",
@@ -933,16 +905,12 @@ describe("ArchiveSearch", () => {
     renderSearch();
     await screen.findByText("Original result");
 
-    fireEvent.click(
-      screen.getByRole("checkbox", {
-        name: "CIAA: 6 results",
-      }),
-    );
+    tick("CIAA: 6 results");
 
     expect(
       await screen.findByText("Archive search could not be loaded."),
     ).toBeTruthy();
-    expect(screen.getAllByText("Filters").length).toBeGreaterThan(0);
+    expect(screen.getByRole("group", { name: "Filters" })).toBeTruthy();
     expect(screen.queryByText("Original result")).toBeNull();
     expect(screen.queryByText("No archive records found")).toBeNull();
   });
@@ -996,65 +964,60 @@ describe("ArchiveSearch", () => {
   // regression is invisible on screen and only shows up as payload and
   // hydration cost. (The getBy* queries in the tests above guard it too: they
   // throw on a second match.)
-  describe("single filter panel", () => {
-    it("renders the facet controls and the landmark exactly once", async () => {
+  describe("All filters sheet", () => {
+    it("keeps the full panel closed until asked for, and renders it once", async () => {
       searchArchiveMock.mockResolvedValue(baseResponse);
       renderSearch();
       await screen.findByText("Original result");
 
+      // Closed: the chips carry the filters; the full panel is not in the DOM.
       expect(
-        document.querySelectorAll('aside[aria-label="Archive search filters"]')
-          .length,
-      ).toBe(1);
-      expect(screen.getAllByRole("checkbox").length).toBe(2);
+        document.querySelectorAll('aside[aria-label="Archive search filters"]').length,
+      ).toBe(0);
       expect(screen.getAllByRole("tab").length).toBe(5);
-      expect(document.querySelectorAll("details").length).toBe(0);
+
+      const sheet = openAllFilters();
+      expect(
+        document.querySelectorAll('aside[aria-label="Archive search filters"]').length,
+      ).toBe(1);
+      expect(within(sheet).getAllByRole("checkbox").length).toBe(2);
     });
 
-    it("keeps the single panel in the desktop sidebar while collapsed on mobile", async () => {
+    it("Clear all keeps the tab, clears the filters, and closes the sheet", async () => {
+      // Regression: clearing on the Cases tab used to drop `type` as well, so
+      // the reader was thrown back to All records.
       searchArchiveMock.mockResolvedValue(baseResponse);
-      renderSearch();
+      renderSearch("/search?type=case&province=Bagmati&tags=procurement");
       await screen.findByText("Original result");
 
-      const toggle = screen.getByRole("button", { name: "Filters" });
-      const panel = document.getElementById(
-        toggle.getAttribute("aria-controls") || "",
-      );
+      const sheet = openAllFilters();
+      fireEvent.click(within(sheet).getByRole("button", { name: "Clear all" }));
 
-      // Collapsed on phones, but `lg:block` still reveals the same node as the
-      // desktop sidebar — that pairing is what makes one instance serve both,
-      // with no breakpoint hook and so no pre-render/hydration mismatch.
-      expect(toggle.getAttribute("aria-expanded")).toBe("false");
-      expect(toggle.className).toContain("lg:hidden");
-      expect(panel?.className).toContain("hidden");
-      expect(panel?.className).toContain("lg:block");
-      expect(panel?.querySelector('aside[aria-label="Archive search filters"]'))
-        .toBeTruthy();
-    });
-
-    it("expands and collapses the panel on mobile and counts active refinements", async () => {
-      searchArchiveMock.mockResolvedValue(baseResponse);
-      renderSearch();
-      await screen.findByText("Original result");
-
-      const toggle = screen.getByRole("button", { name: "Filters" });
-      const panel = document.getElementById(
-        toggle.getAttribute("aria-controls") || "",
-      );
-
-      fireEvent.click(toggle);
-      expect(toggle.getAttribute("aria-expanded")).toBe("true");
-      expect(panel?.className).not.toContain("hidden");
-
-      fireEvent.click(toggle);
-      expect(toggle.getAttribute("aria-expanded")).toBe("false");
-      expect(panel?.className).toContain("hidden");
-
-      // The collapsed control has to report how many refinements are hidden
-      // behind it, the way the old <summary> did.
-      fireEvent.click(screen.getByRole("checkbox", { name: "CIAA: 6 results" }));
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
+        expect(screen.getByTestId("location-search").textContent).toBe("?type=case");
+      });
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
+
+    it("disables Clear all while nothing is applied", async () => {
+      searchArchiveMock.mockResolvedValue(baseResponse);
+      renderSearch("/search?type=case");
+      await screen.findByText("Original result");
+
+      const sheet = openAllFilters();
+      expect(
+        within(sheet).getByRole("button", { name: "Clear all" }).hasAttribute("disabled"),
+      ).toBe(true);
+    });
+
+    it("counts the filters in force on its button", async () => {
+      searchArchiveMock.mockResolvedValue(baseResponse);
+      renderSearch();
+      await screen.findByText("Original result");
+
+      tick("CIAA: 6 results");
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /All filters\s*1/ })).toBeTruthy();
       });
     });
   });
@@ -1101,6 +1064,28 @@ describe("ArchiveSearch — materials tab filters", () => {
     });
   });
 
+  it("scopes to a series from ?series=, the landing page's folders opened as a filter", async () => {
+    renderSearch("/search?type=material&series=charge-sheets");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    const series = seriesBySlug("charge-sheets")!;
+    expect(lastRequest()).toMatchObject({ type: "material", ...seriesScope(series) });
+    // In force, its chip names the series instead of the bare "Series".
+    const bar = screen.getByRole("group", { name: /filters/i });
+    await waitFor(() => expect(within(bar).getByText("Charge sheets")).toBeTruthy());
+  });
+
+  it("ignores an unknown series rather than scoping to nothing", async () => {
+    renderSearch("/search?type=material&series=no-such-shelf");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().source).toBeUndefined();
+  });
+
+  it("ignores a series on any tab but Documents", async () => {
+    renderSearch("/search?type=case&series=charge-sheets");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().source).toBeUndefined();
+  });
+
   it("repeats material_type for a reader who ticks two boxes", async () => {
     renderSearch(
       "/search?type=material&material_type=charge_sheet&material_type=press_release",
@@ -1137,25 +1122,24 @@ describe("ArchiveSearch — materials tab filters", () => {
     expect(searchArchiveMock.mock.calls[0][0].date_to).toBeUndefined();
   });
 
-  it("shows the date range as ONE removable pill, and clears both bounds", async () => {
+  it("shows the date range on its chip, and its × clears both bounds", async () => {
     renderSearch("/search?type=material&date_from=2020-01-01&date_to=2024-12-31");
     await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
 
-    // One pill rather than one per bound, because it is a single removable
+    // One chip value rather than one per bound, because it is a single
     // refinement — same call as the बिगो range above.
     //
     // Asserted on identity and behaviour, not wording: this suite does not
     // initialise i18next, so `t` hands back the raw default with `{{from}}`
     // uninterpolated. The formatted label is covered where a `t` that
-    // interpolates exists — describeDateRange's unit tests and
-    // SearchFilters.test.tsx.
-    const pills = await screen.findByLabelText("Selected filters");
-    const datePills = Array.from(pills.querySelectorAll("button")).filter(
+    // interpolates exists — describeDateRange's unit tests.
+    const row = await screen.findByRole("group", { name: "Filters" });
+    const dateChip = Array.from(row.querySelectorAll("button")).filter(
       (button) => button.textContent?.includes("{{from}}"),
     );
-    expect(datePills).toHaveLength(1);
+    expect(dateChip).toHaveLength(1);
 
-    fireEvent.click(datePills[0]);
+    fireEvent.click(dateChip[0].nextElementSibling as HTMLButtonElement);
 
     await waitFor(() => {
       const search = screen.getByTestId("location-search").textContent ?? "";

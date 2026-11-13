@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -7,17 +7,12 @@ import {
   Menu,
   MessageCircle,
   Search,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { AppSearchCommand } from "@/components/AppSearchCommand";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { MegaMenuPanel } from "@/components/nav/MegaMenuPanel";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -26,6 +21,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { CHAT_URL } from "@/lib/external-links";
 
 type NavItem = {
   key: string;
@@ -34,34 +30,37 @@ type NavItem = {
   exact?: boolean;
 };
 
-type PillStyle = {
-  opacity: number;
-  transform: string;
-  width: number;
-};
-
-const desktopNavWidthClass: Record<string, string> = {
-  home: "min-w-[4.5rem]",
-  process: "min-w-[7.25rem]",
-  cases: "min-w-[4.75rem]",
-  volunteer: "min-w-[6.25rem]",
-  faq: "min-w-[4.25rem]",
-  updates: "min-w-[5.5rem]",
-  commitment: "min-w-[8.75rem]",
-  about: "min-w-[5.75rem]",
-  archive: "min-w-[5.75rem]",
-};
-
-const useIsomorphicLayoutEffect =
-  typeof globalThis.window !== "undefined" ? useLayoutEffect : useEffect;
 
 const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "rounded-2xl px-4 py-3 text-sm font-normal transition-all duration-200",
+    "rounded-2xl px-4 py-3 text-[15px] font-normal transition-colors duration-200",
     isActive
-      ? "bg-secondary/55 text-foreground/80"
-      : "text-foreground/65 hover:bg-secondary/35 hover:text-foreground/80",
+      ? "bg-muted text-primary"
+      : "text-primary/70 hover:bg-muted/60 hover:text-primary",
   );
+
+// The primary links sit in ONE soft pill (the Frontify / AngelList header):
+// 15px, regular, each a pill of its own inside it. The current page is a white
+// pill on the grey track — the site's switcher language — instead of a crimson
+// underline; crimson stays reserved for Donate. NAV_GROUP_* is the track.
+const NAV_ITEM_CLASS =
+  "relative inline-flex h-9 items-center justify-center rounded-full px-3.5 text-center text-[15px] font-normal text-primary/70 transition-colors duration-200 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+const NAV_ACTIVE_CLASS = "bg-surface text-primary shadow-[0_1px_2px_rgba(14,31,59,0.08)]";
+const NAV_ACTIVE_ON_DARK_CLASS = "bg-transparent text-primary-foreground shadow-none";
+const NAV_GROUP_CLASS = "rounded-full bg-muted p-1";
+// On the navy heroes the track and the pills have no fill at all: the bar is
+// part of the hero, and the current page is told by its full-white text.
+const NAV_GROUP_ON_DARK_CLASS = "bg-transparent";
+// Icon buttons (search, menu) are bare glyphs: no border, no fill at rest.
+const NAV_ICON_CLASS =
+  "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none";
+const NAV_ICON_ON_DARK_CLASS = "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground";
+
+/** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
+const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/", "/likhit", "/likhit/"]);
+// /materials opens on the navy landing only when it has no query: with one
+// (?series=, ?q=…) it redirects into /search (pages/Materials.tsx).
+const MATERIALS_PATHS = new Set(["/materials", "/materials/"]);
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -69,15 +68,19 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const [archiveOpen, setArchiveOpen] = useState(false);
-  const [pillStyle, setPillStyle] = useState<PillStyle>({
-    opacity: 0,
-    transform: "translateX(0px)",
-    width: 0,
-  });
-  const navRefs = useRef<Record<string, HTMLElement | null>>({});
+  // The open mega-menu group, if any. Hover opens it after a short intent
+  // delay and leaving the header closes it after a grace period, so a pointer
+  // crossing the bar on its way somewhere does not flash the panel.
+  const [menu, setMenu] = useState<"archive" | "about" | null>(null);
+  const archiveOpen = menu === "archive";
+  const aboutOpen = menu === "about";
+  const menuTimer = useRef<number | undefined>(undefined);
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const schedule = useCallback((next: "archive" | "about" | null, delay: number) => {
+    window.clearTimeout(menuTimer.current);
+    menuTimer.current = window.setTimeout(() => setMenu(next), delay);
+  }, []);
+  const cancelClose = useCallback(() => window.clearTimeout(menuTimer.current), []);
 
   const navItems = useMemo<NavItem[]>(
     () => [
@@ -88,12 +91,12 @@ export function Navbar() {
     [t],
   );
 
-  // Unified public archive: full search + the data-lake single-type browse views.
+  // Unified public archive. Every search lives on /search (court cases, cases and
+  // entities included, via ?type=), so the menu carries no per-type browse links.
   const archiveNavItems = useMemo<NavItem[]>(
     () => [
       { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
-      { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
       { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
       { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
     ],
@@ -122,18 +125,17 @@ export function Navbar() {
 
     // Derived from aboutNavItems rather than a second hardcoded list of the
     // same paths: the two had to be edited together, so they would eventually
-    // drift and the group's pill would go dark on a page inside it.
+    // drift and the group's underline would go missing on a page inside it.
     if (aboutNavItems.some((item) => item.to === path)) {
       return "about";
     }
     // Derived from archiveNavItems for the same reason as the group above —
     // and this list had already drifted: it was a copy of the menu's paths, so
-    // /mcp went into the menu while the pill stayed dark on that page. The
-    // extra entries below are the ones with no menu item of their own: /cases
-    // (reached from the header, not this menu) and the detail-page prefixes.
+    // /mcp went into the menu while the trigger stayed unmarked on that page. The
+    // extra entries below are the ones with no menu item of their own: the
+    // detail-page prefixes.
     if (
       archiveNavItems.some((item) => item.to === path) ||
-      path === "/cases" ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
       path.startsWith("/courtcase/") ||
@@ -145,37 +147,15 @@ export function Navbar() {
     return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
   }, [location.pathname, navItems, aboutNavItems, archiveNavItems]);
 
-  const pillKey = hoveredKey ?? activeKey;
-  const showPill = isScrolled && Boolean(pillKey);
-
-  // The home hero is a full-bleed navy stage, and at rest the header is
-  // transparent directly on top of it — where the navy logo and nav text
+  // The home and MCP heroes are full-bleed navy stages, and at rest the header
+  // is transparent directly on top of them — where the navy logo and nav text
   // would vanish. Every other page opens on a light surface. So the at-rest
-  // header is light-on-dark on "/" only, and snaps back to the normal navy-on-
-  // light treatment the moment it gains its opaque background (isScrolled).
-  const overDarkHero = !isScrolled && location.pathname === "/";
-
-  useIsomorphicLayoutEffect(() => {
-    if (!showPill || !pillKey) {
-      setPillStyle((current) => ({ ...current, opacity: 0 }));
-      return;
-    }
-
-    const node = navRefs.current[pillKey];
-    if (!node) {
-      return;
-    }
-
-    setPillStyle({
-      opacity: 1,
-      transform: `translateX(${node.offsetLeft}px)`,
-      width: node.offsetWidth,
-    });
-  }, [pillKey, showPill, location.pathname]);
-
-  const setNavRef = (key: string) => (node: HTMLElement | null) => {
-    navRefs.current[key] = node;
-  };
+  // header is light-on-dark on those routes only, and snaps back to the normal
+  // navy-on-light treatment the moment it gains its opaque background.
+  const overDarkHero =
+    !isScrolled &&
+    (DARK_HERO_PATHS.has(location.pathname) ||
+      (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
 
   const [homeNavItem, ...secondaryNavItems] = navItems;
 
@@ -189,6 +169,48 @@ export function Navbar() {
     window.addEventListener("scroll", updateScrolled, { passive: true });
     return () => window.removeEventListener("scroll", updateScrolled);
   }, []);
+
+  useEffect(() => {
+    setMenu(null);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (menu === null) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      triggerRefs.current[menu]?.focus();
+      setMenu(null);
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [menu]);
+
+  useEffect(() => () => window.clearTimeout(menuTimer.current), []);
+
+  const triggerProps = (group: "archive" | "about") => ({
+    ref: (el: HTMLButtonElement | null) => {
+      triggerRefs.current[group] = el;
+    },
+    type: "button" as const,
+    "aria-expanded": menu === group,
+    "aria-controls": `nav-menu-${group}`,
+    onPointerEnter: (event: React.PointerEvent) => {
+      if (event.pointerType === "mouse") schedule(group, menu === null ? 90 : 0);
+    },
+    onClick: () => {
+      cancelClose();
+      setMenu((open) => (open === group ? null : group));
+    },
+    onKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+        event.preventDefault();
+        cancelClose();
+        setMenu(group);
+      }
+    },
+  });
+  // Moving onto a plain link in the bar closes any open panel.
+  const closeOnEnter = () => schedule(null, 0);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -216,38 +238,25 @@ export function Navbar() {
 
   return (
     <>
-      {/* Once scrolled, the header itself has to be opaque. It used to stay
-          `bg-transparent` at every scroll position, with `isScrolled` only
-          turning on backgrounds for the individual controls inside it (logo
-          pill, search/menu buttons, language toggle) — so the page scrolled
-          directly behind the band and only those pills masked anything. Measured
-          at eight real scroll positions on the home page: 0 full-width masks and
-          page text under the header at every position but the top, worst case the
-          hero headline "स्थायी अभिलेख" overlapping by 46px.
-          This is worse on a phone than on desktop: a desktop header carries a
-          full nav row that incidentally covers the band, while a 360px header has
-          four small pills and mostly open space. Devanagari makes it worse again,
-          since tall matras and conjuncts collide with the pill shapes.
-          Still deliberately transparent at the top, for the hero. */}
+      {/* Transparent at rest, over the navy heroes; once scrolled, one solid
+          white bar, with no line or shadow under it. It must be opaque, not
+          glass: translucency without blur let the hero headline through as a
+          sharp ghost, and a full-width backdrop-filter repaints on every scroll
+          frame on the low-end phones this site is built for. */}
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-colors duration-200 ease-out",
-          // Fully opaque on phones; glass from `md` up.
-          //
-          // A full-width `backdrop-filter` repaints on every scroll frame, and that
-          // cost lands on the low-end-Android audience this whole change is for. It
-          // is also not measurable here — CPU throttling does not throttle the
-          // compositor — so the phone case takes the option that needs no GPU work
-          // at all rather than the one that merely looks cheap.
-          //
-          // It has to be *opaque*, not just more opaque: `/95` without blur still
-          // let the hero headline through as a sharp, legible ghost, because the
-          // blur was what diffused the residual. Screenshotted both. Translucency
-          // and no-blur do not combine.
           isScrolled
-            ? "bg-background md:bg-background/85 md:backdrop-blur-md"
+            ? "bg-background"
             : "bg-transparent",
         )}
+        onPointerEnter={cancelClose}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse") schedule(null, 160);
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenu(null);
+        }}
       >
         <a
           href="#main-content"
@@ -261,10 +270,7 @@ export function Navbar() {
             to="/"
             aria-label={t("nav.homeAria")}
             className={cn(
-              "flex h-11 min-w-0 items-center justify-self-start rounded-full border px-3 transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isScrolled
-                ? "border-border/70 bg-white/75 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/70"
-                : "border-transparent bg-transparent shadow-none backdrop-blur-0",
+              "flex h-11 min-w-0 items-center justify-self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             )}
           >
             {/* The wordmark in logo.svg is navy and disappears on the dark
@@ -292,36 +298,24 @@ export function Navbar() {
 
           <nav
             aria-label="Primary"
-            onPointerLeave={() => setHoveredKey(null)}
             className={cn(
-              "relative hidden items-center justify-self-center rounded-full border p-1 transition-all duration-200 ease-out xl:flex",
-              isScrolled
-                ? "border-border/70 bg-white/85 shadow-sm shadow-foreground/5 backdrop-blur-md dark:border-border/70 dark:bg-background/80"
-                : "border-transparent bg-transparent shadow-none backdrop-blur-0",
+              "relative hidden items-center gap-0.5 justify-self-center xl:flex",
+              NAV_GROUP_CLASS,
+              overDarkHero && NAV_GROUP_ON_DARK_CLASS,
             )}
           >
-            <span
-              aria-hidden="true"
-              className={cn(
-                "absolute left-0 top-1 h-10 rounded-full bg-muted shadow-sm transition-[transform,width,opacity] duration-200 ease-out motion-reduce:transition-none dark:bg-secondary/55",
-                !isScrolled && "shadow-none",
-              )}
-              style={pillStyle}
-            />
 
             {homeNavItem ? (
               <NavLink
                 to={homeNavItem.to}
                 end={homeNavItem.exact}
-                ref={setNavRef(homeNavItem.key)}
-                onPointerEnter={() => setHoveredKey(homeNavItem.key)}
+                onPointerEnter={closeOnEnter}
                 className={({ isActive }) =>
                   cn(
-                    "relative z-10 inline-flex h-10 items-center justify-center rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    desktopNavWidthClass[homeNavItem.key],
-                    isActive && "font-medium text-foreground/82",
+                    NAV_ITEM_CLASS,
+                    isActive && NAV_ACTIVE_CLASS,
                     overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                    overDarkHero && isActive && "text-primary-foreground",
+                    overDarkHero && isActive && NAV_ACTIVE_ON_DARK_CLASS,
                   )
                 }
               >
@@ -331,52 +325,37 @@ export function Navbar() {
 
             {/* Archive sits directly after Home: the public archive is what most
                 visitors come for, so it leads and About closes the row. */}
-            <DropdownMenu open={archiveOpen} onOpenChange={setArchiveOpen}>
-              <DropdownMenuTrigger
-                ref={setNavRef("archive")}
-                onPointerEnter={() => setHoveredKey("archive")}
+            <button
+              {...triggerProps("archive")}
+              className={cn(
+                cn(NAV_ITEM_CLASS, "gap-1"),
+                (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_CLASS,
+                overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                overDarkHero && (activeKey === "archive" || archiveOpen) && NAV_ACTIVE_ON_DARK_CLASS,
+              )}
+            >
+              {t("nav.archive", "Archive")}
+              <ChevronDown
+                aria-hidden="true"
                 className={cn(
-                  "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  desktopNavWidthClass.archive,
-                  (activeKey === "archive" || archiveOpen) && "text-foreground/82",
-                  overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "archive" || archiveOpen) && "text-primary-foreground",
+                  "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                  archiveOpen && "rotate-180",
                 )}
-              >
-                {t("nav.archive", "Archive")}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    archiveOpen && "rotate-180",
-                  )}
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                className="mt-3 w-52 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
-              >
-                {archiveNavItems.map((item) => (
-                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
-                    <Link to={item.to}>{item.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              />
+            </button>
 
             {secondaryNavItems.map((item) => (
               <NavLink
                 key={item.key}
                 to={item.to}
                 end={item.exact}
-                ref={setNavRef(item.key)}
-                onPointerEnter={() => setHoveredKey(item.key)}
+                onPointerEnter={closeOnEnter}
                 className={({ isActive }) =>
                   cn(
-                    "relative z-10 inline-flex h-10 items-center justify-center rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    desktopNavWidthClass[item.key],
-                    isActive && "font-medium text-foreground/82",
+                    NAV_ITEM_CLASS,
+                    isActive && NAV_ACTIVE_CLASS,
                     overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                    overDarkHero && isActive && "text-primary-foreground",
+                    overDarkHero && isActive && NAV_ACTIVE_ON_DARK_CLASS,
                   )
                 }
               >
@@ -384,104 +363,69 @@ export function Navbar() {
               </NavLink>
             ))}
 
-            <DropdownMenu open={aboutOpen} onOpenChange={setAboutOpen}>
-              <DropdownMenuTrigger
-                ref={setNavRef("about")}
-                onPointerEnter={() => setHoveredKey("about")}
+            <button
+              {...triggerProps("about")}
+              className={cn(
+                cn(NAV_ITEM_CLASS, "gap-1"),
+                (activeKey === "about" || aboutOpen) && NAV_ACTIVE_CLASS,
+                overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
+                overDarkHero && (activeKey === "about" || aboutOpen) && NAV_ACTIVE_ON_DARK_CLASS,
+              )}
+            >
+              {t("nav.about")}
+              <ChevronDown
+                aria-hidden="true"
                 className={cn(
-                  "relative z-10 inline-flex h-10 items-center justify-center gap-1 rounded-full px-3 text-center text-sm font-normal text-foreground/62 transition-colors duration-200 hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  desktopNavWidthClass.about,
-                  (activeKey === "about" || aboutOpen) && "text-foreground/82",
-                  overDarkHero && "text-primary-foreground/75 hover:text-primary-foreground",
-                  overDarkHero && (activeKey === "about" || aboutOpen) && "text-primary-foreground",
+                  "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+                  aboutOpen && "rotate-180",
                 )}
-              >
-                {t("nav.about")}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
-                    aboutOpen && "rotate-180",
-                  )}
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                className="mt-3 w-56 rounded-2xl border-border/70 bg-background/95 p-2 shadow-xl shadow-foreground/10 backdrop-blur-[12px]"
-              >
-                {aboutNavItems.map((item) => (
-                  <DropdownMenuItem key={item.key} asChild className="rounded-xl text-sm font-normal">
-                    <Link to={item.to}>{item.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              />
+            </button>
           </nav>
 
           <div className="hidden items-center justify-end gap-2 justify-self-end xl:flex">
-            <LanguageToggle quiet={!isScrolled} onDark={overDarkHero} />
+            <LanguageToggle quiet onDark={overDarkHero} />
 
-            <div
-              className={cn(
-                "flex items-center gap-1 rounded-full transition-all duration-200 ease-out",
-                isScrolled
-                  ? " dark:border-border/70 dark:bg-background/70"
-                  : "border-transparent bg-transparent shadow-none backdrop-blur-0",
-              )}
-            >
-              <Button
+            <Button
                 variant="navIcon"
                 size="icon"
                 type="button"
                 onClick={() => setIsSearchOpen(true)}
                 aria-label={t("searchCommand.open")}
                 title={t("searchCommand.open")}
-                className={cn(
-                  isScrolled
-                    ? "border-border/70 bg-white/70 dark:border-border/70 dark:bg-background/70"
-                    : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
-                  overDarkHero && "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground",
-                )}
+                className={cn(NAV_ICON_CLASS, overDarkHero && NAV_ICON_ON_DARK_CLASS)}
               >
                 <Search className="h-4 w-4" />
               </Button>
-            </div>
 
-            <Button
-              asChild
-              variant="secondary"
-              className={cn(
-                "min-w-[8rem] whitespace-nowrap bg-accent px-4 font-semibold text-accent-foreground transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent/90",
-                isScrolled ? "shadow-md shadow-accent/20" : "shadow-none",
-              )}
-            >
+            <Button asChild variant="accent" className="text-[15px]">
               <Link to="/donate">
-                <HeartHandshake className="h-4 w-4" />
+                <HeartHandshake aria-hidden="true" />
                 {t("nav.donate")}
               </Link>
             </Button>
 
+            {/* Grey fill, no outline: the secondary action in the same voice as
+                the nav track and the search page's chips. */}
             <Button
               asChild
-              variant="primary"
-              size="navCta"
+              variant="ghost"
               className={cn(
-                "min-w-[12rem] whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-0.5",
-                isScrolled ? "shadow-md shadow-primary-surface/15" : "shadow-none",
-                // bg-primary-surface is the same navy as the home hero — the
-                // button vanishes into the stage without the glass treatment.
-                overDarkHero &&
-                  "bg-primary-foreground/10 text-primary-foreground ring-1 ring-inset ring-primary-foreground/25 hover:bg-primary-foreground/15",
+                "text-[15px] font-normal",
+                overDarkHero
+                  ? "bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  : "bg-muted text-primary hover:bg-primary/[0.08]",
               )}
             >
-              <a href="https://chat.jawafdehi.org" target="_blank" rel="noreferrer">
-                <MessageCircle className="h-4 w-4" />
+              <a href={CHAT_URL} target="_blank" rel="noreferrer">
+                <MessageCircle aria-hidden="true" />
                 {t("header.askAiAssistant")}
               </a>
             </Button>
           </div>
 
           <div className="flex items-center gap-2 justify-self-end xl:hidden">
-            <LanguageToggle quiet={!isScrolled} onDark={overDarkHero} />
+            <LanguageToggle quiet onDark={overDarkHero} />
             <Button
               variant="navIcon"
               size="navMenuIcon"
@@ -490,10 +434,8 @@ export function Navbar() {
               aria-label={t("searchCommand.open")}
               title={t("searchCommand.open")}
               className={cn(
-                isScrolled
-                  ? "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
-                  : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
-                  overDarkHero && "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                NAV_ICON_CLASS,
+                overDarkHero && NAV_ICON_ON_DARK_CLASS,
               )}
             >
               <Search className="h-5 w-5" />
@@ -504,10 +446,8 @@ export function Navbar() {
                   variant="navIcon"
                   size="navMenuIcon"
                   className={cn(
-                    isScrolled
-                      ? "border-border/70 bg-white/75 dark:border-border/70 dark:bg-background/70"
-                      : "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none",
-                  overDarkHero && "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                    NAV_ICON_CLASS,
+                    overDarkHero && NAV_ICON_ON_DARK_CLASS,
                   )}
                 >
                   <Menu className="h-5 w-5" />
@@ -591,7 +531,7 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     <Link to="/donate">
-                      <HeartHandshake className="h-4 w-4" />
+                      <HeartHandshake aria-hidden="true" />
                       {t("nav.donate")}
                     </Link>
                   </Button>
@@ -601,8 +541,8 @@ export function Navbar() {
                     size="navSheet"
                     onClick={() => setIsOpen(false)}
                   >
-                    <a href="https://chat.jawafdehi.org" target="_blank" rel="noreferrer">
-                      <MessageCircle className="h-4 w-4" />
+                    <a href={CHAT_URL} target="_blank" rel="noreferrer">
+                      <MessageCircle aria-hidden="true" />
                       {t("header.askAiAssistant")}
                     </a>
                   </Button>
@@ -611,6 +551,21 @@ export function Navbar() {
             </Sheet>
           </div>
         </div>
+
+        {/* The open group's panel, desktop only: no scrim, and the bar keeps
+            its own background, so opening a menu changes nothing but the panel. */}
+        {menu !== null ? (
+          <div className="hidden xl:block">
+            <MegaMenuPanel
+              key={menu}
+              id={`nav-menu-${menu}`}
+              label={menu === "archive" ? t("nav.archive", "Archive") : t("nav.about")}
+              items={menu === "archive" ? archiveNavItems : aboutNavItems}
+              activePath={location.pathname}
+              onNavigate={() => setMenu(null)}
+            />
+          </div>
+        ) : null}
       </header>
       <AppSearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </>

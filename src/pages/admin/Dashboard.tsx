@@ -18,7 +18,7 @@ import {
   MessageSquare,
   Network,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { hasNesWriteAccess, hasNgmWriteAccess, isModerator } from "@/lib/roles";

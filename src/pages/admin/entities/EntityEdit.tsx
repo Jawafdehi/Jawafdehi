@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save } from "@/components/icons";
 
 // Identity / provenance keys the editor never lets you change (they map to the
 // backend's blocked patch paths). Shown read-only; excluded from the editable

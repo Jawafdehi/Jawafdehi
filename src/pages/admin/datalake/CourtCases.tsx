@@ -3,7 +3,7 @@ import ResourceTable, { type Column } from "@/components/admin/ResourceTable";
 import { listCourtCases } from "@/services/admin-api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 
 type Row = Record<string, unknown>;
 

@@ -1,4 +1,4 @@
-import { Mic2, Youtube } from "lucide-react";
+import { Mic2, Youtube } from "@/components/icons";
 import type { ElementType } from "react";
 import { useTranslation } from "react-i18next";
 import { BsCameraReelsFill } from "react-icons/bs";
@@ -25,25 +25,21 @@ export function DataSources() {
   const { t } = useTranslation();
 
   return (
-    <section id="data-sources" className="bg-background py-14 md:py-20">
+    <section id="data-sources" aria-labelledby="data-sources-title" className="pb-20 md:pb-28">
       <div className="layout-container">
-        <div className="mx-auto mb-12 max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            {t("ourProcess.sources.heading")}
-          </h2>
+        <h2 id="data-sources-title" className="font-home-section-title text-primary">
+          {t("ourProcess.sources.heading")}
+        </h2>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("ourProcess.sources.description")}</p>
 
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-            {t("ourProcess.sources.description")}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-6">
+        {/* Each source as a grey tile: its mark, its name, one line. */}
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {EXTERNAL_SOURCES.map(({ icon: Icon, imageSrc, key }) => (
             <div
               key={key}
-              className="group flex flex-col items-center text-center"
+              className="group flex flex-col rounded-[22px] bg-muted p-5"
             >
-              <div className="mb-4 flex h-16 items-center justify-center">
+              <div className="mb-6 flex h-14 items-center">
                 {imageSrc && (
                   <img
                     src={imageSrc}
@@ -55,22 +51,22 @@ export function DataSources() {
                     height={252}
                     loading="lazy"
                     decoding="async"
-                    className="h-14 w-auto object-contain opacity-85 transition duration-300 group-hover:-translate-y-1 group-hover:opacity-100"
+                    className="h-12 w-auto object-contain"
                   />
                 )}
                 {!imageSrc && Icon && (
                   <Icon
-                    className="h-11 w-11 text-primary opacity-85 transition duration-300 group-hover:-translate-y-1 group-hover:opacity-100"
+                    className="h-10 w-10 text-primary"
                     aria-hidden="true"
                   />
                 )}
               </div>
 
-              <h3 className="text-base font-bold leading-tight text-foreground">
+              <h3 className="mt-auto text-[17px] font-normal leading-snug text-primary">
                 {t(`ourProcess.sources.items.${key}.label`)}
               </h3>
 
-              <p className="mt-2 max-w-[180px] text-sm leading-5 text-muted-foreground">
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                 {t(`ourProcess.sources.items.${key}.desc`)}
               </p>
             </div>

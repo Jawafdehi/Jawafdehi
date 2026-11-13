@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy } from "@/components/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,19 +36,19 @@ function ColourSwatch({
   const failed = status === "failed";
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
+    <div className="overflow-hidden rounded-[22px] border border-border/70 bg-surface">
       {/* Painted from the live token, so the sample is always the colour the
           site actually renders. The inset ring keeps the warm-white swatch
           visible against a white card. */}
       <div
-        className="h-20 w-full ring-1 ring-inset ring-black/10"
+        className="h-24 w-full ring-1 ring-inset ring-black/10"
         style={{ backgroundColor: swatch }}
         aria-hidden="true"
       />
 
-      <div className="flex items-center justify-between gap-2 p-3">
+      <div className="flex items-center justify-between gap-2 p-4">
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-primary">{label}</p>
+          <p className="truncate text-[15px] text-primary">{label}</p>
           <p className="font-mono text-xs text-muted-foreground">{hex}</p>
         </div>
 
@@ -56,7 +56,7 @@ function ColourSwatch({
           type="button"
           onClick={copy}
           aria-label={`${label} ${hex}`}
-          className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="shrink-0 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {copied ? (
             <Check className="h-4 w-4 text-accent" />
@@ -82,16 +82,12 @@ export function PressKitBrand() {
   const { t } = useTranslation();
 
   return (
-    <section id="brand" className="bg-muted/10 py-12 md:py-16">
+    <section id="brand" className="pt-16 md:pt-24">
       <div className="layout-container">
-        <h2 className="mb-3 text-center text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
-          {t("pressKit.colours.title")}
-        </h2>
-        <p className="mx-auto mb-8 max-w-3xl text-center font-paragraph font-paragraph-foreground">
-          {t("pressKit.colours.intro")}
-        </p>
+        <h2 className="font-home-section-title text-primary">{t("pressKit.colours.title")}</h2>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("pressKit.colours.intro")}</p>
 
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-10 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {PRESS_KIT_COLOURS.map((colour) => (
             <ColourSwatch
               key={colour.hex}
@@ -102,17 +98,12 @@ export function PressKitBrand() {
           ))}
         </div>
 
-        <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-muted-foreground">
-          {t("pressKit.colours.note")}
-        </p>
+        <p className="mt-4 max-w-3xl text-sm text-muted-foreground">{t("pressKit.colours.note")}</p>
 
-        <h2 className="mb-8 mt-14 text-center text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
-          {t("pressKit.type.title")}
-        </h2>
+        <h2 className="font-home-section-title mb-10 mt-16 text-primary md:mt-24">{t("pressKit.type.title")}</h2>
 
-        {/* Four faces since the headline role split per locale, so the 3-col
-            grid would leave an orphan: 2 columns from sm, 4 from lg. */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Three faces: Inter (English), Vesper Libre and Noto (Nepali). */}
+        <div className="grid gap-3 sm:grid-cols-3">
           {PRESS_KIT_TYPEFACES.map((face) => {
             // A face is documented either by an explicit family — pinned to
             // the face the caption names, which is all but the mono card — or
@@ -123,15 +114,15 @@ export function PressKitBrand() {
             return (
               <div
                 key={face.name}
-                className="rounded-lg border border-border bg-background p-5"
+                className="rounded-[22px] bg-muted p-6"
               >
                 <p
-                  className={`${className} text-2xl text-primary`}
+                  className={`${className} text-3xl text-primary`}
                   style={family ? { fontFamily: family } : undefined}
                 >
                   {face.sample}
                 </p>
-                <p className="mt-3 font-bold text-primary">{face.name}</p>
+                <p className="mt-6 text-[17px] text-primary">{face.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {t(`pressKit.type.${face.key}`)}
                 </p>
@@ -140,9 +131,7 @@ export function PressKitBrand() {
           })}
         </div>
 
-        <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-muted-foreground">
-          {t("pressKit.type.note")}
-        </p>
+        <p className="mt-4 max-w-3xl text-sm text-muted-foreground">{t("pressKit.type.note")}</p>
       </div>
     </section>
   );

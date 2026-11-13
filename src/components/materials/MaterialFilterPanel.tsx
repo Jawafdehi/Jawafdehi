@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { chipVariants } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
 
 export type MaterialDatePreset = "all" | "30-days" | "6-months" | "1-year" | "custom";
@@ -87,13 +88,8 @@ export function MaterialFilterPanel({
               type="button"
               aria-pressed={filters.preset === preset}
               onClick={() => onPresetChange(preset)}
-              className={cn(
-                "rounded-full border px-3.5 py-2 text-sm outline-none transition-colors",
-                "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
-                filters.preset === preset
-                  ? "border-primary/20 bg-folder-2 text-foreground"
-                  : "border-border bg-background text-foreground hover:bg-surface-2",
-              )}
+              // The site's one switcher pill (ui/chip).
+              className={chipVariants({ active: filters.preset === preset })}
             >
               {t(`materialsLanding.filters.presets.${preset}`)}
             </button>

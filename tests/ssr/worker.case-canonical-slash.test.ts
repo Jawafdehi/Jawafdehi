@@ -81,100 +81,35 @@ describe('the case canonical names the URL the page is pre-rendered at', () => {
   });
 });
 
-/** `/api/search/?type=case&page_size=1` answers with a count and nothing else. */
-function stubCaseCount(count: number | null) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => (count === null
-      ? new Response('upstream is down', { status: 503 })
-      : new Response(JSON.stringify({ count }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }))),
-  );
-}
-
-describe('a case browse page past the end is a 404, not a soft 404', () => {
-  it('404s a page past the end of the live archive', async () => {
-    stubCaseCount(463); // 39 pages of 12
+describe('the retired browse URLs', () => {
+  // /cases, /cases/page/:page and /courtcases folded into the typed /search.
+  // The edge answers them with a 301 carrying the query string, so crawlers
+  // see a move rather than a duplicate and a bookmarked filter still works —
+  // and it does so without asking the API anything.
+  it.each([
+    ['/cases', '/search/?type=case'],
+    ['/cases/', '/search/?type=case'],
+    ['/cases/page/9999', '/search/?type=case'],
+    ['/cases?search=dahal', '/search/?type=case&q=dahal'],
+    ['/courtcases', '/search/?type=courtcase'],
+    ['/courtcases/?q=%E0%A4%B8&court=supreme', '/search/?type=courtcase&q=%E0%A4%B8&court=supreme'],
+  ])('301s %s to %s', async (path, location) => {
+    const upstream = vi.fn();
+    vi.stubGlobal('fetch', upstream);
 
     const res = await worker.fetch(
-      new Request('https://jawafdehi.org/cases/page/40'),
+      new Request(`https://jawafdehi.org${path}`),
       makeEnv() as never,
       {} as never,
     );
 
-    expect(res.status).toBe(404);
-    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe(location);
+    expect(upstream).not.toHaveBeenCalled();
   });
+});
 
-  it('serves a page that is in range but not yet pre-rendered', async () => {
-    // The case CodeRabbit raised on #416, and it is reachable: publishing cases
-    // past a multiple of 12 adds a page immediately. /cases/page/39 hydrates
-    // against the live count, sees 40 pages and renders a Next link to a page
-    // the last build never wrote. "No file" must not mean "does not exist".
-    stubCaseCount(470); // 40 pages — page 40 is real, just not built yet
-
-    const res = await worker.fetch(
-      new Request('https://jawafdehi.org/cases/page/40'),
-      makeEnv() as never,
-      {} as never,
-    );
-
-    expect(res.status).toBe(200);
-  });
-
-  it('serves the page when the count is unavailable, rather than 404ing it', async () => {
-    // Fails open on purpose. A 404 is what removes a URL from the index, so
-    // deciding one on a backend blip is worse than the soft 404 being replaced
-    // — the same call handleCaseMetaFallback makes.
-    stubCaseCount(null);
-
-    const res = await worker.fetch(
-      new Request('https://jawafdehi.org/cases/page/7'),
-      makeEnv() as never,
-      {} as never,
-    );
-
-    expect(res.status).toBe(200);
-  });
-
-  it.each(['abc', '0', '1', '-2', '2.5', '007'])(
-    '404s /cases/page/%s without asking the API at all',
-    async (raw) => {
-      // `1` included deliberately: page one is /cases, so /cases/page/1 is a
-      // second URL for the same listing. None of these need a count to rule
-      // out, which keeps a flood of junk page numbers off the upstream.
-      const upstream = vi.fn();
-      vi.stubGlobal('fetch', upstream);
-
-      const res = await worker.fetch(
-        new Request(`https://jawafdehi.org/cases/page/${raw}`),
-        makeEnv() as never,
-        {} as never,
-      );
-
-      expect(res.status).toBe(404);
-      expect(upstream).not.toHaveBeenCalled();
-    },
-  );
-
-  it('still serves a page that WAS pre-rendered', async () => {
-    const page2 = '<!doctype html><html><body>page 2 of the archive</body></html>';
-    const env = makeEnv({
-      '/cases/page/2': new Response(page2, { status: 200, headers: { 'content-type': 'text/html' } }),
-    });
-
-    const res = await worker.fetch(
-      new Request('https://jawafdehi.org/cases/page/2'),
-      env as never,
-      {} as never,
-    );
-
-    expect(res.status).toBe(200);
-    expect(await res.text()).toContain('page 2 of the archive');
-  });
-
+describe('redirects into a case page', () => {
   // The redirects into a case page have to land on the SAME form the canonical
   // names, or the 301 lands on a URL that immediately 307s. /case/212 cost two
   // hops that way, and URL Inspection reported the middle one as declaring a
@@ -202,17 +137,5 @@ describe('a case browse page past the end is a 404, not a soft 404', () => {
 
     expect(res.status).toBe(301);
     expect(res.headers.get('Location')).toBe('/case/a-case/');
-  });
-
-  it('leaves /cases itself alone', async () => {
-    const env = makeEnv({
-      '/cases': new Response('<!doctype html><html><body>page 1</body></html>', {
-        status: 200,
-        headers: { 'content-type': 'text/html' },
-      }),
-    });
-
-    const res = await worker.fetch(new Request('https://jawafdehi.org/cases'), env as never, {} as never);
-    expect(res.status).toBe(200);
   });
 });

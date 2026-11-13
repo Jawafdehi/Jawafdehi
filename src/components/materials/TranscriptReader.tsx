@@ -18,7 +18,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, FileText, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, X } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

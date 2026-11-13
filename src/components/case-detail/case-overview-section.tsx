@@ -20,7 +20,7 @@ export function CaseOverviewSection({
   const { t } = useTranslation();
 
   return (
-    <section id="overview" className="mb-12 w-full max-w-4xl min-w-0 scroll-mt-28">
+    <section id="overview" className="mb-16 w-full min-w-0 scroll-mt-28">
       <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
       <CollapsibleCaseContent

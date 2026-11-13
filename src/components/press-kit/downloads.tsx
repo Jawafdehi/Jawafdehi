@@ -1,4 +1,4 @@
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { Download, ExternalLink, FileText } from "@/components/icons";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -22,14 +22,14 @@ function DownloadCard({ href, icon: Icon, label, meta, external }: Readonly<Down
     <a
       href={href}
       {...linkProps}
-      className="group flex items-center gap-4 rounded-lg border border-border bg-background p-5 transition-colors hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="group flex items-center gap-4 rounded-[22px] bg-muted p-5 transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.07] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100"
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/5 text-primary transition-colors group-hover:bg-accent/10 group-hover:text-accent">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-primary">
         <Icon className="h-5 w-5" />
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block font-bold text-primary">{label}</span>
+        <span className="block text-[17px] text-primary">{label}</span>
         <span className="block text-sm text-muted-foreground">{meta}</span>
       </span>
 
@@ -46,13 +46,14 @@ export function PressKitDownloads() {
   const { t } = useTranslation();
 
   return (
-    <section id="download" className="bg-muted/10 py-12 md:py-16">
+    <section id="download" aria-labelledby="press-kit-download-title">
       <div className="layout-container">
-        <h2 className="mb-8 text-center text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
+        <h2 id="press-kit-download-title" className="sr-only">
           {t("pressKit.download.title")}
         </h2>
 
-        <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-3">
+        {/* Straight under the hero: what most visitors came for. */}
+        <div className="grid gap-3 md:grid-cols-3">
           <DownloadCard
             href={PRESS_KIT_FILES.zip}
             icon={Download}

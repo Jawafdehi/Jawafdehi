@@ -48,9 +48,14 @@ export function JusticeSpread({
 
   return (
     <div>
+      {/* Drawn in a 760-unit space: scaled to a phone's width every name and
+          figure would shrink to ~5px, so below that width the chart keeps its
+          true size and scrolls sideways in its own focusable region instead. */}
+      <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:thin] sm:mx-0 sm:px-0" tabIndex={0} role="region" aria-label={ariaLabel}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
+        className="min-w-[760px]"
         style={{ height: "auto", overflow: "visible" }}
         role="img"
         aria-label={avgLabel + ": " + ariaLabel}
@@ -70,7 +75,7 @@ export function JusticeSpread({
               x={x(t)}
               y={padTop - 12}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily={MONO_STACK}
               fill="hsl(var(--muted-foreground))"
             >
@@ -93,7 +98,7 @@ export function JusticeSpread({
           x={x(avgPct)}
           y={H - 1}
           textAnchor="middle"
-          fontSize={10}
+          fontSize={12}
           fontFamily={MONO_STACK}
           fill="hsl(var(--accent))"
         >
@@ -115,7 +120,7 @@ export function JusticeSpread({
                 y={cy}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={11.5}
+                fontSize={12}
                 fontFamily={NE_STACK}
                 fill="hsl(var(--foreground))"
               >
@@ -125,7 +130,7 @@ export function JusticeSpread({
                 x={cx + r + 5}
                 y={cy}
                 dominantBaseline="middle"
-                fontSize={10.5}
+                fontSize={12}
                 fontFamily={MONO_STACK}
                 fill="hsl(var(--muted-foreground))"
               >
@@ -135,8 +140,9 @@ export function JusticeSpread({
           );
         })}
       </svg>
+      </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "hsl(var(--primary-surface))" }} aria-hidden="true" />
           {bandLabels.high}

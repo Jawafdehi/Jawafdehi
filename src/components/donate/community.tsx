@@ -17,7 +17,7 @@ export function Community() {
           <Eyebrow className="mb-3">{t("donate.community.eyebrow")}</Eyebrow>
           <h2
             id="donate-community-title"
-            className="text-3xl font-bold leading-tight tracking-normal text-primary md:text-4xl"
+            className="font-home-section-title text-primary"
           >
             {t("donate.community.title")}
           </h2>
@@ -30,7 +30,7 @@ export function Community() {
             dark backdrop. The static world map is the no-WebGL / reduced-motion
             / data-saver fallback; when the scene mounts it simply fades in on
             top (see globe-gate.tsx for the gates). */}
-        <div className="relative mx-auto mt-10 w-full max-w-4xl overflow-hidden rounded-xl bg-primary-surface">
+        <div className="relative mx-auto mt-10 w-full max-w-4xl overflow-hidden rounded-[28px] bg-primary-surface">
           <div className="relative h-[20rem] md:h-[26rem]">
             <img
               src="/assets/world-map.svg"

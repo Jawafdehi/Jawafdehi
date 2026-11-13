@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/admin/FormError";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "@/components/icons";
 
 // The common chrome every admin form page repeats: a "back to list" ghost
 // button, an <h1> title, an optional subtitle, the page-level error box, and a

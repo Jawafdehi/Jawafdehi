@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
-import { Archive, HeartHandshake, Mail } from "lucide-react";
+import { Archive, HeartHandshake, Mail } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 

@@ -6,7 +6,7 @@ import type { ReviewListItem, ReviewDetail } from "@/types/casework";
 import { Button } from "@/components/ui/button";
 import { ReviewRow } from "@/components/casework/ReviewRow";
 import { ReviewResultView } from "@/components/casework/ReviewResultView";
-import { Loader2, ArrowLeft, ExternalLink, RefreshCw, Play } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink, RefreshCw, Play } from "@/components/icons";
 
 // Get the HTTP status / conflicting review id off an axios error without
 // pulling in axios types here.

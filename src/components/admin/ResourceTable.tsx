@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw } from "@/components/icons";
 
 export interface Column<T> {
   header: string;

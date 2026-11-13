@@ -1,30 +1,37 @@
-import { Archive } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-/** The final folder on the series shelf leads to the full materials search. */
+/**
+ * The last tile on the series shelf: the way out to the whole archive. The
+ * same tall tile as a FolderCard, so it sits in the grid as a peer; it holds
+ * the arrow, which is what marks it as the action rather than one
+ * more series. It wears the folder tiles' grey rather than navy, so the row
+ * stays one weight and the arrow alone marks it.
+ */
 export function BrowseAllFolderCard() {
   const { t } = useTranslation();
 
   return (
     <Link
-      to="/materials/?q="
-      className="font-material-folder group relative block rounded-2xl outline-none shadow-elev-md transition-[transform,box-shadow] duration-200 ease-out-strong hover:-translate-y-1 hover:shadow-elev-lg focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      to="/search?type=material"
+      className="group block h-full rounded-[20px] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
     >
-      <div
-        aria-hidden="true"
-        className="absolute -top-[18px] left-0 h-[26px] w-[38%] rounded-t-[8px] bg-card [transform:skewX(-8deg)] [transform-origin:bottom_left]"
-      />
-      <div className="relative flex aspect-[11/10] flex-col items-center justify-center gap-7 overflow-hidden rounded-2xl rounded-tl-none border border-border/60 bg-card p-5 text-center">
-        <div
+      <div className="flex aspect-[4/5] items-center justify-center rounded-[20px] bg-muted transition-colors duration-200 group-hover:bg-[hsl(215_20%_93%)]">
+        <span
           aria-hidden="true"
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-surface text-muted-foreground"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-surface text-primary-foreground transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
         >
-          <Archive className="h-9 w-9 stroke-[1.35]" />
-        </div>
-        <h3 className="text-2xl font-medium leading-tight text-primary">
+          <ArrowRight className="h-5 w-5" />
+        </span>
+      </div>
+      <div className="pt-3">
+        <h3 className="text-[17px] font-normal leading-6 text-primary">
           {t("materialsLanding.grid.browseAll", "Browse all series")}
         </h3>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {t("materialsLanding.grid.browseAllLine", "Search every document")}
+        </p>
       </div>
     </Link>
   );

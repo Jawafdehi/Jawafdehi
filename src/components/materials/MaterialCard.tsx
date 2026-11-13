@@ -1,4 +1,4 @@
-import { Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 import type { MaterialSourceLink } from "@/lib/material-links";
 
@@ -30,7 +30,7 @@ export type MaterialCardViewMode = "list" | "card";
  * as a per-record picture.
  */
 export interface MaterialMetaRow {
-  icon: LucideIcon;
+  icon: IconComponent;
   label: string;
   /** ReactNode so a value can carry search highlights. */
   value: ReactNode;
@@ -43,15 +43,15 @@ export interface MaterialMetaRow {
  */
 function MaterialMeta({ rows }: Readonly<{ rows: readonly MaterialMetaRow[] }>) {
   return (
-    <dl className="mt-2 space-y-1">
+    <dl className="mt-3 space-y-1">
       {rows.map(({ icon: Icon, label, value }) => (
-        <div className="flex items-start gap-2 text-[13px] leading-5" key={label}>
+        <div className="flex items-start gap-2 text-sm leading-5" key={label}>
           <Icon
             aria-hidden="true"
             className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground"
           />
           <dt className="shrink-0 text-muted-foreground">{label}:</dt>
-          <dd className="min-w-0 break-words font-semibold text-foreground">
+          <dd className="min-w-0 break-words text-foreground/85">
             {value}
           </dd>
         </div>
@@ -106,10 +106,10 @@ export function MaterialCard({
   return (
     <Card
       className={cn(
-        "rounded-xl border-0 bg-surface p-5 shadow-elev-md transition-shadow hover:shadow-elev-lg",
+        "rounded-2xl border border-border/70 bg-surface p-5 shadow-none transition-colors hover:border-border",
         isTile
           ? "flex h-full flex-col gap-5"
-          : "grid gap-5 md:grid-cols-[minmax(0,1fr)_auto]",
+          : "grid h-full gap-5 md:grid-cols-[minmax(0,1fr)_auto]",
         // Labelled rows make the text column tall, so the actions sit at the
         // top of the row rather than floating in its vertical middle.
         !isTile && (metaRows ? "md:items-start" : "md:items-center"),
@@ -118,7 +118,7 @@ export function MaterialCard({
       <div className="min-w-0">
         <Link
           to={href}
-          className="line-clamp-2 text-[15px] font-semibold leading-snug text-primary outline-none hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-accent"
+          className="line-clamp-2 text-lg font-normal leading-7 text-primary outline-none underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-accent"
           title={title}
         >
           {titleNode ?? title}
@@ -129,7 +129,7 @@ export function MaterialCard({
           <p className="mt-1.5 text-sm italic text-muted-foreground">{metaLine}</p>
         ) : null}
         {description ? (
-          <p className="mt-2 line-clamp-3 break-words text-[13px] leading-5 text-muted-foreground">
+          <p className="mt-3 line-clamp-3 break-words text-sm leading-5 text-muted-foreground">
             {description}
           </p>
         ) : null}

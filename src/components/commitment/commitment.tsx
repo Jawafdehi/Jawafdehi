@@ -3,16 +3,78 @@ import {
   CheckCircle2,
   GitBranch,
   Globe,
-  Infinity as InfinityIcon,
+  InfinityIcon,
   Scale,
   Sparkles,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
+import { useRef, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 
+
+const DOT_TINTS = ["hsl(var(--accent))", "hsl(214 65% 52%)"] as const;
+
+/**
+ * One commitment: a hairline card with a still dot-dither bloom in its corner,
+ * and a spotlight of the same dots that follows the pointer. CSS only — a dot
+ * grid under a radial mask whose centre is two custom properties — so eight
+ * cards cost no WebGL. The pointer position is written straight onto the
+ * element's style (no React state, no re-render per mousemove). Touch and
+ * reduced motion get the still bloom alone.
+ */
+function CommitmentCard({
+  index,
+  icon: Icon,
+  title,
+  body,
+}: Readonly<{ index: number; icon: IconComponent; title: string; body: string }>) {
+  const ref = useRef<HTMLLIElement>(null);
+  const tint = DOT_TINTS[index % DOT_TINTS.length];
+  const dots = {
+    backgroundImage: `radial-gradient(${tint} 1.4px, transparent 1.9px), radial-gradient(${tint} 1.4px, transparent 1.9px)`,
+    backgroundSize: "8px 8px, 8px 8px",
+    backgroundPosition: "0 0, 4px 4px",
+  } as const;
+  // The still bloom lives in the bottom-right corner, where the words (which
+  // start top-left) never reach, so it never sits under a line of text.
+  const bloom = "radial-gradient(220px circle at 100% 100%, #000 0%, rgba(0,0,0,0.3) 45%, transparent 100%)";
+  const spot = "radial-gradient(140px circle at var(--x, -200px) var(--y, -200px), rgba(0,0,0,0.45), transparent 70%)";
+
+  const onPointerMove = (event: PointerEvent<HTMLLIElement>) => {
+    if (event.pointerType !== "mouse") return;
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--x", `${event.clientX - rect.left}px`);
+    el.style.setProperty("--y", `${event.clientY - rect.top}px`);
+  };
+
+  return (
+    <li
+      ref={ref}
+      onPointerMove={onPointerMove}
+      className="group relative isolate flex gap-5 overflow-hidden rounded-[24px] border border-border/70 bg-surface p-6 transition-[border-color] duration-200 ease-out hover:border-primary/20 md:p-7"
+    >
+      <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-70" style={{ ...dots, maskImage: bloom, WebkitMaskImage: bloom }} />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 motion-reduce:hidden"
+        style={{ ...dots, maskImage: spot, WebkitMaskImage: spot }}
+      />
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-accent">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <h3 className="text-xl leading-snug text-primary">{title}</h3>
+        <p className="mt-2 max-w-xl text-base leading-7 text-muted-foreground">{body}</p>
+      </div>
+    </li>
+  );
+}
+
 type CommitmentItem = {
-  icon: LucideIcon;
+  icon: IconComponent;
   titleKey: string;
   bodyKey: string;
 };
@@ -62,35 +124,22 @@ const COMMITMENTS: CommitmentItem[] = [
 
 export function CommitmentList() {
   const { t } = useTranslation();
+  // Eight promises as the redesign's grey panels, four across.
   return (
-    <section id="commitments" className="py-12 md:py-16">
+    <section id="commitments" aria-labelledby="commitments-title" className="pb-20 pt-16 md:pb-28 md:pt-24">
       <div className="layout-container">
-        <h2 className="mb-10 text-center text-3xl font-extrabold tracking-normal text-primary md:text-4xl">
+        <h2 id="commitments-title" className="font-home-section-title text-primary">
           {t("commitment.title")}
         </h2>
 
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-6">
+        {/* Two columns of hairline cards, each with the site's dot dither in
+            its corner (crimson and blue by turn); under a pointer a soft disc of
+            the same dots follows the cursor across the card. */}
+        <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
           {COMMITMENTS.map(({ icon: Icon, titleKey, bodyKey }, index) => (
-            <div
-              key={titleKey}
-              className={[
-                "flex flex-col items-center text-center lg:col-span-2",
-                index === 6 ? "lg:col-start-2" : "",
-                index === 7 ? "lg:col-start-4" : "",
-              ].join(" ")}
-            >
-              <div>
-                <div className="mb-2 flex items-center justify-center gap-2">
-                  <Icon className="h-5 w-5 flex-shrink-0 text-accent" aria-hidden="true" />
-                  <h3 className="text-lg font-semibold text-foreground">{t(titleKey)}</h3>
-                </div>
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  {t(bodyKey)}
-                </p>
-              </div>
-            </div>
+            <CommitmentCard key={titleKey} index={index} icon={Icon} title={t(titleKey)} body={t(bodyKey)} />
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

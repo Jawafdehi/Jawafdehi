@@ -4,6 +4,7 @@ export type SearchIconName =
   | "Bot"
   | "Building2"
   | "FileText"
+  | "FileType"
   | "HeartHandshake"
   | "Home"
   | "Info"
@@ -119,25 +120,6 @@ export const SITE_ROUTES = [
     keywords: ["home", "jawafdehi", "start"],
     icon: "Home",
     sitemapTitle: "Jawafdehi — Nepal Open Corruption Database",
-  },
-  {
-    path: "/cases",
-    chrome: "app",
-    titleKey: "header.browseCases",
-    descriptionKey: "searchCommand.descriptions.cases",
-    keywords: ["cases", "corruption", "archive"],
-    icon: "Search",
-    sitemapTitle: "Cases — Jawafdehi",
-  },
-  {
-    // Pages 2..N of the case browse; page 1 is "/cases" above. Carries no
-    // StaticPageMeta on purpose, which is what keeps it out of
-    // PRE_RENDERED_STATIC_ROUTES and out of the search index: the page count
-    // depends on how many cases exist, so the URL list cannot be a constant.
-    // scripts/pre-render.ts renders these from the live count and
-    // scripts/sitemap.ts lists them, both via casesPagePaths.
-    path: "/cases/page/:page",
-    chrome: "app",
   },
   {
     path: "/search",
@@ -270,6 +252,24 @@ export const SITE_ROUTES = [
     sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
   },
   {
+    path: "/whats-new",
+    chrome: "app",
+    titleKey: "whatsNew.meta.title",
+    descriptionKey: "searchCommand.descriptions.whatsNew",
+    keywords: ["what's new", "changelog", "release", "updates", "new features", "mcp", "api"],
+    icon: "Newspaper",
+    sitemapTitle: "What's new — Jawafdehi",
+  },
+  {
+    path: "/likhit",
+    chrome: "app",
+    titleKey: "likhit.meta.title",
+    descriptionKey: "searchCommand.descriptions.likhit",
+    keywords: ["likhit", "markdown", "pdf", "doc", "docx", "ocr", "devanagari", "nepali", "converter", "markitdown"],
+    icon: "FileType",
+    sitemapTitle: "likhit — Nepali documents to Markdown — Jawafdehi",
+  },
+  {
     path: "/openhouse",
     chrome: "app",
     titleKey: "nav.openHouse",
@@ -346,13 +346,12 @@ export const SITE_ROUTES = [
   { path: "/entity/*", chrome: "app" },
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },
-  // Data-lake single-type browse pages (unified-archive search, type-pinned).
-  //
-  // Both render ArchiveSearch with the record type pinned (see Materials.tsx and
-  // CourtCases.tsx). They carried no page metadata until 2026-08-11, so they were
-  // filtered out of PRE_RENDERED_STATIC_ROUTES below and never pre-rendered: a
-  // crawl or a share of either got index.html's bare shell. Metadata in the
-  // component cannot fix that on its own, because nothing runs the client render.
+  // The materials landing page. It carried no page
+  // metadata until 2026-08-11, so it was filtered out of
+  // PRE_RENDERED_STATIC_ROUTES below and never pre-rendered: a crawl or a share
+  // got index.html's bare shell. Metadata in the component cannot fix that on its
+  // own, because nothing runs the client render. Its old ?series= and ?q= views
+  // now redirect into /search (see Materials.tsx).
   {
     path: "/materials",
     chrome: "app",
@@ -361,15 +360,6 @@ export const SITE_ROUTES = [
     keywords: ["materials", "documents", "records", "projects", "publications", "government"],
     icon: "FileText",
     sitemapTitle: "Documents & Other Materials — Jawafdehi",
-  },
-  {
-    path: "/courtcases",
-    chrome: "app",
-    titleKey: "courtCasesPage.heading",
-    descriptionKey: "courtCasesPage.description",
-    keywords: ["court", "cases", "hearings", "orders", "supreme", "special", "district", "judiciary"],
-    icon: "ShieldCheck",
-    sitemapTitle: "Court Cases — Jawafdehi",
   },
   // Wagtail headless preview target.
   // The Wagtail headless preview target: an unsaved draft. previewSecurityHeaders()
@@ -391,6 +381,12 @@ export const SITE_ROUTES = [
   { path: "/entities", chrome: "app" },
   { path: "/information", chrome: "app" },
   { path: "/moderation", chrome: "app", noindex: true },
+  // The case and court-case browse pages folded into /search the same way
+  // /entities did: every search lives on the one route. Kept as redirects, with
+  // no page metadata, so old links and indexed URLs still land somewhere.
+  { path: "/cases", chrome: "app" },
+  { path: "/cases/page/:page", chrome: "app" },
+  { path: "/courtcases", chrome: "app" },
 ] as const satisfies readonly SiteRoute[];
 
 // Every path the SPA will render, as a React Router pattern.

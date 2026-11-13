@@ -23,7 +23,21 @@
     "courtCases": "Court cases",
     "research": "Research",
     "faq": "FAQ",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "desc": {
+      "search": "Every case, person and document in one search.",
+      "materials": "Reports, charge sheets and notices, by series.",
+      "courtcases": "Corruption cases through the Special Court.",
+      "research": "What the prosecution record tells us.",
+      "mcp": "The archive inside your AI assistant.",
+      "about": "Who we are and why the archive exists.",
+      "openhouse": "Come meet the team and see the work.",
+      "process": "How a case goes from document to record.",
+      "commitment": "The promises we hold ourselves to.",
+      "team": "The people who build and keep the archive.",
+      "products": "Open tools built on the archive.",
+      "faq": "Short answers to common questions."
+    }
   },
   "weeklyMeetings": {
     "eyebrow": "Currently on pause",
@@ -178,8 +192,13 @@
       "entityDetail": "Open a tracked person, office, or organization.",
       "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers.",
       "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
-      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol."
-    }
+      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
+      "whatsNew": "See the latest changes to the archive, the MCP and the API.",
+      "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter."
+    },
+    "hintMove": "to move",
+    "hintOpen": "to open",
+    "hintClose": "to close"
   },
   "footer": {
     "title": "Jawafdehi",
@@ -218,27 +237,66 @@
       "linktree": "Linktree"
     },
     "pressKit": "Press Kit",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "whatsNew": "What's new",
+    "likhit": "likhit"
   },
   "home": {
+    "bento": {
+      "titleLead": "Nepal's accountability record,",
+      "titleRest": "in one open archive.",
+      "archive": {
+        "label": "The archive",
+        "title": "Every case, court record and public document, searchable.",
+        "chips": [
+          "Corruption cases",
+          "Court cases",
+          "People & offices",
+          "Government documents",
+          "Audit findings",
+          "& more"
+        ],
+        "casesLabel": "corruption cases",
+        "cta": "Browse the archive"
+      },
+      "follow": {
+        "label": "Follow a case",
+        "title": "From charge sheet to verdict.",
+        "steps": {
+          "chargeSheet": "CIAA charge sheet",
+          "specialCourt": "Special Court hearings",
+          "supremeCourt": "Supreme Court appeal"
+        },
+        "body": "Charge sheets, hearings and verdicts are linked, so one case reads from start to finish."
+      },
+      "ask": {
+        "label": "Ask your AI",
+        "title": "The archive, inside Claude and ChatGPT.",
+        "question": "How many corruption cases did the CIAA file in 2081/82?",
+        "answer": "Here are the CIAA's 2081/82 filings, each linked to its charge sheet, Special Court hearings and verdict.",
+        "cta": "Connect your AI"
+      }
+    },
     "hero": {
       "eyebrow": "Accountability has no expiry.",
-      "titlePrefix": "Nepal's Permanent",
-      "titleHighlight": "Corruption Case",
-      "titleSuffix": "Archive",
-      "description": "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
-      "searchLabel": "Search the Jawafdehi archive",
-      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
-      "searchSubmit": "Search Jawafdehi",
-      "suggestionsLabel": "Case suggestions",
+      "description": "Corruption cases, court records and the documents behind them, in one open archive. Read it here, or connect it to your AI tool.",
       "stats": {
         "casesDocumented": "Corruption cases documented",
         "totalBigo": "Total embezzled amount",
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover",
-      "scrollCue": "Scroll"
+      "title": "Nepal's digital archive of public accountability.",
+      "caps": {
+        "line1": "Accountability",
+        "line2": "has no",
+        "line3": "expiry"
+      },
+      "searchArchive": "Search the archive",
+      "searchLabel": "Search the Jawafdehi archive",
+      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
+      "searchSubmit": "Search Jawafdehi",
+      "suggestionsLabel": "Case suggestions"
     },
     "featuredCases": {
       "heading": "Featured Cases",
@@ -271,6 +329,9 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
+    },
+    "figures": {
+      "label": "The archive in figures"
     }
   },
   "ourProcess": {
@@ -395,7 +456,8 @@
       "record": "record",
       "description": "Jawafdehi runs entirely on volunteer effort. Whether you are a technology enthusiast, a working professional, a legal expert, or a student, if you believe corruption should not be forgotten, there is a place for you here.",
       "github": "Find us on GitHub",
-      "email": "Email us"
+      "email": "Email us",
+      "eyebrow": "Volunteer"
     },
     "whoCanJoin": {
       "eyebrow": "Who can join",
@@ -614,10 +676,30 @@
     "hero": {
       "eyebrow": "Our Products",
       "openSource": "Open source,",
-      "freeToUse": "free to use",
-      "builtForCivicGood": "built for civic good",
-      "description": "The components we build are open source and free to use. The full stack is public on GitHub — built by Nepali volunteers and made available to anyone who wants to build on top of it.",
-      "github": "GitHub"
+      "freeToUse": "free to use"
+    },
+    "items": {
+      "mcp": {
+        "kind": "MCP server",
+        "line": "Ask Claude or ChatGPT about any case, and get the record back with its sources."
+      },
+      "likhit": {
+        "kind": "Python library",
+        "line": "Nepali PDFs and scans in, clean Markdown out."
+      },
+      "api": {
+        "kind": "REST API",
+        "line": "Every case, entity and court record, open to your code."
+      },
+      "chat": {
+        "kind": "Web app",
+        "line": "Plain-language questions, answers that cite the record."
+      }
+    },
+    "preview": {
+      "chatQuestion": "Which cases did the CIAA file at the Special Court this month?",
+      "sourceCharge": "Charge sheet",
+      "sourceCourt": "Special Court"
     }
   },
   "team": {
@@ -780,7 +862,9 @@
       "label": "AI-generated",
       "explanation": "This section was written by AI from sources the Jawafdehi team has received. It may contain errors. If you spot an error, please let us know.",
       "explainLabel": "What does AI-generated mean?"
-    }
+    },
+    "failedToLoadLine": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundLine": "It may have been moved or the link may be mistyped. Search the archive for it."
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
@@ -1043,7 +1127,8 @@
       "whatsappLabel": "WhatsApp",
       "socialTitle": "Our social accounts",
       "socialDescription": "These are the only accounts we run. A social message is public or semi-public — do not put case details in one; ask us to move to email or WhatsApp instead.",
-      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp."
+      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp.",
+      "eyebrow": "Report"
     },
     "submitAnother": "Submit another report",
     "howToReachYou": "How we can reach you"
@@ -1100,12 +1185,39 @@
     "attachment": "Attachment",
     "attachmentOptional": "optional",
     "attachmentMaxSize": "Maximum file size: 10 MB",
-    "attachmentTooLarge": "File is too large. Maximum size is 10 MB."
+    "attachmentTooLarge": "File is too large. Maximum size is 10 MB.",
+    "eyebrow": "Feedback",
+    "other": {
+      "title": "Other ways to reach us",
+      "line": "For a correction to a case, a lead, or a longer conversation.",
+      "email": {
+        "name": "Email",
+        "line": "report@jawafdehi.org"
+      },
+      "discord": {
+        "name": "Discord",
+        "line": "Talk to the team and volunteers"
+      },
+      "github": {
+        "name": "GitHub issues",
+        "line": "Report a bug in the open"
+      }
+    }
   },
   "notFound": {
     "title": "404",
-    "message": "Oops! Page not found",
-    "returnHome": "Return to Home"
+    "heading": "This page isn't in the archive.",
+    "line": "The link may be old or mistyped. The case, person or document you wanted is probably still here — search for it.",
+    "searchLabel": "Search the archive",
+    "searchPlaceholder": "Search cases, people and documents",
+    "ways": {
+      "home": "Home",
+      "cases": "Cases",
+      "materials": "Documents",
+      "courtcases": "Court cases",
+      "updates": "Updates"
+    },
+    "waysLabel": "Elsewhere on Jawafdehi"
   },
   "common": {
     "changeLanguage": "Change language",
@@ -1118,7 +1230,10 @@
     "nameSummary": {
       "withOthers_one": "{{name}} with {{count}} other",
       "withOthers_other": "{{name}} with {{count}} others"
-    }
+    },
+    "copied": "Copied",
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "copy": "Copy"
   },
   "themeToggle": {
     "toggleTheme": "Toggle theme",
@@ -1256,7 +1371,12 @@
     "member": "Member",
     "representative": "Representative",
     "federalParliament": "Federal Parliament",
-    "viewSource": "View Source"
+    "viewSource": "View Source",
+    "breadcrumb": "People & organizations",
+    "notFoundTitle": "Not in the registry",
+    "notFoundLine": "This person or organization could not be found in the registry.",
+    "errorTitle": "This profile didn't load",
+    "errorLine": "Something went wrong on our side. Please try again in a moment."
   },
   "updates": {
     "title": "Updates & News",
@@ -1266,7 +1386,22 @@
     "documentsAndResources": "Documents & Resources",
     "view": "View",
     "loading": "Loading updates",
-    "loadingUpdate": "Loading update"
+    "loadingUpdate": "Loading update",
+    "eyebrow": "From the team",
+    "all": "All",
+    "filterLabel": "Show",
+    "filter": {
+      "NEWS": "News",
+      "UPDATE": "Updates"
+    },
+    "category": {
+      "NEWS": "News",
+      "UPDATE": "Update"
+    },
+    "error": "We couldn't load updates right now. Please try again later.",
+    "empty": "No updates have been published yet.",
+    "errorTitle": "Updates didn't load",
+    "emptyTitle": "Nothing here yet"
   },
   "share": {
     "share": "Share",
@@ -1356,14 +1491,18 @@
       "details": "Details",
       "judge": "Judge",
       "remarks": "Remarks",
-      "empty": "No hearings or activity recorded yet for this court case."
+      "empty": "No hearings or activity recorded yet for this court case.",
+      "emptyTitle": "No hearings yet"
     },
     "source": {
       "heading": "Source",
       "title": "Jawafdehi Governance Archive",
       "description": "Court listings, hearings and orders harvested from Nepal's public court records.",
       "view": "View source"
-    }
+    },
+    "errorTitle": "This court case didn't load",
+    "error": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundTitle": "Court case not found"
   },
   "research": {
     "corruption": {
@@ -1869,7 +2008,9 @@
         "manuscript": "Manuscripts",
         "other": "Other"
       }
-    }
+    },
+    "errorTitle": "The figures didn't load",
+    "eyebrow": "Open data"
   },
   "admin": {
     "common": {
@@ -2255,7 +2396,6 @@
     "heading": "Archive Search",
     "description": "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
     "searchLabel": "Search the Jawafdehi archive",
-    "placeholder": "Search cases, people, offices, locations, or allegations",
     "submit": "Search archive",
     "coverageLink": "See what we cover",
     "searching": "Searching archive",
@@ -2285,8 +2425,6 @@
       },
       "bigoMinField": "Min (Rs)",
       "bigoMaxField": "Max (Rs)",
-      "bigoNote_one": "Filtering by amount includes only the {{count}} case with a recorded amount.",
-      "bigoNote_other": "Filtering by amount includes only the {{count}} cases with a recorded amount.",
       "bigoMinThumb": "Minimum amount",
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
@@ -2295,7 +2433,6 @@
       "date": "Record date",
       "dateFromField": "From (AD)",
       "dateToField": "To (AD)",
-      "dateNote": "Filtering by date includes only documents with a recorded date.",
       "dateRange": {
         "any": "Any date",
         "between": "{{from}} – {{to}}",
@@ -2322,7 +2459,17 @@
         "MetropolitanCity": "Metropolitan cities",
         "SubMetropolitanCity": "Sub-metropolitan cities",
         "Place": "Places"
-      }
+      },
+      "bigoCustom": "Custom range",
+      "bigoPresets": {
+        "under1cr": "Under Rs 1 crore",
+        "1to10cr": "Rs 1 – 10 crore",
+        "10to100cr": "Rs 10 – 100 crore",
+        "1to10arab": "Rs 1 – 10 arab",
+        "over10arab": "Over Rs 10 arab"
+      },
+      "bigoChip": "Amount",
+      "series": "Series"
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",
@@ -2330,7 +2477,26 @@
     "filterLess": "Less",
     "filterNoMatch": "No matches",
     "materialSource": "Source",
-    "materialDate": "Date"
+    "materialDate": "Date",
+    "filterShowAll": "Show all {{count}}",
+    "filterShowFewer": "Show fewer",
+    "allFilters": "All filters",
+    "clearAll": "Clear all",
+    "filtersLabel": "Filters",
+    "clearFilter": "Clear {{filter}}",
+    "clear": "Clear search",
+    "viewResults": "View results",
+    "placeholders": {
+      "all": "Search the archive",
+      "case": "Search cases",
+      "entity": "Search people, offices and places",
+      "material": "Search documents",
+      "courtcase": "Search court cases by name or number"
+    },
+    "empty": {
+      "title": "No archive records found",
+      "line": "Try a broader term or remove one of the filters."
+    }
   },
   "materialsPage": {
     "heading": "Documents & other materials",
@@ -2347,25 +2513,12 @@
     "grid": {
       "title": "Browse by series",
       "documents": "documents",
-      "browseAll": "Browse all series"
-    },
-    "capabilities": {
-      "title": "The archive works for you",
-      "lede": "Read it, question it, or take all of it — the records stay public either way.",
-      "downloadTitle": "Download everything",
-      "downloadLine": "Open any series and follow every document to its source file.",
-      "askTitle": "Ask the AI assistant",
-      "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
-      "analyzeTitle": "Analyze in bulk",
-      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub."
+      "browseAll": "Browse all series",
+      "browseAllLine": "Search every document",
+      "subtitle": "Each series is one kind of record, from the body that published it."
     },
     "recent": {
-      "title": "Recently added",
-      "slice": "The {{shown}} newest of {{total}} documents in the archive.",
-      "browseAll": "Browse all documents",
-      "untitled": "Untitled document",
-      "previous": "Previous documents",
-      "next": "Next documents"
+      "untitled": "Untitled document"
     },
     "sourceDescriptions": {
       "ag": "Charge sheets filed by the Office of the Attorney General.",
@@ -2417,6 +2570,11 @@
         "6-months": "Last 6 months",
         "1-year": "Last year"
       }
+    },
+    "heroEyebrow": "The archive's documents",
+    "stats": {
+      "documents": "Documents",
+      "licence": "Licence"
     }
   },
   "courtCasesPage": {
@@ -2591,6 +2749,16 @@
         "title": "Using the data",
         "questions": [
           {
+            "id": "connect-ai",
+            "question": "How do I use the archive from Claude, ChatGPT or another AI tool?",
+            "answer": "Add the Jawafdehi MCP server, `https://api.jawafdehi.org/mcp`, to your AI tool. **MCP** (Model Context Protocol) is an open standard that lets AI assistants use outside tools and data. In Claude, open Settings → Connectors and add a custom connector; in ChatGPT, turn on developer mode first. In Claude Code, run `claude mcp add --transport http jawafdehi https://api.jawafdehi.org/mcp`. It is **free and read-only**, and needs no account. Step-by-step instructions are at jawafdehi.org/mcp."
+          },
+          {
+            "id": "ai-accuracy",
+            "question": "Can an AI assistant get our cases wrong?",
+            "answer": "Yes, it can. The MCP tools return the archive's own records together with links to the source documents, so every claim an assistant makes can be checked against the original. **Always check before you quote or publish.** The tools are read-only: an assistant can read the archive but cannot change it."
+          },
+          {
             "id": "reuse-information",
             "question": "Can I reuse the information — for journalism, research, or advocacy?",
             "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
@@ -2683,7 +2851,12 @@
       "github": "GitHub",
       "website": "their website",
       "twitter": "X"
-    }
+    },
+    "errorTitle": "This profile didn't load",
+    "error": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundTitle": "Profile not found",
+    "seeTeam": "Meet the team",
+    "browseCases": "Browse the cases"
   },
   "pressKit": {
     "meta": {
@@ -2757,11 +2930,10 @@
     },
     "type": {
       "title": "Typography",
-      "displayRoleNepali": "Headlines — Nepali",
-      "displayRoleLatin": "Headlines — English",
-      "bodyRole": "Body and UI",
-      "monoRole": "Figures, dates, case references",
-      "note": "Headlines are pinned to one face per language: Vesper Libre for Nepali, Inter for English. Vesper Libre covers both Latin and Devanagari, so a bilingual Nepali headline stays in one typeface. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics."
+      "displayRoleNepali": "Titles — Nepali",
+      "bodyRole": "Body — Nepali",
+      "note": "English reads in Inter throughout, titles and body alike. Nepali titles are set in Vesper Libre and Nepali body text in Noto Sans Devanagari. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics.",
+      "latinRole": "Titles and body — English"
     },
     "contact": {
       "title": "Contact",
@@ -2777,35 +2949,285 @@
       "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
     },
     "hero": {
-      "eyebrow": "Model Context Protocol",
-      "title": "Jawafdehi",
-      "titleAccent": "MCP",
-      "description": "Connect Nepal's permanent accountability archive to the AI tool you already use."
-    },
-    "endpoint": {
-      "copyLabel": "Copy the server URL"
-    },
-    "clients": {
-      "title": "Add it to your AI tool",
-      "copyCommand": "Copy the command",
-      "claude": {
-        "name": "Claude",
-        "appLabel": "Claude app and claude.ai",
-        "appSteps": "Open Settings → Connectors, add a custom connector, and paste the server URL.",
-        "cliLabel": "Claude Code"
-      },
-      "openai": {
-        "name": "OpenAI",
-        "appLabel": "ChatGPT",
-        "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
-        "cliLabel": "Codex CLI"
-      }
-    },
-    "tools": {
-      "title": "What your AI can read",
-      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, and a Bikram Sambat date converter. Every public tool is read-only."
+      "back": "Back to the archive",
+      "title": "Nepal's accountability record, inside your favourite AI.",
+      "description": "Ask a question in plain language. Your AI assistant searches Nepal's corruption and audit records and answers with links to the original documents."
     },
     "copied": "Copied",
-    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "connect": {
+      "title": "Set it up",
+      "copyAddress": "Copy the server address",
+      "copyCommand": "Copy the command",
+      "copyConfig": "Copy the configuration",
+      "importantLabel": "Important:",
+      "planLabel": "Plan",
+      "clients": {
+        "claude": {
+          "name": "Claude",
+          "steps": [
+            "Open Customize → Connectors, then Add → Add custom connector.",
+            "Name it Jawafdehi, with this URL:",
+            "Authentication: Sign in now. Click Add, then Connect, and sign in with Google."
+          ],
+          "important": "Under OAuth client, choose Register automatically, not the “Recommended” option.",
+          "after": "Ask a question that mentions Jawafdehi; click Always allow when asked.",
+          "platforms": [
+            "Web",
+            "Desktop",
+            "Mobile"
+          ],
+          "plan": "The free plan works but runs out after about four research questions; Claude Pro removes that limit. Signing in unlocks tools that read long reports section by section."
+        },
+        "chatgpt": {
+          "name": "ChatGPT",
+          "steps": [
+            "Open chatgpt.com/plugins, then Add → Add custom MCP server.",
+            "Name it Jawafdehi, with this server URL:",
+            "Authentication: No authentication. Tick I understand and want to continue, click Create as a plugin, then Connect Jawafdehi."
+          ],
+          "after": "In a chat, type @Jawafdehi before your question; click Always allow when asked.",
+          "platforms": [
+            "Web"
+          ],
+          "plan": "Works on a free ChatGPT account, with the 12 public tools. The tools that read long reports need sign-in, which works in Claude today."
+        },
+        "claudeCode": {
+          "name": "Claude Code",
+          "steps": [
+            "Run these in your terminal:",
+            "Sign in with Google when the browser opens."
+          ],
+          "platforms": [
+            "Terminal"
+          ],
+          "requirement": "Paid Claude plan"
+        },
+        "codex": {
+          "name": "Codex",
+          "steps": [
+            "Add this to ~/.codex/config.toml:",
+            "Type /mcp in Codex to check it is connected. The ChatGPT desktop app shares this setting (Settings → MCP servers)."
+          ],
+          "platforms": [
+            "CLI",
+            "IDE",
+            "ChatGPT desktop app"
+          ],
+          "plan": "Codex is included in every ChatGPT plan, Free included."
+        }
+      },
+      "worksIn": "Works in"
+    },
+    "overview": {
+      "problemLabel": "The problem",
+      "problem": "The evidence on corruption in Nepal is public, but it is scattered. Auditor General reports run to a thousand pages of scanned Nepali; CIAA charge sheets sit on one website, verdicts on dozens of court websites, procurement notices on Bolpatra.",
+      "problemPoint": "Connecting one official, one project or one public body across all of it takes a reporter days.",
+      "whatLabel": "What it is",
+      "what": "Jawafdehi has gathered these records into one open database. The Jawafdehi MCP is a connector that plugs that database into Claude or ChatGPT.",
+      "whatPoint": "You ask; the assistant searches the records, reads the documents and answers with sources."
+    },
+    "inside": {
+      "title": "What's inside",
+      "stats": [
+        {
+          "value": "2,836",
+          "label": "published corruption and accountability cases"
+        },
+        {
+          "value": "Rs 23,383 cr",
+          "label": "alleged in those cases"
+        },
+        {
+          "value": "2.3 million",
+          "label": "court case records from 97 courts"
+        },
+        {
+          "value": "~100,000",
+          "label": "Attorney General charge-sheet records"
+        },
+        {
+          "value": "205,000",
+          "label": "procurement notices (Bolpatra)"
+        },
+        {
+          "value": "43,000",
+          "label": "court orders, plus 10,500 Supreme Court precedents"
+        },
+        {
+          "value": "3,500",
+          "label": "CIAA press releases"
+        },
+        {
+          "value": "~220",
+          "label": "Auditor General reports: federal, provincial, SOE"
+        }
+      ]
+    },
+    "questions": {
+      "title": "Questions you can try asking",
+      "items": [
+        {
+          "question": "Show me every corruption case involving Sugat Ratna Kansakar: the charge sheet, the hearings and the verdict.",
+          "answer": "Found the wide-body purchase case 080-CR-0145: the charges, all 24 Special Court hearings, his conviction, and the CIAA's pending Supreme Court appeal."
+        },
+        {
+          "question": "Pick one of the Auditor General's findings about Nepal Airlines and tell me whether anyone involved is also facing a corruption case.",
+          "answer": "Linked the audit's A330 loan finding to Special Court case 080-CR-0145: who was convicted and acquitted, and the pending appeal."
+        },
+        {
+          "question": "ललिता निवास जग्गा प्रकरणमा अख्तियारले कसकसलाई मुद्दा चलायो, र विशेष अदालतको फैसला के भयो?",
+          "answer": "Answered in Nepali: 175 defendants by group, who was convicted and acquitted, and the CIAA's appeal."
+        },
+        {
+          "question": "Which corruption cases did the Special Court decide in FY 2082/83, and how many ended in conviction?",
+          "answer": "103 decisions in the data: 24 full convictions, 35 partial, 41 acquittals, with a warning that the first half of the year is missing."
+        }
+      ],
+      "answerLabel": "Jawafdehi MCP"
+    },
+    "pilot": {
+      "title": "Join the pilot",
+      "tagline": "Try it on a real story.",
+      "body": "For a small group of journalists and researchers, in Claude or ChatGPT.",
+      "steps": [
+        "Free access during the pilot",
+        "A 20-minute setup and demo call",
+        "Use it on a real story for a few weeks",
+        "Tell us what was useful and what was missing"
+      ],
+      "join": "Write to",
+      "contactName": "Damodar Dahal, President",
+      "youGet": "What you get",
+      "weAsk": "What we ask"
+    },
+    "demo": {
+      "title": "See it in action",
+      "label": "A demo of the Jawafdehi MCP in Claude and ChatGPT"
+    },
+    "skill": {
+      "title": "Teach your AI the archive",
+      "body": "Connecting gives your AI the tools; the jawafdehi-archive skill teaches it to use them well: which tool answers which question, keeping the accused apart from the convicted, and citing a source for every claim.",
+      "claudeCode": "Claude Code",
+      "others": "Cursor, Codex and other agents",
+      "copy": "Copy the install command"
+    }
+  },
+  "whatsNew": {
+    "meta": {
+      "title": "What's new",
+      "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
+    },
+    "title": "What's new in Jawafdehi",
+    "lastUpdated": "Last updated {{date}}",
+    "filterLabel": "Show updates for",
+    "all": "All",
+    "more": "More",
+    "seeAll": "Everything that's new",
+    "seeAllTagged": "All {{tag}} updates",
+    "tags": {
+      "archive": "Archive",
+      "mcp": "MCP",
+      "api": "API",
+      "likhit": "Likhit",
+      "chat": "Chat"
+    },
+    "homeHeading": "What's new",
+    "mcpHeading": "What's new in the MCP"
+  },
+  "likhit": {
+    "meta": {
+      "title": "likhit — Nepali documents to Markdown",
+      "description": "likhit is Jawafdehi's open-source MarkItDown plugin for Nepali documents: Devanagari repair, layout-aware Markdown, optional OCR for scanned pages, and legacy .doc support."
+    },
+    "hero": {
+      "title": "Nepali documents, converted",
+      "titleAccent": "faithfully",
+      "benchmark": "Read the benchmark",
+      "source": "Source on GitHub",
+      "pypi": "PyPI",
+      "whatsNew": "What's new",
+      "lede": "<name>likhit</name> is Jawafdehi's open-source converter for Nepali documents: PDFs, scans and old .doc files in, clean Markdown out."
+    },
+    "install": {
+      "copyLabel": "Copy the install command"
+    },
+    "features": {
+      "repair": {
+        "name": "Devanagari repair",
+        "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."
+      },
+      "layout": {
+        "name": "Layout-aware Markdown",
+        "body": "Reconstructs reading order and tables instead of emitting a flat character dump."
+      },
+      "ocr": {
+        "name": "OCR when needed",
+        "body": "Falls back to a vision model on image-only pages, which no text layer can serve."
+      },
+      "legacy": {
+        "name": "Legacy formats",
+        "body": "Reads the .doc and Preeti-era files government archives are actually made of."
+      },
+      "title": "What it does"
+    },
+    "cli": {
+      "title": "Convert from the command line",
+      "copyCommand": "Copy the command",
+      "short": "<cmd>likhit-save</cmd> runs MarkItDown with the plugin on and writes the Markdown for you. No Python needed.",
+      "cases": {
+        "one": "One file",
+        "many": "Many files",
+        "pages": "A page range",
+        "keep": "Keep personal data in",
+        "plugin": "As a MarkItDown plugin"
+      }
+    },
+    "ocr": {
+      "title": "Turn on OCR for scanned pages",
+      "copyRecipe": "Copy the setup",
+      "local": {
+        "name": "A model on your own machine",
+        "body": "Ollama, llama.cpp or vLLM — all three serve an OpenAI-compatible endpoint, and no page image leaves the machine."
+      },
+      "bedrock": {
+        "name": "Bedrock, through a gateway",
+        "body": "Bedrock does not speak the OpenAI API, so run a translating proxy in front of it. The proxy picks up your AWS credentials the usual way, and likhit only ever sees an OpenAI endpoint."
+      },
+      "hosted": {
+        "name": "A hosted API",
+        "body": "Point at any OpenAI-compatible provider. For Gemini, set the Google key alone and likhit selects Google's OpenAI-compatible base URL for you."
+      },
+      "short": "Scanned pages need a vision model. likhit works with any OpenAI-compatible endpoint; pick where yours runs."
+    },
+    "privacy": {
+      "title": "Taking personal data out",
+      "copyCommand": "Copy the command",
+      "short": "Citizenship numbers, dates of birth and phone numbers come out before anything is written. Four tiers; strict is the default.",
+      "tiersShort": {
+        "none": "Removes nothing.",
+        "identifiers": "Citizenship numbers and dates of birth.",
+        "contact": "Adds phone numbers and email addresses.",
+        "strict": "Adds bank accounts, age and passports."
+      },
+      "redactPdf": "Redact a PDF",
+      "default": "Default",
+      "guidePrefix": "Full redaction guide on"
+    },
+    "copy": "Copy",
+    "whatsNewHeading": "What's new in likhit",
+    "pitch": {
+      "titleA": "Nepali PDFs in.",
+      "titleB": "Clean Markdown out.",
+      "body": "likhit repairs broken Devanagari, keeps the tables, reads the scans, and takes personal details out before anything is written.",
+      "redacted": "# citizenship numbers: redacted"
+    }
+  },
+  "materialProfile": {
+    "breadcrumb": "Documents",
+    "notFoundTitle": "Document not found",
+    "notFoundLine": "This material could not be found in the Jawafdehi governance archive.",
+    "errorTitle": "This document didn't load",
+    "errorLine": "Something went wrong on our side. Please try again in a moment."
   }
 }

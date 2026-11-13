@@ -67,7 +67,7 @@ export function CourtYearTrend({ ngm }: { ngm?: DataLakeMetrics }) {
             width={40}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
             tickFormatter={formatCompact}
           />
           <Tooltip

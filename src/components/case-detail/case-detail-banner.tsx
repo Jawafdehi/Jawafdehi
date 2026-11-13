@@ -1,8 +1,9 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowUpRight, Share2 } from "lucide-react";
+import { ArrowUpRight, Share2 } from "@/components/icons";
 import { CaseTagBadge, CaseTypeBadge } from "@/components/CaseBadge";
 import { Button } from "@/components/ui/button";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
@@ -79,12 +80,17 @@ export function CaseDetailBanner({
   const normalizedLang = currentLang === "ne" ? "ne" : "en";
   const title = caseData.title;
   const titleLength = title.trim().length;
+  // Long Nepali titles run to three lines; the display size steps down with
+  // length so a 140-character title is not a wall at 56px.
+  // About 2–2.3× the 18px body text, the ratio reading-heavy pages keep
+  // between a title and its text; it steps down with length so a 200-character
+  // Nepali title stays three lines, not six.
   const titleSizeClass =
     titleLength > 110
-      ? "text-xl leading-snug sm:text-2xl md:text-3xl"
-      : titleLength > 80
-        ? "text-2xl leading-snug sm:text-3xl md:text-3xl"
-        : "text-2xl sm:text-3xl md:text-4xl";
+      ? "text-[1.625rem] sm:text-[1.875rem] lg:text-[2.125rem]"
+      : titleLength > 70
+        ? "text-[1.75rem] sm:text-[2rem] lg:text-[2.375rem]"
+        : "text-[2rem] sm:text-[2.25rem] lg:text-[2.625rem]";
 
   // The hero image in preference order — the uploaded rendition ladder first,
   // then the deprecated banner/thumbnail URLs, then the placeholder — walking
@@ -151,221 +157,167 @@ export function CaseDetailBanner({
     return translateDynamicText(displayName, currentLang);
   };
 
-  const metaTitleClass = "mb-1 text-sm font-semibold leading-5 text-primary/60";
-  const metaValueClass = "text-sm font-medium leading-6 text-primary md:text-base";
-  const metaLinkClass =
-    "font-semibold text-primary underline underline-offset-4 transition-colors hover:text-primary/80";
+  const factLabelClass = "text-[15px] leading-6 text-muted-foreground";
+  const factValueClass = "text-base leading-7 text-primary";
+  const factLinkClass =
+    "text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary";
 
   return (
     <section className="w-full text-foreground no-print">
-      {/* A contained, standalone photograph lets the title remain consistently
-          readable even when a caseworker replaces the image with a light or
-          high-contrast source. */}
-      <div
-        className="mx-auto w-full max-w-[1400px] px-6 pt-6 sm:px-12 lg:pl-24 lg:pr-10 min-[1536px]:pl-8"
-        data-testid="case-detail-hero"
-      >
+      {/* The case's banner as its own section at the top, at the page's full
+          width and never cropped (caseworkers upload portraits and scanned
+          documents as well as 16:9 cards); then the trail, the case's type and
+          tags as pills, the title, its one-line deck and the actions. */}
+      <div className="layout-container pt-6 md:pt-8 lg:pl-24 min-[1536px]:pl-8" data-testid="case-detail-hero">
         <img
           src={imageSrc}
           srcSet={srcSet}
-          // The hero is capped at the same width as the page container, so do
-          // not request a viewport-wide source on large displays.
           sizes="(min-width: 1400px) 1400px, 100vw"
-          // The placeholder illustration says nothing about this case, so it
-          // stays out of the accessibility tree instead of announcing a hero
-          // image that does not exist. Same rule as CaseCard.
           alt={isPlaceholder ? "" : title}
-          // The hero is the largest thing above the fold, so it is the LCP
-          // element on this page: fetch it eagerly and at high priority rather
-          // than letting it queue behind the rest.
           loading="eager"
-          // Lowercase, via a spread. React only learned the camelCase
-          // `fetchPriority` prop in 19; on 18 it warns "React does not
-          // recognize the fetchPriority prop" and DROPS the attribute, so the
-          // hint above never reached the DOM at all. React does pass an unknown
-          // all-lowercase attribute straight through. Collapse this back to
-          // `fetchPriority="high"` when the app is on React 19.
           {...{ fetchpriority: "high" }}
           decoding="async"
           onError={advanceImage}
           width={1400}
           height={788}
           className={cn(
-            "block h-auto w-full rounded-lg object-contain",
-            isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
+            "block h-auto w-full rounded-[24px] border border-border/70 object-contain",
+            // No picture of its own: the stand-in is a shallow band, not a
+            // full banner's height of placeholder.
+            isPlaceholder && cn(CASE_PLACEHOLDER_DARK_CLASS, "aspect-[21/9] py-8 sm:aspect-[24/7]"),
           )}
           data-testid="case-detail-hero-image"
         />
       </div>
 
-      {/* The metadata shares the hero's centered page-width column. Its desktop
-          inset clears the floating share rail until the container has its own
-          wide-screen gutter. */}
-      <div
-        className="mx-auto w-full max-w-[1400px] px-0 sm:px-6 lg:px-0"
-        data-testid="case-detail-metadata"
-      >
-        <div className="grid grid-cols-1">
-          <div className="relative z-10 flex flex-col justify-center">
-            <div className="px-6 py-6 text-sm lg:px-10 lg:py-7 lg:pl-24 min-[1536px]:pl-8">
-              <nav
-                aria-label="breadcrumb"
-                className="mb-3 flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground"
-              >
-                <Link to="/" className="shrink-0 transition-colors hover:text-foreground">
-                  {homeLabel || t("nav.home")}
-                </Link>
-
-                <span className="shrink-0 opacity-50">/</span>
-
-                <Link to="/cases" className="shrink-0 transition-colors hover:text-foreground">
-                  {casesLabel || t("nav.cases")}
-                </Link>
-
-                <span className="shrink-0 opacity-50">/</span>
-
-                <span className="min-w-0 truncate opacity-90">{breadcrumbCase}</span>
-              </nav>
-
-              <h1
-                className={cn(
-                  "mb-6 w-full break-words font-bold tracking-tight text-foreground",
-                  titleSizeClass,
-                )}
-              >
-                {title}
-              </h1>
-
-              <div className="mb-5 flex flex-wrap items-center gap-2">
-                {caseTypeLabel ? (
-                  <CaseTypeBadge caseType={offenceType}>
-                    {caseTypeLabel}
-                  </CaseTypeBadge>
-                ) : null}
-
-                {caseData.tags.map((tag) => (
-                  <CaseTagBadge key={tag}>
-                    {translateDynamicText(tag, currentLang)}
-                  </CaseTagBadge>
-                ))}
-              </div>
-
-              {/* Short description as a lead/deck under the status badge — the
-                  one-line "what is this case" summary at the top of the page.
-                  Authored content, rendered as-is (like the title/description),
-                  not run through the dynamic-text map. */}
-              {caseData.short_description?.trim() ? (
-                <p className="mb-5 w-full break-words text-base font-medium leading-relaxed text-primary/80 md:text-lg">
-                  {caseData.short_description}
-                </p>
-              ) : null}
-
-              <div className="case-dossier">
-                <div className="case-dossier-main" data-testid="case-dossier-main">
-                  <div className="case-dossier-facts">
-                  <div>
-                    <p className={metaTitleClass}>{t("caseDetail.location")}:</p>
-
-                    <div className={cn(metaValueClass, "flex flex-wrap gap-x-3 gap-y-1")}>
-                      {locationEntities.length > 0
-                        ? locationEntities.map((entity, index) => {
-                          // Entities are keyed/linked by their NES @id IRI; id-less
-                          // binds render as plain text (no profile to link to).
-                          const key = entity.nes_id ?? `${entity.display_name ?? "location"}-${index}`;
-                          const to = entityPath(entity.nes_id);
-
-                          return (
-                            <span key={key}>
-                              {to ? (
-                                <Link to={to} className={metaLinkClass}>
-                                  {getEntityDisplayName(entity)}
-                                </Link>
-                              ) : (
-                                <span>{getEntityDisplayName(entity)}</span>
-                              )}
-                            </span>
-                          );
-                        })
-                        : notAvailableLabel}
-                    </div>
-                  </div>
-
-                  {caseData.bigo != null && caseData.bigo > 0 && (
-                    <div>
-                      <p className={metaTitleClass}>
-                        {t("caseDetail.embezzledAmount")}:
-                      </p>
-                      <p className="text-sm font-semibold leading-6 text-accent md:text-base">
-                        {formatBigo(caseData.bigo)}
-                      </p>
-                    </div>
-                  )}
-
-                  </div>
-
-                  {/* The stages, drawn as a horizontal rail. They live OUTSIDE
-                      `case-dossier-facts` because that grid would squeeze the
-                      whole timeline into its 190px label column; out here the
-                      rail gets the full main column — the same width the
-                      Related Court Cases panel below it spans — and scrolls
-                      sideways past it. The single "मुद्दा मिति / Case date"
-                      range this replaces read to the public as when the
-                      corruption happened; these are court registration and
-                      verdict dates, one pair per forum. */}
-                  {stages.length > 0 && (
-                    <CaseStageDates stages={stages} language={currentLang} />
-                  )}
-                  {formattedCourtCases.length > 0 && (
-                    <div className="min-w-0">
-                      <p className={metaTitleClass}>
-                        {t("caseDetail.courtCases")}:
-                      </p>
-                      <div className="case-dossier-courts mt-3">
-                        {formattedCourtCases.map((courtCase) => (
-                          <Link
-                            key={courtCase.label}
-                            to={courtCase.href}
-                            aria-label={courtCase.label}
-                            className="group flex min-w-0 items-center justify-between gap-3 rounded-xl bg-muted/50 px-3.5 py-3 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          >
-                            <span className="min-w-0">
-                              <span className="block break-words text-sm font-semibold leading-5 group-hover:underline group-hover:underline-offset-4">{courtCase.caseNumber}</span>
-                              <span className="mt-0.5 block break-words text-xs leading-5 text-muted-foreground">{courtCase.courtName}</span>
-                            </span>
-                            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-              {actions || shareAction ? (
-                <div className="flex flex-wrap items-center gap-3 no-print">
-                  {actions}
-                  {shareAction && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="hidden gap-2 border-primary/20 bg-background text-primary hover:bg-primary-surface/5 hover:text-primary sm:inline-flex"
-                      onClick={shareAction.onClick}
-                      aria-label={shareAction.label}
-                    >
-                      <Share2 className="h-4 w-4" aria-hidden="true" />
-                      <span className="font-semibold">{shareAction.label}</span>
-                    </Button>
-                  )}
-                </div>
-              ) : null}
-                </div>
-                <div className="case-dossier-sidebar" data-testid="case-dossier-sidebar">
-                  <CaseByline
-                    authors={caseData.authors}
-                    publishDate={caseData.case_publish_date}
-                    editHistory={caseData.public_edit_history}
-                    markdown={caseData.public_notes}
-                  />
-                </div>
-              </div>
+      <div className="layout-container pt-8 md:pt-10 lg:pl-24 min-[1536px]:pl-8">
+        <PageBreadcrumb
+          items={[
+            { label: homeLabel || t("nav.home"), to: "/" },
+            { label: casesLabel || t("nav.cases"), to: "/search?type=case" },
+            { label: breadcrumbCase },
+          ]}
+        />
+        {/* As wide as the banner above it; only the deck keeps a measure. */}
+        <div className="mt-6">
+            <div className="flex flex-wrap items-center gap-2">
+              {caseTypeLabel ? <CaseTypeBadge caseType={offenceType}>{caseTypeLabel}</CaseTypeBadge> : null}
+              {caseData.tags.map((tag) => (
+                <CaseTagBadge key={tag}>{translateDynamicText(tag, currentLang)}</CaseTagBadge>
+              ))}
             </div>
+
+            <h1
+              className={cn(
+                "font-home-display mt-5 w-full text-balance break-words text-primary [:root[lang=en]_&]:leading-[1.08]",
+                titleSizeClass,
+              )}
+            >
+              {title}
+            </h1>
+
+            {/* The short description: the one-line "what is this case" deck.
+                Authored content, rendered as-is; a placeholder with no letters
+                or digits in it (some cases carry a lone ".") is not a deck. */}
+            {/[\p{L}\p{N}]/u.test(caseData.short_description ?? "") ? (
+              <p className="mt-5 max-w-3xl break-words text-lg leading-8 text-muted-foreground">
+                {caseData.short_description}
+              </p>
+            ) : null}
+
+            {actions || shareAction ? (
+              <div className="no-print mt-7 flex flex-wrap items-center gap-3 [&_a]:rounded-full [&_button]:rounded-full">
+                {actions}
+                {shareAction && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="hidden gap-2 border-border bg-background text-primary hover:bg-muted hover:text-primary active:scale-[0.97] sm:inline-flex"
+                    onClick={shareAction.onClick}
+                    aria-label={shareAction.label}
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden="true" />
+                    <span>{shareAction.label}</span>
+                  </Button>
+                )}
+              </div>
+            ) : null}
+        </div>
+      </div>
+
+      {/* The record: a hairline card of facts (where, how much, the court
+          stages, the court files) beside who documented it. */}
+      <div className="layout-container mt-10 md:mt-12 lg:pl-24 min-[1536px]:pl-8" data-testid="case-detail-metadata">
+        <div className="case-dossier rounded-[24px] border border-border/70 bg-surface p-5 sm:p-7 lg:p-8">
+          <div className="case-dossier-main" data-testid="case-dossier-main">
+            <dl className="case-dossier-facts">
+              <div>
+                <dt className={factLabelClass}>{t("caseDetail.location")}</dt>
+                <dd className={cn(factValueClass, "flex flex-wrap gap-x-3 gap-y-1")}>
+                  {locationEntities.length > 0
+                    ? locationEntities.map((entity, index) => {
+                        const key = entity.nes_id ?? `${entity.display_name ?? "location"}-${index}`;
+                        const to = entityPath(entity.nes_id);
+                        return (
+                          <span key={key}>
+                            {to ? (
+                              <Link to={to} className={factLinkClass}>
+                                {getEntityDisplayName(entity)}
+                              </Link>
+                            ) : (
+                              <span>{getEntityDisplayName(entity)}</span>
+                            )}
+                          </span>
+                        );
+                      })
+                    : notAvailableLabel}
+                </dd>
+              </div>
+
+              {caseData.bigo != null && caseData.bigo > 0 && (
+                <div>
+                  <dt className={factLabelClass}>{t("caseDetail.embezzledAmount")}</dt>
+                  <dd className="text-base font-medium leading-7 tabular-nums text-accent">
+                    {formatBigo(caseData.bigo)}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            {/* The stages, drawn as a horizontal rail. They live OUTSIDE
+                `case-dossier-facts`, whose label column would squeeze the
+                rail; out here it gets the full width and scrolls sideways.
+                These are court registration and verdict dates, one pair per
+                forum, not when the corruption happened. */}
+            {stages.length > 0 && <CaseStageDates stages={stages} language={currentLang} />}
+
+            {formattedCourtCases.length > 0 && (
+              <div className="min-w-0">
+                <p className={factLabelClass}>{t("caseDetail.courtCases")}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {formattedCourtCases.map((courtCase) => (
+                    <Link
+                      key={courtCase.label}
+                      to={courtCase.href}
+                      aria-label={courtCase.label}
+                      className="group inline-flex min-h-11 min-w-0 items-center gap-2.5 rounded-full bg-muted px-4 py-2 text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100"
+                    >
+                      <span className="text-sm font-medium tabular-nums">{courtCase.caseNumber}</span>
+                      <span className="text-sm text-muted-foreground">{courtCase.courtName}</span>
+                      <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="case-dossier-sidebar" data-testid="case-dossier-sidebar">
+            <CaseByline
+              authors={caseData.authors}
+              publishDate={caseData.case_publish_date}
+              editHistory={caseData.public_edit_history}
+              markdown={caseData.public_notes}
+            />
           </div>
         </div>
       </div>

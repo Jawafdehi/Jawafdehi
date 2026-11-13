@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Calendar, Landmark, Library } from "lucide-react";
+import { ArrowRight, Calendar, Landmark, Library } from "@/components/icons";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -38,6 +38,8 @@ import {
 import { toggleArchiveSearchParam } from "@/utils/archive-search-params";
 import { entityKindFor, humanizeEntityType } from "@/utils/entity-helpers";
 import { EntityIdentity } from "@/components/EntityIdentity";
+import { entityImageUrl } from "@/lib/entity-jsonld";
+import { http } from "@/services/http";
 
 // Both the /search list and card views render the same components; `viewMode`
 // only decides whether the shared <CaseCard> lays out horizontally (list) or as
@@ -124,8 +126,8 @@ function MaterialResultCard({
     ? seriesBySource(source, result.extra?.dataset_bucket)
     : undefined;
   // Every material names its series. A curated-registry source keeps its
-  // editorial name ("CIAA press releases" — it also has a browsable
-  // ?series= page); every other source resolves to its collection's document
+  // editorial name ("CIAA press releases" — it is also a Series filter on
+  // the Documents tab); every other source resolves to its collection's document
   // type, from the source map, falling back to the schema.org class the index
   // always carries. Both read from one label catalogue, so nothing here
   // invents copy.
@@ -270,7 +272,7 @@ function CaseResultCard({
   // flight. If it settles with no data (e.g. the request failed), fall through
   // to the generic card instead of getting stuck on the skeleton forever.
   if (isFetching) {
-    return viewMode === "card" ? <CaseCardSkeleton /> : <SearchResultCardSkeleton showTags />;
+    return viewMode === "card" ? <CaseCardSkeleton /> : <SearchResultCardSkeleton />;
   }
   return <GenericResultCard result={result} viewMode={viewMode} />;
 }
@@ -315,7 +317,7 @@ function GenericResultCard({
       className={cn(
         "group relative flex flex-col overflow-hidden bg-card transition-all",
         isCard
-          ? "h-full rounded-3xl border border-border/70 p-5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)]"
+          ? "h-full rounded-2xl border border-border/70 bg-surface p-5 duration-200 hover:border-border hover:bg-muted/30"
           : "min-h-20 rounded-xl p-4 hover:bg-muted/35 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
       )}
     >
@@ -329,8 +331,8 @@ function GenericResultCard({
             at the same heading level instead of h2-for-generic / h3-for-case. */}
         <h3
           className={cn(
-            "line-clamp-2 break-words font-semibold text-foreground group-hover:text-primary",
-            isCard ? "text-lg leading-8" : "text-base leading-6",
+            "line-clamp-2 break-words font-normal text-primary",
+            isCard ? "text-[17px] leading-6" : "text-base leading-6",
           )}
         >
           <Link
@@ -394,21 +396,27 @@ function EntityResultCard({
   const humanized = humanizeEntityType(result.extra.type);
   const kindLabel = GENERIC_KIND_LABELS.has(humanized) ? t(`entityDetail.${kind}`) : humanized;
   const supporting = [kindLabel, simpleMetadata(result)].filter(Boolean).join(" · ");
+  const image = useEntityImage(result, kind);
 
   return (
+    // A white card on a hairline, left-aligned: the avatar, then the name in
+    // a light 17px and one grey line of what it is. The search page's cards
+    // share this shell (materials and court cases read the same way), so a
+    // results grid is one family whatever the tab.
     <article
       className={cn(
-        "group relative flex overflow-hidden transition-colors duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-        // The same tinted, borderless surface as the party cards on the case page.
+        "group relative flex overflow-hidden border border-border/70 bg-surface transition-colors duration-200 hover:border-border hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
         isCard
-          ? "h-full min-h-[15rem] flex-col items-center justify-center gap-3 rounded-2xl bg-muted/50 p-4 text-center hover:bg-muted/70"
-          : "min-h-20 flex-row items-center gap-4 rounded-xl bg-card p-4 hover:bg-muted/35",
+          ? "h-full flex-row items-start gap-4 rounded-2xl p-5 sm:min-h-[7.5rem]"
+          : "min-h-20 flex-row items-center gap-4 rounded-xl p-4",
       )}
     >
       <EntityIdentity
         kind={kind}
-        layout={isCard ? "tile" : "row"}
+        src={image}
+        layout="row"
         nameAs="h3"
+        nameClassName="text-[17px] font-normal leading-6"
         alternate={alternate}
         name={
           <Link
@@ -420,42 +428,65 @@ function EntityResultCard({
           </Link>
         }
       >
-        <p className={cn("font-meta break-words", isCard ? "mt-2" : "mt-1")}>{supporting}</p>
+        <p className="mt-1.5 break-words text-sm leading-5 text-muted-foreground">{supporting}</p>
       </EntityIdentity>
     </article>
   );
 }
 
-// Compact generic list-row skeleton. ArchiveSearch selects the dedicated case
-// or court-case skeleton while one of those record types is active.
-export function SearchResultCardSkeleton({
-  showTags = false,
-}: Readonly<{ showTags?: boolean }>) {
+// The entity's picture, for the avatar. The search index does not carry it yet,
+// so a person or organisation card reads the record itself — under the SAME
+// query key as the entity page, so opening the card then renders from cache.
+// Places never have a picture and skip the request; so does any hit whose index
+// document already names one.
+function useEntityImage(result: ArchiveSearchResult, kind: ReturnType<typeof entityKindFor>) {
+  const tail = result.url.startsWith("/entity/") ? result.url.slice("/entity/".length) : "";
+  const fromIndex = result.extra.image;
+  const { data } = useQuery({
+    queryKey: ["entity-record", tail],
+    queryFn: async () => (await http.get<Record<string, unknown>>(`/api/entities/${tail}`)).data,
+    enabled: !fromIndex && Boolean(tail) && kind !== "location",
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  return fromIndex ?? entityImageUrl(data);
+}
+
+// The entity tab's card while it loads: the same white hairline card as
+// EntityResultCard, the round avatar, a name and one grey line.
+export function EntityResultCardSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="relative overflow-hidden rounded-xl bg-card p-4"
+      className="flex h-full flex-row items-start gap-4 rounded-2xl border border-border/70 bg-surface p-5 sm:min-h-[7.5rem]"
     >
-      <div className="relative z-10 flex min-h-20 items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-3 w-20" />
+      <Skeleton className="h-12 w-12 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1 space-y-2 pt-1">
+        <Skeleton className="h-5 w-4/5" />
+        <Skeleton className="h-4 w-3/5" />
+        <Skeleton className="h-4 w-1/3" />
+      </div>
+    </div>
+  );
+}
+
+// The documents tab's row while it loads: the material card's white hairline
+// box, a title, the series / source / date rows with their icons, and the
+// share button's slot at the top right.
+export function SearchResultCardSkeleton() {
+  return (
+    <div aria-hidden="true" className="rounded-2xl border border-border/70 bg-surface p-5">
+      <div className="flex items-start gap-4">
+        <Skeleton className="h-5 w-3/5" />
+        <Skeleton className="ml-auto h-5 w-5 shrink-0 rounded-full" />
+      </div>
+      <div className="mt-4 space-y-2.5">
+        {["w-32", "w-56", "w-36"].map((width) => (
+          <div key={width} className="flex items-center gap-2">
+            <Skeleton className="h-3.5 w-3.5 shrink-0 rounded" />
+            <Skeleton className={`h-3.5 ${width}`} />
           </div>
-          <Skeleton className="h-5 w-4/5 max-w-xl" />
-          <div className="mt-2 space-y-1.5">
-            <Skeleton className="h-3.5 w-full max-w-2xl" />
-            <Skeleton className="h-3.5 w-3/5 max-w-md" />
-          </div>
-          <Skeleton className="mt-3 h-3 w-2/5 max-w-xs" />
-          {showTags ? (
-            <div className="mt-3 flex gap-2">
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-          ) : null}
-        </div>
-        <Skeleton className="mt-2 h-4 w-4 shrink-0" />
+        ))}
       </div>
     </div>
   );

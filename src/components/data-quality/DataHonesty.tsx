@@ -37,7 +37,7 @@ function CompletenessBar({ item, t }: { item: HonestyItem; t: Translate }) {
     <li>
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm text-foreground">{item.label}</span>
-        <span className="font-mono text-sm font-bold tabular-nums" style={{ color }}>
+        <span className="text-[15px] font-medium tabular-nums" style={{ color }}>
           {pct}%
         </span>
       </div>
@@ -51,14 +51,14 @@ function CompletenessBar({ item, t }: { item: HonestyItem; t: Translate }) {
         />
       </div>
       <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
-        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+        <span className="text-sm tabular-nums text-muted-foreground">
           {t("dataQuality.honesty.count", "{{part}} of {{total}}", {
             part: item.part.toLocaleString(),
             total: item.whole.toLocaleString(),
           })}
         </span>
         {item.part === 0 && (
-          <span className="text-xs text-muted-foreground/70">
+          <span className="text-sm text-muted-foreground">
             · {t("dataQuality.honesty.notStarted", "not started yet")}
           </span>
         )}
@@ -160,7 +160,7 @@ export function DataHonesty({
 
   return (
     <section className="border-t border-border pt-10">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
+      <h2 className="font-case-section-title">
         {t("dataQuality.honesty.heading", "How solid is this data?")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -173,7 +173,7 @@ export function DataHonesty({
       <div className="mt-8 max-w-2xl space-y-8">
         {groups.map((g) => (
           <div key={g.key}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-[15px] text-muted-foreground">
               {g.heading}
               <span className="font-normal normal-case tracking-normal text-muted-foreground/70">
                 {" · "}

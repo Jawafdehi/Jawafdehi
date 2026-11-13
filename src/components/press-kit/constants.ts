@@ -70,14 +70,22 @@ export const PRESS_KIT_COLOURS = [
  *
  * Noto is pinned for the same reason the headline faces are. It rode
  * `font-sans`, which resolves to --font-family-app and therefore leads with
- * Helvetica under lang="en" — so the one card whose caption names Noto showed
+ * Inter under lang="en" — so the one card whose caption names Noto showed
  * its Latin half in a system face to exactly the audience reading the English
  * press kit. (`font-sans` was worse still before tailwind.config.ts gained a
  * `sans` key: Tailwind's own `ui-sans-serif, system-ui, …`, i.e. the visitor's
- * OS UI font in both locales.) Only the mono card still rides a utility, and
- * `font-mono` leads with the face it is captioned with in either locale.
+ * OS UI font in both locales.) The kit documents the three faces readers see: Inter
+ * for English titles and body, Vesper Libre for Nepali titles, Noto Sans
+ * Devanagari for Nepali body. (IBM Plex Mono only sets code and commands, so
+ * it is not a brand face and is not listed.)
  */
 export const PRESS_KIT_TYPEFACES = [
+  {
+    key: "latinRole",
+    name: "Inter",
+    family: '"Inter", Helvetica, Arial, sans-serif',
+    sample: "Jawafdehi Aa",
+  },
   {
     key: "displayRoleNepali",
     name: "Vesper Libre",
@@ -85,18 +93,11 @@ export const PRESS_KIT_TYPEFACES = [
     sample: "जवाफदेही",
   },
   {
-    key: "displayRoleLatin",
-    name: "Inter",
-    family: '"Inter", Helvetica, Arial, sans-serif',
-    sample: "Jawafdehi Aa",
-  },
-  {
     key: "bodyRole",
     name: "Noto Sans Devanagari",
     family: '"Noto Sans Devanagari", Helvetica, Arial, sans-serif',
-    sample: "जवाफदेही Aa",
+    sample: "जवाफदेही",
   },
-  { key: "monoRole", name: "IBM Plex Mono", className: "font-mono", sample: "082-CR-0154" },
 ] as const;
 
 export const PRESS_KIT_DESCRIPTORS = {

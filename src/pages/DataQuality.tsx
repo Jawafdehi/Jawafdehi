@@ -1,7 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@/components/icons";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LightHero } from "@/components/ui/light-hero";
 
 import { getStatistics } from "@/services/jds-api";
 import { formatFreshness } from "@/lib/data-quality";
@@ -40,36 +42,36 @@ const DataQuality = () => {
       </Helmet>
 
       <main id="main-content" className="flex-1">
-        <section className="border-b bg-muted/20">
-          <div className="layout-container py-12 md:py-16">
-            <h1 className="font-display text-[2rem] font-bold leading-tight tracking-tight text-foreground md:text-5xl">
-              {t("dataQuality.title", "Data Quality & Coverage")}
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-              {t(
-                "dataQuality.intro",
-                "What our public datasets track today, and how complete the records are.",
-              )}
+        <LightHero
+          id="data-quality-title"
+          shader={false}
+          eyebrow={t("dataQuality.eyebrow", "Open data")}
+          title={t("dataQuality.title", "Data Quality & Coverage")}
+          description={t(
+            "dataQuality.intro",
+            "What our public datasets track today, and how complete the records are.",
+          )}
+        >
+          {freshness && (
+            <p className="mt-5 flex items-center gap-2 text-[15px] text-muted-foreground">
+              <RefreshCw className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {t("dataQuality.ribbon.refreshed", "Data last refreshed {{ago}}", {
+                ago: freshness,
+              })}
             </p>
-            {freshness && (
-              <p className="mt-4 flex items-center gap-1.5 text-sm italic text-muted-foreground/80">
-                <RefreshCw className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
-                {t("dataQuality.ribbon.refreshed", "Data last refreshed {{ago}}", {
-                  ago: freshness,
-                })}
-              </p>
-            )}
-          </div>
-        </section>
+          )}
+        </LightHero>
 
-        <div className="layout-container space-y-8 py-8 md:space-y-12 md:py-12">
+        <div className="layout-container space-y-16 pb-20 md:space-y-24">
           {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
           <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
           {isError && !data && (
-            <p className="text-muted-foreground">
-              {t("dataQuality.error", "Metrics are temporarily unavailable. Please try again later.")}
-            </p>
+            <EmptyState
+              kind="couldNotLoad"
+              title={t("dataQuality.errorTitle", "The figures didn't load")}
+              description={t("dataQuality.error", "Metrics are temporarily unavailable. Please try again later.")}
+            />
           )}
 
           {/* Who we track: 88% people, then the institutions (live nes.by_type). */}

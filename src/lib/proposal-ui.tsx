@@ -18,8 +18,8 @@ import {
   Megaphone,
   Newspaper,
   UserRound,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
 
 // ---- confidence -----------------------------------------------------------
 
@@ -70,11 +70,11 @@ export function statusPill(s: ProposalStatus): string {
 
 export interface SourceMeta {
   label: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   pill: string;
 }
 
-const SOURCE_ICON: Record<SignalSource, LucideIcon> = {
+const SOURCE_ICON: Record<SignalSource, IconComponent> = {
   ngm_docket: Gavel,
   court_order: ScrollText,
   ciaa_press: Megaphone,

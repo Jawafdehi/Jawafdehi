@@ -1,7 +1,13 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils";
+import {
+  DisclosureRow,
+  OptionList,
+  OptionMarker,
+  RadioRow,
+  RangeField,
+} from "@/components/search/filter-controls";
 import {
   activePreset,
   DATE_PRESETS,
@@ -23,7 +29,7 @@ export type { DateBounds };
  * rather than rendering a dotted key path at a reader.
  */
 const PRESET_FALLBACK: Record<DatePreset, string> = {
-  "all": "All time",
+  all: "All time",
   "30-days": "Last 30 days",
   "6-months": "Last 6 months",
   "1-year": "Last year",
@@ -82,6 +88,9 @@ export function DateRangeFilter({
 
   const now = today ?? new Date();
   const pressed = activePreset({ from, to }, now);
+  // A range no preset names came from the fields (or a shared link), so they
+  // open to show it.
+  const [customOpen, setCustomOpen] = useState(pressed === null);
 
   const choosePreset = (preset: DatePreset) => {
     // A preset REPLACES the whole range rather than merging with it: keeping a
@@ -101,7 +110,11 @@ export function DateRangeFilter({
     // An inverted pair is the reader mid-thought, not an error worth shouting
     // about: keep the side they just set and drop the other. Same call as the
     // बिगो fields make.
-    if (next.from !== undefined && next.to !== undefined && next.from > next.to) {
+    if (
+      next.from !== undefined &&
+      next.to !== undefined &&
+      next.from > next.to
+    ) {
       onCommit(which === "from" ? { from: value } : { to: value });
       return;
     }
@@ -115,101 +128,73 @@ export function DateRangeFilter({
     label: string,
     limits: { min?: string; max?: string },
   ) => (
-    <div className="min-w-0 flex-1">
-      <label className="mb-1 block text-xs text-muted-foreground" htmlFor={id}>
-        {label}
-      </label>
-      {/*
-        `font-input` (16px on touch, 14px with a real pointer) rather than a raw
-        size utility: a sub-16px field zooms the whole page the moment it takes
-        focus on iOS. tests/layout/input-font-size.test.ts enforces this — and it
-        reads the element's own markup, so naming the banned utility anywhere
-        inside the tag, even in a comment, trips it.
-
-        `[color-scheme]` keeps the native picker's own chrome legible; the site is
-        pinned light today but the token block exists, so this matches what the
-        /materials panel already does rather than assuming.
-      */}
-      <input
-        className="font-input h-11 w-full min-w-0 rounded-md border bg-background px-2 tabular-nums text-foreground [color-scheme:light] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:[color-scheme:dark]"
-        id={id}
-        max={limits.max}
-        min={limits.min}
-        onChange={(event) => commitBound(which, event.target.value)}
-        type="date"
-        value={value ?? ""}
-      />
-    </div>
+    // `[color-scheme]` keeps the native picker's own chrome legible in either
+    // theme, as the /materials panel does.
+    <RangeField
+      className="[color-scheme:light] dark:[color-scheme:dark]"
+      id={id}
+      label={label}
+      max={limits.max}
+      min={limits.min}
+      onChange={(event) => commitBound(which, event.target.value)}
+      type="date"
+      value={value ?? ""}
+    />
   );
 
   return (
     <fieldset aria-labelledby={labelId} className="min-w-0">
-      <legend className="mb-2 text-sm font-semibold text-foreground" id={labelId}>
+      <legend className="mb-2 text-sm text-muted-foreground" id={labelId}>
         {t("archiveSearch.filters.date", "Record date")}
       </legend>
 
-      <div className="flex flex-wrap gap-1.5">
+      {/* The same list as the amount filter: the windows as single-choice
+          rows, then "Custom range", which opens the two exact fields. */}
+      <OptionList>
         {DATE_PRESETS.map((preset) => (
-          <button
-            aria-pressed={pressed === preset}
-            className={cn(
-              "rounded-full border px-2.5 py-1.5 text-xs outline-none transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-              pressed === preset
-                ? "border-primary/20 bg-folder-2 text-foreground"
-                : "border-border bg-background text-foreground hover:bg-surface-2",
-            )}
+          <RadioRow
+            checked={pressed === preset}
             key={preset}
             onClick={() => choosePreset(preset)}
-            type="button"
           >
             {t(
               `materialsLanding.filters.presets.${preset}`,
               PRESET_FALLBACK[preset],
             )}
-          </button>
+          </RadioRow>
         ))}
-      </div>
+        <DisclosureRow
+          marker={<OptionMarker checked={pressed === null} shape="radio" />}
+          onClick={() => setCustomOpen((open) => !open)}
+          open={customOpen}
+        >
+          {t("archiveSearch.filters.bigoCustom", "Custom range")}
+        </DisclosureRow>
+      </OptionList>
 
       {/*
         Stacked rather than side by side, for the same reason the बिगो fields are:
         a native date field renders a picker affordance next to its value, and two
         of them sharing a 250px sidebar truncate the date the reader just picked.
       */}
-      <div className="mt-3 space-y-2">
-        {dateField(
-          "from",
-          fromFieldId,
-          from,
-          t("archiveSearch.filters.dateFromField", "From (AD)"),
-          { max: to },
-        )}
-        {dateField(
-          "to",
-          toFieldId,
-          to,
-          t("archiveSearch.filters.dateToField", "To (AD)"),
-          { min: from },
-        )}
-      </div>
-
-      {/*
-        The coverage caveat, and only while unfiltered — the same shape, and the
-        same justification, as the बिगो note.
-
-        A `range` clause cannot match a document with no date, so any bound
-        silently drops the ones that have none. Nothing else on the page says so,
-        and without it their disappearance reads as "there are no such documents"
-        rather than "this filter cannot see them".
-      */}
-      {from === undefined && to === undefined && (
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">
-          {t(
-            "archiveSearch.filters.dateNote",
-            "Filtering by date includes only documents with a recorded date.",
+      {customOpen ? (
+        <div className="mt-1 space-y-2 pl-7">
+          {dateField(
+            "from",
+            fromFieldId,
+            from,
+            t("archiveSearch.filters.dateFromField", "From (AD)"),
+            { max: to },
           )}
-        </p>
-      )}
+          {dateField(
+            "to",
+            toFieldId,
+            to,
+            t("archiveSearch.filters.dateToField", "To (AD)"),
+            { min: from },
+          )}
+        </div>
+      ) : null}
     </fieldset>
   );
 }

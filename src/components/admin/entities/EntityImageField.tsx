@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Loader2, Trash2, Upload } from "lucide-react";
+import { Loader2, Trash2, Upload } from "@/components/icons";
 import { uploadCaseImage, adminErrorMessage } from "@/services/admin-api";
 import { FieldError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";

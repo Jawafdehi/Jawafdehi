@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   ChevronRight,
   ArrowRight,
-} from "lucide-react";
+} from "@/components/icons";
 
 /**
  * "Where this comes from." A plain, conceptual flow diagram answering the
@@ -30,7 +30,7 @@ export function DataPipeline() {
 
   return (
     <section className="border-t border-border pt-10">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
+      <h2 className="font-case-section-title">
         {t("dataQuality.methodology.heading", "Where this comes from")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -43,9 +43,9 @@ export function DataPipeline() {
       <div className="mt-6 flex flex-col gap-2 md:flex-row md:items-stretch">
         {STAGES.map(({ key, Icon }, i) => (
           <Fragment key={key}>
-            <div className="flex-1 rounded-xl border border-border bg-muted/20 p-5">
+            <div className="flex-1 rounded-[20px] border border-border/70 bg-surface p-5">
               <Icon className="h-6 w-6 text-accent" aria-hidden="true" />
-              <h3 className="mt-3 text-base font-semibold text-foreground">
+              <h3 className="mt-3 text-lg text-primary">
                 {t(`dataQuality.pipeline.stages.${key}.title`)}
               </h3>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -67,7 +67,7 @@ export function DataPipeline() {
       <p className="mt-6">
         <Link
           to="/our-process"
-          className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+          className="inline-flex min-h-6 items-center gap-1 text-[15px] text-accent hover:underline"
         >
           {t("dataQuality.methodology.processLink", "Read how we research and verify each case")}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />

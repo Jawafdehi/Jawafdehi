@@ -12,6 +12,8 @@ import {
 import { fyLabel } from "@/data/research-corruption";
 import { useMounted } from "@/hooks/useMounted";
 import { MONO_STACK } from "@/lib/data-quality";
+import { ChartReveal } from "@/components/charts/chart-reveal";
+import { chartMotion } from "@/lib/chart-motion";
 
 export type PipelinePoint = {
   year: number;
@@ -53,6 +55,7 @@ export function PipelineHealth({
 
   return (
     <div className="w-full" style={{ height }} role="img" aria-label={ariaLabel}>
+      <ChartReveal>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -61,14 +64,14 @@ export function PipelineHealth({
             tickLine={false}
             axisLine={false}
             tickFormatter={(y: number) => fyLabel(y).slice(2)}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
             yAxisId="months"
             width={34}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <YAxis
             yAxisId="pending"
@@ -76,7 +79,7 @@ export function PipelineHealth({
             width={30}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
           />
           <Tooltip
             labelFormatter={(y) => `FY ${fyLabel(Number(y))}`}
@@ -90,7 +93,8 @@ export function PipelineHealth({
             fill="hsl(var(--accent))"
             fillOpacity={0.3}
             radius={[3, 3, 0, 0]}
-            isAnimationActive={false}
+            isAnimationActive={chartMotion()}
+            animationDuration={900}
           />
           <Line
             yAxisId="months"
@@ -101,7 +105,8 @@ export function PipelineHealth({
             strokeWidth={2.25}
             dot={{ r: 2.5, fill: "hsl(var(--primary-surface))", strokeWidth: 0 }}
             activeDot={{ r: 4.5 }}
-            isAnimationActive={false}
+            isAnimationActive={chartMotion()}
+            animationDuration={900}
             connectNulls={false}
           />
           <Line
@@ -115,12 +120,14 @@ export function PipelineHealth({
             strokeOpacity={0.55}
             dot={{ r: 2, fill: "hsl(var(--primary-surface))", strokeWidth: 0, fillOpacity: 0.55 }}
             activeDot={{ r: 4 }}
-            isAnimationActive={false}
+            isAnimationActive={chartMotion()}
+            animationDuration={900}
             connectNulls
           />
         </ComposedChart>
       </ResponsiveContainer>
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+      </ChartReveal>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: "hsl(var(--primary-surface))" }} aria-hidden="true" />
           {monthsLabel}

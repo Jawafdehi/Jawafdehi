@@ -246,23 +246,15 @@ describe('touch target sizes', () => {
     expect(icon).not.toMatch(/after:h-11|after:w-11/);
   });
 
-  it('gives the two zero-gap segmented controls the clearance the ring needs', () => {
-    // Both toggle groups put two `size="icon"` buttons flush against each other, so
-    // without 4px between them one button's ring covers the other's PAINTED pixels
-    // and a tap on a visible pixel activates the wrong control. Measured before the
-    // gap: the last 2px of "grid view" on /cases and the last 4px of "card view" on
-    // /search fired the list button.
-    for (const [file, marker] of [
-      ['pages/Cases.tsx', 'flex gap-1 border rounded-md'],
-      ['pages/ArchiveSearch.tsx', 'flex items-center gap-1 rounded-full border p-0.5'],
-    ]) {
-      expect(readFileSync(resolve(SRC, file), 'utf8'), `${file} lost the toggle gap`).toContain(marker);
-    }
-  });
-
-  it('keeps footer nav rows and social icons at 44px', () => {
+  it('keeps footer nav rows at 32px and social icons tappable at 44px', () => {
     const footer = readFileSync(resolve(SRC, 'components/Footer.tsx'), 'utf8');
-    expect(footer).toContain('min-h-11');
+    // Rows: 32px, above WCAG 2.5.8's 24px. Social discs: drawn at 36px, the
+    // tap target reaches 44px through a pseudo-element 4px past each edge,
+    // with an 8px gap so neighbours never overlap.
+    expect(footer).toContain("min-h-8");
+    expect(footer).toContain("h-9 w-9");
+    expect(footer).toContain("gap-2");
+    expect(footer).toContain("after:-inset-1");
     expect(footer).not.toContain('min-h-9');
     // The social row is hand-rolled rather than a Button, so the `icon` variant
     // above does not reach it — it needs its own 44px.

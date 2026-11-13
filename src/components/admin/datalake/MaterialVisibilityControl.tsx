@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 
 // Badge tone for the derived `visibility` so a caseworker sees at a glance
 // whether the document is actually public right now: LISTED (public) reads

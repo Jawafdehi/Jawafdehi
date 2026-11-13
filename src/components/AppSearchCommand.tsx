@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { normalizePath } from "@/data/route-patterns";
+import { retiredBrowseType } from "@/lib/archive-redirect";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,6 +9,7 @@ import {
   Bot,
   Building2,
   FileText,
+  FileType,
   HeartHandshake,
   Home,
   Info,
@@ -15,7 +19,7 @@ import {
   Search,
   ShieldCheck,
   Users,
-} from "lucide-react";
+} from "@/components/icons";
 
 import {
   buildFallbackSearchIndexEntries,
@@ -63,6 +67,7 @@ const routeIcons: Record<SearchIconName, typeof Search> = {
   Bot,
   Building2,
   FileText,
+  FileType,
   HeartHandshake,
   Home,
   Info,
@@ -221,7 +226,7 @@ function renderHighlightedQuery(text: string, query: string) {
   return (
     <>
       {before}
-      <strong className="font-semibold text-foreground">{match}</strong>
+      <strong className="font-medium text-primary">{match}</strong>
       {after}
     </>
   );
@@ -249,7 +254,12 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
     loadGeneratedSearchIndex()
       .then((entries) => {
         if (isMounted) {
-          setSearchIndexEntries(entries);
+          // An index built (or cached at the edge) before /cases and
+          // /courtcases folded into /search still lists them; offering a page
+          // that only redirects is noise, so they never reach the list.
+          setSearchIndexEntries(
+            entries.filter((entry) => !retiredBrowseType(normalizePath(entry.path.split(/[?#]/)[0]))),
+          );
         }
       })
       .catch(() => {
@@ -306,28 +316,33 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
     navigate(sectionId ? `${item.to}#${sectionId}` : item.to);
   };
 
+  // The site search as a command palette, Raycast/Linear-style: one white
+  // panel, a plain search line over a hairline, compact rows (icon, title, one
+  // line) with the highlighted row in grey, keyboard hints at the foot. No
+  // open/close animation: it is summoned many times a day, often from the
+  // keyboard, and motion would only make it feel slower.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-[10%] w-[calc(100vw-2rem)] max-w-[640px] translate-y-0 overflow-hidden rounded-2xl border border-border/70 bg-background p-5 shadow-xl shadow-foreground/20 backdrop-blur-xl sm:p-6 data-[state=closed]:slide-out-to-top-4 data-[state=open]:slide-in-from-top-4 [&>button]:right-5 [&>button]:top-5 [&>button]:grid [&>button]:h-11 [&>button]:w-11 [&>button]:place-items-center [&>button]:rounded-full [&>button]:border [&>button]:border-border/60 [&>button]:bg-secondary/80 [&>button]:text-muted-foreground [&>button]:opacity-100 [&>button]:shadow-none [&>button]:transition-colors [&>button]:hover:bg-secondary [&>button]:hover:text-foreground sm:[&>button]:right-6 sm:[&>button]:top-6">
+      <DialogContent className="top-[10%] w-[calc(100vw-2rem)] max-w-[640px] translate-y-0 gap-0 overflow-hidden rounded-[24px] border border-border/70 bg-surface p-0 shadow-[0_24px_64px_-16px_hsl(var(--primary)/0.25)] data-[state=closed]:animate-none data-[state=open]:animate-none [&>button]:right-4 [&>button]:top-3.5 [&>button]:grid [&>button]:h-9 [&>button]:w-9 [&>button]:place-items-center [&>button]:rounded-full [&>button]:bg-muted [&>button]:text-muted-foreground [&>button]:opacity-100 [&>button]:transition-colors [&>button]:hover:bg-primary/[0.08] [&>button]:hover:text-primary">
         <DialogTitle className="sr-only">{t("searchCommand.title")}</DialogTitle>
         <DialogDescription className="sr-only">
           {t("searchCommand.description")}
         </DialogDescription>
         <Command
           shouldFilter={false}
-          className="rounded-none bg-transparent [&_[cmdk-input-wrapper]]:mb-7 [&_[cmdk-input-wrapper]]:mr-14 [&_[cmdk-input-wrapper]]:h-12 [&_[cmdk-input-wrapper]]:rounded-2xl [&_[cmdk-input-wrapper]]:!border [&_[cmdk-input-wrapper]]:!border-border/60 [&_[cmdk-input-wrapper]]:bg-secondary/45 [&_[cmdk-input-wrapper]]:px-4 [&_[cmdk-input-wrapper]]:shadow-inner [&_[cmdk-input-wrapper]]:shadow-foreground/[0.03] [&_[cmdk-input-wrapper]_svg]:mr-3 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input-wrapper]_svg]:text-muted-foreground [&_[cmdk-input-wrapper]_svg]:opacity-80"
+          className="rounded-none bg-transparent [&_[cmdk-input-wrapper]]:h-16 [&_[cmdk-input-wrapper]]:border-b [&_[cmdk-input-wrapper]]:border-border/70 [&_[cmdk-input-wrapper]]:pl-5 [&_[cmdk-input-wrapper]]:pr-16 [&_[cmdk-input-wrapper]_svg]:mr-3 [&_[cmdk-input-wrapper]_svg]:h-[18px] [&_[cmdk-input-wrapper]_svg]:w-[18px] [&_[cmdk-input-wrapper]_svg]:text-muted-foreground [&_[cmdk-input-wrapper]_svg]:opacity-100"
         >
           <CommandInput
             autoFocus
             value={searchValue}
             onValueChange={setSearchValue}
             placeholder={t("searchCommand.placeholder")}
-            className="font-input h-12 placeholder:text-muted-foreground/70"
+            className="font-input h-16 text-[17px] text-primary placeholder:text-muted-foreground"
           />
-          <CommandList className="max-h-[min(460px,62vh)] space-y-2.5 overflow-y-auto rounded-xl bg-transparent pr-1 scroll-py-3">
+          <CommandList className="max-h-[min(440px,60vh)] overflow-y-auto p-2 scroll-py-2">
             {visibleSearchItems.length === 0 ? (
-              <CommandEmpty className="rounded-xl border border-border/60 bg-secondary/25 px-4 py-10 text-center text-sm text-muted-foreground">
-                {t("searchCommand.noResults")}
+              <CommandEmpty className="p-0">
+                <EmptyState compact kind="noResults" title={t("searchCommand.noResults")} />
               </CommandEmpty>
             ) : null}
             {visibleSearchItems.map((item) => {
@@ -342,27 +357,39 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
                   key={item.to}
                   value={`${item.title} ${item.description} ${item.keywords.join(" ")}`}
                   onSelect={() => navigateTo(item)}
-                  className="group mb-2.5 flex min-h-[82px] cursor-pointer items-center gap-4 overflow-hidden rounded-xl border border-border/55 bg-background px-4 py-3.5 shadow-[0_1px_2px_hsl(var(--foreground)/0.04)] transition-[background-color,border-color,box-shadow] last:mb-0 hover:border-border/80 hover:bg-secondary/25 data-[selected=true]:border-border/80 data-[selected=true]:bg-secondary/55 data-[selected=true]:text-foreground data-[selected=true]:shadow-[0_2px_8px_hsl(var(--foreground)/0.06)]"
+                  className="group flex min-h-14 cursor-pointer items-center gap-3.5 rounded-2xl px-3 py-2.5 text-primary data-[selected=true]:bg-muted data-[selected=true]:text-primary"
                 >
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-muted text-foreground transition-colors dark:bg-muted/70 dark:text-muted-foreground group-data-[selected=true]:bg-background/85">
-                    <Icon className="h-[15px] w-[15px]" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted text-primary group-data-[selected=true]:bg-surface">
+                    <Icon className="h-[18px] w-[18px]" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="font-nav block truncate">
-                      {item.title}
-                    </span>
-                    <span className="font-meta mt-1.5 block min-h-9 line-clamp-2 text-muted-foreground/85">
-                      {previewText
-                        ? renderHighlightedQuery(previewText, searchValue)
-                        : "\u00A0"}
-                    </span>
+                    <span className="block truncate text-[15px] leading-6">{item.title}</span>
+                    {previewText ? (
+                      <span className="block truncate text-sm leading-5 text-muted-foreground">
+                        {renderHighlightedQuery(previewText, searchValue)}
+                      </span>
+                    ) : null}
                   </span>
                 </CommandItem>
               );
             })}
           </CommandList>
+          {/* How to drive it from the keyboard; hidden on touch screens. */}
+          <div className="hidden items-center gap-4 border-t border-border/70 px-5 py-3 text-[13px] text-muted-foreground sm:flex" aria-hidden="true">
+            <span className="flex items-center gap-1.5"><Kbd>↑</Kbd><Kbd>↓</Kbd>{t("searchCommand.hintMove", "to move")}</span>
+            <span className="flex items-center gap-1.5"><Kbd>↵</Kbd>{t("searchCommand.hintOpen", "to open")}</span>
+            <span className="flex items-center gap-1.5"><Kbd>esc</Kbd>{t("searchCommand.hintClose", "to close")}</span>
+          </div>
         </Command>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Kbd({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <kbd className="inline-grid h-5 min-w-5 place-items-center rounded-md border border-border/70 bg-muted px-1 font-sans text-xs leading-none text-primary">
+      {children}
+    </kbd>
   );
 }

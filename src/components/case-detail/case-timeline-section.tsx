@@ -90,10 +90,10 @@ export function CaseTimelineSection({
     year: primaryDate?.year ? yearGroupHeadings.get(primaryDate.year) : undefined,
     content: (
       <div className="space-y-1">
-        <h3 className="text-base md:text-lg font-semibold leading-snug tracking-tight text-primary/90">
+        <h3 className="text-lg leading-snug text-primary">
           {item.title}
         </h3>
-        <p className="font-paragraph font-paragraph-compact measure-prose">
+        <p className="measure-prose text-base leading-7 text-muted-foreground">
           {item.description}
         </p>
       </div>
@@ -103,7 +103,7 @@ export function CaseTimelineSection({
   return (
     <section
       id="timeline"
-      className={cn("scroll-mt-28 no-page-break max-w-4xl", className)}
+      className={cn("scroll-mt-28 no-page-break", className)}
       aria-label={title}
     >
       {/* Heading sits outside the collapsible: it is the section's label, not

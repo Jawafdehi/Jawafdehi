@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink, HeartHandshake } from "lucide-react";
+import { Check, Copy, ExternalLink, HeartHandshake } from "@/components/icons";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { trackEvent } from "@/utils/analytics";
+import { trackEvent, type DonateAction, type DonateMethod } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
 // same entity; they differ only in what the donor sees at checkout.
@@ -149,8 +149,8 @@ function CopyRow({
   display: string;
   copyText: string;
   copyAria: string;
-  action: string;
-  trackMethod: string;
+  action: DonateAction;
+  trackMethod: DonateMethod;
   mono?: boolean;
 }) {
   const { t } = useTranslation();
@@ -158,7 +158,7 @@ function CopyRow({
 
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
+      <dt className="text-xs text-accent">
         {label}
       </dt>
       <dd className="mt-0.5 flex items-center gap-1">
@@ -221,7 +221,7 @@ function CopyRow({
 // AbroadPanel). `trackMethod` names the context in analytics. Every row is
 // copyable — donors paste each field into their banking app — and each row owns
 // its feedback state independently.
-function BankDetails({ trackMethod }: { trackMethod: string }) {
+function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   const { t } = useTranslation();
 
   return (
@@ -263,7 +263,7 @@ function NepalPanel() {
 
   return (
     <div>
-      <p className="text-base font-semibold leading-6 text-primary">
+      <p className="text-lg leading-7 text-primary">
         {t("donate.ways.nepali.qrTitle")}
       </p>
       <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
@@ -283,8 +283,8 @@ function NepalPanel() {
             onClick={() => setWallet(id)}
             className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               id === wallet
-                ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
-                : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+                ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
+                : "rounded-full px-3.5 py-1.5 text-sm text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
             }`}
           >
             {t(`donate.ways.nepali.wallets.${id}.label`)}
@@ -294,7 +294,7 @@ function NepalPanel() {
 
       {/* Both networks stay mounted so switching never re-fetches, and the two
           images share one canvas size so the card cannot shift height. */}
-      <div className="mt-3 w-[180px] overflow-hidden rounded-md bg-white p-2">
+      <div className="mt-3 w-[180px] overflow-hidden rounded-2xl bg-white p-2">
         {WALLETS.map(({ id, src }) => (
           <img
             key={id}
@@ -351,7 +351,7 @@ function AbroadRail({
     <div className="flex flex-col gap-2">
       <span className="inline-flex items-center gap-1.5">
         {icon}
-        <span className={`text-base font-bold ${brandClassName}`}>
+        <span className={`text-lg ${brandClassName}`}>
           {t(`donate.ways.us.${id}.title`)}
         </span>
       </span>
@@ -552,11 +552,11 @@ export function PayCard() {
   }, []);
 
   return (
-    <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground shadow-lg md:p-7">
+    <article className="flex flex-col rounded-[28px] bg-surface p-6 text-card-foreground md:p-7">
       <div
         role="group"
         aria-label={t("donate.ways.title")}
-        className="grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1"
+        className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1"
       >
         {REGIONS.map((id) => (
           <button
@@ -573,8 +573,8 @@ export function PayCard() {
             }}
             className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               id === region
-                ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
-                : "rounded-md px-3 py-2 text-sm font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+                ? "rounded-full bg-surface px-3 py-2 text-sm text-primary shadow-[0_1px_3px_rgba(14,31,59,0.14)]"
+                : "rounded-full px-3 py-2 text-sm text-primary/70 transition-colors hover:text-primary"
             }`}
           >
             {t(

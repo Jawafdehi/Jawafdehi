@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save } from "@/components/icons";
 
 // The submit / cancel (/ optional delete) button row shared by the admin forms.
 // The submit button shows a spinner while saving; the delete slot floats right.

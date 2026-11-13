@@ -21,7 +21,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { getMaterialTable } from "@/services/datalake-api";

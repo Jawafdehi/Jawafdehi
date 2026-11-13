@@ -8,17 +8,9 @@ import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
-import { searchArchive } from './services/search-api';
 import { featuredCasesQuery } from './queries/home';
-import {
-  RECENT_MATERIALS_COUNT,
-  archiveStatisticsQuery,
-  recentMaterialsQuery,
-} from './queries/materials-landing';
-import { CASES_PAGE_SIZE } from './lib/cases-pagination';
-import { pickRecentMaterials } from './lib/materials-landing';
-import { getAllPages, getMaterial, materialTail } from './services/datalake-api';
-import type { ArchiveSearchResponse } from './types/search';
+import { archiveStatisticsQuery } from './queries/materials-landing';
+import { getAllPages } from './services/datalake-api';
 import { http } from './services/http';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
@@ -99,52 +91,12 @@ async function prefetch(
     return;
   }
 
-  // Materials landing page (BARE /materials only — ?series= and ?q= views are
-  // client-rendered). The query factories are the SHARED definitions
-  // (queries/materials-landing.ts), so keys and params match the page exactly
-  // and the pre-rendered HTML carries the real archive figures. After the
-  // recents resolve, the four shown documents are prefetched too — their own
-  // records carry the descriptions the cards render (search snippets are
-  // empty when browsing).
+  // Materials landing page (BARE /materials only — with ?series= or ?q= it
+  // redirects into /search on the client). The query factory is the SHARED definition
+  // (queries/materials-landing.ts), so the key matches the page exactly and the
+  // pre-rendered HTML carries the real archive figures.
   if (/^\/materials\/?(?:#|$)/.test(url)) {
-    const recentsQuery = recentMaterialsQuery();
-    await Promise.allSettled([
-      queryClient.prefetchQuery(archiveStatisticsQuery()),
-      queryClient.prefetchQuery(recentsQuery),
-    ]);
-    const recents = queryClient.getQueryData<ArchiveSearchResponse>(recentsQuery.queryKey);
-    if (recents) {
-      const picks = pickRecentMaterials(recents.results, RECENT_MATERIALS_COUNT);
-      await Promise.allSettled(
-        picks.map(({ result }) => {
-          const tail = materialTail(result.id);
-          return queryClient.prefetchQuery({
-            queryKey: ['datalake-material', tail],
-            queryFn: () => getMaterial(tail),
-          });
-        }),
-      );
-    }
-    return;
-  }
-
-  // Cases list page: OpenSearch-backed case browse, via Django /api/search proxy.
-  //
-  // `/cases` is page one and `/cases/page/N` is the rest. Prefetching the page
-  // actually being rendered is the whole point of pre-rendering these: without
-  // it every page in the sequence would ship the same empty cache, so a crawler
-  // would see 39 URLs whose bodies are identical chrome and conclude — correctly
-  // — that 38 of them are duplicates.
-  //
-  // The key must match the one Cases.tsx builds, `page` included, or the client
-  // hydrates nothing and refetches on mount.
-  const casesMatch = url.match(/^\/cases(?:\/page\/(\d+))?\/?(?:[?#]|$)/);
-  if (casesMatch) {
-    const page = casesMatch[1] ? Number(casesMatch[1]) : 1;
-    await queryClient.prefetchQuery({
-      queryKey: ['cases-search', { search: '', status: 'all', page }],
-      queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: CASES_PAGE_SIZE, page }),
-    });
+    await queryClient.prefetchQuery(archiveStatisticsQuery());
     return;
   }
 

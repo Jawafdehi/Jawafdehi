@@ -6,7 +6,7 @@ import { FormError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ClipboardCheck, Loader2 } from "lucide-react";
+import { ClipboardCheck, Loader2 } from "@/components/icons";
 
 const CaseworkLogin = () => {
   const { login, loading, error, user, devAuthEnabled, devLogin } =

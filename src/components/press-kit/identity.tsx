@@ -4,11 +4,9 @@ import { PRESS_KIT_DESCRIPTORS, PRESS_KIT_NAMES } from "./constants";
 
 function Descriptor({ label, text }: Readonly<{ label: string; text: string }>) {
   return (
-    <div>
-      <p className="text-sm font-bold text-primary">{label}</p>
-      <blockquote className="mt-1 border-l-2 border-accent bg-muted/20 py-2 pl-4 pr-3 font-paragraph font-paragraph-foreground">
-        {text}
-      </blockquote>
+    <div className="rounded-[22px] bg-muted p-5">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <blockquote className="mt-2 text-[17px] leading-7 text-primary">{text}</blockquote>
     </div>
   );
 }
@@ -17,23 +15,21 @@ export function PressKitIdentity() {
   const { t } = useTranslation();
 
   return (
-    <section id="identity" className="py-12 md:py-16">
+    <section id="identity" className="pt-16 md:pt-24">
       <div className="layout-container">
-        <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-2">
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
           <div>
-            <h2 className="mb-4 text-2xl font-extrabold tracking-normal text-accent md:text-3xl">
-              {t("pressKit.name.title")}
-            </h2>
+            <h2 className="font-home-section-title text-primary">{t("pressKit.name.title")}</h2>
 
-            <p className="font-paragraph font-paragraph-foreground">
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
               {t("pressKit.name.body")}
             </p>
 
-            <dl className="mt-5 rounded-lg border border-border bg-background p-4">
-              <dt className="text-sm font-bold text-primary">
+            <dl className="mt-6 rounded-[22px] border border-border/70 bg-surface p-5">
+              <dt className="text-sm text-muted-foreground">
                 {t("pressKit.name.registeredLabel")}
               </dt>
-              <dd className="mt-1 font-paragraph font-paragraph-foreground">
+              <dd className="mt-2 text-xl text-primary">
                 {PRESS_KIT_NAMES.latin}
                 <span className="mx-2 text-muted-foreground">·</span>
                 {PRESS_KIT_NAMES.devanagari}
@@ -46,15 +42,13 @@ export function PressKitIdentity() {
           </div>
 
           <div>
-            <h2 className="mb-4 text-2xl font-extrabold tracking-normal text-accent md:text-3xl">
-              {t("pressKit.descriptor.title")}
-            </h2>
+            <h2 className="font-home-section-title text-primary">{t("pressKit.descriptor.title")}</h2>
 
-            <p className="mb-5 font-paragraph font-paragraph-foreground">
+            <p className="mb-6 mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
               {t("pressKit.descriptor.intro")}
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <Descriptor
                 label={t("pressKit.descriptor.nepaliLabel")}
                 text={PRESS_KIT_DESCRIPTORS.nepali}

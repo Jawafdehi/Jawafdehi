@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 import CaseworkLayout from "@/components/CaseworkLayout";
 import ProposalQueue from "@/components/casework/ProposalQueue";
 import {

@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getCaseById } from "@/services/jds-api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
+import { Calendar, ExternalLink, MapPin, User } from "@/components/icons";
 import { formatCaseDateRange } from "@/utils/date";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { JawafEntity } from "@/types/jds";
@@ -105,8 +105,10 @@ const EmbedCaseCard = () => {
     caseData.proceedings_decided_on,
     t("cases.status.ongoing")
   );
+  // A short description with no letters or digits (some cases carry a lone
+  // ".") is not a description; fall through to the allegations instead.
   const description =
-    caseData.short_description ||
+    (/[\p{L}\p{N}]/u.test(caseData.short_description ?? "") ? caseData.short_description : "") ||
     caseData.key_allegations?.[0] ||
     caseData.description?.replace(/<[^>]*>/g, "").slice(0, 200) ||
     "";
@@ -117,10 +119,12 @@ const EmbedCaseCard = () => {
         <title>{caseData.title} - Jawafdehi</title>
       </Helmet>
 
-      <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+      {/* Fills the iframe it is embedded in, up to 640px: opened on its own
+          in a wide window it no longer stretches to the whole screen. */}
+      <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col overflow-hidden rounded-[20px] border border-border/70 bg-white">
         {/* Thumbnail */}
         {thumbnailUrl ? (
-          <div className="relative h-36 overflow-hidden bg-muted">
+          <div className="relative aspect-[1400/788] overflow-hidden bg-muted">
             <img
               src={thumbnailUrl}
               srcSet={srcSet}
@@ -132,31 +136,30 @@ const EmbedCaseCard = () => {
               loading="lazy"
               onError={advanceImage}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
         ) : (
-          <div className="relative h-20 bg-gradient-to-r from-navy-800 to-navy-700" />
+          <div className="relative h-20 bg-primary-surface" />
         )}
 
         {/* Content */}
-        <div className="flex flex-1 flex-col px-4 py-3">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+        <div className="flex flex-1 flex-col px-5 py-4">
+          <h3 className="font-home-display line-clamp-2 text-xl leading-snug text-primary">
             <Link
               to={`/case/${caseData.slug || id}`}
               target="_parent"
-              className="hover:text-navy-700 hover:underline"
+              className="rounded-sm decoration-primary/30 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {caseData.title}
             </Link>
           </h3>
 
           {description && (
-            <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
               {description}
             </p>
           )}
 
-          <div className="mt-auto space-y-1 pt-3 text-xs text-muted-foreground">
+          <div className="mt-auto space-y-1.5 pt-4 text-[13px] text-muted-foreground">
             {primaryEntity && (
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
@@ -189,14 +192,14 @@ const EmbedCaseCard = () => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-border px-4 py-2">
+        <div className="flex items-center justify-between gap-3 border-t border-border/70 px-5 py-3">
           <Link
             to={`/case/${caseData.slug || id}`}
             target="_parent"
-            className="inline-flex items-center gap-1 text-xs font-medium text-navy-700 hover:text-navy-900 hover:underline"
+            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary-surface px-3.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary-surface/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("embedCase.viewOnJawafdehi", "View on Jawafdehi")}
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
 
           <span className="text-xs text-muted-foreground">

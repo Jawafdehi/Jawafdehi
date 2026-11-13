@@ -1,8 +1,8 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
-  AlertCircle,
   Facebook,
   Github,
   Globe,
@@ -11,12 +11,12 @@ import {
   Mail,
   Twitter,
   User,
-} from "lucide-react";
+} from "@/components/icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getAuthorProfile } from "@/services/jds-api";
 import { Seo } from "@/components/Seo";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CaseTypeBadge } from "@/components/CaseBadge";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
@@ -68,6 +68,14 @@ function isSafeHref(value: string): boolean {
   }
 }
 
+const ACTION =
+  "inline-flex min-h-11 items-center rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const ACTION_DARK =
+  "inline-flex min-h-11 items-center rounded-full bg-primary-surface px-5 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+// The author's email and links: grey circles, 44px so a thumb finds them.
+const ICON_PILL =
+  "flex h-11 w-11 items-center justify-center rounded-full bg-muted text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 export default function AuthorProfile() {
   const { t, i18n } = useTranslation();
   const { slug } = useParams();
@@ -77,6 +85,7 @@ export default function AuthorProfile() {
     data: author,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["author-profile", slug],
     queryFn: () => getAuthorProfile(slug as string),
@@ -87,12 +96,13 @@ export default function AuthorProfile() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-24 w-24 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-32" />
+      <div className="layout-container pt-8 md:pt-12" aria-busy="true">
+        <Skeleton className="h-4 w-40" />
+        <div className="mt-10 flex items-center gap-6">
+          <Skeleton className="h-28 w-28 rounded-full" />
+          <div className="space-y-3">
+            <Skeleton className="h-12 w-64 rounded-xl" />
+            <Skeleton className="h-5 w-32" />
           </div>
         </div>
       </div>
@@ -101,11 +111,35 @@ export default function AuthorProfile() {
 
   if (isError || !author) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{t("author.notFound")}</AlertDescription>
-        </Alert>
+      <div className="layout-container">
+        {/* A failed request is not a missing profile: only a 404 (or no data
+            at all) says "not available". */}
+        {isError && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
+          <EmptyState fullHeight headingLevel="h1"
+            kind="couldNotLoad"
+            title={t("author.errorTitle", "This profile didn't load")}
+            description={t("author.error", "Something went wrong on our side. Please try again in a moment.")}
+          />
+        ) : (
+          <EmptyState
+            fullHeight
+            headingLevel="h1"
+            kind="notFound"
+            title={t("author.notFoundTitle", "Profile not found")}
+            description={t("author.notFound")}
+            actions={
+              // Not a dead end: the people behind the archive, and its cases.
+              <>
+                <Link to="/team" className={ACTION_DARK}>
+                  {t("author.seeTeam", "Meet the team")}
+                </Link>
+                <Link to="/search?type=case" className={ACTION}>
+                  {t("author.browseCases", "Browse the cases")}
+                </Link>
+              </>
+            }
+          />
+        )}
       </div>
     );
   }
@@ -142,17 +176,26 @@ export default function AuthorProfile() {
       />
 
       <main id="main-content" className="flex-1">
-        <section className="border-b bg-muted/30">
-          <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 py-10 sm:flex-row sm:items-center sm:px-6">
+        {/* The light hero: the trail, the portrait beside the name in the
+            display face, the role, and the ways to reach them as grey pills. */}
+        <section className="layout-container pt-8 md:pt-12">
+          <PageBreadcrumb
+            items={[
+              { label: t("nav.home"), to: "/" },
+              { label: t("nav.team", "Our team"), to: "/team" },
+              { label: name },
+            ]}
+          />
+          <div className="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-7">
             {photo ? (
               <img
                 src={photo}
                 alt=""
-                className="h-24 w-24 shrink-0 rounded-full object-cover"
+                className="h-28 w-28 shrink-0 rounded-full object-cover"
               />
             ) : (
               <span
-                className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
                 aria-hidden="true"
               >
                 <User className="h-10 w-10" />
@@ -160,24 +203,24 @@ export default function AuthorProfile() {
             )}
 
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">
+              <h1 className="font-home-display text-4xl text-primary sm:text-5xl">
                 {name}
               </h1>
               {title && (
-                <p className="mt-1 text-base text-muted-foreground">{title}</p>
+                <p className="mt-2 text-lg text-muted-foreground">{title}</p>
               )}
 
               {(author.email || author.links.length > 0) && (
-                <div className="mt-3 flex flex-wrap items-center gap-3">
+                <div className="mt-5 flex flex-wrap items-center gap-2">
                   {/* Rendered only when the author actually set one — a blank
                       address comes back as null, not "". */}
                   {author.email && (
                     <a
                       href={mailtoHref(author.email)}
-                      className="text-muted-foreground transition-colors hover:text-primary"
+                      className={ICON_PILL}
                       aria-label={t("author.emailLabel", { name })}
                     >
-                      <Mail className="h-5 w-5" />
+                      <Mail className="h-[18px] w-[18px]" />
                     </a>
                   )}
                   {author.links.map((link) => {
@@ -189,7 +232,7 @@ export default function AuthorProfile() {
                         href={link.value}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-muted-foreground transition-colors hover:text-primary"
+                        className={ICON_PILL}
                         // Localized: a bare `link.type` would read "website" to
                         // a screen reader on the Nepali site.
                         aria-label={t("author.linkLabel", {
@@ -197,7 +240,7 @@ export default function AuthorProfile() {
                           platform: t(`author.platform.${link.type}`),
                         })}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-[18px] w-[18px]" />
                       </a>
                     );
                   })}
@@ -208,27 +251,27 @@ export default function AuthorProfile() {
         </section>
 
         {bio && (
-          <section className="mx-auto w-full max-w-5xl px-4 pt-10 sm:px-6">
-            <h2 className="mb-3 text-xl font-semibold text-primary">
+          <section className="layout-container pt-14 md:pt-16">
+            <h2 className="font-home-display mb-5 text-3xl text-primary md:text-4xl">
               {t("author.aboutHeading")}
             </h2>
             {/* Markdown-only (no rehype-raw): a biography is prose, and there is
                 no reason for it to be able to inject markup. */}
-            <div className="font-paragraph content-prose max-w-3xl">
+            <div className="content-prose max-w-3xl text-lg leading-8 text-primary/85">
               <Markdown remarkPlugins={[remarkGfm]}>{bio}</Markdown>
             </div>
           </section>
         )}
 
-        <section className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-          <h2 className="mb-4 text-xl font-semibold text-primary">
+        <section className="layout-container pb-20 pt-14 md:pt-16">
+          <h2 className="font-home-display mb-6 text-3xl text-primary md:text-4xl">
             {t("author.casesHeading", { count: author.cases.length })}
           </h2>
 
           {author.cases.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("author.noCases")}</p>
+            <p className="text-base text-muted-foreground">{t("author.noCases")}</p>
           ) : (
-            <ul className="grid list-none gap-4 p-0 sm:grid-cols-2">
+            <ul className="grid list-none gap-3 p-0 md:grid-cols-2 xl:grid-cols-3">
               {author.cases.map((entry) => {
                 const published = entry.case_publish_date
                   ? formatDateForLanguage(
@@ -244,31 +287,31 @@ export default function AuthorProfile() {
                   <li key={entry.slug}>
                     <Link
                       to={`/case/${entry.slug}`}
-                      className="flex h-full flex-col rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                      className="flex h-full flex-col rounded-[20px] border border-border/70 bg-surface p-5 transition-[border-color] duration-200 ease-out hover:border-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
                         <CaseTypeBadge caseType={entry.case_type}>
                           {typeKey
                             ? t(typeKey)
                             : entry.case_type.replace(/[_-]/g, " ")}
                         </CaseTypeBadge>
                         {published && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[13px] text-muted-foreground">
                             {published.primary}
                           </span>
                         )}
                       </div>
 
-                      <span className="font-semibold text-primary">{entry.title}</span>
+                      <span className="text-[17px] leading-snug text-primary">{entry.title}</span>
 
                       {entry.short_description?.trim() && (
-                        <span className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        <span className="mt-2 line-clamp-2 text-[15px] leading-6 text-muted-foreground">
                           {entry.short_description}
                         </span>
                       )}
 
                       {entry.bigo != null && entry.bigo > 0 && (
-                        <span className="mt-2 text-sm font-semibold text-accent">
+                        <span className="mt-auto pt-3 text-sm font-medium tabular-nums text-accent">
                           {formatBigo(entry.bigo)}
                         </span>
                       )}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 
 // The transitions the UI offers from each state. The API (A2 +
 // can_transition_case_state) is the authority — it re-checks the role and the

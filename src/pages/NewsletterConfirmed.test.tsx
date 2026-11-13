@@ -23,7 +23,7 @@ describe("NewsletterConfirmed", () => {
     expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "newsletter.confirmed.exploreCases" }).getAttribute("href"),
-    ).toBe("/cases");
+    ).toBe("/search?type=case");
     expect(
       screen.getByRole("link", { name: "newsletter.confirmed.home" }).getAttribute("href"),
     ).toBe("/");

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CaseworkLayout from "@/components/CaseworkLayout";
 import { getReview } from "@/services/casework-api";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 
 // Legacy per-run URL (/admin/reviews/:id). The per-case page now HOSTS run
 // details, so there is no standalone run page — resolve the run's case slug and

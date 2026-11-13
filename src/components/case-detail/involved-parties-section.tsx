@@ -43,7 +43,7 @@ function CardsFallback({ count }: Readonly<{ count: number }>) {
   return (
     <div aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 print:hidden">
       {Array.from({ length: Math.min(count, INITIAL_PARTY_LIMIT) }, (_, i) => (
-        <div key={i} className="min-h-[15rem] rounded-2xl bg-muted/50" />
+        <div key={i} className="min-h-[13rem] rounded-[20px] border border-border/70" />
       ))}
     </div>
   );
@@ -84,12 +84,10 @@ export function InvolvedPartiesSection({
   appealFor,
 }: Readonly<InvolvedPartiesSectionProps>) {
   return (
-    <section id="parties-involved" className={cn("mb-12 scroll-mt-28 max-w-4xl", className)}>
+    <section id="parties-involved" className={cn("mb-16 scroll-mt-28", className)}>
       <CaseSectionHeading className="mb-5">{title}</CaseSectionHeading>
 
-      {/* 42.5rem matches the key-allegations content (numeral + 65ch prose),
-          so the grid's right edge lines up with the text above it. */}
-      <div className="max-w-[42.5rem] space-y-7 text-primary/75">
+      <div className="space-y-8 text-primary/75">
         {Object.entries(groupedEntities)
           .sort(([typeA], [typeB]) => (RELATION_PRIORITY[typeA] ?? 99) - (RELATION_PRIORITY[typeB] ?? 99))
           .map(([type, entities]) => {
@@ -112,7 +110,7 @@ export function InvolvedPartiesSection({
             return (
             <div key={type} className="space-y-4">
               <div className="flex items-center gap-3 print:hidden">
-                <h3 className="whitespace-nowrap text-base font-semibold  text-accent/90">
+                <h3 className="whitespace-nowrap text-[15px] font-medium text-muted-foreground">
                   {translateRelation(type)}
                 </h3>
 

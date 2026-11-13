@@ -1,4 +1,4 @@
-import { Archive, Download, ExternalLink, FileText, Files, Link as LinkIcon } from "lucide-react";
+import { Archive, Download, ExternalLink, FileText, Files, Link as LinkIcon } from "@/components/icons";
 import { useState } from "react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
@@ -321,7 +321,7 @@ export function DocumentSourceCard({
             <div className="min-w-0">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <h3 className="font-semibold leading-snug text-primary/90 text-lg md:text-xl break-words">
+                  <h3 className="break-words text-lg leading-snug text-primary md:text-xl">
                     {materialIri ? (
                       <Link
                         to={`/material/${materialTail(materialIri)}`}
@@ -333,19 +333,24 @@ export function DocumentSourceCard({
                       material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })
                     )}
                   </h3>
-                  <SourceTypeBadge sourceType={material?.material_type} />
+                  {/* The site's grey tag pill: the document's kind is a label, and the
+                      rainbow of category tones competed with the title. */}
+                  <SourceTypeBadge
+                    sourceType={material?.material_type}
+                    className="h-auto border-transparent bg-muted px-3 py-1 text-sm font-normal text-primary shadow-none ring-0"
+                  />
                 </div>
               </div>
             </div>
 
             {byline && (
-              <p className="mt-1 text-sm font-normal leading-relaxed text-primary/65 break-words">
+              <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
                 {byline}
               </p>
             )}
 
             {mainDescription && (
-              <p className={`font-paragraph break-words ${byline ? "mt-2.5" : "mt-2"}`}>
+              <p className={`break-words text-base leading-7 text-primary/85 ${byline ? "mt-2.5" : "mt-2"}`}>
                 {mainDescription}
               </p>
             )}
@@ -365,11 +370,11 @@ export function DocumentSourceCard({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-8 rounded-full px-3 text-xs font-semibold"
+                        className="h-10 rounded-full border-0 bg-muted px-4 text-sm font-normal text-primary shadow-none hover:bg-primary/[0.08] hover:text-primary active:scale-[0.97]"
                         aria-label={ariaLabel}
                         onClick={() => openPreview(action)}
                       >
-                        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Icon className="h-4 w-4" aria-hidden="true" />
                         {action.label}
                       </Button>
                     );
@@ -381,7 +386,7 @@ export function DocumentSourceCard({
                       asChild
                       variant="outline"
                       size="sm"
-                      className="h-8 rounded-full px-3 text-xs font-semibold"
+                      className="h-10 rounded-full border-0 bg-muted px-4 text-sm font-normal text-primary shadow-none hover:bg-primary/[0.08] hover:text-primary active:scale-[0.97]"
                     >
                       <a
                         href={action.href}
@@ -389,7 +394,7 @@ export function DocumentSourceCard({
                         rel="noopener noreferrer"
                         aria-label={ariaLabel}
                       >
-                        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Icon className="h-4 w-4" aria-hidden="true" />
                         {action.label}
                       </a>
                     </Button>
@@ -401,7 +406,7 @@ export function DocumentSourceCard({
                     asChild
                     variant="ghost"
                     size="sm"
-                    className="h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                    className="h-10 rounded-full px-3 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-primary"
                   >
                     <a
                       href={visiblePermalinkLink.link}
@@ -409,7 +414,7 @@ export function DocumentSourceCard({
                       rel="noopener noreferrer"
                       aria-label={`${t("documentSource.role.permalink")} ${t("documentSource.opensInNewTab")}`}
                     >
-                      <LinkIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                      <LinkIcon className="h-4 w-4" aria-hidden="true" />
                       {t("documentSource.role.permalinkShort")}
                     </a>
                   </Button>
@@ -428,11 +433,11 @@ export function DocumentSourceCard({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        className="h-10 rounded-full px-3 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-primary"
                         aria-label={ariaLabel}
                         onClick={() => openPreview(action)}
                       >
-                        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Icon className="h-4 w-4" aria-hidden="true" />
                         {action.label}
                       </Button>
                     );
@@ -444,7 +449,7 @@ export function DocumentSourceCard({
                       asChild
                       variant="ghost"
                       size="sm"
-                      className="h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      className="h-10 rounded-full px-3 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-primary"
                     >
                       <a
                         href={action.href}
@@ -452,7 +457,7 @@ export function DocumentSourceCard({
                         rel="noopener noreferrer"
                         aria-label={ariaLabel}
                       >
-                        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Icon className="h-4 w-4" aria-hidden="true" />
                         {action.label}
                       </a>
                     </Button>

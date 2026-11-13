@@ -33,10 +33,10 @@ function describeFailure(error: unknown, status: string): string {
  * MUST be called before `renderToString`. Rendering mounts the tree's `useQuery`
  * hooks, and each one builds its own cache entry — pending, never fetched, since
  * the server has no effects to run. Afterwards those look exactly like prefetches
- * that failed: /courtcases and /search each mount a search query that no
- * prefetch branch fills, so a report taken after the render would fail the
- * build on pages that are behaving as designed. (/materials used to be the
- * third example, until its landing page gained a prefetch branch.)
+ * that failed: /search mounts a search query that no prefetch branch fills,
+ * so a report taken after the render would fail the build on a page that is
+ * behaving as designed. (/materials and /courtcases used to be further
+ * examples: /materials gained a prefetch branch, /courtcases became a redirect.)
  */
 export function reportPrefetch(queryClient: QueryClient): PrefetchReport {
   const fulfilled: QueryKey[] = [];

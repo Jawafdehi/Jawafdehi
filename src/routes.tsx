@@ -24,7 +24,6 @@ import { SITE_ROUTES, type RouteChrome, type RoutePath } from "@/data/site-route
 // tests/ssr/prerendered-routes-eager.test.ts enforces the eager half of this,
 // for the dynamic routes as well as the static ones.
 import Index from "./pages/Index";
-import Cases from "./pages/Cases";
 import About from "./pages/About";
 import Commitment from "./pages/Commitment";
 // Pre-rendered, so it must stay eager — see the split policy above.
@@ -35,6 +34,9 @@ import Volunteer from "./pages/Volunteer";
 import OurProducts from "./pages/OurProducts";
 // Pre-rendered, so it must stay eager — see the split policy above.
 import Mcp from "./pages/Mcp";
+import WhatsNew from "./pages/WhatsNew";
+// Pre-rendered, so it must stay eager — see the split policy above.
+import Likhit from "./pages/Likhit";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
 import OpenHouse from "./pages/OpenHouse";
 import FaqPage from "./pages/FaqPage";
@@ -47,13 +49,10 @@ import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
 import ResearchCorruption from "./pages/ResearchCorruption";
-// /materials and /courtcases are pre-rendered, so the policy above makes them
-// eager. /courtcases is a twenty-line wrapper over ArchiveSearch (already
-// eager). /materials routes three views by query string inside Materials; only
-// the landing one is pre-rendered, so only it has to be eager — the ?series=
-// browse is lazy() in Materials.tsx, and the ?q= view is ArchiveSearch above.
+// /materials is pre-rendered, so the policy above makes it eager. It is only
+// the landing page now: its old ?series= and ?q= views redirect into /search.
 import Materials from "./pages/Materials";
-import CourtCases from "./pages/CourtCases";
+import { ArchiveRedirect } from "@/components/ArchiveRedirect";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,
 // so per the policy above they must be eager. They were lazy() until 2026-08-11
 // and pre-rendered to exactly what that policy predicts: an empty <title> and no
@@ -125,15 +124,9 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/portal/*": <PortalRedirect />,
 
   "/": <Index />,
-  "/cases": <Cases />,
-  // Page 2..N of the case browse. Page 1 is /cases — see casesPagePath, which
-  // is the single definition of this URL shape that the page, the pre-render
-  // script and the sitemap all read.
-  "/cases/page/:page": <Cases />,
   "/case/:id": <CaseDetail />,
   "/search": <ArchiveSearch />,
   "/materials": <Materials />,
-  "/courtcases": <CourtCases />,
   "/author/:slug": <AuthorProfile />,
   "/entity/*": <EntityRecordProfile />,
   "/material/*": <MaterialProfile />,
@@ -156,6 +149,8 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/donate": <Donate />,
   "/products": <OurProducts />,
   "/mcp": <Mcp />,
+  "/whats-new": <WhatsNew />,
+  "/likhit": <Likhit />,
   "/saptahik": <WeeklyMeetings />,
   "/privacy": <Privacy />,
   "/terms": <TermsOfService />,
@@ -168,6 +163,10 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/entities": <Navigate to="/search?type=entity" replace />,
   "/information": <Navigate to="/faq" replace />,
   "/moderation": <Navigate to="/admin/moderation" replace />,
+  // The case and court-case browse pages folded into /search.
+  "/cases": <ArchiveRedirect type="case" />,
+  "/cases/page/:page": <ArchiveRedirect type="case" />,
+  "/courtcases": <ArchiveRedirect type="courtcase" />,
 };
 
 /** The <Route> elements for one chrome, in table order. */

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "@/components/icons";
 
 // Gregorian (AD) date picker. Stores/emits the canonical "YYYY-MM-DD" string the
 // backend expects; renders a shadcn Calendar in a popover. Empty value = unset.

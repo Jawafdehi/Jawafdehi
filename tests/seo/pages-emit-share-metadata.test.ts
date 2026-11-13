@@ -39,7 +39,7 @@ const NOT_PUBLIC = SITE_ROUTES.filter((r) => 'noindex' in r && r.noindex).map((r
 
 // Elements that are not pages: redirects and layout wrappers. Named explicitly
 // so an unresolvable component is a failure rather than a silent skip.
-const NOT_A_PAGE = ['Navigate', 'PortalRedirect', 'ClientOnly'];
+const NOT_A_PAGE = ['Navigate', 'ArchiveRedirect', 'PortalRedirect', 'ClientOnly'];
 
 /** `"path": <Component …>` from the ROUTE_ELEMENTS literal in src/routes.tsx. */
 function routeElements(): Map<string, string> {
@@ -76,9 +76,9 @@ function resolveModule(specifier: string, fromDir: string): string | null {
 
 /**
  * Does this component render <Seo>, itself or via a component it delegates the
- * whole page to? Materials and CourtCases are thin wrappers around ArchiveSearch
- * and hold no metadata of their own, which is correct — one page's metadata
- * should live in one place.
+ * whole page to? Materials holds no metadata of its own — it routes to
+ * MaterialsLanding (or redirects into /search) — which is correct: one page's
+ * metadata should live in one place.
  */
 function reachesSeo(file: string, depth = 0): boolean {
   const source = readFileSync(file, 'utf8');

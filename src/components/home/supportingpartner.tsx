@@ -2,7 +2,7 @@ export function SupportingPartner() {
   return (
     <section
       aria-labelledby="supporting-partners-title"
-      className="bg-background py-10 md:py-12"
+      className="py-10 md:py-12"
     >
       <div className="layout-container flex flex-col items-center">
         <h2
@@ -24,7 +24,7 @@ export function SupportingPartner() {
             <img
               src="/assets/monal.svg"
               alt="Monal"
-              className="h-16 w-auto object-contain opacity-100 grayscale-0 transition-[filter,opacity] duration-200 md:h-20 md:opacity-70 md:grayscale md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0"
+              className="h-16 w-auto object-contain md:h-20"
             />
           </a>
 
@@ -38,7 +38,7 @@ export function SupportingPartner() {
             <img
               src="/assets/lbn.png"
               alt="Let's Build Nepal"
-              className="h-12 w-auto object-contain opacity-100 grayscale-0 transition-[filter,opacity] duration-200 md:h-14 md:opacity-70 md:grayscale md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0"
+              className="h-12 w-auto object-contain md:h-14"
             />
           </a>
 
@@ -52,7 +52,7 @@ export function SupportingPartner() {
             <img
               src="/assets/oknp.svg"
               alt="Open Knowledge Foundation Nepal"
-              className="h-12 w-auto object-contain opacity-100 grayscale-0 transition-[filter,opacity] duration-200 md:h-14 md:opacity-70 md:grayscale md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0"
+              className="h-12 w-auto object-contain md:h-14"
             />
           </a>
         </div>

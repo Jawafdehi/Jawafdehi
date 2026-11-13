@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CaseTagBadge } from "@/components/CaseBadge";
-import { Coins, MapPin, User } from "lucide-react";
+import { Coins, MapPin, User } from "@/components/icons";
 import { entityPath } from "@/lib/entity-links";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
 import { useCaseImage } from "@/lib/use-case-image";
@@ -81,11 +81,17 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
 
   const cardLayout = viewMode === "list" ? "flex-col sm:flex-row h-auto" : "flex-col h-full";
   const articleLayout = viewMode === "list" ? "flex-col sm:flex-row" : "flex-col";
-  const imageContainerClass = viewMode === "list" ? "h-48 sm:h-auto sm:w-1/3 shrink-0" : "h-52";
+  // The grid image takes the banners' own 16:9 shape rather than a fixed
+  // height: at h-52 a narrow column cropped the case banners' left-aligned
+  // titles ("रवि लामिछाने" lost its first letter).
+  const imageContainerClass = viewMode === "list" ? "h-48 sm:h-auto sm:w-1/3 shrink-0" : "aspect-video shrink-0";
 
   return (
     <Card
-      className={`group relative flex overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_10px_28px_-18px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.35)] focus-within:border-accent/40 cursor-pointer ${cardLayout}`}
+      // The archive's card shell — white on a hairline, no shadow, no lift — so a
+      // case sits in the same family as the entity, document and court-case
+      // cards beside it in search.
+      className={`group relative flex cursor-pointer overflow-hidden rounded-2xl border border-border/70 bg-surface transition-colors duration-200 hover:border-border focus-within:border-primary/30 ${cardLayout}`}
       onClick={handleCardClick}
     >
       <article className={`flex h-full w-full ${articleLayout}`}>
@@ -127,12 +133,12 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
           )}
         </div>
 
-        <div className="flex flex-1 flex-col bg-card min-w-0">
+        <div className="flex flex-1 flex-col bg-surface min-w-0">
           <CardHeader className="space-y-2 px-4 pb-0 pt-4 sm:px-5 sm:pt-5">
             <CaseCardTags tags={tags} onTagClick={onTagClick} />
             {/* NOTE: Dynamic case content (title, description, entity names) from Entity API
                 remains in English until API-side i18n is implemented. See GitHub issue for i18n. */}
-            <h3 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground">
+            <h3 className="line-clamp-2 text-[17px] font-normal leading-6 text-primary">
               {caseSlug ? (
                 <Link
                   to={`/case/${caseSlug}`}
@@ -140,7 +146,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
                   // animating background-size, so it wraps correctly across
                   // the clamped two lines (a pseudo-element underline would
                   // only sit under the last line's box). Keyboard focus only —
-                  // the card already signals hover by lifting.
+                  // the card signals hover with its border.
                   className="rounded-sm bg-gradient-to-r from-accent to-accent bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 outline-none transition-[background-size,color] duration-300 hover:text-primary group-focus-within:bg-[length:100%_2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -155,11 +161,11 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
           <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4 sm:px-5">
             {/* No summary paragraph: the card leads with the title and the facts
                 below it. The full description lives on the case detail page. */}
-            <div className="mt-2 border-t border-border/70 pt-4">
+            <div className="mt-1">
               {/* This meta block is deliberately NOT branched on `viewMode` —
                   grid and list differ only in the outer layout, so every field
                   added here shows up in both /search views and on /cases. */}
-              <div className="space-y-2 text-sm leading-5 text-muted-foreground">
+              <div className="space-y-1.5 text-sm leading-6 text-muted-foreground">
                 <EntityRow icon={User} label={entitySummary} title={entity} ids={entityIds} />
                 <EntityRow icon={MapPin} label={location} ids={locationIds} />
                 <BigoRow amount={bigo} />
@@ -168,7 +174,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
           </CardContent>
 
           <CardFooter className="mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
-            <Button variant="primary" asChild className="w-full rounded-2xl py-3" disabled={!caseSlug}>
+            <Button variant="primary" asChild className="w-full" disabled={!caseSlug}>
               {caseSlug ? (
                 <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>{t("common.viewDetails")}</Link>
               ) : (
@@ -227,12 +233,12 @@ function BigoRow({ amount }: Readonly<{ amount?: number | null }>) {
   if (amount == null || amount <= 0) return null;
   return (
     <div className="flex min-w-0 items-center">
-      <Coins className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+      <Coins className="mr-2 h-[18px] w-[18px] flex-shrink-0" aria-hidden="true" />
       {/* The label truncates, the amount never does: `formatBigo` output is short
           and bounded ("Rs 2.49 Kharab" at the widest), and it is the part worth
           reading — clamping the whole row would eat the figure, not the label. */}
       <span className="min-w-0 truncate">{t("caseCard.bigo")}:</span>
-      <span className="ml-1 shrink-0 font-semibold text-accent">
+      <span className="ml-1 shrink-0 font-medium text-accent">
         {formatBigo(amount)}
       </span>
     </div>
@@ -243,7 +249,7 @@ function EntityRow({ icon: Icon, label, title, ids }: Readonly<{ icon: typeof Us
   const to = ids && ids.length > 0 ? entityPath(ids[0]) : null;
   return (
     <div className="flex min-w-0 items-center">
-      <Icon className="mr-2 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+      <Icon className="mr-2 h-[18px] w-[18px] flex-shrink-0" aria-hidden="true" />
       {to ? (
         <Link
           to={to}

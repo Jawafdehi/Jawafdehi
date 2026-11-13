@@ -77,7 +77,10 @@ describe('case dossier stage timeline', () => {
   });
 
   it('marks a pending stage differently from a concluded one', () => {
-    expect(css).toMatch(/\.case-stage-node\[data-pending="true"\] \.case-stage-dot,\s*\.case-stage-node\[data-pending="true"\] \.case-stage-connector\s*\{[^}]*background:/);
+    // An open ring for the marker, a dashed lead for the track: "not yet"
+    // without a colour of its own.
+    expect(css).toMatch(/\.case-stage-node\[data-pending="true"\] \.case-stage-dot\s*\{[^}]*box-shadow:/);
+    expect(css).toMatch(/\.case-stage-node\[data-pending="true"\] \.case-stage-connector\s*\{[^}]*repeating-linear-gradient/);
     expect(component).toContain('data-pending');
   });
 

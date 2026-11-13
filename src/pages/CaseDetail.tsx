@@ -1,5 +1,5 @@
-import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
+import { type MouseEvent, Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useNavigate, useSearchParams, Link, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Seo } from "@/components/Seo";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
@@ -8,12 +8,13 @@ import { Separator } from "@/components/ui/separator";
 import { Reveal } from "@/components/ui/reveal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   AlertTriangle,
   ArrowLeft,
   AlertCircle,
   SquarePen,
-} from "lucide-react";
+} from "@/components/icons";
 import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
 import { CaseDisclaimerBanner } from "@/components/case-detail/case-disclaimer-banner";
@@ -73,6 +74,14 @@ function getGroupedEntities(entities: JawafEntity[]) {
   }, {} as Record<string, JawafEntity[]>);
 }
 
+// The dev data switch (bottom of the page): lazy and DEV-only, never shipped.
+const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;
+
+// Reads ?data= without importing the stress data itself, which loads lazily.
+function readCaseStressParam(value: string | null): "worst" | "sparse" | "one" | null {
+  return value === "worst" || value === "sparse" || value === "one" ? value : null;
+}
+
 const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
@@ -95,9 +104,20 @@ const CaseDetail = () => {
   // API, then replaced with the canonical slug below once the case loads.
   const isCourtRef = isCourtCaseRef(id);
 
+  // DEV ONLY: ?data=worst|sparse|one swaps the real case for its extremes at
+  // the data boundary (see dev/case-detail-stress.ts); production ignores it.
+  const [searchParams] = useSearchParams();
+  const stressMode = import.meta.env.DEV ? readCaseStressParam(searchParams.get("data")) : null;
   const { data: caseData, isLoading, isError } = useQuery({
-    queryKey: ["case", id],
-    queryFn: () => (isCourtRef ? getCaseByCourtRef(id!) : getCaseById(id!)),
+    queryKey: ["case", id, stressMode],
+    queryFn: async () => {
+      const real = await (isCourtRef ? getCaseByCourtRef(id!) : getCaseById(id!));
+      if (import.meta.env.DEV && stressMode) {
+        const { applyCaseStress } = await import("@/dev/case-detail-stress");
+        return applyCaseStress(stressMode, real);
+      }
+      return real;
+    },
     enabled: id != null && legacyTargetSlug == null,
     staleTime: 5 * 60 * 1000,
   });
@@ -334,25 +354,39 @@ const CaseDetail = () => {
   }
 
   if (isLoading) {
+    // The shape of the page to come, block for block: the full-width banner,
+    // the trail, the pills and a title as wide as the banner, the actions,
+    // then the facts card with its byline column — so nothing jumps when the
+    // case arrives.
     return (
-      <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-        <div className="flex-1 py-6 md:py-12">
-          <div className="layout-container max-w-5xl">
-            <Skeleton className="mb-6 h-10 w-32" />
-
-            <div className="space-y-8">
-              <div>
-                <Skeleton className="mb-4 h-8 w-3/4" />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                </div>
-              </div>
-
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
+      <div className="flex min-h-screen flex-col overflow-x-clip bg-background" aria-busy="true">
+        <div className="layout-container pt-6 md:pt-8 lg:pl-24 min-[1536px]:pl-8">
+          <Skeleton className="aspect-[1400/788] w-full rounded-[24px]" />
+        </div>
+        <div className="layout-container pt-8 md:pt-10 lg:pl-24 min-[1536px]:pl-8">
+          <Skeleton className="h-4 w-48" />
+          <div className="mt-6 flex gap-2">
+            <Skeleton className="h-7 w-24 rounded-full" />
+            <Skeleton className="h-7 w-28 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
+          </div>
+          <Skeleton className="mt-5 h-10 w-full rounded-xl" />
+          <Skeleton className="mt-3 h-10 w-2/3 rounded-xl" />
+          <div className="mt-7 flex gap-3">
+            <Skeleton className="h-11 w-56 rounded-full" />
+            <Skeleton className="h-11 w-32 rounded-full" />
+          </div>
+        </div>
+        <div className="layout-container mt-10 md:mt-12 lg:pl-24 min-[1536px]:pl-8">
+          <div className="grid gap-8 rounded-[24px] border border-border/70 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_300px] lg:p-8">
+            <div className="space-y-4">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="mt-6 h-16 w-full rounded-xl" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-11 w-full rounded-full" />
             </div>
           </div>
         </div>
@@ -363,22 +397,25 @@ const CaseDetail = () => {
   if (isError || !caseData) {
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
-        <div className="flex-1 py-6 md:py-12">
-          <div className="layout-container max-w-5xl">
-            <Button variant="ghost" asChild className="mb-6">
-              <Link to="/cases">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+        <div className="layout-container flex-1">
+          <EmptyState fullHeight headingLevel="h1"
+            kind={isError ? "couldNotLoad" : "notFound"}
+            title={isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
+            description={
+              isError
+                ? t("caseDetail.failedToLoadLine", "Something went wrong on our side. Please try again in a moment.")
+                : t("caseDetail.notFoundLine", "It may have been moved or the link may be mistyped. Search the archive for it.")
+            }
+            actions={
+              <Link
+                to="/search?type=case"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 {t("caseDetail.backToCases")}
               </Link>
-            </Button>
-
-            <Alert variant="destructive" className="items-start">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <AlertDescription className="break-words">
-                {isError ? t("caseDetail.failedToLoad") : t("caseDetail.notFound")}
-              </AlertDescription>
-            </Alert>
-          </div>
+            }
+          />
         </div>
       </div>
     );
@@ -470,7 +507,7 @@ const CaseDetail = () => {
         }}
       />
 
-      <div className="flex-1 py-6 sm:py-8">
+      <div className="flex-1 pb-20 pt-10 md:pt-12">
         {/* lg:pl-24 reserves the left gutter the FloatingShareSidebar occupies.
             The rail is `fixed left-4` and 58px wide, so its right edge is at
             x=74 at EVERY width, while this container is capped at 1400px and
@@ -659,7 +696,9 @@ const CaseDetail = () => {
 
                 <Separator className="mb-8 hidden print:block" />
 
-                <div className="grid min-w-0 gap-6 print:block lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-12">
+                {/* The reading pages' body (see ReadingLayout): "on this page" in
+                    a 13rem column, the text at most 52rem wide beside it. */}
+                <div className="grid min-w-0 gap-6 print:block lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-x-16">
                   <aside className="hidden lg:block min-w-0 lg:col-start-1 lg:row-start-1">
                     <CaseSectionJumpNav
                       activeSection={activeSection}
@@ -668,7 +707,7 @@ const CaseDetail = () => {
                     />
                   </aside>
 
-                  <div className="min-w-0 w-full max-w-6xl lg:col-start-2 lg:pl-8 xl:pl-24">
+                  <div className="min-w-0 w-full max-w-[52rem] lg:col-start-2">
                     {/* Reveal entrances, one per section: fades + lifts as each
                         enters the viewport. Inert during pre-render/no-JS/
                         prefers-reduced-motion (content simply renders visible),
@@ -760,21 +799,40 @@ const CaseDetail = () => {
                 </div>
               </div>
 
-              <Reveal>
-                <CaseContactStrip
-                  email={JAWAFDEHI_EMAIL}
-                  whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
-                  emailLabel={t("caseDetail.emailLabel")}
-                  whatsappLabel={t("caseDetail.whatsappLabel")}
-                  title={t("caseDetail.contact")}
-                />
-              </Reveal>
+              {/* In the reading column, under the sections, like everything
+                  else after the facts card: the contact card and the public
+                  discussion used to span the whole page. */}
+              <div className="lg:ml-[calc(13rem+4rem)] lg:max-w-[52rem]">
+                <Reveal>
+                  <CaseContactStrip
+                    email={JAWAFDEHI_EMAIL}
+                    whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
+                    emailLabel={t("caseDetail.emailLabel")}
+                    whatsappLabel={t("caseDetail.whatsappLabel")}
+                    title={t("caseDetail.contact")}
+                    line={t("caseDetail.contactLine", "Seen a document we don't have, or something we got wrong? Tell us — every case is corrected in the open.")}
+                  />
+                </Reveal>
 
-              <DisqusComments caseId={id || ""} caseTitle={caseData.title} caseUrl={canonicalUrl} />
+                <DisqusComments caseId={id || ""} caseTitle={caseData.title} caseUrl={canonicalUrl} />
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {StressToggle ? (
+        <Suspense fallback={null}>
+          <StressToggle
+            modes={[
+              { value: "demo", label: "Real case" },
+              { value: "worst", label: "Worst case" },
+              { value: "sparse", label: "Sparse" },
+              { value: "one", label: "One stage" },
+            ]}
+          />
+        </Suspense>
+      ) : null}
 
       {/* Mobile Share Button */}
       {isMobile && (

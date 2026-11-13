@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Link2, MoreHorizontal, Printer, QrCode, Share2 } from "lucide-react";
+import { Check, Link2, MoreHorizontal, Printer, QrCode, Share2 } from "@/components/icons";
 import { toast } from "sonner";
 import { LazyQRCode } from "@/components/LazyQRCode";
 

@@ -182,7 +182,7 @@ All colors MUST be HSL.
        value shared by several semantic tokens is defined exactly once. To
        retheme the product, edit this block.
        --------------------------------------------------------------------- */
-    --base-white: 0 0% 100%;
+    --base-white: 0 0% 100%;           /* #FFFFFF */
     --base-cream: 36 100% 99%;
     --base-paper: 60 23.1% 97.5%;      /* #FAFAF7 */
     --base-paper-sunk: 60 10.3% 94.3%; /* #F2F2EF */
@@ -202,13 +202,17 @@ All colors MUST be HSL.
        independently changeable tomorrow (e.g. restyling --input must not
        restyle every --border).
        --------------------------------------------------------------------- */
-    --background: var(--base-paper);
+    /* The page is pure white (decided 2026-11-03); paper stays the tone of
+       sunk surfaces. */
+    --background: var(--base-white);
     --foreground: var(--base-ink);
 
     --card: var(--base-paper-sunk);
     --card-foreground: var(--base-ink);
 
-    --popover: var(--base-paper);
+    /* White, like the cards and the page: the warm paper tone made every
+       menu and popover look like it belonged to another site. */
+    --popover: var(--base-white);
     --popover-foreground: var(--base-ink);
 
     /* --primary is the *text* role (headings, stat values, ledes — 325 uses).
@@ -642,4 +646,28 @@ All colors MUST be HSL.
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* The likhit OCR switcher's progress bar: fills its dot over the dwell time. */
+/* Research bars grow in as they scroll into view: a scroll-driven animation,
+   so it needs no JavaScript and leaves the pre-rendered HTML alone. Where
+   view timelines are unsupported, or motion is reduced, the bars just show. */
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-grow {
+      transform-origin: left center;
+      animation: bar-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+}
+
+@keyframes ocr-progress {
+  from { width: 0%; }
+  to { width: 100%; }
 }

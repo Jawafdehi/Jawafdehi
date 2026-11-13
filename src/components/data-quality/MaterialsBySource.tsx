@@ -34,7 +34,7 @@ export function MaterialsBySource({ materials }: { materials?: MaterialsMetrics 
 
   return (
     <section className="border-t border-border pt-10">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
+      <h2 className="font-case-section-title">
         {t("dataQuality.materialsBySource.heading", "Where the evidence comes from")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">

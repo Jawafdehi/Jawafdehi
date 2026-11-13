@@ -1,11 +1,11 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { type MouseEvent, useEffect, useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, ArrowLeft } from "lucide-react";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileView";
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
@@ -33,7 +33,7 @@ export default function CourtCaseProfile() {
   const parsed = parseTail(tail);
   const [activeSection, setActiveSection] = useState("case-summary");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["datalake-courtcase", parsed?.court, parsed?.caseNumber],
     queryFn: () => getCourtCaseFull(parsed!.court, parsed!.caseNumber),
     enabled: Boolean(parsed),
@@ -144,27 +144,35 @@ export default function CourtCaseProfile() {
       </Helmet>
 
       <div className="layout-container">
-        <Link
-          to="/search?type=courtcase"
-          className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" />
-          <span>{t("courtCaseProfile.backToSearch", "Back to search")}</span>
-        </Link>
+        <PageBreadcrumb className="mb-8 md:mb-10"
+          items={[
+            { label: t("nav.home"), to: "/" },
+            { label: t("nav.courtCases", "Court cases"), to: "/search?type=courtcase" },
+            ...(parsed ? [{ label: parsed.caseNumber, mono: true }] : []),
+          ]}
+        />
 
         {!parsed || isError ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {t("courtCaseProfile.notFound", "This court case could not be found in the Jawafdehi governance archive.")}
-            </AlertDescription>
-          </Alert>
+          // A failed request is not a missing record: only a bad reference or
+          // a 404 says "not found".
+          parsed && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
+            <EmptyState fullHeight headingLevel="h1"
+              kind="couldNotLoad"
+              title={t("courtCaseProfile.errorTitle", "This court case didn't load")}
+              description={t("courtCaseProfile.error", "Something went wrong on our side. Please try again in a moment.")}
+            />
+          ) : (
+            <EmptyState fullHeight headingLevel="h1"
+              kind="notFound"
+              title={t("courtCaseProfile.notFoundTitle", "Court case not found")}
+              description={t("courtCaseProfile.notFound", "This court case could not be found in the Jawafdehi governance archive.")}
+            />
+          )
         ) : (
-          <div className="min-w-0 space-y-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:space-y-0 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-12">
-            <div className="py-5 lg:hidden">
-              <h2 className="mb-3 text-sm font-semibold text-foreground">
-                {t("courtCaseProfile.contents", "Contents")}
-              </h2>
+          // The reading pages' body: "on this page" in a 13rem column, the
+          // text at most 52rem wide beside it; on a phone, a scrolling row.
+          <div className="min-w-0 space-y-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-x-16 lg:space-y-0">
+            <div className="lg:hidden">
               <CaseSectionJumpNav
                 activeSection={activeSection}
                 onJump={handleJumpToSection}
@@ -173,10 +181,7 @@ export default function CourtCaseProfile() {
             </div>
 
             <aside className="hidden min-w-0 lg:block">
-              <div className="sticky top-28">
-                <h2 className="mb-4 text-sm font-semibold text-foreground">
-                  {t("courtCaseProfile.contents", "Contents")}
-                </h2>
+              <div className="sticky top-28 pt-2">
                 <CaseSectionJumpNav
                   activeSection={activeSection}
                   onJump={handleJumpToSection}
@@ -185,7 +190,7 @@ export default function CourtCaseProfile() {
               </div>
             </aside>
 
-            <div className="min-w-0 space-y-12">
+            <div className="min-w-0 max-w-[52rem] space-y-16">
               <CourtCaseProfileView
                 courtCase={data}
                 caseNumber={caseNumber.toUpperCase()}

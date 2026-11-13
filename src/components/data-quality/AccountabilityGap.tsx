@@ -51,7 +51,9 @@ export function AccountabilityGap({
       key: "investigating",
       label: t("dataQuality.cases.status.investigating", "Under investigation"),
       count: inReviewProvided ? draftOnly : investigating,
-      color: "hsl(var(--alert))",
+      // The brand's two colours carry the status: crimson for what is still
+      // open, navy for what reached a finding, grey for what was closed.
+      color: "hsl(var(--accent))",
     },
     ...(inReviewProvided
       ? [
@@ -59,7 +61,7 @@ export function AccountabilityGap({
             key: "in_review",
             label: t("dataQuality.gap.stage.inReview", "In review (being prepared)"),
             count: inReview,
-            color: "hsl(var(--accent))",
+            color: "hsl(var(--accent) / 0.45)",
           } as FunnelStage,
         ]
       : []),
@@ -67,7 +69,7 @@ export function AccountabilityGap({
       key: "published",
       label: t("dataQuality.gap.stage.published", "Reached a published finding"),
       count: published,
-      color: "hsl(var(--success))",
+      color: "hsl(var(--primary))",
     },
     {
       key: "closed",
@@ -83,7 +85,7 @@ export function AccountabilityGap({
       key: "ciaa",
       label: t("dataQuality.corruptionCases.ciaaLabel", "CIAA prosecutions"),
       value: ciaa,
-      color: "hsl(var(--accent))",
+      color: "hsl(var(--primary))",
     },
     {
       key: "non_ciaa",
@@ -95,10 +97,10 @@ export function AccountabilityGap({
 
   return (
     <section>
-      <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">
+      <p className="mb-4 inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
         {t("dataQuality.corruptionCases.eyebrow", "The core finding")}
       </p>
-      <h2 className="font-display text-[1.9rem] font-bold leading-tight tracking-tight text-foreground md:text-[2.5rem]">
+      <h2 className="font-case-section-title">
         {t("dataQuality.corruptionCases.heading", "Corruption cases")}
       </h2>
       <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
@@ -123,10 +125,10 @@ export function AccountabilityGap({
                 header so it never reads as a peer of its own components. */}
             {!isLoading && (
               <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-border pb-3">
-                <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="text-[15px] text-muted-foreground">
                   {t("dataQuality.gap.totalLabel", "Documented cases")}
                 </span>
-                <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
+                <span className="text-3xl font-medium tabular-nums text-primary">
                   <AnimatedCount end={documented} duration={1.2} />
                 </span>
               </div>
@@ -141,7 +143,7 @@ export function AccountabilityGap({
               }
             />
 
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+            <p className="mt-4 text-[15px] leading-6 text-muted-foreground">
               {t(
                 "dataQuality.gap.bucketsCaption",
                 "Every documented case sits in exactly one of these. The three add up to the total above.",
@@ -149,8 +151,8 @@ export function AccountabilityGap({
             </p>
             {published > 0 && (
               <Link
-                to="/cases"
-                className="mt-3 inline-block text-sm font-medium text-accent hover:underline"
+                to="/search?type=case"
+                className="mt-3 inline-flex min-h-6 items-center text-[15px] text-accent hover:underline"
               >
                 {t("dataQuality.corruptionCases.browsePublished", "Browse published cases")} →
               </Link>
@@ -171,7 +173,7 @@ export function AccountabilityGap({
                   centerLabel={t("dataQuality.cases.donutCenter", "cases")}
                 />
               )}
-              <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              <p className="mt-4 text-[15px] leading-6 text-muted-foreground">
                 {t(
                   "dataQuality.corruptionCases.ciaaCaption",
                   "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies.",

@@ -41,7 +41,7 @@ export function ChargeMixByYear({
   return (
     <div className="w-full">
       <div className="mb-2 flex items-center justify-end gap-2">
-        <label htmlFor={toggleId} className="text-xs font-medium text-muted-foreground">
+        <label htmlFor={toggleId} className="text-sm text-muted-foreground">
           {percentLabel}
         </label>
         <Switch id={toggleId} checked={percent} onCheckedChange={setPercent} />
@@ -55,7 +55,7 @@ export function ChargeMixByYear({
         ) : null}
       </div>
 
-      <ul className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+      <ul className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
         {SERIES.map((s) => (
           <li key={s.key} className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: s.color }} aria-hidden="true" />

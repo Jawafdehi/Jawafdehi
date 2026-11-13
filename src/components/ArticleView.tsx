@@ -1,8 +1,8 @@
+import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Calendar, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight } from "@/components/icons";
 
-import { Button } from "@/components/ui/button";
 import { StreamField } from "@/components/StreamField";
 import { formatPublicationDate } from "@/utils/date";
 import type { Article } from "@/types/cms";
@@ -23,67 +23,70 @@ export const ArticleView = ({ article }: { article: Article }) => {
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
-            <main id="main-content" className="flex-1 py-8 md:py-12">
-                <div className="layout-container animate-fade-in">
-                    <div className="mb-8">
-                        <Button
-                            variant="ghost"
-                            asChild
-                            className="pl-0 hover:bg-transparent hover:text-primary"
-                        >
-                            <Link to="/updates" className="flex items-center gap-2">
-                                <ArrowLeft className="h-4 w-4 relative -top-px" />
-                                <span className="mt-1">{t("updates.backToUpdates")}</span>
-                            </Link>
-                        </Button>
-                    </div>
+            <main id="main-content" className="flex-1 pb-20 pt-8 md:pt-12">
+                <div className="layout-container">
+                    <PageBreadcrumb
+                      items={[
+                        { label: t("nav.home"), to: "/" },
+                        { label: t("nav.updates", "Updates"), to: "/updates" },
+                      ]}
+                    />
 
-                    <div className="mx-auto max-w-4xl">
-                        <article className="max-w-none">
-                            <div className="mb-8">
-                                <h1 className="font-page-title mb-4">{article.title}</h1>
-                                <div className="font-meta flex items-center">
-                                    <Calendar className="mr-2 h-4 w-4" />
-                                    <span className="mt-1">{formatPublicationDate(article.date)}</span>
-                                </div>
-                            </div>
+                    {/* Aligned to the page's left edge like every other page (it
+                        used to sit in a centred column, narrower than the rest):
+                        the title up to 56rem, the picture up to 64rem, the text
+                        in the reading measure of 48rem at 18px. */}
+                    <div className="mt-8 md:mt-10">
+                        <article>
+                            <header className="mb-10 max-w-4xl">
+                                <span className="inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
+                                    {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
+                                </span>
+                                <h1 className="font-home-display mt-5 text-balance text-4xl text-primary sm:text-5xl [:root[lang=en]_&]:leading-[1.08]">
+                                    {article.title}
+                                </h1>
+                                <p className="mt-5 flex items-center gap-2 text-[15px] text-muted-foreground">
+                                    <Calendar className="h-[18px] w-[18px]" aria-hidden="true" />
+                                    <time dateTime={article.date}>{formatPublicationDate(article.date)}</time>
+                                </p>
+                            </header>
 
                             {hero?.url && (
-                                <figure className="mb-8">
+                                <figure className="mb-10 max-w-5xl">
                                     <img
                                         src={hero.url}
                                         alt={hero.alt || article.title}
                                         width={hero.width}
                                         height={hero.height}
-                                        className="w-full rounded-lg"
+                                        className="w-full rounded-[20px] border border-border/70"
                                     />
                                     {hero.alt ? (
-                                        <figcaption className="font-caption mt-2 text-muted-foreground">
+                                        <figcaption className="mt-3 text-sm text-muted-foreground">
                                             {hero.alt}
                                         </figcaption>
                                     ) : null}
                                 </figure>
                             )}
 
-                            <div className="font-paragraph content-prose markdown-content">
+                            <div className="content-prose markdown-content max-w-3xl text-lg leading-8 text-primary/85">
                                 <StreamField blocks={article.body} />
                             </div>
                         </article>
 
                         {article.related_cases && article.related_cases.length > 0 && (
-                            <section className="mx-auto mt-12 max-w-4xl">
-                                <h2 className="font-card-title">
+                            <section className="mt-16 max-w-3xl border-t border-border/70 pt-10">
+                                <h2 className="font-home-display text-3xl text-primary md:text-4xl">
                                     {t("updates.relatedCases", "Related cases")}
                                 </h2>
-                                <div className="mt-4 grid gap-3">
+                                <div className="mt-6 grid gap-3">
                                     {article.related_cases.map((relatedCase) => (
                                         <Link
                                             key={relatedCase.id}
                                             to={`/case/${relatedCase.slug}`}
-                                            className="flex items-center justify-between gap-3 rounded-lg bg-card p-4 transition-colors hover:bg-primary-surface/[0.03]"
+                                            className="group flex items-center justify-between gap-4 rounded-[20px] border border-border/70 bg-surface p-5 transition-[border-color] duration-200 ease-out hover:border-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
-                                            <span className="font-card-title">{relatedCase.title}</span>
-                                            <ArrowRight className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                                            <span className="text-[17px] leading-snug text-primary">{relatedCase.title}</span>
+                                            <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5" aria-hidden="true" />
                                         </Link>
                                     ))}
                                 </div>

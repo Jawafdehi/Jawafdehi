@@ -1,4 +1,4 @@
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "@/components/icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -29,7 +29,7 @@ type FaqSectionProps = {
 };
 
 const faqCardClassName =
-  "group overflow-hidden rounded-lg bg-card text-card-foreground outline-none transition-colors duration-200 ease-out hover:bg-card hover:text-card-foreground focus-within:bg-card focus-within:text-card-foreground";
+  "group overflow-hidden rounded-[22px] bg-muted/60 text-card-foreground outline-none transition-colors duration-200 ease-out hover:bg-muted data-[state=open]:bg-muted";
 
 const splitFaqItems = (items: FaqSectionItem[]) => {
   const midpoint = Math.ceil(items.length / 2);
@@ -64,11 +64,11 @@ export function FaqSection({
             ) : null}
             <h2
               id={titleId}
-              className="text-4xl font-bold leading-tight tracking-normal text-primary md:text-5xl"
+              className="font-home-section-title text-primary"
             >
               {title}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/60 md:text-lg">
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
               {description}
             </p>
           </div>
@@ -90,7 +90,7 @@ export function FaqSection({
                     value={item.id}
                     className={faqCardClassName}
                   >
-                    <AccordionTrigger className="min-h-[4.25rem] gap-5 px-5 py-5 text-left text-base font-semibold leading-6 text-foreground no-underline transition-colors hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:px-6 [&>svg]:hidden">
+                    <AccordionTrigger className="min-h-[4.25rem] gap-5 px-5 py-5 text-left text-[17px] font-normal leading-7 text-primary no-underline transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:px-6 [&>svg]:hidden">
                       <span>{item.question}</span>
                       <span
                         className="relative flex h-6 w-6 shrink-0 items-center justify-center text-foreground/55 transition-colors duration-200 group-hover:text-accent group-focus-within:text-accent"

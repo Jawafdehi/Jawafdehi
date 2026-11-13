@@ -75,35 +75,6 @@ export function resolveMaterialDate(
   return { ad: date, bs: adToBsString(date) };
 }
 
-/** A search hit paired with its resolved date, ready for the recents table. */
-export interface RecentMaterial {
-  result: ArchiveSearchResult;
-  date: ResolvedMaterialDate;
-}
-
-/**
- * Order material search hits by real recency and keep the newest `count`.
- *
- * The search backend's `sort=newest` compares the raw `date` field, so the
- * BS-in-AD quirk above floats mis-fielded dates (year 2082 "AD") over
- * genuinely newer documents. Re-sorting on the RESOLVED AD date puts the list
- * back in true order; undated documents are dropped — a "recently added"
- * table cannot honestly place them.
- */
-export function pickRecentMaterials(
-  results: readonly ArchiveSearchResult[],
-  count: number,
-  currentAdYear: number = new Date().getFullYear(),
-): RecentMaterial[] {
-  return results
-    .map((result) => ({ result, date: resolveMaterialDate(result.extra, currentAdYear) }))
-    .filter((entry): entry is RecentMaterial & { date: { ad: string } } =>
-      Boolean(entry.date.ad),
-    )
-    .sort((a, b) => b.date.ad.localeCompare(a.date.ad))
-    .slice(0, count);
-}
-
 /**
  * The data-lake source token embedded in a material URL
  * (`/material/<source>/<ident>`). Sources may themselves contain slashes

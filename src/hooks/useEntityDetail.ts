@@ -61,7 +61,7 @@ export function useEntityDetail(options: UseEntityDetailOptions = {}): UseEntity
 
   const fetchedCases = relatedCaseQueries
     .map((q) => q.data)
-    .filter((c): c is JDSCase => c != null);
+    .filter((c): c is NonNullable<typeof c> => c != null);
 
   const caseMap = new Map<number, JDSCase>(fetchedCases.map((caseItem) => [caseItem.id, caseItem]));
 
