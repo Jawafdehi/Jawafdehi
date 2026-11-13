@@ -22,7 +22,7 @@ export function CaseContactStrip({
   // two ways to reach us as labelled pills (the icons alone said too little).
   return (
     <aside className="no-print mt-4 flex flex-col gap-5 rounded-[24px] border border-border/70 bg-surface p-6 md:flex-row md:items-center md:justify-between md:p-8">
-      <h3 className="font-home-display text-2xl text-primary md:text-[1.75rem]">{title}</h3>
+      <h3 className="font-home-display text-xl text-primary md:text-[1.375rem]">{title}</h3>
       <div className="flex flex-wrap items-center gap-2">
         <a href={`mailto:${email}`} aria-label={emailLabel} className={`${pill} bg-muted text-primary hover:bg-primary/[0.08]`}>
           <Mail className="h-[18px] w-[18px]" aria-hidden="true" />

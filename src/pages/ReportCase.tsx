@@ -104,7 +104,7 @@ export default function ReportCase() {
               <a href={JAWAFDEHI_SOCIALS.whatsapp} target="_blank" rel="noopener noreferrer" className={pill}>
                 <FaWhatsapp className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
                 <span className="sr-only">{t("report.page.whatsappLabel")}: </span>
-                <span className="font-mono text-sm tabular-nums">{JAWAFDEHI_WHATSAPP_NUMBER}</span>
+                <span className="tabular-nums">{JAWAFDEHI_WHATSAPP_NUMBER}</span>
               </a>
             </div>
             <h3 className="mt-6 text-[15px] text-muted-foreground">{t("report.page.socialTitle")}</h3>

@@ -16,17 +16,16 @@ export function KeyAllegationsSection({
     <section id="allegations" className="mb-16 scroll-mt-28">
       <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
-      {/* A hairline list, numbers in the mono face the site uses for figures. */}
-      <ol className="divide-y divide-border/70 border-y border-border/70">
+      {/* A plain numbered list: the number in Inter's tabular figures, set on
+          the text's first line, and space (no rules) between allegations. */}
+      <ol className="space-y-6">
         {allegations.map((allegation, index) => (
-          <li key={index} className="flex items-start gap-4 py-5 sm:gap-6">
-            <span className="mt-1 w-7 shrink-0 font-mono text-sm tabular-nums text-accent">
-              {String(index + 1).padStart(2, "0")}
-            </span>
+          <li key={index} className="flex items-baseline gap-4 sm:gap-5">
+            <span className="w-6 shrink-0 text-base font-medium tabular-nums text-accent">{index + 1}.</span>
             <p className="measure-prose text-lg leading-8 text-primary/85">{allegation}</p>
           </li>
         ))}
-        {allegations.length === 0 && <li className="py-5 text-lg leading-8 text-muted-foreground">{emptyLabel}</li>}
+        {allegations.length === 0 && <li className="text-lg leading-8 text-muted-foreground">{emptyLabel}</li>}
       </ol>
     </section>
   );

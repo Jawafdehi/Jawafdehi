@@ -82,12 +82,15 @@ export function CaseDetailBanner({
   const titleLength = title.trim().length;
   // Long Nepali titles run to three lines; the display size steps down with
   // length so a 140-character title is not a wall at 56px.
+  // About 2–2.3× the 18px body text, the ratio reading-heavy pages keep
+  // between a title and its text; it steps down with length so a 200-character
+  // Nepali title stays three lines, not six.
   const titleSizeClass =
     titleLength > 110
-      ? "text-[1.75rem] sm:text-4xl lg:text-[2.5rem]"
+      ? "text-[1.625rem] sm:text-[1.875rem] lg:text-[2.125rem]"
       : titleLength > 70
-        ? "text-[2rem] sm:text-[2.5rem] lg:text-5xl"
-        : "text-4xl sm:text-5xl lg:text-[3.5rem]";
+        ? "text-[1.75rem] sm:text-[2rem] lg:text-[2.375rem]"
+        : "text-[2rem] sm:text-[2.25rem] lg:text-[2.625rem]";
 
   // The hero image in preference order — the uploaded rendition ladder first,
   // then the deprecated banner/thumbnail URLs, then the placeholder — walking
@@ -161,11 +164,33 @@ export function CaseDetailBanner({
 
   return (
     <section className="w-full text-foreground no-print">
-      {/* The light hero every page now opens with: the trail, the case's type
-          and tags as pills, the title in the display face, its one-line deck
-          and the actions on the left; the case's picture as a framed card on
-          the right. On a phone the picture follows the words. */}
-      <div className="layout-container pt-8 md:pt-12 lg:pl-24 min-[1536px]:pl-8">
+      {/* The case's banner as its own section at the top, at the page's full
+          width and never cropped (caseworkers upload portraits and scanned
+          documents as well as 16:9 cards); then the trail, the case's type and
+          tags as pills, the title, its one-line deck and the actions. */}
+      <div className="layout-container pt-6 md:pt-8 lg:pl-24 min-[1536px]:pl-8" data-testid="case-detail-hero">
+        <img
+          src={imageSrc}
+          srcSet={srcSet}
+          sizes="(min-width: 1400px) 1400px, 100vw"
+          alt={isPlaceholder ? "" : title}
+          loading="eager"
+          {...{ fetchpriority: "high" }}
+          decoding="async"
+          onError={advanceImage}
+          width={1400}
+          height={788}
+          className={cn(
+            "block h-auto w-full rounded-[24px] border border-border/70 object-contain",
+            // No picture of its own: the stand-in is a shallow band, not a
+            // full banner's height of placeholder.
+            isPlaceholder && cn(CASE_PLACEHOLDER_DARK_CLASS, "aspect-[21/9] py-8 sm:aspect-[24/7]"),
+          )}
+          data-testid="case-detail-hero-image"
+        />
+      </div>
+
+      <div className="layout-container pt-8 md:pt-10 lg:pl-24 min-[1536px]:pl-8">
         <PageBreadcrumb
           items={[
             { label: homeLabel || t("nav.home"), to: "/" },
@@ -173,9 +198,7 @@ export function CaseDetailBanner({
             { label: breadcrumbCase },
           ]}
         />
-
-        <div className="mt-6 grid grid-cols-1 items-start gap-8 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
-          <div className="min-w-0">
+        <div className="mt-6 max-w-4xl">
             <div className="flex flex-wrap items-center gap-2">
               {caseTypeLabel ? <CaseTypeBadge caseType={offenceType}>{caseTypeLabel}</CaseTypeBadge> : null}
               {caseData.tags.map((tag) => (
@@ -218,29 +241,6 @@ export function CaseDetailBanner({
                 )}
               </div>
             ) : null}
-          </div>
-
-          <div className="min-w-0" data-testid="case-detail-hero">
-            <img
-              src={imageSrc}
-              srcSet={srcSet}
-              sizes="(min-width: 1024px) 30rem, 100vw"
-              alt={isPlaceholder ? "" : title}
-              loading="eager"
-              {...{ fetchpriority: "high" }}
-              decoding="async"
-              onError={advanceImage}
-              width={1400}
-              height={788}
-              className={cn(
-                // Contained, not cropped: caseworkers upload portraits and scanned
-                // documents as well as 16:9 cards, and none of it may lose an edge.
-                "block aspect-[16/9] h-auto w-full rounded-[20px] border border-border/70 bg-muted object-contain",
-                isPlaceholder && CASE_PLACEHOLDER_DARK_CLASS,
-              )}
-              data-testid="case-detail-hero-image"
-            />
-          </div>
         </div>
       </div>
 
@@ -276,7 +276,7 @@ export function CaseDetailBanner({
               {caseData.bigo != null && caseData.bigo > 0 && (
                 <div>
                   <dt className={factLabelClass}>{t("caseDetail.embezzledAmount")}</dt>
-                  <dd className="font-mono text-base font-medium leading-7 tabular-nums text-accent">
+                  <dd className="text-base font-medium leading-7 tabular-nums text-accent">
                     {formatBigo(caseData.bigo)}
                   </dd>
                 </div>
@@ -301,7 +301,7 @@ export function CaseDetailBanner({
                       aria-label={courtCase.label}
                       className="group inline-flex min-h-11 min-w-0 items-center gap-2.5 rounded-full bg-muted px-4 py-2 text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:active:scale-100"
                     >
-                      <span className="font-mono text-sm tabular-nums">{courtCase.caseNumber}</span>
+                      <span className="text-sm font-medium tabular-nums">{courtCase.caseNumber}</span>
                       <span className="text-sm text-muted-foreground">{courtCase.courtName}</span>
                       <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                     </Link>

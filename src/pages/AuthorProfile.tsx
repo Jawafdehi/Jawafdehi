@@ -290,7 +290,7 @@ export default function AuthorProfile() {
                       )}
 
                       {entry.bigo != null && entry.bigo > 0 && (
-                        <span className="mt-auto pt-3 font-mono text-sm tabular-nums text-accent">
+                        <span className="mt-auto pt-3 text-sm font-medium tabular-nums text-accent">
                           {formatBigo(entry.bigo)}
                         </span>
                       )}

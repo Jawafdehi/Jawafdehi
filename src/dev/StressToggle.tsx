@@ -1,11 +1,14 @@
-// DEV ONLY — the "Demo data / Worst case / Empty / One" switch for /search.
+// DEV ONLY — the "Demo data / Worst case / Empty / One" switch for /search, and
+// the case page's "Real case / Worst case / Sparse / One stage" (pass `modes`).
 // Plain chrome on purpose: it is not part of the design under test. The choice
 // lives in the URL (?data=worst) so a reload keeps it.
 import { useSearchParams } from "react-router-dom";
 
 import { STRESS_MODES } from "@/dev/archive-search-stress";
 
-export default function StressToggle() {
+export default function StressToggle({
+  modes = STRESS_MODES,
+}: Readonly<{ modes?: ReadonlyArray<{ value: string; label: string }> }>) {
   const [searchParams, setSearchParams] = useSearchParams();
   const current = searchParams.get("data") ?? "demo";
   return (
@@ -25,7 +28,7 @@ export default function StressToggle() {
         boxShadow: "0 1px 3px rgba(0,0,0,.15)",
       }}
     >
-      {STRESS_MODES.map((mode) => (
+      {modes.map((mode) => (
         <button
           key={mode.value}
           onClick={() => {

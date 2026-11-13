@@ -397,9 +397,13 @@
     @apply mt-6 mb-4;
   }
 
+  /* The subheadings INSIDE a case's own text (its overview, missing
+     details): one and two steps under the 28px section heading on a 1.2
+     ratio — 22px, then 19px — so an authored h2 never outranks the section
+     it sits in. */
   .font-subsection-title,
   .content-prose h2 {
-    @apply text-xl font-semibold text-primary md:text-2xl;
+    @apply text-xl font-semibold text-primary md:text-[1.375rem];
     font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
@@ -409,10 +413,13 @@
      the per-locale headline pin rather than a hardcoded serif. Sized like
      .font-subsection-title but bolded — Vesper reads lighter than the sans at
      equal weight, and the Nepali locale is the one this role was tuned on. */
-  /* Kept as a hook for print.css; the face and size now come from
-     .font-home-display on CaseSectionHeading, the reading pages' heading. */
+  /* The section heading of a reading-heavy detail page (a case, a court
+     case): the display face at ~1.55x the 18px body (28px; 24px on a phone),
+     the ratio long-form pages keep between a section and its text. Also the
+     hook print.css restyles. */
   .font-case-section-title {
-    line-height: 1.15;
+    @apply font-home-display text-2xl text-primary md:text-[1.75rem];
+    line-height: 1.2;
   }
 
   .content-prose h2 {
@@ -428,7 +435,7 @@
   }
 
   .content-prose h3 {
-    @apply mt-4 mb-2 md:text-xl;
+    @apply mt-4 mb-2 md:text-[1.1875rem];
   }
 
   .content-prose h4 {

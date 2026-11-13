@@ -6,7 +6,7 @@ export type Crumb = {
   label: string;
   /** Omit for the current page, which is the last crumb and not a link. */
   to?: string;
-  /** Case numbers and other references read in the mono face. */
+  /** Case numbers and other references: tabular figures, so digits line up. */
   mono?: boolean;
 };
 
@@ -35,13 +35,13 @@ export function PageBreadcrumb({ items, className }: Readonly<{ items: Crumb[]; 
               className={cn(
                 "block min-h-6 rounded-sm leading-6 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 last && "min-w-0 truncate",
-                item.mono && "font-mono text-[13px]",
+                item.mono && "tabular-nums",
               )}
             >
               {item.label}
             </Link>
           ) : (
-            <span aria-current="page" className={cn("min-w-0 truncate text-primary/80", item.mono && "font-mono text-[13px]")}>
+            <span aria-current="page" className={cn("min-w-0 truncate text-primary/80", item.mono && "tabular-nums")}>
               {item.label}
             </span>
           )}

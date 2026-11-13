@@ -79,7 +79,7 @@ describe("CaseDetailBanner short_description deck (#6)", () => {
     expect(screen.getByTestId("case-detail-metadata").className).toContain("layout-container");
   });
 
-  it("keeps the image standalone, framed beside the title rather than under it", () => {
+  it("keeps the banner as its own full-width section, above the title", () => {
     const { container } = renderBanner(makeCase());
     const heroImage = screen.getByTestId("case-detail-hero-image");
     const title = screen.getByRole("heading", { name: "Test case title" });
@@ -87,10 +87,11 @@ describe("CaseDetailBanner short_description deck (#6)", () => {
     expect(heroImage.className).not.toContain("absolute");
     expect(heroImage.getAttribute("width")).toBe("1400");
     expect(container.querySelector("[class*='bg-gradient']")).toBeNull();
-    // The title comes first in reading order; the picture follows it.
     expect(screen.getByTestId("case-detail-hero").compareDocumentPosition(title)).toBe(
-      Node.DOCUMENT_POSITION_PRECEDING,
+      Node.DOCUMENT_POSITION_FOLLOWING,
     );
+    // Contained, never cropped: uploads are portraits and scans as well as cards.
+    expect(heroImage.className).toContain("object-contain");
   });
 
   it("renders the short description as a lead at the top of the case", () => {

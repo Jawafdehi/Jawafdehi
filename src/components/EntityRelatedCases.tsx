@@ -118,7 +118,7 @@ export function EntityRelatedCases({
         <h2 id="related-cases-heading" className="font-home-display text-2xl text-primary md:text-[1.75rem]">
           {t("entityDetail.relatedCases")}
         </h2>
-        <span className="font-mono text-sm tabular-nums text-muted-foreground">
+        <span className="text-sm tabular-nums text-muted-foreground">
           {data.count} {t(data.count === 1 ? "entityDetail.caseOne" : "entityDetail.cases").toLowerCase()}
         </span>
       </div>
@@ -231,7 +231,7 @@ export function EntityRelatedCases({
                 {c.bigo ? (
                   <p className="text-[13px] text-muted-foreground">
                     <span>{t("caseCard.bigo")}: </span>
-                    <span className="font-mono tabular-nums text-accent">
+                    <span className="font-medium tabular-nums text-accent">
                       {formatBigo(c.bigo)}
                     </span>
                   </p>

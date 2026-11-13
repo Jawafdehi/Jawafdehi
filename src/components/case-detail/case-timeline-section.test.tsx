@@ -44,7 +44,7 @@ describe("CaseTimelineSection heading", () => {
     expect(headings).toHaveLength(1);
     expect(headings[0].textContent).toContain("Timeline");
     // The reading pages' heading: the display face, beside any AI label.
-    expect(headings[0].className).toContain("font-home-display");
+    expect(headings[0].className).toContain("font-case-section-title");
   });
 
   it("keeps the heading outside the collapsible so it never counts against the clamp", () => {

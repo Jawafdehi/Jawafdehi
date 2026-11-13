@@ -1,5 +1,5 @@
-import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
+import { type MouseEvent, Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useNavigate, useSearchParams, Link, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Seo } from "@/components/Seo";
 import { FloatingShareSidebar } from "@/components/FloatingShareSidebar";
@@ -74,6 +74,14 @@ function getGroupedEntities(entities: JawafEntity[]) {
   }, {} as Record<string, JawafEntity[]>);
 }
 
+// The dev data switch (bottom of the page): lazy and DEV-only, never shipped.
+const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;
+
+// Reads ?data= without importing the stress data itself, which loads lazily.
+function readCaseStressParam(value: string | null): "worst" | "sparse" | "one" | null {
+  return value === "worst" || value === "sparse" || value === "one" ? value : null;
+}
+
 const CaseDetail = () => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
@@ -96,9 +104,20 @@ const CaseDetail = () => {
   // API, then replaced with the canonical slug below once the case loads.
   const isCourtRef = isCourtCaseRef(id);
 
+  // DEV ONLY: ?data=worst|sparse|one swaps the real case for its extremes at
+  // the data boundary (see dev/case-detail-stress.ts); production ignores it.
+  const [searchParams] = useSearchParams();
+  const stressMode = import.meta.env.DEV ? readCaseStressParam(searchParams.get("data")) : null;
   const { data: caseData, isLoading, isError } = useQuery({
-    queryKey: ["case", id],
-    queryFn: () => (isCourtRef ? getCaseByCourtRef(id!) : getCaseById(id!)),
+    queryKey: ["case", id, stressMode],
+    queryFn: async () => {
+      const real = await (isCourtRef ? getCaseByCourtRef(id!) : getCaseById(id!));
+      if (import.meta.env.DEV && stressMode) {
+        const { applyCaseStress } = await import("@/dev/case-detail-stress");
+        return applyCaseStress(stressMode, real);
+      }
+      return real;
+    },
     enabled: id != null && legacyTargetSlug == null,
     staleTime: 5 * 60 * 1000,
   });
@@ -782,6 +801,19 @@ const CaseDetail = () => {
           </div>
         </div>
       </div>
+
+      {StressToggle ? (
+        <Suspense fallback={null}>
+          <StressToggle
+            modes={[
+              { value: "demo", label: "Real case" },
+              { value: "worst", label: "Worst case" },
+              { value: "sparse", label: "Sparse" },
+              { value: "one", label: "One stage" },
+            ]}
+          />
+        </Suspense>
+      ) : null}
 
       {/* Mobile Share Button */}
       {isMobile && (
