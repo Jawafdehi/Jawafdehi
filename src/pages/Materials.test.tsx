@@ -12,9 +12,6 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/pages/MaterialsLanding", () => ({
   default: () => <div>LANDING</div>,
 }));
-vi.mock("@/pages/MaterialSeriesBrowse", () => ({
-  default: ({ slug }: { slug: string }) => <div>SERIES BROWSE: {slug}</div>,
-}));
 
 import Materials from "@/pages/Materials";
 
@@ -40,10 +37,10 @@ describe("Materials view routing", () => {
     expect(await screen.findByText("LANDING")).toBeTruthy();
   });
 
-  it("renders the series browse for ?series=", async () => {
+  it("opens a series as a filter on the archive search", async () => {
     renderAt("/materials/?series=ciaa-annual-reports");
     expect(
-      await screen.findByText("SERIES BROWSE: ciaa-annual-reports"),
+      await screen.findByText("SEARCH AT /search/?type=material&series=ciaa-annual-reports"),
     ).toBeTruthy();
   });
 
@@ -66,20 +63,16 @@ describe("Materials view routing", () => {
     expect(await screen.findByText("SEARCH AT /search/?type=material&material_type=report")).toBeTruthy();
   });
 
-  it("gives ?series= precedence over ?q=, which is the reverse of the old rule", async () => {
-    // Before: the search API could not scope to a source, so a query meant the
-    // whole archive and the series was carried along inert — a link reading
-    // "search the CIAA annual reports" silently searched all 346k documents.
-    renderAt("/materials/?series=ciaa-annual-reports&q=ujuri");
-
+  it("keeps a series' own query, sort and date range on the way", async () => {
+    // The retired series page searched inside its shelf with q/sort and kept its
+    // dates as from/to; search reads the same query and sort, and its own
+    // date_from/date_to.
+    renderAt("/materials/?series=charge-sheets&q=ujuri&sort=oldest&from=2080-01-01");
     expect(
-      await screen.findByText("SERIES BROWSE: ciaa-annual-reports"),
+      await screen.findByText(
+        "SEARCH AT /search/?type=material&series=charge-sheets&q=ujuri&sort=oldest&date_from=2080-01-01",
+      ),
     ).toBeTruthy();
-    await waitFor(() => expect(screen.queryByText(/SEARCH AT/)).toBeNull());
-  });
-
-  it("also wins over the other search params a series view owns", async () => {
-    renderAt("/materials/?series=charge-sheets&sort=oldest&page=2");
-    expect(await screen.findByText("SERIES BROWSE: charge-sheets")).toBeTruthy();
+    await waitFor(() => expect(screen.queryByText("LANDING")).toBeNull());
   });
 });

@@ -126,8 +126,8 @@ function MaterialResultCard({
     ? seriesBySource(source, result.extra?.dataset_bucket)
     : undefined;
   // Every material names its series. A curated-registry source keeps its
-  // editorial name ("CIAA press releases" — it also has a browsable
-  // ?series= page); every other source resolves to its collection's document
+  // editorial name ("CIAA press releases" — it is also a Series filter on
+  // the Documents tab); every other source resolves to its collection's document
   // type, from the source map, falling back to the schema.org class the index
   // always carries. Both read from one label catalogue, so nothing here
   // invents copy.

@@ -13,9 +13,15 @@ describe("archiveSearchUrl", () => {
     expect(archiveSearchUrl("case", "?search=prachanda")).toBe("/search/?type=case&q=prachanda");
   });
 
-  it("drops a stale type and the series slug, which mean nothing on /search", () => {
+  it("keeps the series, which /search filters by, and drops a stale type", () => {
     expect(archiveSearchUrl("material", new URLSearchParams("type=case&series=x&q=y"))).toBe(
-      "/search/?type=material&q=y",
+      "/search/?type=material&series=x&q=y",
+    );
+  });
+
+  it("maps the old series page's from/to onto the search date range", () => {
+    expect(archiveSearchUrl("material", "?series=x&from=2080-01-01&to=2081-01-01&when=1y")).toBe(
+      "/search/?type=material&series=x&date_from=2080-01-01&date_to=2081-01-01",
     );
   });
 });

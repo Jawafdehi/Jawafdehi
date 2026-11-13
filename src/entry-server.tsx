@@ -90,8 +90,8 @@ async function prefetch(
     return;
   }
 
-  // Materials landing page (BARE /materials only — ?series= and ?q= views are
-  // client-rendered). The query factory is the SHARED definition
+  // Materials landing page (BARE /materials only — with ?series= or ?q= it
+  // redirects into /search on the client). The query factory is the SHARED definition
   // (queries/materials-landing.ts), so the key matches the page exactly and the
   // pre-rendered HTML carries the real archive figures.
   if (/^\/materials\/?(?:#|$)/.test(url)) {

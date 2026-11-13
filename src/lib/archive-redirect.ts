@@ -13,10 +13,17 @@ export type ArchiveType = "case" | "courtcase" | "material";
 const RENAMED: Record<string, string> = {
   // llms.txt advertised /cases?search={name}; /search calls it q.
   search: "q",
+  // The retired series page kept its own date range as from/to.
+  from: "date_from",
+  to: "date_to",
 };
 
-/** Params that belonged to the old page and mean nothing on /search. */
-const DROPPED = new Set(["type", "series"]);
+/**
+ * Params that belonged to the old page and mean nothing on /search: a stale
+ * type (the redirect sets its own), and the series page's relative date preset
+ * ("last year"), which search expresses as explicit dates instead.
+ */
+const DROPPED = new Set(["type", "when"]);
 
 /** The /search URL for an old browse URL's query string, typed. */
 export function archiveSearchUrl(type: ArchiveType, search: string | URLSearchParams): string {

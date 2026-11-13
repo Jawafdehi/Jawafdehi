@@ -1,3 +1,4 @@
+import { seriesBySlug, seriesScope } from "@/data/material-series";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
@@ -1061,6 +1062,28 @@ describe("ArchiveSearch — materials tab filters", () => {
       date_from: "2020-01-01",
       date_to: "2024-12-31",
     });
+  });
+
+  it("scopes to a series from ?series=, the landing page's folders opened as a filter", async () => {
+    renderSearch("/search?type=material&series=charge-sheets");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    const series = seriesBySlug("charge-sheets")!;
+    expect(lastRequest()).toMatchObject({ type: "material", ...seriesScope(series) });
+    // In force, its chip names the series instead of the bare "Series".
+    const bar = screen.getByRole("group", { name: /filters/i });
+    await waitFor(() => expect(within(bar).getByText("Charge sheets")).toBeTruthy());
+  });
+
+  it("ignores an unknown series rather than scoping to nothing", async () => {
+    renderSearch("/search?type=material&series=no-such-shelf");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().source).toBeUndefined();
+  });
+
+  it("ignores a series on any tab but Documents", async () => {
+    renderSearch("/search?type=case&series=charge-sheets");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest().source).toBeUndefined();
   });
 
   it("repeats material_type for a reader who ticks two boxes", async () => {

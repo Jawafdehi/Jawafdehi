@@ -2453,7 +2453,8 @@
         "1to10arab": "Rs 1 – 10 arab",
         "over10arab": "Over Rs 10 arab"
       },
-      "bigoChip": "Amount"
+      "bigoChip": "Amount",
+      "series": "Series"
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",

@@ -1,3 +1,4 @@
+import { seriesSearchPath } from "@/data/material-series";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -102,7 +103,7 @@ export function FolderCard({ series, count, decorative = false, className }: Rea
     );
   }
   return (
-    <Link to={`/materials/?series=${series.slug}`} className={cn(shell, className)}>
+    <Link to={seriesSearchPath(series.slug)} className={cn(shell, className)}>
       {body}
     </Link>
   );

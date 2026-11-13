@@ -346,12 +346,12 @@ export const SITE_ROUTES = [
   { path: "/entity/*", chrome: "app" },
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },
-  // The materials landing page and its ?series= browse. It carried no page
+  // The materials landing page. It carried no page
   // metadata until 2026-08-11, so it was filtered out of
   // PRE_RENDERED_STATIC_ROUTES below and never pre-rendered: a crawl or a share
   // got index.html's bare shell. Metadata in the component cannot fix that on its
-  // own, because nothing runs the client render. Its old ?q= search view now
-  // redirects into /search (see Materials.tsx).
+  // own, because nothing runs the client render. Its old ?series= and ?q= views
+  // now redirect into /search (see Materials.tsx).
   {
     path: "/materials",
     chrome: "app",

@@ -2432,7 +2432,8 @@
         "1to10arab": "रु १ – १० अर्ब",
         "over10arab": "रु १० अर्बभन्दा बढी"
       },
-      "bigoChip": "रकम"
+      "bigoChip": "रकम",
+      "series": "शृङ्खला"
     },
     "materialSeries": "श्रृंखला",
     "filterSearch": "{{filter}} खोज्नुहोस्",

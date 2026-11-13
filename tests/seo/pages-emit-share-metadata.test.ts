@@ -77,7 +77,7 @@ function resolveModule(specifier: string, fromDir: string): string | null {
 /**
  * Does this component render <Seo>, itself or via a component it delegates the
  * whole page to? Materials holds no metadata of its own — it routes to
- * MaterialsLanding or MaterialSeriesBrowse — which is correct: one page's
+ * MaterialsLanding (or redirects into /search) — which is correct: one page's
  * metadata should live in one place.
  */
 function reachesSeo(file: string, depth = 0): boolean {

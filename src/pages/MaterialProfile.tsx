@@ -39,7 +39,7 @@ import {
   type PreviewDocument,
 } from "@/components/DocumentPreviewDialog";
 import { ShareButton } from "@/components/ShareButton";
-import { seriesBySource } from "@/data/material-series";
+import { seriesBySource, seriesSearchPath } from "@/data/material-series";
 import { getMaterialSourceLinks } from "@/lib/material-links";
 import {
   materialBilingual as bilingual,
@@ -352,7 +352,7 @@ export default function MaterialProfile() {
           items={[
             { label: t("nav.home"), to: "/" },
             { label: t("materialProfile.breadcrumb", "Documents"), to: "/materials/" },
-            ...(series ? [{ label: series.name.en, to: `/materials/?series=${series.slug}` }] : []),
+            ...(series ? [{ label: series.name.en, to: seriesSearchPath(series.slug) }] : []),
           ]}
         />
 

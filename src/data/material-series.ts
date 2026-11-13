@@ -47,7 +47,7 @@ import type { MaterialsMetrics } from "@/types/jds";
 import type { ArchiveSearchParams } from "@/types/search";
 
 export interface MaterialSeries {
-  /** URL identity: /materials/?series=<slug>. Stable; changing one breaks links. */
+  /** URL identity: /search?type=material&series=<slug>. Stable; changing one breaks links. */
   slug: string;
   /** The data-lake source token (statistics by_source / ?source= scope). */
   source: string;
@@ -261,6 +261,14 @@ export function seriesCount(
 
 export function seriesBySlug(slug: string): MaterialSeries | undefined {
   return MATERIAL_SERIES.find((series) => series.slug === slug);
+}
+
+/**
+ * Where a series lives: the archive search, on Documents, with the series
+ * filter applied. There is no page of its own any more; a shelf is a search.
+ */
+export function seriesSearchPath(slug: string): string {
+  return `/search?type=material&series=${encodeURIComponent(slug)}`;
 }
 
 /**

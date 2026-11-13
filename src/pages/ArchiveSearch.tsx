@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { seriesBySlug, seriesScope } from "@/data/material-series";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
@@ -305,6 +306,7 @@ export default function ArchiveSearch() {
     // Document type and the date range are both material-scoped controls, so
     // they clear on the way out for the same reason.
     if (type !== "material") {
+      next.delete("series");
       next.delete("material_type");
       next.delete("date_from");
       next.delete("date_to");
@@ -360,6 +362,7 @@ export default function ArchiveSearch() {
         "district",
         "province",
         "material_type",
+        "series",
         "bigo_min",
         "bigo_max",
         "date_from",
@@ -417,13 +420,27 @@ export default function ArchiveSearch() {
         label: describeDateRange(params.date_from, params.date_to, t),
       }
     : null;
+  // The series in force, only while it can apply (Documents) and only when the
+  // slug names a real shelf — the same conditions readParams scopes by.
+  const activeSeries =
+    selectedRecordType === "material" && seriesBySlug(searchParams.get("series") ?? "")
+      ? (searchParams.get("series") ?? undefined)
+      : undefined;
+  const updateSeries = (slug: string | undefined) => {
+    const next = new URLSearchParams(searchParams);
+    if (slug) next.set("series", slug);
+    else next.delete("series");
+    next.delete("page");
+    setSearchParams(next);
+  };
   const activeRefinementCount =
     Object.values(selectedRefinements).reduce(
       (count, values) => count + values.length,
       0,
     ) +
     (bigoPill ? 1 : 0) +
-    (datePill ? 1 : 0);
+    (datePill ? 1 : 0) +
+    (activeSeries ? 1 : 0);
   const facets = displayData?.facets || emptyFacets;
   const searchFilters = showFilters ? (
     isInitialLoading ? (
@@ -439,9 +456,11 @@ export default function ArchiveSearch() {
         dateFrom={params.date_from}
         dateTo={params.date_to}
         onDateCommit={updateDateRange}
+        onSeriesChange={updateSeries}
         onToggle={toggleRefinement}
         selected={selectedSidebarFilters}
         selectedType={selectedRecordType}
+        series={activeSeries}
         variant="sheet"
       />
     )
@@ -559,7 +578,9 @@ export default function ArchiveSearch() {
                   onClearGroup={clearRefinementGroup}
                   onDateCommit={updateDateRange}
                   onOpenAll={() => setAllFiltersOpen(true)}
+                  onSeriesChange={updateSeries}
                   onToggle={toggleRefinement}
+                  series={activeSeries}
                   selected={selectedSidebarFilters}
                   selectedType={selectedRecordType}
                 />
@@ -764,6 +785,11 @@ function readDateParams(searchParams: URLSearchParams) {
   return { date_from: from, date_to: to };
 }
 
+function readSeriesScope(searchParams: URLSearchParams) {
+  const series = seriesBySlug(searchParams.get("series") ?? "");
+  return series ? seriesScope(series) : {};
+}
+
 function readParams(
   searchParams: URLSearchParams,
   selectedRecordType: ArchiveSearchType,
@@ -811,6 +837,10 @@ function readParams(
       selectedRecordType === "material"
         ? searchParams.getAll("material_type")
         : [],
+    // A series (?series=<slug>) is a SCOPE, the landing page's folders opened
+    // as a filter: its source token and document kind, built by seriesScope.
+    // Documents only, and an unknown slug scopes nothing rather than erroring.
+    ...(selectedRecordType === "material" ? readSeriesScope(searchParams) : {}),
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
     // Date bounds, gated to the tab that renders the control. Read through

@@ -7,7 +7,7 @@ import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { ArrowLink } from "@/components/ui/arrow-link";
-import { MATERIAL_SERIES, seriesCount } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesCount, seriesSearchPath } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
 import { formatArchiveCount } from "@/lib/materials-landing";
 import { archiveStatisticsQuery } from "@/queries/materials-landing";
@@ -82,7 +82,7 @@ export default function MaterialsLanding() {
             name: series.name.ne,
             alternateName: series.name.en,
             description: series.description.ne,
-            url: `${SITE_URL}/materials/?series=${series.slug}`,
+            url: `${SITE_URL}${seriesSearchPath(series.slug)}`,
             creator: { "@id": `${SITE_URL}/#organization` },
             license: CC_BY_NC_URL,
             isAccessibleForFree: true,

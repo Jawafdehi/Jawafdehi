@@ -16,6 +16,7 @@ import type {
 } from "@/types/search";
 import { BigoRangeFilterSkeleton } from "@/components/search/BigoRangeFilterSkeleton";
 import { DateRangeFilter } from "@/components/search/DateRangeFilter";
+import { SeriesFilter } from "@/components/search/SeriesFilter";
 import { LazyBigoRangeFilter } from "@/components/search/LazyBigoRangeFilter";
 import type { BigoExtent } from "@/lib/bigo-range";
 import type { DateBounds } from "@/lib/date-range";
@@ -67,6 +68,9 @@ type SearchFiltersProps = {
   dateFrom?: string;
   dateTo?: string;
   onDateCommit: (bounds: DateBounds) => void;
+  /** The series in force on the Documents tab (a registry slug), and its setter. */
+  series?: string;
+  onSeriesChange?: (slug: string | undefined) => void;
   /** "panel" (default): its own grey surface and header. "sheet": bare, for
    * the "All filters" sheet. */
   variant?: "panel" | "sheet";
@@ -85,6 +89,8 @@ export function SearchFilters({
   dateFrom,
   dateTo,
   onDateCommit,
+  series,
+  onSeriesChange,
   variant = "panel",
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
@@ -158,6 +164,9 @@ export function SearchFilters({
         actually supports it — 93% of materials carry a date. Widening this to
         court cases is a one-line change to this condition once someone wants it.
       */}
+      {selectedType === "material" && onSeriesChange ? (
+        <SeriesFilter onChange={onSeriesChange} value={series} />
+      ) : null}
       {selectedType === "material" ? (
         <DateRangeFilter
           from={dateFrom}

@@ -49,10 +49,8 @@ import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
 import ResearchCorruption from "./pages/ResearchCorruption";
-// /materials is pre-rendered, so the policy above makes it eager. Materials
-// routes by query string: only the landing view is pre-rendered, so only it has
-// to be eager — the ?series= browse is lazy() in Materials.tsx, and the old ?q=
-// search view is now a redirect into /search.
+// /materials is pre-rendered, so the policy above makes it eager. It is only
+// the landing page now: its old ?series= and ?q= views redirect into /search.
 import Materials from "./pages/Materials";
 import { ArchiveRedirect } from "@/components/ArchiveRedirect";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,
