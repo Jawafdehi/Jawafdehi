@@ -198,7 +198,8 @@ export function CaseDetailBanner({
             { label: breadcrumbCase },
           ]}
         />
-        <div className="mt-6 max-w-4xl">
+        {/* As wide as the banner above it; only the deck keeps a measure. */}
+        <div className="mt-6">
             <div className="flex flex-wrap items-center gap-2">
               {caseTypeLabel ? <CaseTypeBadge caseType={offenceType}>{caseTypeLabel}</CaseTypeBadge> : null}
               {caseData.tags.map((tag) => (
@@ -219,7 +220,7 @@ export function CaseDetailBanner({
                 Authored content, rendered as-is; a placeholder with no letters
                 or digits in it (some cases carry a lone ".") is not a deck. */}
             {/[\p{L}\p{N}]/u.test(caseData.short_description ?? "") ? (
-              <p className="mt-5 max-w-2xl break-words text-lg leading-8 text-muted-foreground">
+              <p className="mt-5 max-w-3xl break-words text-lg leading-8 text-muted-foreground">
                 {caseData.short_description}
               </p>
             ) : null}

@@ -13,7 +13,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "@/components/icons";
 
-import { Badge } from "@/components/ui/badge";
 import { EntityIdentity } from "@/components/EntityIdentity";
 import { Reveal } from "@/components/ui/reveal";
 import type { JawafEntity } from "@/types/jds";
@@ -108,6 +107,9 @@ function entityKind(jawafEntity: JawafEntity, entity: Entity | null) {
 const EASE_OUT = "[transition-timing-function:cubic-bezier(0.23,1,0.32,1)]";
 
 // Hairline cards, as everywhere in the redesign; the border darkens on hover.
+// Strips a badge's fill, border and padding, keeping only its text colour.
+const TEXT_ONLY = "border-0 bg-transparent px-0 py-0 shadow-none dark:bg-transparent";
+
 const SURFACE = "border border-border/70 bg-surface transition-colors duration-200 group-hover:border-primary/25";
 
 // Flip: the back face is pre-rotated and both faces hide their backface; the
@@ -225,25 +227,26 @@ function EntityCard({ jawafEntity, entity, language, forum, appeal }: Readonly<E
       {showOutcome && (
         // Stacked, not side by side: the appeal line reads as a qualifier of
         // the verdict above it.
-        <div className="mt-3 flex flex-col items-center gap-1">
-          <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
+        // No pills: the verdict is a line of text under the name, in its
+        // outcome colour (convicted red, acquitted green…) without the fill.
+        <div className="mt-2.5 flex flex-col items-center gap-0.5 text-sm leading-5">
+          <span className={cn(outcomeBadgeClass(jawafEntity.outcome), TEXT_ONLY)}>
             {outcomeWithForumLabel(jawafEntity.outcome, outcomeForum, language)}
-          </Badge>
+          </span>
           {showAppeal && (
-            <Badge
-              variant="outline"
-              className={appealBadgeClass(appeal.result, jawafEntity.outcome)}
+            <span
+              className={cn(appealBadgeClass(appeal.result, jawafEntity.outcome), TEXT_ONLY)}
               data-testid="entity-card-appeal"
             >
               {appealWithForumLabel(appeal, language)}
-            </Badge>
+            </span>
           )}
         </div>
       )}
     </EntityIdentity>
   );
   const frontClass = cn(
-    "relative flex h-full min-h-[15rem] w-full flex-col items-center justify-center gap-3 rounded-[20px] p-5 text-center",
+    "relative flex h-full min-h-[13rem] w-full flex-col items-center justify-center gap-3 rounded-[20px] p-5 text-center",
     SURFACE,
   );
 

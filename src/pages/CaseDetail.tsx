@@ -354,28 +354,41 @@ const CaseDetail = () => {
   }
 
   if (isLoading) {
-    // The shape of the page to come: the hero's pills, title and picture, then
-    // the facts card, so nothing jumps when the case arrives.
+    // The shape of the page to come, block for block: the full-width banner,
+    // the trail, the pills and a title as wide as the banner, the actions,
+    // then the facts card with its byline column — so nothing jumps when the
+    // case arrives.
     return (
       <div className="flex min-h-screen flex-col overflow-x-clip bg-background" aria-busy="true">
-        <div className="layout-container pt-8 md:pt-12 lg:pl-24 min-[1536px]:pl-8">
+        <div className="layout-container pt-6 md:pt-8 lg:pl-24 min-[1536px]:pl-8">
+          <Skeleton className="aspect-[1400/788] w-full rounded-[24px]" />
+        </div>
+        <div className="layout-container pt-8 md:pt-10 lg:pl-24 min-[1536px]:pl-8">
           <Skeleton className="h-4 w-48" />
-          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
-            <div className="space-y-5">
-              <div className="flex gap-2">
-                <Skeleton className="h-7 w-24 rounded-full" />
-                <Skeleton className="h-7 w-28 rounded-full" />
-              </div>
-              <Skeleton className="h-12 w-11/12 rounded-xl" />
-              <Skeleton className="h-12 w-3/4 rounded-xl" />
-              <div className="flex gap-3 pt-2">
-                <Skeleton className="h-11 w-48 rounded-full" />
-                <Skeleton className="h-11 w-32 rounded-full" />
-              </div>
-            </div>
-            <Skeleton className="aspect-[16/9] w-full rounded-[20px]" />
+          <div className="mt-6 flex gap-2">
+            <Skeleton className="h-7 w-24 rounded-full" />
+            <Skeleton className="h-7 w-28 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
           </div>
-          <Skeleton className="mt-10 h-56 w-full rounded-[24px] md:mt-12" />
+          <Skeleton className="mt-5 h-10 w-full rounded-xl" />
+          <Skeleton className="mt-3 h-10 w-2/3 rounded-xl" />
+          <div className="mt-7 flex gap-3">
+            <Skeleton className="h-11 w-56 rounded-full" />
+            <Skeleton className="h-11 w-32 rounded-full" />
+          </div>
+        </div>
+        <div className="layout-container mt-10 md:mt-12 lg:pl-24 min-[1536px]:pl-8">
+          <div className="grid gap-8 rounded-[24px] border border-border/70 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_300px] lg:p-8">
+            <div className="space-y-4">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="mt-6 h-16 w-full rounded-xl" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-11 w-full rounded-full" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -786,17 +799,23 @@ const CaseDetail = () => {
                 </div>
               </div>
 
-              <Reveal>
-                <CaseContactStrip
-                  email={JAWAFDEHI_EMAIL}
-                  whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
-                  emailLabel={t("caseDetail.emailLabel")}
-                  whatsappLabel={t("caseDetail.whatsappLabel")}
-                  title={t("caseDetail.contact")}
-                />
-              </Reveal>
+              {/* In the reading column, under the sections, like everything
+                  else after the facts card: the contact card and the public
+                  discussion used to span the whole page. */}
+              <div className="lg:ml-[calc(13rem+4rem)] lg:max-w-[52rem]">
+                <Reveal>
+                  <CaseContactStrip
+                    email={JAWAFDEHI_EMAIL}
+                    whatsappNumber={JAWAFDEHI_WHATSAPP_NUMBER}
+                    emailLabel={t("caseDetail.emailLabel")}
+                    whatsappLabel={t("caseDetail.whatsappLabel")}
+                    title={t("caseDetail.contact")}
+                    line={t("caseDetail.contactLine", "Seen a document we don't have, or something we got wrong? Tell us — every case is corrected in the open.")}
+                  />
+                </Reveal>
 
-              <DisqusComments caseId={id || ""} caseTitle={caseData.title} caseUrl={canonicalUrl} />
+                <DisqusComments caseId={id || ""} caseTitle={caseData.title} caseUrl={canonicalUrl} />
+              </div>
             </div>
           </div>
         </div>

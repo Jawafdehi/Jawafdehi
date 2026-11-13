@@ -43,7 +43,7 @@ function CardsFallback({ count }: Readonly<{ count: number }>) {
   return (
     <div aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 print:hidden">
       {Array.from({ length: Math.min(count, INITIAL_PARTY_LIMIT) }, (_, i) => (
-        <div key={i} className="min-h-[15rem] rounded-[20px] border border-border/70" />
+        <div key={i} className="min-h-[13rem] rounded-[20px] border border-border/70" />
       ))}
     </div>
   );

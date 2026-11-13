@@ -8,7 +8,9 @@
 //   worst   everything at its longest: a 200-character Nepali title, a dozen
 //           tags, a बिगो in the hundreds of arab, four long place names, five
 //           stages (investigation → first instance → appeal → review → other)
-//           with notes, four court files, three contributors, eight allegations
+//           with notes, twelve court files, three contributors, eight
+//           allegations (the real case behind it already brings 87 parties,
+//           a long timeline and ten sources)
 //   sparse  a case with nothing but a title: no deck, tags, amount, places,
 //           stages, court files, authors, allegations or picture
 //   one     a single, still-pending first-instance stage (the lone-marker case)
@@ -95,11 +97,15 @@ export function applyCaseStress(mode: CaseStressMode, real: CaseDetail): CaseDet
       place("Kathmandu Metropolitan City, Ward 31 (New Baneshwor)"),
     ],
     dates: { stages: STAGES_WORST },
+    // Twelve court files: one case can run through first instance, appeal,
+    // review and several connected filings, and the facts card must wrap them.
     court_cases: [
-      "https://jawafdehi.org/courtcase/special/077-CR-0112",
-      "https://jawafdehi.org/courtcase/supreme/080-RC-0091",
-      "https://jawafdehi.org/courtcase/supreme/081-RV-0007",
-      "https://jawafdehi.org/courtcase/special/081-CR-0233",
+      ...["077-CR-0112", "078-CR-0045", "079-CR-0231", "080-CR-0007", "081-CR-0233", "081-CR-0301"].map(
+        (n) => `https://jawafdehi.org/courtcase/special/${n}`,
+      ),
+      ...["080-RC-0091", "081-RV-0007", "081-RC-0112", "081-WO-0456", "082-RC-0003", "082-RV-0010"].map(
+        (n) => `https://jawafdehi.org/courtcase/supreme/${n}`,
+      ),
     ],
     authors: [
       { slug: "a", display_name: "Kumari Laxmi Rajya Lakshmi Devi Shah", title: "Senior caseworker and BALLB 4th year student", has_public_page: false },

@@ -164,19 +164,19 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
   );
 
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div className="rounded-[20px] border border-border/70 bg-surface p-5 md:p-6">
       {/* Court name + case number header (links to the detail page when asked). */}
       <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           {detailPath ? (
             <Link
               to={detailPath}
-              className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary underline underline-offset-4 transition-colors hover:text-primary/75 md:text-lg"
+              className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-[17px] font-medium leading-6 tabular-nums text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary"
             >
               {headerText}
             </Link>
           ) : (
-            <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold leading-6 text-primary md:text-lg">
+            <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-[17px] font-medium leading-6 tabular-nums text-primary">
               {headerText}
             </span>
           )}
@@ -184,8 +184,8 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
 
         <div className="flex shrink-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-end">
           {lastUpdate && (
-            <p className="max-w-md text-left text-sm leading-5 text-primary/60">
-              <span className="font-medium text-primary/70">
+            <p className="max-w-md text-left text-sm leading-6 tabular-nums text-muted-foreground">
+              <span className="text-primary">
                 {t("caseDetail.courtLastUpdate", "Last update")}:
               </span>{" "}
               {lastUpdate.type || t(lastUpdate.fallbackKey)} - {lastUpdate.date}
@@ -196,12 +196,12 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
             <div className="flex w-fit flex-col items-start gap-1">
               <Badge
                 variant="outline"
-                className={cn("w-fit rounded-full px-3 py-1 text-xs font-semibold", getStatusTone(courtCase?.case_status))}
+                className={cn("w-fit rounded-full px-3 py-1 text-sm", getStatusTone(courtCase?.case_status))}
               >
                 {t(statusDisplay.labelKey, statusDisplay.labelFallback)}
               </Badge>
               {statusDisplay.detail ? (
-                <span className="text-xs text-primary/60">{statusDisplay.detail}</span>
+                <span className="text-sm text-muted-foreground">{statusDisplay.detail}</span>
               ) : null}
             </div>
           )}
@@ -216,28 +216,28 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
       ) : courtCase ? (
         <div className="space-y-3">
           {/* Metadata row */}
-          <div className="font-paragraph flex flex-wrap gap-x-5 gap-y-1 break-words">
+          <div className="flex flex-wrap gap-x-6 gap-y-1 break-words text-base leading-7 text-primary">
             {courtCase.case_type && (
               <span className="break-words">
-                <span className="font-medium text-primary/90">{t("caseDetail.courtCaseType", "Case Type")}:</span>{" "}
+                <span className="text-muted-foreground">{t("caseDetail.courtCaseType", "Case Type")}:</span>{" "}
                 {courtCase.case_type}
               </span>
             )}
             {courtCase.category && (
               <span className="break-words">
-                <span className="font-medium text-primary/90">{t("caseDetail.courtCategory", "Category")}:</span>{" "}
+                <span className="text-muted-foreground">{t("caseDetail.courtCategory", "Category")}:</span>{" "}
                 {courtCase.category}
               </span>
             )}
             {courtCase.registration_date_ad && (
               <span className="break-words">
-                <span className="font-medium text-primary/90">{t("caseDetail.courtRegistered", "Registered")}:</span>{" "}
+                <span className="text-muted-foreground">{t("caseDetail.courtRegistered", "Registered")}:</span>{" "}
                 {formatDateWithBS(courtCase.registration_date_ad, "PP", courtCase.registration_date_bs)}
               </span>
             )}
             {courtCase.verdict_date_ad && (
               <span className="break-words">
-                <span className="font-medium text-primary/90">{t("caseDetail.courtVerdictDate", "Faisala date")}:</span>{" "}
+                <span className="text-muted-foreground">{t("caseDetail.courtVerdictDate", "Faisala date")}:</span>{" "}
                 {formatDateWithBS(courtCase.verdict_date_ad, "PP", courtCase.verdict_date_bs)}
               </span>
             )}
@@ -248,16 +248,16 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
             const { plaintiffs, defendants } = getPartiesByRole(courtCase);
             if (plaintiffs.length === 0 && defendants.length === 0) return null;
             return (
-              <div className="font-paragraph flex flex-wrap gap-x-5 gap-y-1 break-words">
+              <div className="flex flex-wrap gap-x-6 gap-y-1 break-words text-base leading-7 text-primary">
                 {plaintiffs.length > 0 && (
                   <span className="break-words">
-                    <span className="font-medium text-primary/90">{t("caseDetail.courtPlaintiff", "Plaintiff")}:</span>{" "}
+                    <span className="text-muted-foreground">{t("caseDetail.courtPlaintiff", "Plaintiff")}:</span>{" "}
                     {plaintiffs.join(", ")}
                   </span>
                 )}
                 {defendants.length > 0 && (
                   <span className="break-words">
-                    <span className="font-medium text-primary/90">{t("caseDetail.courtDefendant", "Defendant")}:</span>{" "}
+                    <span className="text-muted-foreground">{t("caseDetail.courtDefendant", "Defendant")}:</span>{" "}
                     {defendants.join(", ")}
                   </span>
                 )}
@@ -276,7 +276,7 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                  className="min-h-10 rounded-full bg-muted px-4 text-sm font-normal text-primary hover:bg-primary/[0.08] hover:text-primary"
                 >
                   <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
                   {t("caseDetail.courtHearings", "Hearings")} ({courtCase.hearings?.length ?? 0})
@@ -286,17 +286,17 @@ export function CourtCaseDetails({ courtCaseId, courtCase, isLoading, linkToDeta
                 <div className="table-scroll-wrapper overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr className="border-b border-border bg-muted/50">
-                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
+                      <tr className="border-b border-border/70">
+                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-normal text-muted-foreground">
                           {t("caseDetail.courtHearingDate", "सुनवाइ मिती")}
                         </th>
-                        <th className="px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
+                        <th className="px-3 py-2.5 text-left text-sm font-normal text-muted-foreground">
                           {t("caseDetail.courtHearingJudges", "Judges")}
                         </th>
-                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
+                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-normal text-muted-foreground">
                           {t("caseDetail.courtHearingStatus", "Status")}
                         </th>
-                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-semibold text-primary/90">
+                        <th className="whitespace-nowrap px-3 py-2.5 text-left text-sm font-normal text-muted-foreground">
                           {t("caseDetail.courtHearingDecision", "Decision")}
                         </th>
                       </tr>
