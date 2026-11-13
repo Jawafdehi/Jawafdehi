@@ -260,6 +260,8 @@ export interface CourtCase {
   verdict_date_bs: string | null;
   verdict_date_ad: string | null;
   verdict_judge: string | null;
+  /** Structured outcome (the API filters it to its closed enum, else null). */
+  verdict_type?: string | null;
   status: string;
   /** The court document this record was read from (a /material/ IRI or path). */
   material_id?: string | null;

@@ -15,7 +15,7 @@ const TermsOfService = () => {
         id="terms-hero"
         eyebrow="Legal"
         title="Jawafdehi Initiative Terms of Service"
-        updated="Last updated: November 2, 2026"
+        updated="Last updated: November 8, 2026"
         contentsLabel="Contents"
       >
         <h2 id="acceptance">1. Acceptance of Terms</h2>
@@ -53,6 +53,9 @@ const TermsOfService = () => {
           <li>Impersonate any person or entity, or misrepresent your affiliation</li>
           <li>Use the Platform for any unlawful purpose</li>
         </ul>
+        <p>
+          To protect the people in our archive and stop misuse, our servers may record what is searched for and viewed on the Platform and who the request came from, as described in Section 2.9 of our <a href="/privacy#keeping-people-safe" className="text-primary hover:underline">Privacy Policy</a>.
+        </p>
 
         <h3 id="connected-social-accounts">3.3 Connected Social Media Accounts</h3>
         <p>

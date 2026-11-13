@@ -164,9 +164,11 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     // Case Activity section
     const activityPill = screen.getByText("Bail order");
     expect(activityPill).toBeTruthy();
-    // A grey pill in sentence case: a hearing's outcome is a label, not an alarm.
-    expect(activityPill.className).toContain("bg-muted");
+    // An outcome takes the accent tone ("listed for hearing" alone is neutral),
+    // as a sentence-case, regular-weight pill rather than shouted capitals.
+    expect(activityPill.getAttribute("data-tone")).toBe("accent");
     expect(activityPill.className).not.toContain("uppercase");
+    expect(activityPill.className).not.toContain("font-semibold");
     expect(screen.getByText("Judge")).toBeTruthy();
     expect(screen.getByText("माननीय जिल्ला न्यायाधीश श्री महेन्द्रबहादुर थापा क्षेत्री")).toBeTruthy();
     expect(screen.getByText("Order")).toBeTruthy();
@@ -254,5 +256,155 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(screen.getByText("प्रतिवादी ४")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Show less" }));
     expect(screen.queryByText("प्रतिवादी ४")).toBeNull();
+  });
+});
+
+// The errors found on 3 Nov 2026 (work/2026-11-03-case-pages): each page below
+// is the live API record of a real case, reduced to the rows that matter.
+describe("CourtCaseProfile — labels come from the court's own record", () => {
+  const supremeHearing = (id: number, date_bs: string, date_ad: string, extra = {}) => ({
+    id,
+    case_number: "083-WH-0084",
+    court_identifier: "supreme",
+    hearing_date_bs: date_bs,
+    hearing_date_ad: date_ad,
+    bench: null,
+    bench_type: "संयुक्त इजलास",
+    judge_names: null,
+    lawyer_names: null,
+    serial_no: "8",
+    case_status: null as unknown as string,
+    decision_type: null as unknown as string,
+    remarks: "वन्दीप्रत्येक्षीकरण",
+    ...extra,
+  });
+
+  const supremeCase = (over: Partial<CourtCase>): CourtCase => ({
+    ...mockCourtCase,
+    case_number: "083-WH-0084",
+    court_identifier: "supreme",
+    case_type: "बन्दीप्रत्यक्षीकरण",
+    case_status: null,
+    verdict_date_bs: null,
+    verdict_date_ad: null,
+    verdict_type: null,
+    entities: [],
+    ...over,
+  });
+
+  it("a cause-list listing reads 'Listed for hearing', never 'Order' (083-WH-0084)", async () => {
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(
+      supremeCase({
+        hearings: [
+          supremeHearing(10682795, "2083-07-13", "2026-10-30"),
+          supremeHearing(5880068, "2083-06-08", "2026-09-24", { serial_no: "4" }),
+        ],
+      }),
+    );
+    renderPage("/courtcase/supreme/083-WH-0084");
+
+    expect(await screen.findAllByText("Listed for hearing")).toHaveLength(2);
+    // A listing is neutral grey, not the crimson accent used for court actions.
+    for (const pill of screen.getAllByText("Listed for hearing")) {
+      expect(pill.dataset.tone).toBe("neutral");
+      expect(pill.className).toContain("bg-muted");
+      expect(pill.className).toContain("text-muted-foreground");
+      expect(pill.className).not.toContain("text-accent");
+    }
+    expect(screen.queryByText("Order")).toBeNull();
+    // No register status and no decision on record: no pill, rather than "Ongoing".
+    expect(screen.queryByText("Ongoing")).toBeNull();
+    expect(screen.queryByText("Decided")).toBeNull();
+  });
+
+  it("shows 'Not reached' where the court recorded हेर्न नभ्याइने", async () => {
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(
+      supremeCase({
+        hearings: [
+          supremeHearing(1, "2083-07-13", "2026-10-30", {
+            case_status: "हेर्न नभ्याइने",
+            judge_names: "मा.न्या. श्री शारङ्गा सुवेदी, मा.न्या. श्री शान्तिसिंह थापा",
+          }),
+        ],
+      }),
+    );
+    renderPage("/courtcase/supreme/083-WH-0084");
+    expect(await screen.findByText("Not reached")).toBeTruthy();
+    expect(screen.getByText("Not reached").dataset.tone).toBe("accent");
+    expect(screen.queryByText("Order")).toBeNull();
+  });
+
+  it("a decided case with no register status shows Decided and the decision (083-WH-0093)", async () => {
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(
+      supremeCase({
+        case_number: "083-WH-0093",
+        verdict_date_bs: "2083-06-23",
+        verdict_date_ad: "2026-10-09",
+        verdict_type: "CLAIM_DENIED",
+        hearings: [
+          supremeHearing(3, "2083-06-23", "2026-10-09", {
+            case_status: "फैसला",
+            decision_type: "रिट खारेज फाइल हेर्नुहोस्",
+          }),
+          supremeHearing(2, "2083-06-22", "2026-10-08"),
+          supremeHearing(1, "2083-06-19", "2026-10-05", {
+            case_status: "आदेश",
+            decision_type: "कारण देखाउ आदेश",
+          }),
+        ],
+      }),
+    );
+    renderPage("/courtcase/supreme/083-WH-0093");
+
+    expect(await screen.findByText("Decided")).toBeTruthy();
+    const decisionRow = screen.getByText("Decision", { selector: "span" }).closest("div")?.parentElement;
+    expect(decisionRow?.textContent).toContain("रिट खारेज");
+    expect(decisionRow?.textContent).not.toContain("फाइल हेर्नुहोस्");
+    // 06-22 was only a listing; 06-19 was an order; 06-23 the decision.
+    expect(screen.getByText("Listed for hearing")).toBeTruthy();
+    // "Order": the 06-19 badge, and the caption over the 06-19 and 06-23 order text.
+    expect(screen.getAllByText("Order")).toHaveLength(3);
+    expect(screen.getAllByText("Decision", { selector: "span" })).toHaveLength(1);
+  });
+
+  it("a custody order is not labelled bail (082-CR-0154, 2083-03-03)", async () => {
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce({
+      ...mockCourtCase,
+      court_identifier: "special",
+      case_number: "082-CR-0154",
+      case_status: "चलिरहेको",
+      hearings: [
+        {
+          ...mockCourtCase.hearings![0],
+          court_identifier: "special",
+          hearing_date_bs: "2083-03-03",
+          hearing_date_ad: "2026-06-17",
+          case_status: "आदेश",
+          decision_type: "थुनछेक आदेश (थुनामा राख्ने)",
+          remarks: "थुनछेक",
+        },
+      ],
+    });
+    renderPage("/courtcase/special/082-CR-0154");
+
+    expect(await screen.findByText("Custody hearing: held in custody")).toBeTruthy();
+    expect(screen.queryByText("Bail order")).toBeNull();
+  });
+
+  it("captions an adjournment's reason as Details, not Order", async () => {
+    vi.mocked(getCourtCaseFull).mockResolvedValueOnce(
+      supremeCase({
+        hearings: [
+          supremeHearing(1, "2083-06-12", "2026-09-28", {
+            case_status: "स्थगीत",
+            decision_type: "निवेदकको कानून व्यवसायीबाट",
+          }),
+        ],
+      }),
+    );
+    renderPage("/courtcase/supreme/083-WH-0061");
+    expect(await screen.findByText("Adjourned")).toBeTruthy();
+    expect(screen.getByText("Details")).toBeTruthy();
+    expect(screen.queryByText("Order")).toBeNull();
   });
 });
