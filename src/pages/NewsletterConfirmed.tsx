@@ -27,6 +27,7 @@ export default function NewsletterConfirmed() {
       <div className="layout-container">
         <EmptyState
           kind="celebrate"
+          fullHeight
           headingLevel="h1"
           title={t("newsletter.confirmed.title")}
           description={t("newsletter.confirmed.message")}

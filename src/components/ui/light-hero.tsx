@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/utils";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Eyebrow } from "@/components/ui/eyebrow";
 
@@ -16,6 +17,7 @@ export function LightHero({
   actions,
   children,
   shader = true,
+  tight = false,
 }: Readonly<{
   id: string;
   eyebrow: ReactNode;
@@ -26,6 +28,12 @@ export function LightHero({
   children?: ReactNode;
   /** The diamond field behind the title; off on the plain reading pages. */
   shader?: boolean;
+  /**
+   * Less room under the words, for a page whose content (a form) follows
+   * straight on: the hero's full bottom padding left a gap that read as the
+   * end of the page.
+   */
+  tight?: boolean;
 }>) {
   return (
     <section aria-labelledby={id} className="relative isolate overflow-hidden">
@@ -37,7 +45,7 @@ export function LightHero({
           <ShaderBackdrop design="diamondLight" />
         </div>
       ) : null}
-      <div className="layout-container py-16 md:py-24">
+      <div className={cn("layout-container pt-16 md:pt-24", tight ? "pb-8 md:pb-10" : "pb-16 md:pb-24")}>
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 id={id} className="font-home-display mt-4 max-w-4xl text-4xl text-primary sm:text-5xl md:text-6xl">
           {title}

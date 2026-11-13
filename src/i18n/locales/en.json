@@ -2839,7 +2839,9 @@
     },
     "errorTitle": "This profile didn't load",
     "error": "Something went wrong on our side. Please try again in a moment.",
-    "notFoundTitle": "Profile not found"
+    "notFoundTitle": "Profile not found",
+    "seeTeam": "Meet the team",
+    "browseCases": "Browse the cases"
   },
   "pressKit": {
     "meta": {

@@ -43,6 +43,7 @@ export function EmptyState({
   compact = false,
   className,
   headingLevel: Heading = "h2",
+  fullHeight = false,
 }: Readonly<{
   kind: EmptyStateKind;
   title: ReactNode;
@@ -52,6 +53,12 @@ export function EmptyState({
   className?: string;
   /** h1 when the state is the whole page (a confirmation, an unsubscribe). */
   headingLevel?: "h1" | "h2";
+  /**
+   * The whole page is this state (a profile that is not there): fill the
+   * window under the header and centre it, so the footer only arrives on a
+   * scroll instead of crowding a short message.
+   */
+  fullHeight?: boolean;
 }>) {
   return (
     <div
@@ -59,6 +66,7 @@ export function EmptyState({
       className={cn(
         "mx-auto flex max-w-xl flex-col items-center text-center",
         compact ? "py-8" : "py-14 md:py-20",
+        fullHeight && "min-h-[calc(100svh-76px)] justify-center",
         className,
       )}
     >

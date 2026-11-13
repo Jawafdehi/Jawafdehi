@@ -20,7 +20,7 @@ function ScaleTile({
   return (
     <div className="rounded-[20px] border border-border/70 bg-surface p-5">
       <div className="mb-3 text-accent">{icon}</div>
-      <p className="font-mono text-2xl font-medium tabular-nums text-foreground md:text-3xl">
+      <p className="text-3xl font-medium tabular-nums text-primary">
         <AnimatedCount end={value} duration={1.2} />
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
@@ -40,7 +40,7 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
 
   return (
     <section className="border-t border-border pt-10">
-      <h2 className="font-home-display text-3xl text-primary md:text-4xl">
+      <h2 className="font-case-section-title">
         {t("dataQuality.courtCases.heading", "Court cases")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -69,7 +69,7 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
           payload leaves no orphan heading above an empty chart. */}
       {bsYearRows(ngm?.by_year).length ? (
         <div className="mt-8">
-          <p className="mb-3 text-[13px] text-muted-foreground">
+          <p className="mb-3 text-[15px] text-muted-foreground">
             {t(
               "dataQuality.courtCases.trendHeading",
               "Court cases filed per year (Bikram Sambat)",
@@ -81,7 +81,7 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
 
       {bsYearRows(ngm?.by_court_type_year).length ? (
         <div className="mt-8">
-          <p className="mb-3 text-[13px] text-muted-foreground">
+          <p className="mb-3 text-[15px] text-muted-foreground">
             {t(
               "dataQuality.courtCases.matrixHeading",
               "Court records by level and year (Bikram Sambat)",

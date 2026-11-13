@@ -156,13 +156,13 @@ export default function CourtCaseProfile() {
           // A failed request is not a missing record: only a bad reference or
           // a 404 says "not found".
           parsed && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
-            <EmptyState headingLevel="h1"
+            <EmptyState fullHeight headingLevel="h1"
               kind="couldNotLoad"
               title={t("courtCaseProfile.errorTitle", "This court case didn't load")}
               description={t("courtCaseProfile.error", "Something went wrong on our side. Please try again in a moment.")}
             />
           ) : (
-            <EmptyState headingLevel="h1"
+            <EmptyState fullHeight headingLevel="h1"
               kind="notFound"
               title={t("courtCaseProfile.notFoundTitle", "Court case not found")}
               description={t("courtCaseProfile.notFound", "This court case could not be found in the Jawafdehi governance archive.")}

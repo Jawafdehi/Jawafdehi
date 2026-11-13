@@ -82,7 +82,7 @@ export function StatusDonut({
         </ResponsiveContainer>
         </ChartReveal>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-2xl font-medium tabular-nums text-primary">
+          <span className="text-3xl font-medium tabular-nums text-primary">
             {centerValue}
           </span>
           <span className="text-sm text-muted-foreground">{centerLabel}</span>
@@ -100,7 +100,7 @@ export function StatusDonut({
                 aria-hidden="true"
               />
               <span className="text-muted-foreground">{s.label}</span>
-              <span className="ml-auto font-semibold tabular-nums text-foreground">
+              <span className="ml-auto font-medium tabular-nums text-primary">
                 {s.value.toLocaleString()}
               </span>
               <span className="w-10 text-right tabular-nums text-muted-foreground">

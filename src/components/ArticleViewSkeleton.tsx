@@ -26,7 +26,7 @@ export const ArticleViewSkeleton = () => {
             {/* Breadcrumb */}
             <Skeleton className="h-4 w-36" aria-hidden="true" />
 
-            <div className="mx-auto mt-10 max-w-3xl md:mt-14" aria-hidden="true">
+            <div className="mt-8 max-w-5xl md:mt-10" aria-hidden="true">
               <div className="mb-10 space-y-4">
                 <Skeleton className="h-8 w-20 rounded-full" />
                 <Skeleton className="h-11 w-full rounded-xl md:h-14" />

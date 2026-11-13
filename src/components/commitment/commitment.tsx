@@ -11,7 +11,6 @@ import {
 } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
-import { Panel } from "@/components/ui/panel";
 
 type CommitmentItem = {
   icon: IconComponent;
@@ -72,16 +71,19 @@ export function CommitmentList() {
           {t("commitment.title")}
         </h2>
 
-        <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Two columns of single hairline cards, the icon beside the words.
+            Four narrow columns turned each paragraph into a tall strip, every
+            card stretched to the longest of its row. */}
+        <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
           {COMMITMENTS.map(({ icon: Icon, titleKey, bodyKey }) => (
-            <li key={titleKey}>
-              <Panel>
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-accent">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <h3 className="mt-6 text-xl font-normal leading-snug text-primary">{t(titleKey)}</h3>
-                <p className="mt-2 text-base leading-7 text-muted-foreground">{t(bodyKey)}</p>
-              </Panel>
+            <li key={titleKey} className="flex gap-5 rounded-[24px] border border-border/70 bg-surface p-6 md:p-7">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-accent">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-xl leading-snug text-primary">{t(titleKey)}</h3>
+                <p className="mt-2 max-w-xl text-base leading-7 text-muted-foreground">{t(bodyKey)}</p>
+              </div>
             </li>
           ))}
         </ul>

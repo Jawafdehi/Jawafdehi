@@ -59,6 +59,7 @@ export default function ReportCase() {
       <LightHero
         id="report-title"
         shader={false}
+        tight
         eyebrow={t("report.page.eyebrow", "Report")}
         title={t("report.title")}
         description={t("report.description")}

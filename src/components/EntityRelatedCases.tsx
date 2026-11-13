@@ -6,6 +6,7 @@ import { ArrowRight } from "@/components/icons";
 
 import { getCasesCitingEntity } from "@/services/jds-api";
 import { Badge } from "@/components/ui/badge";
+import { CaseTagBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
@@ -194,15 +195,13 @@ export function EntityRelatedCases({
                   {c.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                  <Badge
-                    variant={accused ? undefined : "secondary"}
-                    className={cn(
-                      "shrink-0",
-                      accused && "border-transparent bg-accent text-accent-foreground",
-                    )}
+                  {/* The updates page's pill: grey for a role, crimson only
+                      when the role is accused. */}
+                  <CaseTagBadge
+                    className={cn("shrink-0 px-3 py-1 text-sm", accused && "bg-accent/10 text-accent hover:bg-accent/10")}
                   >
                     {roleLabel}
-                  </Badge>
+                  </CaseTagBadge>
                   {showOutcome ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
                       {outcomeWithForumLabel(
@@ -222,14 +221,14 @@ export function EntityRelatedCases({
                       {appealWithForumLabel(appeal, language)}
                     </Badge>
                   ) : null}
-                  <span className="text-[13px] text-muted-foreground">
+                  <span className="text-sm tabular-nums text-muted-foreground">
                     {[typeLabel, date].filter(Boolean).join(" · ")}
                   </span>
                 </div>
                 {/* `formatBigo(0)` is the literal "Rs 0", so only render a real
                     amount — a missing bigo is not a zero-rupee case. */}
                 {c.bigo ? (
-                  <p className="text-[13px] text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     <span>{t("caseCard.bigo")}: </span>
                     <span className="font-medium tabular-nums text-accent">
                       {formatBigo(c.bigo)}

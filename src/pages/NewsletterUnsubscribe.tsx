@@ -38,6 +38,7 @@ export default function NewsletterUnsubscribe() {
       <div className="layout-container">
         <EmptyState
           kind={asking ? "waiting" : isSuccess ? "thanks" : "couldNotLoad"}
+          fullHeight
           headingLevel="h1"
           title={t(
             asking

@@ -366,13 +366,13 @@ export default function EntityRecordProfile() {
 
         {isError ? (
           (error as { response?: { status?: number } } | null)?.response?.status === 404 ? (
-            <EmptyState headingLevel="h1"
+            <EmptyState fullHeight headingLevel="h1"
               kind="notFound"
               title={t("entityDetail.notFoundTitle", "Not in the registry")}
               description={t("entityDetail.notFoundLine", "This person or organization could not be found in the registry.")}
             />
           ) : (
-            <EmptyState headingLevel="h1"
+            <EmptyState fullHeight headingLevel="h1"
               kind="couldNotLoad"
               title={t("entityDetail.errorTitle", "This profile didn't load")}
               description={t("entityDetail.errorLine", "Something went wrong on our side. Please try again in a moment.")}

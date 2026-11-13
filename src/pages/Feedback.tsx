@@ -4,6 +4,7 @@ import { FaDiscord } from "react-icons/fa";
 
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { Seo } from "@/components/Seo";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { LightHero } from "@/components/ui/light-hero";
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
@@ -30,8 +31,19 @@ export default function Feedback() {
         canonicalUrl={`${SITE_URL}/feedback/`}
       />
 
-      <main id="main-content" className="flex-1">
+      {/* The archive's dither field behind the whole page, not just its
+          heading: it fades in from the top right and the form and the other
+          ways to reach us sit on it as white cards. */}
+      <main id="main-content" className="relative isolate flex-1 overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_90%_80%_at_85%_10%,#000_20%,transparent_75%)]"
+        >
+          <ShaderBackdrop design="diamondLight" />
+        </div>
         <LightHero
+          shader={false}
+          tight
           id="feedback-title"
           eyebrow={t("feedback.eyebrow", "Feedback")}
           title={t("feedback.title")}
@@ -40,12 +52,12 @@ export default function Feedback() {
 
         <section aria-label={t("feedback.title")} className="pb-20 md:pb-28">
           <div className="layout-container grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:gap-8">
-            <div className="rounded-[28px] border border-border/70 bg-surface p-6 md:p-8">
+            <div className="rounded-[28px] border border-border/70 bg-surface p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] md:p-8">
               <FeedbackForm />
             </div>
 
             <aside className="lg:self-start">
-              <div className="rounded-[28px] bg-muted p-6 md:p-8">
+              <div className="rounded-[28px] border border-border/70 bg-surface p-6 md:p-8">
                 <h2 className="text-xl font-normal leading-snug text-primary">
                   {t("feedback.other.title", "Other ways to reach us")}
                 </h2>
@@ -58,9 +70,9 @@ export default function Feedback() {
                       <a
                         href={href}
                         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                        className="group flex items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 transition-colors hover:bg-surface/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="group flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5 transition-colors hover:bg-primary/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-primary">
                           <Icon className="h-4 w-4" aria-hidden="true" />
                         </span>
                         <span className="min-w-0 flex-1">

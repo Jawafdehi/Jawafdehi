@@ -68,6 +68,10 @@ function isSafeHref(value: string): boolean {
   }
 }
 
+const ACTION =
+  "inline-flex min-h-11 items-center rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const ACTION_DARK =
+  "inline-flex min-h-11 items-center rounded-full bg-primary-surface px-5 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 // The author's email and links: grey circles, 44px so a thumb finds them.
 const ICON_PILL =
   "flex h-11 w-11 items-center justify-center rounded-full bg-muted text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -111,13 +115,30 @@ export default function AuthorProfile() {
         {/* A failed request is not a missing profile: only a 404 (or no data
             at all) says "not available". */}
         {isError && (error as { statusCode?: number } | null)?.statusCode !== 404 ? (
-          <EmptyState headingLevel="h1"
+          <EmptyState fullHeight headingLevel="h1"
             kind="couldNotLoad"
             title={t("author.errorTitle", "This profile didn't load")}
             description={t("author.error", "Something went wrong on our side. Please try again in a moment.")}
           />
         ) : (
-          <EmptyState headingLevel="h1" kind="notFound" title={t("author.notFoundTitle", "Profile not found")} description={t("author.notFound")} />
+          <EmptyState
+            fullHeight
+            headingLevel="h1"
+            kind="notFound"
+            title={t("author.notFoundTitle", "Profile not found")}
+            description={t("author.notFound")}
+            actions={
+              // Not a dead end: the people behind the archive, and its cases.
+              <>
+                <Link to="/team" className={ACTION_DARK}>
+                  {t("author.seeTeam", "Meet the team")}
+                </Link>
+                <Link to="/search?type=case" className={ACTION}>
+                  {t("author.browseCases", "Browse the cases")}
+                </Link>
+              </>
+            }
+          />
         )}
       </div>
     );

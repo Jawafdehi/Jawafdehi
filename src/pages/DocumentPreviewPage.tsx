@@ -8,6 +8,8 @@ import {
   type PreviewDocument,
 } from "@/components/DocumentPreviewDialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/Navbar";
 import { TranscriptReader } from "@/components/materials/TranscriptReader";
 
 /**
@@ -72,9 +74,15 @@ export default function DocumentPreviewPage() {
 
   if (!document) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-4">
+      // The viewer itself is chromeless (a full-screen reader with its own
+      // close bar), but with no document there is nothing to read: this state
+      // is an ordinary page, with the site's header and footer as the way on.
+      <div className="flex min-h-screen flex-col bg-background">
+        <Navbar />
+        <main id="main-content" className="layout-container flex-1">
         <EmptyState
           kind="couldNotLoad"
+          fullHeight
           headingLevel="h1"
           title={t("documentPreview.unavailableTitle")}
           description={t("documentPreview.unavailableDescription")}
@@ -88,7 +96,9 @@ export default function DocumentPreviewPage() {
             </Link>
           }
         />
-      </main>
+        </main>
+        <Footer />
+      </div>
     );
   }
 

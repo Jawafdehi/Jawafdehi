@@ -265,7 +265,7 @@ const Likhit = () => {
               {t("likhit.hero.title")} <span className="text-[hsl(var(--accent-on-dark))]">{t("likhit.hero.titleAccent")}</span>
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-8 text-primary-foreground/80 md:text-2xl md:leading-9">
-              <Trans i18nKey="likhit.hero.lede" components={{ name: <strong className="font-medium text-primary-foreground" /> }} />
+              <Trans i18nKey="likhit.hero.lede" t={t} components={{ name: <strong className="font-medium text-primary-foreground" /> }} />
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -321,7 +321,7 @@ const Likhit = () => {
             <div>
               <SectionTitle id="likhit-cli-title">{t("likhit.cli.title")}</SectionTitle>
               <p className="mt-4 text-lg leading-8 text-muted-foreground">
-                <Trans i18nKey="likhit.cli.short" components={{ cmd: <Code /> }} />
+                <Trans i18nKey="likhit.cli.short" t={t} components={{ cmd: <Code /> }} />
               </p>
             </div>
             {/* One command per row, each with its own label and copy button. */}

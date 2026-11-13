@@ -119,10 +119,12 @@ const EmbedCaseCard = () => {
         <title>{caseData.title} - Jawafdehi</title>
       </Helmet>
 
-      <div className="flex flex-1 flex-col overflow-hidden rounded-[20px] border border-border/70 bg-white">
+      {/* Fills the iframe it is embedded in, up to 640px: opened on its own
+          in a wide window it no longer stretches to the whole screen. */}
+      <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col overflow-hidden rounded-[20px] border border-border/70 bg-white">
         {/* Thumbnail */}
         {thumbnailUrl ? (
-          <div className="relative h-40 overflow-hidden bg-muted">
+          <div className="relative aspect-[1400/788] overflow-hidden bg-muted">
             <img
               src={thumbnailUrl}
               srcSet={srcSet}

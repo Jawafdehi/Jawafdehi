@@ -157,7 +157,8 @@ describe("CourtCaseProfile (redesigned layout)", () => {
     expect(screen.queryByText("VS")).toBeNull();
     expect(screen.getByText("नारद अवस्थी")).toBeTruthy();
     expect(screen.getByText("कुन्ता भाट")).toBeTruthy();
-    expect(screen.getByText("कुन्ता भाट").closest("ul")?.className).toContain("font-medium");
+    // Party names read as body text: regular weight, the reading pages' size.
+    expect(screen.getByText("कुन्ता भाट").closest("ul")?.className).not.toContain("font-medium");
     expect(screen.getByRole("navigation", { name: "breadcrumb" }).closest(".layout-container")?.className).not.toContain("max-w-4xl");
 
     // Case Activity section

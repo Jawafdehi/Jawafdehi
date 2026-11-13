@@ -57,12 +57,12 @@ export function MaterialsTable({ groups }: { groups: MaterialsSourceGroup[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{t("dataQuality.materialsBySource.table.source", "Source")}</TableHead>
-            <TableHead>{t("dataQuality.materialsBySource.table.type", "Document type")}</TableHead>
-            <TableHead className="text-right">
+            <TableHead className="text-sm font-normal normal-case tracking-normal">{t("dataQuality.materialsBySource.table.source", "Source")}</TableHead>
+            <TableHead className="text-sm font-normal normal-case tracking-normal">{t("dataQuality.materialsBySource.table.type", "Document type")}</TableHead>
+            <TableHead className="text-right text-sm font-normal normal-case tracking-normal">
               {t("dataQuality.materialsBySource.table.count", "Documents")}
             </TableHead>
-            <TableHead className="text-right">
+            <TableHead className="text-right text-sm font-normal normal-case tracking-normal">
               {t("dataQuality.materialsBySource.table.share", "Share")}
             </TableHead>
           </TableRow>
@@ -84,10 +84,10 @@ export function MaterialsTable({ groups }: { groups: MaterialsSourceGroup[] }) {
                   </th>
                 )}
                 <TableCell className="text-muted-foreground">{r.type}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums text-foreground">
+                <TableCell className="text-right tabular-nums text-foreground">
                   {r.count.toLocaleString(i18n.language)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                <TableCell className="text-right tabular-nums text-muted-foreground">
                   {grandTotal > 0 ? ((r.count / grandTotal) * 100).toFixed(1) : "0.0"}%
                 </TableCell>
               </TableRow>

@@ -32,12 +32,13 @@ export const ArticleView = ({ article }: { article: Article }) => {
                       ]}
                     />
 
-                    {/* One reading column, 48rem: the category pill, the title in
-                        the display face, the date; the picture framed at the
-                        column's width; then the text at the reading pages' 18px. */}
-                    <div className="mx-auto mt-10 max-w-3xl md:mt-14">
+                    {/* Aligned to the page's left edge like every other page (it
+                        used to sit in a centred column, narrower than the rest):
+                        the title up to 56rem, the picture up to 64rem, the text
+                        in the reading measure of 48rem at 18px. */}
+                    <div className="mt-8 md:mt-10">
                         <article>
-                            <header className="mb-10">
+                            <header className="mb-10 max-w-4xl">
                                 <span className="inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
                                     {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
                                 </span>
@@ -51,7 +52,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                             </header>
 
                             {hero?.url && (
-                                <figure className="mb-10">
+                                <figure className="mb-10 max-w-5xl">
                                     <img
                                         src={hero.url}
                                         alt={hero.alt || article.title}
@@ -67,13 +68,13 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                 </figure>
                             )}
 
-                            <div className="content-prose markdown-content text-lg leading-8 text-primary/85">
+                            <div className="content-prose markdown-content max-w-3xl text-lg leading-8 text-primary/85">
                                 <StreamField blocks={article.body} />
                             </div>
                         </article>
 
                         {article.related_cases && article.related_cases.length > 0 && (
-                            <section className="mt-16 border-t border-border/70 pt-10">
+                            <section className="mt-16 max-w-3xl border-t border-border/70 pt-10">
                                 <h2 className="font-home-display text-3xl text-primary md:text-4xl">
                                     {t("updates.relatedCases", "Related cases")}
                                 </h2>

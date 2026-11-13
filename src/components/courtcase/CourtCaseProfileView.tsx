@@ -40,7 +40,7 @@ function PartyRoster({ names, emptyLabel }: Readonly<PartyRosterProps>) {
 
   return (
     <div className="min-w-0">
-      <ul id={listId} className="text-base font-medium leading-relaxed text-foreground sm:text-lg">
+      <ul id={listId} className="text-base leading-7 text-primary/85 sm:text-lg sm:leading-8">
         {visibleNames.map((name, index) => (
           <li key={`${name}-${index}`} className="inline break-words">
             {index > 0 ? ", " : ""}
@@ -55,7 +55,7 @@ function PartyRoster({ names, emptyLabel }: Readonly<PartyRosterProps>) {
           aria-controls={listId}
           aria-expanded={isExpanded}
           onClick={() => setIsExpanded((expanded) => !expanded)}
-          className="mt-2 inline-flex min-h-11 items-center rounded-md px-1 text-sm font-medium text-primary underline decoration-primary/35 underline-offset-4 transition-colors hover:text-primary/75 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mt-3 inline-flex min-h-11 items-center rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {isExpanded
             ? t("courtCaseProfile.showLess", "Show less")
@@ -78,7 +78,7 @@ function PartyPresentation({ plaintiffs, defendants }: Readonly<PartyPresentatio
   const { t } = useTranslation();
   const plaintiff = (
     <div className="min-w-0">
-      <div className="mb-2 text-base font-medium text-muted-foreground sm:text-lg">
+      <div className="mb-1.5 text-[15px] text-muted-foreground">
         {t("courtCaseProfile.labels.plaintiff", "Plaintiff")}
       </div>
       <PartyRoster
@@ -89,7 +89,7 @@ function PartyPresentation({ plaintiffs, defendants }: Readonly<PartyPresentatio
   );
   const defendant = (
     <div className="min-w-0">
-      <div className="mb-2 text-base font-medium text-muted-foreground sm:text-lg">
+      <div className="mb-1.5 text-[15px] text-muted-foreground">
         {t("courtCaseProfile.labels.defendant", "Defendant")}
       </div>
       <PartyRoster
@@ -257,32 +257,32 @@ export function CourtCaseProfileView({
 
         <div className="mt-7 space-y-4 text-base">
           <div className="flex items-start gap-4">
-            <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+            <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-[15px] text-muted-foreground sm:w-48">
               <IdCard className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
               <span>{t("courtCaseProfile.labels.caseNumber", "Case number")}</span>
             </div>
-            <div className="min-w-0 break-words text-base font-semibold text-foreground sm:text-lg" translate="no">
+            <div className="min-w-0 break-words text-base tabular-nums text-primary" translate="no">
               {caseNumber}
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+            <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-[15px] text-muted-foreground sm:w-48">
               <Landmark className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
               <span>{t("courtCaseProfile.labels.court", "Court")}</span>
             </div>
-            <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+            <div className="min-w-0 break-words text-base text-primary">
               {courtName}
             </div>
           </div>
 
           {registered ? (
             <div className="flex items-start gap-4">
-              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-[15px] text-muted-foreground sm:w-48">
                 <CalendarCheck className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
                 <span>{t("courtCaseProfile.labels.registered", "Registered")}</span>
               </div>
-              <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+              <div className="min-w-0 break-words text-base text-primary">
                 {registered.primary}
                 {registered.secondary ? ` (${registered.secondary})` : ""}
               </div>
@@ -291,11 +291,11 @@ export function CourtCaseProfileView({
 
           {decision ? (
             <div className="flex items-start gap-4">
-              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-sm text-muted-foreground sm:w-48 sm:text-base">
+              <div className="flex w-40 shrink-0 items-center gap-2.5 pt-0.5 text-[15px] text-muted-foreground sm:w-48">
                 <CalendarDays className="h-[1.125rem] w-[1.125rem] shrink-0 text-muted-foreground/80" aria-hidden="true" />
                 <span>{t("courtCaseProfile.labels.decisionDate", "Decision date")}</span>
               </div>
-              <div className="min-w-0 break-words text-base font-medium text-foreground sm:text-lg">
+              <div className="min-w-0 break-words text-base text-primary">
                 {decision.primary}
                 {decision.secondary ? ` (${decision.secondary})` : ""}
               </div>
@@ -360,7 +360,7 @@ export function CourtCaseProfileView({
                   <div className="flex flex-1 flex-col sm:flex-row sm:items-start gap-4 sm:gap-8 min-w-0">
                     {/* Date Block */}
                     <div className="w-40 shrink-0">
-                      <div className="text-base sm:text-lg font-semibold text-foreground">
+                      <div className="text-base font-medium tabular-nums text-primary">
                         {primaryDate}
                       </div>
                       {secondaryDate && (
@@ -383,10 +383,10 @@ export function CourtCaseProfileView({
 
                       {hearing.judge_names && (
                         <div>
-                          <div className="text-xs sm:text-sm font-medium text-muted-foreground">
+                          <div className="text-[15px] text-muted-foreground">
                             {t("courtCaseProfile.activity.judge", "Judge")}
                           </div>
-                          <div className="text-base sm:text-lg font-medium text-foreground mt-0.5 whitespace-pre-line leading-relaxed">
+                          <div className="mt-0.5 whitespace-pre-line text-base leading-7 text-primary/85">
                             {hearing.judge_names}
                           </div>
                         </div>
@@ -394,10 +394,10 @@ export function CourtCaseProfileView({
 
                       {hearing.decision_type && (
                         <div>
-                          <div className="text-xs sm:text-sm font-medium text-muted-foreground">
+                          <div className="text-[15px] text-muted-foreground">
                             {t("courtCaseProfile.activity.order", "Order")}
                           </div>
-                          <div className="text-base sm:text-lg font-medium text-foreground mt-0.5 leading-relaxed">
+                          <div className="mt-0.5 text-base leading-7 text-primary/85">
                             {hearing.decision_type}
                           </div>
                         </div>
@@ -405,7 +405,7 @@ export function CourtCaseProfileView({
 
                       {hearing.remarks && (
                         <div>
-                          <div className="text-xs sm:text-sm font-medium text-muted-foreground">
+                          <div className="text-[15px] text-muted-foreground">
                             {t("courtCaseProfile.activity.remarks", "Remarks")}
                           </div>
                           <div className="text-sm sm:text-base text-muted-foreground mt-0.5 leading-relaxed">
@@ -439,10 +439,10 @@ export function CourtCaseProfileView({
 
         <div className="flex flex-col gap-3 pt-7 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">
+            <h3 className="text-lg text-primary">
               {t("courtCaseProfile.source.title", "Jawafdehi Governance Archive")}
             </h3>
-            <p className="mt-1 max-w-lg text-sm sm:text-base leading-relaxed text-muted-foreground">
+            <p className="mt-1 max-w-lg text-base leading-7 text-muted-foreground">
               {t("courtCaseProfile.source.description", "Court listings, hearings and orders harvested from Nepal's public court records.")}
             </p>
           </div>
@@ -450,7 +450,7 @@ export function CourtCaseProfileView({
           {sourceUrl ? (
             <Link
               to={sourceUrl}
-              className="inline-flex items-center gap-1.5 text-sm sm:text-base font-medium text-foreground hover:text-primary transition-colors shrink-0"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-muted px-5 text-[15px] text-primary transition-colors hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>{t("courtCaseProfile.source.view", "View source")}</span>
               <ExternalLink className="h-4 w-4 text-muted-foreground" aria-hidden="true" />

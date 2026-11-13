@@ -361,6 +361,7 @@ export default function MaterialProfile() {
           (error as { statusCode?: number } | null)?.statusCode === 404 ? (
             <EmptyState
               kind="notFound"
+              fullHeight
               headingLevel="h1"
               title={t("materialProfile.notFoundTitle", "Document not found")}
               description={t("materialProfile.notFoundLine", "This material could not be found in the Jawafdehi governance archive.")}
@@ -368,6 +369,7 @@ export default function MaterialProfile() {
           ) : (
             <EmptyState
               kind="couldNotLoad"
+              fullHeight
               headingLevel="h1"
               title={t("materialProfile.errorTitle", "This document didn't load")}
               description={t("materialProfile.errorLine", "Something went wrong on our side. Please try again in a moment.")}

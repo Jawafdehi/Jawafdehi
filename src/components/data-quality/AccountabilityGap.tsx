@@ -100,7 +100,7 @@ export function AccountabilityGap({
       <p className="mb-4 inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
         {t("dataQuality.corruptionCases.eyebrow", "The core finding")}
       </p>
-      <h2 className="font-home-display text-4xl text-primary md:text-5xl">
+      <h2 className="font-case-section-title">
         {t("dataQuality.corruptionCases.heading", "Corruption cases")}
       </h2>
       <p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
@@ -128,7 +128,7 @@ export function AccountabilityGap({
                 <span className="text-[15px] text-muted-foreground">
                   {t("dataQuality.gap.totalLabel", "Documented cases")}
                 </span>
-                <span className="font-mono text-2xl font-medium tabular-nums text-foreground">
+                <span className="text-3xl font-medium tabular-nums text-primary">
                   <AnimatedCount end={documented} duration={1.2} />
                 </span>
               </div>
@@ -143,7 +143,7 @@ export function AccountabilityGap({
               }
             />
 
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+            <p className="mt-4 text-[15px] leading-6 text-muted-foreground">
               {t(
                 "dataQuality.gap.bucketsCaption",
                 "Every documented case sits in exactly one of these. The three add up to the total above.",
@@ -152,7 +152,7 @@ export function AccountabilityGap({
             {published > 0 && (
               <Link
                 to="/search?type=case"
-                className="mt-3 inline-flex min-h-6 items-center text-sm font-medium text-accent hover:underline"
+                className="mt-3 inline-flex min-h-6 items-center text-[15px] text-accent hover:underline"
               >
                 {t("dataQuality.corruptionCases.browsePublished", "Browse published cases")} →
               </Link>
@@ -173,7 +173,7 @@ export function AccountabilityGap({
                   centerLabel={t("dataQuality.cases.donutCenter", "cases")}
                 />
               )}
-              <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              <p className="mt-4 text-[15px] leading-6 text-muted-foreground">
                 {t(
                   "dataQuality.corruptionCases.ciaaCaption",
                   "Cases split by who prosecutes them. CIAA files corruption as criminal (CR) cases; the rest run through other bodies.",

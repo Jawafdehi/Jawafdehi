@@ -101,6 +101,7 @@ export function CookieConsentBanner() {
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-8">
         <p className="text-sm text-muted-foreground max-w-3xl">
           <Trans
+            t={t}
             i18nKey={
               isNarrow ? "cookieConsent.messageShort" : "cookieConsent.message"
             }
