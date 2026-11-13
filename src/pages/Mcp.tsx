@@ -108,6 +108,7 @@ const Mcp = () => {
                 {t("mcp.tools.title")}
               </h2>
               <p className="font-paragraph font-paragraph-foreground">{t("mcp.tools.body")}</p>
+              <p className="font-paragraph font-paragraph-foreground mt-4">{t("mcp.tools.courtNames")}</p>
             </div>
           </div>
         </section>
