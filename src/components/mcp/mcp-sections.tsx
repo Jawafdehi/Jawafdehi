@@ -219,7 +219,9 @@ export function McpSkill() {
         {/* The likhit OCR card's shape: one hairline card on the mist shader,
             the words on the left, the install commands on white on the right. */}
         <div className="relative isolate grid grid-cols-1 gap-8 overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 md:p-10 lg:min-h-[22rem] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
-          <div aria-hidden="true" className="absolute inset-0 -z-10">
+          {/* At 55%: the silk under the words of "Teach your AI the archive"
+              was loud enough to compete with them. */}
+          <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-55">
             <ShaderBackdrop design="silk" />
           </div>
           <div>

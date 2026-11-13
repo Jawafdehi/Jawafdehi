@@ -118,7 +118,7 @@ export function MaterialCard({
       <div className="min-w-0">
         <Link
           to={href}
-          className="line-clamp-2 text-[17px] font-normal leading-6 text-primary outline-none underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-accent"
+          className="line-clamp-2 text-lg font-normal leading-7 text-primary outline-none underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-accent"
           title={title}
         >
           {titleNode ?? title}
