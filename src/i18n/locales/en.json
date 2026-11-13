@@ -195,7 +195,10 @@
       "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
       "whatsNew": "See the latest changes to the archive, the MCP and the API.",
       "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter."
-    }
+    },
+    "hintMove": "to move",
+    "hintOpen": "to open",
+    "hintClose": "to close"
   },
   "footer": {
     "title": "Jawafdehi",
