@@ -62,24 +62,21 @@ const DataQuality = () => {
           </div>
         </section>
 
-        <div className="layout-container space-y-8 py-8 md:space-y-12 md:py-12">
-          {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
-          <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
-
+        <div className="layout-container space-y-8 py-8 md:space-y-12 md:py-12 [&>section:first-of-type]:border-t-0 [&>section:first-of-type]:pt-0">
           {isError && !data && (
             <p className="text-muted-foreground">
               {t("dataQuality.error", "Metrics are temporarily unavailable. Please try again later.")}
             </p>
           )}
 
-          {/* Who we track: 88% people, then the institutions (live nes.by_type). */}
-          <EntityBreakdown nes={data?.nes} />
+          {/* Where the evidence comes from (live materials.by_source). */}
+          <MaterialsBySource materials={data?.materials} />
 
           {/* Court cases: the judicial record base + court x year heatmap. */}
           <EvidenceBackbone ngm={data?.ngm} />
 
-          {/* Where the evidence comes from (live materials.by_source). */}
-          <MaterialsBySource materials={data?.materials} />
+          {/* Corruption cases (funnel + status + CIAA split). */}
+          <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
           {/* Honest completeness / trust label. */}
           <DataHonesty nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
@@ -89,6 +86,9 @@ const DataQuality = () => {
 
           {/* Make the data reusable: the public API + report-an-error. */}
           <UseThisData />
+
+          {/* Who we track: 88% people, then the institutions (live nes.by_type). */}
+          <EntityBreakdown nes={data?.nes} />
         </div>
       </main>
     </div>
