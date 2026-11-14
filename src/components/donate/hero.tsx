@@ -4,6 +4,7 @@ import { Mail } from "@/components/icons";
 import { FaFacebook, FaWhatsapp } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { PayCard } from "@/components/donate/pay-card";
 import { JAWAFDEHI_EMAIL, JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { getStatistics } from "@/services/jds-api";
@@ -43,27 +44,29 @@ const CONTACT_CHANNELS: readonly {
   },
 ];
 
-/** One live figure under the headline. Loading/error/missing all render the
- * "—" placeholder rather than "0", so an absent stat never reads as a real
- * zero (same convention as the home hero). */
+/** One live figure. Loading/error/missing all render the "—" placeholder
+ * rather than "0", so an absent stat never reads as a real zero (same
+ * convention as the home hero). Label first in the markup (dt before dd),
+ * figure first on screen. */
 function Stat({ value, label }: Readonly<{ value?: number; label: string }>) {
   return (
-    <div>
-      <div className="font-home-display text-3xl tabular-nums text-primary-foreground">
+    <div className="flex flex-col-reverse">
+      <dt className="mt-1.5 text-sm text-muted-foreground">{label}</dt>
+      {/* Inter tabular figures, per the press kit: a count should line up
+          digit for digit as it loads. */}
+      <dd className="text-3xl font-medium leading-none tracking-tight tabular-nums text-primary">
         {typeof value === "number" ? value.toLocaleString() : "—"}
-      </div>
-      <div className="mt-1 text-sm text-primary-foreground/60">
-        {label}
-      </div>
+      </dd>
     </div>
   );
 }
 
 /**
- * Donate hero, payment-first: the headline and the archive's live footprint on
- * the left, the actual payment card on the right — a donor never scrolls to
- * find out *how* to give. The panel is always navy (`--primary-surface`), same
- * as the home hero's stage, so the card reads as the single bright object.
+ * The top of /donate in two parts. A short navy banner says what the money is
+ * for, and the giving itself sits right under it on white: the payment card on
+ * the left and, beside it like a checkout summary, what the money already
+ * sustains and how to reach a person. The banner stays short so the card is in
+ * view without scrolling on a laptop.
  */
 export function DonateHero() {
   const { t } = useTranslation();
@@ -77,82 +80,80 @@ export function DonateHero() {
   });
 
   return (
-    <section
-      id="donate-hero"
-      aria-labelledby="donate-hero-title"
-      className="bg-primary-surface"
-    >
-      <div className="layout-container py-12 md:py-16">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12">
-          <div>
-            <h1
-              id="donate-hero-title"
-              className="font-home-display text-4xl leading-[1.08] text-primary-foreground md:text-[3.5rem]"
-            >
-              {/* Three slots so the amber emphasis can sit mid-sentence in
-                  either language. Nepali needs no lead-in — its verb phrase
-                  carries the whole clause — so the lead renders only when the
-                  locale supplies one, rather than leaving a stray space. */}
-              {titleLead ? (
-                <>
-                  {titleLead}{" "}
-                </>
-              ) : null}
-              {/* No `whitespace-nowrap` here. The previous highlight was two
-                  short words and was pinned to one line; this phrase is long
-                  enough that forbidding a wrap pushes it past the grid column
-                  and the overflow gets clipped mid-word ("permanent record of
-                  corru…"). Let it wrap. */}
-              <span className="text-[hsl(var(--accent-on-dark))]">
-                {t("donate.hero.titleHighlight")}
-              </span>{" "}
-              {t("donate.hero.titleTail")}
-            </h1>
-
-            <p className="mt-4 max-w-prose text-base leading-7 text-primary-foreground/75">
-              {t("donate.hero.description")}
-            </p>
-
-            {/* What the money already sustains — real figures, not pledges. */}
-            <div className="mt-8 flex gap-10 border-t border-primary-foreground/15 pt-6">
-              <Stat
-                value={stats?.published_cases}
-                label={t("donate.hero.stats.cases")}
-              />
-              <Stat
-                value={stats?.entities_tracked}
-                label={t("donate.hero.stats.entities")}
-              />
-            </div>
-
-            <p className="mt-6 text-sm text-primary-foreground/60">
-              <span className="mr-1">{t("donate.hero.contactUs")}</span>
-              {CONTACT_CHANNELS.map((channel) => (
-                <a
-                  key={channel.id}
-                  href={channel.href}
-                  {...(channel.external
-                    ? { target: "_blank", rel: "noopener noreferrer" }
-                    : {})}
-                  onClick={() =>
-                    trackEvent("donate_click", {
-                      method: channel.id,
-                      action: "contact",
-                      link_url: channel.href,
-                    })
-                  }
-                  className="mr-4 inline-flex items-center gap-1.5 font-medium text-primary-foreground/80 underline underline-offset-4 transition-colors last:mr-0 hover:text-primary-foreground"
-                >
-                  <channel.icon className="h-4 w-4" aria-hidden="true" />
-                  {t(channel.labelKey)}
-                </a>
-              ))}
-            </p>
-          </div>
-
-          <PayCard />
+    <>
+      <section
+        id="donate-hero"
+        aria-labelledby="donate-hero-title"
+        className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]"
+      >
+        {/* The same grain stage as /mcp, pooled navy behind the words. */}
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <ShaderBackdrop design="grain" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface)/0.92)_0%,hsl(var(--primary-surface)/0.6)_55%,hsl(var(--primary-surface)/0.3)_100%)]" />
         </div>
-      </div>
-    </section>
+
+        <div className="layout-container grid gap-6 pb-12 pt-10 md:pb-14 md:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-end lg:gap-16">
+          <h1
+            id="donate-hero-title"
+            className="font-home-display max-w-[17ch] text-[clamp(2.25rem,4.4vw,3.75rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[22ch]"
+          >
+            {/* Three slots so the crimson emphasis can sit mid-sentence in
+                either language. Nepali needs no lead-in — its verb phrase
+                carries the whole clause — so the lead renders only when the
+                locale supplies one. The highlight is allowed to wrap. */}
+            {titleLead ? <>{titleLead} </> : null}
+            <span className="text-[hsl(var(--accent-on-dark))]">{t("donate.hero.titleHighlight")}</span>{" "}
+            {t("donate.hero.titleTail")}
+          </h1>
+          <p className="max-w-xl text-base leading-7 text-primary-foreground/75 md:text-lg md:leading-8">
+            {t("donate.hero.description")}
+          </p>
+        </div>
+      </section>
+
+      <section id="donate-give" aria-labelledby="donate-give-title" className="bg-background pb-4 pt-12 md:pt-16">
+        <div className="layout-container">
+          <h2 id="donate-give-title" className="font-home-section-title text-primary">
+            {t("donate.ways.title")}
+          </h2>
+
+          <div className="mt-8 grid gap-10 md:mt-10 lg:grid-cols-[minmax(0,46rem)_minmax(0,1fr)] lg:gap-14">
+            <PayCard />
+
+            <aside className="lg:border-l lg:border-border lg:pl-10">
+              {/* What the money already sustains — real figures, not pledges. */}
+              <dl className="grid grid-cols-2 gap-8 lg:grid-cols-1 lg:gap-7">
+                <Stat value={stats?.published_cases} label={t("donate.hero.stats.cases")} />
+                <Stat value={stats?.entities_tracked} label={t("donate.hero.stats.entities")} />
+              </dl>
+
+              <div className="mt-8 border-t border-border pt-6">
+                <p className="text-sm text-muted-foreground">{t("donate.hero.contactUs")}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {CONTACT_CHANNELS.map((channel) => (
+                    <a
+                      key={channel.id}
+                      href={channel.href}
+                      {...(channel.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                      onClick={() =>
+                        trackEvent("donate_click", {
+                          method: channel.id,
+                          action: "contact",
+                          link_url: channel.href,
+                        })
+                      }
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
+                    >
+                      <channel.icon className="h-4 w-4" aria-hidden="true" />
+                      {t(channel.labelKey)}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

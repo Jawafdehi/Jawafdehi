@@ -165,7 +165,7 @@ function CopyRow({
         <span
           className={
             mono
-              ? "min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary"
+              ? "min-w-0 select-all break-all text-base font-medium tabular-nums tracking-wide text-primary"
               : "min-w-0 select-all text-sm font-medium leading-5 text-card-foreground"
           }
         >
@@ -261,55 +261,60 @@ function NepalPanel() {
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
+  // From md up the card is wide (it no longer sits in the hero), so the QR
+  // and the bank details stand side by side instead of stacking.
   return (
-    <div>
-      <p className="text-lg leading-7 text-primary">
-        {t("donate.ways.nepali.qrTitle")}
-      </p>
-      <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
-        {t("donate.ways.nepali.qrDescription")}
-      </p>
+    <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-8">
+      <div>
+        <p className="text-lg leading-7 text-primary">
+          {t("donate.ways.nepali.qrTitle")}
+        </p>
+        <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
+          {t("donate.ways.nepali.qrDescription")}
+        </p>
 
-      <div
-        role="group"
-        aria-label={t("donate.ways.nepali.walletSwitchAria")}
-        className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
-      >
-        {WALLETS.map(({ id }) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={id === wallet}
-            onClick={() => setWallet(id)}
-            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-              id === wallet
-                ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
-                : "rounded-full px-3.5 py-1.5 text-sm text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-            }`}
-          >
-            {t(`donate.ways.nepali.wallets.${id}.label`)}
-          </button>
-        ))}
+        <div
+          role="group"
+          aria-label={t("donate.ways.nepali.walletSwitchAria")}
+          className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
+        >
+          {WALLETS.map(({ id }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={id === wallet}
+              onClick={() => setWallet(id)}
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                id === wallet
+                  ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
+                  : "rounded-full px-3.5 py-1.5 text-sm text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+              }`}
+            >
+              {t(`donate.ways.nepali.wallets.${id}.label`)}
+            </button>
+          ))}
+        </div>
+
+        {/* Both networks stay mounted so switching never re-fetches, and the two
+            images share one canvas size so the card cannot shift height. */}
+        <div className="mt-3 w-[180px] overflow-hidden rounded-2xl bg-white p-2">
+          {WALLETS.map(({ id, src }) => (
+            <img
+              key={id}
+              src={src}
+              alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
+              width={600}
+              height={736}
+              loading="lazy"
+              hidden={id !== wallet}
+              className="h-auto w-full"
+            />
+          ))}
+        </div>
+
       </div>
 
-      {/* Both networks stay mounted so switching never re-fetches, and the two
-          images share one canvas size so the card cannot shift height. */}
-      <div className="mt-3 w-[180px] overflow-hidden rounded-2xl bg-white p-2">
-        {WALLETS.map(({ id, src }) => (
-          <img
-            key={id}
-            src={src}
-            alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
-            width={600}
-            height={736}
-            loading="lazy"
-            hidden={id !== wallet}
-            className="h-auto w-full"
-          />
-        ))}
-      </div>
-
-      <div className="mt-5 border-t border-border/60 pt-4">
+      <div className="mt-5 border-t border-border/60 pt-4 md:mt-0 md:border-l md:border-t-0 md:pl-8 md:pt-0">
         <BankDetails trackMethod="nepal_bank" />
       </div>
     </div>
@@ -552,7 +557,7 @@ export function PayCard() {
   }, []);
 
   return (
-    <article className="flex flex-col rounded-[28px] bg-surface p-6 text-card-foreground md:p-7">
+    <article className="flex flex-col rounded-[28px] border border-border bg-background p-5 text-card-foreground sm:p-6 md:p-8">
       <div
         role="group"
         aria-label={t("donate.ways.title")}
