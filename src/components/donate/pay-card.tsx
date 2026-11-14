@@ -264,8 +264,10 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
 // on the left, the working part on a frosted white panel on the right. Each
 // route therefore comes in two halves — its words and its action — rendered
 // into those two columns.
-const FROSTED_PANEL =
-  "rounded-3xl border border-border/60 bg-surface/90 p-5 backdrop-blur-sm";
+// The one tile both actions sit on: the QR's white card, so switching routes
+// swaps the contents of the same object rather than a different box.
+const ACTION_TILE =
+  "overflow-hidden rounded-2xl bg-surface shadow-[0_1px_2px_rgba(14,31,59,0.06),0_8px_24px_-12px_rgba(14,31,59,0.18)]";
 
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
 function NepalWords() {
@@ -298,7 +300,7 @@ function NepalAction() {
       {/* Both networks stay mounted so switching never re-fetches, and the two
           images share one canvas size so nothing shifts height. The code's own
           white is the tile: no panel behind it. */}
-      <div className="w-full max-w-[15rem] overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(14,31,59,0.06),0_8px_24px_-12px_rgba(14,31,59,0.18)]">
+      <div className={ACTION_TILE + " w-full max-w-[18rem] bg-white"}>
         {WALLETS.map(({ id, src }) => (
           <img
             key={id}
@@ -371,21 +373,27 @@ function AbroadRail({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="inline-flex items-center gap-1.5">
+    // Built like the QR tile on the other route: a visual on top (where the
+    // code sits there), the name, line and button under it — so both routes
+    // show the same object, the same height, with no hole in the middle.
+    <div className="flex flex-1 flex-col">
+      <span
+        aria-hidden="true"
+        className="-mx-6 -mt-6 flex h-40 items-center justify-center bg-muted/70 [&>svg]:h-12 [&>svg]:w-12"
+      >
         {icon}
-        <span className={`text-lg ${brandClassName}`}>
-          {t(`donate.ways.us.${id}.title`)}
-        </span>
       </span>
-      <p className="text-base leading-7 text-muted-foreground">
+      <span className={`mt-5 text-lg leading-7 ${brandClassName}`}>
+        {t(`donate.ways.us.${id}.title`)}
+      </span>
+      <p className="mb-6 mt-1 text-base leading-7 text-muted-foreground">
         {t(`donate.ways.us.${id}.detail`)}
       </p>
       <Button
         asChild
         variant={variant}
         size="sm"
-        className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center"
+        className="mt-auto h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center"
       >
         <a
           href={href}
@@ -464,12 +472,12 @@ function AbroadAction() {
   const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
-    <div className={FROSTED_PANEL}>
+    <div className={ACTION_TILE + " flex h-full flex-col p-6"}>
       {/* Zeffy carries the filled button. The outlined PayPal rail below it is
           hidden (see SHOW_PAYPAL), so in practice this is a single rail — the
           gap and column direction are kept so restoring PayPal needs no layout
           work. */}
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-1 flex-col gap-5">
         <AbroadRail
           id="zeffy"
           href={ZEFFY_FORM_URL}
@@ -579,7 +587,7 @@ export function PayCard({
     // left and the working part on a frosted white panel on the right. Both routes stay mounted
     // (the inactive one is `hidden`), so switching keeps a chosen wallet and a
     // part-filled Zeffy form.
-    <article className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 text-card-foreground md:p-8">
+    <article className="relative isolate mx-auto max-w-5xl overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 text-card-foreground md:p-8">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <ShaderBackdrop design="mist" />
       </div>
@@ -627,12 +635,13 @@ export function PayCard({
         </div>
       </div>
 
-      {/* Words on the left with the contact row under them, the action in a
-          fixed column on the right spanning both, so the card is only as tall
-          as its tallest column. From md up both routes share one grid cell on
+      {/* Words on the left with the contact row on the card's bottom edge,
+          level with the foot of the action tile; the action in a fixed column
+          on the right spanning both rows, so the card is only as tall as its
+          tallest column. From md up both routes share one grid cell on
           each side (the inactive one only invisible), so switching never makes
           the card jump; on phones the inactive route is gone entirely. */}
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_15rem] md:grid-rows-[1fr_auto] md:gap-x-12 lg:gap-x-16">
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_18rem] md:grid-rows-[auto_1fr] md:gap-x-12 md:gap-y-8 lg:gap-x-16">
         <div className="grid min-w-0 md:col-start-1 md:row-start-1 md:[&>*]:[grid-area:1/1]">
           <div className={routeClass(region === "nepal")}>
             <NepalWords />
@@ -653,7 +662,7 @@ export function PayCard({
           </div>
         </div>
 
-        {footer ? <div className="md:col-start-1 md:row-start-2">{footer}</div> : null}
+        {footer ? <div className="md:col-start-1 md:row-start-2 md:self-end">{footer}</div> : null}
       </div>
     </article>
   );
