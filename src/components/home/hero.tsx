@@ -18,9 +18,9 @@ import { useTranslation } from "react-i18next";
 import { HeroSearchTypeahead } from "@/components/home/hero-search-typeahead";
 
 // The page of record: rows of blacked-out lines, every third ending in a
-// crimson bar. Widths are fixed per row, so it renders identically on the
-// server and the client.
-const RECORD_ROWS = Array.from({ length: 14 }, (_, i) => ({
+// crimson bar, spread evenly over the height of the words beside them. Widths
+// are fixed per row, so it renders identically on the server and the client.
+const RECORD_ROWS = Array.from({ length: 18 }, (_, i) => ({
   a: 18 + ((i * 37) % 30),
   b: 22 + ((i * 53) % 35),
   crimson: i % 3 === 0,
@@ -31,20 +31,11 @@ export function Hero() {
 
   return (
     <section id="hero" className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
-      <div
-        aria-hidden="true"
-        className="absolute inset-y-0 right-0 -z-10 hidden w-1/2 flex-col justify-center gap-4 px-12 [mask-image:linear-gradient(to_left,#000_30%,transparent)] lg:flex"
-      >
-        {RECORD_ROWS.map((row, i) => (
-          <div key={i} className="flex gap-3">
-            <span className="h-3 rounded-sm bg-white/[0.06]" style={{ width: `${row.a}%` }} />
-            <span className="h-3 rounded-sm bg-white/[0.12]" style={{ width: `${row.b}%` }} />
-            {row.crimson ? <span className="h-3 w-[14%] rounded-sm bg-[hsl(var(--accent-on-dark))]/40" /> : null}
-          </div>
-        ))}
-      </div>
-
-      <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center py-14">
+      {/* The words and the page of record share one row, so the lines run
+          exactly from the top of the eyebrow to the bottom of the search,
+          whatever the language or the headline's wrapping. */}
+      <div className="layout-container grid min-h-[calc(100svh-76px)] content-center py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,42%)] lg:gap-12">
+        <div>
         {/* Upright and one step up from the eyebrow default, so the motto
             reads at a comfortable size on navy (--accent-on-dark is 4.6:1). */}
         <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
@@ -57,6 +48,20 @@ export function Hero() {
         <p className="mt-6 max-w-xl text-lg leading-8 text-primary-foreground/75">{t("home.hero.description")}</p>
         <div className="flex">
           <HeroSearchTypeahead />
+        </div>
+        </div>
+
+        <div
+          aria-hidden="true"
+          className="hidden flex-col justify-between [mask-image:linear-gradient(to_left,#000_45%,transparent)] lg:flex"
+        >
+          {RECORD_ROWS.map((row, i) => (
+            <div key={i} className="flex gap-3">
+              <span className="h-3 rounded-sm bg-white/[0.06]" style={{ width: `${row.a}%` }} />
+              <span className="h-3 rounded-sm bg-white/[0.12]" style={{ width: `${row.b}%` }} />
+              {row.crimson ? <span className="h-3 w-[14%] rounded-sm bg-[hsl(var(--accent-on-dark))]/40" /> : null}
+            </div>
+          ))}
         </div>
       </div>
     </section>
