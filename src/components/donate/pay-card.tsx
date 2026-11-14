@@ -159,15 +159,15 @@ function CopyRow({
 
   return (
     <div>
-      <dt className="text-xs text-accent">
+      <dt className="text-sm text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-0.5 flex items-center gap-1">
         <span
           className={
             mono
-              ? "min-w-0 select-all break-all text-base font-medium tabular-nums tracking-wide text-primary"
-              : "min-w-0 select-all text-sm font-medium leading-5 text-card-foreground"
+              ? "min-w-0 select-all break-all text-base tabular-nums text-primary"
+              : "min-w-0 select-all text-base leading-6 text-primary"
           }
         >
           {display}
@@ -209,7 +209,7 @@ function CopyRow({
         </button>
       </dd>
       {failed ? (
-        <p className="mt-1 text-xs font-medium text-destructive">
+        <p className="mt-1 text-sm text-destructive">
           {t("donate.ways.copyFailed")}
         </p>
       ) : null}
@@ -262,15 +262,21 @@ function NepalPanel() {
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
-  // From md up the card is wide (it no longer sits in the hero), so the QR
-  // and the bank details stand side by side instead of stacking.
+  // Bank details on the left, where the eye starts; the QR on the right with
+  // its network switch. On phones the bank details come first too: someone on
+  // their phone cannot scan a code shown on that same phone, but can copy an
+  // account number.
   return (
-    <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-8">
+    <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-10">
       <div>
+        <BankDetails trackMethod="nepal_bank" />
+      </div>
+
+      <div className="mt-6 border-t border-border/60 pt-6 md:mt-0 md:border-l md:border-t-0 md:pl-10 md:pt-0">
         <p className="text-lg leading-7 text-primary">
           {t("donate.ways.nepali.qrTitle")}
         </p>
-        <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
+        <p className="mt-1 text-base leading-7 text-muted-foreground">
           {t("donate.ways.nepali.qrDescription")}
         </p>
 
@@ -312,11 +318,6 @@ function NepalPanel() {
             />
           ))}
         </div>
-
-      </div>
-
-      <div className="mt-5 border-t border-border/60 pt-4 md:mt-0 md:border-l md:border-t-0 md:pl-8 md:pt-0">
-        <BankDetails trackMethod="nepal_bank" />
       </div>
     </div>
   );
@@ -361,7 +362,7 @@ function AbroadRail({
           {t(`donate.ways.us.${id}.title`)}
         </span>
       </span>
-      <p className="text-sm leading-5 text-card-foreground/70">
+      <p className="text-base leading-7 text-muted-foreground">
         {t(`donate.ways.us.${id}.detail`)}
       </p>
       <Button
@@ -430,7 +431,7 @@ function AbroadPanel() {
 
   return (
     <div>
-      <p className="text-sm font-medium text-accent">
+      <p className="text-lg leading-7 text-primary">
         {t("donate.ways.us.whoFor")}
       </p>
       {/* Who actually receives the money, and under which EIN. It is a
@@ -444,7 +445,7 @@ function AbroadPanel() {
           shows one route or both. It said "Either option" while two rails were
           visible; with PayPal hidden that counted a route a donor cannot
           see. */}
-      <p className="mt-2 text-xs font-medium leading-5 text-card-foreground/70">
+      <p className="mt-1 text-base leading-7 text-muted-foreground">
         {t("donate.ways.us.proceedsNote")}
       </p>
 
@@ -489,7 +490,7 @@ function AbroadPanel() {
         {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
             in light mode, under the 4.5 AA floor. Same grey as the proceeds
             note above, so the two disclosures read as one register. */}
-        <p className="text-xs leading-5 text-card-foreground/70">
+        <p className="text-sm leading-6 text-muted-foreground">
           {t("donate.ways.us.capitalControlNote")}
         </p>
       </div>
@@ -546,7 +547,10 @@ function guessRegion(): Region {
  * The tab auto-selects from the visitor's timezone after hydration, but only
  * until they touch it — a manual toggle always wins.
  */
-export function PayCard() {
+export function PayCard({
+  header,
+  footer,
+}: Readonly<{ header?: ReactNode; footer?: ReactNode }>) {
   const { t } = useTranslation();
   const [region, setRegion] = useState<Region>("nepal");
   const userChoseRef = useRef(false);
@@ -558,14 +562,16 @@ export function PayCard() {
   }, []);
 
   return (
-    // Two parts, like a checkout: where you are giving from (a rail of two big
-    // choices) and, beside it, how. On phones the choices sit side by side
-    // above the panel.
-    <article className="grid gap-4 text-card-foreground lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+    // Open on the page, not boxed: the section's heading, the route as tabs
+    // along a hairline, the chosen route's details, then anything that applies
+    // to both routes.
+    <article className="text-card-foreground">
+      {header}
+
       <div
         role="group"
         aria-label={t("donate.ways.title")}
-        className="grid grid-cols-2 gap-2 self-start lg:grid-cols-1 lg:gap-3"
+        className="mt-6 grid grid-cols-2 border-b border-border sm:flex sm:gap-8 md:mt-8"
       >
         {REGIONS.map((id) => {
           const selected = id === region;
@@ -584,36 +590,34 @@ export function PayCard() {
                 });
               }}
               className={cn(
-                "flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base lg:min-h-[4.5rem] lg:px-5",
+                "relative -mb-px inline-flex min-h-12 items-center justify-center gap-2 border-b-2 px-1 pb-3 pt-2 text-center text-base leading-6 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:justify-start sm:text-left",
                 selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background text-primary hover:border-primary/40 hover:bg-muted/50",
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-primary",
               )}
             >
-              <Icon
-                className={cn("h-5 w-5 shrink-0", selected ? "text-primary-foreground/80" : "text-primary/60")}
-                aria-hidden="true"
-              />
-              <span className="min-w-0 flex-1 leading-snug">
-                {t(
-                  id === "nepal"
-                    ? "donate.ways.nepali.title"
-                    : "donate.ways.us.title",
-                )}
-              </span>
+              <Icon className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
+              {t(
+                id === "nepal"
+                  ? "donate.ways.nepali.title"
+                  : "donate.ways.us.title",
+              )}
             </button>
           );
         })}
       </div>
 
-      <div className="rounded-[28px] border border-border bg-background p-5 sm:p-6 md:p-8">
+      <div className="py-8 md:py-10">
         <div hidden={region !== "nepal"}>
           <NepalPanel />
         </div>
-        <div hidden={region !== "abroad"}>
+        {/* One column of prose: capped at reading width. */}
+        <div hidden={region !== "abroad"} className="max-w-3xl">
           <AbroadPanel />
         </div>
       </div>
+
+      {footer}
     </article>
   );
 }

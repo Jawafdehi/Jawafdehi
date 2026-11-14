@@ -102,42 +102,39 @@ export function DonateHero() {
         </dl>
       </LightHero>
 
-      <section id="donate-give" aria-labelledby="donate-give-title" className="bg-background pb-4 pt-10 md:pt-12">
+      <section id="donate-give" aria-labelledby="donate-give-title" className="bg-background pb-4 pt-6 md:pt-10">
         <div className="layout-container">
-          <div className="grid border-t border-border pt-10 md:pt-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-8">
-            <h2 id="donate-give-title" className="font-home-section-title text-primary">
-              {t("donate.ways.title")}
-            </h2>
-
-            {/* A person to ask: beside the heading on a wide screen, where most
-                questions come before a gift; under the card on a phone, so the
-                choice of route is the first thing after the heading. */}
-            <div className="order-last mt-8 flex flex-wrap items-center gap-2 lg:order-none lg:mt-0">
-              <span className="mr-1 text-sm text-muted-foreground">{t("donate.hero.contactUs")}</span>
-              {CONTACT_CHANNELS.map((channel) => (
-                <a
-                  key={channel.id}
-                  href={channel.href}
-                  {...(channel.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  onClick={() =>
-                    trackEvent("donate_click", {
-                      method: channel.id,
-                      action: "contact",
-                      link_url: channel.href,
-                    })
-                  }
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
-                >
-                  <channel.icon className="h-4 w-4" aria-hidden="true" />
-                  {t(channel.labelKey)}
-                </a>
-              ))}
-            </div>
-
-            <div className="mt-8 md:mt-10 lg:col-span-2">
-              <PayCard />
-            </div>
-          </div>
+          <PayCard
+            header={
+              <h2 id="donate-give-title" className="font-home-section-title text-primary">
+                {t("donate.ways.title")}
+              </h2>
+            }
+            footer={
+              // A person to ask, for either route.
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-sm text-muted-foreground">{t("donate.hero.contactUs")}</span>
+                {CONTACT_CHANNELS.map((channel) => (
+                  <a
+                    key={channel.id}
+                    href={channel.href}
+                    {...(channel.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    onClick={() =>
+                      trackEvent("donate_click", {
+                        method: channel.id,
+                        action: "contact",
+                        link_url: channel.href,
+                      })
+                    }
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
+                  >
+                    <channel.icon className="h-4 w-4" aria-hidden="true" />
+                    {t(channel.labelKey)}
+                  </a>
+                ))}
+              </div>
+            }
+          />
         </div>
       </section>
     </>
