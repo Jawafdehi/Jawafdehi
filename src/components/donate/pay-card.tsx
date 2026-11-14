@@ -162,11 +162,11 @@ function CopyRow({
     // One row of the details table (OKX, Kraken): the label in its own column
     // from lg up, the value, and the copy button at the row's end where the
     // thumb expects it. On a phone the label sits above the value.
-    <div className="grid gap-x-6 gap-y-0.5 border-b border-border py-3 lg:grid-cols-[6.5rem_minmax(0,1fr)] lg:items-center">
+    <div className="grid gap-x-6 py-1.5 lg:grid-cols-[6.5rem_minmax(0,1fr)] lg:items-center">
       <dt className="text-sm text-muted-foreground">
         {label}
       </dt>
-      <dd className="flex min-w-0 items-center justify-between gap-3">
+      <dd className="flex min-w-0 items-center gap-2">
         <span
           className={
             mono
@@ -230,7 +230,7 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   const { t } = useTranslation();
 
   return (
-    <dl className="[&>div:last-child]:border-b-0">
+    <dl>
       <CopyRow
         label={t("donate.ways.nepali.nameLabel")}
         display={t("donate.ways.nepali.accountName")}
@@ -265,7 +265,7 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
 // route therefore comes in two halves — its words and its action — rendered
 // into those two columns.
 const FROSTED_PANEL =
-  "rounded-3xl border border-border/60 bg-surface/90 p-5 backdrop-blur-sm sm:p-6";
+  "rounded-3xl border border-border/60 bg-surface/90 p-5 backdrop-blur-sm";
 
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
 function NepalWords() {
@@ -276,10 +276,11 @@ function NepalWords() {
       <p className="mt-1 max-w-xl text-base leading-7 text-muted-foreground">
         {t("donate.ways.nepali.qrDescription")}
       </p>
-      {/* The details you copy sit with the words; the code you scan is the
-          action on the right. On a phone this comes first: someone on their
-          phone cannot scan a code shown on that phone, but can copy a number. */}
-      <div className={FROSTED_PANEL + " mt-6 py-2 sm:py-2"}>
+      {/* The details you copy sit with the words, straight on the card; the
+          code you scan is the action on the right. On a phone this comes first:
+          someone on their phone cannot scan a code shown on that phone, but can
+          copy a number. */}
+      <div className="mt-4">
         <BankDetails trackMethod="nepal_bank" />
       </div>
     </>
@@ -293,11 +294,29 @@ function NepalAction() {
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex w-full flex-col items-center">
+      {/* Both networks stay mounted so switching never re-fetches, and the two
+          images share one canvas size so nothing shifts height. The code's own
+          white is the tile: no panel behind it. */}
+      <div className="w-full max-w-[15rem] overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(14,31,59,0.06),0_8px_24px_-12px_rgba(14,31,59,0.18)]">
+        {WALLETS.map(({ id, src }) => (
+          <img
+            key={id}
+            src={src}
+            alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
+            width={600}
+            height={736}
+            loading="lazy"
+            hidden={id !== wallet}
+            className="h-auto w-full"
+          />
+        ))}
+      </div>
+
       <div
         role="group"
         aria-label={t("donate.ways.nepali.walletSwitchAria")}
-        className="inline-flex gap-1 rounded-full bg-muted p-1"
+        className="mt-3 inline-flex gap-1 rounded-full border border-border/60 bg-surface/90 p-1 backdrop-blur-sm"
       >
         {WALLETS.map(({ id }) => (
           <button
@@ -313,23 +332,6 @@ function NepalAction() {
           >
             {t(`donate.ways.nepali.wallets.${id}.label`)}
           </button>
-        ))}
-      </div>
-
-      {/* Both networks stay mounted so switching never re-fetches, and the two
-          images share one canvas size so the card cannot shift height. */}
-      <div className="mt-4 w-[180px] overflow-hidden rounded-2xl bg-white">
-        {WALLETS.map(({ id, src }) => (
-          <img
-            key={id}
-            src={src}
-            alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
-            width={600}
-            height={736}
-            loading="lazy"
-            hidden={id !== wallet}
-            className="h-auto w-full"
-          />
         ))}
       </div>
     </div>
@@ -462,7 +464,7 @@ function AbroadAction() {
   const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
-    <div className="w-full">
+    <div className={FROSTED_PANEL}>
       {/* Zeffy carries the filled button. The outlined PayPal rail below it is
           hidden (see SHOW_PAYPAL), so in practice this is a single rail — the
           gap and column direction are kept so restoring PayPal needs no layout
@@ -552,6 +554,11 @@ function guessRegion(): Region {
  * The tab auto-selects from the visitor's timezone after hydration, but only
  * until they touch it — a manual toggle always wins.
  */
+/** The active route shows; the inactive one is gone on phones and only
+ * invisible (still holding its space) from md up. */
+const routeClass = (active: boolean) =>
+  active ? "" : "hidden md:block md:invisible";
+
 export function PayCard({
   header,
   footer,
@@ -572,18 +579,18 @@ export function PayCard({
     // left and the working part on a frosted white panel on the right. Both routes stay mounted
     // (the inactive one is `hidden`), so switching keeps a chosen wallet and a
     // part-filled Zeffy form.
-    <article className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 text-card-foreground md:p-10">
+    <article className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 text-card-foreground md:p-8">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <ShaderBackdrop design="mist" />
       </div>
 
       {/* The heading and the route switch share the top line. */}
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {header}
         <div
           role="group"
           aria-label={t("donate.ways.title")}
-          className="inline-flex w-fit gap-1 rounded-full border border-border/60 bg-surface/90 p-1 backdrop-blur-sm"
+          className="flex w-full gap-1 rounded-full border border-border/60 bg-surface/90 p-1 backdrop-blur-sm md:inline-flex md:w-fit"
         >
           {REGIONS.map((id) => {
             const selected = id === region;
@@ -602,7 +609,7 @@ export function PayCard({
                   });
                 }}
                 className={cn(
-                  "inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]",
+                  "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full px-2 text-sm transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97] min-[360px]:whitespace-nowrap md:flex-none md:px-4",
                   selected
                     ? "bg-primary text-primary-foreground"
                     : "text-primary/70 hover:bg-primary/10 hover:text-primary",
@@ -620,33 +627,34 @@ export function PayCard({
         </div>
       </div>
 
-      {/* The words take 60%, the action 40%. The action panel stretches to the
-          words' height and centres its content, so neither side floats. */}
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
-        <div className="min-w-0">
-          <div hidden={region !== "nepal"}>
+      {/* Words on the left with the contact row under them, the action in a
+          fixed column on the right spanning both, so the card is only as tall
+          as its tallest column. From md up both routes share one grid cell on
+          each side (the inactive one only invisible), so switching never makes
+          the card jump; on phones the inactive route is gone entirely. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_15rem] md:grid-rows-[1fr_auto] md:gap-x-12 lg:gap-x-16">
+        <div className="grid min-w-0 md:col-start-1 md:row-start-1 md:[&>*]:[grid-area:1/1]">
+          <div className={routeClass(region === "nepal")}>
             <NepalWords />
           </div>
-          <div hidden={region !== "abroad"}>
+          <div className={routeClass(region === "abroad")}>
             <AbroadWords />
           </div>
         </div>
 
-        <div className="min-w-0">
-          <div hidden={region !== "nepal"} className={FROSTED_PANEL + " h-full"}>
-            <div className="flex h-full items-center justify-center">
+        <div className="grid min-w-0 md:col-start-2 md:row-span-2 md:row-start-1 md:[&>*]:[grid-area:1/1]">
+          <div className={routeClass(region === "nepal")}>
+            <div className="flex justify-center">
               <NepalAction />
             </div>
           </div>
-          <div hidden={region !== "abroad"} className={FROSTED_PANEL + " h-full"}>
-            <div className="flex h-full items-center">
-              <AbroadAction />
-            </div>
+          <div className={routeClass(region === "abroad")}>
+            <AbroadAction />
           </div>
         </div>
-      </div>
 
-      {footer ? <div className="mt-8">{footer}</div> : null}
+        {footer ? <div className="md:col-start-1 md:row-start-2">{footer}</div> : null}
+      </div>
     </article>
   );
 }

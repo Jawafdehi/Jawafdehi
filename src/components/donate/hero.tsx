@@ -106,7 +106,7 @@ export function DonateHero() {
         <div className="layout-container">
           <PayCard
             header={
-              <h2 id="donate-give-title" className="font-home-section-title text-primary">
+              <h2 id="donate-give-title" className="font-case-section-title text-primary">
                 {t("donate.ways.title")}
               </h2>
             }
