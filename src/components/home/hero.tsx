@@ -25,11 +25,12 @@ import { HeroSearchTypeahead } from "@/components/home/hero-search-typeahead";
 const HeroStyleSwitch = import.meta.env.DEV ? lazy(() => import("@/components/home/hero-styles")) : null;
 const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;
 const HERO_STYLES = [
-  { value: "panel", label: "Panel" },
-  { value: "redaction", label: "Redaction" },
-  { value: "wall", label: "Archive wall" },
-  { value: "files", label: "Case files" },
-  { value: "numbers", label: "The numbers" },
+  { value: "panel", label: "Panel ★" },
+  { value: "record", label: "Record ★" },
+  { value: "numbers", label: "The numbers ★" },
+  { value: "seal", label: "Seal" },
+  { value: "register", label: "Register" },
+  { value: "search", label: "Search first" },
 ] as const;
 
 export function Hero() {
@@ -37,7 +38,7 @@ export function Hero() {
   const style = searchParams.get("hero");
   const alternate =
     HeroStyleSwitch && HERO_STYLES.some((s) => s.value === style) && style !== "panel"
-      ? (style as "redaction" | "wall" | "files" | "numbers")
+      ? (style as "record" | "numbers" | "seal" | "register" | "search")
       : null;
 
   return (
