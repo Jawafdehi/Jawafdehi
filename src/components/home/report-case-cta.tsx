@@ -22,7 +22,7 @@ export function ReportCaseCta() {
       <div className="layout-container text-center">
         <div className="mx-auto flex max-w-2xl flex-col items-center">
           <h2 className="font-home-section-title text-primary-foreground">{t("reportCta.title")}</h2>
-          <p className="mt-5 max-w-xl text-lg leading-8 text-primary-foreground/75">{t("reportCta.description")}</p>
+          <p className="mt-4 max-w-xl text-lg leading-8 text-primary-foreground/75">{t("reportCta.description")}</p>
           <Button variant="accent" size="lg" asChild className="mt-8">
             <Link to="/report">
               <FilePlus2 aria-hidden="true" />

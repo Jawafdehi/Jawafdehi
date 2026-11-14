@@ -34,7 +34,7 @@ export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
   ];
 
   return (
-    <section id="archive-figures" aria-label={t("home.figures.label")} className="pt-16 md:pt-24">
+    <section id="archive-figures" aria-label={t("home.figures.label")} className="py-12 md:py-16">
     <div className="layout-container grid grid-cols-2 gap-x-10 gap-y-10 xl:grid-cols-4">
       {stats.map(({ value, label, href, highlight }) => (
         <Link

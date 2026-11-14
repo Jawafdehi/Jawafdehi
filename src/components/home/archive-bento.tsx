@@ -22,7 +22,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
   ];
 
   return (
-    <section aria-labelledby="archive-bento-title" className="pt-16 md:pt-24">
+    <section aria-labelledby="archive-bento-title" className="pb-12 pt-20 md:pb-16 md:pt-28">
       <div className="layout-container">
         <Reveal>
           <SplitHeading id="archive-bento-title" lead={t("home.bento.titleLead")} rest={t("home.bento.titleRest")} />

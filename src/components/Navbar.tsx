@@ -1,4 +1,3 @@
-import { useHeroTone } from "@/lib/hero-tone";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -153,11 +152,8 @@ export function Navbar() {
   // would vanish. Every other page opens on a light surface. So the at-rest
   // header is light-on-dark on those routes only, and snaps back to the normal
   // navy-on-light treatment the moment it gains its opaque background.
-  // The home hero has a light style too (dev hero switch); it says so here.
-  const heroTone = useHeroTone();
   const overDarkHero =
     !isScrolled &&
-    !(location.pathname === "/" && heroTone === "light") &&
     (DARK_HERO_PATHS.has(location.pathname) ||
       (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
 

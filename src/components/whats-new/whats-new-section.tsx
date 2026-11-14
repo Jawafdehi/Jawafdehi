@@ -27,7 +27,7 @@ export function WhatsNewSection({
       <div className="layout-container">
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <h2 className={compact ? "font-home-display text-2xl text-primary md:text-3xl" : "font-home-section-title text-primary"}>{heading}</h2>
+            <h2 className="font-home-section-title text-primary">{heading}</h2>
             <Link
               to={tag ? `/whats-new?tag=${tag}` : "/whats-new"}
               className="group inline-flex items-center gap-1.5 rounded text-base font-medium text-accent hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -38,7 +38,7 @@ export function WhatsNewSection({
           </div>
         </Reveal>
 
-        <ul className={cn("grid gap-x-14 md:grid-cols-2", compact ? "mt-6 gap-y-8" : "mt-10 gap-y-12")}>
+        <ul className={cn("grid gap-x-14 md:grid-cols-2", compact ? "mt-10 gap-y-8" : "mt-10 gap-y-12")}>
           {entries.map((entry, index) => (
             <li key={entry.id}>
               <Reveal delayMs={index * 80}>

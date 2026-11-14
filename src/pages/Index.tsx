@@ -133,10 +133,10 @@ const Index = () => {
         {/* ── Featured Cases ── */}
         {/* The `recent-cases` id is kept on purpose: nothing in src links to it,
             but external links to jawafdehi.org/#recent-cases would break. */}
-        <section id="recent-cases" className="py-12 md:py-20">
+        <section id="recent-cases" className="py-12 md:py-16">
           <div className="layout-container">
             <Reveal>
-              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
                 <div>
                   {/* Same subtitle treatment and no one-off underline as the
                       other sections (PR #359 visual review, item 5). One step
@@ -165,7 +165,7 @@ const Index = () => {
                   <FeaturedCaseSpotlight {...featuredCases[0]} />
                 </Reveal>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                   {featuredCases.slice(1).map((caseItem, index) => (
                     <Reveal key={caseItem.id} className="h-full" delayMs={(index % 3) * 90}>
                       <CaseCard {...caseItem} />
@@ -176,7 +176,7 @@ const Index = () => {
             ) : (
               <>
                 <div className="h-72 rounded-3xl bg-muted animate-pulse" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                   {Array.from({ length: FEATURED_CASE_GRID_COUNT }, (_, i) => (
                     <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
                   ))}
@@ -185,7 +185,7 @@ const Index = () => {
             )}
 
             <Reveal>
-              <div className="text-center mt-10 mb-4 flex justify-center">
+              <div className="text-center mt-10 flex justify-center">
                 <Button variant="primary" size="lg" asChild className="group">
                   <Link to="/search?type=case">
                     {t("home.featuredCases.viewAll", "View all cases")}{" "}
