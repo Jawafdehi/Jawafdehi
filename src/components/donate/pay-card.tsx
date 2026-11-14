@@ -159,9 +159,9 @@ function CopyRow({
 
   return (
     // One row of the details table (OKX, Kraken): the label in its own column
-    // from sm up, the value, and the copy button at the row's end where the
+    // from lg up, the value, and the copy button at the row's end where the
     // thumb expects it. On a phone the label sits above the value.
-    <div className="grid gap-x-6 gap-y-0.5 border-b border-border py-3 sm:grid-cols-[6.5rem_minmax(0,1fr)] sm:items-center">
+    <div className="grid gap-x-6 gap-y-0.5 border-b border-border py-3 lg:grid-cols-[6.5rem_minmax(0,1fr)] lg:items-center">
       <dt className="text-sm text-muted-foreground">
         {label}
       </dt>
@@ -212,7 +212,7 @@ function CopyRow({
         </button>
       </dd>
       {failed ? (
-        <p className="text-sm text-destructive sm:col-start-2">
+        <p className="text-sm text-destructive lg:col-start-2">
           {t("donate.ways.copyFailed")}
         </p>
       ) : null}
@@ -259,10 +259,10 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   );
 }
 
-// Both panels share one shape: the words in a wide left column, the action in
-// a fixed-width grey tile on the right (stacked on phones).
+// Both panels share one shape: the words on the left, the action in a
+// fixed-width grey tile right beside them (stacked on phones).
 const PANEL_GRID =
-  "grid items-start justify-between gap-8 md:grid-cols-[minmax(0,1fr)_17rem] md:gap-12 lg:grid-cols-[minmax(0,40rem)_19rem] lg:gap-16";
+  "grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_17rem] md:gap-10";
 const PANEL_TILE = "flex flex-col rounded-3xl bg-muted/60 p-5 sm:p-6";
 
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
@@ -575,16 +575,17 @@ export function PayCard({
   }, []);
 
   return (
-    // Open on the page, not boxed: the section's heading, the route as tabs
-    // along a hairline, the chosen route's details, then anything that applies
-    // to both routes.
-    <article className="text-card-foreground">
-      {header}
+    // One card, narrower than the page so each tile sits right beside the
+    // words it belongs to: the section's heading, the route as tabs along a
+    // hairline, the chosen route's details, then a footer for anything that
+    // applies to both routes.
+    <article className="max-w-5xl overflow-hidden rounded-[28px] border border-border bg-background text-card-foreground">
+      {header ? <div className="px-5 pt-6 sm:px-8 md:pt-8">{header}</div> : null}
 
       <div
         role="group"
         aria-label={t("donate.ways.title")}
-        className="mt-6 grid grid-cols-2 border-b border-border sm:flex sm:gap-8 md:mt-8"
+        className="mt-5 grid grid-cols-2 border-b border-border px-5 sm:flex sm:gap-8 sm:px-8 md:mt-6"
       >
         {REGIONS.map((id) => {
           const selected = id === region;
@@ -620,7 +621,7 @@ export function PayCard({
         })}
       </div>
 
-      <div className="py-8 md:py-10">
+      <div className="px-5 py-6 sm:px-8 md:py-8">
         <div hidden={region !== "nepal"}>
           <NepalPanel />
         </div>
@@ -629,7 +630,7 @@ export function PayCard({
         </div>
       </div>
 
-      {footer}
+      {footer ? <div className="border-t border-border bg-muted/40 px-5 py-4 sm:px-8">{footer}</div> : null}
     </article>
   );
 }

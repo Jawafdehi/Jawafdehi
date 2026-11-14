@@ -126,7 +126,7 @@ export function DonateHero() {
                         link_url: channel.href,
                       })
                     }
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-background px-3.5 text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
                   >
                     <channel.icon className="h-4 w-4" aria-hidden="true" />
                     {t(channel.labelKey)}
