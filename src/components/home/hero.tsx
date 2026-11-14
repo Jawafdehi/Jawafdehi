@@ -13,12 +13,52 @@
 //     DARK_HERO_PATHS), and it is what SSR/no-WebGL visitors see
 //   * --accent-on-dark for crimson text on navy (raw --accent is 2.6:1)
 //   * reduced motion: the shader renders one still frame
+import { Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { HeroSearchTypeahead } from "@/components/home/hero-search-typeahead";
 
+// DEV ONLY: other hero styles to compare (?hero=…), with a switch at the
+// bottom of the page. Lazy and DEV-gated, so neither reaches production.
+const HeroStyleSwitch = import.meta.env.DEV ? lazy(() => import("@/components/home/hero-styles")) : null;
+const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;
+const HERO_STYLES = [
+  { value: "panel", label: "Panel" },
+  { value: "redaction", label: "Redaction" },
+  { value: "wall", label: "Archive wall" },
+  { value: "files", label: "Case files" },
+  { value: "numbers", label: "The numbers" },
+] as const;
+
 export function Hero() {
+  const [searchParams] = useSearchParams();
+  const style = searchParams.get("hero");
+  const alternate =
+    HeroStyleSwitch && HERO_STYLES.some((s) => s.value === style) && style !== "panel"
+      ? (style as "redaction" | "wall" | "files" | "numbers")
+      : null;
+
+  return (
+    <>
+      {alternate && HeroStyleSwitch ? (
+        <Suspense fallback={<div className="min-h-[100svh]" />}>
+          <HeroStyleSwitch style={alternate} />
+        </Suspense>
+      ) : (
+        <PanelHero />
+      )}
+      {StressToggle ? (
+        <Suspense fallback={null}>
+          <StressToggle modes={HERO_STYLES} param="hero" />
+        </Suspense>
+      ) : null}
+    </>
+  );
+}
+
+function PanelHero() {
   const { t } = useTranslation();
 
   return (

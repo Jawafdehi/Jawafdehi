@@ -8,9 +8,10 @@ import { STRESS_MODES } from "@/dev/archive-search-stress";
 
 export default function StressToggle({
   modes = STRESS_MODES,
-}: Readonly<{ modes?: ReadonlyArray<{ value: string; label: string }> }>) {
+  param = "data",
+}: Readonly<{ modes?: ReadonlyArray<{ value: string; label: string }>; param?: string }>) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const current = searchParams.get("data") ?? "demo";
+  const current = searchParams.get(param) ?? modes[0]?.value ?? "demo";
   return (
     <div
       style={{
@@ -33,8 +34,8 @@ export default function StressToggle({
           key={mode.value}
           onClick={() => {
             const next = new URLSearchParams(searchParams);
-            if (mode.value === "demo") next.delete("data");
-            else next.set("data", mode.value);
+            if (mode.value === modes[0]?.value) next.delete(param);
+            else next.set(param, mode.value);
             setSearchParams(next, { replace: true });
           }}
           style={{
