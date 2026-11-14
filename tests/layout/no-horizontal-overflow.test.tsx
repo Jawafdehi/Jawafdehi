@@ -82,13 +82,12 @@ describe.each([
     ).not.toContain('whitespace-nowrap');
     expect(classes).toContain('whitespace-normal');
 
-    // `w-fit` sizes the button to that label. Full width on phones, hug from sm up.
+    // `w-fit` sizes the button to that label. The CTA fills its tile instead.
     expect(
       classes,
-      'the CTA hugs its content at phone widths again — use `w-full sm:w-fit`.',
+      'the CTA hugs its content at phone widths again — keep it `w-full`.',
     ).not.toContain('w-fit');
     expect(classes).toContain('w-full');
-    expect(classes).toContain('sm:w-fit');
   });
 });
 

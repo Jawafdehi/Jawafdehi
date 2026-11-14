@@ -158,11 +158,14 @@ function CopyRow({
   const { copied, failed, copy } = useCopyFeedback();
 
   return (
-    <div>
+    // One row of the details table (OKX, Kraken): the label in its own column
+    // from sm up, the value, and the copy button at the row's end where the
+    // thumb expects it. On a phone the label sits above the value.
+    <div className="grid gap-x-6 gap-y-0.5 border-b border-border py-3 sm:grid-cols-[6.5rem_minmax(0,1fr)] sm:items-center">
       <dt className="text-sm text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-0.5 flex items-center gap-1">
+      <dd className="flex min-w-0 items-center justify-between gap-3">
         <span
           className={
             mono
@@ -209,7 +212,7 @@ function CopyRow({
         </button>
       </dd>
       {failed ? (
-        <p className="mt-1 text-sm text-destructive">
+        <p className="text-sm text-destructive sm:col-start-2">
           {t("donate.ways.copyFailed")}
         </p>
       ) : null}
@@ -226,7 +229,7 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   const { t } = useTranslation();
 
   return (
-    <dl className="grid gap-2.5">
+    <dl className="border-t border-border">
       <CopyRow
         label={t("donate.ways.nepali.nameLabel")}
         display={t("donate.ways.nepali.accountName")}
@@ -256,34 +259,42 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   );
 }
 
+// Both panels share one shape: the words in a wide left column, the action in
+// a fixed-width grey tile on the right (stacked on phones).
+const PANEL_GRID =
+  "grid items-start justify-between gap-8 md:grid-cols-[minmax(0,1fr)_17rem] md:gap-12 lg:grid-cols-[minmax(0,40rem)_19rem] lg:gap-16";
+const PANEL_TILE = "flex flex-col rounded-3xl bg-muted/60 p-5 sm:p-6";
+
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
 function NepalPanel() {
   const { t } = useTranslation();
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
-  // Bank details on the left, where the eye starts; the QR on the right with
-  // its network switch. On phones the bank details come first too: someone on
-  // their phone cannot scan a code shown on that same phone, but can copy an
-  // account number.
+  // Words on the left, the thing you act on on the right — the same shape as
+  // the abroad panel. The left column says how to pay and carries the bank
+  // details as a table; the right is one tile with the network switch and the
+  // code, centred (Coinbase, Squarespace). On phones the tile follows the
+  // table: someone on their phone cannot scan a code shown on that phone.
   return (
-    <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-10">
+    <div className={PANEL_GRID}>
       <div>
-        <BankDetails trackMethod="nepal_bank" />
-      </div>
-
-      <div className="mt-6 border-t border-border/60 pt-6 md:mt-0 md:border-l md:border-t-0 md:pl-10 md:pt-0">
-        <p className="text-lg leading-7 text-primary">
+        <h3 className="text-lg leading-7 text-primary">
           {t("donate.ways.nepali.qrTitle")}
-        </p>
-        <p className="mt-1 text-base leading-7 text-muted-foreground">
+        </h3>
+        <p className="mt-1 max-w-lg text-base leading-7 text-muted-foreground">
           {t("donate.ways.nepali.qrDescription")}
         </p>
+        <div className="mt-6">
+          <BankDetails trackMethod="nepal_bank" />
+        </div>
+      </div>
 
+      <div className={PANEL_TILE + " items-center"}>
         <div
           role="group"
           aria-label={t("donate.ways.nepali.walletSwitchAria")}
-          className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
+          className="inline-flex gap-1 rounded-full bg-background p-1"
         >
           {WALLETS.map(({ id }) => (
             <button
@@ -304,7 +315,7 @@ function NepalPanel() {
 
         {/* Both networks stay mounted so switching never re-fetches, and the two
             images share one canvas size so the card cannot shift height. */}
-        <div className="mt-3 w-[180px] overflow-hidden rounded-2xl bg-white p-2">
+        <div className="mt-5 w-[200px] overflow-hidden rounded-2xl bg-white p-3">
           {WALLETS.map(({ id, src }) => (
             <img
               key={id}
@@ -327,11 +338,12 @@ function NepalPanel() {
 // link. Shared by both rails so they cannot drift apart — in particular the CTA
 // classes, which are load-bearing:
 //
-// `whitespace-normal` and `w-full` until `sm`, because each label is a sentence
-// in Nepali ("PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्").
-// `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then sizes
-// the button to that unbreakable line — 350px of min-content, which floors the
-// grid track and overflows a 320px phone. See
+// `whitespace-normal` and `w-full` at every width: the rail sits in a fixed
+// tile, so the button fills it, and each label is a sentence in Nepali
+// ("PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्"). `buttonVariants`' base
+// string is `whitespace-nowrap`; sized to fit that unbreakable line (`w-fit`)
+// it was 350px of min-content, which floors the grid track and overflows a
+// 320px phone. See
 // tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a wrapped
 // label no longer fits `size="sm"`'s 36px.
 function AbroadRail({
@@ -369,7 +381,7 @@ function AbroadRail({
         asChild
         variant={variant}
         size="sm"
-        className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
+        className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center"
       >
         <a
           href={href}
@@ -430,10 +442,11 @@ function AbroadPanel() {
   const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
-    <div>
-      <p className="text-lg leading-7 text-primary">
+    <div className={PANEL_GRID}>
+      <div>
+      <h3 className="text-lg leading-7 text-primary">
         {t("donate.ways.us.whoFor")}
-      </p>
+      </h3>
       {/* Who actually receives the money, and under which EIN. It is a
           disclosure, not a pitch, so it is grey rather than crimson — the
           accent above it is the lead-in that says who this panel is for.
@@ -445,15 +458,23 @@ function AbroadPanel() {
           shows one route or both. It said "Either option" while two rails were
           visible; with PayPal hidden that counted a route a donor cannot
           see. */}
-      <p className="mt-1 text-base leading-7 text-muted-foreground">
+      <p className="mt-1 max-w-lg text-base leading-7 text-muted-foreground">
         {t("donate.ways.us.proceedsNote")}
       </p>
+
+      {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
+          in light mode, under the 4.5 AA floor. Same grey as the proceeds
+          note above, so the two disclosures read as one register. */}
+      <p className="mt-6 max-w-lg text-sm leading-6 text-muted-foreground">
+        {t("donate.ways.us.capitalControlNote")}
+      </p>
+      </div>
 
       {/* Zeffy carries the filled button. The outlined PayPal rail below it is
           hidden (see SHOW_PAYPAL), so in practice this is a single rail — the
           gap and column direction are kept so restoring PayPal needs no layout
           work. */}
-      <div className="mt-5 flex flex-col gap-5 border-t border-border/60 pt-5">
+      <div className={PANEL_TILE + " gap-5"}>
         <AbroadRail
           id="zeffy"
           href={ZEFFY_FORM_URL}
@@ -486,14 +507,6 @@ function AbroadPanel() {
         ) : null}
       </div>
 
-      <div className="mt-5 border-t border-border/60 pt-4">
-        {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
-            in light mode, under the 4.5 AA floor. Same grey as the proceeds
-            note above, so the two disclosures read as one register. */}
-        <p className="text-sm leading-6 text-muted-foreground">
-          {t("donate.ways.us.capitalControlNote")}
-        </p>
-      </div>
 
       {/* Zeffy's hosted form, framed. `allow="payment"` is what lets the Payment
           Request API run inside a cross-origin frame — without it card wallets
@@ -611,8 +624,7 @@ export function PayCard({
         <div hidden={region !== "nepal"}>
           <NepalPanel />
         </div>
-        {/* One column of prose: capped at reading width. */}
-        <div hidden={region !== "abroad"} className="max-w-3xl">
+        <div hidden={region !== "abroad"}>
           <AbroadPanel />
         </div>
       </div>
