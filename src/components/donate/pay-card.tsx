@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Check, Copy, ExternalLink, Globe, HeartHandshake, MapPin } from "@/components/icons";
 import { SiPaypal } from "react-icons/si";
 
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -229,7 +230,7 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   const { t } = useTranslation();
 
   return (
-    <dl className="border-t border-border">
+    <dl className="[&>div:last-child]:border-b-0">
       <CopyRow
         label={t("donate.ways.nepali.nameLabel")}
         display={t("donate.ways.nepali.accountName")}
@@ -259,76 +260,77 @@ function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   );
 }
 
-// Both panels share one shape: the words on the left, the action in a
-// fixed-width grey tile right beside them (stacked on phones).
-const PANEL_GRID =
-  "grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_17rem] md:gap-10";
-const PANEL_TILE = "flex flex-col rounded-3xl bg-muted/60 p-5 sm:p-6";
+// The card follows the shader cards on /likhit and /mcp: the words on the mist
+// on the left, the working part on a frosted white panel on the right. Each
+// route therefore comes in two halves — its words and its action — rendered
+// into those two columns.
+const FROSTED_PANEL =
+  "rounded-3xl border border-border/60 bg-surface/90 p-5 backdrop-blur-sm sm:p-6";
 
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
-function NepalPanel() {
+function NepalWords() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <h3 className="text-lg leading-7 text-primary">{t("donate.ways.nepali.qrTitle")}</h3>
+      <p className="mt-1 max-w-xl text-base leading-7 text-muted-foreground">
+        {t("donate.ways.nepali.qrDescription")}
+      </p>
+      {/* The details you copy sit with the words; the code you scan is the
+          action on the right. On a phone this comes first: someone on their
+          phone cannot scan a code shown on that phone, but can copy a number. */}
+      <div className={FROSTED_PANEL + " mt-6 py-2 sm:py-2"}>
+        <BankDetails trackMethod="nepal_bank" />
+      </div>
+    </>
+  );
+}
+
+// The network switch and its code, centred in the frosted panel.
+function NepalAction() {
   const { t } = useTranslation();
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
-  // Words on the left, the thing you act on on the right — the same shape as
-  // the abroad panel. The left column says how to pay and carries the bank
-  // details as a table; the right is one tile with the network switch and the
-  // code, centred (Coinbase, Squarespace). On phones the tile follows the
-  // table: someone on their phone cannot scan a code shown on that phone.
   return (
-    <div className={PANEL_GRID}>
-      <div>
-        <h3 className="text-lg leading-7 text-primary">
-          {t("donate.ways.nepali.qrTitle")}
-        </h3>
-        <p className="mt-1 max-w-lg text-base leading-7 text-muted-foreground">
-          {t("donate.ways.nepali.qrDescription")}
-        </p>
-        <div className="mt-6">
-          <BankDetails trackMethod="nepal_bank" />
-        </div>
+    <div className="flex flex-col items-center">
+      <div
+        role="group"
+        aria-label={t("donate.ways.nepali.walletSwitchAria")}
+        className="inline-flex gap-1 rounded-full bg-muted p-1"
+      >
+        {WALLETS.map(({ id }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={id === wallet}
+            onClick={() => setWallet(id)}
+            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+              id === wallet
+                ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
+                : "rounded-full px-3.5 py-1.5 text-sm text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+            }`}
+          >
+            {t(`donate.ways.nepali.wallets.${id}.label`)}
+          </button>
+        ))}
       </div>
 
-      <div className={PANEL_TILE + " items-center"}>
-        <div
-          role="group"
-          aria-label={t("donate.ways.nepali.walletSwitchAria")}
-          className="inline-flex gap-1 rounded-full bg-background p-1"
-        >
-          {WALLETS.map(({ id }) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={id === wallet}
-              onClick={() => setWallet(id)}
-              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                id === wallet
-                  ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
-                  : "rounded-full px-3.5 py-1.5 text-sm text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-              }`}
-            >
-              {t(`donate.ways.nepali.wallets.${id}.label`)}
-            </button>
-          ))}
-        </div>
-
-        {/* Both networks stay mounted so switching never re-fetches, and the two
-            images share one canvas size so the card cannot shift height. */}
-        <div className="mt-5 w-[200px] overflow-hidden rounded-2xl bg-white p-3">
-          {WALLETS.map(({ id, src }) => (
-            <img
-              key={id}
-              src={src}
-              alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
-              width={600}
-              height={736}
-              loading="lazy"
-              hidden={id !== wallet}
-              className="h-auto w-full"
-            />
-          ))}
-        </div>
+      {/* Both networks stay mounted so switching never re-fetches, and the two
+          images share one canvas size so the card cannot shift height. */}
+      <div className="mt-4 w-[180px] overflow-hidden rounded-2xl bg-white">
+        {WALLETS.map(({ id, src }) => (
+          <img
+            key={id}
+            src={src}
+            alt={t(`donate.ways.nepali.wallets.${id}.alt`)}
+            width={600}
+            height={736}
+            loading="lazy"
+            hidden={id !== wallet}
+            className="h-auto w-full"
+          />
+        ))}
       </div>
     </div>
   );
@@ -434,7 +436,25 @@ function AbroadRail({
 // (Wise/Remitly/Western Union) straight into the Nepal account — that was
 // withdrawn as non-compliant, not merely redundant. Do not reinstate it without
 // a written legal sign-off.
-function AbroadPanel() {
+function AbroadWords() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <h3 className="text-lg leading-7 text-primary">{t("donate.ways.us.whoFor")}</h3>
+      {/* Who actually receives the money, and under which EIN. A disclosure,
+          not a pitch, so it is grey rather than crimson. Worded without naming
+          a rail, so it stays true whether one route shows or both. */}
+      <p className="mt-1 max-w-xl text-base leading-7 text-muted-foreground">
+        {t("donate.ways.us.proceedsNote")}
+      </p>
+      <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+        {t("donate.ways.us.capitalControlNote")}
+      </p>
+    </>
+  );
+}
+
+function AbroadAction() {
   const { t } = useTranslation();
   const [zeffyOpen, setZeffyOpen] = useState(false);
   // Mount the iframe on first open and leave it mounted, so closing and
@@ -442,39 +462,12 @@ function AbroadPanel() {
   const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
-    <div className={PANEL_GRID}>
-      <div>
-      <h3 className="text-lg leading-7 text-primary">
-        {t("donate.ways.us.whoFor")}
-      </h3>
-      {/* Who actually receives the money, and under which EIN. It is a
-          disclosure, not a pitch, so it is grey rather than crimson — the
-          accent above it is the lead-in that says who this panel is for.
-          Crimson also failed AA here in dark mode (4.11:1 against the sunk
-          card at 12px, which needs 4.5). card-foreground/70 is 5.21:1 light
-          and 7.83:1 dark.
-
-          Worded without naming a rail, so it stays true whether the panel
-          shows one route or both. It said "Either option" while two rails were
-          visible; with PayPal hidden that counted a route a donor cannot
-          see. */}
-      <p className="mt-1 max-w-lg text-base leading-7 text-muted-foreground">
-        {t("donate.ways.us.proceedsNote")}
-      </p>
-
-      {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
-          in light mode, under the 4.5 AA floor. Same grey as the proceeds
-          note above, so the two disclosures read as one register. */}
-      <p className="mt-6 max-w-lg text-sm leading-6 text-muted-foreground">
-        {t("donate.ways.us.capitalControlNote")}
-      </p>
-      </div>
-
+    <div className="w-full">
       {/* Zeffy carries the filled button. The outlined PayPal rail below it is
           hidden (see SHOW_PAYPAL), so in practice this is a single rail — the
           gap and column direction are kept so restoring PayPal needs no layout
           work. */}
-      <div className={PANEL_TILE + " gap-5"}>
+      <div className="flex flex-col gap-5">
         <AbroadRail
           id="zeffy"
           href={ZEFFY_FORM_URL}
@@ -506,7 +499,6 @@ function AbroadPanel() {
           />
         ) : null}
       </div>
-
 
       {/* Zeffy's hosted form, framed. `allow="payment"` is what lets the Payment
           Request API run inside a cross-origin frame — without it card wallets
@@ -575,62 +567,86 @@ export function PayCard({
   }, []);
 
   return (
-    // One card, narrower than the page so each tile sits right beside the
-    // words it belongs to: the section's heading, the route as tabs along a
-    // hairline, the chosen route's details, then a footer for anything that
-    // applies to both routes.
-    <article className="max-w-5xl overflow-hidden rounded-[28px] border border-border bg-background text-card-foreground">
-      {header ? <div className="px-5 pt-6 sm:px-8 md:pt-8">{header}</div> : null}
-
-      <div
-        role="group"
-        aria-label={t("donate.ways.title")}
-        className="mt-5 grid grid-cols-2 border-b border-border px-5 sm:flex sm:gap-8 sm:px-8 md:mt-6"
-      >
-        {REGIONS.map((id) => {
-          const selected = id === region;
-          const Icon = id === "nepal" ? MapPin : Globe;
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => {
-                userChoseRef.current = true;
-                setRegion(id);
-                trackEvent("donate_click", {
-                  method: "region_toggle",
-                  action: id,
-                });
-              }}
-              className={cn(
-                "relative -mb-px inline-flex min-h-12 items-center justify-center gap-2 border-b-2 px-1 pb-3 pt-2 text-center text-base leading-6 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:justify-start sm:text-left",
-                selected
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-primary",
-              )}
-            >
-              <Icon className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
-              {t(
-                id === "nepal"
-                  ? "donate.ways.nepali.title"
-                  : "donate.ways.us.title",
-              )}
-            </button>
-          );
-        })}
+    // The /likhit and /mcp shader card: one hairline card on the mist, the
+    // heading with the route switch beside it, then that route's words on the
+    // left and the working part on a frosted white panel on the right. Both routes stay mounted
+    // (the inactive one is `hidden`), so switching keeps a chosen wallet and a
+    // part-filled Zeffy form.
+    <article className="relative isolate overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 text-card-foreground md:p-10">
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        <ShaderBackdrop design="mist" />
       </div>
 
-      <div className="px-5 py-6 sm:px-8 md:py-8">
-        <div hidden={region !== "nepal"}>
-          <NepalPanel />
-        </div>
-        <div hidden={region !== "abroad"}>
-          <AbroadPanel />
+      {/* The heading and the route switch share the top line. */}
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        {header}
+        <div
+          role="group"
+          aria-label={t("donate.ways.title")}
+          className="inline-flex w-fit gap-1 rounded-full border border-border/60 bg-surface/90 p-1 backdrop-blur-sm"
+        >
+          {REGIONS.map((id) => {
+            const selected = id === region;
+            const Icon = id === "nepal" ? MapPin : Globe;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => {
+                  userChoseRef.current = true;
+                  setRegion(id);
+                  trackEvent("donate_click", {
+                    method: "region_toggle",
+                    action: id,
+                  });
+                }}
+                className={cn(
+                  "inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]",
+                  selected
+                    ? "bg-primary text-primary-foreground"
+                    : "text-primary/70 hover:bg-primary/10 hover:text-primary",
+                )}
+              >
+                <Icon className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
+                {t(
+                  id === "nepal"
+                    ? "donate.ways.nepali.title"
+                    : "donate.ways.us.title",
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {footer ? <div className="border-t border-border bg-muted/40 px-5 py-4 sm:px-8">{footer}</div> : null}
+      {/* The words take 60%, the action 40%. The action panel stretches to the
+          words' height and centres its content, so neither side floats. */}
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
+        <div className="min-w-0">
+          <div hidden={region !== "nepal"}>
+            <NepalWords />
+          </div>
+          <div hidden={region !== "abroad"}>
+            <AbroadWords />
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div hidden={region !== "nepal"} className={FROSTED_PANEL + " h-full"}>
+            <div className="flex h-full items-center justify-center">
+              <NepalAction />
+            </div>
+          </div>
+          <div hidden={region !== "abroad"} className={FROSTED_PANEL + " h-full"}>
+            <div className="flex h-full items-center">
+              <AbroadAction />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {footer ? <div className="mt-8">{footer}</div> : null}
     </article>
   );
 }
