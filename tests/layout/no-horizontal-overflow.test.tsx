@@ -109,9 +109,11 @@ describe('the /donate headline can wrap its emphasised phrase', () => {
       join(SRC, 'components/donate/hero.tsx'),
       'utf8',
     );
-    const headline = /<h1[\s\S]*?<\/h1>/.exec(source);
+    // The headline is LightHero's `title` prop (LightHero renders the <h1>),
+    // so the guard reads that prop up to the description that follows it.
+    const headline = /title=\{[\s\S]*?description=/.exec(source);
 
-    expect(headline, 'the donate hero no longer renders an <h1>').not.toBeNull();
+    expect(headline, 'the donate hero no longer passes a headline as `title`').not.toBeNull();
     expect(
       headline![0],
       'the donate headline pins its emphasis to one line. Any localisation ' +

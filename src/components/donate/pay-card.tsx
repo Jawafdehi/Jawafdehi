@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink, HeartHandshake } from "@/components/icons";
+import { Check, Copy, ExternalLink, Globe, HeartHandshake, MapPin } from "@/components/icons";
 import { SiPaypal } from "react-icons/si";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { trackEvent, type DonateAction, type DonateMethod } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
@@ -557,45 +558,61 @@ export function PayCard() {
   }, []);
 
   return (
-    <article className="flex flex-col rounded-[28px] border border-border bg-background p-5 text-card-foreground sm:p-6 md:p-8">
+    // Two parts, like a checkout: where you are giving from (a rail of two big
+    // choices) and, beside it, how. On phones the choices sit side by side
+    // above the panel.
+    <article className="grid gap-4 text-card-foreground lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
       <div
         role="group"
         aria-label={t("donate.ways.title")}
-        className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1"
+        className="grid grid-cols-2 gap-2 self-start lg:grid-cols-1 lg:gap-3"
       >
-        {REGIONS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={id === region}
-            onClick={() => {
-              userChoseRef.current = true;
-              setRegion(id);
-              trackEvent("donate_click", {
-                method: "region_toggle",
-                action: id,
-              });
-            }}
-            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-              id === region
-                ? "rounded-full bg-surface px-3 py-2 text-sm text-primary shadow-[0_1px_3px_rgba(14,31,59,0.14)]"
-                : "rounded-full px-3 py-2 text-sm text-primary/70 transition-colors hover:text-primary"
-            }`}
-          >
-            {t(
-              id === "nepal"
-                ? "donate.ways.nepali.title"
-                : "donate.ways.us.title",
-            )}
-          </button>
-        ))}
+        {REGIONS.map((id) => {
+          const selected = id === region;
+          const Icon = id === "nepal" ? MapPin : Globe;
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => {
+                userChoseRef.current = true;
+                setRegion(id);
+                trackEvent("donate_click", {
+                  method: "region_toggle",
+                  action: id,
+                });
+              }}
+              className={cn(
+                "flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base lg:min-h-[4.5rem] lg:px-5",
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-primary hover:border-primary/40 hover:bg-muted/50",
+              )}
+            >
+              <Icon
+                className={cn("h-5 w-5 shrink-0", selected ? "text-primary-foreground/80" : "text-primary/60")}
+                aria-hidden="true"
+              />
+              <span className="min-w-0 flex-1 leading-snug">
+                {t(
+                  id === "nepal"
+                    ? "donate.ways.nepali.title"
+                    : "donate.ways.us.title",
+                )}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="mt-5" hidden={region !== "nepal"}>
-        <NepalPanel />
-      </div>
-      <div className="mt-5" hidden={region !== "abroad"}>
-        <AbroadPanel />
+      <div className="rounded-[28px] border border-border bg-background p-5 sm:p-6 md:p-8">
+        <div hidden={region !== "nepal"}>
+          <NepalPanel />
+        </div>
+        <div hidden={region !== "abroad"}>
+          <AbroadPanel />
+        </div>
       </div>
     </article>
   );
