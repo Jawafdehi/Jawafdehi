@@ -2796,20 +2796,41 @@
       "claude": {
         "name": "Claude",
         "appLabel": "Claude app and claude.ai",
-        "appSteps": "Open Settings → Connectors, add a custom connector, and paste the server URL.",
+        "appSteps": "Open Customize → Connectors, choose Add → Add custom connector, paste the server URL, then sign in.",
         "cliLabel": "Claude Code"
       },
       "openai": {
         "name": "OpenAI",
         "appLabel": "ChatGPT",
-        "appSteps": "Turn on developer mode, then open Settings → Connectors, add a connector, and paste the server URL.",
+        "appSteps": "Open Plugins, select +, then Add custom MCP server. Paste the server URL, then sign in.",
         "cliLabel": "Codex CLI"
       }
     },
+    "signIn": {
+      "title": "Sign in once",
+      "body": "Every tool needs a free Jawafdehi account. The first time you connect, your AI tool opens our sign-in page, where you can sign in with your Google account. Tools for editing the archive are only for Jawafdehi staff and never appear for other accounts.",
+      "privacy": "What we record when your AI tool uses Jawafdehi is in our Privacy Policy, Section 2.10.",
+      "privacyLink": "Read the Privacy Policy"
+    },
     "tools": {
       "title": "What your AI can read",
-      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, read-only queries over the court records, and a Bikram Sambat date converter. Every public tool is read-only.",
+      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, read-only queries over the court records, and a Bikram Sambat date converter. Every public tool only reads, except one: it sends your feedback to the Jawafdehi team when you ask it to, after showing you the message.",
       "courtNames": "Court records: anyone can look up a single case by its number and see its parties, as on the court's own website. In lists, searches and queries, party names are shown for corruption-related cases; for other cases they are replaced with placeholders such as “plaintiff-1”. Searching every court party by name is for Jawafdehi staff only."
+    },
+    "examples": {
+      "title": "Try asking",
+      "items": [
+        "Find Jawafdehi cases about bribes at land survey offices (नापी कार्यालय) and summarise each one, with links.",
+        "How many corruption cases did the Special Court register in each fiscal year since 2078 BS?",
+        "What does Jawafdehi have on the Nepal Electricity Authority? List the cases, court records and documents.",
+        "Convert 2083-07-29 BS to an AD date."
+      ],
+      "note": "Your AI tool answers from Jawafdehi's records and should cite them. Check anything important against the linked case or document; nothing here is legal advice."
+    },
+    "support": {
+      "title": "Help",
+      "body": "Something not working, or a record looks wrong? Ask your AI tool to send feedback to Jawafdehi, use our feedback page, or email us.",
+      "feedbackLink": "Feedback page"
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."

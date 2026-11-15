@@ -18,7 +18,7 @@ const TermsOfService = () => {
                 Jawafdehi Initiative Terms of Service
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: November 8, 2026
+                Last updated: November 15, 2026
               </p>
             </div>
           </div>
@@ -29,7 +29,7 @@ const TermsOfService = () => {
             <div className="font-paragraph content-prose max-w-3xl mx-auto">
               <h2 id="acceptance">1. Acceptance of Terms</h2>
               <p>
-                By accessing or using jawafdehi.org or any public website or service we run on a subdomain of jawafdehi.org, including research.jawafdehi.org and justice.jawafdehi.org (together, "the Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.
+                By accessing or using jawafdehi.org or any public website or service we run on a subdomain of jawafdehi.org, including research.jawafdehi.org, justice.jawafdehi.org and our MCP connector at api.jawafdehi.org/mcp (together, "the Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.
               </p>
 
               <h2 id="about-jawafdehi">2. About Jawafdehi</h2>
@@ -69,6 +69,14 @@ const TermsOfService = () => {
               <h3 id="connected-social-accounts">3.3 Connected Social Media Accounts</h3>
               <p>
                 We use third-party tools to manage and publish content to social media accounts that we operate (including TikTok). Our use of those accounts and the platforms' developer interfaces is additionally subject to the terms of service and policies of each platform, including those of TikTok. Information accessed through these integrations is described in our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
+              </p>
+
+              <h3 id="ai-assistants">3.4 Use Through AI Assistants</h3>
+              <p>
+                You may use the Platform through an AI assistant, such as ChatGPT or Claude, by connecting our MCP connector and signing in with a Jawafdehi account. These Terms apply to everything done through the connector with your account, including the requests your AI assistant makes for you. Section 3.2 applies too: do not use the connector to copy the archive in bulk or in a way that degrades service for others. We may limit or suspend connector access that breaks these Terms.
+              </p>
+              <p>
+                AI assistants can misread, mis-summarize, or invent details. Check anything that matters against the case pages, court records, and source documents the assistant cites, and remember that nothing on the Platform is legal advice (Sections 2 and 5). Your use of the AI assistant itself is governed by the terms of the company that runs it, not by these Terms. How we handle data from the connector is described in Section 2.10 of our <a href="/privacy#ai-assistants" className="text-primary hover:underline">Privacy Policy</a>.
               </p>
 
               <h2 id="data-license">4. Data License (CC BY-NC 4.0)</h2>
@@ -129,7 +137,7 @@ const TermsOfService = () => {
 
               <h2 id="contact">13. Contact</h2>
               <p>
-                For questions about these Terms, please use our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>.
+                For questions about these Terms, or for help with the Platform, including the MCP connector, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or use our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. Jawafdehi Initiative Inc. operates the Platform (Section 2).
               </p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { Terminal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { Seo } from "@/components/Seo";
 import { CopyButton, CopyField } from "@/components/mcp/copy-field";
@@ -28,8 +29,16 @@ const CLIENTS = [
   { key: "openai", command: `codex mcp add jawafdehi --url ${MCP_URL}` },
 ] as const;
 
+const SUPPORT_EMAIL = "inquiry@jawafdehi.org";
+
 const Mcp = () => {
   const { t, i18n } = useTranslation();
+  // Example prompts double as the public documentation the Claude connectors
+  // directory asks for (at least three working examples).
+  const rawExamples = t("mcp.examples.items", { returnObjects: true });
+  const examples = Array.isArray(rawExamples)
+    ? rawExamples.filter((item): item is string => typeof item === "string")
+    : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -101,7 +110,24 @@ const Mcp = () => {
           </div>
         </section>
 
-        <section id="tools" className="bg-muted/10 py-12 md:py-16">
+        <section id="sign-in" className="bg-muted/10 py-12 md:py-16">
+          <div className="layout-container">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="mb-3 text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
+                {t("mcp.signIn.title")}
+              </h2>
+              <p className="font-paragraph font-paragraph-foreground">{t("mcp.signIn.body")}</p>
+              <p className="font-paragraph font-paragraph-foreground mt-4">
+                {t("mcp.signIn.privacy")}{" "}
+                <Link to="/privacy#ai-assistants" className="text-primary hover:underline">
+                  {t("mcp.signIn.privacyLink")}
+                </Link>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="tools" className="py-12 md:py-16">
           <div className="layout-container">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="mb-3 text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
@@ -109,6 +135,49 @@ const Mcp = () => {
               </h2>
               <p className="font-paragraph font-paragraph-foreground">{t("mcp.tools.body")}</p>
               <p className="font-paragraph font-paragraph-foreground mt-4">{t("mcp.tools.courtNames")}</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="examples" className="bg-muted/10 py-12 md:py-16">
+          <div className="layout-container">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="mb-6 text-center text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
+                {t("mcp.examples.title")}
+              </h2>
+              <ul className="space-y-3">
+                {examples.map((example) => (
+                  <li
+                    key={example}
+                    className="rounded-lg border border-border bg-background p-4 font-paragraph font-paragraph-foreground"
+                  >
+                    {example}
+                  </li>
+                ))}
+              </ul>
+              <p className="font-paragraph font-paragraph-foreground mt-6 text-center text-sm">
+                {t("mcp.examples.note")}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="support" className="py-12 md:py-16">
+          <div className="layout-container">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="mb-3 text-3xl font-extrabold tracking-normal text-accent md:text-4xl">
+                {t("mcp.support.title")}
+              </h2>
+              <p className="font-paragraph font-paragraph-foreground">{t("mcp.support.body")}</p>
+              <p className="font-paragraph font-paragraph-foreground mt-4">
+                <Link to="/feedback" className="text-primary hover:underline">
+                  {t("mcp.support.feedbackLink")}
+                </Link>
+                {" · "}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">
+                  {SUPPORT_EMAIL}
+                </a>
+              </p>
             </div>
           </div>
         </section>

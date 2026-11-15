@@ -18,7 +18,7 @@ const Privacy = () => {
                 Jawafdehi Initiative Privacy Policy
               </h1>
               <p className="font-page-lede font-page-lede-inverse">
-                Last updated: November 8, 2026
+                Last updated: November 15, 2026
               </p>
             </div>
           </div>
@@ -39,7 +39,7 @@ const Privacy = () => {
                 <li><strong>research.jawafdehi.org</strong>: our research on how corruption cases move through investigation, prosecution, the courts, and appeals.</li>
                 <li><strong>justice.jawafdehi.org</strong>: a summary of the work of the justices of the Supreme Court of Nepal.</li>
                 <li><strong>give.jawafdehi.org</strong>: information about supporting our work.</li>
-                <li><strong>auth.jawafdehi.org</strong>, <strong>chat.jawafdehi.org</strong>, and our MCP connector at <strong>api.jawafdehi.org/mcp</strong>: sign-in and the services that use it (see Section 2.7).</li>
+                <li><strong>auth.jawafdehi.org</strong>, <strong>chat.jawafdehi.org</strong>, and our MCP connector at <strong>api.jawafdehi.org/mcp</strong>: sign-in and the services that use it (see Sections 2.7 and 2.10).</li>
                 <li>Any other public site we run under jawafdehi.org, now or later.</li>
               </ul>
               <p>
@@ -116,7 +116,7 @@ const Privacy = () => {
                 When you create an account, we collect your name, email address, and password (stored in a scrambled form we cannot read), and, if you turn it on, two-factor authentication details. If you sign in with Google instead, Google tells us your name, email address, and profile picture. We also keep a record of sign-ins (time, IP address, and browser) for security. We use this information only to let you sign in, decide what you are allowed to do, keep accounts secure, and contact you about your account.
               </p>
               <p>
-                You can use the MCP connector without an account, in which case you get read-only access to the same public data that is on our websites. When you are signed in, what you ask the connector to do is linked to your account (see Section 2.9).
+                The MCP connector needs an account: you sign in when you first connect it to your AI assistant, and what you ask it to do is linked to your account (see Sections 2.9 and 2.10).
               </p>
 
               <h3 id="contacting-us">2.8 When You Contact Us</h3>
@@ -141,6 +141,26 @@ const Privacy = () => {
                 We use these records only to protect the people in our archive, to stop misuse, and to improve our search. We never use them for advertising, and we don't sell or share them. Only a small number of Jawafdehi staff can see them. We keep IP addresses for up to a year and everything else for up to 13 months.
               </p>
 
+              <h3 id="ai-assistants">2.10 AI Assistants (ChatGPT, Claude and Others)</h3>
+              <p>
+                Our MCP connector at api.jawafdehi.org/mcp lets an AI assistant you use, such as ChatGPT or Claude, search and read our archive for you. You connect it from inside your AI assistant, and then sign in to Jawafdehi (Section 2.7). Your AI assistant then holds a sign-in token from us that lets it make requests for you. We never see your password for Google or for your AI assistant.
+              </p>
+              <p>
+                <strong>What we receive.</strong> We receive only what your AI assistant sends us to carry out a request: which of our tools it is using and what it passes to that tool, such as the words it searches for, a query over the court records, or the case or document it wants to read. We do not receive your conversation with the assistant, your other chats, or your files, unless the assistant puts them into a request.
+              </p>
+              <p>
+                <strong>What we record.</strong> For each request we record your account (its ID and email address), the time, the tool and what was passed to it, which records we returned and how much data that was, whether the request worked, which app sent it (for example "ChatGPT" or "Claude"), and the network (IP) address it came from, with the country that address is in. When you use ChatGPT or Claude, that address is usually the AI company's server rather than your own device. These are the records described in Section 2.9, and we use them in the same way: to answer your requests, keep the service secure, stop misuse, protect the people in our archive, fix errors, and improve the connector. We do not use them for advertising, we do not sell or share them, and only a small number of Jawafdehi staff can see them.
+              </p>
+              <p>
+                <strong>Feedback sent through your assistant.</strong> If you ask your AI assistant to send us feedback, we receive the message and, only if you choose to include them, your name and email address. We handle it like other feedback (Section 2.1). If you send it anonymously, the message is kept without your account; our records show only that you sent a message, and when.
+              </p>
+              <p>
+                <strong>Your AI assistant is not run by us.</strong> What you say to your AI assistant, and what our connector sends back to it, is handled by the company that runs the assistant (for example OpenAI for ChatGPT or Anthropic for Claude) under its own terms and privacy policy, not ours.
+              </p>
+              <p>
+                <strong>Your choices.</strong> You can disconnect the connector in your AI assistant at any time, which stops any further requests. To get a copy of the records linked to your account, or to delete your account and those records, write to <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> (Section 11). How long we keep these records is in Section 10.
+              </p>
+
               <h2 id="cookies">3. Cookies</h2>
               <p>
                 The Platform uses the following cookies and similar technologies:
@@ -163,6 +183,7 @@ const Privacy = () => {
               <ul>
                 <li>Process feedback, allegation reports, and volunteer submissions, and respond to inquiries</li>
                 <li>Provide and secure accounts for services that need sign-in</li>
+                <li>Carry out the requests you make through an AI assistant using our MCP connector (Section 2.10)</li>
                 <li>Operate, maintain, and improve the Platform</li>
                 <li>Monitor security and prevent abuse</li>
                 <li>Protect the people in our archive, stop misuse, and improve our search, using the records described in Section 2.9</li>
@@ -225,7 +246,7 @@ const Privacy = () => {
                 <li><strong>Edge and access logs</strong>: up to 30 days.</li>
                 <li><strong>Application and security logs</strong>: up to 1 year.</li>
                 <li><strong>Error-monitoring (Sentry) events</strong>: up to 90 days.</li>
-                <li><strong>Records of what is searched for and viewed (Section 2.9)</strong>: IP addresses kept for up to 1 year; the rest for up to 13 months.</li>
+                <li><strong>Records of what is searched for and viewed (Section 2.9), including requests made through the MCP connector (Section 2.10)</strong>: IP addresses kept for up to 1 year; the rest for up to 13 months.</li>
                 <li><strong>Analytics data</strong>: up to 14 months.</li>
                 <li><strong>Feedback submissions</strong>: up to 24 months, then deleted unless tied to a published case.</li>
                 <li><strong>Allegation reports</strong>: retained for the life of any resulting public record; otherwise purged when closed without action.</li>
@@ -271,7 +292,7 @@ const Privacy = () => {
 
               <h2 id="contact">14. Contact</h2>
               <p>
-                For questions about this Privacy Policy or to exercise your rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or through our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. For anything else, including our research and data sites, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or message us on <a href="https://api.whatsapp.com/send?phone=9779768630501" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WhatsApp at +977 976-8630501</a> (see Section 2.8).
+                For questions about this Privacy Policy or to exercise your rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or through our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. For help with the MCP connector or with using Jawafdehi in ChatGPT or Claude, and for anything else, including our research and data sites, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or message us on <a href="https://api.whatsapp.com/send?phone=9779768630501" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WhatsApp at +977 976-8630501</a> (see Section 2.8).
               </p>
             </div>
           </div>
