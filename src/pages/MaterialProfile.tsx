@@ -152,8 +152,10 @@ const HANDLED_KEYS = new Set([
 // ─── page ───────────────────────────────────────────────────────────────────
 
 // The content switcher: grey pills, the active one white.
+// Underline tabs on a hairline, as on a reading page: the active one carries a
+// navy rule that sits on the list's own bottom border.
 const TAB =
-  "rounded-full px-4 py-2 text-[15px] text-muted-foreground transition-colors data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm";
+  "relative -mb-px rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-1 text-base font-normal text-muted-foreground shadow-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none";
 // The aside's downloads and actions: one column of grey pills.
 const ASIDE_ACTION =
   "h-auto min-h-11 w-full justify-start gap-3 rounded-full bg-muted px-5 py-2.5 text-left text-[15px] font-normal text-primary hover:bg-primary/[0.08] hover:text-primary active:scale-[0.98]";
@@ -410,7 +412,7 @@ export default function MaterialProfile() {
                 <Tabs value={tab} onValueChange={setTab} id="material-content-tab">
                   {/* A switcher only when there is something to switch to. */}
                   {fullTextStr || contentSummary ? (
-                  <TabsList className="h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-full bg-muted p-1 [scrollbar-width:none]">
+                  <TabsList className="flex h-auto w-full justify-start gap-8 overflow-x-auto rounded-none border-b border-border bg-transparent p-0 [scrollbar-width:none]">
                     <TabsTrigger
                       value="summary"
                       className={TAB}
