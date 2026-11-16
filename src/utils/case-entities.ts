@@ -6,6 +6,7 @@
 // entity when there are none. Locations are never a subject.
 
 import { materialTypeKeyFor } from "@/lib/material-type-labels";
+import { caseTagLabel } from "@/lib/case-tags";
 import { formatCourtName, formatCourtType } from "@/utils/court-case-format";
 import { entityTypeToken, humanizeEntityType } from "@/utils/entity-helpers";
 
@@ -170,6 +171,10 @@ export function getFacetItemLabel(
   }
   // Court tier ("district") and court identifier ("kathmandudc") are different
   // vocabularies over the same names, so they take the two matching helpers.
+  // Case tags are vocabulary ids ("tax-evasion"); the vocabulary carries both
+  // names. An id not in it (a legacy keyword still indexed into this facet)
+  // shows as stored.
+  if (facetName === "tags") return caseTagLabel(item.name, language);
   if (facetName === "court_type") return formatCourtType(item.name, language);
   if (facetName === "court") return formatCourtName(item.name, language);
   // `NATIONAL` is NOT a province: the API uses it as the sentinel for the two

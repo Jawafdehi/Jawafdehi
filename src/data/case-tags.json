@@ -1,0 +1,502 @@
+{
+ "abuse-of-public-office": {
+  "en": "Abuse of Public Office",
+  "ne": "पदको दुरुपयोग"
+ },
+ "achham": {
+  "en": "Achham",
+  "ne": "अछाम"
+ },
+ "agriculture": {
+  "en": "Agriculture",
+  "ne": "कृषि"
+ },
+ "arghakhanchi": {
+  "en": "Arghakhanchi",
+  "ne": "अर्घाखाँची"
+ },
+ "baglung": {
+  "en": "Baglung",
+  "ne": "बागलुङ"
+ },
+ "bagmati": {
+  "en": "Bagmati Province",
+  "ne": "बागमती प्रदेश"
+ },
+ "baitadi": {
+  "en": "Baitadi",
+  "ne": "बैतडी"
+ },
+ "bajhang": {
+  "en": "Bajhang",
+  "ne": "बझाङ"
+ },
+ "bajura": {
+  "en": "Bajura",
+  "ne": "बाजुरा"
+ },
+ "banke": {
+  "en": "Banke",
+  "ne": "बाँके"
+ },
+ "bara": {
+  "en": "Bara",
+  "ne": "बारा"
+ },
+ "bardiya": {
+  "en": "Bardiya",
+  "ne": "बर्दिया"
+ },
+ "bhaktapur": {
+  "en": "Bhaktapur",
+  "ne": "भक्तपुर"
+ },
+ "bhojpur": {
+  "en": "Bhojpur",
+  "ne": "भोजपुर"
+ },
+ "bid-rigging": {
+  "en": "Bid Rigging",
+  "ne": "बोलपत्रमा मिलेमतो"
+ },
+ "bribery": {
+  "en": "Bribery",
+  "ne": "घुस रिसवत"
+ },
+ "budget-misuse": {
+  "en": "Budget Misuse",
+  "ne": "बजेट दुरुपयोग"
+ },
+ "chitwan": {
+  "en": "Chitwan",
+  "ne": "चितवन"
+ },
+ "conflict-of-interest": {
+  "en": "Conflict of Interest",
+  "ne": "स्वार्थ बाझिने अवस्था"
+ },
+ "cooperative-fraud": {
+  "en": "Cooperative Fraud",
+  "ne": "सहकारी ठगी"
+ },
+ "dadeldhura": {
+  "en": "Dadeldhura",
+  "ne": "डडेल्धुरा"
+ },
+ "dailekh": {
+  "en": "Dailekh",
+  "ne": "दैलेख"
+ },
+ "dang": {
+  "en": "Dang",
+  "ne": "दाङ"
+ },
+ "darchula": {
+  "en": "Darchula",
+  "ne": "दार्चुला"
+ },
+ "dhading": {
+  "en": "Dhading",
+  "ne": "धादिङ"
+ },
+ "dhankuta": {
+  "en": "Dhankuta",
+  "ne": "धनकुटा"
+ },
+ "dhanusha": {
+  "en": "Dhanusha",
+  "ne": "धनुषा"
+ },
+ "dolakha": {
+  "en": "Dolakha",
+  "ne": "दोलखा"
+ },
+ "dolpa": {
+  "en": "Dolpa",
+  "ne": "डोल्पा"
+ },
+ "doti": {
+  "en": "Doti",
+  "ne": "डोटी"
+ },
+ "education": {
+  "en": "Education",
+  "ne": "शिक्षा"
+ },
+ "embezzlement": {
+  "en": "Embezzlement",
+  "ne": "हिनामिना तथा अपचलन"
+ },
+ "energy": {
+  "en": "Energy",
+  "ne": "ऊर्जा"
+ },
+ "exam-rigging": {
+  "en": "Exam Rigging",
+  "ne": "परीक्षा धाँधली"
+ },
+ "fake-employees": {
+  "en": "Fake Employees",
+  "ne": "नक्कली कर्मचारी"
+ },
+ "false-report": {
+  "en": "False Report",
+  "ne": "गलत प्रतिवेदन"
+ },
+ "federal-government": {
+  "en": "Federal Government",
+  "ne": "संघीय सरकार"
+ },
+ "finance": {
+  "en": "Finance",
+  "ne": "वित्त"
+ },
+ "forestry": {
+  "en": "Forestry",
+  "ne": "वन"
+ },
+ "forged-documents": {
+  "en": "Forged Documents",
+  "ne": "कीर्ते कागजात"
+ },
+ "gandaki": {
+  "en": "Gandaki Province",
+  "ne": "गण्डकी प्रदेश"
+ },
+ "gorkha": {
+  "en": "Gorkha",
+  "ne": "गोरखा"
+ },
+ "gulmi": {
+  "en": "Gulmi",
+  "ne": "गुल्मी"
+ },
+ "health": {
+  "en": "Health",
+  "ne": "स्वास्थ्य"
+ },
+ "humla": {
+  "en": "Humla",
+  "ne": "हुम्ला"
+ },
+ "ilam": {
+  "en": "Ilam",
+  "ne": "इलाम"
+ },
+ "illicit-enrichment": {
+  "en": "Illicit Enrichment",
+  "ne": "स्रोत नखुलेको सम्पत्ति आर्जन"
+ },
+ "information-technology": {
+  "en": "Information Technology",
+  "ne": "सूचना प्रविधि"
+ },
+ "infrastructure": {
+  "en": "Infrastructure",
+  "ne": "पूर्वाधार"
+ },
+ "jajarkot": {
+  "en": "Jajarkot",
+  "ne": "जाजरकोट"
+ },
+ "jhapa": {
+  "en": "Jhapa",
+  "ne": "झापा"
+ },
+ "jumla": {
+  "en": "Jumla",
+  "ne": "जुम्ला"
+ },
+ "kailali": {
+  "en": "Kailali",
+  "ne": "कैलाली"
+ },
+ "kalikot": {
+  "en": "Kalikot",
+  "ne": "कालिकोट"
+ },
+ "kanchanpur": {
+  "en": "Kanchanpur",
+  "ne": "कञ्चनपुर"
+ },
+ "kapilvastu": {
+  "en": "Kapilvastu",
+  "ne": "कपिलवस्तु"
+ },
+ "karnali": {
+  "en": "Karnali Province",
+  "ne": "कर्णाली प्रदेश"
+ },
+ "kaski": {
+  "en": "Kaski",
+  "ne": "कास्की"
+ },
+ "kathmandu": {
+  "en": "Kathmandu",
+  "ne": "काठमाडौं"
+ },
+ "kathmandu-valley": {
+  "en": "Kathmandu Valley",
+  "ne": "काठमाडौं उपत्यका"
+ },
+ "kavrepalanchok": {
+  "en": "Kavrepalanchok",
+  "ne": "काभ्रेपलाञ्चोक"
+ },
+ "khotang": {
+  "en": "Khotang",
+  "ne": "खोटाङ"
+ },
+ "koshi": {
+  "en": "Koshi Province",
+  "ne": "कोशी प्रदेश"
+ },
+ "lalitpur": {
+  "en": "Lalitpur",
+  "ne": "ललितपुर"
+ },
+ "lamjung": {
+  "en": "Lamjung",
+  "ne": "लमजुङ"
+ },
+ "land": {
+  "en": "Land",
+  "ne": "भूमि"
+ },
+ "land-administration": {
+  "en": "Land Administration",
+  "ne": "भूमि प्रशासन"
+ },
+ "land-grab": {
+  "en": "Land Grab",
+  "ne": "सरकारी जग्गा हडप"
+ },
+ "local-government": {
+  "en": "Local Government",
+  "ne": "स्थानीय तह"
+ },
+ "lumbini": {
+  "en": "Lumbini Province",
+  "ne": "लुम्बिनी प्रदेश"
+ },
+ "madhesh": {
+  "en": "Madhesh Province",
+  "ne": "मधेश प्रदेश"
+ },
+ "mahottari": {
+  "en": "Mahottari",
+  "ne": "महोत्तरी"
+ },
+ "makwanpur": {
+  "en": "Makwanpur",
+  "ne": "मकवानपुर"
+ },
+ "manang": {
+  "en": "Manang",
+  "ne": "मनाङ"
+ },
+ "money-laundering": {
+  "en": "Money Laundering",
+  "ne": "सम्पत्ति शुद्धीकरण"
+ },
+ "morang": {
+  "en": "Morang",
+  "ne": "मोरङ"
+ },
+ "mugu": {
+  "en": "Mugu",
+  "ne": "मुगु"
+ },
+ "mustang": {
+  "en": "Mustang",
+  "ne": "मुस्ताङ"
+ },
+ "myagdi": {
+  "en": "Myagdi",
+  "ne": "म्याग्दी"
+ },
+ "nawalparasi": {
+  "en": "Nawalparasi",
+  "ne": "नवलपरासी"
+ },
+ "nuwakot": {
+  "en": "Nuwakot",
+  "ne": "नुवाकोट"
+ },
+ "okhaldhunga": {
+  "en": "Okhaldhunga",
+  "ne": "ओखलढुङ्गा"
+ },
+ "palpa": {
+  "en": "Palpa",
+  "ne": "पाल्पा"
+ },
+ "panchthar": {
+  "en": "Panchthar",
+  "ne": "पाँचथर"
+ },
+ "parbat": {
+  "en": "Parbat",
+  "ne": "पर्वत"
+ },
+ "parsa": {
+  "en": "Parsa",
+  "ne": "पर्सा"
+ },
+ "passport-misuse": {
+  "en": "Passport Misuse",
+  "ne": "राहदानी दुरुपयोग"
+ },
+ "policy-corruption": {
+  "en": "Policy Corruption",
+  "ne": "नीतिगत भ्रष्टाचार"
+ },
+ "postal-services": {
+  "en": "Postal Services",
+  "ne": "हुलाक सेवा"
+ },
+ "procurement": {
+  "en": "Public Procurement",
+  "ne": "सार्वजनिक खरिद"
+ },
+ "procurement-irregularity": {
+  "en": "Procurement Irregularity",
+  "ne": "सार्वजनिक खरिद अनियमितता"
+ },
+ "province-government": {
+  "en": "Province Government",
+  "ne": "प्रदेश सरकार"
+ },
+ "public-asset-damage": {
+  "en": "Public Asset Damage",
+  "ne": "सार्वजनिक सम्पत्ति हानि नोक्सानी"
+ },
+ "pyuthan": {
+  "en": "Pyuthan",
+  "ne": "प्युठान"
+ },
+ "ramechhap": {
+  "en": "Ramechhap",
+  "ne": "रामेछाप"
+ },
+ "rasuwa": {
+  "en": "Rasuwa",
+  "ne": "रसुवा"
+ },
+ "rautahat": {
+  "en": "Rautahat",
+  "ne": "रौतहट"
+ },
+ "revenue": {
+  "en": "Revenue",
+  "ne": "राजस्व"
+ },
+ "revenue-leakage": {
+  "en": "Revenue Leakage",
+  "ne": "राजस्व चुहावट"
+ },
+ "rolpa": {
+  "en": "Rolpa",
+  "ne": "रोल्पा"
+ },
+ "rukum": {
+  "en": "Rukum",
+  "ne": "रुकुम"
+ },
+ "rupandehi": {
+  "en": "Rupandehi",
+  "ne": "रुपन्देही"
+ },
+ "salyan": {
+  "en": "Salyan",
+  "ne": "सल्यान"
+ },
+ "sankhuwasabha": {
+  "en": "Sankhuwasabha",
+  "ne": "संखुवासभा"
+ },
+ "saptari": {
+  "en": "Saptari",
+  "ne": "सप्तरी"
+ },
+ "sarlahi": {
+  "en": "Sarlahi",
+  "ne": "सर्लाही"
+ },
+ "sindhuli": {
+  "en": "Sindhuli",
+  "ne": "सिन्धुली"
+ },
+ "sindhupalchok": {
+  "en": "Sindhupalchok",
+  "ne": "सिन्धुपाल्चोक"
+ },
+ "siraha": {
+  "en": "Siraha",
+  "ne": "सिराहा"
+ },
+ "solukhumbu": {
+  "en": "Solukhumbu",
+  "ne": "सोलुखुम्बु"
+ },
+ "state-owned-entity": {
+  "en": "State-Owned Entity",
+  "ne": "सरकारी संस्थान"
+ },
+ "sudurpashchim": {
+  "en": "Sudurpashchim Province",
+  "ne": "सुदूरपश्चिम प्रदेश"
+ },
+ "sunsari": {
+  "en": "Sunsari",
+  "ne": "सुनसरी"
+ },
+ "surkhet": {
+  "en": "Surkhet",
+  "ne": "सुर्खेत"
+ },
+ "syangja": {
+  "en": "Syangja",
+  "ne": "स्याङ्जा"
+ },
+ "tanahun": {
+  "en": "Tanahun",
+  "ne": "तनहुँ"
+ },
+ "taplejung": {
+  "en": "Taplejung",
+  "ne": "ताप्लेजुङ"
+ },
+ "tax-evasion": {
+  "en": "Tax Evasion",
+  "ne": "कर छली"
+ },
+ "telecommunications": {
+  "en": "Telecommunications",
+  "ne": "दूरसञ्चार"
+ },
+ "terhathum": {
+  "en": "Terhathum",
+  "ne": "तेह्रथुम"
+ },
+ "transport": {
+  "en": "Transport",
+  "ne": "यातायात"
+ },
+ "udayapur": {
+  "en": "Udayapur",
+  "ne": "उदयपुर"
+ },
+ "unlawful-gain": {
+  "en": "Unlawful Gain or Loss",
+  "ne": "गैरकानुनी लाभ हानि"
+ },
+ "water-supply": {
+  "en": "Water Supply",
+  "ne": "खानेपानी"
+ },
+ "witness-tampering": {
+  "en": "Witness Tampering",
+  "ne": "साक्षी प्रभावित पार्ने"
+ }
+}
