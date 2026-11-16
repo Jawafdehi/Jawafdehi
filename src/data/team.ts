@@ -52,7 +52,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Damodar Dahal", ne: "दामोदर दाहाल" },
     thumb: "/assets/teammembers/damodar.webp",
     description: "Software Engineer @ Amazon Web Services",
-    tags: ["Founding Member", "Board Member"],
+    tags: ["Chairman", "Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "damo94761@gmail.com" },
       { type: "linkedin", value: "https://www.linkedin.com/in/damo-da/" },
@@ -82,7 +82,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Niroj Aryal", ne: "निरोज अर्याल" },
     thumb: "/assets/teammembers/niroj.webp",
     description: "",
-    tags: ["Founding Member", "Board Member"],
+    tags: ["Secretary", "Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "nirojaryal2002@gmail.com" },
     ],
@@ -96,14 +96,11 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
     ],
   },
-];
-
-export const members: TeamMember[] = [
   {
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.webp",
     description: "",
-    tags: ["Founding Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
@@ -111,9 +108,25 @@ export const members: TeamMember[] = [
   {
     displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
     thumb: "/assets/teammembers/purna.webp",
-    description: "Member",
+    description: "",
+    tags: ["Board Member"],
     contacts: [],
   },
+];
+
+// Shown directly below the Nepal Board.
+export const advisors: TeamMember[] = [
+  {
+    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
+    thumb: "/assets/teammembers/purna.webp",
+    description: "",
+    tags: ["Advisor"],
+    contacts: [],
+  },
+];
+
+// Rendered as "Consultants and Volunteers".
+export const members: TeamMember[] = [
   {
     displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
     thumb: "/assets/teammembers/ashwini.webp",
@@ -148,17 +161,20 @@ export const members: TeamMember[] = [
     ],
   },
   {
+    // TODO(JAW-60): photo, confirmed names and profile link pending from Santosh.
     displayName: { en: "Santosh Pokharel", ne: "सन्तोष पोखरेल" },
-    description: "",
+    description: "Social Media",
     contacts: [],
   },
   {
+    // TODO(JAW-60): photo, Nepali name and profile link pending from Sujesh.
     displayName: { en: "Sujesh Sah" },
-    description: "",
+    description: "Caseworker",
     contacts: [],
   },
 ];
 
+// Rendered as "Former Consultants and Volunteers".
 export const pastMembers: TeamMember[] = [
   {
     displayName: { en: "Deep Chaulagain", ne: "दीप चौलागाईं" },

@@ -629,9 +629,16 @@
     },
     "sections": {
       "nepalBoard": "Nepal Board",
+      "advisors": "Advisors",
       "usBoard": "US Board",
-      "currentMembers": "Current Members",
-      "pastMembers": "Past Members"
+      "usBoardNote": "Jawafdehi Initiative Inc. is a separate entity registered in the US, distinct from Jawafdehi Initiative Nepal.",
+      "currentMembers": "Consultants and Volunteers",
+      "pastMembers": "Former Consultants and Volunteers"
+    },
+    "tags": {
+      "Chairman": "Chairman",
+      "Secretary": "Secretary",
+      "Advisor": "Advisor"
     }
   },
   "pagination": {
