@@ -16,12 +16,14 @@ export interface TeamMember {
   contacts: Contact[];
 }
 
+// Officer titles from the signed Initial Board Consent of Jawafdehi
+// Initiative Inc. (Resolution 2026-02, signed 2026-10-28).
 export const usBoard: TeamMember[] = [
   {
     displayName: { en: "Bishwas Gautam", ne: "बिश्वास गौतम" },
     thumb: "/assets/teammembers/bishwas.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["Treasurer", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/gbishwas/" },
       { type: "github", value: "https://github.com/bishwasgautam" },
@@ -31,7 +33,7 @@ export const usBoard: TeamMember[] = [
     displayName: { en: "Nischal Dahal", ne: "निश्चल दाहाल" },
     thumb: "/assets/teammembers/nischal.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["President", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/nischaldahal/" },
     ],
@@ -40,7 +42,7 @@ export const usBoard: TeamMember[] = [
     displayName: { en: "Anish Karki", ne: "अनिश कार्की" },
     thumb: "/assets/teammembers/anish.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["Secretary", "Board Member"],
     contacts: [
       { type: "email", value: "karkianish93@gmail.com" },
     ],
