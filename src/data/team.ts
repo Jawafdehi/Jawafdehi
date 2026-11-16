@@ -169,10 +169,12 @@ export const members: TeamMember[] = [
     contacts: [],
   },
   {
-    // TODO(JAW-60): photo, Nepali name and profile link pending from Sujesh.
-    displayName: { en: "Sujesh Sah" },
-    description: "Caseworker",
-    contacts: [],
+    displayName: { en: "Sujesh Sah", ne: "सुजेश साह" },
+    thumb: "/assets/teammembers/sujesh.webp",
+    description: "Social Media",
+    contacts: [
+      { type: "instagram", value: "https://www.instagram.com/sujeshsah77" },
+    ],
   },
 ];
 
