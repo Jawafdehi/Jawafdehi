@@ -325,7 +325,23 @@ const DIR = arg("dir", "dist/client");
 // pre-renderer is hard-coded to `ne`, and English is opt-in and already applied
 // asynchronously. Deferring the English bundle is the biggest low-risk win
 // available and nobody has taken it.
-const MAX_INITIAL_JS_GZIP = 679_400;
+//
+// 2026-11: 679_400 → 683_800 for bilingual case tag names (src/data/case-tags.json,
+// 125 tags × a Nepali and an English name). Measured in CI, not estimated: main
+// (2d812b3f) built to 662.9 KB gzip and this branch to 666.7 KB, so the names cost
+// ~3.9 KB, ~0.6%. Main itself sat 0.6 KB under the old line, so no form of this
+// change fit under it — dropping the English names that merely title-case their id
+// was measured too and saves ~0.5 KB.
+//
+// Taken deliberately: since the 2026-11-15 tag cleanup, Case.tags holds ids like
+// `tax-evasion`, and every case card on the pre-rendered homepage and /cases shows
+// them at first paint. Deferring the names would paint the raw English id first —
+// in Nepali, on a Nepali-first site — and then swap it. The en.json lever above
+// is still the place to win this back.
+//
+// 683_800 leaves ~1,100 bytes over the measured branch, matching the headroom the
+// entries above leave.
+const MAX_INITIAL_JS_GZIP = 683_800;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

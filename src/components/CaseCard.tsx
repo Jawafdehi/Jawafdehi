@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CaseTagBadge } from "@/components/CaseBadge";
+import { caseTagLabel } from "@/lib/case-tags";
 import { Coins, MapPin, User } from "lucide-react";
 import { entityPath } from "@/lib/entity-links";
 import { CASE_PLACEHOLDER_DARK_CLASS } from "@/lib/case-images";
@@ -183,6 +184,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
 };
 
 function CaseCardTags({ tags, onTagClick }: Readonly<{ tags: string[]; onTagClick?: (tag: string) => void }>) {
+  const { i18n } = useTranslation();
   if (!tags || tags.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1.5 mb-1">
@@ -200,11 +202,11 @@ function CaseCardTags({ tags, onTagClick }: Readonly<{ tags: string[]; onTagClic
             }}
             className="relative z-10 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <CaseTagBadge className="px-2.5 py-0.5">{tag}</CaseTagBadge>
+            <CaseTagBadge className="px-2.5 py-0.5">{caseTagLabel(tag, i18n.language)}</CaseTagBadge>
           </button>
         ) : (
           <CaseTagBadge key={tag} className="px-2.5 py-0.5">
-            {tag}
+            {caseTagLabel(tag, i18n.language)}
           </CaseTagBadge>
         ),
       )}

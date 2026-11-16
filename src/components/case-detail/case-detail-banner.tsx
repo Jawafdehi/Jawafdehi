@@ -15,6 +15,7 @@ import { caseStages } from "@/utils/case-stages";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { caseTagLabel } from "@/lib/case-tags";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { CaseByline } from "@/components/case-detail/case-byline";
@@ -245,7 +246,7 @@ export function CaseDetailBanner({
 
                 {caseData.tags.map((tag) => (
                   <CaseTagBadge key={tag}>
-                    {translateDynamicText(tag, currentLang)}
+                    {caseTagLabel(tag, currentLang)}
                   </CaseTagBadge>
                 ))}
               </div>
