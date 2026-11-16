@@ -337,6 +337,14 @@ const DIR = arg("dir", "dist/client");
 // Measure in CI, not locally: a local build on Node 26 gzips the same files
 // 3–4 KB smaller (670.7 vs 674.5 KB here), so a limit set from a local number
 // fails CI. Deferring en.json (above) remains the way to win this back.
+//
+// 2026-11-16: merged with main's bilingual case tag names, the redesign had
+// drifted to 758.2 KB in CI (82.5 KB over), mostly from the Phosphor icon swap
+// (every icon component ships all six weights) and Sentry Replay riding in the
+// first paint. Brought back under without raising this line: icons draw from
+// generated light/fill paths (scripts/gen-icon-paths.mjs, -52 KB) and Replay
+// loads on idle from its own chunk (src/lib/sentry-replay.ts, -36 KB). 665.9 KB
+// locally, so ~670 KB in CI.
 const MAX_INITIAL_JS_GZIP = 692_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 

@@ -7,139 +7,15 @@
 // up 18% (a transform: layout and hit areas keep their size). An icon styled
 // `fill-current` takes Phosphor's fill weight, the solid shape it meant.
 // Phosphor ignores stroke widths, so strokeWidth is accepted and dropped.
+//
+// The drawings come from icon-paths.ts, generated from @phosphor-icons/react by
+// scripts/gen-icon-paths.mjs, rather than from Phosphor's components: each of
+// those ships all six weights, and only light and fill are ever drawn here, so
+// importing them cost ~60 KB gzip of first-paint JS. After adding an icon
+// below, run `node scripts/gen-icon-paths.mjs`.
 import { forwardRef } from "react";
 import type { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
-import {
-  Archive as PhArchive,
-  ArrowDown as PhArrowDown,
-  ArrowLeft as PhArrowLeft,
-  ArrowRight as PhArrowRight,
-  ArrowSquareOut as PhArrowSquareOut,
-  ArrowUUpLeft as PhArrowUUpLeft,
-  ArrowUp as PhArrowUp,
-  ArrowUpRight as PhArrowUpRight,
-  ArrowsClockwise as PhArrowsClockwise,
-  ArrowsDownUp as PhArrowsDownUp,
-  ArrowsOut as PhArrowsOut,
-  Bank as PhBank,
-  BookOpen as PhBookOpen,
-  Books as PhBooks,
-  BracketsCurly as PhBracketsCurly,
-  Briefcase as PhBriefcase,
-  Building as PhBuilding,
-  Calendar as PhCalendar,
-  CalendarCheck as PhCalendarCheck,
-  CalendarDots as PhCalendarDots,
-  CaretDown as PhCaretDown,
-  CaretLeft as PhCaretLeft,
-  CaretRight as PhCaretRight,
-  CaretUp as PhCaretUp,
-  ChartBar as PhChartBar,
-  ChatCenteredText as PhChatCenteredText,
-  ChatCircle as PhChatCircle,
-  Chats as PhChats,
-  Check as PhCheck,
-  CheckCircle as PhCheckCircle,
-  CheckSquare as PhCheckSquare,
-  Circle as PhCircle,
-  ClipboardText as PhClipboardText,
-  Clock as PhClock,
-  ClockCounterClockwise as PhClockCounterClockwise,
-  Code as PhCode,
-  Coins as PhCoins,
-  Copy as PhCopy,
-  CreditCard as PhCreditCard,
-  Database as PhDatabase,
-  DotsThree as PhDotsThree,
-  Download as PhDownload,
-  Envelope as PhEnvelope,
-  Eye as PhEye,
-  FacebookLogo as PhFacebookLogo,
-  FileArrowDown as PhFileArrowDown,
-  FileCode as PhFileCode,
-  FileMagnifyingGlass as PhFileMagnifyingGlass,
-  FilePlus as PhFilePlus,
-  FileText as PhFileText,
-  FileTxt as PhFileTxt,
-  FileX as PhFileX,
-  FileXls as PhFileXls,
-  Files as PhFiles,
-  Flag as PhFlag,
-  Flask as PhFlask,
-  FloppyDisk as PhFloppyDisk,
-  Funnel as PhFunnel,
-  Gavel as PhGavel,
-  GitBranch as PhGitBranch,
-  GitMerge as PhGitMerge,
-  GithubLogo as PhGithubLogo,
-  Globe as PhGlobe,
-  GraduationCap as PhGraduationCap,
-  GridFour as PhGridFour,
-  HandHeart as PhHandHeart,
-  Handshake as PhHandshake,
-  Hash as PhHash,
-  Headphones as PhHeadphones,
-  House as PhHouse,
-  IdentificationCard as PhIdentificationCard,
-  Infinity as PhInfinity,
-  Info as PhInfo,
-  InstagramLogo as PhInstagramLogo,
-  Laptop as PhLaptop,
-  Link as PhLink,
-  LinkedinLogo as PhLinkedinLogo,
-  List as PhList,
-  Lock as PhLock,
-  LockOpen as PhLockOpen,
-  MagnifyingGlass as PhMagnifyingGlass,
-  MapPin as PhMapPin,
-  Megaphone as PhMegaphone,
-  Microphone as PhMicrophone,
-  Minus as PhMinus,
-  Network as PhNetwork,
-  Newspaper as PhNewspaper,
-  NotePencil as PhNotePencil,
-  Package as PhPackage,
-  PaperPlaneTilt as PhPaperPlaneTilt,
-  Paperclip as PhPaperclip,
-  PauseCircle as PhPauseCircle,
-  Pencil as PhPencil,
-  PencilSimple as PhPencilSimple,
-  Phone as PhPhone,
-  Play as PhPlay,
-  Plus as PhPlus,
-  Printer as PhPrinter,
-  QrCode as PhQrCode,
-  Question as PhQuestion,
-  Repeat as PhRepeat,
-  Robot as PhRobot,
-  Scales as PhScales,
-  Scroll as PhScroll,
-  SealCheck as PhSealCheck,
-  Share as PhShare,
-  ShieldCheck as PhShieldCheck,
-  ShieldWarning as PhShieldWarning,
-  SidebarSimple as PhSidebarSimple,
-  SignOut as PhSignOut,
-  SlidersHorizontal as PhSlidersHorizontal,
-  Sparkle as PhSparkle,
-  SpinnerGap as PhSpinnerGap,
-  SquaresFour as PhSquaresFour,
-  Tag as PhTag,
-  Trash as PhTrash,
-  Tray as PhTray,
-  TwitterLogo as PhTwitterLogo,
-  Upload as PhUpload,
-  User as PhUser,
-  UserPlus as PhUserPlus,
-  Users as PhUsers,
-  Video as PhVideo,
-  Warning as PhWarning,
-  WarningCircle as PhWarningCircle,
-  X as PhX,
-  XCircle as PhXCircle,
-  YoutubeLogo as PhYoutubeLogo,
-} from "@phosphor-icons/react";
-import type { Icon as PhosphorIcon, IconProps as PhosphorProps } from "@phosphor-icons/react";
+import { ICON_PATHS } from "@/components/icon-paths";
 
 import { cn } from "@/lib/utils";
 
@@ -151,19 +27,25 @@ export type IconProps = Omit<SVGProps<SVGSVGElement>, "ref"> & {
 };
 export type IconComponent = ForwardRefExoticComponent<IconProps & RefAttributes<SVGSVGElement>>;
 
-function make(Glyph: PhosphorIcon, name: string): IconComponent {
+function make(glyph: string, name: string): IconComponent {
+  const [light, fill] = ICON_PATHS[glyph];
   const Icon = forwardRef<SVGSVGElement, IconProps>(function SiteIcon(
-    { className, size = 24, strokeWidth: _strokeWidth, absoluteStrokeWidth: _absolute, ...rest },
+    { className, size = 24, color, strokeWidth: _strokeWidth, absoluteStrokeWidth: _absolute, ...rest },
     ref,
   ) {
     const filled = /(^|\s)fill-current(\s|$)/.test(className ?? "");
     return (
-      <Glyph
+      <svg
         ref={ref}
-        size={size}
-        weight={filled ? "fill" : "light"}
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 256 256"
+        fill={color ?? "currentColor"}
         className={cn("scale-[1.18]", className)}
-        {...(rest as PhosphorProps)}
+        {...rest}
+        // Phosphor's own markup, generated at build time (icon-paths.ts).
+        dangerouslySetInnerHTML={{ __html: filled ? fill : light }}
       />
     );
   });
@@ -171,137 +53,137 @@ function make(Glyph: PhosphorIcon, name: string): IconComponent {
   return Icon;
 }
 
-export const AlertCircle = make(PhWarningCircle, "AlertCircle");
-export const AlertTriangle = make(PhWarning, "AlertTriangle");
-export const Archive = make(PhArchive, "Archive");
-export const ArrowDown = make(PhArrowDown, "ArrowDown");
-export const ArrowLeft = make(PhArrowLeft, "ArrowLeft");
-export const ArrowRight = make(PhArrowRight, "ArrowRight");
-export const ArrowUp = make(PhArrowUp, "ArrowUp");
-export const ArrowUpDown = make(PhArrowsDownUp, "ArrowUpDown");
-export const ArrowUpRight = make(PhArrowUpRight, "ArrowUpRight");
-export const BarChart3 = make(PhChartBar, "BarChart3");
-export const BookOpen = make(PhBookOpen, "BookOpen");
-export const Bot = make(PhRobot, "Bot");
-export const Braces = make(PhBracketsCurly, "Braces");
-export const BriefcaseBusiness = make(PhBriefcase, "BriefcaseBusiness");
-export const Building2 = make(PhBuilding, "Building2");
-export const Calendar = make(PhCalendar, "Calendar");
-export const CalendarCheck = make(PhCalendarCheck, "CalendarCheck");
-export const CalendarDays = make(PhCalendarDots, "CalendarDays");
-export const CalendarIcon = make(PhCalendar, "CalendarIcon");
-export const Check = make(PhCheck, "Check");
-export const CheckCircle2 = make(PhCheckCircle, "CheckCircle2");
-export const ChevronDown = make(PhCaretDown, "ChevronDown");
-export const ChevronLeft = make(PhCaretLeft, "ChevronLeft");
-export const ChevronRight = make(PhCaretRight, "ChevronRight");
-export const ChevronUp = make(PhCaretUp, "ChevronUp");
-export const Circle = make(PhCircle, "Circle");
-export const CircleX = make(PhXCircle, "CircleX");
-export const ClipboardCheck = make(PhClipboardText, "ClipboardCheck");
-export const Clock = make(PhClock, "Clock");
-export const Code2 = make(PhCode, "Code2");
-export const Coins = make(PhCoins, "Coins");
-export const Copy = make(PhCopy, "Copy");
-export const CreditCard = make(PhCreditCard, "CreditCard");
-export const Database = make(PhDatabase, "Database");
-export const Download = make(PhDownload, "Download");
-export const ExternalLink = make(PhArrowSquareOut, "ExternalLink");
-export const Eye = make(PhEye, "Eye");
-export const Facebook = make(PhFacebookLogo, "Facebook");
-export const FileCheck2 = make(PhSealCheck, "FileCheck2");
-export const FileDown = make(PhFileArrowDown, "FileDown");
-export const FileEdit = make(PhNotePencil, "FileEdit");
-export const FileJson = make(PhFileCode, "FileJson");
-export const FilePlus2 = make(PhFilePlus, "FilePlus2");
-export const FileSearch = make(PhFileMagnifyingGlass, "FileSearch");
-export const FileSpreadsheet = make(PhFileXls, "FileSpreadsheet");
-export const FileText = make(PhFileText, "FileText");
-export const FileType = make(PhFileTxt, "FileType");
-export const FileWarning = make(PhFileX, "FileWarning");
-export const Files = make(PhFiles, "Files");
-export const Filter = make(PhFunnel, "Filter");
-export const Flag = make(PhFlag, "Flag");
-export const FlaskConical = make(PhFlask, "FlaskConical");
-export const Gavel = make(PhGavel, "Gavel");
-export const GitBranch = make(PhGitBranch, "GitBranch");
-export const GitMerge = make(PhGitMerge, "GitMerge");
-export const Github = make(PhGithubLogo, "Github");
-export const Globe = make(PhGlobe, "Globe");
-export const GraduationCap = make(PhGraduationCap, "GraduationCap");
-export const HandHeart = make(PhHandHeart, "HandHeart");
-export const Handshake = make(PhHandshake, "Handshake");
-export const Hash = make(PhHash, "Hash");
-export const Headphones = make(PhHeadphones, "Headphones");
-export const HeartHandshake = make(PhHandHeart, "HeartHandshake");
-export const HelpCircle = make(PhQuestion, "HelpCircle");
-export const History = make(PhClockCounterClockwise, "History");
-export const Home = make(PhHouse, "Home");
-export const IdCard = make(PhIdentificationCard, "IdCard");
-export const Inbox = make(PhTray, "Inbox");
-export const InfinityIcon = make(PhInfinity, "InfinityIcon");
-export const Info = make(PhInfo, "Info");
-export const Instagram = make(PhInstagramLogo, "Instagram");
-export const Landmark = make(PhBank, "Landmark");
-export const Laptop = make(PhLaptop, "Laptop");
-export const LayoutDashboard = make(PhSquaresFour, "LayoutDashboard");
-export const LayoutGrid = make(PhGridFour, "LayoutGrid");
-export const Library = make(PhBooks, "Library");
-export const Link = make(PhLink, "Link");
-export const Link2 = make(PhLink, "Link2");
-export const Linkedin = make(PhLinkedinLogo, "Linkedin");
-export const List = make(PhList, "List");
-export const Loader2 = make(PhSpinnerGap, "Loader2");
-export const Lock = make(PhLock, "Lock");
-export const LogOut = make(PhSignOut, "LogOut");
-export const Mail = make(PhEnvelope, "Mail");
-export const MapPin = make(PhMapPin, "MapPin");
-export const Maximize2 = make(PhArrowsOut, "Maximize2");
-export const Megaphone = make(PhMegaphone, "Megaphone");
-export const Menu = make(PhList, "Menu");
-export const MessageCircle = make(PhChatCircle, "MessageCircle");
-export const MessageSquare = make(PhChatCenteredText, "MessageSquare");
-export const MessagesSquare = make(PhChats, "MessagesSquare");
-export const Mic2 = make(PhMicrophone, "Mic2");
-export const Minus = make(PhMinus, "Minus");
-export const MoreHorizontal = make(PhDotsThree, "MoreHorizontal");
-export const Network = make(PhNetwork, "Network");
-export const Newspaper = make(PhNewspaper, "Newspaper");
-export const Package = make(PhPackage, "Package");
-export const PanelLeft = make(PhSidebarSimple, "PanelLeft");
-export const Paperclip = make(PhPaperclip, "Paperclip");
-export const PauseCircle = make(PhPauseCircle, "PauseCircle");
-export const Pencil = make(PhPencil, "Pencil");
-export const Phone = make(PhPhone, "Phone");
-export const Play = make(PhPlay, "Play");
-export const Plus = make(PhPlus, "Plus");
-export const Printer = make(PhPrinter, "Printer");
-export const QrCode = make(PhQrCode, "QrCode");
-export const RefreshCw = make(PhArrowsClockwise, "RefreshCw");
-export const Repeat = make(PhRepeat, "Repeat");
-export const Save = make(PhFloppyDisk, "Save");
-export const Scale = make(PhScales, "Scale");
-export const ScrollText = make(PhScroll, "ScrollText");
-export const Search = make(PhMagnifyingGlass, "Search");
-export const Send = make(PhPaperPlaneTilt, "Send");
-export const Share2 = make(PhShare, "Share2");
-export const ShieldAlert = make(PhShieldWarning, "ShieldAlert");
-export const ShieldCheck = make(PhShieldCheck, "ShieldCheck");
-export const SlidersHorizontal = make(PhSlidersHorizontal, "SlidersHorizontal");
-export const Sparkles = make(PhSparkle, "Sparkles");
-export const SquarePen = make(PhPencilSimple, "SquarePen");
-export const Tag = make(PhTag, "Tag");
-export const Trash2 = make(PhTrash, "Trash2");
-export const Twitter = make(PhTwitterLogo, "Twitter");
-export const Undo2 = make(PhArrowUUpLeft, "Undo2");
-export const Unlock = make(PhLockOpen, "Unlock");
-export const Upload = make(PhUpload, "Upload");
-export const User = make(PhUser, "User");
-export const UserPlus = make(PhUserPlus, "UserPlus");
-export const UserRound = make(PhUser, "UserRound");
-export const Users = make(PhUsers, "Users");
-export const Video = make(PhVideo, "Video");
-export const Vote = make(PhCheckSquare, "Vote");
-export const X = make(PhX, "X");
-export const XCircle = make(PhXCircle, "XCircle");
-export const Youtube = make(PhYoutubeLogo, "Youtube");
+export const AlertCircle = make("WarningCircle", "AlertCircle");
+export const AlertTriangle = make("Warning", "AlertTriangle");
+export const Archive = make("Archive", "Archive");
+export const ArrowDown = make("ArrowDown", "ArrowDown");
+export const ArrowLeft = make("ArrowLeft", "ArrowLeft");
+export const ArrowRight = make("ArrowRight", "ArrowRight");
+export const ArrowUp = make("ArrowUp", "ArrowUp");
+export const ArrowUpDown = make("ArrowsDownUp", "ArrowUpDown");
+export const ArrowUpRight = make("ArrowUpRight", "ArrowUpRight");
+export const BarChart3 = make("ChartBar", "BarChart3");
+export const BookOpen = make("BookOpen", "BookOpen");
+export const Bot = make("Robot", "Bot");
+export const Braces = make("BracketsCurly", "Braces");
+export const BriefcaseBusiness = make("Briefcase", "BriefcaseBusiness");
+export const Building2 = make("Building", "Building2");
+export const Calendar = make("Calendar", "Calendar");
+export const CalendarCheck = make("CalendarCheck", "CalendarCheck");
+export const CalendarDays = make("CalendarDots", "CalendarDays");
+export const CalendarIcon = make("Calendar", "CalendarIcon");
+export const Check = make("Check", "Check");
+export const CheckCircle2 = make("CheckCircle", "CheckCircle2");
+export const ChevronDown = make("CaretDown", "ChevronDown");
+export const ChevronLeft = make("CaretLeft", "ChevronLeft");
+export const ChevronRight = make("CaretRight", "ChevronRight");
+export const ChevronUp = make("CaretUp", "ChevronUp");
+export const Circle = make("Circle", "Circle");
+export const CircleX = make("XCircle", "CircleX");
+export const ClipboardCheck = make("ClipboardText", "ClipboardCheck");
+export const Clock = make("Clock", "Clock");
+export const Code2 = make("Code", "Code2");
+export const Coins = make("Coins", "Coins");
+export const Copy = make("Copy", "Copy");
+export const CreditCard = make("CreditCard", "CreditCard");
+export const Database = make("Database", "Database");
+export const Download = make("Download", "Download");
+export const ExternalLink = make("ArrowSquareOut", "ExternalLink");
+export const Eye = make("Eye", "Eye");
+export const Facebook = make("FacebookLogo", "Facebook");
+export const FileCheck2 = make("SealCheck", "FileCheck2");
+export const FileDown = make("FileArrowDown", "FileDown");
+export const FileEdit = make("NotePencil", "FileEdit");
+export const FileJson = make("FileCode", "FileJson");
+export const FilePlus2 = make("FilePlus", "FilePlus2");
+export const FileSearch = make("FileMagnifyingGlass", "FileSearch");
+export const FileSpreadsheet = make("FileXls", "FileSpreadsheet");
+export const FileText = make("FileText", "FileText");
+export const FileType = make("FileTxt", "FileType");
+export const FileWarning = make("FileX", "FileWarning");
+export const Files = make("Files", "Files");
+export const Filter = make("Funnel", "Filter");
+export const Flag = make("Flag", "Flag");
+export const FlaskConical = make("Flask", "FlaskConical");
+export const Gavel = make("Gavel", "Gavel");
+export const GitBranch = make("GitBranch", "GitBranch");
+export const GitMerge = make("GitMerge", "GitMerge");
+export const Github = make("GithubLogo", "Github");
+export const Globe = make("Globe", "Globe");
+export const GraduationCap = make("GraduationCap", "GraduationCap");
+export const HandHeart = make("HandHeart", "HandHeart");
+export const Handshake = make("Handshake", "Handshake");
+export const Hash = make("Hash", "Hash");
+export const Headphones = make("Headphones", "Headphones");
+export const HeartHandshake = make("HandHeart", "HeartHandshake");
+export const HelpCircle = make("Question", "HelpCircle");
+export const History = make("ClockCounterClockwise", "History");
+export const Home = make("House", "Home");
+export const IdCard = make("IdentificationCard", "IdCard");
+export const Inbox = make("Tray", "Inbox");
+export const InfinityIcon = make("Infinity", "InfinityIcon");
+export const Info = make("Info", "Info");
+export const Instagram = make("InstagramLogo", "Instagram");
+export const Landmark = make("Bank", "Landmark");
+export const Laptop = make("Laptop", "Laptop");
+export const LayoutDashboard = make("SquaresFour", "LayoutDashboard");
+export const LayoutGrid = make("GridFour", "LayoutGrid");
+export const Library = make("Books", "Library");
+export const Link = make("Link", "Link");
+export const Link2 = make("Link", "Link2");
+export const Linkedin = make("LinkedinLogo", "Linkedin");
+export const List = make("List", "List");
+export const Loader2 = make("SpinnerGap", "Loader2");
+export const Lock = make("Lock", "Lock");
+export const LogOut = make("SignOut", "LogOut");
+export const Mail = make("Envelope", "Mail");
+export const MapPin = make("MapPin", "MapPin");
+export const Maximize2 = make("ArrowsOut", "Maximize2");
+export const Megaphone = make("Megaphone", "Megaphone");
+export const Menu = make("List", "Menu");
+export const MessageCircle = make("ChatCircle", "MessageCircle");
+export const MessageSquare = make("ChatCenteredText", "MessageSquare");
+export const MessagesSquare = make("Chats", "MessagesSquare");
+export const Mic2 = make("Microphone", "Mic2");
+export const Minus = make("Minus", "Minus");
+export const MoreHorizontal = make("DotsThree", "MoreHorizontal");
+export const Network = make("Network", "Network");
+export const Newspaper = make("Newspaper", "Newspaper");
+export const Package = make("Package", "Package");
+export const PanelLeft = make("SidebarSimple", "PanelLeft");
+export const Paperclip = make("Paperclip", "Paperclip");
+export const PauseCircle = make("PauseCircle", "PauseCircle");
+export const Pencil = make("Pencil", "Pencil");
+export const Phone = make("Phone", "Phone");
+export const Play = make("Play", "Play");
+export const Plus = make("Plus", "Plus");
+export const Printer = make("Printer", "Printer");
+export const QrCode = make("QrCode", "QrCode");
+export const RefreshCw = make("ArrowsClockwise", "RefreshCw");
+export const Repeat = make("Repeat", "Repeat");
+export const Save = make("FloppyDisk", "Save");
+export const Scale = make("Scales", "Scale");
+export const ScrollText = make("Scroll", "ScrollText");
+export const Search = make("MagnifyingGlass", "Search");
+export const Send = make("PaperPlaneTilt", "Send");
+export const Share2 = make("Share", "Share2");
+export const ShieldAlert = make("ShieldWarning", "ShieldAlert");
+export const ShieldCheck = make("ShieldCheck", "ShieldCheck");
+export const SlidersHorizontal = make("SlidersHorizontal", "SlidersHorizontal");
+export const Sparkles = make("Sparkle", "Sparkles");
+export const SquarePen = make("PencilSimple", "SquarePen");
+export const Tag = make("Tag", "Tag");
+export const Trash2 = make("Trash", "Trash2");
+export const Twitter = make("TwitterLogo", "Twitter");
+export const Undo2 = make("ArrowUUpLeft", "Undo2");
+export const Unlock = make("LockOpen", "Unlock");
+export const Upload = make("Upload", "Upload");
+export const User = make("User", "User");
+export const UserPlus = make("UserPlus", "UserPlus");
+export const UserRound = make("User", "UserRound");
+export const Users = make("Users", "Users");
+export const Video = make("Video", "Video");
+export const Vote = make("CheckSquare", "Vote");
+export const X = make("X", "X");
+export const XCircle = make("XCircle", "XCircle");
+export const Youtube = make("YoutubeLogo", "Youtube");

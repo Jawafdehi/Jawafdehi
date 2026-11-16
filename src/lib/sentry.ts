@@ -28,14 +28,25 @@ export function initSentry(): void {
     // bundle and is unactionable noise, so refuse events whose frames originate
     // from those scripts.
     denyUrls: [/beacon\.min\.js/i, /static\.cloudflareinsights\.com/i],
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      // Mask text and block media in any captured replay.
-      Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
-    ],
+    integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: 0.1,
     // Error-only replay: never record random sessions, only when an error fires.
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
   });
+
+  // Replay joins once the page is idle, from its own chunk, so its weight is not
+  // in the first-paint bundle. Errors are captured from the start either way;
+  // only a replay of the first second or two before an early error is lost.
+  // Mask text and block media in any captured replay.
+  const addReplay = () =>
+    import("./sentry-replay")
+      .then(({ replayIntegration }) =>
+        Sentry.addIntegration(replayIntegration({ maskAllText: true, blockAllMedia: true })),
+      )
+      .catch(() => {
+        // A failed chunk load costs only the replay; error reporting is unaffected.
+      });
+  if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(addReplay);
+  else window.setTimeout(addReplay, 2000);
 }
