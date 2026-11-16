@@ -7,6 +7,13 @@ type HeldFacets = Pick<ArchiveSearchResponse, "counts" | "facets" | "extents">;
 type Fetcher = (params: ArchiveSearchParams) => Promise<ArchiveSearchResponse>;
 
 /**
+ * How long held facets may be reused. Matches the archive query's React Query
+ * `staleTime`, so a refetch that React Query considers stale also gets fresh
+ * aggregations instead of counts from a page left open for an hour.
+ */
+export const HELD_FACETS_MAX_AGE_MS = 5 * 60 * 1000;
+
+/**
  * Identity of a result set for facet purposes: every param except the page.
  * Facets, type counts and the बिगो extent describe the whole result set, so they
  * are the same on page 1 and page 7 of one search.
@@ -34,14 +41,21 @@ export function facetKeyOf(params: ArchiveSearchParams): string {
  * - An API that ignores `include_facets` (deployed before this change) still
  *   answers with facets; they are replaced by the identical held ones.
  * - Cursor paging is left alone: the archive pages by offset.
+ * - Held facets expire after {@link HELD_FACETS_MAX_AGE_MS}: a page left open
+ *   gets fresh aggregations on its next request rather than stale counts.
  */
-export function withHeldFacets(fetcher: Fetcher): Fetcher {
-  let held: { key: string; data: HeldFacets } | null = null;
+export function withHeldFacets(
+  fetcher: Fetcher,
+  now: () => number = Date.now,
+): Fetcher {
+  let held: { key: string; data: HeldFacets; fetchedAt: number } | null = null;
 
   return async (params) => {
     const key = facetKeyOf(params);
     const page = params.page ?? 1;
-    if (page > 1 && !params.cursor && held?.key === key) {
+    const fresh =
+      held !== null && now() - held.fetchedAt < HELD_FACETS_MAX_AGE_MS;
+    if (page > 1 && !params.cursor && held?.key === key && fresh) {
       const reuse = held.data;
       const lean = await fetcher({ ...params, include_facets: false });
       return { ...lean, ...reuse };
@@ -50,6 +64,7 @@ export function withHeldFacets(fetcher: Fetcher): Fetcher {
     held = {
       key,
       data: { counts: full.counts, facets: full.facets, extents: full.extents },
+      fetchedAt: now(),
     };
     return full;
   };

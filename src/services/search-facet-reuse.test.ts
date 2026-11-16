@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { facetKeyOf, withHeldFacets } from "./search-facet-reuse";
+import {
+  HELD_FACETS_MAX_AGE_MS,
+  facetKeyOf,
+  withHeldFacets,
+} from "./search-facet-reuse";
 import type {
   ArchiveSearchParams,
   ArchiveSearchResponse,
@@ -89,6 +93,23 @@ describe("withHeldFacets", () => {
     await expect(search({ q: "x", page: 1 })).rejects.toThrow("503");
     await search({ q: "x", page: 2 });
     expect(fetcher.mock.calls[1][0].include_facets).toBeUndefined();
+  });
+
+  it("held facets expire, so a long-open page gets fresh aggregations", async () => {
+    let clock = 0;
+    const fetcher = vi.fn().mockResolvedValue(response());
+    const search = withHeldFacets(fetcher, () => clock);
+    await search({ q: "x", page: 1 });
+    clock = HELD_FACETS_MAX_AGE_MS - 1;
+    await search({ q: "x", page: 2 });
+    expect(fetcher.mock.calls[1][0].include_facets).toBe(false);
+    clock = HELD_FACETS_MAX_AGE_MS + 1;
+    await search({ q: "x", page: 3 });
+    expect(fetcher.mock.calls[2][0].include_facets).toBeUndefined();
+    // ...and the fresh full response is held again from that moment.
+    clock += 1000;
+    await search({ q: "x", page: 4 });
+    expect(fetcher.mock.calls[3][0].include_facets).toBe(false);
   });
 
   it("cursor paging is left alone", async () => {
