@@ -9,6 +9,7 @@ import { SiLinktree } from "react-icons/si";
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { API_BASE_URL } from "@/services/http";
 import { cn } from "@/lib/utils";
+import { currentSiteVariant } from "@/lib/site-host";
 
 type FooterLink = {
   label: string;
@@ -122,6 +123,7 @@ function renderBadgeIcon(marker: string | undefined, Icon: ComponentType<{ class
 
 export const Footer = () => {
   const { t } = useTranslation();
+  const siteVariant = currentSiteVariant();
 
   const platformLinks: FooterLink[] = [
     { label: t("footer.searchCases"), to: "/search?type=case" },
@@ -284,9 +286,18 @@ export const Footer = () => {
         </div>
 
         <div className="mt-6 border-t border-[var(--footer-border)] pt-6">
-          <p className="text-xs text-[var(--footer-muted)]">
-            {t("footer.legalEntity")}
-          </p>
+          {/* jawafdehi.org.np names only the Nepal entity; see src/lib/site-host.ts.
+              Pre-render (siteVariant === null) emits both and CSS picks one. */}
+          {siteVariant !== "np" && (
+            <p data-site-variant="org" className="text-xs text-[var(--footer-muted)]">
+              {t("footer.legalEntity")}
+            </p>
+          )}
+          {siteVariant !== "org" && (
+            <p data-site-variant="np" className="text-xs text-[var(--footer-muted)]">
+              {t("footer.legalEntityNp")}
+            </p>
+          )}
         </div>
       </div>
     </footer>

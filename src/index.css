@@ -643,3 +643,16 @@ All colors MUST be HSL.
     display: none;
   }
 }
+
+/* Host-specific footer copy (src/lib/site-host.ts). Pre-rendered HTML carries
+   both variants; index.html sets data-site="np" on jawafdehi.org.np before
+   first paint. After the client renders, only one variant is in the DOM. */
+[data-site-variant="np"] {
+  display: none;
+}
+html[data-site="np"] [data-site-variant="np"] {
+  display: block;
+}
+html[data-site="np"] [data-site-variant="org"] {
+  display: none;
+}
