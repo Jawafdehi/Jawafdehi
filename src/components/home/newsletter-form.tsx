@@ -77,7 +77,7 @@ export function NewsletterForm({
         <div>
           <p
             className={cn(
-              "mx-auto max-w-md text-base font-bold leading-7 text-foreground",
+              "mx-auto max-w-md text-lg leading-7 text-primary",
               inverted && "text-primary-foreground",
             )}
           >
@@ -85,7 +85,7 @@ export function NewsletterForm({
           </p>
           <p
             className={cn(
-              "mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-muted-foreground",
+              "mx-auto mt-2 max-w-md text-base leading-7 text-muted-foreground",
               inverted && "text-primary-foreground/80",
             )}
           >
@@ -274,7 +274,10 @@ export function NewsletterForm({
             )}
           >
             {t("newsletter.form.privacyLink")}
-          </Link>{" "}
+          </Link>
+          {/* A space before a word ("…सँग सहमत छु।"), none before bare
+              punctuation, or English reads "Privacy Policy ." */}
+          {/^[.,;:!?।]/.test(t("newsletter.form.privacySuffix")) ? "" : " "}
           {t("newsletter.form.privacySuffix")}
         </Label>
       </div>

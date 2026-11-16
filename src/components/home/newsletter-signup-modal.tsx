@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { NewsletterForm } from "@/components/home/newsletter-form";
 import { getNewsletterPromptState, setNewsletterPromptState } from "@/lib/newsletter";
 
@@ -99,30 +100,31 @@ export function NewsletterSignupModal() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md gap-6 p-8 text-center sm:rounded-2xl">
-        <div className="flex items-center justify-center gap-2">
-          <img src="/favicon.png" alt="" aria-hidden="true" className="h-8 w-8" />
-          <span className="text-lg font-bold text-foreground">Jawafdehi</span>
+      {/* The site's light card: a mist header carrying the wordmark and the
+          ask in the display face, left-aligned like every other page head;
+          the form on plain white under it. */}
+      <DialogContent className="max-w-md gap-0 overflow-hidden p-0 sm:rounded-[28px]">
+        <div className="relative isolate px-6 pb-6 pt-7 sm:px-8 sm:pt-8">
+          <div aria-hidden="true" className="absolute inset-0 -z-10 [mask-image:linear-gradient(to_bottom,#000_55%,transparent)]">
+            <ShaderBackdrop design="mist" />
+          </div>
+          <img src="/assets/logo.svg" alt="Jawafdehi" className="h-8 w-auto" />
+          <DialogHeader className="mt-6 space-y-3 text-left sm:text-left">
+            <DialogTitle className="font-home-display text-[1.75rem] leading-[1.1] text-primary sm:text-[2rem]">
+              {t("newsletter.modal.title")}
+            </DialogTitle>
+            <DialogDescription className="text-base leading-7 text-muted-foreground">
+              {t("newsletter.modal.description")}
+            </DialogDescription>
+          </DialogHeader>
         </div>
 
-        <DialogHeader className="space-y-3 text-center sm:text-center">
-          <DialogTitle className="text-2xl font-extrabold leading-tight tracking-normal md:text-3xl">
-            {t("newsletter.modal.title")}
-          </DialogTitle>
-          <DialogDescription className="mx-auto max-w-sm text-sm leading-6">
-            {t("newsletter.modal.description")}
-          </DialogDescription>
-        </DialogHeader>
-
-        <NewsletterForm
-          compact
-          submitLabel={t("newsletter.modal.submit")}
-          className="mx-auto w-full max-w-sm"
-        />
-
-        <p className="mx-auto max-w-sm text-xs leading-5 text-muted-foreground">
-          {t("newsletter.modal.disclaimer")}
-        </p>
+        <div className="px-6 pb-7 sm:px-8 sm:pb-8">
+          <NewsletterForm compact submitLabel={t("newsletter.modal.submit")} className="w-full" />
+          <p className="mt-5 text-sm leading-6 text-muted-foreground">
+            {t("newsletter.modal.disclaimer")}
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );

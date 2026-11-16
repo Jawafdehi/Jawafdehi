@@ -183,7 +183,7 @@ describe('served image weight', () => {
       ['src/components/data-sources.tsx', '/assets/ciaa.webp'],
       ['src/components/data-sources.tsx', '/assets/cib.webp'],
       ['src/lib/case-images.ts', '/assets/placeholder.webp'],
-      ['src/components/home/newsletter-signup-modal.tsx', '/favicon.png'],
+      ['src/components/home/newsletter-signup-modal.tsx', '/assets/logo.svg'],
     ];
     const broken = refs.filter(([file, ref]) => {
       const referenced = readFileSync(resolve(ROOT, file), 'utf8').includes(ref);
