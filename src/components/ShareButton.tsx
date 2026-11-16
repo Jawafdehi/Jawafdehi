@@ -172,14 +172,14 @@ export const ShareButton = ({
         </PopoverTrigger>
         {/* The link first, in a field with its own Copy button (Gemini, Whop,
             Sprig); then every destination as a round tile with its name under
-            it (Substack, Nextdoor); print and PDF on a quiet footer line. No
+            it (Substack, Nextdoor); print and PDF as two grey pills under them. No
             "More options" fold: eight tiles fit, so nothing has to hide. */}
         <PopoverContent
           className="w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border-border/70 p-0 shadow-[0_1px_2px_rgba(14,31,59,0.06),0_16px_40px_-16px_rgba(14,31,59,0.28)]"
           align="end"
           sideOffset={8}
         >
-          <div className="px-5 pb-5 pt-4">
+          <div className="px-5 pb-4 pt-4">
             <p className="text-base text-primary">{t("share.shareVia")}</p>
 
             <div className="mt-3 flex items-center gap-2 rounded-full bg-muted py-1 pl-4 pr-1">
@@ -230,22 +230,21 @@ export const ShareButton = ({
             </ul>
           </div>
 
-          <div className="flex border-t border-border/70">
+          <div className="flex gap-2 px-5 pb-5">
             <button
               type="button"
               onClick={handlePrint}
               aria-label={t("share.print")}
-              className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-primary transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-muted text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
             >
               <Printer className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               {t("share.print")}
             </button>
-            <span aria-hidden="true" className="w-px bg-border/70" />
             <button
               type="button"
               onClick={handleDownloadPDF}
               aria-label={t("share.downloadPDF")}
-              className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-primary transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-muted text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
             >
               <Download className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               {t("share.downloadPDF")}
