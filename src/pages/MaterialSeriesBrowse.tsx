@@ -258,6 +258,22 @@ export default function MaterialSeriesBrowse({
     );
   }
 
+  // The source list could not be fetched: say so and offer a retry, rather
+  // than claiming a real source does not exist. (Existing strings on purpose:
+  // the locale catalogues ship in the initial bundle, which is at its budget.)
+  if (!series && sourceKey && sourcesQuery.isError) {
+    return (
+      <div className="layout-container py-24" role="alert">
+        <p className="font-page-lede">
+          {t("newsletter.form.errorGeneric", "Something went wrong. Please try again later.")}
+        </p>
+        <Button className="mt-6" onClick={() => void sourcesQuery.refetch()}>
+          {t("cases.retry", "Retry")}
+        </Button>
+      </div>
+    );
+  }
+
   if (!series) {
     return (
       <div className="layout-container py-24">

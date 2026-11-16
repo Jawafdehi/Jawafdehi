@@ -353,4 +353,17 @@ describe("MaterialSeriesBrowse for a whole source", () => {
     expect(await screen.findByText(/This series does not exist/)).toBeTruthy();
     expect(searchArchive).not.toHaveBeenCalled();
   });
+
+  it("offers a retry, not a 'does not exist', when the source list fails to load", async () => {
+    getDocumentSources.mockRejectedValueOnce(new Error("timeout")).mockResolvedValueOnce(sources);
+    searchArchive.mockResolvedValue(response([hit("1", "A DRI press release", "2021-06-14")], 160));
+    renderPage("/materials/?source=dri", "source:dri");
+
+    const retry = await screen.findByRole("button", { name: "Retry" });
+    expect(screen.queryByText(/This series does not exist/)).toBeNull();
+    fireEvent.click(retry);
+    expect(
+      await screen.findByRole("heading", { name: "Revenue Investigation releases and reports" }),
+    ).toBeTruthy();
+  });
 });
