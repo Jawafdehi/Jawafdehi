@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchArchive } from "@/services/search-api";
+import { withHeldFacets } from "@/services/search-facet-reuse";
 import type {
   ArchiveSearchFacets,
   ArchiveSearchParams,
@@ -160,6 +161,9 @@ export default function ArchiveSearch({
     }
   }, [searchParams, setSearchParams]);
 
+  // One per mounted page: paging within a result set reuses the facets from its
+  // first request instead of recomputing them (see withHeldFacets).
+  const [search] = useState(() => withHeldFacets(searchArchive));
   const {
     data,
     isError,
@@ -169,7 +173,7 @@ export default function ArchiveSearch({
     refetch,
   } = useQuery({
     queryKey: ["archive-search", params],
-    queryFn: () => searchArchive(params),
+    queryFn: () => search(params),
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
   });
