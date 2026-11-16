@@ -82,6 +82,10 @@ export interface ArchiveSearchParams {
   page_size?: number;
   // Opaque deep-paging cursor (next_cursor from a prior response).
   cursor?: string;
+  // Default true server-side. `false` skips every aggregation: `counts`,
+  // `facets` and `extents` come back empty. Only `withHeldFacets` sets it, for a
+  // later page of a result set whose facets it already holds.
+  include_facets?: boolean;
 }
 
 export interface SearchFacetItem {

@@ -1,6 +1,6 @@
 import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "@/components/icons";
 import { useTranslation } from "react-i18next";
-import { usBoard, nepalBoard, members, pastMembers } from "@/data/team";
+import { usBoard, nepalBoard, advisors, members, pastMembers } from "@/data/team";
 import type { Contact } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
@@ -32,6 +32,10 @@ const ContactIcon = ({ contact }: { contact: Contact }) => {
   );
 };
 
+// Office-bearer titles get their own badge colour so they stand out from the
+// "Founding Member" / "Board Member" badges.
+const OFFICER_TITLES = new Set(["Chairman", "President", "Secretary", "Treasurer"]);
+
 const OurTeam = () => {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language?.startsWith("ne") ? "ne" : "en") as "en" | "ne";
@@ -62,13 +66,40 @@ const OurTeam = () => {
         {/* Team sections */}
         {[
           { id: "nepal-board", heading: t("team.sections.nepalBoard", "Nepal Board"), data: nepalBoard },
-          { id: "us-board", heading: t("team.sections.usBoard", "US Board"), data: usBoard },
-          { id: "members", heading: t("team.sections.currentMembers", "Current Members"), data: members },
-          { id: "past-members", heading: t("team.sections.pastMembers", "Past Members"), data: pastMembers },
-        ].map(({ id, heading, data }) => (
+          { id: "advisors", heading: t("team.sections.advisors", "Advisors"), data: advisors },
+          {
+            id: "us-board",
+            heading: t("team.sections.usBoard", "US Board"),
+            // The US company's board is shown in English only: names, titles
+            // and the note, in both site languages.
+            note: t("team.sections.usBoardNote", { lng: "en" }),
+            data: usBoard,
+            englishOnly: true,
+          },
+          { id: "members", heading: t("team.sections.currentMembers", "Consultants and Volunteers"), data: members },
+          {
+            id: "past-members",
+            heading: t("team.sections.pastMembers", "Former Consultants and Volunteers"),
+            data: pastMembers,
+          },
+        ].map(
+          ({
+            id,
+            heading,
+            note,
+            data,
+            englishOnly,
+          }: {
+            id: string;
+            heading: string;
+            note?: string;
+            data: typeof members;
+            englishOnly?: boolean;
+          }) => (
           <section key={id} id={id} aria-labelledby={`${id}-title`} className="pt-16 md:pt-24 last-of-type:pb-4">
             <div className="layout-container">
               <h2 id={`${id}-title`} className="font-home-section-title text-primary">{heading}</h2>
+              {note && <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">{note}</p>}
               <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {data.map((member) => (
                   <TeamCard key={member.displayName.en}>
@@ -104,9 +135,9 @@ const OurTeam = () => {
 
                     {/* Name */}
                     <h3 className="text-xl font-normal leading-snug text-primary">
-                      {member.displayName[lang] ?? member.displayName.en}
+                      {englishOnly ? member.displayName.en : (member.displayName[lang] ?? member.displayName.en)}
                     </h3>
-                    {lang === "en" && member.displayName.ne && (
+                    {lang === "en" && !englishOnly && member.displayName.ne && (
                       <p className="mt-0.5 text-sm text-muted-foreground">{member.displayName.ne}</p>
                     )}
 
@@ -121,16 +152,17 @@ const OurTeam = () => {
                     {member.tags && member.tags.length > 0 && (
                       <div className="mt-4 flex flex-wrap items-center gap-1.5">
                         {member.tags.map((tag) => {
-                          const isFoundingMember = tag === "Founding Member";
-                          const colorClasses = isFoundingMember
-                            ? "bg-accent/10 text-accent"
-                            : "bg-muted text-primary/80";
+                          const colorClasses = OFFICER_TITLES.has(tag)
+                            ? "bg-primary/10 text-primary"
+                            : tag === "Founding Member"
+                              ? "bg-accent/10 text-accent"
+                              : "bg-muted text-primary/80";
                           return (
                             <span
                               key={tag}
                               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm ${colorClasses}`}
                             >
-                              {tag}
+                              {englishOnly ? tag : t(`team.tags.${tag}`, { defaultValue: tag })}
                             </span>
                           );
                         })}
@@ -150,7 +182,8 @@ const OurTeam = () => {
               </div>
             </div>
           </section>
-        ))}
+        ),
+        )}
 
        <Cta/>
       </main>

@@ -4,6 +4,7 @@
 // and the pilot. Setup lives in connect-panel.tsx.
 import { ArrowUpRight, Check, Github } from "@/components/icons";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { GrainTexture } from "@/components/brand-shaders/grain-texture";
@@ -255,6 +256,83 @@ export function McpSkill() {
             ))}
           </ul>
         </div>
+      </div>
+    </section>
+  );
+}
+
+const SUPPORT_EMAIL = "inquiry@jawafdehi.org";
+
+/**
+ * What a reader needs to know before and after connecting: every tool needs a
+ * free Jawafdehi account (JAW-42/JAW-52), what the AI can read — including the
+ * court party-name rules — and where to get help. A hairline list beside the
+ * section title, like the rest of the page's reading sections.
+ */
+export function McpAccess() {
+  const { t } = useTranslation();
+  const linkClass =
+    "rounded font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const rows = [
+    {
+      id: "sign-in",
+      title: t("mcp.signIn.title"),
+      body: (
+        <>
+          <p>{t("mcp.signIn.body")}</p>
+          <p className="mt-3">
+            {t("mcp.signIn.privacy")}{" "}
+            <Link to="/privacy#ai-assistants" className={linkClass}>
+              {t("mcp.signIn.privacyLink")}
+            </Link>
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "tools",
+      title: t("mcp.tools.title"),
+      body: (
+        <>
+          <p>{t("mcp.tools.body")}</p>
+          <p className="mt-3">{t("mcp.tools.courtNames")}</p>
+        </>
+      ),
+    },
+    {
+      id: "support",
+      title: t("mcp.support.title"),
+      body: (
+        <>
+          <p>{t("mcp.support.body")}</p>
+          <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+            <Link to="/feedback" className={linkClass}>
+              {t("mcp.support.feedbackLink")}
+            </Link>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className={linkClass}>
+              {SUPPORT_EMAIL}
+            </a>
+          </p>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <section aria-label={t("mcp.signIn.title")} className="pt-16 md:pt-24">
+      <div className="layout-container">
+        <dl className="divide-y divide-border/70 border-y border-border/70">
+          {rows.map((row) => (
+            <div
+              key={row.id}
+              id={row.id}
+              className="grid scroll-mt-24 gap-3 py-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12 md:py-10"
+            >
+              <dt className="text-xl leading-8 text-primary">{row.title}</dt>
+              <dd className="max-w-2xl text-base leading-7 text-muted-foreground">{row.body}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );

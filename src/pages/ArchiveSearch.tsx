@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchArchive } from "@/services/search-api";
+import { withHeldFacets } from "@/services/search-facet-reuse";
 import type {
   ArchiveSearchFacets,
   ArchiveSearchParams,
@@ -145,6 +146,9 @@ export default function ArchiveSearch() {
   }, [searchParams, setSearchParams]);
 
   const stressMode = import.meta.env.DEV ? readStressParam(searchParams.get("data")) : null;
+  // One per mounted page: paging within a result set reuses the facets from its
+  // first request instead of recomputing them (see withHeldFacets).
+  const [search] = useState(() => withHeldFacets(searchArchive));
   const {
     data,
     isError,
@@ -155,7 +159,7 @@ export default function ArchiveSearch() {
   } = useQuery({
     queryKey: ["archive-search", params, stressMode],
     queryFn: async () => {
-      const response = await searchArchive(params);
+      const response = await search(params);
       // DEV ONLY: ?data=worst|empty|one swaps in the stress fixture at this
       // boundary. The branch is compiled out of production builds.
       if (import.meta.env.DEV && stressMode) {

@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescription, formatSubType } from '@/utils/entity-helpers';
 import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 import { formatDate } from '@/utils/date';
+import { caseTagLabel } from '@/lib/case-tags';
 
 interface EntityDetailContainerProps {
   entityId?: string;
@@ -46,7 +47,7 @@ export function EntityDetailContainer({
   hasNesData = true,
   relatedCaseEntries = [],
 }: EntityDetailContainerProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     entity,
     allegations,
@@ -325,7 +326,7 @@ export function EntityDetailContainer({
                           </Badge>
                         ))}
                         {caseItem.tags?.slice(0, 2).map((tag: string) => (
-                          <Badge key={tag} variant="secondary">{tag}</Badge>
+                          <Badge key={tag} variant="secondary">{caseTagLabel(tag, i18n.language)}</Badge>
                         ))}
                       </div>
                       {relations.some((relation) => relation.notes) && (
@@ -381,7 +382,7 @@ export function EntityDetailContainer({
                           </Badge>
                         ))}
                         {caseItem.tags?.slice(0, 2).map((tag: string) => (
-                          <Badge key={tag} variant="secondary">{tag}</Badge>
+                          <Badge key={tag} variant="secondary">{caseTagLabel(tag, i18n.language)}</Badge>
                         ))}
                       </div>
                       {relations.some((relation) => relation.notes) && (

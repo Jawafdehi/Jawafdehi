@@ -190,8 +190,8 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
       "publication_audit-journals",
       "publication_audit-bulletin",
     ],
-    // Repeats `charge-sheets`, the first card; this is the last. There are nine
-    // shelves and eight tints.
+    // Repeats `charge-sheets`, the first card; this is the ninth of ten
+    // shelves, and there are eight tints.
     tint: 2,
     name: { ne: "महालेखा परीक्षकका अन्य प्रकाशन", en: "Other Auditor General publications" },
     description: {
@@ -199,6 +199,21 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
       en: "Performance, IT, environmental and special audit reports, corporate-body audits, right-to-information reports and other publications.",
     },
     typeLabel: { ne: "प्रतिवेदन र प्रकाशन", en: "Reports and publications" },
+  },
+  {
+    // Official forms and prescribed formats, each from the issuing body's own
+    // site (Supreme Court, National Information Commission, Nepal Law
+    // Commission, NHRC). Curated list in the API repo:
+    // materials/sourcing/legal_templates/manifest.json.
+    slug: "legal-templates",
+    source: "legal_template",
+    tint: 1,
+    name: { ne: "कानुनी ढाँचा", en: "Legal templates" },
+    description: {
+      ne: "अदालतमा पेस गर्ने निवेदनका ढाँचा, अदालती नियमावलीका अनुसूची, सूचनाको हकका निवेदन र उजुरी फाराम — आधिकारिक स्रोतबाट।",
+      en: "Court application forms, the formats annexed to the court rules, right-to-information requests and complaint forms, from official sources.",
+    },
+    typeLabel: { ne: "ढाँचा र फाराम", en: "Templates and forms" },
   },
 ];
 

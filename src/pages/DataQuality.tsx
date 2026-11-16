@@ -62,10 +62,10 @@ const DataQuality = () => {
           )}
         </LightHero>
 
+        {/* Main's order (JAW-46): evidence sources, court cases, then the
+            corruption-case funnel, entities last. Sections are spaced, not
+            ruled, as elsewhere in the redesign. */}
         <div className="layout-container space-y-16 pb-20 md:space-y-24">
-          {/* Centerpiece: corruption cases (funnel + status + CIAA split). */}
-          <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
-
           {isError && !data && (
             <EmptyState
               kind="couldNotLoad"
@@ -74,14 +74,14 @@ const DataQuality = () => {
             />
           )}
 
-          {/* Who we track: 88% people, then the institutions (live nes.by_type). */}
-          <EntityBreakdown nes={data?.nes} />
+          {/* Where the evidence comes from (live materials.by_source). */}
+          <MaterialsBySource materials={data?.materials} />
 
           {/* Court cases: the judicial record base + court x year heatmap. */}
           <EvidenceBackbone ngm={data?.ngm} />
 
-          {/* Where the evidence comes from (live materials.by_source). */}
-          <MaterialsBySource materials={data?.materials} />
+          {/* Corruption cases (funnel + status + CIAA split). */}
+          <AccountabilityGap stats={data} isLoading={isLoading} isError={isError} />
 
           {/* Honest completeness / trust label. */}
           <DataHonesty nes={data?.nes} ngm={data?.ngm} materials={data?.materials} />
@@ -91,6 +91,9 @@ const DataQuality = () => {
 
           {/* Make the data reusable: the public API + report-an-error. */}
           <UseThisData />
+
+          {/* Who we track: 88% people, then the institutions (live nes.by_type). */}
+          <EntityBreakdown nes={data?.nes} />
         </div>
       </main>
     </div>

@@ -16,6 +16,7 @@ import { caseStages } from "@/utils/case-stages";
 import { getPrimaryName } from "@/utils/entity-helpers";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
+import { caseTagLabel } from "@/lib/case-tags";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 import { CaseByline } from "@/components/case-detail/case-byline";
@@ -203,7 +204,7 @@ export function CaseDetailBanner({
             <div className="flex flex-wrap items-center gap-2">
               {caseTypeLabel ? <CaseTypeBadge caseType={offenceType}>{caseTypeLabel}</CaseTypeBadge> : null}
               {caseData.tags.map((tag) => (
-                <CaseTagBadge key={tag}>{translateDynamicText(tag, currentLang)}</CaseTagBadge>
+                <CaseTagBadge key={tag}>{caseTagLabel(tag, currentLang)}</CaseTagBadge>
               ))}
             </div>
 

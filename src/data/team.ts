@@ -16,12 +16,14 @@ export interface TeamMember {
   contacts: Contact[];
 }
 
+// Officer titles from the signed Initial Board Consent of Jawafdehi
+// Initiative Inc. (Resolution 2026-02, signed 2026-10-28).
 export const usBoard: TeamMember[] = [
   {
     displayName: { en: "Bishwas Gautam", ne: "बिश्वास गौतम" },
     thumb: "/assets/teammembers/bishwas.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["Treasurer", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/gbishwas/" },
       { type: "github", value: "https://github.com/bishwasgautam" },
@@ -31,7 +33,7 @@ export const usBoard: TeamMember[] = [
     displayName: { en: "Nischal Dahal", ne: "निश्चल दाहाल" },
     thumb: "/assets/teammembers/nischal.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["President", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/nischaldahal/" },
     ],
@@ -40,7 +42,7 @@ export const usBoard: TeamMember[] = [
     displayName: { en: "Anish Karki", ne: "अनिश कार्की" },
     thumb: "/assets/teammembers/anish.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["Secretary", "Board Member"],
     contacts: [
       { type: "email", value: "karkianish93@gmail.com" },
     ],
@@ -52,7 +54,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Damodar Dahal", ne: "दामोदर दाहाल" },
     thumb: "/assets/teammembers/damodar.webp",
     description: "Software Engineer @ Amazon Web Services",
-    tags: ["Founding Member", "Board Member"],
+    tags: ["Chairman", "Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "damo94761@gmail.com" },
       { type: "linkedin", value: "https://www.linkedin.com/in/damo-da/" },
@@ -82,7 +84,7 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Niroj Aryal", ne: "निरोज अर्याल" },
     thumb: "/assets/teammembers/niroj.webp",
     description: "",
-    tags: ["Founding Member", "Board Member"],
+    tags: ["Secretary", "Founding Member", "Board Member"],
     contacts: [
       { type: "email", value: "nirojaryal2002@gmail.com" },
     ],
@@ -96,14 +98,11 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
     ],
   },
-];
-
-export const members: TeamMember[] = [
   {
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.webp",
     description: "",
-    tags: ["Founding Member"],
+    tags: ["Founding Member", "Board Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
@@ -111,9 +110,25 @@ export const members: TeamMember[] = [
   {
     displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
     thumb: "/assets/teammembers/purna.webp",
-    description: "Member",
+    description: "",
+    tags: ["Board Member"],
     contacts: [],
   },
+];
+
+// Shown directly below the Nepal Board.
+export const advisors: TeamMember[] = [
+  {
+    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
+    thumb: "/assets/teammembers/purna.webp",
+    description: "",
+    tags: ["Advisor"],
+    contacts: [],
+  },
+];
+
+// Rendered as "Consultants and Volunteers".
+export const members: TeamMember[] = [
   {
     displayName: { en: "Ashwini Subedi", ne: "अश्विनी सुवेदी" },
     thumb: "/assets/teammembers/ashwini.webp",
@@ -149,16 +164,24 @@ export const members: TeamMember[] = [
   },
   {
     displayName: { en: "Santosh Pokharel", ne: "सन्तोष पोखरेल" },
-    description: "",
-    contacts: [],
+    thumb: "/assets/teammembers/santosh.webp",
+    description: "Social Media Consultant",
+    contacts: [
+      { type: "email", value: "santosh@jawafdehi.org" },
+      { type: "instagram", value: "https://www.instagram.com/santos_pokh" },
+    ],
   },
   {
-    displayName: { en: "Sujesh Sah" },
-    description: "",
-    contacts: [],
+    displayName: { en: "Sujesh Sah", ne: "सुजेश साह" },
+    thumb: "/assets/teammembers/sujesh.webp",
+    description: "Social Media",
+    contacts: [
+      { type: "instagram", value: "https://www.instagram.com/sujeshsah77" },
+    ],
   },
 ];
 
+// Rendered as "Former Consultants and Volunteers".
 export const pastMembers: TeamMember[] = [
   {
     displayName: { en: "Deep Chaulagain", ne: "दीप चौलागाईं" },

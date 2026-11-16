@@ -14,6 +14,7 @@ import {
 } from "@/lib/case-images";
 import { cn } from "@/lib/utils";
 import { summarizeNames } from "@/utils/name-summary";
+import { caseTagLabel } from "@/lib/case-tags";
 
 type FeaturedCaseSpotlightProps = {
   slug?: string | null;
@@ -37,7 +38,7 @@ export function FeaturedCaseSpotlight({
   thumbnailUrl,
   bannerUrl,
 }: Readonly<FeaturedCaseSpotlightProps>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   // One truncating line, so the full comma-joined list would read as a cut-off
   // fragment. Same "X and N others" phrasing as <CaseCard> and the court-case
@@ -146,7 +147,7 @@ export function FeaturedCaseSpotlight({
                 key={tag}
                 className="rounded-full border border-primary-foreground/25 px-2.5 py-0.5 text-xs text-primary-foreground/80"
               >
-                {tag}
+                {caseTagLabel(tag, i18n.language)}
               </span>
             ))}
           </div>

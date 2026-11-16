@@ -711,9 +711,16 @@
     },
     "sections": {
       "nepalBoard": "Nepal Board",
+      "advisors": "Advisors",
       "usBoard": "US Board",
-      "currentMembers": "Current Members",
-      "pastMembers": "Past Members"
+      "usBoardNote": "Jawafdehi Initiative Inc. is a separate entity registered in the US, distinct from Jawafdehi Initiative Nepal.",
+      "currentMembers": "Consultants and Volunteers",
+      "pastMembers": "Former Consultants and Volunteers"
+    },
+    "tags": {
+      "Chairman": "Chairman",
+      "Secretary": "Secretary",
+      "Advisor": "Advisor"
     }
   },
   "pagination": {
@@ -2751,7 +2758,7 @@
           {
             "id": "connect-ai",
             "question": "How do I use the archive from Claude, ChatGPT or another AI tool?",
-            "answer": "Add the Jawafdehi MCP server, `https://api.jawafdehi.org/mcp`, to your AI tool. **MCP** (Model Context Protocol) is an open standard that lets AI assistants use outside tools and data. In Claude, open Settings → Connectors and add a custom connector; in ChatGPT, turn on developer mode first. In Claude Code, run `claude mcp add --transport http jawafdehi https://api.jawafdehi.org/mcp`. It is **free and read-only**, and needs no account. Step-by-step instructions are at jawafdehi.org/mcp."
+            "answer": "Add the Jawafdehi MCP server, `https://api.jawafdehi.org/mcp`, to your AI tool. **MCP** (Model Context Protocol) is an open standard that lets AI assistants use outside tools and data. In Claude, open Settings → Connectors and add a custom connector; in ChatGPT, open Plugins and add a custom MCP server. In Claude Code, run `claude mcp add --transport http jawafdehi https://api.jawafdehi.org/mcp`. It is **free**, and needs a free Jawafdehi account: you sign in once when you first connect. Step-by-step instructions are at jawafdehi.org/mcp."
           },
           {
             "id": "ai-accuracy",
@@ -2762,6 +2769,11 @@
             "id": "reuse-information",
             "question": "Can I reuse the information — for journalism, research, or advocacy?",
             "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
+          },
+          {
+            "id": "court-party-names",
+            "question": "Can I look up who is party to a court case?",
+            "answer": "Yes, one case at a time. Look up a case by its number and you'll see its parties — the same names the court publishes on its own website.\n\nWhen you **browse, search or query** court records in bulk, party names are shown only for **corruption-related cases** (the Special Court, corruption charges in any court, and cases cited by a published Jawafdehi case). For other cases — ordinary civil and criminal matters, writs — names are replaced with placeholders such as “plaintiff-1”, so the archive can't be used to list everyone who has ever been in court. In sensitive cases (sexual offences, domestic violence, divorce, trafficking) names are never shown in lists, searches or queries, even when the case would otherwise qualify; people the court itself has anonymised stay anonymised everywhere.\n\nSearching every court party by name is limited to Jawafdehi staff, and staff searches are logged."
           },
           {
             "id": "free-forever",
@@ -2946,7 +2958,7 @@
   "mcp": {
     "meta": {
       "title": "Connect to Jawafdehi MCP",
-      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL, no account needed."
+      "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL; sign in with a free Jawafdehi account."
     },
     "hero": {
       "back": "Back to the archive",
@@ -2977,20 +2989,20 @@
             "Desktop",
             "Mobile"
           ],
-          "plan": "The free plan works but runs out after about four research questions; Claude Pro removes that limit. Signing in unlocks tools that read long reports section by section."
+          "plan": "The free plan works but runs out after about four research questions; Claude Pro removes that limit."
         },
         "chatgpt": {
           "name": "ChatGPT",
           "steps": [
             "Open chatgpt.com/plugins, then Add → Add custom MCP server.",
             "Name it Jawafdehi, with this server URL:",
-            "Authentication: No authentication. Tick I understand and want to continue, click Create as a plugin, then Connect Jawafdehi."
+            "Click Create as a plugin, then Connect Jawafdehi and sign in with Google."
           ],
           "after": "In a chat, type @Jawafdehi before your question; click Always allow when asked.",
           "platforms": [
             "Web"
           ],
-          "plan": "Works on a free ChatGPT account, with the 12 public tools. The tools that read long reports need sign-in, which works in Claude today."
+          "plan": "Works on a free ChatGPT account."
         },
         "claudeCode": {
           "name": "Claude Code",
@@ -3111,6 +3123,22 @@
       "claudeCode": "Claude Code",
       "others": "Cursor, Codex and other agents",
       "copy": "Copy the install command"
+    },
+    "signIn": {
+      "title": "Sign in once",
+      "body": "Every tool needs a free Jawafdehi account. The first time you connect, your AI tool opens our sign-in page, where you can sign in with your Google account. Tools for editing the archive are only for Jawafdehi staff and never appear for other accounts.",
+      "privacy": "What we record when your AI tool uses Jawafdehi is in our Privacy Policy, Section 2.10.",
+      "privacyLink": "Read the Privacy Policy"
+    },
+    "tools": {
+      "title": "What your AI can read",
+      "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, read-only queries over the court records, and a Bikram Sambat date converter. Every public tool only reads, except one: it sends your feedback to the Jawafdehi team when you ask it to, after showing you the message.",
+      "courtNames": "Court records: anyone can look up a single case by its number and see its parties, as on the court's own website. In lists, searches and queries, party names are shown for corruption-related cases; for other cases they are replaced with placeholders such as “plaintiff-1”. Searching every court party by name is for Jawafdehi staff only."
+    },
+    "support": {
+      "title": "Help",
+      "body": "Something not working, or a record looks wrong? Ask your AI tool to send feedback to Jawafdehi, use our feedback page, or email us.",
+      "feedbackLink": "Feedback page"
     }
   },
   "whatsNew": {

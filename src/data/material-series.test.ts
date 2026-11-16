@@ -88,12 +88,13 @@ describe("MATERIAL_SERIES registry", () => {
       "ciaa_annual_report",
       "ciaa_press_release",
       "kanun_patrika",
+      "legal_template",
       "official_report",
     ]);
   });
 
   it("never fills a whole grid row with one publisher", () => {
-    // Registry order IS render order. Five of the nine shelves are the Auditor
+    // Registry order IS render order. Five of the ten shelves are the Auditor
     // General's, and listed as a block they filled two of the grid's three
     // rows — a page about the archive's BREADTH reading as one institution.
     // The fix is to interleave them, NOT to drop shelves from the grid: every
