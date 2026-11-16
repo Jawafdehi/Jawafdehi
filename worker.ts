@@ -735,9 +735,10 @@ async function handleComposedCard(request: Request, upstreamUrl: string): Promis
       'Cache-Control': `public, max-age=${AUTHOR_CARD_TTL_SECONDS}`,
     },
   });
-  // Only successful responses are cached. The clone is required: the body is a
-  // stream and can be read once.
-  await cache.put(request, response.clone());
+  // Only successful GETs are cached: Cloudflare's cache.put throws on any other
+  // method, and these routes also answer HEAD. The clone is required: the body
+  // is a stream and can be read once.
+  if (request.method === 'GET') await cache.put(request, response.clone());
   return response;
 }
 

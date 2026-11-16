@@ -108,7 +108,9 @@ export function NewsletterSignupModal() {
           <div aria-hidden="true" className="absolute inset-0 -z-10 [mask-image:linear-gradient(to_bottom,#000_55%,transparent)]">
             <ShaderBackdrop design="mist" />
           </div>
-          <img src="/assets/logo.svg" alt="Jawafdehi" className="h-8 w-auto" />
+          {/* The navy wordmark disappears on the dark theme; same pair as the navbar. */}
+          <img src="/assets/logo.svg" alt="Jawafdehi" className="h-8 w-auto dark:hidden" />
+          <img src="/assets/logo-dark.svg" alt="" aria-hidden="true" className="hidden h-8 w-auto dark:block" />
           <DialogHeader className="mt-6 space-y-3 text-left sm:text-left">
             <DialogTitle className="font-home-display text-[1.75rem] leading-[1.1] text-primary sm:text-[2rem]">
               {t("newsletter.modal.title")}

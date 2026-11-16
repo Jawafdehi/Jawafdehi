@@ -319,20 +319,21 @@ export function McpAccess() {
   ];
 
   return (
-    <section aria-label={t("mcp.signIn.title")} className="pt-16 md:pt-24">
+    <section className="pt-16 md:pt-24">
       <div className="layout-container">
-        <dl className="divide-y divide-border/70 border-y border-border/70">
+        <div className="divide-y divide-border/70 border-y border-border/70">
           {rows.map((row) => (
             <div
               key={row.id}
               id={row.id}
               className="grid scroll-mt-24 gap-3 py-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12 md:py-10"
             >
-              <dt className="text-xl leading-8 text-primary">{row.title}</dt>
-              <dd className="max-w-2xl text-base leading-7 text-muted-foreground">{row.body}</dd>
+              {/* Headings, so each topic is reachable by heading navigation. */}
+              <h3 className="text-xl font-normal leading-8 text-primary">{row.title}</h3>
+              <div className="max-w-2xl text-base leading-7 text-muted-foreground">{row.body}</div>
             </div>
           ))}
-        </dl>
+        </div>
       </div>
     </section>
   );

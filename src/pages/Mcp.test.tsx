@@ -31,9 +31,15 @@ describe("Mcp page", () => {
   it.each(["en", "ne"] as const)("shows at least three example prompts in %s", async (lng) => {
     await i18n.changeLanguage(lng);
     renderPage();
-    expect(document.getElementById("questions")).toBeTruthy();
+    // Counted on the rendered page, not in the locale file: the carousel gives
+    // every question its own labelled button, so a carousel that stopped
+    // rendering them fails here.
+    const section = document.getElementById("questions") as HTMLElement;
     const items = (lng === "en" ? en : ne).mcp.questions.items;
-    expect(items.length).toBeGreaterThanOrEqual(3);
+    const rendered = items.filter(
+      ({ question }: { question: string }) => within(section).queryByRole("button", { name: question }) !== null,
+    );
+    expect(rendered.length).toBeGreaterThanOrEqual(3);
   });
 
   it("links the support email, the feedback page and the privacy section", async () => {

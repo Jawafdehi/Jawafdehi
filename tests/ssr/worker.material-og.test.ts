@@ -141,6 +141,25 @@ describe('the material card route', () => {
     expect(calls).toEqual([]);
   });
 
+  it('answers a HEAD request without trying to cache it', async () => {
+    // Cloudflare's cache.put throws on any method but GET; caching a HEAD used
+    // to turn an uncached card into a 500.
+    stubApi();
+    vi.stubGlobal('caches', {
+      default: {
+        match: async () => undefined,
+        put: async (req: Request) => {
+          if (req.method !== 'GET') throw new TypeError('Cannot cache a non-GET request');
+        },
+      },
+    });
+    const response = await worker.fetch(
+      new Request(`https://jawafdehi.org/assets/og/material/${TAIL}.jpg`, { method: 'HEAD' }),
+      makeEnv() as never,
+    );
+    expect(response.status).toBe(200);
+  });
+
   it('answers 405 to anything but GET and HEAD', async () => {
     stubApi();
     const response = await worker.fetch(
