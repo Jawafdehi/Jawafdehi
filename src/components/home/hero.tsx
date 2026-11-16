@@ -15,6 +15,8 @@
 //   * --accent-on-dark for crimson on navy (raw --accent is 2.6:1)
 import { useTranslation } from "react-i18next";
 
+import { cn } from "@/lib/utils";
+
 import { HeroSearchTypeahead } from "@/components/home/hero-search-typeahead";
 
 // The page of record: rows of blacked-out lines, every third ending in a
@@ -35,7 +37,7 @@ export function Hero() {
           exactly from the top of the eyebrow to the bottom of the search,
           whatever the language or the headline's wrapping. */}
       <div className="layout-container grid min-h-[calc(100svh-76px)] content-center py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,42%)] lg:gap-12">
-        <div>
+        <div className="col-start-1 row-start-1">
         {/* Upright and one step up from the eyebrow default, so the motto
             reads at a comfortable size on navy (--accent-on-dark is 4.6:1). */}
         <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
@@ -53,7 +55,13 @@ export function Hero() {
 
         <div
           aria-hidden="true"
-          className="hidden flex-col justify-between [mask-image:linear-gradient(to_left,#000_45%,transparent)] lg:flex"
+          className={cn(
+            // Below lg the grid is one column: the lines share the words' cell,
+            // behind them on the right and fainter, still running from the
+            // eyebrow to the search bar. From lg up they take their own column.
+            "col-start-1 row-start-1 -z-10 ml-auto flex w-3/5 max-w-sm flex-col justify-between opacity-35 sm:opacity-50 [mask-image:linear-gradient(to_left,#000_25%,transparent)]",
+            "lg:col-start-2 lg:z-auto lg:ml-0 lg:w-auto lg:max-w-none lg:opacity-100 lg:[mask-image:linear-gradient(to_left,#000_45%,transparent)]",
+          )}
         >
           {RECORD_ROWS.map((row, i) => (
             <div key={i} className="flex gap-3">
