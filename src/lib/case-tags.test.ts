@@ -21,6 +21,13 @@ describe("caseTagLabel", () => {
     expect(caseTagLabel("not-yet-synced", "ne")).toBe("not-yet-synced");
   });
 
+  it("does not mistake an inherited object property for a tag", () => {
+    for (const name of ["constructor", "toString", "__proto__"]) {
+      expect(caseTagLabel(name, "en")).toBe(name);
+      expect(caseTagLabel(name, "ne")).toBe(name);
+    }
+  });
+
   it("has both names for every tag", () => {
     const missing = Object.entries(CASE_TAG_LABELS).filter(
       ([, labels]) => !labels.en.trim() || !labels.ne.trim(),
