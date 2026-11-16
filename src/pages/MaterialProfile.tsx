@@ -452,7 +452,9 @@ export default function MaterialProfile() {
 
                   {contentSummary ? (
                     <TabsContent value="content" className="mt-0">
-                      <div className="mt-6 overflow-hidden rounded-[24px] border border-border/70 bg-surface">
+                      {/* The contents list sits straight on the page; a focused
+                          table or chart keeps its card. */}
+                      <div className={cn("mt-8", focused && "overflow-hidden rounded-[24px] border border-border/70 bg-surface")}>
                         {focusedTable ? (
                           <TableFocusView
                             tail={tail}
