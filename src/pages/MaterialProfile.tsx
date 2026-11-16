@@ -377,17 +377,14 @@ export default function MaterialProfile() {
           )
         ) : isLoading ? (
           <div className="mt-8 space-y-4">
-            <Skeleton className="h-7 w-32 rounded-full" />
             <Skeleton className="h-14 w-4/5 rounded-xl" />
             <Skeleton className="h-80 w-full rounded-[24px]" />
           </div>
         ) : data ? (
           <article>
             <header className="mt-8 md:mt-10">
-              <span className="inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
-                {typeLabel}
-              </span>
-              <h1 className="font-home-display mt-5 max-w-4xl text-balance break-words text-4xl text-primary sm:text-5xl lg:text-[3.5rem] [:root[lang=en]_&]:leading-[1.06]">
+              {/* No type pill here: the Summary's "Type" row already says it. */}
+              <h1 className="font-home-display max-w-4xl text-balance break-words text-4xl text-primary sm:text-5xl lg:text-[3.5rem] [:root[lang=en]_&]:leading-[1.06]">
                 {displayName}
               </h1>
               {name.ne && name.ne !== displayName ? (
