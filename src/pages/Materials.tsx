@@ -19,6 +19,8 @@ const MaterialSeriesBrowse = lazy(lazyChunk(() => import("./MaterialSeriesBrowse
  *   /materials/                → the archive landing page (pre-rendered)
  *   /materials/?series=<slug>  → one series' browse page, which owns `q`/`sort`
  *                                and the date range WITHIN that series
+ *   /materials/?source=<key>   → the same browse page for one whole source,
+ *                                labelled from /api/document-sources/
  *   /materials/?q=…&tags=…&…   → the materials-locked archive search, exactly
  *                                as before — existing deep links keep working
  *
@@ -39,12 +41,22 @@ export default function Materials() {
   const [searchParams] = useSearchParams();
 
   const series = searchParams.get("series");
+  const source = searchParams.get("source");
   const hasSearchIntent = SEARCH_PARAMS.some((param) => searchParams.has(param));
 
   if (series) {
     return (
       <Suspense fallback={null}>
         <MaterialSeriesBrowse slug={series} />
+      </Suspense>
+    );
+  }
+
+  // One whole source, from the API's live source list (lib/document-sources).
+  if (source) {
+    return (
+      <Suspense fallback={null}>
+        <MaterialSeriesBrowse sourceKey={source} />
       </Suspense>
     );
   }

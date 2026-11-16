@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
+import { AllSourcesList } from "@/components/materials/AllSourcesList";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
@@ -236,6 +237,18 @@ export default function MaterialsLanding() {
               <BrowseAllFolderCard />
             </li>
           </ul>
+        </div>
+      </section>
+
+      {/* Every source, live from the API — the complete list behind the
+          curated shelves, so a newly loaded source is never invisible here. */}
+      <section
+        id="sources"
+        aria-labelledby="sources-heading"
+        className="scroll-mt-24 border-t border-border"
+      >
+        <div className="layout-container py-16 md:py-24">
+          <AllSourcesList />
         </div>
       </section>
 

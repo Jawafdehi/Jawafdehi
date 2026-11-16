@@ -14,6 +14,7 @@
 
 import { http, extractErrorMessage } from './http';
 import { courtRefCandidates } from '@/utils/courtCaseRef';
+import type { DocumentSourcesResponse } from '@/lib/document-sources';
 import type {
   AuthorProfile,
   Case,
@@ -319,6 +320,21 @@ export async function getStatistics(): Promise<CaseStatistics> {
     return response.data;
   } catch (error) {
     handleApiError(error, '/statistics/');
+  }
+}
+
+/**
+ * Every document source with its label and live public count — the API's
+ * source registry (JAW-57). Types and helpers live in lib/document-sources.
+ */
+export async function getDocumentSources(): Promise<DocumentSourcesResponse> {
+  try {
+    const response = await http.get<DocumentSourcesResponse>('/api/document-sources/', {
+      timeout: 10000,
+    });
+    return response.data;
+  } catch (error) {
+    handleApiError(error, '/document-sources/');
   }
 }
 

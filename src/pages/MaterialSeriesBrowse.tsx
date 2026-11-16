@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Filter } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySlug, seriesScope } from "@/data/material-series";
+import { seriesBrowseHref, seriesForSourceKey } from "@/lib/document-source-series";
+import { documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
 import { searchArchive } from "@/services/search-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
@@ -136,10 +138,24 @@ function hitAsMaterial(hit: ArchiveSearchResult): Material {
  *
  * The controls live in the URL, so a filtered view is a link someone can send.
  */
-export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }>) {
+export default function MaterialSeriesBrowse({
+  slug,
+  sourceKey,
+}: Readonly<{ slug?: string; sourceKey?: string }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const series = seriesBySlug(slug);
+  // `?source=<key>` browses one whole source from the API's live registry, so a
+  // source added after this release still gets a page; `?series=` is a curated shelf.
+  const sourcesQuery = useQuery({
+    ...documentSourcesQuery(),
+    enabled: Boolean(sourceKey),
+    staleTime: 5 * 60 * 1000,
+  });
+  const series = sourceKey
+    ? seriesForSourceKey(sourcesQuery.data, sourceKey)
+    : slug
+      ? seriesBySlug(slug)
+      : undefined;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get(PARAM.query) ?? "";
@@ -174,8 +190,9 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
       // The SLUG, not the source: several shelves share one source token now
       // (the five Auditor General ones all scope `official_report`), so keying
       // on the source would serve the annual-report page's results on the
-      // audit-journal page from cache.
-      slug,
+      // audit-journal page from cache. Source-built series carry a
+      // `source:<key>` slug, so they cannot collide with a curated one.
+      series?.slug ?? "",
       query,
       sortOrder,
       dateFrom,
@@ -232,6 +249,31 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
       [PARAM.end]: "",
     });
 
+  if (!series && sourceKey && sourcesQuery.isPending) {
+    return (
+      <div className="layout-container py-12 md:py-16" aria-busy="true">
+        <Skeleton className="h-10 w-2/3" />
+        <Skeleton className="mt-6 h-5 w-1/2" />
+      </div>
+    );
+  }
+
+  // The source list could not be fetched: say so and offer a retry, rather
+  // than claiming a real source does not exist. (Existing strings on purpose:
+  // the locale catalogues ship in the initial bundle, which is at its budget.)
+  if (!series && sourceKey && sourcesQuery.isError) {
+    return (
+      <div className="layout-container py-24" role="alert">
+        <p className="font-page-lede">
+          {t("newsletter.form.errorGeneric", "Something went wrong. Please try again later.")}
+        </p>
+        <Button className="mt-6" onClick={() => void sourcesQuery.refetch()}>
+          {t("cases.retry", "Retry")}
+        </Button>
+      </div>
+    );
+  }
+
   if (!series) {
     return (
       <div className="layout-container py-24">
@@ -260,7 +302,7 @@ export default function MaterialSeriesBrowse({ slug }: Readonly<{ slug: string }
       <Seo
         title={`${name} — ${t("materialsPage.heading", "Documents & other materials")} | ${SITE_NAME}`}
         description={pickLocalized(series.description, language)}
-        canonicalUrl={`${SITE_URL}/materials/?series=${series.slug}`}
+        canonicalUrl={`${SITE_URL}${seriesBrowseHref(series)}`}
         language={language}
         robots="noindex, follow"
       />

@@ -26,6 +26,9 @@ vi.mock("@/services/search-api", () => ({
 
 vi.mock("@/services/jds-api", () => ({
   getCaseById: getCaseByIdMock,
+  // Material cards name sources from the API's registry; an empty one leaves
+  // them on the frontend's own labels, which is what these tests assert.
+  getDocumentSources: () => Promise.resolve({ ready: true, sources: [] }),
 }));
 
 // Material rows hydrate their download/source buttons from the detail API;
