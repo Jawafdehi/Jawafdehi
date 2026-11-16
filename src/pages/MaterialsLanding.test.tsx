@@ -7,6 +7,7 @@ import type { MaterialsMetrics } from "@/types/jds";
 
 const getStatistics = vi.hoisted(() => vi.fn());
 const searchArchive = vi.hoisted(() => vi.fn());
+const getDocumentSources = vi.hoisted(() => vi.fn());
 
 // Mirrors the two call shapes this page uses: `t(key, "inline default")` and
 // `t(key, { defaultValue, ...vars })`. The second has to interpolate, or an
@@ -30,7 +31,10 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/components/Seo", () => ({ default: () => null }));
 // jsdom implements no IntersectionObserver, which the reveal hook observes with.
 vi.mock("@/hooks/useRevealOnScroll", () => ({ useRevealOnScroll: () => ({ current: null }) }));
-vi.mock("@/services/jds-api", () => ({ getStatistics: () => getStatistics() }));
+vi.mock("@/services/jds-api", () => ({
+  getStatistics: () => getStatistics(),
+  getDocumentSources: () => getDocumentSources(),
+}));
 vi.mock("@/services/search-api", () => ({
   searchArchive: (...args: unknown[]) => searchArchive(...args),
 }));
@@ -91,6 +95,8 @@ beforeEach(() => {
   getStatistics.mockReset();
   searchArchive.mockReset();
   searchArchive.mockResolvedValue({ results: [], count: 0 });
+  getDocumentSources.mockReset();
+  getDocumentSources.mockResolvedValue({ ready: true, sources: [] });
 });
 
 describe("MaterialsLanding folder counts", () => {
@@ -170,5 +176,45 @@ describe("MaterialsLanding recently-added framing", () => {
 
     // Better to say nothing than to size the archive at zero.
     expect(screen.queryByText(/newest of/)).toBeNull();
+  });
+});
+
+// Sources the curated shelves do not cover (Revenue Investigation, SEBON…) were
+// unreachable from /materials. The page now lists every source the API serves.
+describe("MaterialsLanding every-source list", () => {
+  it("lists each source from the API with its count and a browse link", async () => {
+    getStatistics.mockResolvedValue({ materials: metrics() });
+    getDocumentSources.mockResolvedValue({
+      ready: true,
+      sources: [
+        {
+          source: "ciaa_press_release",
+          name: { en: "CIAA press releases", ne: "अख्तियारका प्रेस विज्ञप्ति" },
+          publisher: { en: "CIAA" },
+          labelled: true,
+          count: 3556,
+        },
+        {
+          source: "dri",
+          name: { en: "Revenue Investigation releases and reports" },
+          publisher: { en: "Department of Revenue Investigation", ne: "राजस्व अनुसन्धान विभाग" },
+          labelled: true,
+          count: 160,
+        },
+        { source: "unnamed", name: null, publisher: null, labelled: false, count: 9 },
+      ],
+    });
+    renderPage();
+
+    const dri = await screen.findByRole("link", { name: /Revenue Investigation releases and reports/ });
+    expect(dri.getAttribute("href")).toBe("/materials/?source=dri");
+    expect(dri.textContent).toContain("Department of Revenue Investigation");
+    expect(dri.textContent).toContain("160");
+    // A source with a curated shelf links to that shelf.
+    expect(
+      screen.getByRole("link", { name: /CIAA press releases.*3,556/ }).getAttribute("href"),
+    ).toBe("/materials/?series=ciaa-press-releases");
+    // Staff have not named it yet: not listed.
+    expect(document.querySelector('[data-source="unnamed"]')).toBeNull();
   });
 });

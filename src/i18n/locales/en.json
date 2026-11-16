@@ -2346,6 +2346,10 @@
     "placeholder": "Search documents & other materials"
   },
   "materialsLanding": {
+    "sources": {
+      "title": "Every source in the archive",
+      "lede": "Every office and publication we hold documents from, largest first. New sources appear here as soon as they are added."
+    },
     "title": "Documents & other materials — Nepal's public records",
     "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
     "heroTitle": "Nepal's public records. One archive.",

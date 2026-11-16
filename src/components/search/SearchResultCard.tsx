@@ -10,6 +10,7 @@ import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySource } from "@/data/material-series";
+import { documentSourceLabel, documentSourcesQuery } from "@/lib/document-sources";
 import { sourceKeyFor } from "@/lib/material-source-labels";
 import {
   materialTypeForSchemaClass,
@@ -117,6 +118,13 @@ function MaterialResultCard({
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const source = sourceFromMaterialUrl(result.url);
+  // The API's live source registry names sources this release has never heard
+  // of (one cached request shared by every card on the page).
+  const { data: documentSources } = useQuery({
+    ...documentSourcesQuery(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const registryLabel = source ? documentSourceLabel(documentSources, source, language) : null;
   // The KIND is required alongside the source: one source token can carry
   // several shelves, and 210 of the 228 `official_report` documents are not
   // annual reports. Absent on materials from corpora that classify nothing.
@@ -134,7 +142,11 @@ function MaterialResultCard({
     materialTypeForSchemaClass(result.extra.type);
   const seriesName = series
     ? pickLocalized(series.name, language)
-    : t(
+    : // A source with no curated shelf and no entry in the type map below
+      // (Revenue Investigation, SEBON…) is named by the registry rather than
+      // by its schema.org class.
+      (!(source && materialTypeForSource(source)) && registryLabel?.name) ||
+      t(
         `dataQuality.materialsByType.type.${materialTypeKeyFor(materialType)}`,
         // Last resort for a catalogue gap: the type token read plainly, so a
         // missing entry degrades the wording rather than dropping the line.
@@ -147,10 +159,11 @@ function MaterialResultCard({
   // the series: CIAA owns two series (press releases AND annual reports), and
   // one series spans several offices (press releases come from CIAA, CIB and
   // DMLI). Neither line implies the other, so the card carries both.
-  const officeLabel = t(
-    `dataQuality.materialsBySource.source.${sourceKeyFor(source ?? "")}`,
-    source ?? "",
-  );
+  const officeKey = sourceKeyFor(source ?? "");
+  const officeLabel =
+    officeKey === "other" && registryLabel?.publisher
+      ? registryLabel.publisher
+      : t(`dataQuality.materialsBySource.source.${officeKey}`, source ?? "");
   const title =
     pickLocalized(result.title, language) ||
     t("materialsLanding.recent.untitled", "Untitled document");

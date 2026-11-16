@@ -16,7 +16,8 @@ vi.mock("@/pages/ArchiveSearch", () => ({
   default: () => <div>ARCHIVE SEARCH</div>,
 }));
 vi.mock("@/pages/MaterialSeriesBrowse", () => ({
-  default: ({ slug }: { slug: string }) => <div>SERIES BROWSE: {slug}</div>,
+  default: ({ slug, sourceKey }: { slug?: string; sourceKey?: string }) =>
+    sourceKey ? <div>SOURCE BROWSE: {sourceKey}</div> : <div>SERIES BROWSE: {slug}</div>,
 }));
 
 import Materials from "@/pages/Materials";
@@ -64,5 +65,10 @@ describe("Materials view routing", () => {
   it("also wins over the other search params a series view owns", async () => {
     renderAt("/materials/?series=charge-sheets&sort=oldest&page=2");
     expect(await screen.findByText("SERIES BROWSE: charge-sheets")).toBeTruthy();
+  });
+
+  it("renders a whole-source browse for ?source=", async () => {
+    renderAt("/materials/?source=dri");
+    expect(await screen.findByText("SOURCE BROWSE: dri")).toBeTruthy();
   });
 });

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArchiveSearchParams, ArchiveSearchResponse } from "@/types/search";
 
 const searchArchive = vi.hoisted(() => vi.fn());
+const getDocumentSources = vi.hoisted(() => vi.fn());
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => {
@@ -42,6 +43,9 @@ vi.mock("@/components/Seo", () => ({ default: () => null }));
 vi.mock("@/components/ShareButton", () => ({ ShareButton: () => null }));
 vi.mock("@/services/search-api", () => ({
   searchArchive: (...args: unknown[]) => searchArchive(...args),
+}));
+vi.mock("@/services/jds-api", () => ({
+  getDocumentSources: () => getDocumentSources(),
 }));
 
 import MaterialSeriesBrowse from "@/pages/MaterialSeriesBrowse";
@@ -100,7 +104,11 @@ function renderPage(
             element={
               <>
                 <LocationProbe />
-                <MaterialSeriesBrowse slug={slug} />
+                {slug.startsWith("source:") ? (
+                  <MaterialSeriesBrowse sourceKey={slug.slice("source:".length)} />
+                ) : (
+                  <MaterialSeriesBrowse slug={slug} />
+                )}
               </>
             }
           />
@@ -305,5 +313,44 @@ describe("MaterialSeriesBrowse", () => {
 
     expect(await screen.findByText("No documents match these filters.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Clear filters" })).toBeTruthy();
+  });
+});
+
+// A source the curated registry has never heard of is browsable from the API's
+// live source list: /materials/?source=dri.
+describe("MaterialSeriesBrowse for a whole source", () => {
+  const sources = {
+    ready: true,
+    sources: [
+      {
+        source: "dri",
+        name: { en: "Revenue Investigation releases and reports" },
+        publisher: { en: "Department of Revenue Investigation", ne: "राजस्व अनुसन्धान विभाग" },
+        description: "Press releases on cases filed, and reports (dri.gov.np).",
+        labelled: true,
+        count: 160,
+      },
+    ],
+  };
+
+  it("names the source from the API and scopes the search to it", async () => {
+    getDocumentSources.mockResolvedValue(sources);
+    searchArchive.mockResolvedValue(response([hit("1", "A DRI press release", "2021-06-14")], 160));
+    renderPage("/materials/?source=dri", "source:dri");
+
+    expect(
+      await screen.findByRole("heading", { name: "Revenue Investigation releases and reports" }),
+    ).toBeTruthy();
+    await waitFor(() => expect(searchArchive).toHaveBeenCalled());
+    expect(lastParams().source).toEqual(["dri"]);
+    expect(lastParams().dataset_bucket).toBeUndefined();
+  });
+
+  it("says the source does not exist when the API does not list it", async () => {
+    getDocumentSources.mockResolvedValue(sources);
+    renderPage("/materials/?source=nope", "source:nope");
+
+    expect(await screen.findByText(/This series does not exist/)).toBeTruthy();
+    expect(searchArchive).not.toHaveBeenCalled();
   });
 });

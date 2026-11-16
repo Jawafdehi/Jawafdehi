@@ -20,6 +20,7 @@ import { pickRecentMaterials } from './lib/materials-landing';
 import { getAllPages, getMaterial, materialTail } from './services/datalake-api';
 import type { ArchiveSearchResponse } from './types/search';
 import { http } from './services/http';
+import { documentSourcesQuery } from './lib/document-sources';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
 import type { JawafEntity } from './types/jds';
@@ -111,6 +112,7 @@ async function prefetch(
     await Promise.allSettled([
       queryClient.prefetchQuery(archiveStatisticsQuery()),
       queryClient.prefetchQuery(recentsQuery),
+      queryClient.prefetchQuery(documentSourcesQuery()),
     ]);
     const recents = queryClient.getQueryData<ArchiveSearchResponse>(recentsQuery.queryKey);
     if (recents) {
