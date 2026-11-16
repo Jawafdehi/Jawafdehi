@@ -163,10 +163,13 @@ export const members: TeamMember[] = [
     ],
   },
   {
-    // TODO(JAW-60): photo, confirmed names and profile link pending from Santosh.
     displayName: { en: "Santosh Pokharel", ne: "सन्तोष पोखरेल" },
-    description: "Social Media",
-    contacts: [],
+    thumb: "/assets/teammembers/santosh.webp",
+    description: "Social Media Consultant",
+    contacts: [
+      { type: "email", value: "santosh@jawafdehi.org" },
+      { type: "instagram", value: "https://www.instagram.com/santos_pokh" },
+    ],
   },
   {
     displayName: { en: "Sujesh Sah", ne: "सुजेश साह" },
