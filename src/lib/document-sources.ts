@@ -11,7 +11,7 @@
  * up here with no frontend release.
  */
 
-import { MATERIAL_SERIES, type MaterialSeries } from "@/data/material-series";
+import { MATERIAL_SERIES } from "@/data/material-series";
 import { getDocumentSources } from "@/services/jds-api";
 
 export interface BilingualLabel {
@@ -56,9 +56,6 @@ export function listedSources(response: DocumentSourcesResponse | undefined | nu
   );
 }
 
-/** The slug prefix that marks a series built from a source row, not the registry. */
-const SOURCE_SLUG_PREFIX = "source:";
-
 /**
  * Where to browse one source. A source that a curated shelf covers whole
  * (one shelf, no kind narrowing) links to that shelf, keeping its editorial
@@ -72,51 +69,10 @@ export function sourceBrowseHref(source: string): string {
   return `/materials/?source=${encodeURIComponent(source)}`;
 }
 
-/** The canonical browse URL for a series, curated or built from a source row. */
-export function seriesBrowseHref(series: MaterialSeries): string {
-  return series.slug.startsWith(SOURCE_SLUG_PREFIX)
-    ? `/materials/?source=${encodeURIComponent(series.source)}`
-    : `/materials/?series=${series.slug}`;
-}
-
-/** A stable folder tint per source key, so a source keeps its colour between visits. */
-function tintFor(source: string): number {
-  let hash = 0;
-  for (const char of source) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return (hash % 8) + 1;
-}
-
-/**
- * A browsable series for a source the curated registry does not cover, built
- * from its API row. Missing Nepali falls back to English when rendered
- * (pickLocalized), so an unlabelled half never shows as a blank.
- */
-export function seriesFromDocumentSource(row: DocumentSourceEntry): MaterialSeries {
-  const nameEn = row.name?.en ?? row.name?.ne ?? row.source;
-  const publisherEn = row.publisher?.en ?? "";
-  const descriptionEn = row.description || publisherEn;
-  return {
-    slug: `${SOURCE_SLUG_PREFIX}${row.source}`,
-    source: row.source,
-    tint: tintFor(row.source),
-    name: { en: nameEn, ne: row.name?.ne ?? "" },
-    description: {
-      en: descriptionEn,
-      // The API has no Nepali description field; the Nepali publisher name is
-      // the best Nepali line it offers.
-      ne: row.publisher?.ne ?? "",
-    },
-    typeLabel: { en: nameEn, ne: row.name?.ne ?? "" },
-  };
-}
-
-/** The series for `/materials/?source=<key>`, or undefined if no listed source has that key. */
-export function seriesForSourceKey(
-  response: DocumentSourcesResponse | undefined | null,
-  source: string,
-): MaterialSeries | undefined {
-  const row = listedSources(response).find((entry) => entry.source === source);
-  return row ? seriesFromDocumentSource(row) : undefined;
+/** A bilingual label in the reader's language, falling back to the other one. */
+export function pickLabel(label: BilingualLabel | null | undefined, language: string): string {
+  const nepali = Boolean(language?.startsWith("ne"));
+  return (nepali ? label?.ne || label?.en : label?.en || label?.ne) ?? "";
 }
 
 /** The source's own name for a reader, falling back across languages. */
@@ -127,8 +83,5 @@ export function documentSourceLabel(
 ): { name: string; publisher: string } | null {
   const row = response?.sources.find((entry) => entry.source === source);
   if (!row || !row.labelled) return null;
-  const nepali = Boolean(language?.startsWith("ne"));
-  const pick = (label: BilingualLabel | null) =>
-    (nepali ? label?.ne || label?.en : label?.en || label?.ne) ?? "";
-  return { name: pick(row.name), publisher: pick(row.publisher) };
+  return { name: pickLabel(row.name, language), publisher: pickLabel(row.publisher, language) };
 }

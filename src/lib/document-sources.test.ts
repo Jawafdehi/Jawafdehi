@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  documentSourceLabel,
-  listedSources,
   seriesBrowseHref,
   seriesForSourceKey,
   seriesFromDocumentSource,
+} from "@/lib/document-source-series";
+import {
+  documentSourceLabel,
+  listedSources,
   sourceBrowseHref,
   type DocumentSourcesResponse,
 } from "@/lib/document-sources";

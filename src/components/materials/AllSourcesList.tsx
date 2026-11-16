@@ -3,18 +3,13 @@ import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   documentSourcesQuery,
   listedSources,
+  pickLabel,
   sourceBrowseHref,
-  type BilingualLabel,
 } from "@/lib/document-sources";
 import { formatArchiveCount } from "@/lib/materials-landing";
-
-function pick(label: BilingualLabel | null, nepali: boolean): string {
-  return (nepali ? label?.ne || label?.en : label?.en || label?.ne) ?? "";
-}
 
 /**
  * Every source the archive holds, with its live count, straight from
@@ -25,37 +20,28 @@ function pick(label: BilingualLabel | null, nepali: boolean): string {
 export function AllSourcesList() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const nepali = Boolean(language?.startsWith("ne"));
-  const { data, isPending, isError } = useQuery({
+  const { data } = useQuery({
     ...documentSourcesQuery(),
     staleTime: 5 * 60 * 1000,
   });
   const sources = listedSources(data);
 
-  if (isError) return null;
+  // Nothing until the list arrives (the pre-rendered page already carries it),
+  // and nothing at all if the request fails: no empty heading.
+  if (sources.length === 0) return null;
 
   return (
     <div>
       <h2 id="sources-heading" className="font-archive-section-title">
-        {t("materialsLanding.sources.title", "Every source in the archive")}
+        {t("materialsLanding.sources.title")}
       </h2>
       <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-        {t(
-          "materialsLanding.sources.lede",
-          "Every office and publication we hold documents from, largest first. New sources appear here as soon as they are added.",
-        )}
+        {t("materialsLanding.sources.lede")}
       </p>
-      {isPending ? (
-        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 9 }, (_, index) => (
-            <Skeleton key={index} className="h-16 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : (
-        <ul className="mt-8 grid list-none grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-8 grid list-none grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {sources.map((row) => {
-            const name = pick(row.name, nepali);
-            const publisher = pick(row.publisher, nepali);
+            const name = pickLabel(row.name, language);
+            const publisher = pickLabel(row.publisher, language);
             return (
               <li key={row.source}>
                 <Link
@@ -80,7 +66,6 @@ export function AllSourcesList() {
             );
           })}
         </ul>
-      )}
     </div>
   );
 }

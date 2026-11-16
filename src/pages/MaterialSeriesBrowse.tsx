@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySlug, seriesScope } from "@/data/material-series";
-import { documentSourcesQuery, seriesBrowseHref, seriesForSourceKey } from "@/lib/document-sources";
+import { seriesBrowseHref, seriesForSourceKey } from "@/lib/document-source-series";
+import { documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
 import { searchArchive } from "@/services/search-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
