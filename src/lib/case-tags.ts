@@ -27,8 +27,12 @@ type TagLabels = Record<string, { en: string; ne: string }>;
 
 const LABELS: TagLabels = CASE_TAG_LABELS;
 
+export function isCaseTag(tag: string): boolean {
+  return Object.prototype.hasOwnProperty.call(LABELS, tag);
+}
+
 export function caseTagLabel(tag: string, language: string): string {
+  if (!isCaseTag(tag)) return tag;
   const labels = LABELS[tag];
-  if (!labels) return tag;
   return language === "ne" ? labels.ne : labels.en;
 }

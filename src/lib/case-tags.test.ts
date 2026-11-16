@@ -40,9 +40,12 @@ describe("the Tags search filter", () => {
     expect(getFacetItemLabel("tags", { name: "bribery" }, translate, "en")).toBe(
       "Bribery",
     );
-    // A legacy keyword still indexed into the facet shows as stored.
-    expect(getFacetItemLabel("tags", { name: "CORRUPTION" }, translate, "en")).toBe(
-      "CORRUPTION",
+    // A bucket that is not a known tag keeps the generic facet label.
+    expect(
+      getFacetItemLabel("tags", { name: "ciaa", display_name: "CIAA" }, translate, "en"),
+    ).toBe("CIAA");
+    expect(getFacetItemLabel("tags", { name: "public_works" }, translate, "en")).toBe(
+      "public works",
     );
   });
 });
