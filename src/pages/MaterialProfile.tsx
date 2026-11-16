@@ -48,9 +48,12 @@ import {
   materialDisplayName,
   materialJsonLd,
   materialMetaDescription,
+  materialCardUrl,
   materialMetaTitle,
   materialRobots,
   materialTypeLabel,
+  MATERIAL_CARD_HEIGHT,
+  MATERIAL_CARD_WIDTH,
 } from "@/lib/material-meta";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
@@ -344,6 +347,12 @@ export default function MaterialProfile() {
         <meta property="og:url" content={materialCanonicalUrl(tail)} />
         <meta property="og:title" content={materialMetaTitle(displayName)} />
         <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={materialCardUrl(tail)} />
+        <meta property="og:image:width" content={String(MATERIAL_CARD_WIDTH)} />
+        <meta property="og:image:height" content={String(MATERIAL_CARD_HEIGHT)} />
+        <meta property="og:image:alt" content={displayName} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={materialCardUrl(tail)} />
         <meta name="twitter:title" content={materialMetaTitle(displayName)} />
         <meta name="twitter:description" content={metaDescription} />
         {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}

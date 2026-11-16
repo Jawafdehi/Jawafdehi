@@ -10,6 +10,9 @@ import {
   materialJsonLd,
   materialMetaDescription,
   materialMetaTitle,
+  materialCardUrl,
+  MATERIAL_CARD_WIDTH,
+  MATERIAL_CARD_HEIGHT,
   materialRobots,
   materialTypeLabel,
   type MaterialMetaSource,
@@ -53,7 +56,7 @@ const META_FETCH_TIMEOUT_MS = 4000;
 const CARD_FETCH_TIMEOUT_MS = 10000;
 // A day, matching the API's `s-maxage`. This is the window in which a profile
 // edit (new photo, corrected role) reaches a shared link.
-const AUTHOR_CARD_TTL_SECONDS = 86400;
+const AUTHOR_CARD_TTL_SECONDS = 86400; // also the document cards' TTL
 
 const DOCUMENT_PREVIEW_ALLOWED_HOSTS = new Set([
   'ngm-store.jawafdehi.org',
@@ -637,11 +640,14 @@ async function handleMaterialMetaFallback(
     title: materialMetaTitle(displayName),
     description,
     canonicalUrl: materialCanonicalUrl(tail),
-    // Materials carry no image of their own, so the site card is the honest
-    // choice; no imageWidth/imageHeight, matching how buildMetaTags is called
-    // elsewhere for the shared fallback card.
-    imageUrl: SOCIAL_IMAGE_URL,
+    // The document's own composed card (its kind, its title, an invitation
+    // into the archive), never the site banner: every material used to unfurl
+    // identically. The card route falls back to the banner by itself when the
+    // API cannot answer, so this URL is always an image.
+    imageUrl: materialCardUrl(tail),
     imageAlt: displayName,
+    imageWidth: MATERIAL_CARD_WIDTH,
+    imageHeight: MATERIAL_CARD_HEIGHT,
     type: 'article',
     publishedTime:
       typeof material.datePublished === 'string' ? material.datePublished : null,
@@ -678,13 +684,40 @@ async function handleMaterialMetaFallback(
 // of serving an error: an unfurler that gets a non-image for og:image shows NO
 // image, which is worse than a generic one.
 async function handleAuthorCard(request: Request, slug: string): Promise<Response> {
+  return handleComposedCard(
+    request,
+    `${JDS_API_BASE}/authors/${encodeURIComponent(slug)}/og-card.jpg`,
+  );
+}
+
+// A document's composed share card, proxied exactly as the author card is.
+//
+// `/assets/og/material/*` matches at any depth, so the splat is checked with
+// isMaterialTail before it reaches a URL, for the same reason the material
+// head fallback checks it: `..` segments would otherwise normalise into a
+// different API endpoint. A bad tail gets the banner, not an error — it is
+// still an og:image URL, and an unfurler shown a non-image shows nothing.
+async function handleMaterialCard(request: Request, tail: string): Promise<Response> {
+  if (!isMaterialTail(tail)) {
+    return new Response(null, {
+      status: 302,
+      headers: { Location: SOCIAL_IMAGE_URL, 'Cache-Control': 'no-store' },
+    });
+  }
+  return handleComposedCard(
+    request,
+    `${JDS_API_BASE}/materials/${encodeMaterialTail(tail)}/og-card.jpg`,
+  );
+}
+
+// Shared by both cards: edge-cached for a day on success, the static banner on
+// any failure.
+async function handleComposedCard(request: Request, upstreamUrl: string): Promise<Response> {
   const cache = caches.default;
   const cached = await cache.match(request);
   if (cached) return cached;
 
-  const upstream = await fetchImageWithTimeout(
-    `${JDS_API_BASE}/authors/${encodeURIComponent(slug)}/og-card.jpg`,
-  );
+  const upstream = await fetchImageWithTimeout(upstreamUrl);
 
   if (!upstream || !upstream.ok) {
     // 404 (no such public author) and 503 (the API cannot shape the name) both
@@ -801,6 +834,23 @@ export default {
         return new Response('Method Not Allowed', { status: 405 });
       }
       return handleAuthorCard(request, decodeURIComponent(authorCardMatch[1]));
+    }
+
+    // Document share cards, matched here for the same reason the author card
+    // is. The tail is percent-decoded per segment, the inverse of
+    // encodeMaterialTail, so a Devanagari ident reaches the API as itself.
+    const materialCardMatch = endpoint.match(/^\/assets\/og\/material\/(.+)\.jpg$/);
+    if (materialCardMatch) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
+      let tail: string;
+      try {
+        tail = materialCardMatch[1].split('/').map(decodeURIComponent).join('/');
+      } catch {
+        tail = '';
+      }
+      return handleMaterialCard(request, tail);
     }
 
     // Latest YouTube uploads for the Weekly Series "Past presentations" section

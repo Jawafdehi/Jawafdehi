@@ -116,6 +116,22 @@ export function encodeMaterialTail(tail: string): string {
   return tail.split("/").map(encodeURIComponent).join("/");
 }
 
+/** The composed share card's intrinsic size; the API renders exactly this. */
+export const MATERIAL_CARD_WIDTH = 1200;
+export const MATERIAL_CARD_HEIGHT = 630;
+
+/**
+ * The document's own share card: what kind of document it is, its title, and
+ * "Find more documents in the archive". Rendered by the platform API
+ * (`materials/og_card.py`) and proxied by the Worker under THIS origin, exactly
+ * as the author card is (see `authorCardUrl`). Both renderers of a material's
+ * head — MaterialProfile and the Worker — take it from here, so a crawler and a
+ * browser cannot disagree about the page's image.
+ */
+export function materialCardUrl(tail: string): string {
+  return `${SITE_URL}/assets/og/material/${encodeMaterialTail(tail)}.jpg`;
+}
+
 /**
  * Is this splat a material tail worth resolving at all?
  *
