@@ -1,6 +1,8 @@
 // The platform changelog: one dated, tagged list of what has changed in the
-// archive and the tools around it. /whats-new shows all of it; the home page
-// and each product page show a slice (see entriesFor).
+// archive and the tools around it. It lives on Updates & News: /updates shows it
+// as a bento band (all of it under ?filter=whats-new), each entry has its own
+// post at /updates/whats-new/<id>, and the home page and each product page show
+// a slice (see entriesFor). The old /whats-new redirects to the filtered list.
 //
 // Rules for an entry:
 //   * it has shipped — merged and live, never planned
@@ -125,4 +127,24 @@ export function entriesFor({
 /** Tags that at least one entry carries, in WHATS_NEW_TAGS order. */
 export function tagsInUse(): WhatsNewTag[] {
   return WHATS_NEW_TAGS.filter((tag) => WHATS_NEW.some((entry) => entry.tags.includes(tag)));
+}
+
+/** An entry's own post, on Updates & News. */
+export function whatsNewPostPath(id: string): string {
+  return `/updates/whats-new/${id}`;
+}
+
+/** The changelog's list: Updates & News, filtered to What's new, optionally one tag. */
+export function whatsNewListPath(tag?: WhatsNewTag): string {
+  return tag ? `/updates?filter=whats-new&tag=${tag}` : "/updates?filter=whats-new";
+}
+
+/** One entry by its id, or undefined. */
+export function entryById(id: string | undefined): WhatsNewEntry | undefined {
+  return WHATS_NEW.find((entry) => entry.id === id);
+}
+
+/** A tag from a URL param, or undefined if it is not one of ours. */
+export function asWhatsNewTag(value: string | null | undefined): WhatsNewTag | undefined {
+  return (WHATS_NEW_TAGS as readonly string[]).includes(value ?? "") ? (value as WhatsNewTag) : undefined;
 }

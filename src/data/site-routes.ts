@@ -252,15 +252,6 @@ export const SITE_ROUTES = [
     sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
   },
   {
-    path: "/whats-new",
-    chrome: "app",
-    titleKey: "whatsNew.meta.title",
-    descriptionKey: "searchCommand.descriptions.whatsNew",
-    keywords: ["what's new", "changelog", "release", "updates", "new features", "mcp", "api"],
-    icon: "Newspaper",
-    sitemapTitle: "What's new — Jawafdehi",
-  },
-  {
     path: "/likhit",
     chrome: "app",
     titleKey: "likhit.meta.title",
@@ -292,7 +283,7 @@ export const SITE_ROUTES = [
     chrome: "app",
     titleKey: "nav.updates",
     descriptionKey: "searchCommand.descriptions.updates",
-    keywords: ["updates", "news", "posts"],
+    keywords: ["updates", "news", "posts", "what's new", "changelog", "release", "new features"],
     icon: "Newspaper",
     sitemapTitle: "Updates — Jawafdehi",
   },
@@ -367,6 +358,10 @@ export const SITE_ROUTES = [
   // framing to the CMS; this declares the same fact on the route itself so the
   // table is the one place that says which routes are not indexable.
   { path: "/updates/preview", chrome: "app", noindex: true },
+  // One post per changelog entry (src/data/whats-new.ts), pre-rendered by
+  // scripts/pre-render.ts from the entry list. Two segments, so it never
+  // competes with /updates/:slug.
+  { path: "/updates/whats-new/:id", chrome: "app" },
   { path: "/updates/:slug", chrome: "app" },
   { path: "/data-quality", chrome: "app" },
   { path: "/newsletter/confirmed", chrome: "app" },
@@ -387,6 +382,8 @@ export const SITE_ROUTES = [
   { path: "/cases", chrome: "app" },
   { path: "/cases/page/:page", chrome: "app" },
   { path: "/courtcases", chrome: "app" },
+  // Folded into Updates & News (?filter=whats-new); the edge 301s it.
+  { path: "/whats-new", chrome: "app" },
 ] as const satisfies readonly SiteRoute[];
 
 // Every path the SPA will render, as a React Router pattern.

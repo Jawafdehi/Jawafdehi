@@ -34,7 +34,6 @@ import Volunteer from "./pages/Volunteer";
 import OurProducts from "./pages/OurProducts";
 // Pre-rendered, so it must stay eager — see the split policy above.
 import Mcp from "./pages/Mcp";
-import WhatsNew from "./pages/WhatsNew";
 // Pre-rendered, so it must stay eager — see the split policy above.
 import Likhit from "./pages/Likhit";
 import WeeklyMeetings from "./pages/WeeklyMeetings";
@@ -45,6 +44,8 @@ import Feedback from "./pages/Feedback";
 import ReportCase from "./pages/ReportCase";
 import Updates from "./pages/Updates";
 import UpdateDetail from "./pages/UpdateDetail";
+// Pre-rendered (one page per changelog entry), so it must stay eager.
+import WhatsNewPost from "./pages/WhatsNewPost";
 import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
@@ -53,6 +54,7 @@ import ResearchCorruption from "./pages/ResearchCorruption";
 // the landing page now: its old ?series= and ?q= views redirect into /search.
 import Materials from "./pages/Materials";
 import { ArchiveRedirect } from "@/components/ArchiveRedirect";
+import { WhatsNewRedirect } from "@/components/WhatsNewRedirect";
 // /donate, /donate/success and /donate/cancel ARE in PRE_RENDERED_STATIC_ROUTES,
 // so per the policy above they must be eager. They were lazy() until 2026-08-11
 // and pre-rendered to exactly what that policy predicts: an empty <title> and no
@@ -136,6 +138,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/openhouse": <OpenHouse />,
   "/updates": <Updates />,
   "/updates/preview": <UpdatePreview />,
+  "/updates/whats-new/:id": <WhatsNewPost />,
   "/updates/:slug": <UpdateDetail />,
   "/faq": <FaqPage />,
   "/about": <About />,
@@ -149,7 +152,8 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/donate": <Donate />,
   "/products": <OurProducts />,
   "/mcp": <Mcp />,
-  "/whats-new": <WhatsNew />,
+  // Folded into Updates & News: the changelog is its "What's new" filter.
+  "/whats-new": <WhatsNewRedirect />,
   "/likhit": <Likhit />,
   "/saptahik": <WeeklyMeetings />,
   "/privacy": <Privacy />,

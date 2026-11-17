@@ -5,6 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { ArticleListItem } from "@/types/cms";
+import { WHATS_NEW } from "@/data/whats-new";
 
 // Passthrough translations so assertions don't depend on i18n resources.
 vi.mock("react-i18next", () => ({
@@ -18,14 +19,14 @@ vi.mock("@/services/cms-api", () => ({
 
 import Updates from "@/pages/Updates";
 
-const renderPage = () => {
+const renderPage = (url = "/updates") => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/updates"]}>
+        <MemoryRouter initialEntries={[url]}>
           <Updates />
         </MemoryRouter>
       </QueryClientProvider>
@@ -75,7 +76,7 @@ describe("Updates feed", () => {
     expect(screen.getByText("Story 2").closest("a")?.getAttribute("data-shape")).toBe("picture");
     expect(screen.getByText("Story 3").closest("a")?.getAttribute("data-shape")).toBe("text");
     // An even grid: no story spans more than one cell.
-    for (const item of document.querySelectorAll("ul.grid > li")) {
+    for (const item of document.querySelectorAll('ul[data-feed="articles"] > li')) {
       expect(item.className).not.toContain("span");
     }
   });
@@ -98,8 +99,49 @@ describe("Updates feed", () => {
     const { container } = renderPage();
 
     await screen.findByText("Story 1");
-    const className = container.querySelector("ul.grid")?.className ?? "";
+    const className = container.querySelector('ul[data-feed="articles"]')?.className ?? "";
     expect(className).toContain("md:grid-cols-2");
     expect(className).toContain("lg:grid-cols-3");
+  });
+});
+
+// The platform changelog (src/data/whats-new.ts) lives here too: a bento band in
+// "All", the whole of it under ?filter=whats-new (where /whats-new redirects).
+describe("Updates — What's new", () => {
+  it("shows the changelog as a bento band above the articles in All", async () => {
+    getArticles.mockResolvedValue([article(1)]);
+    const { container } = renderPage();
+
+    await screen.findByText("Story 1");
+    const bento = container.querySelector('ul[data-feed="whats-new"]');
+    expect(bento?.querySelectorAll(":scope > li").length).toBe(Math.min(5, WHATS_NEW.length));
+    // Each tile opens its own post.
+    expect(bento?.querySelector("a")?.getAttribute("href")).toMatch(/^\/updates\/whats-new\//);
+    // The band comes first, the articles after it.
+    const feeds = [...container.querySelectorAll("ul[data-feed]")].map((ul) => ul.getAttribute("data-feed"));
+    expect(feeds).toEqual(["whats-new", "articles"]);
+  });
+
+  it("shows every entry and no articles under ?filter=whats-new", async () => {
+    getArticles.mockResolvedValue([article(1)]);
+    const { container } = renderPage("/updates?filter=whats-new");
+
+    await screen.findAllByRole("link");
+    expect(container.querySelectorAll('ul[data-feed="whats-new"] > li').length).toBe(WHATS_NEW.length);
+    expect(container.querySelector('ul[data-feed="articles"]')).toBeNull();
+    expect(screen.getByRole("button", { name: "What's new" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("narrows to one product with ?tag=", async () => {
+    const { container } = renderPage("/updates?filter=whats-new&tag=mcp");
+    const expected = WHATS_NEW.filter((entry) => entry.tags.includes("mcp")).length;
+    expect(container.querySelectorAll('ul[data-feed="whats-new"] > li').length).toBe(expected);
+  });
+
+  it("leaves the changelog out of News and Updates", async () => {
+    getArticles.mockResolvedValue([article(1, { category: "NEWS" })]);
+    const { container } = renderPage("/updates?filter=news");
+    await screen.findByText("Story 1");
+    expect(container.querySelector('ul[data-feed="whats-new"]')).toBeNull();
   });
 });

@@ -19,6 +19,7 @@ import {
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
+import { WHATS_NEW, whatsNewPostPath } from '../src/data/whats-new.ts';
 import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -826,6 +827,23 @@ async function main() {
       console.log(`[pre-render] ✓ ${route.path} → ${route.outFile}`);
     } catch (err) {
       console.error(`[pre-render] ERROR rendering ${route.path}:`, err);
+      if (err instanceof Error) console.error(err.stack);
+      process.exit(1);
+    }
+  }
+
+  // One post per changelog entry (src/data/whats-new.ts). Static data, so every
+  // entry is known at build time. A failure fails the build like a static route.
+  for (const entry of WHATS_NEW) {
+    const path = whatsNewPostPath(entry.id);
+    const outFile = join(ROOT, 'dist', path.slice(1), 'index.html');
+    try {
+      const result = await render(path);
+      await writeHtml(outFile, injectIntoTemplate(template, result));
+      notePrefetch(path, result);
+      console.log(`[pre-render] ✓ ${path}`);
+    } catch (err) {
+      console.error(`[pre-render] ERROR rendering ${path}:`, err);
       if (err instanceof Error) console.error(err.stack);
       process.exit(1);
     }

@@ -932,6 +932,20 @@ export default {
       });
     }
 
+    // /whats-new folded into Updates & News (?filter=whats-new) — 301, keeping
+    // ?tag= so a bookmarked product filter still lands on its entries.
+    if (endpoint === '/whats-new') {
+      const tag = url.searchParams.get('tag');
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': '/updates?filter=whats-new' + (tag ? `&tag=${encodeURIComponent(tag)}` : ''),
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Short alias: /weekly → /saptahik (301)
     if (endpoint === '/weekly') {
       return new Response(null, {

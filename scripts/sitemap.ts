@@ -8,6 +8,7 @@ import {
 } from '../src/data/site-routes.ts';
 import { buildAuthHeaders } from './build-auth.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
+import { WHATS_NEW, whatsNewPostPath } from '../src/data/whats-new.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -237,6 +238,7 @@ async function main() {
     ...PRE_RENDERED_STATIC_ROUTES
       .filter(shouldIncludeStaticRouteInSitemap)
       .map(r => urlEntry(`${CANONICAL}${withTrailingSlash(r.path)}`)),
+    ...WHATS_NEW.map(e => urlEntry(`${CANONICAL}${withTrailingSlash(whatsNewPostPath(e.id))}`, e.date)),
     ...articles
       .filter(a => a.meta.slug)
       .map(a => urlEntry(

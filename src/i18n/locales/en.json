@@ -1400,7 +1400,8 @@
     "filterLabel": "Show",
     "filter": {
       "NEWS": "News",
-      "UPDATE": "Updates"
+      "UPDATE": "Updates",
+      "WHATS_NEW": "What's new"
     },
     "category": {
       "NEWS": "News",
@@ -1409,7 +1410,8 @@
     "error": "We couldn't load updates right now. Please try again later.",
     "empty": "No updates have been published yet.",
     "errorTitle": "Updates didn't load",
-    "emptyTitle": "Nothing here yet"
+    "emptyTitle": "Nothing here yet",
+    "articlesHeading": "News and updates"
   },
   "share": {
     "share": "Share",
