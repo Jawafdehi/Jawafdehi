@@ -59,17 +59,23 @@ export function Hero() {
             // Below lg the grid is one column: the lines share the words' cell,
             // behind them on the right and fainter, still running from the
             // eyebrow to the search bar. From lg up they take their own column.
-            "col-start-1 row-start-1 -z-10 ml-auto flex w-3/5 max-w-sm flex-col justify-between opacity-35 sm:opacity-50 [mask-image:linear-gradient(to_left,#000_25%,transparent)]",
+            "relative col-start-1 row-start-1 -z-10 ml-auto flex w-3/5 overflow-hidden max-w-sm flex-col justify-between opacity-35 sm:opacity-50 [mask-image:linear-gradient(to_left,#000_25%,transparent)]",
             "lg:col-start-2 lg:z-auto lg:ml-0 lg:w-auto lg:max-w-none lg:opacity-100 lg:[mask-image:linear-gradient(to_left,#000_45%,transparent)]",
           )}
         >
+          {/* Movement (index.css, .record-write / .record-scan): the lines write
+              themselves in row by row, the crimson marks last, then a soft scan
+              passes down now and then. Still under reduced motion. */}
           {RECORD_ROWS.map((row, i) => (
             <div key={i} className="flex gap-3">
-              <span className="h-3 rounded-sm bg-white/[0.06]" style={{ width: `${row.a}%` }} />
-              <span className="h-3 rounded-sm bg-white/[0.12]" style={{ width: `${row.b}%` }} />
-              {row.crimson ? <span className="h-3 w-[14%] rounded-sm bg-[hsl(var(--accent-on-dark))]/40" /> : null}
+              <span className="record-write h-3 rounded-sm bg-white/[0.06]" style={{ width: `${row.a}%`, ["--record-delay" as string]: `${150 + i * 45}ms` }} />
+              <span className="record-write h-3 rounded-sm bg-white/[0.12]" style={{ width: `${row.b}%`, ["--record-delay" as string]: `${230 + i * 45}ms` }} />
+              {row.crimson ? <span className="record-write h-3 w-[14%] rounded-sm bg-[hsl(var(--accent-on-dark))]/40" style={{ ["--record-delay" as string]: `${420 + i * 45}ms` }} /> : null}
             </div>
           ))}
+          <span
+            className="record-scan pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(255,255,255,0.12)_50%,transparent_100%)] [background-size:100%_40%] bg-no-repeat [background-position:center] [mask-image:linear-gradient(to_left,transparent,#000_35%)]"
+          />
         </div>
       </div>
     </section>
