@@ -49,7 +49,6 @@ import WhatsNewPost from "./pages/WhatsNewPost";
 import Privacy from "./pages/Privacy";
 import TermsOfService from "./pages/TermsOfService";
 import ArchiveSearch from "./pages/ArchiveSearch";
-import ResearchCorruption from "./pages/ResearchCorruption";
 // /materials is pre-rendered, so the policy above makes it eager. It is only
 // the landing page now: its old ?series= and ?q= views redirect into /search.
 import Materials from "./pages/Materials";
@@ -145,7 +144,6 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/commitment": <Commitment />,
   "/press-kit": <PressKit />,
   "/data-quality": <DataQuality />,
-  "/research/corruption-accountability": <ResearchCorruption />,
   "/our-process": <OurProcess />,
   "/team": <OurTeam />,
   "/volunteer": <Volunteer />,

@@ -27,7 +27,6 @@ describe("the route table", () => {
       "/",
       "/search",
       "/faq",
-      "/research/corruption-accountability",
       "/our-process",
       "/commitment",
       "/press-kit",

@@ -5,6 +5,7 @@ import {
   ChevronDown,
   HeartHandshake,
   Menu,
+  ArrowUpRight,
   Plug,
   Search,
 } from "@/components/icons";
@@ -21,12 +22,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { RESEARCH_URL } from "@/lib/external-links";
 
 type NavItem = {
   key: string;
   label: string;
   to: string;
   exact?: boolean;
+  /** A site of ours off this one, opened in a new tab (see MegaMenuItem). */
+  external?: boolean;
 };
 
 
@@ -96,7 +100,8 @@ export function Navbar() {
     () => [
       { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
       { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
-      { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
+      // Research lives on its own site now; the in-app report page is gone.
+      { key: "research", label: t("nav.research", "Research"), to: RESEARCH_URL, external: true },
       { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
     ],
     [t],
@@ -488,17 +493,31 @@ export function Navbar() {
                     </NavLink>
                   ) : null}
                   {/* Same order as the desktop row: Archive first, About last. */}
-                  {archiveNavItems.map((item) => (
-                    <NavLink
-                      key={item.key}
-                      to={item.to}
-                      end={item.exact}
-                      className={mobileNavLinkClass}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
+                  {archiveNavItems.map((item) =>
+                    item.external ? (
+                      <a
+                        key={item.key}
+                        href={item.to}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(mobileNavLinkClass({ isActive: false }), "inline-flex items-center gap-1.5")}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <NavLink
+                        key={item.key}
+                        to={item.to}
+                        end={item.exact}
+                        className={mobileNavLinkClass}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                      </NavLink>
+                    ),
+                  )}
                   {secondaryNavItems.map((item) => (
                     <NavLink
                       key={item.key}

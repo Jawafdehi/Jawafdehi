@@ -32,6 +32,7 @@ const MATCHABLE_ROUTES = SITE_ROUTES.map((route) => ({ path: route.path }));
 export const WORKER_OWNED_PATHS: readonly string[] = [
   "/weekly",
   "/research",
+  "/research/corruption-accountability",
   "/oembed",
   "/document-preview",
   "/api/latest-videos",

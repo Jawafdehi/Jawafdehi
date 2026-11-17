@@ -361,8 +361,8 @@ const MUST_BE_DEFERRED = [
     marker: "recharts",
     why:
       "recharts + lodash + decimal.js-light + react-smooth were 110 KB gzip of " +
-      "the initial payload because ResearchCorruption (pre-rendered, therefore " +
-      "eagerly imported) imported the charts directly. Load them through " +
+      "the initial payload when a pre-rendered (therefore eagerly imported) " +
+      "page imported the charts directly. Load them through " +
       "lazyChart() in src/components/charts/lazy.tsx.",
   },
   {

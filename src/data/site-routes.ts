@@ -140,15 +140,6 @@ export const SITE_ROUTES = [
     sitemapTitle: "FAQ — Jawafdehi",
   },
   {
-    path: "/research/corruption-accountability",
-    chrome: "app",
-    titleKey: "research.corruption.meta.title",
-    descriptionKey: "research.corruption.meta.description",
-    keywords: ["research", "corruption", "conviction rate", "ciaa", "special court", "accountability", "report"],
-    icon: "FileText",
-    sitemapTitle: "Corruption Accountability — Jawafdehi",
-  },
-  {
     path: "/our-process",
     chrome: "app",
     titleKey: "nav.ourProcess",

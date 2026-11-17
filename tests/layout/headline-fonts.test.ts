@@ -13,7 +13,7 @@ import { PRESS_KIT_TYPEFACES } from '@/components/press-kit/constants';
 //
 //  1. Which face index.html preloads. First paint is decided by the
 //     document's own `lang` — pre-rendered pages ship Nepali under lang="ne",
-//     /research/corruption-accountability ships lang="en" — while the stored
+//     an English-only page ships lang="en" — while the stored
 //     preference takes over a frame later. Getting that split wrong is how a
 //     visitor ends up with the face they do not paint in preloaded and the one
 //     they do arriving late, which is the CLS regression PR #359 closed.
@@ -99,8 +99,7 @@ describe('the headline font preload in index.html', () => {
   });
 
   it('preloads Inter alone on an English-declared page', () => {
-    // /research/corruption-accountability is served English-only and
-    // pre-renders with lang="en" (ResearchCorruption.tsx, carried through by
+    // An English-only page pre-renders with lang="en" (carried through by
     // scripts/pre-render.ts), so Vesper would be 65 KB it never paints.
     expect(preloadedHrefs('en')).toEqual([INTER]);
   });

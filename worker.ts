@@ -1,5 +1,6 @@
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
 import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
+import { RESEARCH_URL } from './src/lib/external-links';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import {
   encodeMaterialTail,
@@ -958,25 +959,17 @@ export default {
       });
     }
 
-    // /research → the only research publication there is (302)
-    //
-    // The SPA has no /research route, so the bare path answered 404 even though
-    // it is the address people shorten to and type. It points at the single
-    // publication because that is currently the whole of the section.
-    //
-    // TEMPORARY, hence 302 rather than the permanent 301 /weekly uses above: once
-    // there is more than one research item this redirect goes away and /research
-    // becomes the section's own dashboard page. A 301 would by then be cached in
-    // browsers we cannot reach.
-    //
-    // Target carries the trailing slash the pre-rendered page is published at, so
-    // this is one hop rather than a 302 into the assets binding's own 307.
-    if (endpoint === '/research') {
+    // Research moved to its own site, research.jawafdehi.org, and the in-app
+    // report page was removed. The section's old addresses — the bare /research
+    // people type, and the report's own URL — 301 there, query string carried
+    // (so a reel's ?utm_source still arrives). Permanent: the section does not
+    // come back to this origin.
+    if (endpoint === '/research' || endpoint === '/research/corruption-accountability') {
       return new Response(null, {
-        status: 302,
+        status: 301,
         headers: {
-          'Location': '/research/corruption-accountability/' + url.search,
-          'Cache-Control': 'public, max-age=3600',
+          'Location': RESEARCH_URL + '/' + url.search,
+          'Cache-Control': 'public, max-age=86400',
           ...secHeaders,
         },
       });
@@ -985,7 +978,7 @@ export default {
     // Handle legacy numeric case redirects (301)
     //
     // Target carries the trailing slash the pre-rendered page is published at,
-    // for the same reason /research above does: without it this 301 lands on a
+    // because otherwise this 301 lands on a
     // URL that immediately 307s, so /case/212 cost two hops and the middle one
     // named a redirecting URL as its canonical. Search Console counted that as
     // "Duplicate, Google chose different canonical than user" on 16 URLs.
