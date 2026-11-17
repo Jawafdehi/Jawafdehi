@@ -5,7 +5,7 @@ import {
   ChevronDown,
   HeartHandshake,
   Menu,
-  MessageCircle,
+  Plug,
   Search,
 } from "@/components/icons";
 
@@ -21,7 +21,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { CHAT_URL } from "@/lib/external-links";
 
 type NavItem = {
   key: string;
@@ -417,10 +416,11 @@ export function Navbar() {
                   : "bg-muted text-primary hover:bg-primary/[0.08]",
               )}
             >
-              <a href={CHAT_URL} target="_blank" rel="noreferrer">
-                <MessageCircle aria-hidden="true" />
-                {t("header.askAiAssistant")}
-              </a>
+              {/* Markets the MCP connector: the archive inside the reader's own AI tool. */}
+              <Link to="/mcp">
+                <Plug aria-hidden="true" />
+                {t("header.connectYourAi")}
+              </Link>
             </Button>
           </div>
 
@@ -541,10 +541,10 @@ export function Navbar() {
                     size="navSheet"
                     onClick={() => setIsOpen(false)}
                   >
-                    <a href={CHAT_URL} target="_blank" rel="noreferrer">
-                      <MessageCircle aria-hidden="true" />
-                      {t("header.askAiAssistant")}
-                    </a>
+                    <Link to="/mcp">
+                      <Plug aria-hidden="true" />
+                      {t("header.connectYourAi")}
+                    </Link>
                   </Button>
                 </div>
               </SheetContent>

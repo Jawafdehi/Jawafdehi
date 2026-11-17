@@ -170,6 +170,7 @@ export const Share2 = make("Share", "Share2");
 export const ShieldAlert = make("ShieldWarning", "ShieldAlert");
 export const ShieldCheck = make("ShieldCheck", "ShieldCheck");
 export const SlidersHorizontal = make("SlidersHorizontal", "SlidersHorizontal");
+export const Plug = make("PlugsConnected", "Plug");
 export const Sparkles = make("Sparkle", "Sparkles");
 export const SquarePen = make("PencilSimple", "SquarePen");
 export const Tag = make("Tag", "Tag");

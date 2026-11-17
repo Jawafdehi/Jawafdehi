@@ -458,7 +458,7 @@ All colors MUST be HSL.
        restated rather than aliased. */
     /* Text role goes light, per the design: hero title, "Archive", stat values
        and "See what we cover" all sample #F0F0EA there. The fill role keeps the
-       navy so the "Ask AI Assistant" button is unchanged. */
+       navy so the "Connect your AI" button is unchanged. */
     --primary: var(--base-ink);
     --primary-surface: var(--base-navy);
 
