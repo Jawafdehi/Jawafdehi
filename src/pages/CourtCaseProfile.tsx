@@ -52,14 +52,19 @@ export default function CourtCaseProfile() {
     ? `${caseNumber} — ${data.case_type || t("courtCaseProfile.fallbackTitle", "Court case")}`
     : caseNumber || t("courtCaseProfile.fallbackTitle", "Court case");
 
+  const orderCount = Array.isArray(data?.orders) ? data.orders.length : 0;
   const jumpSections = useMemo<CaseJumpSection[]>(
     () => [
       { id: "case-summary", label: t("courtCaseProfile.summary", "Case summary") },
       { id: "parties", label: t("courtCaseProfile.parties", "Parties") },
       { id: "activity", label: t("courtCaseProfile.activity.heading", "Case activity") },
+      // Only when the section renders (it hides on an empty or absent list).
+      ...(orderCount > 0
+        ? [{ id: "orders", label: t("courtCaseProfile.orders.nav", "Court orders") }]
+        : []),
       { id: "source", label: t("courtCaseProfile.source.heading", "Source") },
     ],
-    [t],
+    [t, orderCount],
   );
 
   useEffect(() => {

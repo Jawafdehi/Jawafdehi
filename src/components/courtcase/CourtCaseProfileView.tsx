@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { CaseStatusBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CourtCase, CourtCaseHearing } from "@/types/jds";
+import { CourtCaseOrders } from "@/components/courtcase/CourtCaseOrders";
 import { formatDateForLanguage, formatDate, convertToBS } from "@/utils/date";
 import { formatBSString } from "@/utils/bs-calendar";
 import {
@@ -461,6 +462,9 @@ export function CourtCaseProfileView({
           </p>
         )}
       </section>
+
+      {/* Self-hiding: absent (older API) or empty renders nothing. */}
+      <CourtCaseOrders orders={courtCase?.orders} />
 
       <section id="source" aria-labelledby="source-heading" className="scroll-mt-28">
         <h2
