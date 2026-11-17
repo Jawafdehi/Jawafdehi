@@ -12,6 +12,7 @@ import { featuredCasesQuery } from './queries/home';
 import { archiveStatisticsQuery } from './queries/materials-landing';
 import { getAllPages } from './services/datalake-api';
 import { http } from './services/http';
+import { documentSourcesQuery } from './lib/document-sources';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
 import type { JawafEntity } from './types/jds';
@@ -96,7 +97,10 @@ async function prefetch(
   // (queries/materials-landing.ts), so the key matches the page exactly and the
   // pre-rendered HTML carries the real archive figures.
   if (/^\/materials\/?(?:#|$)/.test(url)) {
-    await queryClient.prefetchQuery(archiveStatisticsQuery());
+    await Promise.allSettled([
+      queryClient.prefetchQuery(archiveStatisticsQuery()),
+      queryClient.prefetchQuery(documentSourcesQuery()),
+    ]);
     return;
   }
 

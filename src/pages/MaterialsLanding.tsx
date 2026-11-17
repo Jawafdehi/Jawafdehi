@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { AllSourcesList } from "@/components/materials/AllSourcesList";
 import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { ArrowLink } from "@/components/ui/arrow-link";
@@ -197,6 +198,13 @@ export default function MaterialsLanding() {
         </div>
       </section>
 
+      {/* Every source, live from the API: the complete list behind the curated
+          series, so a newly loaded source is never invisible here. */}
+      <section id="sources" aria-labelledby="sources-heading" className="scroll-mt-24">
+        <div className="layout-container pb-16 md:pb-24">
+          <AllSourcesList />
+        </div>
+      </section>
     </div>
   );
 }

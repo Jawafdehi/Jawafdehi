@@ -10,6 +10,8 @@ import MaterialsLanding from "./MaterialsLanding";
  *   /materials/                → the landing page (pre-rendered)
  *   /materials/?series=<slug>  → /search?type=material&series=<slug>, the
  *                                series as a filter on the Documents tab
+ *   /materials/?source=<key>   → /search?type=material&source=<key>, one whole
+ *                                source from /api/document-sources/ as a filter
  *   /materials/?q=…&tags=…&…   → /search?type=material&q=…, as before
  *
  * Every param is carried across (see archiveSearchUrl), so a shared link to a
@@ -19,6 +21,7 @@ import MaterialsLanding from "./MaterialsLanding";
 // redirect carries EVERY param, not just these, so filters survive the move.
 const SEARCH_PARAMS = [
   "series",
+  "source",
   "q",
   "tags",
   "case_type",

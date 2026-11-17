@@ -75,4 +75,9 @@ describe("Materials view routing", () => {
     ).toBeTruthy();
     await waitFor(() => expect(screen.queryByText("LANDING")).toBeNull());
   });
+
+  it("opens a whole source (?source=) as a filter on the archive search", async () => {
+    renderAt("/materials/?source=dri");
+    expect(await screen.findByText("SEARCH AT /search/?type=material&source=dri")).toBeTruthy();
+  });
 });

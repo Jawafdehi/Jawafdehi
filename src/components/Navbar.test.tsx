@@ -91,12 +91,13 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
 
     fireEvent.keyDown(screen.getByRole("button", { name: /Archive/ }), { key: "Enter" });
 
+    // The header's "Connect your AI" button also links to /mcp, so look for the
+    // dropdown's own entry by its text rather than taking the first /mcp link.
     await waitFor(() => {
       const link = screen
         .getAllByRole("link")
-        .find((el) => el.getAttribute("href") === "/mcp");
+        .find((el) => el.getAttribute("href") === "/mcp" && el.textContent?.includes("Jawafdehi MCP"));
       expect(link).toBeTruthy();
-      expect(link?.textContent).toContain("Jawafdehi MCP");
     });
   });
 

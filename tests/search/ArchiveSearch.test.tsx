@@ -27,6 +27,9 @@ vi.mock("@/services/search-api", () => ({
 
 vi.mock("@/services/jds-api", () => ({
   getCaseById: getCaseByIdMock,
+  // Material cards name sources from the API's registry; an empty one leaves
+  // them on the frontend's own labels, which is what these tests assert.
+  getDocumentSources: () => Promise.resolve({ ready: true, sources: [] }),
 }));
 
 // Material rows hydrate their download/source buttons from the detail API;
@@ -1078,6 +1081,18 @@ describe("ArchiveSearch — materials tab filters", () => {
     renderSearch("/search?type=material&series=no-such-shelf");
     await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
     expect(lastRequest().source).toBeUndefined();
+  });
+
+  it("scopes to one whole source from ?source= (JAW-65), on Documents only", async () => {
+    renderSearch("/search?type=material&source=dri");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest()).toMatchObject({ type: "material", source: ["dri"] });
+  });
+
+  it("lets a series win over a stray ?source=", async () => {
+    renderSearch("/search?type=material&series=charge-sheets&source=dri");
+    await waitFor(() => expect(searchArchiveMock).toHaveBeenCalled());
+    expect(lastRequest()).toMatchObject(seriesScope(seriesBySlug("charge-sheets")!));
   });
 
   it("ignores a series on any tab but Documents", async () => {

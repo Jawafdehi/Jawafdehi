@@ -10,6 +10,7 @@ import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { API_BASE_URL } from "@/services/http";
 import { cn } from "@/lib/utils";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { currentSiteVariant } from "@/lib/site-host";
 
 type FooterLink = {
   label: string;
@@ -123,6 +124,7 @@ function renderBadgeIcon(marker: string | undefined, Icon: ComponentType<{ class
 
 export const Footer = () => {
   const { t } = useTranslation();
+  const siteVariant = currentSiteVariant();
 
   const platformLinks: FooterLink[] = [
     { label: t("footer.searchCases"), to: "/search?type=case" },
@@ -299,9 +301,18 @@ export const Footer = () => {
         </div>
 
         <div className="mt-3">
-          <p className="text-[13px] leading-5 text-[var(--footer-muted)]">
-            {t("footer.legalEntity")}
-          </p>
+          {/* jawafdehi.org.np names only the Nepal entity; see src/lib/site-host.ts.
+              Pre-render (siteVariant === null) emits both and CSS picks one. */}
+          {siteVariant !== "np" && (
+            <p data-site-variant="org" className="text-[13px] leading-5 text-[var(--footer-muted)]">
+              {t("footer.legalEntity")}
+            </p>
+          )}
+          {siteVariant !== "org" && (
+            <p data-site-variant="np" className="text-[13px] leading-5 text-[var(--footer-muted)]">
+              {t("footer.legalEntityNp")}
+            </p>
+          )}
         </div>
       </div>
     </footer>

@@ -47,6 +47,16 @@
        ahead of the stylesheet request.
        `crossorigin` is required even same-origin: font fetches are CORS-mode,
        and a mismatch makes the browser fetch the file twice. -->
+  <!-- jawafdehi.org.np is served by the same Worker and the same pre-rendered
+       HTML as jawafdehi.org, but its footer names only the Nepal entity. The
+       HTML carries both footer variants; this marks the Nepal host before first
+       paint so CSS (src/index.css, [data-site-variant]) never shows the .org
+       variant there. Keep the regex in step with src/lib/site-host.ts. -->
+  <script>
+    if (/(^|\.)jawafdehi\.org\.np\.?$/i.test(location.hostname)) {
+      document.documentElement.setAttribute('data-site', 'np');
+    }
+  </script>
   <script>
     (function () {
       function faceFor(language) {

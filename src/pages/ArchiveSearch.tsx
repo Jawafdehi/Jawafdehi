@@ -311,6 +311,7 @@ export default function ArchiveSearch() {
     // they clear on the way out for the same reason.
     if (type !== "material") {
       next.delete("series");
+      next.delete("source");
       next.delete("material_type");
       next.delete("date_from");
       next.delete("date_to");
@@ -367,6 +368,7 @@ export default function ArchiveSearch() {
         "province",
         "material_type",
         "series",
+        "source",
         "bigo_min",
         "bigo_max",
         "date_from",
@@ -791,7 +793,11 @@ function readDateParams(searchParams: URLSearchParams) {
 
 function readSeriesScope(searchParams: URLSearchParams) {
   const series = seriesBySlug(searchParams.get("series") ?? "");
-  return series ? seriesScope(series) : {};
+  if (series) return seriesScope(series);
+  // ?source=<key>: one whole source from /api/document-sources/ (JAW-65), for
+  // the sources no curated series covers.
+  const source = searchParams.get("source");
+  return source ? { source: [source] } : {};
 }
 
 function readParams(
