@@ -105,22 +105,6 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
     ],
   },
-  {
-    displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
-    thumb: "/assets/teammembers/busan.webp",
-    description: "",
-    tags: ["Founding Member", "Board Member"],
-    contacts: [
-      { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
-    ],
-  },
-  {
-    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
-    thumb: "/assets/teammembers/purna.webp",
-    description: "",
-    tags: ["Board Member"],
-    contacts: [],
-  },
 ];
 
 // Shown directly below the Nepal Board.
@@ -143,6 +127,27 @@ export const advisors: TeamMember[] = [
       { type: "youtube", value: "https://www.youtube.com/@techtanka" },
       { type: "facebook", value: "https://www.facebook.com/tanka.dahal/" },
     ],
+  },
+];
+
+// Members of the Nepal company who are not on its board. Someone who is
+// also an advisor appears in both sections. Shown below the Advisors.
+export const companyMembers: TeamMember[] = [
+  {
+    displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
+    thumb: "/assets/teammembers/busan.webp",
+    description: "",
+    tags: ["Founding Member"],
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
+    ],
+  },
+  {
+    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
+    thumb: "/assets/teammembers/purna.webp",
+    description: "",
+    tags: ["Member"],
+    contacts: [],
   },
 ];
 
