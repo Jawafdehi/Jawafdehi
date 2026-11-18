@@ -19,7 +19,7 @@ import {
   parseCasesPageParam,
 } from "@/lib/cases-pagination";
 import { translateDynamicText } from "@/lib/translate-dynamic-content";
-import { searchArchive } from "@/services/search-api";
+import { casesSearchQuery } from "@/queries/cases";
 import type { ArchiveSearchResult, CaseSearchCard, CaseSearchCardEntity } from "@/types/search";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 import NotFound from "./NotFound";
@@ -139,14 +139,7 @@ const Cases = () => {
   const requestedPage = isFiltered ? filteredPage : (page ?? 1);
 
   const { data, isLoading: loading, isPlaceholderData, isError, refetch } = useQuery({
-    queryKey: ["cases-search", { search: debouncedSearch, page: requestedPage }],
-    queryFn: () => searchArchive({
-      q: debouncedSearch || undefined,
-      type: "case",
-      sort: debouncedSearch ? "relevance" : "newest",
-      page_size: CASES_PAGE_SIZE,
-      page: requestedPage,
-    }),
+    ...casesSearchQuery(debouncedSearch, requestedPage),
     // Keep the previous page's cards on screen while the next one loads, so
     // paging does not collapse the layout to six skeletons and bounce scroll.
     placeholderData: keepPreviousData,
