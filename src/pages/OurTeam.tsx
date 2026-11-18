@@ -1,6 +1,6 @@
 import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram, Youtube } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { usBoard, nepalBoard, advisors, companyMembers, members, pastMembers } from "@/data/team";
+import { usBoard, nepalBoard, membersAndAdvisors, members, pastMembers } from "@/data/team";
 import type { Contact } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
@@ -67,11 +67,10 @@ const OurTeam = () => {
         {/* Team sections */}
         {[
           { id: "nepal-board", heading: t("team.sections.nepalBoard", "Nepal Board"), data: nepalBoard },
-          { id: "advisors", heading: t("team.sections.advisors", "Advisors"), data: advisors },
           {
-            id: "company-members",
-            heading: t("team.sections.companyMembers", "Members"),
-            data: companyMembers,
+            id: "members-and-advisors",
+            heading: t("team.sections.membersAndAdvisors", "General Members and Advisors"),
+            data: membersAndAdvisors,
           },
           {
             id: "us-board",

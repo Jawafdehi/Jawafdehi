@@ -107,32 +107,9 @@ export const nepalBoard: TeamMember[] = [
   },
 ];
 
-// Shown directly below the Nepal Board.
-export const advisors: TeamMember[] = [
-  {
-    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
-    thumb: "/assets/teammembers/purna.webp",
-    description: "",
-    tags: ["Advisor"],
-    contacts: [],
-  },
-  // Name, role and links from his signed advisor acceptance form
-  // (2026-11-18, invitation letter ५१२), which consents to this listing.
-  {
-    displayName: { en: "Tanka Dahal", ne: "टंक दाहाल" },
-    thumb: "/assets/teammembers/tanka.webp",
-    description: "Software Engineer and IT expert",
-    tags: ["Advisor"],
-    contacts: [
-      { type: "youtube", value: "https://www.youtube.com/@techtanka" },
-      { type: "facebook", value: "https://www.facebook.com/tanka.dahal/" },
-    ],
-  },
-];
-
-// Members of the Nepal company who are not on its board. Someone who is
-// also an advisor appears in both sections. Shown below the Advisors.
-export const companyMembers: TeamMember[] = [
+// "General Members and Advisors", shown directly below the Nepal Board. One
+// card per person: a general member who is also an advisor carries both badges.
+export const membersAndAdvisors: TeamMember[] = [
   {
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.webp",
@@ -146,8 +123,20 @@ export const companyMembers: TeamMember[] = [
     displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
     thumb: "/assets/teammembers/purna.webp",
     description: "",
-    tags: ["Member"],
+    tags: ["General Member", "Advisor"],
     contacts: [],
+  },
+  // Name, role and links from his signed advisor acceptance form
+  // (2026-11-18, invitation letter ५१२), which consents to this listing.
+  {
+    displayName: { en: "Tanka Dahal", ne: "टंक दाहाल" },
+    thumb: "/assets/teammembers/tanka.webp",
+    description: "Software Engineer and IT expert",
+    tags: ["Advisor"],
+    contacts: [
+      { type: "youtube", value: "https://www.youtube.com/@techtanka" },
+      { type: "facebook", value: "https://www.facebook.com/tanka.dahal/" },
+    ],
   },
 ];
 
