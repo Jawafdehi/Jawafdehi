@@ -260,7 +260,11 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
     if (!focusRequested.current) return;
     focusRequested.current = false;
     const selected = wrapRef.current?.querySelectorAll<HTMLElement>('[aria-selected="true"]');
-    selected?.[selected.length - 1]?.focus();
+    // After a drill-down (phone) the selected folder is no longer on screen:
+    // focus the first row of the column now shown instead of losing focus.
+    const target =
+      selected?.[selected.length - 1] ?? wrapRef.current?.querySelector<HTMLElement>('[role="option"]');
+    target?.focus();
   });
   useEffect(() => {
     // Keep the newest column in view as the selection moves right.
@@ -276,6 +280,34 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
   const onKeyDown = (event: KeyboardEvent<HTMLElement>, column: (typeof columns)[number], index: number) => {
     const node = column.items[index];
     const nodePath = [...column.at, node.slug];
+    if (compact) {
+      // Phone: one column at a time, so arrows only move focus; selecting a
+      // folder would drill into it and take the focused row off screen.
+      const rows = [...(wrapRef.current?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])];
+      switch (event.key) {
+        case "ArrowDown":
+          rows[index + 1]?.focus();
+          break;
+        case "ArrowUp":
+          rows[index - 1]?.focus();
+          break;
+        case "ArrowRight":
+        case "Enter":
+          focusRequested.current = true;
+          ctx.select(nodePath, true);
+          break;
+        case "ArrowLeft":
+          if (column.at.length) {
+            focusRequested.current = true;
+            ctx.select(column.at.slice(0, -1), true);
+          }
+          break;
+        default:
+          return;
+      }
+      event.preventDefault();
+      return;
+    }
     switch (event.key) {
       case "ArrowDown":
         if (column.items[index + 1]) move([...column.at, column.items[index + 1].slug]);
