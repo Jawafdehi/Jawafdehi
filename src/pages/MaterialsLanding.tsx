@@ -1,9 +1,9 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
+import { lazyChart } from "@/components/charts/lazy";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
@@ -13,7 +13,6 @@ import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
-import { lazyChunk } from "@/lib/chunk-reload";
 import { archiveTotal, documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
 import {
@@ -24,10 +23,24 @@ import { getMaterial, materialTail } from "@/services/datalake-api";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 // The archive browser (folder tree, views, its bilingual name table) is its own
-// chunk: the initial bundle is at its budget, and the browser is interactive
-// UI the reader reaches by scrolling. Pre-rendered HTML carries the fallback.
-const ArchiveBrowser = lazy(
-  lazyChunk(() => import("@/components/materials/ArchiveBrowser"), (m) => m.ArchiveBrowser),
+// chunk: the initial bundle is at its budget, and the browser is interactive UI
+// the reader reaches by scrolling. Loaded in an effect via `lazyChart`, NOT
+// lazy() + <Suspense>, which renderToString cannot pre-render (see
+// components/charts/lazy.tsx); the pre-rendered page carries the placeholder.
+function ArchivePlaceholder() {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-[24rem]">
+      <h2 id="archive-heading" className="font-archive-section-title">
+        {t("materialsLanding.archive.title", "Browse the archive")}
+      </h2>
+      <p className="mt-3 text-sm text-muted-foreground">{t("materialsLanding.series.loading", "Loading…")}</p>
+    </div>
+  );
+}
+const ArchiveBrowser = lazyChart<Record<string, never>>(
+  () => import("@/components/materials/ArchiveBrowser").then((m) => m.ArchiveBrowser),
+  () => <ArchivePlaceholder />,
 );
 
 const CHAT_URL = "https://chat.jawafdehi.org";
@@ -237,20 +250,7 @@ export default function MaterialsLanding() {
         <span id="series" className="block scroll-mt-24" aria-hidden="true" />
         <span id="sources" className="block scroll-mt-24" aria-hidden="true" />
         <div className="layout-container py-16 md:py-24">
-          <Suspense
-            fallback={
-              <div className="min-h-[24rem]">
-                <h2 id="archive-heading" className="font-archive-section-title">
-                  {t("materialsLanding.archive.title", "Browse the archive")}
-                </h2>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {t("materialsLanding.series.loading", "Loading…")}
-                </p>
-              </div>
-            }
-          >
-            <ArchiveBrowser />
-          </Suspense>
+          <ArchiveBrowser />
         </div>
       </section>
 
