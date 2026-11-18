@@ -277,6 +277,32 @@ describe('/_cache/purge', () => {
     expect(res.status).toBe(429);
   });
 
+  it('refuses an oversized body without buffering it, Content-Length or not', async () => {
+    const env = makeEnv({ CACHE_PURGE_SECRET: SECRET });
+    const { ctx, purge } = makeCtx(env);
+    const chunk = new TextEncoder().encode('x'.repeat(8 * 1024));
+    let pulled = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled += 1;
+        controller.enqueue(chunk);
+      },
+    });
+    const res = await worker.fetch(
+      new Request('https://jawafdehi.org/_cache/purge', {
+        method: 'POST',
+        body: stream,
+        // @ts-expect-error -- undici needs duplex for a streaming body
+        duplex: 'half',
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(413);
+    expect(pulled).toBeLessThan(10);
+    expect(purge).not.toHaveBeenCalled();
+  });
+
   it('takes POST only', async () => {
     const env = makeEnv({ CACHE_PURGE_SECRET: SECRET });
     const { ctx, fetch } = makeCtx(env);

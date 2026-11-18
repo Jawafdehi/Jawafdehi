@@ -1068,6 +1068,29 @@ async function handleEdgePageRequest(request: Request, env: Env, ctx?: WorkerCon
   }
 }
 
+// The request body as text, or null once it passes `maxBytes`. Read in chunks
+// and cancelled at the limit, because the route is reachable before the
+// signature is checked: a chunked upload with no Content-Length must not be
+// buffered whole just to be refused.
+async function readBodyLimited(request: Request, maxBytes: number): Promise<string | null> {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let total = 0;
+  let text = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
 // POST /_cache/purge from the API's case_events edge-purge consumer.
 //
 // Runs inside EdgePages because a Workers Cache purge only reaches the cache of
@@ -1079,8 +1102,8 @@ async function handleCachePurge(request: Request, env: Env, ctx?: WorkerContext)
 
   const declared = Number(request.headers.get('Content-Length') ?? '0');
   if (declared > MAX_PURGE_BODY_BYTES) return jsonResponse({ error: 'body too large' }, 413, 0);
-  const body = await request.text();
-  if (body.length > MAX_PURGE_BODY_BYTES) return jsonResponse({ error: 'body too large' }, 413, 0);
+  const body = await readBodyLimited(request, MAX_PURGE_BODY_BYTES);
+  if (body === null) return jsonResponse({ error: 'body too large' }, 413, 0);
 
   const authentic = await verifyPurgeSignature({
     secret,
