@@ -132,9 +132,9 @@ describe("ArchiveBrowser", () => {
     fireEvent.keyDown(first, { key: "ArrowDown" });
     // Arrows only move focus on a phone: nothing drilled, focus on the next row.
     expect(location).toBe("?view=columns");
-    expect((document.activeElement as HTMLElement).getAttribute("data-node")).toBe("international");
+    expect((document.activeElement as HTMLElement).getAttribute("data-node")).toBe("laws");
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Enter" });
-    await waitFor(() => expect(location).toContain("path=international"));
+    await waitFor(() => expect(location).toContain("path=laws"));
     // Focus lands on the first row of the column now shown, not on the body.
     await waitFor(() => expect(document.activeElement?.getAttribute("role")).toBe("option"));
   });

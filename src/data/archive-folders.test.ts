@@ -71,12 +71,30 @@ describe("archive folder tree", () => {
     expect(nodeCount(judiciary, { ...catalogue, ready: false })).toBeNull();
   });
 
-  it("sorts every level alphabetically in the language shown, Others last", () => {
-    const en = withUnfiled(catalogue, "en").map((folder) => nodeName(folder, "en"));
-    expect(en).toEqual(["Government bodies", "International", "Judiciary", "Laws", "News", "Others"]);
-    const ne = withUnfiled(catalogue, "ne").map((folder) => nodeName(folder, "ne"));
-    expect(ne.at(-1)).toBe("अन्य");
-    expect(ne.slice(0, -1)).toEqual([...ne.slice(0, -1)].sort(new Intl.Collator("ne").compare));
+  it("keeps the top-level folders in their fixed order in both languages", () => {
+    expect(withUnfiled(catalogue, "en").map((folder) => nodeName(folder, "en"))).toEqual([
+      "Judiciary",
+      "Government bodies",
+      "Laws",
+      "News",
+      "International",
+      "Others",
+    ]);
+    expect(withUnfiled(catalogue, "ne").map((folder) => nodeName(folder, "ne"))).toEqual([
+      "न्यायपालिका",
+      "सरकारी निकाय",
+      "कानुन",
+      "समाचार",
+      "अन्तर्राष्ट्रिय",
+      "अन्य",
+    ]);
+  });
+
+  it("sorts every level below the top alphabetically in the language shown, Other last", () => {
+    const offices = childrenAt(withUnfiled(catalogue, "en"), ["government"]).map((node) => nodeName(node, "en"));
+    expect(offices).toEqual([...offices].sort(new Intl.Collator("en").compare));
+    const neOffices = childrenAt(withUnfiled(catalogue, "ne"), ["government"]).map((node) => nodeName(node, "ne"));
+    expect(neOffices).toEqual([...neOffices].sort(new Intl.Collator("ne").compare));
     const oag = childrenAt(withUnfiled(catalogue, "en"), ["government", "auditor-general"]);
     expect(nodeName(oag.at(-1)!, "en")).toBe("Other publications");
   });

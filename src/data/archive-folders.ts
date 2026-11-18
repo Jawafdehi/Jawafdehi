@@ -107,7 +107,7 @@ const LAW_KINDS = [
   "court-rules",
 ] as const;
 
-/** The folder tree (each level is sorted for display by `sortTree`). */
+/** The folder tree. The top level shows in THIS order; every level below is sorted for display by `sortTree`. */
 export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
   branch("judiciary", { ne: "न्यायपालिका", en: "Judiciary" }, 2, [
     branch("supreme-court", { ne: "सर्वोच्च अदालत", en: "Supreme Court" }, 2, [
@@ -255,7 +255,9 @@ export function withUnfiled(
   catalogue: DocumentSourcesResponse | undefined | null,
   language = "en",
 ): ArchiveBranch[] {
-  return sortTree(fileUnfiled(catalogue), language);
+  // The top level keeps the tree's fixed order (damo: Judiciary, Government
+  // bodies, Laws, News, International, Others); everything below it is sorted.
+  return fileUnfiled(catalogue).map((folder) => ({ ...folder, children: sortTree(folder.children, language) }));
 }
 
 /** "Others" folders and "Other …" series always sort last. */
@@ -264,8 +266,9 @@ function isOther(node: ArchiveNode): boolean {
 }
 
 /**
- * Every level alphabetical in the language shown (Intl.Collator "ne" or
- * "en"), so the order follows the names the reader sees; "Others" last.
+ * Alphabetical in the language shown (Intl.Collator "ne" or "en"), so the
+ * order follows the names the reader sees; "Other…" last. Used for every
+ * level BELOW the top folders, which keep their fixed order.
  */
 export function sortTree<T extends ArchiveNode>(nodes: readonly T[], language: string): T[] {
   const collator = new Intl.Collator(language?.startsWith("ne") ? "ne" : "en");

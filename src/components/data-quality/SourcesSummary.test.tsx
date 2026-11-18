@@ -54,15 +54,15 @@ describe("SourcesSummary", () => {
     expect(summary.textContent).toContain('"sources":"7"');
     expect(summary.textContent).toContain('"folders":"6"');
 
-    // Every top-level folder of the /materials archive, alphabetical, with its
+    // Every top-level folder of the /materials archive, in its fixed order, with its
     // live count, each linking into that folder in place.
     const folders = screen.getAllByRole("listitem").map((item) => item.textContent);
     expect(folders).toEqual([
-      "Government bodies309,323",
-      "International0",
       "Judiciary53,842",
+      "Government bodies309,323",
       "Laws0",
       "News0",
+      "International0",
       "Others0",
     ]);
     expect(screen.getByRole("link", { name: /Government bodies/ }).getAttribute("href")).toBe(
