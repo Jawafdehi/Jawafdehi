@@ -124,6 +124,17 @@ describe("chain helpers", () => {
     );
     expect(linkKind(eachOf)).toBe("eachOf");
   });
+
+  it("keeps a highly skewed sibling set a set", () => {
+    const skewed = (from: Array<[string, number]>, whole: number) =>
+      linkKind(appeal("082-CR-0001", from, whole));
+    expect(skewed([["081-CR-0001", 0.999], ["081-CR-0002", 0.001]], 1)).toBe("oneOf");
+    // A candidate at 1.0 still leaves the capped sum above the lowest candidate.
+    expect(skewed([["081-CR-0001", 1], ["081-CR-0002", 0.2]], 1)).toBe("oneOf");
+    expect(skewed([["081-CR-0001", 0.5], ["081-CR-0002", 0.4], ["081-CR-0003", 0.1]], 1)).toBe(
+      "oneOf",
+    );
+  });
 });
 
 describe("CourtCaseChain", () => {

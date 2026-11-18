@@ -26,15 +26,21 @@ export function percent(probability: number): string {
 
 export type LinkKind = "single" | "oneOf" | "eachOf";
 
+/** The API states probabilities to three places; compare them at that precision. */
+const thousandths = (value: number) => Math.round(value * 1000);
+
 /**
- * How a step's sources read. Several sources are a set ("one of these") when
- * every candidate is less likely than the step itself, whose probability is
- * their sum; otherwise the appeal is of each of them (the step carries the
- * lowest of theirs).
+ * How a step's sources read. The API derives a step's probability from its
+ * sources (courts/appeal_links.py `probability`): an appeal of EACH of several
+ * cases carries the lowest of theirs, while a set ("one of these") carries
+ * their sum, capped at 1, which for two or more non-zero candidates is always
+ * above the lowest. So the step equals its lowest source exactly when it is
+ * each-of. No tolerance is applied: a skewed set such as 0.999 + 0.001 still
+ * reads as a set.
  */
 export function linkKind(step: CourtChainStep): LinkKind {
   const sources = step.appealed_from ?? [];
   if (sources.length <= 1) return "single";
-  const whole = step.probability ?? 0;
-  return sources.every((s) => s.probability < whole - 0.0005) ? "oneOf" : "eachOf";
+  const lowest = Math.min(...sources.map((s) => thousandths(s.probability)));
+  return thousandths(step.probability ?? 0) === lowest ? "eachOf" : "oneOf";
 }
