@@ -32,7 +32,7 @@ import {
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
-import { edgeApiToken } from './worker/api-token';
+import { edgeApiTokenNoWait } from './worker/api-token';
 import { bundle as edgeBundle } from './worker/edge-bundle';
 import {
   CACHE_CONTROL_BROWSER,
@@ -75,6 +75,7 @@ interface EdgeCacheApi {
   purge(options: { tags: string[] }): Promise<CachePurgeResult>;
 }
 interface WorkerContext {
+  waitUntil?(promise: Promise<unknown>): void;
   exports?: { EdgePages?: { fetch(request: Request): Promise<Response> } };
   cache?: EdgeCacheApi;
 }
@@ -1031,7 +1032,8 @@ async function handleEdgePageRequest(request: Request, env: Env, ctx?: WorkerCon
   const outcome = await renderEdgePage(edgeBundle, kind, tail, normalizePath(url.pathname), {
     apiTimeoutMs: positiveInt(env.EDGE_SSR_API_TIMEOUT_MS, DEFAULT_EDGE_API_TIMEOUT_MS),
     deadlineMs: positiveInt(env.EDGE_SSR_DEADLINE_MS, DEFAULT_EDGE_DEADLINE_MS),
-    token: await edgeApiToken(env),
+    // Never wait on a token mint: see edgeApiTokenNoWait.
+    token: edgeApiTokenNoWait(env, ctx?.waitUntil ? (p) => ctx.waitUntil?.(p) : undefined),
   });
 
   switch (outcome.kind) {
