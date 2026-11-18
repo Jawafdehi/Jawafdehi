@@ -195,6 +195,13 @@ const CaseDetail = () => {
           currentLang,
         )
       : null;
+  // Sections with nothing in them are left out, heading and jump link alike,
+  // like the others below. Most CIAA-sourced cases have no curated allegations
+  // yet, and a heading followed by "उपलब्ध छैन" on ~70% of case pages is the same
+  // empty boilerplate repeated thousands of times, for readers and crawlers both.
+  const keyAllegations = (caseData?.key_allegations ?? []).filter((a) => typeof a === "string" && a.trim() !== "");
+  const hasAllegations = keyAllegations.length > 0;
+  const hasOverview = Boolean(caseData?.description?.trim());
   const hasTimeline = (caseData?.timeline || []).length > 0;
   const hasCourtCases = (caseData?.court_cases ?? []).length > 0;
   const hasEvidence = (caseData?.evidence ?? []).length > 0;
@@ -203,10 +210,10 @@ const CaseDetail = () => {
 
   const jumpSections = useMemo<CaseJumpSection[]>(() => {
     const sections: Array<CaseJumpSection | false> = [
-      { id: "allegations", label: t("caseDetail.allegations") },
+      hasAllegations && { id: "allegations", label: t("caseDetail.allegations") },
       hasInvolvedParties && { id: "parties-involved", label: t("caseDetail.partiesInvolved") },
       hasTimeline && { id: "timeline", label: t("caseDetail.timeline") },
-      { id: "overview", label: t("caseDetail.overview") },
+      hasOverview && { id: "overview", label: t("caseDetail.overview") },
       hasCourtCases && { id: "court-case", label: t("caseDetail.courtUpdates", "Court updates") },
       hasEvidence && { id: "evidence", label: t("caseDetail.evidence") },
       hasMissingDetails && { id: "missing-details", label: t("caseDetail.missingDetails") },
@@ -215,11 +222,13 @@ const CaseDetail = () => {
 
     return sections.filter((section): section is CaseJumpSection => Boolean(section));
   }, [
+    hasAllegations,
     hasCourtCases,
     hasEvidence,
     hasInvolvedParties,
     hasMissingDetails,
     hasNotes,
+    hasOverview,
     hasTimeline,
     t,
   ]);
@@ -675,14 +684,16 @@ const CaseDetail = () => {
                         prefers-reduced-motion (content simply renders visible),
                         and the group class lets each CaseSectionHeading's
                         crimson rule draw in off the same trigger. */}
-                    <Reveal className="group">
-                      <KeyAllegationsSection
-                        aiGenerated={isAiGenerated(caseData.ai_generated_sections, "key_allegations")}
-                        allegations={caseData.key_allegations || []}
-                        emptyLabel={t("common.notAvailable")}
-                        title={t("caseDetail.allegations")}
-                      />
-                    </Reveal>
+                    {hasAllegations && (
+                      <Reveal className="group">
+                        <KeyAllegationsSection
+                          aiGenerated={isAiGenerated(caseData.ai_generated_sections, "key_allegations")}
+                          allegations={keyAllegations}
+                          emptyLabel={t("common.notAvailable")}
+                          title={t("caseDetail.allegations")}
+                        />
+                      </Reveal>
+                    )}
 
                     {hasInvolvedParties && (
                       <Reveal className="group">
@@ -714,13 +725,15 @@ const CaseDetail = () => {
                       </Reveal>
                     )}
 
-                    <Reveal className="group">
-                      <CaseOverviewSection
-                        aiGenerated={isAiGenerated(caseData.ai_generated_sections, "description")}
-                        description={caseData.description}
-                        title={t("caseDetail.overview")}
-                      />
-                    </Reveal>
+                    {hasOverview && (
+                      <Reveal className="group">
+                        <CaseOverviewSection
+                          aiGenerated={isAiGenerated(caseData.ai_generated_sections, "description")}
+                          description={caseData.description}
+                          title={t("caseDetail.overview")}
+                        />
+                      </Reveal>
+                    )}
 
                     <Reveal className="group">
                       <CourtCasesSection
