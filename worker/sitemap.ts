@@ -50,3 +50,16 @@ export function withSiteSitemap(indexXml: string): string {
   const entry = `<sitemap><loc>${SITE_SITEMAP_LOC}</loc></sitemap>`;
   return `${indexXml.slice(0, close)}${entry}${indexXml.slice(close)}`;
 }
+
+// The API lists every record by its @id IRI, which has no trailing slash. The
+// site's canonical case and entity URLs DO end in a slash (CaseDetail and
+// EntityRecordProfile <Seo>, the legacy redirects in worker.ts): those pages
+// were pre-rendered to <path>/index.html, and the slashless form redirected.
+// A sitemap must name the canonical URL, not a redirect or a duplicate, so the
+// two families are slashed here. Materials and court cases are canonical
+// without the slash and pass through untouched.
+const SLASHED_LOC_RE = /<loc>(https:\/\/jawafdehi\.org\/(?:case|entity)\/[^<]*?[^/<])<\/loc>/g;
+
+export function withCanonicalSlashes(xml: string): string {
+  return xml.replace(SLASHED_LOC_RE, (_, loc: string) => `<loc>${loc}/</loc>`);
+}

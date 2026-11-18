@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import worker from '../../worker';
-import { sitemapUpstreamPath, withSiteSitemap } from '../../worker/sitemap';
+import { sitemapUpstreamPath, withCanonicalSlashes, withSiteSitemap } from '../../worker/sitemap';
 
 // jawafdehi.org/sitemap*.xml is the API's sitemap, proxied and cached, plus the
 // site's own /sitemap-site.xml (a static asset) added to the index.
@@ -59,6 +59,28 @@ describe('withSiteSitemap', () => {
     const out = withSiteSitemap(API_INDEX);
     expect(out).toContain('<sitemap><loc>https://jawafdehi.org/sitemap-site.xml</loc></sitemap></sitemapindex>');
     expect(withSiteSitemap(out)).toBe(out);
+  });
+});
+
+describe('withCanonicalSlashes', () => {
+  it('slashes case and entity locs, the canonical form of those pages', () => {
+    const xml =
+      '<url><loc>https://jawafdehi.org/case/some-slug</loc></url>' +
+      '<url><loc>https://jawafdehi.org/entity/person/ram</loc></url>' +
+      '<url><loc>https://jawafdehi.org/case/already/</loc></url>' +
+      '<url><loc>https://jawafdehi.org/material/ag/10</loc></url>' +
+      '<url><loc>https://jawafdehi.org/courtcase/special/081-cr-0154</loc></url>';
+    expect(withCanonicalSlashes(xml)).toBe(
+      '<url><loc>https://jawafdehi.org/case/some-slug/</loc></url>' +
+        '<url><loc>https://jawafdehi.org/entity/person/ram/</loc></url>' +
+        '<url><loc>https://jawafdehi.org/case/already/</loc></url>' +
+        '<url><loc>https://jawafdehi.org/material/ag/10</loc></url>' +
+        '<url><loc>https://jawafdehi.org/courtcase/special/081-cr-0154</loc></url>',
+    );
+  });
+
+  it('leaves sitemap index children alone', () => {
+    expect(withCanonicalSlashes(API_INDEX)).toBe(API_INDEX);
   });
 });
 

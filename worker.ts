@@ -51,6 +51,7 @@ import {
   SITEMAP_CDN_CACHE_CONTROL,
   SITEMAP_FETCH_TIMEOUT_MS,
   sitemapUpstreamPath,
+  withCanonicalSlashes,
   withSiteSitemap,
 } from './worker/sitemap';
 
@@ -1113,7 +1114,7 @@ async function handleSitemap(upstreamPath: string): Promise<Response> {
     if (upstream?.status === 404) return edgeMarker(404, 'not-found');
     return edgeMarker(503, 'error', `sitemap upstream ${upstream?.status ?? 'timeout'}`);
   }
-  let body = await upstream.text();
+  let body = withCanonicalSlashes(await upstream.text());
   if (upstreamPath.startsWith('/sitemap.xml')) body = withSiteSitemap(body);
   return new Response(body, {
     status: 200,
