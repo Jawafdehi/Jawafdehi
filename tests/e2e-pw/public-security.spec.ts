@@ -18,6 +18,8 @@
 // never inserted (which would make every "absent" assertion vacuously true).
 import { test, expect, type Page } from "@playwright/test";
 
+import { caseLink } from "./selectors";
+
 async function dismissConsent(page: Page) {
   await page.addInitScript(() =>
     localStorage.setItem("jawafdehi_analytics_consent", "denied"),
@@ -113,7 +115,7 @@ test("searching for a non-public-only term surfaces no non-public case", async (
   // a linked result — this web-first assertion waits out the query, proving search
   // runs end-to-end.
   await page.goto("/search?q=embezzlement");
-  await expect(page.locator(`a[href="/case/${PUBLIC.slug}"]`).first()).toBeVisible();
+  await expect(page.locator(caseLink(PUBLIC.slug)).first()).toBeVisible();
 
   // For the negative query, anchor on the results surface having SETTLED (the
   // "no records found" state) before asserting absence, so the check can't pass
@@ -126,7 +128,7 @@ test("searching for a non-public-only term surfaces no non-public case", async (
       page.getByText(/no archive records found/i).first(),
     ).toBeVisible();
     for (const c of ABSENT_FROM_SEARCH) {
-      await expect(page.locator(`a[href="/case/${c.slug}"]`)).toHaveCount(0);
+      await expect(page.locator(caseLink(c.slug))).toHaveCount(0);
     }
   }
 });
