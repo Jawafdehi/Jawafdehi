@@ -1331,6 +1331,24 @@
     "contents": "Contents",
     "summary": "Case summary",
     "parties": "Parties",
+    "chain": {
+      "heading": "Appeal history",
+      "nav": "Appeal history",
+      "note": "Jawafdehi linked these cases from court records; the courts do not publish these links. Each link shows our estimate of how likely it is to be right.",
+      "stage": {
+        "initial": "First court",
+        "appeal": "Appeal",
+        "review": "Review"
+      },
+      "thisCase": "This case",
+      "registered": "Registered {{date}}",
+      "decided": "Decided {{date}}",
+      "appealOf": "Appeal of",
+      "probablyAppealOf": "Probably an appeal of",
+      "oneOf": "Possibly an appeal of one of these. We could not tell which:",
+      "eachOf": "Appeal of each of:",
+      "likely": "{{pct}} likely"
+    },
     "vs": "VS",
     "noParties": "No party recorded",
     "showMore": "Show {{count}} more",
