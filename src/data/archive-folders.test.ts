@@ -116,4 +116,16 @@ describe("archive folder tree", () => {
     const chain = findLeafChain(tree, (leaf) => leaf.slug === slug)!;
     expect(chain.at(-1)?.type === "leaf" && chain.at(-1)!.slug).toBe(slug);
   });
+
+  it("files the Nepal Rajpatra under Laws and Nepal Police under Government bodies", () => {
+    const tree = withUnfiled({
+      ready: true,
+      sources: [row("rajpatra", 120), row("nepal_police", 2)],
+    });
+    const chainOf = (source: string) =>
+      findLeafChain(tree, (leaf) => leaf.source === source)!.map((node) => node.slug);
+    expect(chainOf("rajpatra")).toEqual(["laws", "rajpatra"]);
+    expect(chainOf("nepal_police")).toEqual(["government", "nepal-police", "nepal-police-press-releases"]);
+    expect(nodeCount(tree.find((folder) => folder.slug === "others")!, { ready: true, sources: [row("rajpatra", 120), row("nepal_police", 2)] })).toBe(0);
+  });
 });

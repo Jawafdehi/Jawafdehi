@@ -2358,7 +2358,8 @@
       "openSource": "Open original source",
       "download": "Download {{format}}",
       "notListable": "{{total}} documents are counted in this series, but they can't be listed here yet.",
-      "wholeSource": "Browse the whole source instead"
+      "wholeSource": "Browse the whole source instead",
+      "showingTotal": "{{shown}} of {{total}}"
     },
     "filters": {
       "title": "Filter",

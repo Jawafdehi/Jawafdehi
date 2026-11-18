@@ -168,6 +168,9 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
       leaf("dmli-press-releases", "dmli", W.pressReleases, { kind: "dmli-press-release" }),
       leaf("dmli-reports", "dmli", W.reports, { kindExclude: ["dmli-press-release"] }),
     ]),
+    branch("nepal-police", { ne: "नेपाल प्रहरी", en: "Nepal Police" }, 6, [
+      leaf("nepal-police-press-releases", "nepal_police", W.pressReleases),
+    ]),
     branch("koshi-province", { ne: "कोशी प्रदेश", en: "Koshi Province" }, 2, [
       leaf("koshi-budget", "province/koshi", { ne: "बजेट विवरण", en: "Budget lines" }),
     ]),
@@ -188,8 +191,6 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
   branch("laws", { ne: "कानुन", en: "Laws" }, 5, [
     // legal_corpus split by kind (`jawafdehi:datasetBucket`, written by the
     // API's classify_legal_corpus). A document with no kind lands in "Other".
-    // Nepal Rajpatra (JAW-82) will be a sibling folder here, in the gazette's
-    // own volume › part › issue layout.
     branch("nepal-laws", { ne: "नेपालको कानुन", en: "Nepal's laws" }, 5, [
       leaf("constitution", "legal_corpus", { ne: "संविधान", en: "Constitution" }, { kind: "law-constitution" }),
       leaf("acts", "legal_corpus", { ne: "ऐन", en: "Acts" }, { kind: "law-act" }),
@@ -205,6 +206,9 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
       }),
     ]),
     curated("legal-templates", { ne: "कानुनी ढाँचा", en: "Legal templates" }),
+    // The Nepal Gazette (JAW-82). One series for now; it gains the gazette's own
+    // volume › part › issue layout once that hierarchy is in the data.
+    leaf("rajpatra", "rajpatra", { ne: "राजपत्र", en: "Nepal Rajpatra" }),
   ]),
 
   branch("news", { ne: "समाचार", en: "News" }, 6, [
