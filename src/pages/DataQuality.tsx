@@ -8,7 +8,7 @@ import { formatFreshness } from "@/lib/data-quality";
 import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
 import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
 import { EvidenceBackbone } from "@/components/data-quality/EvidenceBackbone";
-import { MaterialsBySource } from "@/components/data-quality/MaterialsBySource";
+import { SourcesSummary } from "@/components/data-quality/SourcesSummary";
 import { DataHonesty } from "@/components/data-quality/DataHonesty";
 import { DataPipeline } from "@/components/data-quality/DataPipeline";
 import { UseThisData } from "@/components/data-quality/UseThisData";
@@ -69,8 +69,9 @@ const DataQuality = () => {
             </p>
           )}
 
-          {/* Where the evidence comes from (live materials.by_source). */}
-          <MaterialsBySource materials={data?.materials} />
+          {/* Where the evidence comes from: a summary of the one source list on
+              /materials#sources, from the same /api/document-sources/ catalogue. */}
+          <SourcesSummary />
 
           {/* Court cases: the judicial record base + court x year heatmap. */}
           <EvidenceBackbone ngm={data?.ngm} />

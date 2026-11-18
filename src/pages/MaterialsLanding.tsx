@@ -14,10 +14,10 @@ import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MATERIAL_SERIES, seriesBySlug, seriesCount } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
+import { archiveTotal, documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
 import {
   RECENT_MATERIALS_COUNT,
-  archiveStatisticsQuery,
   recentMaterialsQuery,
 } from "@/queries/materials-landing";
 import { getMaterial, materialTail } from "@/services/datalake-api";
@@ -34,14 +34,15 @@ export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
 
-  const { data: statistics } = useQuery({ ...archiveStatisticsQuery(), staleTime: 5 * 60 * 1000 });
+  // One catalogue for every count on this page — the shelves, the total and
+  // the every-source list — so none of them can disagree with another.
+  const { data: catalogue } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
   const { data: recentResponse } = useQuery({ ...recentMaterialsQuery(), staleTime: 5 * 60 * 1000 });
 
-  // Counts come from `seriesCount` rather than a by_source lookup here: a shelf
-  // can now be narrower than its source token (five of them scope
-  // `official_report`), so the arithmetic differs per shelf and lives with the
-  // registry that defines it.
-  const materials = statistics?.materials;
+  // Shelf counts come from `seriesCount`: a shelf can be narrower than its
+  // source token (five of them scope `official_report`), so the arithmetic
+  // differs per shelf and lives with the registry that defines it.
+  const total = archiveTotal(catalogue);
 
   const recents = recentResponse
     ? pickRecentMaterials(recentResponse.results, RECENT_MATERIALS_COUNT)
@@ -155,9 +156,9 @@ export default function MaterialsLanding() {
       <header className="relative isolate -mt-[76px] overflow-hidden bg-background pt-[76px]">
         <PageHeroBackdrop />
         <div className="layout-container relative z-10 pb-16 pt-14 text-center md:pb-24 md:pt-20">
-        {materials && (
+        {total !== null && (
           <Eyebrow className="tabular-nums">
-            {formatArchiveCount(materials.total, language)}{" "}
+            {formatArchiveCount(total, language)}{" "}
             {t("materialsLanding.grid.documents", "documents")}
           </Eyebrow>
         )}
@@ -230,7 +231,7 @@ export default function MaterialsLanding() {
           <ul className="mt-12 grid list-none grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {MATERIAL_SERIES.map((series) => (
               <li key={series.slug} className="pt-4">
-                <FolderCard series={series} count={seriesCount(series, materials)} />
+                <FolderCard series={series} count={seriesCount(series, catalogue)} />
               </li>
             ))}
             <li className="pt-4">
@@ -326,12 +327,12 @@ export default function MaterialsLanding() {
                       holding — a reviewer counted three news items here and
                       asked why we only have those three. Say what the slice is
                       and where the rest live. */}
-                  {materials && (
+                  {total !== null && (
                     <p className="mt-3 text-sm text-muted-foreground">
                       <span className="tabular-nums">
                         {t("materialsLanding.recent.slice", {
                           shown: formatArchiveCount(recents.length, language),
-                          total: formatArchiveCount(materials.total, language),
+                          total: formatArchiveCount(total, language),
                           defaultValue:
                             "The {{shown}} newest of {{total}} documents in the archive.",
                         })}

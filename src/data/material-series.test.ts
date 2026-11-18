@@ -153,80 +153,85 @@ describe("seriesScope", () => {
 });
 
 describe("seriesCount", () => {
-  // Modelled on the live corpus: 228 documents under one source token.
-  const materials = {
-    total: 346339,
-    by_type: [],
-    by_source: [
-      { source: "official_report", count: 228 },
-      { source: "kanun_patrika", count: 220 },
+  // Modelled on the live catalogue (/api/document-sources/): 228 documents
+  // under one source token, split into kind buckets.
+  const catalogue = {
+    ready: true,
+    sources: [
+      {
+        source: "official_report",
+        name: { en: "Auditor General reports and publications" },
+        publisher: { en: "Office of the Auditor General" },
+        labelled: true,
+        count: 228,
+        series: [
+          { bucket: "report_province-report", count: 56 },
+          { bucket: "publication_audit-bulletin", count: 29 },
+          { bucket: "publication_audit-journals", count: 21 },
+          { bucket: "report_annual-report", count: 18 },
+          { bucket: "publication_right-to-information", count: 22 },
+        ],
+      },
+      {
+        source: "kanun_patrika",
+        name: { en: "Kanun Patrika" },
+        publisher: null,
+        labelled: true,
+        count: 220,
+        series: [],
+      },
     ],
-    by_source_type: [],
-    by_dataset_bucket: [
-      { source: "official_report", dataset_bucket: "report_province-report", count: 56 },
-      {
-        source: "official_report",
-        dataset_bucket: "publication_audit-bulletin",
-        count: 29,
-      },
-      {
-        source: "official_report",
-        dataset_bucket: "publication_audit-journals",
-        count: 21,
-      },
-      { source: "official_report", dataset_bucket: "report_annual-report", count: 18 },
-      {
-        source: "official_report",
-        dataset_bucket: "publication_right-to-information",
-        count: 22,
-      },
-    ],
-    counts: { with_description: 0, with_url: 0, with_date: 0 },
-  } as never;
+  };
 
-  it("returns null while statistics are loading, so a card shows a dash", () => {
+  it("returns null while the catalogue is loading, so a card shows a dash", () => {
     expect(seriesCount(seriesBySlug("audit-journal")!, undefined)).toBeNull();
   });
 
-  it("counts a plain series off by_source, unchanged", () => {
-    expect(seriesCount(seriesBySlug("kanun-patrika")!, materials)).toBe(220);
+  it("counts a plain series off its source's whole count", () => {
+    expect(seriesCount(seriesBySlug("kanun-patrika")!, catalogue)).toBe(220);
   });
 
-  it("counts a kinded shelf off its own bucket row", () => {
-    expect(seriesCount(seriesBySlug("auditor-general-reports")!, materials)).toBe(18);
-    expect(seriesCount(seriesBySlug("province-audit-reports")!, materials)).toBe(56);
-    expect(seriesCount(seriesBySlug("audit-journal")!, materials)).toBe(21);
-    expect(seriesCount(seriesBySlug("audit-bulletin")!, materials)).toBe(29);
+  it("counts a kinded shelf off its own bucket", () => {
+    expect(seriesCount(seriesBySlug("auditor-general-reports")!, catalogue)).toBe(18);
+    expect(seriesCount(seriesBySlug("province-audit-reports")!, catalogue)).toBe(56);
+    expect(seriesCount(seriesBySlug("audit-journal")!, catalogue)).toBe(21);
+    expect(seriesCount(seriesBySlug("audit-bulletin")!, catalogue)).toBe(29);
   });
 
   it("counts the complement by SUBTRACTION, so unknown kinds are not lost", () => {
-    // 228 − (18 + 56 + 21 + 29) = 104. Note the fixture's bucket rows do not
-    // enumerate every kind the token holds — that is the point: summing the
-    // kinds it keeps would undercount, subtracting the kinds it excludes does
-    // not.
-    expect(seriesCount(seriesBySlug("oag-publications")!, materials)).toBe(104);
+    // 228 − (18 + 56 + 21 + 29) = 104. The fixture's buckets do not enumerate
+    // every kind the token holds — that is the point: summing the kinds it
+    // keeps would undercount, subtracting the kinds it excludes does not.
+    expect(seriesCount(seriesBySlug("oag-publications")!, catalogue)).toBe(104);
   });
 
   it("makes the shelves of one token sum to that token's total", () => {
     const total = MATERIAL_SERIES.filter((s) => s.source === "official_report").reduce(
-      (sum, series) => sum + (seriesCount(series, materials) ?? 0),
+      (sum, series) => sum + (seriesCount(series, catalogue) ?? 0),
       0,
     );
     expect(total).toBe(228);
   });
 
-  it("yields 0 for a kinded shelf when the API predates by_dataset_bucket", () => {
-    // Degrades to an honest zero rather than showing the whole token's 228
-    // under "annual reports", which is the bug this all exists to fix.
-    const older = { ...(materials as object), by_dataset_bucket: undefined } as never;
+  it("yields 0 for a kinded shelf when the source lists no buckets", () => {
+    // An honest zero rather than the whole token's 228 under "annual reports",
+    // which is the bug the kind split exists to fix.
+    const older = {
+      ...catalogue,
+      sources: catalogue.sources.map((row) => ({ ...row, series: undefined })),
+    };
     expect(seriesCount(seriesBySlug("auditor-general-reports")!, older)).toBe(0);
   });
 
-  it("never renders a negative count from a stale snapshot", () => {
+  it("counts 0 for a source the catalogue does not list", () => {
+    expect(seriesCount(seriesBySlug("legal-templates")!, catalogue)).toBe(0);
+  });
+
+  it("never renders a negative count from a stale catalogue", () => {
     const stale = {
-      ...(materials as object),
-      by_source: [{ source: "official_report", count: 10 }],
-    } as never;
+      ...catalogue,
+      sources: [{ ...catalogue.sources[0], count: 10 }],
+    };
     expect(seriesCount(seriesBySlug("oag-publications")!, stale)).toBe(0);
   });
 });

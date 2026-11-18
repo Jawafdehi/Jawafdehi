@@ -11,7 +11,6 @@ import { MaterialCard } from "@/components/materials/MaterialCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySource } from "@/data/material-series";
 import { documentSourceLabel, documentSourcesQuery } from "@/lib/document-sources";
-import { sourceKeyFor } from "@/lib/material-source-labels";
 import {
   materialTypeForSchemaClass,
   materialTypeForSource,
@@ -159,11 +158,9 @@ function MaterialResultCard({
   // the series: CIAA owns two series (press releases AND annual reports), and
   // one series spans several offices (press releases come from CIAA, CIB and
   // DMLI). Neither line implies the other, so the card carries both.
-  const officeKey = sourceKeyFor(source ?? "");
-  const officeLabel =
-    officeKey === "other" && registryLabel?.publisher
-      ? registryLabel.publisher
-      : t(`dataQuality.materialsBySource.source.${officeKey}`, source ?? "");
+  // From the API's source registry, the same labels /materials#sources groups
+  // by; the bare token only while the registry has not arrived.
+  const officeLabel = registryLabel?.publisher || registryLabel?.name || source || "";
   const title =
     pickLocalized(result.title, language) ||
     t("materialsLanding.recent.untitled", "Untitled document");
