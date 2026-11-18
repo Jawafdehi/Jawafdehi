@@ -45,6 +45,14 @@ import {
   verifyPurgeSignature,
 } from './worker/edge-cache';
 import { renderEdgePage } from './worker/edge-render';
+import {
+  API_ORIGIN,
+  SITEMAP_BROWSER_CACHE_CONTROL,
+  SITEMAP_CDN_CACHE_CONTROL,
+  SITEMAP_FETCH_TIMEOUT_MS,
+  sitemapUpstreamPath,
+  withSiteSitemap,
+} from './worker/sitemap';
 
 interface Env {
   ASSETS: {
@@ -1020,6 +1028,8 @@ async function handleEdgePageRequest(request: Request, env: Env, ctx?: WorkerCon
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method Not Allowed', { status: 405 });
   }
+  const sitemapPath = sitemapUpstreamPath(url.pathname, url.search);
+  if (sitemapPath) return handleSitemap(sitemapPath);
 
   const matched = matchRoute(url.pathname);
   const kind = edgeKindForRoute(matched?.path);
@@ -1091,6 +1101,30 @@ async function readBodyLimited(request: Request, maxBytes: number): Promise<stri
     text += decoder.decode(value, { stream: true });
   }
   return text + decoder.decode();
+}
+
+// A sitemap from the API, cached like a page (see worker/sitemap.ts). On any
+// upstream failure: 5xx, so the cache keeps serving its last good copy.
+async function handleSitemap(upstreamPath: string): Promise<Response> {
+  const upstream = await fetchWithTimeout(`${API_ORIGIN}${upstreamPath}`, 'follow', SITEMAP_FETCH_TIMEOUT_MS);
+  const type = upstream?.headers.get('Content-Type') ?? '';
+  if (!upstream?.ok || !/xml/i.test(type)) {
+    console.warn('[edge-ssr] sitemap fetch failed', upstreamPath, upstream?.status ?? 'no response');
+    if (upstream?.status === 404) return edgeMarker(404, 'not-found');
+    return edgeMarker(503, 'error', `sitemap upstream ${upstream?.status ?? 'timeout'}`);
+  }
+  let body = await upstream.text();
+  if (upstreamPath.startsWith('/sitemap.xml')) body = withSiteSitemap(body);
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': SITEMAP_BROWSER_CACHE_CONTROL,
+      'Cloudflare-CDN-Cache-Control': SITEMAP_CDN_CACHE_CONTROL,
+      'Cache-Tag': 'sitemap,ssr:all',
+      'X-Edge-SSR': 'sitemap',
+    },
+  });
 }
 
 // POST /_cache/purge from the API's case_events edge-purge consumer.
@@ -1353,6 +1387,29 @@ export default {
           },
         });
       }
+    }
+
+    // Sitemaps come from the API through the cached EdgePages entrypoint.
+    // /sitemap-site.xml, the site's own pages, is a static asset and never
+    // reaches here: the assets binding answers first.
+    const sitemapPath = sitemapUpstreamPath(path, url.search);
+    if (sitemapPath && (request.method === 'GET' || request.method === 'HEAD')) {
+      const inner = new Request(new URL(sitemapPath, url.origin).toString(), {
+        method: request.method,
+        headers: { Accept: 'application/xml' },
+      });
+      const res = ctx?.exports?.EdgePages
+        ? await ctx.exports.EdgePages.fetch(inner)
+        : await handleEdgePageRequest(inner, env, ctx);
+      if (res.status === 200) {
+        const response = new Response(res.body, res);
+        for (const name of EDGE_INTERNAL_HEADERS) response.headers.delete(name);
+        return response;
+      }
+      return new Response(res.status === 404 ? 'Not Found' : 'Sitemap temporarily unavailable', {
+        status: res.status === 404 ? 404 : 503,
+        headers: { 'Cache-Control': 'no-store', 'Retry-After': '300', 'Content-Type': 'text/plain' },
+      });
     }
 
     // Try to serve pre-rendered static asset
