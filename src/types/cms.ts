@@ -3,7 +3,7 @@
  * Mounted on the unified monolith at `/api/cms/v2` (see services/cms-api.ts).
  */
 
-export type ArticleCategory = "UPDATE" | "NEWS";
+export type ArticleCategory = "UPDATE" | "NEWS" | "BLOG";
 
 export interface CmsImageRendition {
   url: string;

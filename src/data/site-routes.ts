@@ -288,6 +288,15 @@ export const SITE_ROUTES = [
     sitemapTitle: "Weekly Corruption Series — Jawafdehi",
   },
   {
+    path: "/blog",
+    chrome: "app",
+    titleKey: "nav.blog",
+    descriptionKey: "searchCommand.descriptions.blog",
+    keywords: ["blog", "posts", "stories", "articles", "explainer"],
+    icon: "Newspaper",
+    sitemapTitle: "Blog — Jawafdehi",
+  },
+  {
     path: "/updates",
     chrome: "app",
     titleKey: "nav.updates",

@@ -104,8 +104,8 @@ async function prefetch(
     return;
   }
 
-  // Updates/News list page
-  if (url === '/updates') {
+  // Updates/News and Blog list pages share one query: both show the CMS articles.
+  if (url === '/updates' || url === '/blog') {
     await queryClient.prefetchQuery({ queryKey: ['cms-articles'], queryFn: () => getArticles() });
     return;
   }

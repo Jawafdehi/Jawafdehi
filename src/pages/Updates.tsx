@@ -20,7 +20,7 @@ type Filter = "ALL" | ArticleCategory;
 const FILTERS: Filter[] = ["ALL", "NEWS", "UPDATE"];
 
 /** The feed's grid: three across on desktop, two on a tablet, one on a phone. */
-const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols-3";
+export const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols-3";
 
 /**
  * One story, in the AngelList / Beside / Lightdash listing shape: no card
@@ -29,7 +29,7 @@ const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols
  * with no picture gets a quiet patterned tile of the same size, so the grid
  * stays even. The whole story is the link; press scales it to 0.99.
  */
-function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
+export function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
   const { t } = useTranslation();
   const image = article.thumbnail?.url;
 
@@ -59,7 +59,7 @@ function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
       <div className="flex flex-1 flex-col pt-5">
         <div className="flex items-center justify-between gap-3">
           <CaseTagBadge className="px-3 py-1 text-sm">
-            {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
+            {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : article.category === "BLOG" ? "Blog" : "Update")}
           </CaseTagBadge>
           <span className="inline-flex items-center gap-1.5 text-[15px] text-muted-foreground">
             <Calendar className="h-4 w-4" aria-hidden="true" />
@@ -80,7 +80,7 @@ function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
 }
 
 /** The feed while it loads: the same grid, as quiet blocks. */
-function FeedSkeleton() {
+export function FeedSkeleton() {
   const { t } = useTranslation();
   return (
     <output aria-label={t("updates.loading", "Loading updates")} className={FEED_GRID}>
@@ -110,7 +110,7 @@ const Updates = () => {
     queryFn: () => getArticles(),
   });
 
-  const shown = (articles ?? []).filter((article) => filter === "ALL" || article.category === filter);
+  const shown = (articles ?? []).filter((article) => article.category !== "BLOG" && (filter === "ALL" || article.category === filter));
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

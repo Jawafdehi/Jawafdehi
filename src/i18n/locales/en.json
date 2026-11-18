@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "entities": "Entities",
+    "blog": "Blog",
     "updates": "Updates",
     "cases": "Cases",
     "about": "About",
@@ -169,6 +170,7 @@
       "terms": "Terms of Service"
     },
     "descriptions": {
+      "blog": "Read stories and notes from the Jawafdehi team.",
       "home": "Return to the Jawafdehi homepage.",
       "cases": "Open the dedicated case search and browsing page.",
       "archiveSearch": "Search cases, entities, locations, and evidence documents in one archive.",
@@ -333,6 +335,10 @@
     },
     "figures": {
       "label": "The archive in figures"
+    },
+    "blog": {
+      "heading": "From the blog",
+      "viewAll": "All blog posts"
     }
   },
   "ourProcess": {
@@ -1386,6 +1392,15 @@
     "errorTitle": "This profile didn't load",
     "errorLine": "Something went wrong on our side. Please try again in a moment."
   },
+  "blog": {
+    "eyebrow": "From the team",
+    "title": "Blog",
+    "description": "Stories, explainers, and notes from the people building Jawafdehi.",
+    "error": "We couldn't load blog posts right now. Please try again later.",
+    "errorTitle": "The blog didn't load",
+    "empty": "No blog posts have been published yet.",
+    "emptyTitle": "Nothing here yet"
+  },
   "updates": {
     "title": "Updates & News",
     "description": "Latest news, announcements, and reports from Jawafdehi.",
@@ -1404,7 +1419,8 @@
     },
     "category": {
       "NEWS": "News",
-      "UPDATE": "Update"
+      "UPDATE": "Update",
+      "BLOG": "Blog"
     },
     "error": "We couldn't load updates right now. Please try again later.",
     "empty": "No updates have been published yet.",

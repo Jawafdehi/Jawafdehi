@@ -7,6 +7,7 @@ import { ArchiveFigures } from "@/components/home/archive-figures";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Reveal } from "@/components/ui/reveal";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
+import { BlogSection } from "@/components/home/blog-section";
 import { SupportingPartner } from "@/components/home/supportingpartner";
 import { ArrowRight } from "@/components/icons";
 import { Link } from "react-router-dom";
@@ -202,6 +203,7 @@ const Index = () => {
         <ReportCaseCta />
         {/* What's new, compact: the latest from the changelog (src/data/whats-new.ts). */}
         <WhatsNewSection id="whats-new" heading={t("whatsNew.homeHeading")} compact />
+        <BlogSection />
         <SupportingPartner />
       </div>
     </div>

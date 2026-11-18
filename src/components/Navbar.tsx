@@ -85,6 +85,7 @@ export function Navbar() {
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
       { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
+      { key: "blog", label: t("nav.blog"), to: "/blog" },
       { key: "updates", label: t("nav.updates"), to: "/updates" },
     ],
     [t],
