@@ -1375,7 +1375,6 @@
       "kind": {
         "judgment": "Judgment",
         "order": "Order",
-        "interim": "Interim order",
         "unknown": "Court order"
       }
     },

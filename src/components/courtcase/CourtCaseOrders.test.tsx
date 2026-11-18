@@ -15,7 +15,7 @@ import type { CourtCase, CourtCaseOrder } from "@/types/jds";
 const ORDERS: CourtCaseOrder[] = [
   {
     iri: "https://jawafdehi.org/material/court_order/special.076-cr-0438",
-    kind: "judgment",
+    kind: "verdict",
     order_date_bs: "2080-09-05",
     order_date_ad: "2023-12-21",
     readable: true,
@@ -29,7 +29,7 @@ const ORDERS: CourtCaseOrder[] = [
   },
   {
     iri: "https://jawafdehi.org/material/court_order/special.076-cr-0438.3",
-    kind: "interim",
+    kind: "judgment",
     order_date_bs: "2078-11-30",
     order_date_ad: "2022-03-14",
     readable: false,
@@ -97,7 +97,8 @@ describe("CourtCaseOrders", () => {
     // BS date, Nepal-first like the activity timeline.
     expect(items[0].textContent).toContain("२०८० पौष ५");
     expect(items[1].textContent).toContain(en.courtCaseProfile.orders.kind.order);
-    expect(items[2].textContent).toContain(en.courtCaseProfile.orders.kind.interim);
+    // `judgment` is an alias of the API's `verdict`.
+    expect(items[2].textContent).toContain(en.courtCaseProfile.orders.kind.judgment);
 
     const links = screen.getAllByRole("link", { name: en.courtCaseProfile.orders.read });
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
@@ -131,6 +132,14 @@ describe("CourtCaseOrders", () => {
     expect(item.textContent).toContain(en.courtCaseProfile.orders.undated);
   });
 
+  it("labels the API's `verdict` kind as a judgment, not a generic court order", async () => {
+    await i18n.changeLanguage("en");
+    renderOrders([ORDERS[0]]);
+    const item = within(screen.getByTestId("court-case-orders")).getByRole("listitem");
+    expect(item.textContent).toContain(en.courtCaseProfile.orders.kind.judgment);
+    expect(item.textContent).not.toContain(en.courtCaseProfile.orders.kind.unknown);
+  });
+
   it("does not link an IRI that is not a material IRI", async () => {
     await i18n.changeLanguage("en");
     renderOrders([{ ...ORDERS[0], iri: "https://example.org/whatever" }]);
@@ -145,7 +154,7 @@ describe("CourtCaseOrders", () => {
     const items = within(screen.getByTestId("court-case-orders")).getAllByRole("listitem");
     expect(items[0].textContent).toContain("फैसला");
     expect(items[1].textContent).toContain("आदेश");
-    expect(items[2].textContent).toContain("अन्तरिम आदेश");
+    expect(items[2].textContent).toContain("फैसला");
     expect(items[2].textContent).toContain(ne.courtCaseProfile.orders.notReadable);
     expect(screen.getAllByRole("link", { name: ne.courtCaseProfile.orders.read })).toHaveLength(2);
   });

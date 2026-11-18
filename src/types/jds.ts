@@ -269,15 +269,19 @@ export interface CourtCase {
   hearings?: CourtCaseHearing[];
   entities?: CourtCaseEntity[];
   /**
-   * The court orders this case references (JAW-76), newest first. Always present
+   * The court orders this case references (JAW-76), oldest first (undated last). Always present
    * on an API that ships the field (possibly []); ABSENT on an older API, which
    * every reader must treat the same as an empty list.
    */
   orders?: CourtCaseOrder[];
 }
 
-/** What kind of court order a listed order is (the API's closed set). */
-export type CourtCaseOrderKind = "judgment" | "order" | "interim" | "unknown";
+/**
+ * What kind of court order a listed order is. The API sends `verdict` (the case
+ * is decided) or `order`; `judgment` is a tolerated alias of `verdict`, and
+ * `unknown` is the frontend's own fallback label for anything else.
+ */
+export type CourtCaseOrderKind = "verdict" | "judgment" | "order" | "unknown";
 
 /**
  * One entry in a court case's order list. Deliberately carries no title: an

@@ -8,10 +8,19 @@ import { formatBSString } from "@/utils/bs-calendar";
 
 const MATERIAL_MARKER = "/material/";
 
-const KIND_LABELS: Record<CourtCaseOrderKind, { key: string; fallback: string }> = {
-  judgment: { key: "courtCaseProfile.orders.kind.judgment", fallback: "Judgment" },
+type KindLabel = { key: string; fallback: string };
+
+const JUDGMENT: KindLabel = { key: "courtCaseProfile.orders.kind.judgment", fallback: "Judgment" };
+
+/**
+ * Labels by the API's `kind` (courts/orders.py: `verdict` for a decided case,
+ * else `order`). `judgment` is accepted as an alias of `verdict`; anything else
+ * renders as the generic "Court order".
+ */
+const KIND_LABELS: Record<CourtCaseOrderKind, KindLabel> = {
+  verdict: JUDGMENT,
+  judgment: JUDGMENT,
   order: { key: "courtCaseProfile.orders.kind.order", fallback: "Order" },
-  interim: { key: "courtCaseProfile.orders.kind.interim", fallback: "Interim order" },
   unknown: { key: "courtCaseProfile.orders.kind.unknown", fallback: "Court order" },
 };
 
