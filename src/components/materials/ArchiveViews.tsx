@@ -277,9 +277,11 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
     if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth - el.clientWidth;
   }, [path.length]);
 
-  const move = (next: string[]) => {
+  // Up/Down replace the history entry (moving within a column); drilling in or
+  // out pushes one, like clicking a folder does, so Back retraces the levels.
+  const move = (next: string[], push = false) => {
     focusRequested.current = true;
-    ctx.select(next);
+    ctx.select(next, push);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>, column: (typeof columns)[number], index: number) => {
@@ -321,13 +323,13 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
         if (column.items[index - 1]) move([...column.at, column.items[index - 1].slug]);
         break;
       case "ArrowRight":
-        if (node.type === "branch") move([...nodePath, node.children[0].slug]);
+        if (node.type === "branch") move([...nodePath, node.children[0].slug], true);
         break;
       case "ArrowLeft":
-        if (column.at.length) move(column.at);
+        if (column.at.length) move(column.at, true);
         break;
       case "Enter":
-        if (node.type === "branch") move([...nodePath, node.children[0].slug]);
+        if (node.type === "branch") move([...nodePath, node.children[0].slug], true);
         else ctx.openLeaf(nodePath);
         break;
       default:

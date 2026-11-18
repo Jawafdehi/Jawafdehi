@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation, useNavigationType } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getDocumentSources = vi.hoisted(() => vi.fn());
@@ -19,9 +19,15 @@ vi.mock("@/services/search-api", () => ({
 import { ArchiveBrowser } from "@/components/materials/ArchiveBrowser";
 
 let location = "";
+let entries: string[] = [];
 function Probe() {
   const here = useLocation();
+  const type = useNavigationType();
   location = `${here.search}${here.hash}`;
+  // Rebuild the stack the way the history does: PUSH adds, REPLACE swaps the top.
+  if (type === "PUSH") entries = [...entries, location];
+  else if (type === "REPLACE") entries = [...entries.slice(0, -1), location];
+  else if (!entries.length) entries = [location];
   return null;
 }
 
@@ -38,6 +44,7 @@ function renderAt(url: string, { phone = false } = {}) {
 }
 
 beforeEach(() => {
+  entries = [];
   window.localStorage.clear();
   window.matchMedia = vi.fn().mockReturnValue({
     matches: false,
@@ -159,5 +166,17 @@ describe("ArchiveBrowser", () => {
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Backspace" });
     await waitFor(() => expect(location).not.toContain("path="));
     await waitFor(() => expect(document.activeElement?.hasAttribute("data-item")).toBe(true));
+  });
+
+  it("adds a history entry per level when drilling into folders by keyboard on desktop", async () => {
+    renderAt("/materials/?view=columns&path=judiciary");
+    const row = await screen.findByRole("option", { name: /Judiciary/ });
+    row.focus();
+    fireEvent.keyDown(row, { key: "ArrowRight" });
+    await waitFor(() => expect(location).toContain("path=judiciary/"));
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
+    await waitFor(() => expect(entries.length).toBe(2));
+    // ArrowRight pushed one entry; ArrowDown within the column replaced it.
+    expect(entries[0]).toContain("path=judiciary");
   });
 });
