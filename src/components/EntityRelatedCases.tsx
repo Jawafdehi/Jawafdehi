@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
-import { getCasesCitingEntity } from "@/services/jds-api";
+import { entityRelatedCasesQuery } from "@/queries/related-cases";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,6 @@ const ROLE_LABEL_KEY: Record<string, string> = {
 // One page holds the lot: the corpus is small (the busiest entity has ~20
 // cases) and the list scrolls inside its column, so nothing is left behind a
 // "+N more" line short of an entity with over fifty citations.
-const PAGE_SIZE = 50;
 
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
@@ -75,8 +74,7 @@ export function EntityRelatedCases({
   const language = i18n.language === "ne" ? "ne" : "en";
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["entity-related-cases", entityIri],
-    queryFn: () => getCasesCitingEntity(entityIri, { page_size: PAGE_SIZE }),
+    ...entityRelatedCasesQuery(entityIri),
     enabled: entityIri.length > 0,
     retry: false,
     staleTime: 5 * 60 * 1000,
