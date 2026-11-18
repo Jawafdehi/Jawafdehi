@@ -21,6 +21,7 @@ import {
 } from '../src/lib/ssr-prefetch.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
 import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
+import { fetchWithRetry } from './build-fetch.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -216,8 +217,6 @@ const CONCURRENCY = 5;
 // 400s with BATCH_SIZE_EXCEEDED, so raising this needs the server raised first.
 const ENTITY_BATCH_SIZE = 25;
 
-const FETCH_TIMEOUT_MS = 10_000;
-
 /** `GET /api/entities?ids=` — the batch form of the per-entity detail endpoint. */
 interface EntityBatchResponse {
   entities: unknown[];
@@ -234,20 +233,11 @@ async function fetchJson<T>(url: string): Promise<T> {
   // the entity batches) go out from this script rather than through the SSR
   // bundle's axios client, so they need the header attached here too — the
   // bundle's own requests get it from setPrerenderToken in main().
+  //
+  // Retried with backoff on a timeout, a network error or a 429/5xx, so one slow
+  // answer cannot stop a deploy (scripts/build-fetch.ts).
   const headers = await buildAuthHeaders();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  let res: Response;
-  try {
-    res = await fetch(url, { signal: controller.signal, headers });
-  } catch (err) {
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
+  const res = await fetchWithRetry(url, { headers });
   if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
   return (await res.json()) as T;
 }

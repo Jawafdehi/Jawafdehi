@@ -8,6 +8,7 @@ import {
 } from '../src/data/site-routes.ts';
 import { caseBrowsePagePaths } from './case-browse-pages.ts';
 import { buildAuthHeaders } from './build-auth.ts';
+import { fetchWithRetry } from './build-fetch.ts';
 import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
@@ -16,7 +17,6 @@ const ROOT = join(__dirname, '..');
 const CANONICAL = 'https://jawafdehi.org';
 const API_BASE = process.env.VITE_JAWAFDEHI_API_BASE_URL || 'https://api.jawafdehi.org/api';
 const CMS_BASE = `${API_BASE}/cms/v2`;
-const FETCH_TIMEOUT_MS = 10_000;
 
 interface EntitySummary {
   // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
@@ -50,19 +50,12 @@ async function fetchWithTimeout(url: string): Promise<Response> {
   // Authenticated when the build has credentials. This step walks the whole case
   // list again in its own process, so it is a second helping of the same
   // request budget the pre-render spends — see scripts/build-auth.ts.
+  //
+  // Retried with backoff (scripts/build-fetch.ts): production build 38a68552
+  // failed HERE, on one 10 s timeout for /api/cases/?page=2, after the
+  // pre-render had already rendered every page.
   const headers = await buildAuthHeaders();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    return await fetch(url, { signal: controller.signal, headers });
-  } catch (err) {
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
+  return fetchWithRetry(url, { headers });
 }
 
 // <title> is not a valid child of <url> in the sitemaps.org 0.9 schema, so it
