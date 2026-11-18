@@ -150,7 +150,7 @@ export default function CourtCaseProfile() {
 
       <div className="layout-container">
         <Link
-          to="/search?type=courtcase"
+          to="/search/?type=courtcase"
           className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" />

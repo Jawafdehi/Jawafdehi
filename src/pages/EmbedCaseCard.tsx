@@ -8,6 +8,7 @@ import { Calendar, ExternalLink, MapPin, User } from "lucide-react";
 import { formatCaseDateRange } from "@/utils/date";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { JawafEntity } from "@/types/jds";
+import { casePath } from "@/lib/case-links";
 
 const RELATION_PRIORITY: Record<string, number> = {
   accused: 1,
@@ -142,7 +143,7 @@ const EmbedCaseCard = () => {
         <div className="flex flex-1 flex-col px-4 py-3">
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
             <Link
-              to={`/case/${caseData.slug || id}`}
+              to={casePath(caseData.slug || id)}
               target="_parent"
               className="hover:text-navy-700 hover:underline"
             >
@@ -191,7 +192,7 @@ const EmbedCaseCard = () => {
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-border px-4 py-2">
           <Link
-            to={`/case/${caseData.slug || id}`}
+            to={casePath(caseData.slug || id)}
             target="_parent"
             className="inline-flex items-center gap-1 text-xs font-medium text-navy-700 hover:text-navy-900 hover:underline"
           >

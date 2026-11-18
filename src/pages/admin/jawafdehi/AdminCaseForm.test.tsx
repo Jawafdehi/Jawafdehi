@@ -89,7 +89,7 @@ const loadCase = (state: string, extra: Record<string, unknown> = {}) =>
   });
 
 const viewLink = (): HTMLAnchorElement | null =>
-  document.querySelector('a[href="/case/ncell-tax-case"]');
+  document.querySelector('a[href="/case/ncell-tax-case/"]');
 
 beforeEach(() => {
   vi.mocked(getCaseWithEtag).mockReset();
@@ -104,7 +104,7 @@ describe("AdminCaseForm — View on website link (BB-37)", () => {
 
     await waitFor(() => expect(viewLink()).not.toBeNull());
     const link = viewLink() as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/case/ncell-tax-case");
+    expect(link.getAttribute("href")).toBe("/case/ncell-tax-case/");
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toContain("noopener");
     // It is a real link, not a disabled control.

@@ -63,12 +63,12 @@ const TermsOfService = () => {
                 <li>Use the Platform for any unlawful purpose</li>
               </ul>
               <p>
-                To protect the people in our archive and stop misuse, our servers may record what is searched for and viewed on the Platform and who the request came from, as described in Section 2.9 of our <a href="/privacy#keeping-people-safe" className="text-primary hover:underline">Privacy Policy</a>.
+                To protect the people in our archive and stop misuse, our servers may record what is searched for and viewed on the Platform and who the request came from, as described in Section 2.9 of our <a href="/privacy/#keeping-people-safe" className="text-primary hover:underline">Privacy Policy</a>.
               </p>
 
               <h3 id="connected-social-accounts">3.3 Connected Social Media Accounts</h3>
               <p>
-                We use third-party tools to manage and publish content to social media accounts that we operate (including TikTok). Our use of those accounts and the platforms' developer interfaces is additionally subject to the terms of service and policies of each platform, including those of TikTok. Information accessed through these integrations is described in our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
+                We use third-party tools to manage and publish content to social media accounts that we operate (including TikTok). Our use of those accounts and the platforms' developer interfaces is additionally subject to the terms of service and policies of each platform, including those of TikTok. Information accessed through these integrations is described in our <a href="/privacy/" className="text-primary hover:underline">Privacy Policy</a>.
               </p>
 
               <h3 id="ai-assistants">3.4 Use Through AI Assistants</h3>
@@ -76,7 +76,7 @@ const TermsOfService = () => {
                 You may use the Platform through an AI assistant, such as ChatGPT or Claude, by connecting our MCP connector and signing in with a Jawafdehi account. These Terms apply to everything done through the connector with your account, including the requests your AI assistant makes for you. Section 3.2 applies too: do not use the connector to copy the archive in bulk or in a way that degrades service for others. We may limit or suspend connector access that breaks these Terms.
               </p>
               <p>
-                AI assistants can misread, mis-summarize, or invent details. Check anything that matters against the case pages, court records, and source documents the assistant cites, and remember that nothing on the Platform is legal advice (Sections 2 and 5). Your use of the AI assistant itself is governed by the terms of the company that runs it, not by these Terms. How we handle data from the connector is described in Section 2.10 of our <a href="/privacy#ai-assistants" className="text-primary hover:underline">Privacy Policy</a>.
+                AI assistants can misread, mis-summarize, or invent details. Check anything that matters against the case pages, court records, and source documents the assistant cites, and remember that nothing on the Platform is legal advice (Sections 2 and 5). Your use of the AI assistant itself is governed by the terms of the company that runs it, not by these Terms. How we handle data from the connector is described in Section 2.10 of our <a href="/privacy/#ai-assistants" className="text-primary hover:underline">Privacy Policy</a>.
               </p>
 
               <h2 id="data-license">4. Data License (CC BY-NC 4.0)</h2>
@@ -84,7 +84,7 @@ const TermsOfService = () => {
                 Published case records, summaries, and related data on the Platform are licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). You may read, share, and build on this information for non-commercial purposes — journalism, research, education, advocacy — as long as you credit Jawafdehi.org. For commercial use, you must obtain a separate license from us (which carries ethical-use terms) by writing to inquiry@jawafdehi.org. We deliberately do not place this data in the public domain, so the archive remains a single authoritative, correctable source.
               </p>
               <p>
-                User-submitted information (feedback, allegations, volunteer applications) is handled according to our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
+                User-submitted information (feedback, allegations, volunteer applications) is handled according to our <a href="/privacy/" className="text-primary hover:underline">Privacy Policy</a>.
               </p>
 
               <h2 id="content-accuracy">5. Content Accuracy</h2>
@@ -97,7 +97,7 @@ const TermsOfService = () => {
                 <li>Information on the Platform should not be treated as legal fact or used as the sole basis for legal decisions</li>
               </ul>
               <p>
-                If you believe any information is inaccurate, please use our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>.
+                If you believe any information is inaccurate, please use our <a href="/feedback/" className="text-primary hover:underline">Feedback page</a>.
               </p>
 
               <h2 id="intellectual-property">6. Intellectual Property</h2>
@@ -137,7 +137,7 @@ const TermsOfService = () => {
 
               <h2 id="contact">13. Contact</h2>
               <p>
-                For questions about these Terms, or for help with the Platform, including the MCP connector, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or use our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. Jawafdehi Initiative Inc. operates the Platform (Section 2).
+                For questions about these Terms, or for help with the Platform, including the MCP connector, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or use our <a href="/feedback/" className="text-primary hover:underline">Feedback page</a>. Jawafdehi Initiative Inc. operates the Platform (Section 2).
               </p>
             </div>
           </div>

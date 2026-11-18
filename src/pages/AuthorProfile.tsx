@@ -30,6 +30,7 @@ import {
   authorCardUrl,
 } from "@/utils/seo";
 import type { AuthorLink } from "@/types/jds";
+import { casePath } from "@/lib/case-links";
 
 // Same icon vocabulary as the team page (src/data/team.ts ContactType), so the
 // two surfaces render the same person the same way.
@@ -243,7 +244,7 @@ export default function AuthorProfile() {
                 return (
                   <li key={entry.slug}>
                     <Link
-                      to={`/case/${entry.slug}`}
+                      to={casePath(entry.slug)}
                       className="flex h-full flex-col rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
                     >
                       <div className="mb-2 flex flex-wrap items-center gap-2">

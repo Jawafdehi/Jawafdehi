@@ -82,8 +82,8 @@ export function Navbar() {
   const navItems = useMemo<NavItem[]>(
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
-      { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
-      { key: "updates", label: t("nav.updates"), to: "/updates" },
+      { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer/" },
+      { key: "updates", label: t("nav.updates"), to: "/updates/" },
     ],
     [t],
   );
@@ -91,11 +91,11 @@ export function Navbar() {
   // Unified public archive: full search + the data-lake single-type browse views.
   const archiveNavItems = useMemo<NavItem[]>(
     () => [
-      { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
-      { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
-      { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases" },
-      { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
-      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
+      { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search/", exact: true },
+      { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials/" },
+      { key: "courtcases", label: t("nav.courtCases", "Court cases"), to: "/courtcases/" },
+      { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability/" },
+      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp/" },
     ],
     [t],
   );
@@ -104,26 +104,29 @@ export function Navbar() {
   // maps this same list — so an entry added here appears in both.
   const aboutNavItems = useMemo<NavItem[]>(
     () => [
-      { key: "about", label: t("nav.about"), to: "/about", exact: true },
+      { key: "about", label: t("nav.about"), to: "/about/", exact: true },
       // Placed second rather than last: it is the only item in this group with
       // a live action behind it, and the one being shared with prospects.
-      { key: "openhouse", label: t("nav.openHouse"), to: "/openhouse" },
-      { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
-      { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
-      { key: "team", label: t("nav.team"), to: "/team" },
-      { key: "products", label: t("nav.products"), to: "/products" },
-      { key: "faq", label: t("nav.faq"), to: "/faq" },
+      { key: "openhouse", label: t("nav.openHouse"), to: "/openhouse/" },
+      { key: "process", label: t("nav.ourProcess"), to: "/our-process/" },
+      { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment/" },
+      { key: "team", label: t("nav.team"), to: "/team/" },
+      { key: "products", label: t("nav.products"), to: "/products/" },
+      { key: "faq", label: t("nav.faq"), to: "/faq/" },
     ],
     [t],
   );
 
   const activeKey = useMemo(() => {
-    const path = location.pathname;
+    // Compared without the trailing slash: the links are slash-terminated (the
+    // canonical form) but a visitor can still arrive on either form.
+    const path = location.pathname.replace(/(.)\/+$/, "$1");
+    const sameAs = (to: string) => to.replace(/(.)\/+$/, "$1") === path;
 
     // Derived from aboutNavItems rather than a second hardcoded list of the
     // same paths: the two had to be edited together, so they would eventually
     // drift and the group's pill would go dark on a page inside it.
-    if (aboutNavItems.some((item) => item.to === path)) {
+    if (aboutNavItems.some((item) => sameAs(item.to))) {
       return "about";
     }
     // Derived from archiveNavItems for the same reason as the group above —
@@ -132,7 +135,7 @@ export function Navbar() {
     // extra entries below are the ones with no menu item of their own: /cases
     // (reached from the header, not this menu) and the detail-page prefixes.
     if (
-      archiveNavItems.some((item) => item.to === path) ||
+      archiveNavItems.some((item) => sameAs(item.to)) ||
       path === "/cases" ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
@@ -142,7 +145,12 @@ export function Navbar() {
       return "archive";
     }
 
-    return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
+    return (
+      navItems.find((item) => {
+        const to = item.to.replace(/(.)\/+$/, "$1");
+        return path === to || path.startsWith(`${to}/`);
+      })?.key ?? null
+    );
   }, [location.pathname, navItems, aboutNavItems, archiveNavItems]);
 
   const pillKey = hoveredKey ?? activeKey;
@@ -454,7 +462,7 @@ export function Navbar() {
                 isScrolled ? "shadow-md shadow-accent/20" : "shadow-none",
               )}
             >
-              <Link to="/donate">
+              <Link to="/donate/">
                 <HeartHandshake className="h-4 w-4" />
                 {t("nav.donate")}
               </Link>
@@ -590,7 +598,7 @@ export function Navbar() {
                     className="bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
                     onClick={() => setIsOpen(false)}
                   >
-                    <Link to="/donate">
+                    <Link to="/donate/">
                       <HeartHandshake className="h-4 w-4" />
                       {t("nav.donate")}
                     </Link>

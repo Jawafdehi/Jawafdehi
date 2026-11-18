@@ -65,7 +65,7 @@ describe("Navbar — the Open House entry", () => {
     await waitFor(() => {
       const link = screen
         .getAllByRole("menuitem")
-        .find((el) => el.getAttribute("href") === "/openhouse");
+        .find((el) => el.getAttribute("href") === "/openhouse/");
       expect(link).toBeTruthy();
       expect(link?.textContent).toContain("nav.openHouse");
     });
@@ -78,7 +78,7 @@ describe("Navbar — the Open House entry", () => {
 
     await waitFor(() => {
       const links = screen.getAllByRole("link");
-      expect(links.some((el) => el.getAttribute("href") === "/openhouse")).toBe(true);
+      expect(links.some((el) => el.getAttribute("href") === "/openhouse/")).toBe(true);
     });
   });
 });
@@ -95,7 +95,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
     await waitFor(() => {
       const link = screen
         .getAllByRole("menuitem")
-        .find((el) => el.getAttribute("href") === "/mcp");
+        .find((el) => el.getAttribute("href") === "/mcp/");
       expect(link).toBeTruthy();
       expect(link?.textContent).toContain("Jawafdehi MCP");
     });
@@ -108,7 +108,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
 
     await waitFor(() => {
       const links = screen.getAllByRole("link");
-      expect(links.some((el) => el.getAttribute("href") === "/mcp")).toBe(true);
+      expect(links.some((el) => el.getAttribute("href") === "/mcp/")).toBe(true);
     });
   });
 
@@ -118,7 +118,9 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // check is derived from the menu now, and this covers it. /courtcases is the
   // control — without it, a test that stopped exercising the active state at
   // all would still pass.
-  it.each(["/mcp", "/courtcases"])("keeps the Archive trigger active on %s", (path) => {
+  // Both forms: the links are slash-terminated (the canonical URL), and the
+  // slashed path is what a visitor's address bar actually holds.
+  it.each(["/mcp", "/courtcases", "/mcp/", "/courtcases/"])("keeps the Archive trigger active on %s", (path) => {
     renderNavbar(path);
 
     expect(screen.getByRole("button", { name: /Archive/ }).className).toContain(

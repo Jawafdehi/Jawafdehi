@@ -165,8 +165,8 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/donate/success": <PaymentSuccess />,
 
   // Redirects to a canonical home.
-  "/entities": <Navigate to="/search?type=entity" replace />,
-  "/information": <Navigate to="/faq" replace />,
+  "/entities": <Navigate to="/search/?type=entity" replace />,
+  "/information": <Navigate to="/faq/" replace />,
   "/moderation": <Navigate to="/admin/moderation" replace />,
 };
 

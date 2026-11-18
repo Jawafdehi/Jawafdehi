@@ -89,7 +89,7 @@ export function ReportCaseCta() {
             // branch gave ReportAllegationDialog before main deleted that file.
             className="mt-8 bg-white font-semibold text-primary shadow-lg shadow-black/10 transition duration-200 hover:bg-white/90 motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.98] dark:bg-white dark:text-primary-surface dark:hover:bg-white/90"
           >
-            <Link to="/report">
+            <Link to="/report/">
               <FilePlus2 className="h-5 w-5" aria-hidden="true" />
               {t("report.trigger")}
             </Link>

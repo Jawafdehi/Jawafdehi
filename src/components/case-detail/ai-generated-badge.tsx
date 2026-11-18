@@ -95,7 +95,7 @@ export function AiGeneratedBadge({ className }: Readonly<{ className?: string }>
         >
           <p>{t("caseDetail.aiGenerated.explanation")}</p>
           <Link
-            to="/our-process"
+            to="/our-process/"
             className="inline-block font-medium text-accent underline underline-offset-4 hover:text-accent/80"
           >
             {t("nav.ourProcess")}

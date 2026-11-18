@@ -54,6 +54,7 @@ import { isAiGenerated } from "@/utils/ai-generated";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import "@/styles/print.css";
+import { casePath } from "@/lib/case-links";
 
 function getGroupedEntities(entities: JawafEntity[]) {
   // Case entities are keyed on their NES @id IRI (the backend no longer returns
@@ -117,7 +118,7 @@ const CaseDetail = () => {
   useEffect(() => {
     const canonicalSlug = caseData?.slug;
     if (canonicalSlug && canonicalSlug !== id) {
-      navigate(`/case/${canonicalSlug}/`, { replace: true });
+      navigate(casePath(canonicalSlug), { replace: true });
     }
   }, [caseData?.slug, id, navigate]);
 
@@ -330,7 +331,7 @@ const CaseDetail = () => {
   // Legacy /case/<numeric> URLs: replace with the canonical slug. This must
   // happen after all hooks have run so we don't violate rules-of-hooks.
   if (legacyTargetSlug) {
-    return <Navigate to={`/case/${legacyTargetSlug}/`} replace />;
+    return <Navigate to={casePath(legacyTargetSlug)} replace />;
   }
 
   if (isLoading) {
@@ -366,7 +367,7 @@ const CaseDetail = () => {
         <div className="flex-1 py-6 md:py-12">
           <div className="layout-container max-w-5xl">
             <Button variant="ghost" asChild className="mb-6">
-              <Link to="/cases">
+              <Link to="/cases/">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t("caseDetail.backToCases")}
               </Link>

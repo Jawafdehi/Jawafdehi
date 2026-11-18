@@ -119,7 +119,7 @@ const Mcp = () => {
               <p className="font-paragraph font-paragraph-foreground">{t("mcp.signIn.body")}</p>
               <p className="font-paragraph font-paragraph-foreground mt-4">
                 {t("mcp.signIn.privacy")}{" "}
-                <Link to="/privacy#ai-assistants" className="text-primary hover:underline">
+                <Link to="/privacy/#ai-assistants" className="text-primary hover:underline">
                   {t("mcp.signIn.privacyLink")}
                 </Link>
               </p>
@@ -170,7 +170,7 @@ const Mcp = () => {
               </h2>
               <p className="font-paragraph font-paragraph-foreground">{t("mcp.support.body")}</p>
               <p className="font-paragraph font-paragraph-foreground mt-4">
-                <Link to="/feedback" className="text-primary hover:underline">
+                <Link to="/feedback/" className="text-primary hover:underline">
                   {t("mcp.support.feedbackLink")}
                 </Link>
                 {" · "}

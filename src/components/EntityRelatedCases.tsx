@@ -19,6 +19,7 @@ import {
 import { caseVerdictForum } from "@/utils/case-stages";
 import { accusedAppeal, appealBadgeClass, appealWithForumLabel } from "@/utils/appeal-verdict";
 import type { Case } from "@/types/jds";
+import { casePath } from "@/lib/case-links";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
 // the reverse view reads the same as the forward (case detail) view.
@@ -161,7 +162,7 @@ export function EntityRelatedCases({
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
-          const href = c.slug ? `/case/${c.slug}` : undefined;
+          const href = c.slug ? casePath(c.slug) : undefined;
           const showOutcome = accused && shouldShowOutcome(outcome);
           // Same rule as the case page; see `accusedAppeal`.
           const bind = (c.entities ?? []).find(

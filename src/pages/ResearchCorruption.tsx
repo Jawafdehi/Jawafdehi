@@ -387,7 +387,7 @@ const ResearchCorruption = () => {
                 </p>
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">
                   {t("research.corruption.outcomes.note", "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. That figure is comparable to the top of our range, not the bottom: on the CIAA's own definition this archive gives {{incl}}%, higher than the Commission's number rather than lower. Set {{ciaa}}% against our {{full}}% and you are comparing two different definitions of the word.", { ciaa: REPORT.ciaa.successRatePct, incl: convPct + partPct, full: convPct })}{" "}
-                  <Link to="/courtcases" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
+                  <Link to="/courtcases/" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
                 </p>
               </div>
             </div>
@@ -507,7 +507,7 @@ const ResearchCorruption = () => {
 
             <p className="mt-4 text-xs leading-5 text-muted-foreground">
               {t("research.corruption.overTime.caption", "Full-conviction rate by verdict fiscal year, case-grain, from Special Court records.")}{" "}
-              <Link to="/courtcases" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
+              <Link to="/courtcases/" className="text-accent hover:underline">{t("research.corruption.cite.courtRecords", "Browse the court records")}</Link>
             </p>
           </section>
 
@@ -641,7 +641,7 @@ const ResearchCorruption = () => {
                 <li><a href={CITATIONS.ciaaReports} className="text-accent hover:underline">{t("research.corruption.sources.ciaaReports", "CIAA annual reports (complaints, prosecutions filed, amounts claimed)")}</a></li>
                 <li><a href={CITATIONS.ciaaPressReleases} className="text-accent hover:underline">{t("research.corruption.sources.pressReleases", "CIAA charge-sheet announcements")}</a></li>
                 <li><a href={CITATIONS.chargeSheets} className="text-accent hover:underline">{t("research.corruption.sources.chargeSheets", "Charge sheets (abhiyog patra)")}</a></li>
-                <li><Link to="/courtcases" className="text-accent hover:underline">{t("research.corruption.sources.courtRecords", "Special Court records (outcomes, charge types, verdict dates)")}</Link></li>
+                <li><Link to="/courtcases/" className="text-accent hover:underline">{t("research.corruption.sources.courtRecords", "Special Court records (outcomes, charge types, verdict dates)")}</Link></li>
                 <li><Link to="/data-quality" className="text-accent hover:underline">{t("research.corruption.sources.dataQuality", "Live coverage counts")}</Link></li>
               </ul>
             </div>

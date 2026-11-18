@@ -277,7 +277,7 @@ const Privacy = () => {
                 <strong>EEA / UK residents (GDPR)</strong>: In addition to the rights above, you have the right to lodge a complaint with your local data protection supervisory authority.
               </p>
               <p>
-                To exercise any of these rights, email <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or use our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. We will verify your request and respond within the timeframes required by applicable law.
+                To exercise any of these rights, email <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or use our <a href="/feedback/" className="text-primary hover:underline">Feedback page</a>. We will verify your request and respond within the timeframes required by applicable law.
               </p>
 
               <h2 id="childrens-privacy">12. Children's Privacy</h2>
@@ -292,7 +292,7 @@ const Privacy = () => {
 
               <h2 id="contact">14. Contact</h2>
               <p>
-                For questions about this Privacy Policy or to exercise your rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or through our <a href="/feedback" className="text-primary hover:underline">Feedback page</a>. For help with the MCP connector or with using Jawafdehi in ChatGPT or Claude, and for anything else, including our research and data sites, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or message us on <a href="https://api.whatsapp.com/send?phone=9779768630501" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WhatsApp at +977 976-8630501</a> (see Section 2.8).
+                For questions about this Privacy Policy or to exercise your rights, contact us at <a href="mailto:privacy@jawafdehi.org" className="text-primary hover:underline">privacy@jawafdehi.org</a> or through our <a href="/feedback/" className="text-primary hover:underline">Feedback page</a>. For help with the MCP connector or with using Jawafdehi in ChatGPT or Claude, and for anything else, including our research and data sites, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or message us on <a href="https://api.whatsapp.com/send?phone=9779768630501" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WhatsApp at +977 976-8630501</a> (see Section 2.8).
               </p>
             </div>
           </div>

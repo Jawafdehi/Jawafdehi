@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StreamField } from "@/components/StreamField";
 import { formatPublicationDate } from "@/utils/date";
 import type { Article } from "@/types/cms";
+import { casePath } from "@/lib/case-links";
 
 /**
  * Presentational article view shared by the public Updates detail page and the
@@ -31,7 +32,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                             asChild
                             className="pl-0 hover:bg-transparent hover:text-primary"
                         >
-                            <Link to="/updates" className="flex items-center gap-2">
+                            <Link to="/updates/" className="flex items-center gap-2">
                                 <ArrowLeft className="h-4 w-4 relative -top-px" />
                                 <span className="mt-1">{t("updates.backToUpdates")}</span>
                             </Link>
@@ -79,7 +80,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                     {article.related_cases.map((relatedCase) => (
                                         <Link
                                             key={relatedCase.id}
-                                            to={`/case/${relatedCase.slug}`}
+                                            to={casePath(relatedCase.slug)}
                                             className="flex items-center justify-between gap-3 rounded-lg bg-card p-4 transition-colors hover:bg-primary-surface/[0.03]"
                                         >
                                             <span className="font-card-title">{relatedCase.title}</span>

@@ -126,33 +126,33 @@ export const Footer = () => {
   const siteVariant = currentSiteVariant();
 
   const platformLinks: FooterLink[] = [
-    { label: t("footer.searchCases"), to: "/search?type=case" },
-    { label: t("footer.searchEntities"), to: "/search?type=entity" },
-    { label: t("nav.cases"), to: "/cases" },
-    { label: t("nav.ourProcess"), to: "/our-process" },
-    { label: t("nav.ourCommitment"), to: "/commitment" },
-    { label: t("nav.volunteer"), to: "/volunteer" },
-    { label: t("nav.donate"), to: "/donate" },
+    { label: t("footer.searchCases"), to: "/search/?type=case" },
+    { label: t("footer.searchEntities"), to: "/search/?type=entity" },
+    { label: t("nav.cases"), to: "/cases/" },
+    { label: t("nav.ourProcess"), to: "/our-process/" },
+    { label: t("nav.ourCommitment"), to: "/commitment/" },
+    { label: t("nav.volunteer"), to: "/volunteer/" },
+    { label: t("nav.donate"), to: "/donate/" },
   ];
 
   const aboutLinks: FooterLink[] = [
-    { label: t("nav.about"), to: "/about" },
-    { label: t("nav.team"), to: "/team" },
-    { label: t("nav.products"), to: "/products" },
-    { label: t("nav.weeklySeries"), to: "/saptahik" },
-    { label: t("nav.updates"), to: "/updates" },
-    { label: t("footer.feedback"), to: "/feedback" },
+    { label: t("nav.about"), to: "/about/" },
+    { label: t("nav.team"), to: "/team/" },
+    { label: t("nav.products"), to: "/products/" },
+    { label: t("nav.weeklySeries"), to: "/saptahik/" },
+    { label: t("nav.updates"), to: "/updates/" },
+    { label: t("footer.feedback"), to: "/feedback/" },
   ];
 
   const resourceLinks: FooterLink[] = [
     { label: t("footer.contributorPortal"), to: `${API_BASE_URL}/admin`, external: true },
-    { label: t("nav.faq"), to: "/faq" },
-    { label: t("footer.pressKit"), to: "/press-kit" },
-    { label: t("footer.mcp"), to: "/mcp" },
+    { label: t("nav.faq"), to: "/faq/" },
+    { label: t("footer.pressKit"), to: "/press-kit/" },
+    { label: t("footer.mcp"), to: "/mcp/" },
     { label: t("footer.githubRepo"), to: "https://github.com/Jawafdehi/Jawafdehi", external: true },
     { label: t("footer.siteStatus"), to: "https://stats.uptimerobot.com/lwVRcc5suC", external: true },
-    { label: t("footer.privacy"), to: "/privacy" },
-    { label: t("footer.terms"), to: "/terms" },
+    { label: t("footer.privacy"), to: "/privacy/" },
+    { label: t("footer.terms"), to: "/terms/" },
   ];
 
   const socialLinks: FooterSocialLink[] = [
@@ -276,10 +276,10 @@ export const Footer = () => {
             {t("footer.allDataPublicDomain")}
           </p>
           <div className="flex gap-4">
-            <Link to="/privacy" className="transition-colors hover:text-[var(--footer-fg)]">
+            <Link to="/privacy/" className="transition-colors hover:text-[var(--footer-fg)]">
               {t("footer.privacy")}
             </Link>
-            <Link to="/terms" className="transition-colors hover:text-[var(--footer-fg)]">
+            <Link to="/terms/" className="transition-colors hover:text-[var(--footer-fg)]">
               {t("footer.terms")}
             </Link>
           </div>
