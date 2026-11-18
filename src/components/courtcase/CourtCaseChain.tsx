@@ -59,6 +59,14 @@ function SourceRef({
   const parts = parseCourtCaseIri(source.courtcase_iri);
   const court = known?.court ?? parts?.court ?? "";
   const caseNumber = known?.case_number ?? parts?.caseNumber.toUpperCase() ?? source.courtcase_iri;
+  if (known?.this_case) {
+    // The case the page is about: named, never linked to itself.
+    return (
+      <span className="font-semibold text-foreground">
+        {formatCourtName(court, lang)} {caseNumber}
+      </span>
+    );
+  }
   return <CaseRef iri={source.courtcase_iri} court={court} caseNumber={caseNumber} lang={lang} />;
 }
 

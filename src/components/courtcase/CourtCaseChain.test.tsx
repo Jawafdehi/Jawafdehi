@@ -162,6 +162,20 @@ describe("CourtCaseChain", () => {
     expect(new Set(links)).toEqual(new Set(["/courtcase/special/075-cr-0048"]));
   });
 
+  it("never links the current case to itself, on the trial's own page either", async () => {
+    await i18n.changeLanguage("en");
+    // special/075-cr-0048's page: the trial is this case, the appeal is not.
+    renderChain([
+      { ...FIRM[0], this_case: true },
+      { ...FIRM[1], this_case: false },
+    ]);
+    const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["/courtcase/supreme/077-cr-0026"]);
+    const line = document.querySelector("[data-link-kind='single']");
+    expect(line?.textContent).toContain("Appeal of Special Court 075-CR-0048");
+    expect(line?.querySelector("a")).toBeNull();
+  });
+
   it("says 'probably' for a single link below the plain threshold", async () => {
     await i18n.changeLanguage("en");
     renderChain([trial("075-CR-0048"), appeal("077-CR-0026", [["075-CR-0048", 0.625]], 0.625)]);
