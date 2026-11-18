@@ -623,16 +623,12 @@
   },
   "team": {
     "hero": {
-      "builtBy": "Built by",
-      "nepaliVolunteers": "Nepali volunteers",
-      "forNepal": "for Nepal",
-      "description": "Jawafdehi runs entirely on volunteer effort from Nepali citizens across technology, research, journalism, and public policy. No corporate interests. No government funding. Just people who believe accountability matters."
+      "title": "Our Team"
     },
     "sections": {
-      "nepalBoard": "Nepal Board",
-      "membersAndAdvisors": "General Members and Advisors",
+      "board": "Nepal Board",
       "usBoard": "US Board",
-      "usBoardNote": "Jawafdehi Initiative Inc. is a separate entity registered in the US, distinct from Jawafdehi Initiative Nepal.",
+      "advisors": "Advisors",
       "currentMembers": "Consultants and Volunteers",
       "pastMembers": "Former Consultants and Volunteers"
     },
