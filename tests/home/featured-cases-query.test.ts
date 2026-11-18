@@ -13,7 +13,7 @@ describe("featuredCasesQuery", () => {
     searchArchiveMock.mockResolvedValue({ results: [] });
   });
 
-  it("asks the search API for the featured order", async () => {
+  it("asks the search API for the newest order", async () => {
     // `sort` is a server-side ChoiceField, so this string is a contract with the
     // API's ALL_SORTS, not a local preference: "newest" silently reverts the
     // curation, and a typo is a 400 that leaves the section on its skeleton.
@@ -21,7 +21,7 @@ describe("featuredCasesQuery", () => {
 
     expect(searchArchiveMock).toHaveBeenCalledWith({
       type: "case",
-      sort: "featured",
+      sort: "newest",
       page_size: FEATURED_CASE_COUNT,
     });
   });

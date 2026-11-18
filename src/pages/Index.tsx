@@ -51,8 +51,7 @@ const Index = () => {
 
   // Query key + params live in queries/home.ts, shared verbatim with the SSR
   // prefetch in entry-server.tsx — the two must agree or the prefetch is wasted.
-  // Still the search source (not /api/cases/), which is where the editorial
-  // `weight` ordering lives.
+  // Still the search source (not /api/cases/), sorted newest first.
   const { data: casesData } = useQuery({
     ...featuredCasesQuery(),
     staleTime: 5 * 60 * 1000,
@@ -159,7 +158,7 @@ const Index = () => {
             {featuredCases.length > 0 ? (
               <>
                 {/* Every case gets the same card: no lead or spotlight. Order
-                    comes from the editorial `weight` ranking in the search
+                    comes from the newest-first order from the search
                     source. */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {featuredCases.map((caseItem, index) => (
