@@ -145,7 +145,7 @@ const OurTeam = () => {
                 </div>
               </div>
             </div>
-            <div id="advisors" className="lg:border-l lg:border-border lg:pl-10">
+            <div id="advisors" className="order-first lg:order-none lg:border-l lg:border-border lg:pl-10">
               <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.advisors", "Advisors")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-8">
                 {advisors.map(renderMember)}
