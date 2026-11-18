@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 
 import ArchiveSearch from "./ArchiveSearch";
 import MaterialsLanding from "./MaterialsLanding";
@@ -11,7 +11,6 @@ import { lazyChunk } from "@/lib/chunk-reload";
 // select). Behind a dynamic import that is ~4 KB gzip off the entry chunk.
 // ArchiveSearch stays a static import: routes.tsx already imports it eagerly
 // for /search, so a dynamic one here would defer nothing and only cost a frame.
-const ArchiveFolderPage = lazy(lazyChunk(() => import("./ArchiveFolderPage"), (m) => m.default));
 const MaterialSeriesBrowse = lazy(lazyChunk(() => import("./MaterialSeriesBrowse"), (m) => m.default));
 
 /**
@@ -46,13 +45,9 @@ export default function Materials() {
   const source = searchParams.get("source");
   const hasSearchIntent = SEARCH_PARAMS.some((param) => searchParams.has(param));
 
-  // One folder / office of the archive tree (data/archive-folders).
+  // The old ?folder=<path> preview URLs open the same folder in place.
   if (folder) {
-    return (
-      <Suspense fallback={null}>
-        <ArchiveFolderPage path={folder.split("/").filter(Boolean)} />
-      </Suspense>
-    );
+    return <Navigate to={`/materials/?path=${encodeURI(folder)}#archive`} replace />;
   }
 
   if (series) {

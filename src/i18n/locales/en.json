@@ -2381,7 +2381,16 @@
     "archive": {
       "root": "Archive",
       "title": "Browse the archive",
-      "lede": "Every document we hold, filed by the institution that published it. Open a folder to see its offices and series."
+      "lede": "Every document we hold, filed by the institution that published it. Open a folder to see its offices and series.",
+      "seeDocuments": "View all",
+      "open": "Open",
+      "recent": "Recent documents",
+      "viewAs": "View as",
+      "views": {
+        "icons": "Icons",
+        "list": "List",
+        "columns": "Columns"
+      }
     }
   },
   "courtCasesPage": {

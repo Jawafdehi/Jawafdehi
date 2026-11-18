@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
-import { ArchiveFolders } from "@/components/materials/ArchiveFolders";
+import { ArchiveBrowser } from "@/components/materials/ArchiveBrowser";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
@@ -229,7 +229,7 @@ export default function MaterialsLanding() {
         <span id="series" className="block scroll-mt-24" aria-hidden="true" />
         <span id="sources" className="block scroll-mt-24" aria-hidden="true" />
         <div className="layout-container py-16 md:py-24">
-          <ArchiveFolders />
+          <ArchiveBrowser />
         </div>
       </section>
 

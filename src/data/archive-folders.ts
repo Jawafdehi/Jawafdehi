@@ -290,7 +290,8 @@ export function leafBySlug(tree: readonly ArchiveBranch[], slug: string): Archiv
 }
 
 export function folderHref(path: readonly string[]): string {
-  return path.length ? `/materials/?folder=${path.join("/")}` : "/materials/#archive";
+  // In place on /materials: the archive browser reads ?path= (and ?view=).
+  return path.length ? `/materials/?path=${path.join("/")}#archive` : "/materials/#archive";
 }
 
 export function leafHref(entry: ArchiveLeaf): string {
@@ -301,4 +302,30 @@ export function leafHref(entry: ArchiveLeaf): string {
 export function nodeName(node: ArchiveNode, language: string): string {
   const nepali = Boolean(language?.startsWith("ne"));
   return (nepali ? node.name.ne : node.name.en) || node.name.en || node.name.ne;
+}
+
+/** The nodes one level below `path` (the root folders for an empty path). */
+export function childrenAt(tree: readonly ArchiveBranch[], path: readonly string[]): readonly ArchiveNode[] {
+  if (!path.length) return tree;
+  const chain = resolvePath(tree, path);
+  const last = chain?.[chain.length - 1];
+  return last?.type === "branch" ? last.children : [];
+}
+
+/** Every leaf under a node (the node itself, for a leaf). */
+export function leavesUnder(node: ArchiveNode): ArchiveLeaf[] {
+  return leavesOf(node);
+}
+
+/** The longest prefix of `path` that resolves in the tree (drops stale segments). */
+export function validPath(tree: readonly ArchiveBranch[], path: readonly string[]): string[] {
+  const valid: string[] = [];
+  let level: readonly ArchiveNode[] = tree;
+  for (const slug of path) {
+    const next = level.find((node) => node.slug === slug);
+    if (!next) break;
+    valid.push(slug);
+    level = next.type === "branch" ? next.children : [];
+  }
+  return valid;
 }

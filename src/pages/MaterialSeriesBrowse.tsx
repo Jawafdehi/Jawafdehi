@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { findLeafChain, leafSeries, withUnfiled } from "@/data/archive-folders";
-import { ArchiveBreadcrumbs } from "@/components/materials/ArchiveFolders";
+import { ArchiveBreadcrumbs } from "@/components/materials/ArchiveBreadcrumbs";
 import { seriesBySlug, seriesScope } from "@/data/material-series";
 import { seriesBrowseHref, seriesForSourceKey } from "@/lib/document-source-series";
 import { documentSourcesQuery } from "@/lib/document-sources";
