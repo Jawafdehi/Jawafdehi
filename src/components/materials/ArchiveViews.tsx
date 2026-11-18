@@ -161,7 +161,7 @@ export function ListView({ ctx }: Readonly<{ ctx: Ctx }>) {
                 to={leafHref(row.node as never)}
                 tabIndex={-1}
                 onClick={(event) => event.stopPropagation()}
-                className="hidden shrink-0 text-xs font-semibold text-primary hover:text-accent sm:inline"
+                className="shrink-0 text-xs font-semibold text-primary hover:text-accent"
               >
                 {t("materialsLanding.archive.seeDocuments", "View all")} →
               </Link>
@@ -348,19 +348,20 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
   if (compact) {
     // Phone: one column at a time, drilling down; a series shows its preview.
     const parentPath = last?.type === "leaf" ? path.slice(0, -1) : path;
+    // Back from a series preview returns to the list it was picked from (its
+    // office); back from a folder's list goes up one folder.
+    const backTo = last?.type === "leaf" ? parentPath : parentPath.slice(0, -1);
     const column = columns[columns.length - 1];
     return (
       <div ref={wrapRef} className="rounded-xl border border-border">
-        {parentPath.length > 0 && (
+        {(last?.type === "leaf" || parentPath.length > 0) && (
           <button
             type="button"
-            onClick={() => ctx.select(parentPath.slice(0, -1), true)}
+            onClick={() => ctx.select(backTo, true)}
             className="flex w-full items-center gap-1 border-b border-border px-3 py-2 text-sm text-primary"
           >
             <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-            {parentPath.length > 1
-              ? nodeName(chain[parentPath.length - 2], language)
-              : t("materialsLanding.archive.root", "Archive")}
+            {backTo.length ? nodeName(chain[backTo.length - 1], language) : t("materialsLanding.archive.root", "Archive")}
           </button>
         )}
         {last?.type === "leaf" ? (

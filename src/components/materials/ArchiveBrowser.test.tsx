@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -105,5 +105,23 @@ describe("ArchiveBrowser", () => {
     fireEvent.click(judiciary);
     await waitFor(() => expect(judiciary.getAttribute("aria-expanded")).toBe("true"));
     expect(screen.getByRole("treeitem", { name: /Supreme Court/ })).toBeTruthy();
+  });
+
+  it("keeps View all reachable on a phone in the List view", async () => {
+    renderAt("/materials/?view=list&path=judiciary/supreme-court", { phone: true });
+    const links = await screen.findAllByRole("link", { name: /View all/ });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) expect(link.className).not.toMatch(/\bhidden\b/);
+  });
+
+  it("goes back from a series preview to its office's list on a phone", async () => {
+    renderAt("/materials/?view=columns&path=judiciary/supreme-court/supreme-court-precedents", { phone: true });
+    const view = () => document.querySelector("[data-archive-view]") as HTMLElement;
+    await waitFor(() => expect(within(view()).getByRole("button", { name: /Supreme Court/ })).toBeTruthy());
+    fireEvent.click(within(view()).getByRole("button", { name: /Supreme Court/ }));
+    await waitFor(() => expect(location).toBe("?view=columns&path=judiciary/supreme-court#archive"));
+    // …and from there up one folder.
+    fireEvent.click(await within(view()).findByRole("button", { name: /Judiciary/ }));
+    await waitFor(() => expect(location).toBe("?view=columns&path=judiciary#archive"));
   });
 });
