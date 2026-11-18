@@ -1,5 +1,6 @@
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
+import { LEGACY_ENTITY_MAP } from './src/utils/legacyEntityMap';
 import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import { casesPageCount } from './src/lib/cases-pagination';
@@ -567,12 +568,13 @@ function metaHtmlResponse(html: string, cacheControl = 'public, max-age=300'): R
 
 // The SPA shell at 404. Used when the API positively reports that a detail
 // record does not exist — a renamed case slug, a deleted article. React Router
-// renders NotFound from this body; only the status line differs.
-async function notFoundShellResponse(request: Request, env: Env): Promise<Response | null> {
+// renders NotFound from this body; only the status line differs. 410 for a URL
+// that is gone for good (legacy numeric entity pages).
+async function notFoundShellResponse(request: Request, env: Env, status: 404 | 410 = 404): Promise<Response | null> {
   const indexHtml = await fetchIndexHtml(request, env);
   if (!indexHtml) return null;
   return new Response(indexHtml, {
-    status: 404,
+    status,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
@@ -1375,6 +1377,24 @@ export default {
           },
         });
       }
+    }
+
+    // Legacy numeric entity URLs (/entity/<id>), retired with the JawafEntity
+    // table in July 2026. Google still holds ~90 of them, as 404s and soft 404s.
+    // An ID whose entity can be identified today 301s to its page; the rest are
+    // 410, which tells Google the page is gone for good rather than missing.
+    // See src/utils/legacyEntityMap.ts for how the mapping was made.
+    const legacyEntityMatch = path.match(/^\/entity\/(\d+)\/?$/);
+    if (legacyEntityMatch) {
+      const target = LEGACY_ENTITY_MAP[legacyEntityMatch[1]];
+      if (target) {
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': target, 'Cache-Control': 'public, max-age=86400', ...secHeaders },
+        });
+      }
+      const gone = await notFoundShellResponse(request, env, 410);
+      if (gone) return gone;
     }
 
     // Court-case-ref case URLs: /case/081-CR-0116 → canonical slug (301)
