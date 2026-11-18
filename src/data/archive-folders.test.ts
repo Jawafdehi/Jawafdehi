@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ARCHIVE_TREE,
+  ARCHIVE_SHELVES,
   childrenAt,
   findLeafChain,
   leafSeries,
   leavesUnder,
   nodeCount,
   nodeName,
+  shelfLeafBySlug,
   unfiledSlug,
   validPath,
   withUnfiled,
@@ -100,7 +101,7 @@ describe("archive folder tree", () => {
   });
 
   it("gives every node a Nepali and an English name, with no abbreviation as a display name", () => {
-    const walk = (nodes: readonly (typeof ARCHIVE_TREE)[number]["children"][number][]): void => {
+    const walk = (nodes: readonly (typeof ARCHIVE_SHELVES)[number][]): void => {
       for (const node of nodes) {
         expect(node.name.ne).toMatch(/[ऀ-ॿ]/);
         expect(node.name.en.trim().length).toBeGreaterThan(0);
@@ -108,7 +109,7 @@ describe("archive folder tree", () => {
         if (node.type === "branch") walk(node.children);
       }
     };
-    walk(ARCHIVE_TREE);
+    walk(ARCHIVE_SHELVES);
   });
 
   it("resolves paths, drops stale segments, and finds a leaf's chain", () => {
@@ -145,5 +146,62 @@ describe("archive folder tree", () => {
     expect(chainOf("rajpatra")).toEqual(["laws", "rajpatra"]);
     expect(chainOf("nepal_police")).toEqual(["government", "nepal-police", "nepal-police-press-releases"]);
     expect(nodeCount(tree.find((folder) => folder.slug === "others")!, { ready: true, sources: [row("rajpatra", 120), row("nepal_police", 2)] })).toBe(0);
+  });
+});
+
+describe("archive folders from the API (JAW-87)", () => {
+  const folders = [
+    { key: "judiciary", name: { en: "Judiciary", ne: "न्यायपालिका" } },
+    {
+      key: "government",
+      name: { en: "Government bodies", ne: "सरकारी निकाय" },
+      subfolders: [{ key: "regulators", name: { en: "Regulators", ne: "नियामक निकाय" } }],
+    },
+    { key: "laws", name: { en: "Laws", ne: "कानुन" } },
+    { key: "others", name: { en: "Others", ne: "अन्य" } },
+  ];
+  const filed = (source: string, count: number, folder: string | null, subfolder: string | null = null) => ({
+    ...row(source, count),
+    folder,
+    subfolder,
+  });
+  const chainOf = (tree: ReturnType<typeof withUnfiled>, source: string) =>
+    findLeafChain(tree, (leaf) => leaf.source === source)?.map((node) => node.slug);
+
+  it("files a new source in the folder the API gives it, not in Others", () => {
+    const tree = withUnfiled({
+      ready: true,
+      folders,
+      sources: [filed("judicial_council", 4, "judiciary"), filed("beema_samiti", 2, "government", "regulators")],
+    });
+    expect(chainOf(tree, "judicial_council")).toEqual(["judiciary", unfiledSlug("judicial_council")]);
+    expect(chainOf(tree, "beema_samiti")).toEqual(["government", "regulators", unfiledSlug("beema_samiti")]);
+    expect(nodeCount(tree.find((folder) => folder.slug === "others")!, { ready: true, sources: [] })).toBe(0);
+  });
+
+  it("moves a curated shelf when the API moves its source", () => {
+    const tree = withUnfiled({ ready: true, folders, sources: [filed("dri", 160, "others")] });
+    expect(chainOf(tree, "dri")).toEqual(["others", "dri", "dri-releases-reports"]);
+  });
+
+  it("takes the folders, their order and their names from the API", () => {
+    const tree = withUnfiled({ ready: true, folders, sources: [] }, "ne");
+    expect(tree.map((folder) => folder.slug)).toEqual(["judiciary", "government", "laws", "others"]);
+    expect(nodeName(tree[1], "ne")).toBe("सरकारी निकाय");
+  });
+
+  it("sends a source with an unknown folder, or none, to Others", () => {
+    const tree = withUnfiled({
+      ready: true,
+      folders,
+      sources: [filed("mystery", 3, "ministries"), filed("legacy_token", 2, null)],
+    });
+    expect(chainOf(tree, "mystery")).toEqual(["others", unfiledSlug("mystery")]);
+    expect(chainOf(tree, "legacy_token")).toEqual(["others", unfiledSlug("legacy_token")]);
+  });
+
+  it("resolves a shelf's series before the catalogue has loaded", () => {
+    expect(shelfLeafBySlug("dri-releases-reports")?.source).toBe("dri");
+    expect(shelfLeafBySlug("nope")).toBeUndefined();
   });
 });
