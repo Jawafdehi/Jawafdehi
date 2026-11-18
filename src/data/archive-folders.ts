@@ -234,46 +234,6 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   leaf("case-documents", "document", { ne: "मुद्दासम्बन्धी विविध कागजात", en: "Miscellaneous case documents" }),
 ];
 
-/**
- * ROLLOUT FALLBACK, until every /api/document-sources/ row carries `folder`:
- * the folder each shelf had in the hard-coded tree this replaces.
- */
-const LEGACY_PLACEMENT: Record<string, readonly [string, string?]> = {
-  "supreme-court": ["judiciary"],
-  "kanun-patrika": ["judiciary"],
-  "special-court": ["judiciary"],
-  "judicial-council": ["judiciary"],
-  "court-orders": ["judiciary"],
-  "court-filings": ["judiciary"],
-  "ciaa": ["government"],
-  "attorney-general": ["government"],
-  "auditor-general": ["government"],
-  "opmcm": ["government"],
-  "ppmo": ["government"],
-  "finance-ministry": ["government"],
-  "dri": ["government"],
-  "dmli": ["government"],
-  "nepal-police": ["government"],
-  "koshi-province": ["government"],
-  "nrb": ["government", "regulators"],
-  "sebon": ["government", "regulators"],
-  "insurance-authority": ["government", "regulators"],
-  "nepal-laws": ["laws"],
-  "legal-templates": ["laws"],
-  "rajpatra": ["laws"],
-  "news-articles": ["news"],
-  "ratopati": ["news"],
-  "setopati": ["news"],
-  "shilapatra": ["news"],
-  "occrp": ["news"],
-  "social-media": ["news"],
-  "us-court-records": ["international"],
-  "us-sec-enforcement": ["international"],
-  "us-doj-agreements": ["international"],
-  "case-documents": ["others"],
-};
-
-
 export const UNFILED_FOLDER = "others";
 const UNFILED_PREFIX = "source-";
 
@@ -347,9 +307,9 @@ function folderSkeleton(catalogue: DocumentSourcesResponse | undefined | null): 
 type Placement = { folder: string; subfolder?: string | null };
 
 /**
- * Where a shelf goes: the folder of the first of its sources the API files,
- * else (during the rollout) where the old hard-coded tree had it. A shelf with
- * no source in the catalogue at all is not drawn: there is nothing in it.
+ * Where a shelf goes: the folder of the first of its sources the API files
+ * (Others if the API gives none). A shelf with no source in the catalogue at
+ * all is not drawn: there is nothing in it.
  */
 function shelfPlacement(
   shelf: ArchiveNode,
@@ -358,8 +318,6 @@ function shelfPlacement(
   const sources = leavesOf(shelf).map((entry) => entry.source);
   const filed = sources.map((source) => rows.get(source)).find((row) => row?.folder);
   if (filed?.folder) return { folder: filed.folder, subfolder: filed.subfolder };
-  const legacy = LEGACY_PLACEMENT[shelf.slug];
-  if (legacy) return { folder: legacy[0], subfolder: legacy[1] };
   return sources.some((source) => rows.has(source)) ? { folder: UNFILED_FOLDER } : null;
 }
 

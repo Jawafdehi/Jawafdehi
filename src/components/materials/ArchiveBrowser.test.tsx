@@ -17,6 +17,7 @@ vi.mock("@/services/search-api", () => ({
 }));
 
 import { ArchiveBrowser } from "@/components/materials/ArchiveBrowser";
+import { filedRow } from "@/data/archive-folders.fixtures";
 
 let location = "";
 let entries: string[] = [];
@@ -57,7 +58,10 @@ beforeEach(() => {
     sources: [
       { source: "nkp", name: { en: "Precedents" }, publisher: null, labelled: true, count: 10_554 },
       { source: "court_order", name: { en: "Court orders" }, publisher: null, labelled: true, count: 43_332 },
-    ],
+      // Shelves are drawn only for sources the catalogue lists (JAW-87).
+      { source: "legal_corpus", name: { en: "Laws and bills" }, publisher: null, labelled: true, count: 758 },
+      { source: "dri", name: { en: "Revenue Investigation" }, publisher: null, labelled: true, count: 160 },
+    ].map(filedRow),
   });
 });
 
@@ -170,6 +174,8 @@ describe("ArchiveBrowser", () => {
 
   it("adds a history entry per level when drilling into folders by keyboard on desktop", async () => {
     renderAt("/materials/?view=columns&path=judiciary");
+    // Shelves are placed by the catalogue's folders, so wait until it is in.
+    await screen.findByRole("option", { name: /Supreme Court/ });
     const row = await screen.findByRole("option", { name: /Judiciary/ });
     row.focus();
     fireEvent.keyDown(row, { key: "ArrowRight" });

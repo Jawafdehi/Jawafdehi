@@ -13,16 +13,19 @@ import {
   validPath,
   withUnfiled,
 } from "@/data/archive-folders";
+import { filedRow } from "@/data/archive-folders.fixtures";
 import type { DocumentSourcesResponse } from "@/lib/document-sources";
 
-const row = (source: string, count: number, series?: { bucket: string; count: number }[]) => ({
-  source,
-  name: { en: `${source} name` },
-  publisher: null,
-  labelled: true,
-  count,
-  ...(series ? { series } : {}),
-});
+// Each row carries the folder the API files its source under in production.
+const row = (source: string, count: number, series?: { bucket: string; count: number }[]) =>
+  filedRow({
+    source,
+    name: { en: `${source} name` },
+    publisher: null,
+    labelled: true,
+    count,
+    ...(series ? { series } : {}),
+  });
 
 const catalogue: DocumentSourcesResponse = {
   ready: true,
@@ -39,6 +42,9 @@ const catalogue: DocumentSourcesResponse = {
       { bucket: "law-regulation", count: 321 },
       { bucket: "court-rules", count: 4 },
     ]),
+    row("official_report", 235),
+    row("dri", 160),
+    row("ciaa_press_release", 3_576),
     row("brand_new_source", 7),
   ],
 };
@@ -184,6 +190,13 @@ describe("archive folders from the API (JAW-87)", () => {
     expect(chainOf(tree, "dri")).toEqual(["others", "dri", "dri-releases-reports"]);
   });
 
+  it("puts the regulators in their sub-folder and drops an empty sub-folder", () => {
+    const tree = withUnfiled({ ready: true, folders, sources: [filed("nrb", 160, "government", "regulators")] });
+    expect(chainOf(tree, "nrb")).toEqual(["government", "regulators", "nrb", "nrb-enforcement"]);
+    const none = withUnfiled({ ready: true, folders, sources: [filed("dri", 1, "government")] });
+    expect(childrenAt(none, ["government"]).map((node) => node.slug)).not.toContain("regulators");
+  });
+
   it("takes the folders, their order and their names from the API", () => {
     const tree = withUnfiled({ ready: true, folders, sources: [] }, "ne");
     expect(tree.map((folder) => folder.slug)).toEqual(["judiciary", "government", "laws", "others"]);
@@ -198,6 +211,12 @@ describe("archive folders from the API (JAW-87)", () => {
     });
     expect(chainOf(tree, "mystery")).toEqual(["others", unfiledSlug("mystery")]);
     expect(chainOf(tree, "legacy_token")).toEqual(["others", unfiledSlug("legacy_token")]);
+  });
+
+  it("does not draw a shelf none of whose sources is in the catalogue", () => {
+    const tree = withUnfiled({ ready: true, folders, sources: [filed("nkp", 1, "judiciary")] });
+    expect(chainOf(tree, "dri")).toBeUndefined();
+    expect(chainOf(tree, "nkp")).toEqual(["judiciary", "supreme-court", "supreme-court-precedents"]);
   });
 
   it("resolves a shelf's series before the catalogue has loaded", () => {
