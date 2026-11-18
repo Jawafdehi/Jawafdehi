@@ -92,7 +92,10 @@ export function documentSourceLabel(
 
 /** Every document the catalogue counts, across all sources, named or not. */
 export function archiveTotal(response: DocumentSourcesResponse | undefined | null): number | null {
-  if (!response) return null;
+  // `ready: false` means the counts are still being computed: say nothing
+  // rather than claim the archive is empty. (The API answers that state with a
+  // 503 today; this keeps the page honest if it ever arrives as a 200.)
+  if (!response?.ready) return null;
   return response.sources.reduce((sum, row) => sum + row.count, 0);
 }
 

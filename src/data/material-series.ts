@@ -249,14 +249,15 @@ export function seriesScope(
  * does keep, so a kind this registry has never heard of is counted in "other"
  * instead of vanishing — the same reason the scope is an exclusion.
  *
- * Returns null while the catalogue is still loading, which the card renders as
- * a dash. A source the catalogue does not list counts 0.
+ * Returns null while the catalogue is still loading or not ready, which the
+ * card renders as a dash. A source the catalogue does not list counts 0.
  */
 export function seriesCount(
   series: MaterialSeries,
   catalogue: DocumentSourcesResponse | undefined | null,
 ): number | null {
-  if (!catalogue) return null;
+  // Not ready = counts still being computed: a dash, not a premature zero.
+  if (!catalogue?.ready) return null;
 
   const row = catalogue.sources.find((entry) => entry.source === series.source);
   const sourceTotal = row?.count ?? 0;
