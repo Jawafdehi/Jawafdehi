@@ -64,11 +64,9 @@ function urlEntry(loc: string, lastmod?: string): string {
 // route starts being pre-rendered, its sitemap and canonical forms have to move
 // with it, or the sitemap advertises redirects for the whole family.
 //
-// /entity/* USED to be in that left-alone group and no longer is: pre-render.ts
-// now writes dist/entity/<prefix>/<slug>/index.html for every case-cited entity,
-// which makes it prerendered by the rule above. Emitting those 1,544 slashless
-// would have been the single biggest source of sitemap redirects we have ever
-// shipped — an order of magnitude past the 17 this function was written to fix.
+// /entity/* followed /case/* out of that group when it was pre-rendered too.
+// Neither family is pre-rendered any more (the edge renders them), but both
+// stay canonical WITH a slash: worker.ts now 301s the slashless form itself.
 function withTrailingSlash(path: string): string {
   return path === '/' || path.endsWith('/') ? path : `${path}/`;
 }

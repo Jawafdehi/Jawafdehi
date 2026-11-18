@@ -9,9 +9,10 @@
 // WHY A FILE COUNT, AND WHY IT IS A GATE
 //
 // Cloudflare caps a Worker version at 20,000 static asset FILES (100,000 on
-// Workers Paid). Every pre-rendered page is one file, so the count tracks the
-// corpus, and the corpus moves in bulk imports: case pages went from ~463 on
-// 2026-10-03 to 2,629 by 2026-10-19.
+// Workers Paid). Every pre-rendered page is one file. Case and entity pages
+// used to be pre-rendered, so the count tracked the corpus (2,629 cases by
+// 2026-10-19, plus up to 10,000 entities); they are rendered at the edge now,
+// and the count is a few hundred. Still a gate, so nothing re-grows it unseen.
 //
 // The limit has been crossed once already. The failure mode is the reason this
 // script is a gate and not a log line: the deploy is rejected with error 10304
@@ -136,7 +137,7 @@ if (uploaded > MAX && !REPORT_ONLY) {
       "  Cloudflare rejects a Worker version over 20,000 files, and that rejection surfaces\n" +
       "  days later as a production frozen on an old bundle, with no failing check anywhere.\n" +
       "  Options, in order of preference:\n" +
-      "    1. Lower PRERENDER_ENTITY_LIMIT (currently the largest single contributor).\n" +
+      "    1. Find what grew (the table above) and stop pre-rendering it; the edge can serve it.\n" +
       "    2. Move to Workers Paid (100,000 files) and set ASSET_BUDGET_MAX=90000.\n" +
       "    3. If you are certain this deploy is safe: ASSET_BUDGET_MAX=<n> to override.\n",
   );
