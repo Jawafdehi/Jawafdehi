@@ -91,3 +91,27 @@ export async function edgeApiToken(env: ApiTokenEnv, now = Date.now()): Promise<
   })();
   return pending;
 }
+
+/**
+ * The cached bearer, or null, without ever waiting on the token endpoint.
+ *
+ * A mint takes ~1.7 s, and every new isolate in every colo starts without a
+ * token, so awaiting it put that wait in front of the first render each
+ * isolate served (measured on production 18 Nov: first renders of 4-10 s,
+ * some past the render deadline). Instead the first render goes anonymous,
+ * exactly as with no credentials, and the mint runs in `waitUntil` so the
+ * isolate's next render carries the token. Concurrent misses still share one
+ * mint, and a failed mint still backs off.
+ */
+export function edgeApiTokenNoWait(
+  env: ApiTokenEnv,
+  waitUntil?: (promise: Promise<unknown>) => void,
+  now = Date.now(),
+): string | null {
+  if (cached && cached.expiresAt > now) return cached.token;
+  if (!env.EDGE_API_CLIENT_ID?.trim() || !env.EDGE_API_CLIENT_SECRET?.trim()) return null;
+  if (now < retryAfter) return null;
+  const mint = edgeApiToken(env, now);
+  waitUntil?.(mint);
+  return null;
+}
