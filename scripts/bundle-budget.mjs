@@ -353,7 +353,18 @@ const DIR = arg("dir", "dist/client");
 //
 // 685_000 leaves ~1,000 bytes over the measured branch, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 685_000;
+//
+// 2026-11: 685_000 → 674_700. Ratcheted DOWN, per the rule above: the Privacy
+// Policy and Terms of Service texts moved off the initial payload (Nepal-entity
+// legal pages, PR #502). They were eager page components; they are now lazy
+// chunks on the client (src/pages/legal/bodies.ts), with the server build handed
+// eager copies so the pre-render stays complete. The same PR added Nepali
+// versions of both, which would have cost ~14 KB gzip had they stayed eager.
+// Measured, same method: this branch builds to 673,612 bytes.
+//
+// 674_700 leaves ~1,100 bytes over the measured branch, matching the headroom the
+// entries above leave.
+const MAX_INITIAL_JS_GZIP = 674_700;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that

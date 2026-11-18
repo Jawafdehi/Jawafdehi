@@ -6,6 +6,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import type { HelmetServerState } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider, dehydrate } from '@tanstack/react-query';
 import App from './App';
+import { registerEagerLegalBodies } from './pages/legal/bodies';
+import { EAGER_LEGAL_BODIES } from './pages/legal/eager-bodies';
 import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
@@ -32,6 +34,10 @@ import type { JawafEntity } from './types/jds';
 // source instead would configure a different module instance and silently leave
 // every outgoing request anonymous. See services/prerender-auth.ts.
 export { setPrerenderToken } from './services/prerender-auth';
+
+// The legal texts are lazy on the client but must render synchronously here,
+// or /privacy and /terms would pre-render empty (src/pages/legal/bodies.ts).
+registerEagerLegalBodies(EAGER_LEGAL_BODIES);
 
 /**
  * Upper bound on every API request this bundle makes, in ms.

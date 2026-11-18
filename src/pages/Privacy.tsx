@@ -1,10 +1,9 @@
-import { LegalPage } from "@/pages/legal/LegalPage";
-import { PrivacyEn } from "@/pages/legal/PrivacyEn";
-import { PrivacyNe } from "@/pages/legal/PrivacyNe";
+import LegalPage from "@/pages/legal/LegalPage";
 
 const Privacy = () => (
   <LegalPage
     id="privacy"
+    name="Privacy"
     path="/privacy/"
     copy={{
       en: {
@@ -22,8 +21,6 @@ const Privacy = () => (
         switchLabel: "Read this policy in English",
       },
     }}
-    en={<PrivacyEn />}
-    ne={<PrivacyNe />}
   />
 );
 

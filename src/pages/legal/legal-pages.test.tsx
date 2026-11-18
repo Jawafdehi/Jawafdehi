@@ -28,6 +28,12 @@ vi.mock("@/components/Seo", () => ({ Seo: () => null }));
 
 import Privacy from "@/pages/Privacy";
 import TermsOfService from "@/pages/TermsOfService";
+import { registerEagerLegalBodies } from "@/pages/legal/bodies";
+import { EAGER_LEGAL_BODIES } from "@/pages/legal/eager-bodies";
+
+// What the pre-render (src/entry-server.tsx) does; the lazy client path has
+// its own test in legal-lazy.test.tsx.
+registerEagerLegalBodies(EAGER_LEGAL_BODIES);
 
 const PAGES = { privacy: Privacy, terms: TermsOfService } as const;
 const LANGUAGES = ["en", "ne"] as const;
@@ -136,7 +142,8 @@ describe("FAQ: how to give, on jawafdehi.org.np", () => {
     ["en", en],
     ["ne", ne],
   ] as const)("the .np answer asks for no gift to the US entity (%s)", (_, locale) => {
-    const question = locale.faqPage.sections
+    const sections: unknown[] = locale.faqPage.sections;
+    const question = sections
       .filter(isFaqPageSection)
       .flatMap((section) => section.questions)
       .find((q) => q.id === "financial-support");

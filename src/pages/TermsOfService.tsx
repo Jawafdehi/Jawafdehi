@@ -1,10 +1,9 @@
-import { LegalPage } from "@/pages/legal/LegalPage";
-import { TermsEn } from "@/pages/legal/TermsEn";
-import { TermsNe } from "@/pages/legal/TermsNe";
+import LegalPage from "@/pages/legal/LegalPage";
 
 const TermsOfService = () => (
   <LegalPage
     id="terms"
+    name="Terms"
     path="/terms/"
     copy={{
       en: {
@@ -22,8 +21,6 @@ const TermsOfService = () => (
         switchLabel: "Read these terms in English",
       },
     }}
-    en={<TermsEn />}
-    ne={<TermsNe />}
   />
 );
 

@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
+import { legalBody } from "@/pages/legal/bodies";
 import { SITE_URL } from "@/utils/seo";
 
 type LegalCopy = {
@@ -12,28 +13,40 @@ type LegalCopy = {
 };
 
 /**
+ * The body's pre-rendered HTML for this page in this language, if the page was
+ * loaded from the pre-render and the client has not replaced it yet. Read
+ * during the first client render, before React commits over the server DOM.
+ */
+function readPrerenderedBody(id: string, lang: string): string | null {
+  if (typeof document === "undefined") return null;
+  const el = document.querySelector<HTMLElement>(`[data-legal-body="${id}"]`);
+  return el && el.lang === lang && el.innerHTML.trim() ? el.innerHTML : null;
+}
+
+/**
  * Shell shared by the Privacy Policy and the Terms of Service: hero, date and
  * a body in the reader's language. The legal text itself lives in
  * <Name>En.tsx / <Name>Ne.tsx beside this file, one component per language
  * with the same sections and anchor ids, so each version reads as a whole and
- * the two can be compared side by side.
+ * the two can be compared side by side. They load lazily on the client
+ * (./bodies.ts).
  */
-export function LegalPage({
+export default function LegalPage({
   id,
+  name,
   path,
   copy,
-  en,
-  ne,
 }: {
   id: string;
+  name: "Privacy" | "Terms";
   path: string;
   copy: { en: LegalCopy; ne: LegalCopy };
-  en: ReactNode;
-  ne: ReactNode;
 }) {
   const { i18n } = useTranslation();
   const lang = i18n.language?.startsWith("en") ? "en" : "ne";
   const text = copy[lang];
+  const Body = legalBody(lang === "en" ? `${name}En` : `${name}Ne`);
+  const [prerendered] = useState(() => readPrerenderedBody(id, lang));
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -71,10 +84,22 @@ export function LegalPage({
         <section className="py-12 md:py-16">
           <div className="layout-container">
             <div
+              data-legal-body={id}
               lang={lang}
               className="font-paragraph content-prose max-w-3xl mx-auto"
             >
-              {lang === "en" ? en : ne}
+              <Suspense
+                fallback={
+                  prerendered ? (
+                    <div
+                      className="contents"
+                      dangerouslySetInnerHTML={{ __html: prerendered }}
+                    />
+                  ) : null
+                }
+              >
+                <Body />
+              </Suspense>
             </div>
           </div>
         </section>
