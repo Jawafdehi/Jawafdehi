@@ -10,6 +10,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SiteOnly } from "@/components/SiteOnly";
+import { currentSiteVariant } from "@/lib/site-host";
 import { trackEvent } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
@@ -547,51 +549,66 @@ export function PayCard() {
 
   useEffect(() => {
     if (userChoseRef.current) return;
+    // jawafdehi.org.np has no "abroad" panel (see below), so it never leaves
+    // the Nepal tab whatever the visitor's timezone.
+    if (currentSiteVariant() === "np") return;
     const guessed = guessRegion();
     if (guessed !== "nepal") setRegion(guessed);
   }, []);
 
   return (
     <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground shadow-lg md:p-7">
-      <div
-        role="group"
-        aria-label={t("donate.ways.title")}
-        className="grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1"
-      >
-        {REGIONS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={id === region}
-            onClick={() => {
-              userChoseRef.current = true;
-              setRegion(id);
-              trackEvent("donate_click", {
-                method: "region_toggle",
-                action: id,
-              });
-            }}
-            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-              id === region
-                ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
-                : "rounded-md px-3 py-2 text-sm font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-            }`}
-          >
-            {t(
-              id === "nepal"
-                ? "donate.ways.nepali.title"
-                : "donate.ways.us.title",
-            )}
-          </button>
-        ))}
-      </div>
+      {/* jawafdehi.org.np is the Nepal company's site and does not ask for
+          gifts to the US entity: it shows only the Nepal panel (the company's
+          own bank account and QR codes), with no region switch. jawafdehi.org
+          keeps both. */}
+      <SiteOnly site="org">
+        <div
+          role="group"
+          aria-label={t("donate.ways.title")}
+          className="grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1"
+        >
+          {REGIONS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={id === region}
+              onClick={() => {
+                userChoseRef.current = true;
+                setRegion(id);
+                trackEvent("donate_click", {
+                  method: "region_toggle",
+                  action: id,
+                });
+              }}
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                id === region
+                  ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                  : "rounded-md px-3 py-2 text-sm font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+              }`}
+            >
+              {t(
+                id === "nepal"
+                  ? "donate.ways.nepali.title"
+                  : "donate.ways.us.title",
+              )}
+            </button>
+          ))}
+        </div>
+      </SiteOnly>
 
-      <div className="mt-5" hidden={region !== "nepal"}>
+      {/* No gap above the Nepal panel when there is no region switch over it. */}
+      <div
+        className={currentSiteVariant() === "np" ? undefined : "mt-5"}
+        hidden={region !== "nepal"}
+      >
         <NepalPanel />
       </div>
-      <div className="mt-5" hidden={region !== "abroad"}>
-        <AbroadPanel />
-      </div>
+      <SiteOnly site="org">
+        <div className="mt-5" hidden={region !== "abroad"}>
+          <AbroadPanel />
+        </div>
+      </SiteOnly>
     </article>
   );
 }
