@@ -18,7 +18,7 @@ export function SourcesSummary() {
   const { data } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
   const total = archiveTotal(data);
   if (total === null) return null;
-  const folders = withUnfiled(data);
+  const folders = withUnfiled(data, language);
 
   return (
     <section className="border-t border-border pt-10" aria-labelledby="sources-summary-heading">

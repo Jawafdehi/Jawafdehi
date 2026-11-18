@@ -123,7 +123,7 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
   ]),
 
   branch("government", { ne: "सरकारी निकाय", en: "Government bodies" }, 1, [
-    branch("ciaa", { ne: "अख्तियार दुरुपयोग अनुसन्धान आयोग", en: "CIAA" }, 1, [
+    branch("ciaa", { ne: "अख्तियार दुरुपयोग अनुसन्धान आयोग", en: "Commission for the Investigation of Abuse of Authority" }, 1, [
       curated("ciaa-press-releases", W.pressReleases),
       leaf("ciaa-press-releases-uploads", "press_release", W.pressReleasesUploads),
       curated("ciaa-annual-reports", W.annualReports),
@@ -144,7 +144,7 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
       leaf("cabinet-decisions", "cabinet_decision", { ne: "मन्त्रिपरिषद्का निर्णय", en: "Cabinet decisions" }),
     ]),
     branch("ppmo", { ne: "सार्वजनिक खरिद अनुगमन कार्यालय", en: "Public Procurement Monitoring Office" }, 6, [
-      leaf("tender-notices", "bolpatra", { ne: "बोलपत्र सूचना (e-GP)", en: "Tender notices (e-GP)" }),
+      leaf("tender-notices", "bolpatra", { ne: "बोलपत्र सूचना (विद्युतीय खरिद प्रणाली)", en: "Tender notices (electronic procurement)" }),
       leaf("ppmo-publications", "ppmo", W.publications),
       leaf("ppmo-blacklist", "ppmo_blacklist", { ne: "कालोसूची", en: "Blacklist" }),
     ]),
@@ -185,14 +185,14 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
     leaf("ratopati", "ratopati", { ne: "रातोपाटी", en: "Ratopati" }),
     leaf("setopati", "news_setopati", { ne: "सेतोपाटी", en: "Setopati" }),
     leaf("shilapatra", "news_shilaptra", { ne: "शिलापत्र", en: "Shilapatra" }),
-    leaf("occrp", "occrp", { ne: "ओसीसीआरपी", en: "OCCRP" }),
+    leaf("occrp", "occrp", { ne: "संगठित अपराध तथा भ्रष्टाचार रिपोर्टिङ परियोजना (OCCRP)", en: "Organized Crime and Corruption Reporting Project (OCCRP)" }),
     leaf("social-media", "social_media", { ne: "सामाजिक सञ्जाल", en: "Social media posts" }),
   ]),
 
   branch("international", { ne: "अन्तर्राष्ट्रिय", en: "International" }, 7, [
-    leaf("us-court-records", "us_court", { ne: "अमेरिकी संघीय अदालतका अभिलेख", en: "US federal court records" }),
-    leaf("us-sec-enforcement", "us_sec", { ne: "अमेरिकी धितोपत्र आयोग (SEC) का कारबाही", en: "US SEC enforcement actions" }),
-    leaf("us-doj-agreements", "us_doj", { ne: "अमेरिकी न्याय विभाग (DOJ) का सम्झौता", en: "US DOJ agreements" }),
+    leaf("us-court-records", "us_court", { ne: "अमेरिकी संघीय अदालतका अभिलेख", en: "United States federal court records" }),
+    leaf("us-sec-enforcement", "us_sec", { ne: "अमेरिकी धितोपत्र तथा विनिमय आयोगका कारबाही", en: "United States Securities and Exchange Commission enforcement actions" }),
+    leaf("us-doj-agreements", "us_doj", { ne: "अमेरिकी न्याय विभागका सम्झौता", en: "United States Department of Justice agreements" }),
   ]),
 
   branch("others", { ne: "अन्य", en: "Others" }, 8, [
@@ -211,7 +211,34 @@ function leavesOf(node: ArchiveNode): ArchiveLeaf[] {
  * The tree plus every listed source it does not mention, filed under अन्य |
  * Others from its API row, so a newly loaded source appears with no release.
  */
-export function withUnfiled(catalogue: DocumentSourcesResponse | undefined | null): ArchiveBranch[] {
+export function withUnfiled(
+  catalogue: DocumentSourcesResponse | undefined | null,
+  language = "en",
+): ArchiveBranch[] {
+  return sortTree(fileUnfiled(catalogue), language);
+}
+
+/** "Others" folders and "Other …" series always sort last. */
+function isOther(node: ArchiveNode): boolean {
+  return node.slug === UNFILED_FOLDER || /^other\b/i.test(node.name.en);
+}
+
+/**
+ * Every level alphabetical in the language shown (Intl.Collator "ne" or
+ * "en"), so the order follows the names the reader sees; "Others" last.
+ */
+export function sortTree<T extends ArchiveNode>(nodes: readonly T[], language: string): T[] {
+  const collator = new Intl.Collator(language?.startsWith("ne") ? "ne" : "en");
+  return [...nodes]
+    .map((node) => (node.type === "branch" ? ({ ...node, children: sortTree(node.children, language) } as T) : node))
+    .sort(
+      (a, b) =>
+        Number(isOther(a)) - Number(isOther(b)) ||
+        collator.compare(nodeName(a, language), nodeName(b, language)),
+    );
+}
+
+function fileUnfiled(catalogue: DocumentSourcesResponse | undefined | null): ArchiveBranch[] {
   const known = new Set(ARCHIVE_TREE.flatMap(leavesOf).map((entry) => entry.source));
   const unfiled: ArchiveLeaf[] = listedSources(catalogue)
     .filter((row) => !known.has(row.source))

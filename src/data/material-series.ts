@@ -113,7 +113,7 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
     slug: "ciaa-press-releases",
     source: "ciaa_press_release",
     tint: 5,
-    name: { ne: "अख्तियारका प्रेस विज्ञप्ति", en: "CIAA press releases" },
+    name: { ne: "अख्तियारका प्रेस विज्ञप्ति", en: "Press releases of the Commission for the Investigation of Abuse of Authority" },
     description: {
       ne: "अख्तियार दुरुपयोग अनुसन्धान आयोगले जारी गरेका प्रेस विज्ञप्तिहरू।",
       en: "Press releases issued by the Commission for the Investigation of Abuse of Authority.",
@@ -159,7 +159,7 @@ export const MATERIAL_SERIES: readonly MaterialSeries[] = [
     slug: "ciaa-annual-reports",
     source: "ciaa_annual_report",
     tint: 3,
-    name: { ne: "अख्तियारका वार्षिक प्रतिवेदन", en: "CIAA annual reports" },
+    name: { ne: "अख्तियारका वार्षिक प्रतिवेदन", en: "Annual reports of the Commission for the Investigation of Abuse of Authority" },
     description: {
       ne: "अख्तियार दुरुपयोग अनुसन्धान आयोगका वार्षिक प्रतिवेदनहरू, आर्थिक वर्ष २०४७/४८ देखि।",
       en: "Annual reports of the CIAA, from fiscal year 2047/48 BS onward.",

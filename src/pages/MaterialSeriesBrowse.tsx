@@ -154,7 +154,7 @@ export default function MaterialSeriesBrowse({
   });
   // The archive tree names every series (curated shelves and the rest), and
   // gives the page its breadcrumb trail.
-  const tree = withUnfiled(sourcesQuery.data);
+  const tree = withUnfiled(sourcesQuery.data, language);
   const treeChain = sourceKey
     ? findLeafChain(tree, (entry) => entry.source === sourceKey && !entry.kind && !entry.kindExclude)
     : slug

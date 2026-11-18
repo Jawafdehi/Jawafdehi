@@ -219,7 +219,7 @@ export function ArchiveBrowser() {
   const language = i18n.language;
   const navigate = useNavigate();
   const { data: catalogue } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
-  const tree = useMemo(() => withUnfiled(catalogue), [catalogue]);
+  const tree = useMemo(() => withUnfiled(catalogue, language), [catalogue, language]);
   const [params] = useSearchParams();
   const isMobile = useIsMobile();
 
