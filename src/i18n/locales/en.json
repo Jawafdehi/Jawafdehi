@@ -583,7 +583,8 @@
       "items": [
         {
           "q": "Can I give monthly instead of once?",
-          "a": "Yes. Zeffy and PayPal both support recurring gifts, so you can choose one-time or monthly support before confirming your donation."
+          "a": "Yes. Zeffy and PayPal both support recurring gifts, so you can choose one-time or monthly support before confirming your donation.",
+          "site": "org"
         },
         {
           "q": "Where exactly does the money go?",
@@ -591,7 +592,8 @@
         },
         {
           "q": "Are my donations tax-deductible?",
-          "a": "For US taxpayers, yes. Jawafdehi Initiative Inc. (US EIN 42-3114954) is a 501(c)(3) tax-exempt nonprofit, so gifts to it are tax-deductible to the extent allowed by law. Donations made through our Nepal entity are not deductible under US law. Email us if you need a receipt."
+          "a": "For US taxpayers, yes. Jawafdehi Initiative Inc. (US EIN 42-3114954) is a 501(c)(3) tax-exempt nonprofit, so gifts to it are tax-deductible to the extent allowed by law. Donations made through our Nepal entity are not deductible under US law. Email us if you need a receipt.",
+          "site": "org"
         },
         {
           "q": "Can I support Jawafdehi without donating money?",
@@ -599,7 +601,13 @@
         },
         {
           "q": "Will I get a receipt?",
-          "a": "If you give through **Zeffy** or **PayPal Giving Fund**, a receipt is emailed to you automatically. For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org** with your transfer details and we will confirm your contribution."
+          "a": "If you give through **Zeffy** or **PayPal Giving Fund**, a receipt is emailed to you automatically. For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org** with your transfer details and we will confirm your contribution.",
+          "site": "org"
+        },
+        {
+          "q": "Will I get a receipt?",
+          "a": "For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org.np** with your transfer details and we will confirm your contribution.",
+          "site": "np"
         }
       ]
     },
@@ -2641,7 +2649,8 @@
           {
             "id": "financial-support",
             "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **Zeffy** or **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **Zeffy** or **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit.",
+            "answerNp": "You can support us by **Nepal bank transfer** or by scanning our **FonePay or NepalPay QR**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
           },
           {
             "id": "help-without-donating",

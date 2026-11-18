@@ -1,149 +1,30 @@
-import { Seo } from "@/components/Seo";
-import { SITE_URL } from "@/utils/seo";
+import { LegalPage } from "@/pages/legal/LegalPage";
+import { TermsEn } from "@/pages/legal/TermsEn";
+import { TermsNe } from "@/pages/legal/TermsNe";
 
-const TermsOfService = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Seo
-        title="Jawafdehi Initiative Terms of Service"
-        description="Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive."
-        canonicalUrl={`${SITE_URL}/terms/`}
-      />
-
-      <main id="main-content" className="flex-1">
-        <section id="terms-hero" className="bg-gradient-to-br from-primary-surface via-navy-dark to-foreground py-16 md:py-20">
-          <div className="layout-container">
-            <div className="max-w-3xl">
-              <h1 className="font-page-title font-page-title-inverse mb-4">
-                Jawafdehi Initiative Terms of Service
-              </h1>
-              <p className="font-page-lede font-page-lede-inverse">
-                Last updated: November 15, 2026
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-12 md:py-16">
-          <div className="layout-container">
-            <div className="font-paragraph content-prose max-w-3xl mx-auto">
-              <h2 id="acceptance">1. Acceptance of Terms</h2>
-              <p>
-                By accessing or using jawafdehi.org or any public website or service we run on a subdomain of jawafdehi.org, including research.jawafdehi.org, justice.jawafdehi.org and our MCP connector at api.jawafdehi.org/mcp (together, "the Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.
-              </p>
-
-              <h2 id="about-jawafdehi">2. About Jawafdehi</h2>
-              <p>
-                The Platform is operated by Jawafdehi Initiative Inc., a Michigan public benefit nonprofit corporation. Jawafdehi is Nepal's open corruption accountability platform. We document, simplify, and permanently archive CIAA (Commission for the Investigation of Abuse of Authority) corruption cases. Published case data is licensed under Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0) and is provided for public interest, transparency, and accountability purposes.
-              </p>
-              <p>
-                Jawafdehi is an open-source project run with the help of volunteers. We are not a government entity, law firm, or legal authority. We do not provide legal advice.
-              </p>
-
-              <h2 id="platform-use">3. Use of the Platform</h2>
-
-              <h3 id="permitted-use">3.1 Permitted Use</h3>
-              <p>You may use the Platform to:</p>
-              <ul>
-                <li>Browse and search public corruption case records</li>
-                <li>Submit feedback through our designated forms</li>
-                <li>Report allegations through our designated submission forms</li>
-                <li>Volunteer and contribute to the project</li>
-                <li>Share and reference public case information with proper attribution</li>
-              </ul>
-
-              <h3 id="prohibited-conduct">3.2 Prohibited Conduct</h3>
-              <p>You agree not to:</p>
-              <ul>
-                <li>Submit false, misleading, or fraudulent information through any Platform form</li>
-                <li>Use the Platform to harass, defame, or threaten any individual or entity</li>
-                <li>Attempt to gain unauthorized access to any part of the Platform or its systems</li>
-                <li>Use automated tools to scrape, crawl, or overload the Platform in a way that degrades service for other users</li>
-                <li>Impersonate any person or entity, or misrepresent your affiliation</li>
-                <li>Use the Platform for any unlawful purpose</li>
-              </ul>
-              <p>
-                To protect the people in our archive and stop misuse, our servers may record what is searched for and viewed on the Platform and who the request came from, as described in Section 2.9 of our <a href="/privacy/#keeping-people-safe" className="text-primary hover:underline">Privacy Policy</a>.
-              </p>
-
-              <h3 id="connected-social-accounts">3.3 Connected Social Media Accounts</h3>
-              <p>
-                We use third-party tools to manage and publish content to social media accounts that we operate (including TikTok). Our use of those accounts and the platforms' developer interfaces is additionally subject to the terms of service and policies of each platform, including those of TikTok. Information accessed through these integrations is described in our <a href="/privacy/" className="text-primary hover:underline">Privacy Policy</a>.
-              </p>
-
-              <h3 id="ai-assistants">3.4 Use Through AI Assistants</h3>
-              <p>
-                You may use the Platform through an AI assistant, such as ChatGPT or Claude, by connecting our MCP connector and signing in with a Jawafdehi account. These Terms apply to everything done through the connector with your account, including the requests your AI assistant makes for you. Section 3.2 applies too: do not use the connector to copy the archive in bulk or in a way that degrades service for others. We may limit or suspend connector access that breaks these Terms.
-              </p>
-              <p>
-                AI assistants can misread, mis-summarize, or invent details. Check anything that matters against the case pages, court records, and source documents the assistant cites, and remember that nothing on the Platform is legal advice (Sections 2 and 5). Your use of the AI assistant itself is governed by the terms of the company that runs it, not by these Terms. How we handle data from the connector is described in Section 2.10 of our <a href="/privacy/#ai-assistants" className="text-primary hover:underline">Privacy Policy</a>.
-              </p>
-
-              <h2 id="data-license">4. Data License (CC BY-NC 4.0)</h2>
-              <p>
-                Published case records, summaries, and related data on the Platform are licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). You may read, share, and build on this information for non-commercial purposes — journalism, research, education, advocacy — as long as you credit Jawafdehi.org. For commercial use, you must obtain a separate license from us (which carries ethical-use terms) by writing to inquiry@jawafdehi.org. We deliberately do not place this data in the public domain, so the archive remains a single authoritative, correctable source.
-              </p>
-              <p>
-                User-submitted information (feedback, allegations, volunteer applications) is handled according to our <a href="/privacy/" className="text-primary hover:underline">Privacy Policy</a>.
-              </p>
-
-              <h2 id="content-accuracy">5. Content Accuracy</h2>
-              <p>
-                We strive for accuracy through rigorous sourcing from official documents and human review. However:
-              </p>
-              <ul>
-                <li>Case information is based on publicly available records and may not reflect the most current legal status</li>
-                <li>We do not guarantee the completeness or accuracy of all content</li>
-                <li>Information on the Platform should not be treated as legal fact or used as the sole basis for legal decisions</li>
-              </ul>
-              <p>
-                If you believe any information is inaccurate, please use our <a href="/feedback/" className="text-primary hover:underline">Feedback page</a>.
-              </p>
-
-              <h2 id="intellectual-property">6. Intellectual Property</h2>
-              <p>
-                The Jawafdehi platform codebase is open source and available on <a href="https://github.com/Jawafdehi" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub</a>. The Jawafdehi name, logo, and branding are property of the Jawafdehi project. Case data published on the platform is available under CC BY-NC 4.0 (see Section 4).
-              </p>
-
-              <h2 id="disclaimer">7. Disclaimer of Warranties</h2>
-              <p>
-                The Platform is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not warrant that the Platform will be uninterrupted, error-free, or free of harmful components.
-              </p>
-
-              <h2 id="liability">8. Limitation of Liability</h2>
-              <p>
-                To the fullest extent permitted by applicable law, Jawafdehi, its volunteers, and contributors shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from your use of or inability to use the Platform.
-              </p>
-
-              <h2 id="indemnification">9. Indemnification</h2>
-              <p>
-                You agree to indemnify and hold harmless Jawafdehi, its volunteers, and contributors from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.
-              </p>
-
-              <h2 id="third-party-links">10. Third-Party Links</h2>
-              <p>
-                The Platform may contain links to third-party websites (e.g., CIAA, Nepali government portals, GitHub, social media). We are not responsible for the content or practices of these external sites.
-              </p>
-
-              <h2 id="terms-changes">11. Modifications to Terms</h2>
-              <p>
-                We reserve the right to modify these Terms at any time. Changes will be posted on this page with an updated "Last updated" date. Continued use of the Platform after changes constitutes acceptance of the modified Terms.
-              </p>
-
-              <h2 id="governing-law">12. Governing Law</h2>
-              <p>
-                These Terms are governed by the laws of the State of Michigan, United States, without regard to its conflict-of-laws principles. Any disputes arising from these Terms shall be subject to the jurisdiction of the state and federal courts located in Michigan.
-              </p>
-
-              <h2 id="contact">13. Contact</h2>
-              <p>
-                For questions about these Terms, or for help with the Platform, including the MCP connector, write to <a href="mailto:inquiry@jawafdehi.org" className="text-primary hover:underline">inquiry@jawafdehi.org</a> or use our <a href="/feedback/" className="text-primary hover:underline">Feedback page</a>. Jawafdehi Initiative Inc. operates the Platform (Section 2).
-              </p>
-            </div>
-          </div>
-        </section>
-      </main>    </div>
-  );
-};
+const TermsOfService = () => (
+  <LegalPage
+    id="terms"
+    path="/terms/"
+    copy={{
+      en: {
+        title: "Jawafdehi Initiative Terms of Service",
+        description:
+          "Jawafdehi's terms of service — guidelines for using Nepal's open corruption accountability platform and public case archive.",
+        lastUpdated: "Last updated: November 18, 2026",
+        switchLabel: "यी सर्तहरू नेपालीमा पढ्नुहोस्",
+      },
+      ne: {
+        title: "जवाफदेही इनिशिएटिभका सेवाका सर्तहरू",
+        description:
+          "जवाफदेहीका सेवाका सर्तहरू — नेपालको खुला भ्रष्टाचार जवाफदेही प्लेटफर्म र सार्वजनिक मुद्दा अभिलेख प्रयोग गर्ने नियम।",
+        lastUpdated: "अन्तिम अद्यावधिक: १८ नोभेम्बर २०२६",
+        switchLabel: "Read these terms in English",
+      },
+    }}
+    en={<TermsEn />}
+    ne={<TermsNe />}
+  />
+);
 
 export default TermsOfService;

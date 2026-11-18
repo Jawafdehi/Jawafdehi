@@ -15,6 +15,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
 import { Seo } from "@/components/Seo";
+import { SiteOnly } from "@/components/SiteOnly";
 import { SITE_URL } from "@/utils/seo";
 
 export default function FaqPage() {
@@ -139,9 +140,24 @@ export default function FaqPage() {
                             </span>
                           </AccordionTrigger>
                           <AccordionContent className="pb-6 pr-0 text-sm font-normal leading-7 text-muted-foreground md:pr-16 md:text-base">
-                            <Markdown components={faqMarkdownComponents} remarkPlugins={[remarkGfm]}>
-                              {item.answer}
-                            </Markdown>
+                            {item.answerNp === undefined ? (
+                              <Markdown components={faqMarkdownComponents} remarkPlugins={[remarkGfm]}>
+                                {item.answer}
+                              </Markdown>
+                            ) : (
+                              <>
+                                <SiteOnly site="org">
+                                  <Markdown components={faqMarkdownComponents} remarkPlugins={[remarkGfm]}>
+                                    {item.answer}
+                                  </Markdown>
+                                </SiteOnly>
+                                <SiteOnly site="np">
+                                  <Markdown components={faqMarkdownComponents} remarkPlugins={[remarkGfm]}>
+                                    {item.answerNp}
+                                  </Markdown>
+                                </SiteOnly>
+                              </>
+                            )}
                           </AccordionContent>
                         </AccordionItem>
                       ))}

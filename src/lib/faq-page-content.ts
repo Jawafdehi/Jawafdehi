@@ -8,6 +8,12 @@ export type FaqPageQuestion = {
   id: string;
   question: string;
   answer: string;
+  /**
+   * The answer as jawafdehi.org.np shows it, where it must differ: the Nepal
+   * company's site does not ask for gifts to the US entity. Without it, both
+   * sites show `answer`.
+   */
+  answerNp?: string;
 };
 
 export type FaqPageSection = {
@@ -23,7 +29,8 @@ export const isFaqPageQuestion = (value: unknown): value is FaqPageQuestion =>
   isRecord(value) &&
   typeof value.id === "string" &&
   typeof value.question === "string" &&
-  typeof value.answer === "string";
+  typeof value.answer === "string" &&
+  (value.answerNp === undefined || typeof value.answerNp === "string");
 
 export const isFaqPageSection = (value: unknown): value is FaqPageSection =>
   isRecord(value) &&
