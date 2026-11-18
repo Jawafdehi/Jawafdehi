@@ -1366,6 +1366,18 @@
       "remarks": "Remarks",
       "empty": "No hearings or activity recorded yet for this court case."
     },
+    "orders": {
+      "heading": "Court orders ({{count}})",
+      "nav": "Court orders",
+      "read": "Read",
+      "notReadable": "Text not available yet",
+      "undated": "Date not recorded",
+      "kind": {
+        "judgment": "Judgment",
+        "order": "Order",
+        "unknown": "Court order"
+      }
+    },
     "source": {
       "heading": "Source",
       "title": "Jawafdehi Governance Archive",

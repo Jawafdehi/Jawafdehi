@@ -268,6 +268,37 @@ export interface CourtCase {
   // reader must treat them as optional and default to [].
   hearings?: CourtCaseHearing[];
   entities?: CourtCaseEntity[];
+  /**
+   * The court orders this case references (JAW-76), oldest first (undated last). Always present
+   * on an API that ships the field (possibly []); ABSENT on an older API, which
+   * every reader must treat the same as an empty list.
+   */
+  orders?: CourtCaseOrder[];
+}
+
+/**
+ * What kind of court order a listed order is. The API sends `verdict` (the case
+ * is decided) or `order`; `judgment` is a tolerated alias of `verdict`, and
+ * `unknown` is the frontend's own fallback label for anything else.
+ */
+export type CourtCaseOrderKind = "verdict" | "judgment" | "order" | "unknown";
+
+/**
+ * One entry in a court case's order list. Deliberately carries no title: an
+ * order's title names the parties, so the list shows only kind and date.
+ */
+export interface CourtCaseOrder {
+  /** Material IRI, e.g. `https://jawafdehi.org/material/court_order/special.076-cr-0438`. */
+  iri: string;
+  /**
+   * One of {@link CourtCaseOrderKind} today. Typed as string so a kind the API
+   * adds later still renders (as a generic "Court order").
+   */
+  kind: string;
+  order_date_bs: string | null;
+  order_date_ad: string | null;
+  /** False when the order's text has not been extracted yet. */
+  readable: boolean;
 }
 
 /** One credited author on a case's public byline, resolved from their profile.

@@ -341,7 +341,19 @@ const DIR = arg("dir", "dist/client");
 //
 // 683_800 leaves ~1,100 bytes over the measured branch, matching the headroom the
 // entries above leave.
-const MAX_INITIAL_JS_GZIP = 683_800;
+//
+// 2026-11: 683_800 → 685_000 for the court-case "Court orders" section (JAW-76).
+// Measured, same machine and method: main (a0141458) builds to 683,793 bytes —
+// 7 under the old line, the rest of #476's headroom having gone to #479 — and
+// this branch to 683,987, so the feature costs 194 bytes gzip. The component and
+// its page ride the existing lazy CourtCaseProfile chunk; the whole 194 is the
+// section's EN + NE strings in en.json / ne.json, which are eager. With 7 bytes
+// of headroom no form of a bilingual change fits, so the line moves. The en.json
+// lever above is still where to win this back.
+//
+// 685_000 leaves ~1,000 bytes over the measured branch, matching the headroom the
+// entries above leave.
+const MAX_INITIAL_JS_GZIP = 685_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
 // Packages that must not be in the initial payload, with a marker string that
