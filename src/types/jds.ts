@@ -274,6 +274,51 @@ export interface CourtCase {
    * every reader must treat the same as an empty list.
    */
   orders?: CourtCaseOrder[];
+  /**
+   * The case's appeal history across courts, first court first (JAW-1); `[]` when
+   * the case is in none. ABSENT on an API older than the appeal-links table, which
+   * readers treat the same as `[]`. Linked by Jawafdehi, not the court.
+   */
+  court_chain?: CourtChainStep[];
+  /** Says the links are Jawafdehi's, not the court's. */
+  court_chain_note?: string;
+}
+
+/** One case a chain step was appealed from, with its own probability. */
+export interface CourtChainSource {
+  /** e.g. `https://jawafdehi.org/courtcase/special/075-cr-0048`. */
+  courtcase_iri: string;
+  /** Estimated chance (0-1) that this link is correct. */
+  probability: number;
+}
+
+/**
+ * One court case in an appeal history. Never names a party.
+ *
+ * `appealed_from` with one entry is a plain link. With several, it is either a
+ * set ("appeal of ONE of these"; each candidate's probability is below the
+ * step's, which is their sum) or an appeal of EACH of them (the step's
+ * probability is the lowest of theirs).
+ */
+export interface CourtChainStep {
+  /** `initial` for the first court; `appeal` or `review` after it. */
+  stage: string;
+  courtcase_iri: string;
+  court: string;
+  case_number: string;
+  case_type: string | null;
+  start: string | null;
+  start_bs: string | null;
+  end: string | null;
+  end_bs: string | null;
+  verdict_type: string | null;
+  /** True for the case the page is about. */
+  this_case: boolean;
+  /** Absent on `initial` steps. */
+  probability?: number;
+  /** Absent on `initial` steps. */
+  appealed_from?: CourtChainSource[];
+  linked_on?: string;
 }
 
 /**
