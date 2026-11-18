@@ -107,9 +107,7 @@ export const nepalBoard: TeamMember[] = [
   },
 ];
 
-// "General Members and Advisors", shown directly below the Nepal Board. One
-// card per person: a general member who is also an advisor carries both badges.
-export const membersAndAdvisors: TeamMember[] = [
+export const generalMembers: TeamMember[] = [
   {
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.webp",
@@ -119,13 +117,10 @@ export const membersAndAdvisors: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
   },
-  {
-    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
-    thumb: "/assets/teammembers/purna.webp",
-    description: "",
-    tags: ["General Member", "Advisor"],
-    contacts: [],
-  },
+];
+
+// Shown in its own section. A general member who is also an advisor carries both badges.
+export const advisors: TeamMember[] = [
   // Name, role and links from his signed advisor acceptance form
   // (2026-11-18, invitation letter ५१२), which consents to this listing.
   {
@@ -137,6 +132,13 @@ export const membersAndAdvisors: TeamMember[] = [
       { type: "youtube", value: "https://www.youtube.com/@techtanka" },
       { type: "facebook", value: "https://www.facebook.com/tanka.dahal/" },
     ],
+  },
+  {
+    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
+    thumb: "/assets/teammembers/purna.webp",
+    description: "",
+    tags: ["General Member", "Advisor"],
+    contacts: [],
   },
 ];
 
