@@ -22,6 +22,7 @@ import {
 import { entityPath } from '../src/lib/entity-links.ts';
 import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
 import { fetchWithRetry } from './build-fetch.ts';
+import { injectIntoTemplate } from '../src/lib/ssr-template.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -465,41 +466,6 @@ function staticRouteOutFile(path: string): string {
   }
 
   return join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
-}
-
-function injectIntoTemplate(template: string, result: RenderResult): string {
-  const { html, helmetContext, dehydratedState } = result;
-  const h = helmetContext.helmet;
-  const title = h?.title?.toString() ?? '';
-  const meta = [
-    h?.meta?.toString() ?? '',
-    h?.link?.toString() ?? '',
-    h?.script?.toString() ?? '',
-    h?.style?.toString() ?? '',
-    h?.noscript?.toString() ?? '',
-  ].filter(s => s.trim()).join('\n    ');
-  const json = JSON.stringify(dehydratedState).replace(/<\//g, '<\\/');
-  const stateScript = `<script id="__REACT_QUERY_STATE__" type="application/json">${json}</script>`;
-
-  // A page may override the document language via Helmet's <html lang="…" />.
-  // Only the title and the meta block were substituted here, so that override
-  // was silently dropped and every pre-rendered page shipped index.html's
-  // lang="ne" — including /research/corruption-accountability, which is served
-  // English-only and declares lang="en". A crawler then read Nepali markup
-  // language with an en_US og:locale, which is the same contradiction #300 set
-  // out to remove, just from the other side.
-  //
-  // Narrow on purpose: lang is the only attribute any page overrides, and
-  // rewriting the whole <html> tag from htmlAttributes would drop the
-  // translate="no" the template carries.
-  const lang = h?.htmlAttributes?.toString().match(/lang="([^"]+)"/)?.[1];
-
-  return template
-    .replace('<!--app-html-->', () => html)
-    .replace('<!--helmet-title-->', () => title)
-    .replace('<!--helmet-meta-->', () => meta)
-    .replace('<!--dehydrated-state-->', () => stateScript)
-    .replace(/<html lang="[^"]*"/, (match) => (lang ? `<html lang="${lang}"` : match));
 }
 
 function stripHtml(value: string | null | undefined): string {

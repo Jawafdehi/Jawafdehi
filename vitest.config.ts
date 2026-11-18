@@ -21,8 +21,18 @@ export default defineConfig({
     ],
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // worker.ts runs on Cloudflare: its runtime module and its build-output
+      // imports (worker/edge-bundle.ts reads dist/) do not exist under vitest.
+      {
+        find: 'cloudflare:workers',
+        replacement: path.resolve(__dirname, './tests/support/cloudflare-workers-stub.ts'),
+      },
+      {
+        find: /^\.\/worker\/edge-bundle$/,
+        replacement: path.resolve(__dirname, './tests/support/edge-bundle-stub.ts'),
+      },
+    ],
   },
 });
