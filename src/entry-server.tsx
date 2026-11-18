@@ -10,13 +10,12 @@ import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
-import { searchArchive } from './services/search-api';
 import { featuredCasesQuery } from './queries/home';
+import { casesSearchQuery } from './queries/cases';
 import {
   RECENT_MATERIALS_COUNT,
   recentMaterialsQuery,
 } from './queries/materials-landing';
-import { CASES_PAGE_SIZE } from './lib/cases-pagination';
 import { pickRecentMaterials } from './lib/materials-landing';
 import { getAllPages, getMaterial, materialTail } from './services/datalake-api';
 import type { ArchiveSearchResponse } from './types/search';
@@ -183,15 +182,12 @@ async function prefetch(
   // would see 39 URLs whose bodies are identical chrome and conclude — correctly
   // — that 38 of them are duplicates.
   //
-  // The key must match the one Cases.tsx builds, `page` included, or the client
-  // hydrates nothing and refetches on mount.
+  // The key comes from the same factory Cases.tsx uses: a hand-copied key here
+  // drifted once (#440) and served every listing page as a skeleton.
   const casesMatch = url.match(/^\/cases(?:\/page\/(\d+))?\/?(?:[?#]|$)/);
   if (casesMatch) {
     const page = casesMatch[1] ? Number(casesMatch[1]) : 1;
-    await queryClient.prefetchQuery({
-      queryKey: ['cases-search', { search: '', status: 'all', page }],
-      queryFn: () => searchArchive({ type: 'case', sort: 'newest', page_size: CASES_PAGE_SIZE, page }),
-    });
+    await queryClient.prefetchQuery(casesSearchQuery('', page));
     return;
   }
 
