@@ -377,6 +377,7 @@ export const SITE_ROUTES = [
   // table is the one place that says which routes are not indexable.
   { path: "/updates/preview", chrome: "app", noindex: true },
   { path: "/updates/:slug", chrome: "app" },
+  { path: "/blog/:slug", chrome: "app" },
   { path: "/data-quality", chrome: "app" },
   { path: "/newsletter/confirmed", chrome: "app" },
   { path: "/newsletter/unsubscribe/:token", chrome: "app" },

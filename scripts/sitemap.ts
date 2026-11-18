@@ -240,7 +240,7 @@ async function main() {
     ...articles
       .filter(a => a.meta.slug)
       .map(a => urlEntry(
-        `${CANONICAL}/updates/${a.meta.slug}`,
+        `${CANONICAL}/${a.category === 'BLOG' ? 'blog' : 'updates'}/${a.meta.slug}`,
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
       )),
     ...cases.map(c => urlEntry(

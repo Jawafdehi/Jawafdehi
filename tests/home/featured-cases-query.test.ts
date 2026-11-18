@@ -31,7 +31,7 @@ describe("featuredCasesQuery", () => {
     // grid, so fetching exactly the grid size leaves the grid one card short —
     // which is how it silently showed 5 tiles for a 6-card constant.
     expect(FEATURED_CASE_GRID_COUNT).toBe(6);
-    expect(FEATURED_CASE_COUNT).toBe(FEATURED_CASE_GRID_COUNT + 1);
+    expect(FEATURED_CASE_COUNT).toBe(FEATURED_CASE_GRID_COUNT);
   });
 
   it("keeps the cache key stable across calls", () => {

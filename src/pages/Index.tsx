@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { CaseCard } from "@/components/CaseCard";
-import { FeaturedCaseSpotlight } from "@/components/home/featured-case-spotlight";
 import { Hero } from "@/components/home/hero";
 import { ArchiveBento } from "@/components/home/archive-bento";
 import { ArchiveFigures } from "@/components/home/archive-figures";
@@ -159,15 +158,11 @@ const Index = () => {
 
             {featuredCases.length > 0 ? (
               <>
-                {/* The lead case gets the navy spotlight treatment; the rest
-                    stay on the standard card. Order comes from the editorial
-                    `weight` ranking in the search source. */}
-                <Reveal>
-                  <FeaturedCaseSpotlight {...featuredCases[0]} />
-                </Reveal>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                  {featuredCases.slice(1).map((caseItem, index) => (
+                {/* Every case gets the same card: no lead or spotlight. Order
+                    comes from the editorial `weight` ranking in the search
+                    source. */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {featuredCases.map((caseItem, index) => (
                     <Reveal key={caseItem.id} className="h-full" delayMs={(index % 3) * 90}>
                       <CaseCard {...caseItem} />
                     </Reveal>
@@ -176,8 +171,7 @@ const Index = () => {
               </>
             ) : (
               <>
-                <div className="h-72 rounded-3xl bg-muted animate-pulse" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {Array.from({ length: FEATURED_CASE_GRID_COUNT }, (_, i) => (
                     <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
                   ))}

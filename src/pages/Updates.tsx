@@ -11,6 +11,7 @@ import { chipVariants } from "@/components/ui/chip";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { articlePath } from "@/lib/article-path";
 import { getArticles } from "@/services/cms-api";
 import type { ArticleCategory, ArticleListItem } from "@/types/cms";
 import { formatPublicationDate } from "@/utils/date";
@@ -35,7 +36,7 @@ export function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
 
   return (
     <Link
-      to={`/updates/${article.meta.slug}`}
+      to={articlePath(article)}
       data-shape={image ? "picture" : "text"}
       className="group flex h-full flex-col rounded-[22px] transition-transform duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 motion-reduce:active:scale-100"
     >

@@ -19,6 +19,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   ClipboardCheck,
+  Newspaper,
   FileText,
   Inbox,
   LayoutDashboard,
@@ -90,6 +91,7 @@ const NAV: NavGroup[] = [
     headingKey: "admin.nav.casesGroup",
     items: [
       { to: "/admin/jawafdehi/cases", labelKey: "admin.nav.cases", icon: FileText },
+      { to: "/admin/blog", labelKey: "admin.nav.blog", icon: Newspaper, canAccess: isModerator },
     ],
   },
   {

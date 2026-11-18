@@ -74,6 +74,7 @@ describe("isKnownRoute", () => {
     "/report/",
     "/updates/preview",
     "/updates/an-article",
+    "/blog/a-post",
     "/entity/organization/np/gov/tu",
     "/entity/person/ram-shah",
     "/material/ngm/some-doc",

@@ -140,6 +140,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/updates": <Updates />,
   "/updates/preview": <UpdatePreview />,
   "/updates/:slug": <UpdateDetail />,
+  "/blog/:slug": <UpdateDetail />,
   "/faq": <FaqPage />,
   "/about": <About />,
   "/commitment": <Commitment />,

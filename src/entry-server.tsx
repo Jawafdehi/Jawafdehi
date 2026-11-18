@@ -104,14 +104,18 @@ async function prefetch(
     return;
   }
 
-  // Updates/News and Blog list pages share one query: both show the CMS articles.
-  if (url === '/updates' || url === '/blog') {
+  // Updates/News lists every non-blog article; /blog lists only BLOG ones, under its own key.
+  if (url === '/updates') {
     await queryClient.prefetchQuery({ queryKey: ['cms-articles'], queryFn: () => getArticles() });
+    return;
+  }
+  if (url === '/blog') {
+    await queryClient.prefetchQuery({ queryKey: ['cms-articles', 'BLOG'], queryFn: () => getArticles('BLOG') });
     return;
   }
 
   // Article detail page (slug is everything after /updates/ up to /?#)
-  const updateMatch = url.match(/^\/updates\/([^/?#]+)/);
+  const updateMatch = url.match(/^\/(?:updates|blog)\/([^/?#]+)/);
   if (updateMatch) {
     const slug = decodeURIComponent(updateMatch[1]);
     await queryClient.prefetchQuery({

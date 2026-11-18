@@ -528,7 +528,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.
-async function handleUpdateMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
+async function handleUpdateMetaFallback(request: Request, env: Env, slug: string, basePath = '/updates'): Promise<Response | null> {
   const apiResponse = await fetchWithTimeout(
     `${CMS_API_BASE}/pages/?type=content.ArticlePage&slug=${encodeURIComponent(slug)}&fields=*`,
   );
@@ -551,7 +551,7 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     stripHtml(typeof article.excerpt === 'string' ? article.excerpt : '') ||
     `An update from ${SITE_NAME}.`,
   );
-  const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
+  const canonicalUrl = `${SITE_URL}${basePath}/${encodeURIComponent(slug)}`;
   // The social rendition has to be picked HERE, not only in <Seo>: an unfurler
   // never runs the React app, so this worker-injected head is the only one it
   // sees. `og_image` is a 1200x630 JPEG — the ratio unfurlers want, and not the
@@ -1035,8 +1035,13 @@ export default {
       const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
       if (metaResponse) return metaResponse;
     }
-    if (matched?.path === '/updates/:slug' && matched.params.slug) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
+    if ((matched?.path === '/updates/:slug' || matched?.path === '/blog/:slug') && matched.params.slug) {
+      const metaResponse = await handleUpdateMetaFallback(
+        request,
+        env,
+        matched.params.slug,
+        matched.path === '/blog/:slug' ? '/blog' : '/updates',
+      );
       if (metaResponse) return metaResponse;
     }
     if (matched?.path === '/author/:slug' && matched.params.slug) {
