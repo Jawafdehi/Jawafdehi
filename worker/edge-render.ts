@@ -123,7 +123,15 @@ export async function renderEdgePage(
   if (kind === 'case') {
     for (const data of queryData(result.dehydratedState, 'case')) {
       const slug = (data as { slug?: unknown } | null)?.slug;
-      if (typeof slug === 'string' && slug.trim()) tails.push(slug);
+      if (typeof slug !== 'string' || !slug.trim()) continue;
+      // The API resolves a case's earlier slugs (its slug history) to the case
+      // itself, so an old URL used to render the whole page a second time with
+      // only a rel=canonical pointing at the current one — 200 on a duplicate,
+      // which Search Console files under "Alternate page with proper canonical"
+      // and still crawls. Send it to the current URL instead, as for materials.
+      if (slug !== tail) {
+        return { kind: 'moved', location: `/case/${encodeURIComponent(slug)}/` };
+      }
     }
   }
   if (kind === 'material') {

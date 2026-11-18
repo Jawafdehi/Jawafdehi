@@ -170,6 +170,26 @@ describe('edge SSR record pages', () => {
     expect(res.headers.get('Location')).toBe('/material/new_source/7');
   });
 
+  it('301s a superseded case slug, and never lets the hop to EdgePages follow it', async () => {
+    vi.spyOn(bundle, 'render').mockResolvedValue({
+      ...renderResult(),
+      dehydratedState: {
+        queries: [{ queryKey: ['case', 'old-slug'], state: { data: { slug: 'current-slug' } } }],
+      },
+    });
+    const env = makeEnv();
+    const { ctx, fetch } = makeCtx(env);
+
+    const res = await worker.fetch(new Request('https://jawafdehi.org/case/old-slug/'), env, ctx);
+
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe('/case/current-slug/');
+    // In the runtime a followed redirect is invisible here: the reader would get
+    // the target's render as a 200 under the old URL. This stub cannot follow,
+    // so pin the option that stops the runtime from doing it.
+    expect((fetch.mock.calls[0][0] as Request).redirect).toBe('manual');
+  });
+
   it('does not render at all when EDGE_SSR is off', async () => {
     const render = vi.spyOn(bundle, 'render');
     stubApi(() => new Response('{}', { status: 500 }));

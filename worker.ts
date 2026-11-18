@@ -1179,9 +1179,13 @@ async function serveEdgePage(
   // URL anyway (createRoot, not hydration). No incoming headers either:
   // Authorization or Cookie on the forwarded request would make the cache
   // BYPASS, and nothing the page renders depends on them.
+  // `redirect: 'manual'`: a `moved` verdict (a re-filed material, a superseded
+  // case slug) is a 301 for the READER. Followed here, it was silently replaced
+  // by a render of the target, served under the old URL as a 200 duplicate.
   const inner = new Request(new URL(normalizePath(url.pathname), url.origin).toString(), {
     method: request.method === 'HEAD' ? 'HEAD' : 'GET',
     headers: { Accept: 'text/html' },
+    redirect: 'manual',
   });
 
   let res: Response;

@@ -12,8 +12,8 @@ export const LEGACY_CASE_MAP: Record<string, string> = {
   '438': 'case-081-cr-0090-389ad1',
   '240': 'case-081-cr-0127-b807df',
   '238': 'case-081-cr-0060-681d9859',
-  '237': 'case-081-cr-0107-f112c5',
-  '233': 'case-081-cr-0121-4f277f',
+  '237': 'case-081-cr-0107-patanjali',
+  '233': 'case-081-cr-0121-aurahi-gaupalika-hospital',
   '232': 'case-081-cr-0123-081-cr-0123-d7e9a3',
   '231': 'case-081-cr-0122-fd3f2cd9',
   '230': 'case-081-cr-0022-ec3412bb',
@@ -27,7 +27,7 @@ export const LEGACY_CASE_MAP: Record<string, string> = {
   '219': 'case-081-cr-0129-50904188',
   '216': 'case-081-cr-0082-0070ab5b',
   '214': 'madhesh-pathology-lab-081-CR-0081',
-  '213': 'case-080-cr-0158-8a2709',
+  '213': 'case-080-cr-0158-sunil-paudel-illegal-assets',
   '212': 'case-081-cr-0080-82b7d966',
   '211': 'case-081-cr-0079-539b729d',
   '210': 'high-compute-infrastructure-08-d53cf7',
@@ -35,7 +35,7 @@ export const LEGACY_CASE_MAP: Record<string, string> = {
   '208': 'nitc-081-cr-0058-12d94f',
   '207': 'rabi-lamichhane-cooperative-fr-11ccd7',
   '188': 'budhigandaki-hydropower-projec-77f597',
-  '175': 'giribandhu-tea-estate-land-swa-af32f7',
+  '175': 'giribandhu-tea-estate-land-swap',
   '111': 'maoist-combatant-cantonment-co-9095fa',
 };
 
