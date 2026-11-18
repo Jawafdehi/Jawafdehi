@@ -131,10 +131,18 @@ const OurTeam = () => {
         {/* Board (wide) beside Advisors (narrow column) */}
         <section id="board" className="py-12 md:py-16">
           <div className="layout-container grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-12 lg:gap-10">
-            <div>
-              <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.board", "Board")}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[...nepalBoard, ...usBoard].map(renderMember)}
+            <div className="space-y-12">
+              <div id="nepal-board">
+                <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.board", "Nepal Board")}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {[...nepalBoard, ...generalMembers].map(renderMember)}
+                </div>
+              </div>
+              <div id="us-board">
+                <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.usBoard", "US Board")}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {usBoard.map(renderMember)}
+                </div>
               </div>
             </div>
             <div id="advisors" className="lg:border-l lg:border-border lg:pl-10">
@@ -147,7 +155,6 @@ const OurTeam = () => {
         </section>
 
         {[
-          { id: "general-members", heading: t("team.sections.generalMembers", "General Members"), data: generalMembers },
           { id: "members", heading: t("team.sections.currentMembers", "Consultants and Volunteers"), data: members },
           {
             id: "past-members",
