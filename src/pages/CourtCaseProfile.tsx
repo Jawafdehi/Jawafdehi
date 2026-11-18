@@ -10,6 +10,7 @@ import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileVie
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
 import { getCourtCaseFull } from "@/services/datalake-api";
+import { courtCaseIri as buildCourtCaseIri } from "@/queries/related-cases";
 
 // The /courtcase/* splat tail is the courtcase IRI path component
 // `<court>/<case_number>` (e.g. `special/081-CR-0079`); we rebuild the canonical
@@ -45,9 +46,7 @@ export default function CourtCaseProfile() {
   // The canonical court-case @id IRI lowercases court + case number (matches the
   // backend build_courtcase_iri); use it as the JSON-LD `url` so the structured
   // data points at one canonical URL, not a mixed-case duplicate.
-  const courtCaseIri = parsed
-    ? `https://jawafdehi.org/courtcase/${parsed.court.toLowerCase()}/${parsed.caseNumber.toLowerCase()}`
-    : "";
+  const courtCaseIri = parsed ? buildCourtCaseIri(parsed.court, parsed.caseNumber) : "";
   const title = data
     ? `${caseNumber} — ${data.case_type || t("courtCaseProfile.fallbackTitle", "Court case")}`
     : caseNumber || t("courtCaseProfile.fallbackTitle", "Court case");

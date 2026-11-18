@@ -3,14 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
-import { getCasesCitingCourtCase } from "@/services/jds-api";
+import { courtCaseRelatedCasesQuery } from "@/queries/related-cases";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/date";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
 
 // First page only — a court case is rarely cited by many Jawafdehi cases.
-const PAGE_SIZE = 20;
 
 /**
  * "Related Jawafdehi cases" section for a court case's own page: the published
@@ -26,8 +25,7 @@ export function CourtCaseRelatedCases({ courtCaseIri }: { courtCaseIri: string }
   const { t } = useTranslation();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["courtcase-related-cases", courtCaseIri],
-    queryFn: () => getCasesCitingCourtCase(courtCaseIri, { page_size: PAGE_SIZE }),
+    ...courtCaseRelatedCasesQuery(courtCaseIri),
     enabled: courtCaseIri.length > 0,
     retry: false,
     staleTime: 5 * 60 * 1000,

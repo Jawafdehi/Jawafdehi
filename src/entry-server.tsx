@@ -11,6 +11,7 @@ import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { featuredCasesQuery } from './queries/home';
+import { courtCaseIri, courtCaseRelatedCasesQuery, entityRelatedCasesQuery } from './queries/related-cases';
 import { casesSearchQuery } from './queries/cases';
 import {
   RECENT_MATERIALS_COUNT,
@@ -114,6 +115,23 @@ export interface RenderOptions {
 // scripts/pre-render.ts fails the build on it — which is how a prefetch that
 // silently returned nothing for months (see getAccessToken in services/oidc.ts)
 // stops being a thing that can ship.
+/**
+ * Prefetch a query the page can do without. On failure the entry is removed
+ * rather than left in `error`: reportPrefetch would count it as failed, and the
+ * edge (worker/edge-render.ts) serves the fallback shell for any failed
+ * prefetch — so one slow related-cases call would cost the whole page its SSR.
+ * Removed, the component just fetches it on the client as it did before.
+ */
+async function prefetchOptional(
+  queryClient: QueryClient,
+  query: { queryKey: readonly unknown[]; queryFn: () => Promise<unknown> },
+): Promise<void> {
+  await queryClient.prefetchQuery({ ...query, retry: false });
+  if (queryClient.getQueryState(query.queryKey)?.status !== 'success') {
+    queryClient.removeQueries({ queryKey: query.queryKey, exact: true });
+  }
+}
+
 async function prefetch(
   url: string,
   queryClient: QueryClient,
@@ -284,29 +302,36 @@ async function prefetch(
       return;
     }
 
-    await queryClient.prefetchQuery({
-      queryKey: ['entity-record', tail],
-      queryFn: async () => {
-        const res = await http.get<EntityRecordHead>(`/api/entities/${tail}`);
-        return res.data;
-      },
-      ...transientRetry,
-    });
-
-    // NOT prefetched here: EntityRelatedCases' own query, keyed on the record's
-    // `@id`. So the related-cases column of a pre-rendered entity page is still
-    // its aria-busy skeleton — measured over a full build, 1,579 entity pages
-    // contained the skeleton and none contained a single href="/case/". The
-    // identity, title, description and facts are real; the case list is not.
+    // The related-cases column (EntityRelatedCases, keyed on the record's
+    // `@id`) is fetched alongside the record. It is the only link from an
+    // entity page to the cases that cite it, so leaving it out shipped every
+    // entity page with an aria-busy skeleton and no href="/case/" at all —
+    // crawlers could reach the 2,836 case pages from almost nowhere but the
+    // sitemap. The build used to skip it because ~3,158 calls drew 429s; entity
+    // pages are rendered one per request at the edge now (#488), so that cost
+    // no longer exists.
     //
-    // Fetching it per entity was tried and does not work: it doubles the build to
-    // ~3,158 upstream calls and api.jawafdehi.org answers 429. The fix is to
-    // SEED it rather than fetch it — pre-render.ts already holds every published
-    // case with its binds, so the citing set for an IRI is derivable in-process
-    // for zero extra calls, and the component sorts client-side so server order
-    // does not matter. That needs the list payload confirmed field-identical to
-    // /api/cases/?entity=, and a seed threaded through render(); deliberately
-    // left out of this PR rather than done hastily inside it.
+    // Fetched in parallel with the record, under the IRI the URL implies (an
+    // `@id` IS https://jawafdehi.org/entity/<tail>). If the record's actual @id
+    // turns out different, the speculative entry is dropped and the client
+    // fetches under the right key. Optional either way: a failure leaves the
+    // column to the client, it never fails the page.
+    const impliedIri = `https://jawafdehi.org/entity/${tail}`;
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: ['entity-record', tail],
+        queryFn: async () => {
+          const res = await http.get<EntityRecordHead>(`/api/entities/${tail}`);
+          return res.data;
+        },
+        ...transientRetry,
+      }),
+      prefetchOptional(queryClient, entityRelatedCasesQuery(impliedIri)),
+    ]);
+    const record = queryClient.getQueryData<EntityRecordHead>(['entity-record', tail]);
+    if (record && record['@id'] !== impliedIri) {
+      queryClient.removeQueries({ queryKey: ['entity-related-cases', impliedIri], exact: true });
+    }
     return;
   }
 
@@ -334,6 +359,9 @@ async function prefetch(
     const court = decodeURIComponent(courtcaseMatch[1]);
     const caseNumber = decodeURIComponent(courtcaseMatch[2]);
     const base = `/api/courtcases/${encodeURIComponent(court)}/${encodeURIComponent(caseNumber)}`;
+    // The cases citing this court case are its only links to case pages; see
+    // the entity branch above. Optional: a failure leaves them to the client.
+    const related = prefetchOptional(queryClient, courtCaseRelatedCasesQuery(courtCaseIri(court, caseNumber)));
     await queryClient.prefetchQuery({
       queryKey: ['datalake-courtcase', court, caseNumber],
       queryFn: async () => {
@@ -347,6 +375,7 @@ async function prefetch(
         return { ...core, hearings, entities };
       },
     });
+    await related;
     return;
   }
 }
