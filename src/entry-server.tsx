@@ -1,4 +1,6 @@
+import * as ReactDOMServer from 'react-dom/server';
 import { renderToString } from 'react-dom/server';
+import type { ReactElement } from 'react';
 import { StaticRouter } from 'react-router-dom/server';
 import { HelmetProvider } from 'react-helmet-async';
 import type { HelmetServerState } from 'react-helmet-async';
@@ -30,6 +32,34 @@ import type { JawafEntity } from './types/jds';
 // source instead would configure a different module instance and silently leave
 // every outgoing request anonymous. See services/prerender-auth.ts.
 export { setPrerenderToken } from './services/prerender-auth';
+
+/**
+ * Upper bound on every API request this bundle makes, in ms.
+ *
+ * The build leaves the client's timeouts alone (30 s default, 10 s for most
+ * jds-api calls). The Worker (edge SSR, see worker/edge-render.ts) caps them at
+ * a few seconds instead: a reader waiting on a cache miss is better served by
+ * the meta-injection shell after 4 s than by a page after 10. A CAP rather than
+ * a default because jds-api passes its own per-call `timeout`, which a default
+ * would not override. Same reason as setPrerenderToken for living here: the
+ * Worker holds the COMPILED bundle, which carries its own copy of the axios
+ * client.
+ */
+let apiTimeoutCap: number | null = null;
+let apiTimeoutInterceptor: number | null = null;
+
+export function setApiTimeout(ms: number): void {
+  if (!Number.isFinite(ms) || ms <= 0) return;
+  apiTimeoutCap = ms;
+  if (apiTimeoutInterceptor === null) {
+    apiTimeoutInterceptor = http.interceptors.request.use((config) => {
+      if (apiTimeoutCap !== null) {
+        config.timeout = config.timeout ? Math.min(config.timeout, apiTimeoutCap) : apiTimeoutCap;
+      }
+      return config;
+    });
+  }
+}
 
 // Just the part of an NES entity record this module needs: the canonical IRI that
 // keys the related-cases query. Deliberately not the full EntityRecord shape —
@@ -68,6 +98,18 @@ export interface RenderSeed {
   entityRecord?: unknown;
 }
 
+/** How render() is being driven. */
+export interface RenderOptions {
+  /**
+   * Rendering one page on request at the edge, not the whole archive at build
+   * time. Turns off the transient retries below: they exist so one blip does
+   * not fail a 3,000-page build, but on a reader's request they turn a 4 s
+   * timeout into 18 s of waiting. At the edge a failed fetch falls back to the
+   * cached copy or the meta-injection shell instead.
+   */
+  edge?: boolean;
+}
+
 // Nothing here reports whether it worked: prefetchQuery swallows its own errors,
 // so a route whose every fetch failed is indistinguishable from one that had
 // nothing to fetch. render() reads the outcome off the cache instead, and
@@ -78,7 +120,9 @@ async function prefetch(
   url: string,
   queryClient: QueryClient,
   seed?: RenderSeed,
+  options?: RenderOptions,
 ): Promise<void> {
+  const transientRetry = options?.edge ? NO_RETRY : TRANSIENT_RETRY;
   // Home page: prefetch stats + the same featured-case search the client renders.
   // featuredCasesQuery() is the SHARED definition (queries/home.ts) — the key and
   // params must match pages/Index.tsx exactly or this prefetch fills a cache entry
@@ -181,7 +225,7 @@ async function prefetch(
     await queryClient.prefetchQuery({
       queryKey: ['case', slug],
       queryFn: () => getCaseById(slug),
-      ...TRANSIENT_RETRY,
+      ...transientRetry,
     });
     return;
   }
@@ -251,7 +295,7 @@ async function prefetch(
         const res = await http.get<EntityRecordHead>(`/api/entities/${tail}`);
         return res.data;
       },
-      ...TRANSIENT_RETRY,
+      ...transientRetry,
     });
 
     // NOT prefetched here: EntityRelatedCases' own query, keyed on the record's
@@ -341,17 +385,57 @@ const TRANSIENT_RETRY = {
   retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 4000),
 } as const;
 
-export async function render(url: string, seed?: RenderSeed): Promise<RenderResult> {
+const NO_RETRY = { retry: 0 } as const;
+
+/**
+ * Render to a string AFTER every Suspense boundary has resolved.
+ *
+ * `renderToString` cannot wait: a `lazy()` page renders as its fallback, which
+ * is why the build only pre-renders eager routes (see the split policy in
+ * src/routes.tsx). At the edge that would leave /material/* and /courtcase/* —
+ * both lazy, deliberately, to keep them out of the initial client bundle — as a
+ * skeleton. `renderToReadableStream` + `allReady` loads the lazy chunk on the
+ * server and emits the real page, without touching the client bundle.
+ *
+ * Only reachable in the Worker: React 18's Node build of react-dom/server has no
+ * renderToReadableStream, and the build never passes `edge`.
+ */
+async function renderComplete(tree: ReactElement): Promise<string> {
+  const renderStream = (ReactDOMServer as { renderToReadableStream?: RenderToReadableStream })
+    .renderToReadableStream;
+  if (!renderStream) return renderToString(tree);
+  let renderError: unknown = null;
+  const stream = await renderStream(tree, {
+    onError(error: unknown) {
+      renderError = error;
+    },
+  });
+  await stream.allReady;
+  const html = await new Response(stream).text();
+  if (renderError) throw renderError;
+  return html;
+}
+
+type RenderToReadableStream = (
+  children: ReactElement,
+  options?: { onError?: (error: unknown) => void },
+) => Promise<ReadableStream & { allReady: Promise<void> }>;
+
+export async function render(
+  url: string,
+  seed?: RenderSeed,
+  options?: RenderOptions,
+): Promise<RenderResult> {
   const helmetContext: { helmet?: HelmetServerState } = {};
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 0 } },
   });
 
-  await prefetch(url, queryClient, seed);
+  await prefetch(url, queryClient, seed, options);
   // Before the render, not after: see reportPrefetch.
   const prefetchReport = reportPrefetch(queryClient);
 
-  const html = renderToString(
+  const tree = (
     <ThemeProvider>
       <HelmetProvider context={helmetContext}>
         <QueryClientProvider client={queryClient}>
@@ -362,6 +446,7 @@ export async function render(url: string, seed?: RenderSeed): Promise<RenderResu
       </HelmetProvider>
     </ThemeProvider>
   );
+  const html = options?.edge ? await renderComplete(tree) : renderToString(tree);
 
   const dehydratedState = dehydrate(queryClient);
   return { html, helmetContext, dehydratedState, prefetch: prefetchReport };

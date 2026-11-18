@@ -1,7 +1,63 @@
 name = "jawafdehi"
 main = "worker.ts"
 compatibility_date = "2025-12-25"
+# The Worker now carries the SSR bundle (React, the app); minified it is ~1.6 MB gzip.
+minify = true
 
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+
+# --- Edge SSR (JAW-80) -------------------------------------------------------
+#
+# Workers Cache sits in front of the EdgePages entrypoint ONLY: record pages
+# (/case, /entity, /material, /courtcase) rendered on request are cached there
+# for an hour, served stale while they re-render, and purged by tag when the
+# API says a case changed. The default entrypoint stays uncached so redirects,
+# 404s and per-route headers run on every request exactly as before, and static
+# asset requests stay free (Workers Cache bills every request to a cached
+# entrypoint). See the "Edge SSR" section of worker.ts.
+#
+# Needs wrangler >= 4.107 (per-entrypoint cache) and the Workers Paid plan: one
+# render is ~25 ms of CPU, over the Free plan's 10 ms per invocation.
+[cache]
+enabled = true
+
+[exports.default]
+type = "worker"
+
+  [exports.default.cache]
+  enabled = false
+
+[exports.EdgePages]
+type = "worker"
+
+  [exports.EdgePages.cache]
+  enabled = true
+
+[vars]
+# "off" stops edge rendering without a code change: record pages then get the
+# meta-injection shell, as before JAW-80. Redeploy (or roll back) to apply.
+EDGE_SSR = "on"
+# Per API call while rendering, and for the whole render. On a timeout the
+# cached copy is served if there is one, else the meta-injection shell.
+EDGE_SSR_API_TIMEOUT_MS = "4000"
+EDGE_SSR_DEADLINE_MS = "8000"
+# Secrets, set with `wrangler secret put` (never committed):
+#   EDGE_API_CLIENT_ID, EDGE_API_CLIENT_SECRET  sa-prerender client credentials
+#                                               (optional; anonymous without)
+#   CACHE_PURGE_SECRET                          HMAC key shared with the API's
+#                                               edge-purge consumer (unset = the
+#                                               /_cache/purge route answers 503)
+
+# The SSR bundle's dependencies (React, axios, …) read process.env.NODE_ENV,
+# and the Worker runs without nodejs_compat.
+[define]
+"process.env.NODE_ENV" = '"production"'
+
+# isomorphic-dompurify pulls in jsdom, which cannot run in a Worker. Its only
+# user (StreamField, CMS body text) is not on an edge-rendered route; the stub
+# returns an empty string, so if one ever were, the server HTML would carry no
+# CMS markup at all rather than unsanitised markup. The browser re-renders it.
+[alias]
+"isomorphic-dompurify" = "./worker/dompurify-stub.ts"
