@@ -290,7 +290,7 @@ export function ArchiveBrowser() {
 
       <div className="sticky top-16 z-10 -mx-2 mt-8 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-background/90 px-2 py-2 backdrop-blur">
         <Breadcrumbs ctx={ctx} />
-        <div role="radiogroup" aria-label={t("materialsLanding.archive.viewAs", "View as")} className="flex shrink-0 rounded-lg border border-border p-0.5">
+        <div role="group" aria-label={t("materialsLanding.archive.viewAs", "View as")} className="flex shrink-0 rounded-lg border border-border p-0.5">
           {ARCHIVE_VIEWS.map((option) => {
             const Icon = VIEW_ICONS[option];
             const label = t(`materialsLanding.archive.views.${option}`, option);
@@ -298,8 +298,7 @@ export function ArchiveBrowser() {
               <button
                 key={option}
                 type="button"
-                role="radio"
-                aria-checked={view === option}
+                aria-pressed={view === option}
                 aria-label={label}
                 title={label}
                 data-view={option}

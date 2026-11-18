@@ -319,7 +319,7 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
               data-node={node.slug}
               aria-selected={selected}
               tabIndex={node.slug === focusSlug ? 0 : -1}
-              onClick={() => ctx.select([...column.at, node.slug], node.type === "branch")}
+              onClick={() => ctx.select([...column.at, node.slug], true)}
               onKeyDown={(event) => onKeyDown(event, column, index)}
               className={cn(
                 "mx-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none",
