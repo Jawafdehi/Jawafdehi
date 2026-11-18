@@ -120,13 +120,13 @@ export function sourceFromMaterialUrl(url: string): string | null {
 }
 
 /**
- * An archive figure in the reader's numerals: Indian-system grouping in both
- * languages ("3,45,886"), Devanagari digits in Nepali ("३,४५,८८६").
+ * An archive figure in the reader's numerals: international grouping in
+ * English ("345,886"), Nepali grouping and Devanagari digits in Nepali
+ * ("३,४५,८८६"), so each language reads the way its readers write numbers.
  */
 export function formatArchiveCount(value: number, language: string): string {
-  const grouped = formatIndianNumber(value);
-  if (!language.startsWith("ne")) return grouped;
-  return grouped.replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
+  if (!language?.startsWith("ne")) return value.toLocaleString("en-US");
+  return formatIndianNumber(value).replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
 }
 
 /**

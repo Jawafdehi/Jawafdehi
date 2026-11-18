@@ -97,7 +97,17 @@ const W = {
   judgments: { ne: "फैसला", en: "Judgments" },
 } as const;
 
-/** The folder tree, top-level folders in display order. */
+const LAW_KINDS = [
+  "law-constitution",
+  "law-act",
+  "law-ordinance",
+  "law-bill",
+  "law-regulation",
+  "law-procedure",
+  "court-rules",
+] as const;
+
+/** The folder tree (each level is sorted for display by `sortTree`). */
 export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
   branch("judiciary", { ne: "न्यायपालिका", en: "Judiciary" }, 2, [
     branch("supreme-court", { ne: "सर्वोच्च अदालत", en: "Supreme Court" }, 2, [
@@ -176,7 +186,24 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
   ]),
 
   branch("laws", { ne: "कानुन", en: "Laws" }, 5, [
-    leaf("acts-bills-ordinances", "legal_corpus", { ne: "ऐन, विधेयक र अध्यादेश", en: "Acts, bills and ordinances" }),
+    // legal_corpus split by kind (`jawafdehi:datasetBucket`, written by the
+    // API's classify_legal_corpus). A document with no kind lands in "Other".
+    // Nepal Rajpatra (JAW-82) will be a sibling folder here, in the gazette's
+    // own volume › part › issue layout.
+    branch("nepal-laws", { ne: "नेपालको कानुन", en: "Nepal's laws" }, 5, [
+      leaf("constitution", "legal_corpus", { ne: "संविधान", en: "Constitution" }, { kind: "law-constitution" }),
+      leaf("acts", "legal_corpus", { ne: "ऐन", en: "Acts" }, { kind: "law-act" }),
+      leaf("ordinances", "legal_corpus", { ne: "अध्यादेश", en: "Ordinances" }, { kind: "law-ordinance" }),
+      leaf("bills", "legal_corpus", { ne: "विधेयक", en: "Bills" }, { kind: "law-bill" }),
+      leaf("regulations", "legal_corpus", { ne: "नियमावली", en: "Regulations" }, { kind: "law-regulation" }),
+      leaf("procedures", "legal_corpus", { ne: "कार्यविधि र निर्देशिका", en: "Procedures and directives" }, {
+        kind: "law-procedure",
+      }),
+      leaf("court-rules", "legal_corpus", { ne: "अदालती नियमावली", en: "Court rules" }, { kind: "court-rules" }),
+      leaf("other-laws", "legal_corpus", { ne: "अन्य", en: "Other" }, {
+        kindExclude: LAW_KINDS,
+      }),
+    ]),
     curated("legal-templates", { ne: "कानुनी ढाँचा", en: "Legal templates" }),
   ]),
 

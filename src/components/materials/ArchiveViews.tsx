@@ -153,7 +153,7 @@ export function ListView({ ctx }: Readonly<{ ctx: Ctx }>) {
             ) : (
               <FileText aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
-            <span className={cn("min-w-0 flex-1 truncate", row.level === 1 ? "font-semibold text-foreground" : "text-foreground")}>
+            <span title={nodeName(row.node, language)} className={cn("min-w-0 flex-1 truncate", row.level === 1 ? "font-semibold text-foreground" : "text-foreground")}>
               {nodeName(row.node, language)}
             </span>
             {!isBranch && (
@@ -308,7 +308,7 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
         role="listbox"
         aria-label={column.at.length ? nodeName(chain[column.at.length - 1], language) : t("materialsLanding.archive.root", "Archive")}
         data-col={ci}
-        className={cn("list-none py-1", compact ? "w-full" : "w-56 shrink-0 border-r border-border")}
+        className={cn("list-none py-1", compact ? "w-full" : "w-64 shrink-0 border-r border-border")}
       >
         {column.items.map((node, index) => {
           const selected = node.slug === selectedSlug;
@@ -316,27 +316,28 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
             <li
               key={node.slug}
               role="option"
+              title={nodeName(node, language)}
               data-node={node.slug}
               aria-selected={selected}
               tabIndex={node.slug === focusSlug ? 0 : -1}
               onClick={() => ctx.select([...column.at, node.slug], true)}
               onKeyDown={(event) => onKeyDown(event, column, index)}
               className={cn(
-                "mx-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none",
+                "mx-1 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-sm outline-none",
                 "focus-visible:ring-2 focus-visible:ring-accent",
                 selected ? "bg-primary text-primary-foreground" : "hover:bg-muted/60",
               )}
             >
               {node.type === "branch" ? (
-                <Folder aria-hidden="true" className="h-4 w-4 shrink-0 opacity-70" />
+                <Folder aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
               ) : (
-                <FileText aria-hidden="true" className="h-4 w-4 shrink-0 opacity-70" />
+                <FileText aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
               )}
-              <span className="min-w-0 flex-1 truncate">{nodeName(node, language)}</span>
+              <span className="min-w-0 flex-1 break-words leading-snug">{nodeName(node, language)}</span>
               <span className={cn("shrink-0 text-xs tabular-nums", selected ? "opacity-80" : "text-muted-foreground")}>
                 {nodeCount(node, ctx.catalogue) === null ? "—" : formatArchiveCount(nodeCount(node, ctx.catalogue) ?? 0, language)}
               </span>
-              {node.type === "branch" && <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 opacity-60" />}
+              {node.type === "branch" && <ChevronRight aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 opacity-60" />}
             </li>
           );
         })}
