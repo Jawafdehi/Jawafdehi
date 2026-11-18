@@ -66,6 +66,19 @@ describe("SSR of the /cases listing", () => {
     );
   });
 
+  it("retries a transient upstream failure instead of publishing a skeleton", async () => {
+    // The build renders all ~238 listing pages at once; one ECONNRESET used to
+    // fail the whole build (no retry on this branch, unlike the case pages).
+    const reset = Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" });
+    searchArchiveMock.mockRejectedValueOnce(reset);
+
+    const { html, prefetch } = await render("/cases/page/2/");
+
+    expect(prefetch.failed).toEqual([]);
+    expect(html).toContain('href="/case/bhaktapur-malpot-bribe-p2');
+    expect(searchArchiveMock).toHaveBeenCalledTimes(2);
+  });
+
   it("dehydrates the listing under the key the page reads", async () => {
     const { dehydratedState } = await render("/cases/page/2/");
 

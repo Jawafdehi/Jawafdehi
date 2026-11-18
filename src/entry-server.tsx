@@ -184,10 +184,13 @@ async function prefetch(
   //
   // The key comes from the same factory Cases.tsx uses: a hand-copied key here
   // drifted once (#440) and served every listing page as a skeleton.
+  // Retried like the case pages: the build renders all ~238 listing pages at
+  // once, and a single ECONNRESET or 503 among them fails the whole build (it
+  // did on 2026-11-18, twice on main and once on a PR).
   const casesMatch = url.match(/^\/cases(?:\/page\/(\d+))?\/?(?:[?#]|$)/);
   if (casesMatch) {
     const page = casesMatch[1] ? Number(casesMatch[1]) : 1;
-    await queryClient.prefetchQuery(casesSearchQuery('', page));
+    await queryClient.prefetchQuery({ ...casesSearchQuery('', page), ...transientRetry });
     return;
   }
 
