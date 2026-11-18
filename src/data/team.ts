@@ -1,4 +1,11 @@
-export type ContactType = "email" | "facebook" | "linkedin" | "github" | "website" | "instagram";
+export type ContactType =
+  | "email"
+  | "facebook"
+  | "linkedin"
+  | "github"
+  | "website"
+  | "instagram"
+  | "youtube";
 
 export interface Contact {
   type: ContactType;
@@ -98,11 +105,16 @@ export const nepalBoard: TeamMember[] = [
       { type: "linkedin", value: "https://www.linkedin.com/in/shikshitab" },
     ],
   },
+];
+
+// "General Members and Advisors", shown directly below the Nepal Board. One
+// card per person: a general member who is also an advisor carries both badges.
+export const membersAndAdvisors: TeamMember[] = [
   {
     displayName: { en: "Busan Prasain", ne: "बुसान प्रसाईं" },
     thumb: "/assets/teammembers/busan.webp",
     description: "",
-    tags: ["Founding Member", "Board Member"],
+    tags: ["Founding Member"],
     contacts: [
       { type: "linkedin", value: "https://www.linkedin.com/in/busanprasain/" },
     ],
@@ -111,19 +123,20 @@ export const nepalBoard: TeamMember[] = [
     displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
     thumb: "/assets/teammembers/purna.webp",
     description: "",
-    tags: ["Board Member"],
+    tags: ["General Member", "Advisor"],
     contacts: [],
   },
-];
-
-// Shown directly below the Nepal Board.
-export const advisors: TeamMember[] = [
+  // Name, role and links from his signed advisor acceptance form
+  // (2026-11-18, invitation letter ५१२), which consents to this listing.
   {
-    displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
-    thumb: "/assets/teammembers/purna.webp",
-    description: "",
+    displayName: { en: "Tanka Dahal", ne: "टंक दाहाल" },
+    thumb: "/assets/teammembers/tanka.webp",
+    description: "Software Engineer and IT expert",
     tags: ["Advisor"],
-    contacts: [],
+    contacts: [
+      { type: "youtube", value: "https://www.youtube.com/@techtanka" },
+      { type: "facebook", value: "https://www.facebook.com/tanka.dahal/" },
+    ],
   },
 ];
 

@@ -1,6 +1,6 @@
-import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "lucide-react";
+import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram, Youtube } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { usBoard, nepalBoard, advisors, members, pastMembers } from "@/data/team";
+import { usBoard, nepalBoard, membersAndAdvisors, members, pastMembers } from "@/data/team";
 import type { Contact } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
@@ -17,6 +17,7 @@ const ContactIcon = ({ contact }: { contact: Contact }) => {
     github: <Github className="h-4 w-4" />,
     website: <Globe className="h-4 w-4" />,
     instagram: <Instagram className="h-4 w-4" />,
+    youtube: <Youtube className="h-4 w-4" />,
   }[contact.type];
 
   return (
@@ -66,7 +67,11 @@ const OurTeam = () => {
         {/* Team sections */}
         {[
           { id: "nepal-board", heading: t("team.sections.nepalBoard", "Nepal Board"), data: nepalBoard },
-          { id: "advisors", heading: t("team.sections.advisors", "Advisors"), data: advisors },
+          {
+            id: "members-and-advisors",
+            heading: t("team.sections.membersAndAdvisors", "General Members and Advisors"),
+            data: membersAndAdvisors,
+          },
           {
             id: "us-board",
             heading: t("team.sections.usBoard", "US Board"),

@@ -630,7 +630,7 @@
     },
     "sections": {
       "nepalBoard": "नेपाल बोर्ड",
-      "advisors": "सल्लाहकारहरू",
+      "membersAndAdvisors": "साधारण सदस्य तथा सल्लाहकारहरू",
       "usBoard": "अमेरिका बोर्ड",
       "usBoardNote": "जवाफदेही इनिशिएटिभ इन्क. (Jawafdehi Initiative Inc.) अमेरिकामा दर्ता भएको छुट्टै संस्था हो, जुन जवाफदेही इनिशिएटिभ नेपालभन्दा भिन्न छ।",
       "currentMembers": "परामर्शदाता तथा स्वयंसेवकहरू",
@@ -639,7 +639,10 @@
     "tags": {
       "Chairman": "अध्यक्ष",
       "Secretary": "सचिव",
-      "Advisor": "सल्लाहकार"
+      "Advisor": "सल्लाहकार",
+      "Founding Member": "संस्थापक सदस्य",
+      "General Member": "साधारण सदस्य",
+      "Board Member": "सञ्चालक समिति सदस्य"
     }
   },
   "pagination": {
