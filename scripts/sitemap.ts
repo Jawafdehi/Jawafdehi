@@ -1,4 +1,13 @@
-import { existsSync } from 'fs';
+// The site's OWN pages, as one child sitemap: dist/sitemap-site.xml.
+//
+// Record pages (cases, entities, materials, court cases) are no longer listed
+// here. The API owns that list: its sitemap index (api.jawafdehi.org/sitemap.xml,
+// 50k URLs per child file, only published / listed / name-gated records) is what
+// the Worker serves at jawafdehi.org/sitemap.xml, with this file added as one
+// more <sitemap> entry (see the sitemap section of worker.ts). So this script
+// no longer walks the case archive: one count call for the browse pages and the
+// CMS article list are all it fetches, and the build stops depending on the
+// archive being fast (JAW-80).
 import { writeFile, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -9,7 +18,6 @@ import {
 import { caseBrowsePagePaths } from './case-browse-pages.ts';
 import { buildAuthHeaders } from './build-auth.ts';
 import { fetchWithRetry } from './build-fetch.ts';
-import { entityPath } from '../src/lib/entity-links.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -18,42 +26,16 @@ const CANONICAL = 'https://jawafdehi.org';
 const API_BASE = process.env.VITE_JAWAFDEHI_API_BASE_URL || 'https://api.jawafdehi.org/api';
 const CMS_BASE = `${API_BASE}/cms/v2`;
 
-interface EntitySummary {
-  // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
-  // canonical NES `@id` IRI and the case serializer stopped emitting one. This
-  // file used to map `e.id`, which is now always undefined — so the filter
-  // below evaluated to [] and the sitemap shipped ZERO entity URLs.
-  nes_id: string | null;
-  display_name: string | null;
-}
-
-interface CaseSummary {
-  id: number;
-  slug?: string | null;
-  title: string;
-  updated_at: string;
-  entities: EntitySummary[];
-}
-
-interface PaginatedCaseList {
-  next: string | null;
-  results: CaseSummary[];
-  /** Archive-wide total. Only read to report what a sampled run skipped. */
-  count?: number;
-}
-
 function toYMD(isoDate: string): string {
   return isoDate.substring(0, 10);
 }
 
 async function fetchWithTimeout(url: string): Promise<Response> {
-  // Authenticated when the build has credentials. This step walks the whole case
-  // list again in its own process, so it is a second helping of the same
-  // request budget the pre-render spends — see scripts/build-auth.ts.
+  // Authenticated when the build has credentials, so these few calls land in
+  // the build's own throttle bucket — see scripts/build-auth.ts.
   //
   // Retried with backoff (scripts/build-fetch.ts): production build 38a68552
-  // failed HERE, on one 10 s timeout for /api/cases/?page=2, after the
-  // pre-render had already rendered every page.
+  // failed in this script on one 10 s API timeout.
   const headers = await buildAuthHeaders();
   return fetchWithRetry(url, { headers });
 }
@@ -91,47 +73,6 @@ function withTrailingSlash(path: string): string {
   return path === '/' || path.endsWith('/') ? path : `${path}/`;
 }
 
-// A sitemap written by a `static` build is never published — `build:preview`
-// has no deploy path — so sweeping the whole archive for it is pure cost. It was
-// 115 s of a 496 s preview build on 2026-10-19, a second full sweep on top of the
-// one pre-render.ts had already done.
-//
-// Sample rather than skip: one page still exercises every code path below —
-// URL construction, withTrailingSlash, lastmod, the section grouping and the
-// counts — so a regression in sitemap logic still fails the PR. Only the
-// pagination loop shrinks.
-//
-// ⚠️ `static` must never reach a deploy. It cannot today, and the log line
-// below says so loudly if anyone wires one up.
-const SITEMAP_SCOPE = process.env.PRERENDER_SCOPE ?? 'full';
-const SAMPLE_ONLY = SITEMAP_SCOPE === 'static';
-const SAMPLE_PAGE_SIZE = 200;
-
-async function fetchAllCases(): Promise<CaseSummary[]> {
-  const all: CaseSummary[] = [];
-  // page_size is honoured by /api/cases/ and is NOT capped at 50 the way
-  // /api/materials/ and /api/search/ are. Following `next` still handles
-  // whatever page size the server actually returns.
-  let url: string | null = SAMPLE_ONLY
-    ? `${API_BASE}/cases/?page_size=${SAMPLE_PAGE_SIZE}`
-    : `${API_BASE}/cases/`;
-  while (url) {
-    const res = await fetchWithTimeout(url);
-    if (!res.ok) throw new Error(`API error ${res.status}`);
-    const data: PaginatedCaseList = await res.json();
-    all.push(...data.results);
-    if (SAMPLE_ONLY) {
-      console.warn(
-        `[sitemap] PRERENDER_SCOPE=static — sampling ${all.length} of ${data.count ?? '?'} ` +
-        `cases. This sitemap is NOT publishable; it exists to exercise the code path.`,
-      );
-      break;
-    }
-    url = data.next;
-  }
-  return all;
-}
-
 async function fetchAllArticles(): Promise<ArticleListItem[]> {
   const all: ArticleListItem[] = [];
   const limit = 20;
@@ -164,23 +105,9 @@ async function fetchAllArticles(): Promise<ArticleListItem[]> {
 }
 
 async function main() {
-  // A reachable API is a hard requirement: a static-only sitemap that silently
-  // omits every case and update would hide entire sections from search engines
-  // while the build stays green. Fetch failures abort instead.
-  let cases: CaseSummary[] = [];
-  try {
-    cases = await fetchAllCases();
-    console.log(`[sitemap] Fetched ${cases.length} cases`);
-  } catch (err) {
-    console.error(
-      `[sitemap] FATAL: could not fetch cases from ${API_BASE}. ` +
-      `Refusing to write a sitemap missing every case. ` +
-      `Check the API is reachable and VITE_JAWAFDEHI_API_BASE_URL is correct.`,
-      err,
-    );
-    process.exit(1);
-  }
-
+  // A reachable CMS is a hard requirement: a sitemap that silently omits every
+  // update would hide a whole section from search engines while the build stays
+  // green. Fetch failures abort instead.
   let articles: ArticleListItem[] = [];
   try {
     articles = await fetchAllArticles();
@@ -195,45 +122,12 @@ async function main() {
     process.exit(1);
   }
 
-  // Entity pages worth listing are exactly the ones a published case cites —
-  // the same rule the public entity search applies (`case_count >= 1`, see
-  // `entities/search_visibility.py` in the API). `cases` here is the published
-  // set, so deriving from its binds gives that rule for free; the ~186k
-  // registry records no case names stay out, which is the point.
-  //
-  // Then filtered to the pages pre-render ACTUALLY WROTE. Deriving the list
-  // twice from the same rule was fine while pre-render rendered every cited
-  // entity; it stopped being fine with PRERENDER_ENTITY_LIMIT, which caps the
-  // rendered set (see pre-render.ts). Without this filter the sitemap would
-  // advertise ~7.6k URLs that exist only as the SPA shell — HTTP 200 with no
-  // <title> and no entity name in the HTML — which is worse for search than not
-  // listing them at all. Reading the directory is also the durable fix: the
-  // sitemap can no longer drift from the build, whatever the rule becomes.
-  const rendered = cases
-    .flatMap(c => c.entities.map(e => entityPath(e.nes_id)))
-    .filter((path): path is string => path != null);
-  const entityPaths: string[] = [];
-  const seenEntity = new Set<string>();
-  for (const path of rendered) {
-    if (seenEntity.has(path)) continue;
-    seenEntity.add(path);
-    if (existsSync(join(ROOT, 'dist', path, 'index.html'))) entityPaths.push(path);
-  }
-  const skipped = seenEntity.size - entityPaths.length;
-  if (skipped > 0) {
-    console.log(
-      `[sitemap] ${entityPaths.length} entity URLs listed; ${skipped} cited ` +
-        `entities were not pre-rendered (PRERENDER_ENTITY_LIMIT) and are omitted.`,
-    );
-  }
-
   // Pages 2..N of the case browse. `/cases/` itself comes from the static route
   // list above, so drop the first path here rather than emitting it twice.
   //
   // Listing pages belong in the sitemap even though they are reachable by link:
   // they are how a crawler that has only ever seen the home page finds its way
-  // to the 444 case pages nothing else links to, and advertising them makes that
-  // path discoverable on the first fetch instead of the fourth.
+  // to case pages nothing else links to.
   const casePageEntries = (await caseBrowsePagePaths(API_BASE))
     .slice(1)
     .map(path => urlEntry(`${CANONICAL}${path}`));
@@ -249,11 +143,6 @@ async function main() {
         `${CANONICAL}/updates/${a.meta.slug}`,
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
       )),
-    ...cases.map(c => urlEntry(
-      `${CANONICAL}${withTrailingSlash(`/case/${c.slug || c.id}`)}`,
-      toYMD(c.updated_at),
-    )),
-    ...entityPaths.map(path => urlEntry(`${CANONICAL}${withTrailingSlash(path)}`)),
   ];
 
   const xml = [
@@ -263,7 +152,9 @@ async function main() {
     '</urlset>',
   ].join('\n');
 
-  const outPath = join(ROOT, 'dist/sitemap.xml');
+  // Not dist/sitemap.xml: a file there would be served by the assets binding
+  // ahead of the Worker and hide the API's index (assets answer first).
+  const outPath = join(ROOT, 'dist/sitemap-site.xml');
   await mkdir(dirname(outPath), { recursive: true });
   await writeFile(outPath, xml, 'utf-8');
   console.log(`[sitemap] Written to ${outPath} (${entries.length} entries)`);

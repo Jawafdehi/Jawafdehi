@@ -81,7 +81,8 @@ export async function pageTags(kind: EdgeKind, tails: readonly string[]): Promis
   return [...recordTags, `type:${kind}`, 'ssr:all'];
 }
 
-const TAG_RE = /^(?:(?:case|entity|material|courtcase):[0-9a-f]{32}|type:(?:case|entity|material|courtcase)|ssr:all)$/;
+// `sitemap` tags the proxied API sitemaps (worker/sitemap.ts).
+const TAG_RE = /^(?:(?:case|entity|material|courtcase):[0-9a-f]{32}|type:(?:case|entity|material|courtcase)|ssr:all|sitemap)$/;
 
 /** Cloudflare's per-call purge limit is 100 tags. */
 export const MAX_PURGE_TAGS = 100;
