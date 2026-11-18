@@ -17,6 +17,7 @@ vi.mock("@/services/search-api", () => ({
 }));
 
 import { ArchiveBrowser } from "@/components/materials/ArchiveBrowser";
+import { filedRow } from "@/data/archive-folders.fixtures";
 
 let location = "";
 let entries: string[] = [];
@@ -29,6 +30,15 @@ function Probe() {
   else if (type === "REPLACE") entries = [...entries.slice(0, -1), location];
   else if (!entries.length) entries = [location];
   return null;
+}
+
+/**
+ * Wait until the catalogue is in: shelves are placed by its folders (JAW-87),
+ * so before it arrives every folder is empty. Judiciary's count (nkp +
+ * court_order) shows once it has.
+ */
+async function catalogueLoaded() {
+  await waitFor(() => expect(document.body.textContent).toContain("53,886"));
 }
 
 function renderAt(url: string, { phone = false } = {}) {
@@ -57,7 +67,10 @@ beforeEach(() => {
     sources: [
       { source: "nkp", name: { en: "Precedents" }, publisher: null, labelled: true, count: 10_554 },
       { source: "court_order", name: { en: "Court orders" }, publisher: null, labelled: true, count: 43_332 },
-    ],
+      // Shelves are drawn only for sources the catalogue lists (JAW-87).
+      { source: "legal_corpus", name: { en: "Laws and bills" }, publisher: null, labelled: true, count: 758 },
+      { source: "dri", name: { en: "Revenue Investigation" }, publisher: null, labelled: true, count: 160 },
+    ].map(filedRow),
   });
 });
 
@@ -76,9 +89,9 @@ describe("ArchiveBrowser", () => {
 
   it("restores the view and selection from the URL, and moves in place", async () => {
     renderAt("/materials/?view=columns&path=judiciary");
-    // Root column plus Judiciary's contents.
+    // Root column plus Judiciary's contents, once the catalogue has placed its shelves.
+    expect(await screen.findByRole("option", { name: /Supreme Court/ })).toBeTruthy();
     await waitFor(() => expect(screen.getAllByRole("listbox")).toHaveLength(2));
-    expect(screen.getByRole("option", { name: /Supreme Court/ })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("option", { name: /Supreme Court/ }));
     await waitFor(() => expect(location).toBe("?view=columns&path=judiciary/supreme-court#archive"));
@@ -108,6 +121,7 @@ describe("ArchiveBrowser", () => {
   it("expands a folder in the List view's tree in place", async () => {
     renderAt("/materials/?view=list");
     const judiciary = await screen.findByRole("treeitem", { name: /Judiciary/ });
+    await catalogueLoaded();
     expect(judiciary.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(judiciary);
     await waitFor(() => expect(judiciary.getAttribute("aria-expanded")).toBe("true"));
@@ -135,6 +149,7 @@ describe("ArchiveBrowser", () => {
   it("keeps keyboard focus inside the phone Columns view while moving and drilling down", async () => {
     renderAt("/materials/?view=columns", { phone: true });
     const first = await screen.findByRole("option", { name: /Government bodies/ });
+    await catalogueLoaded();
     first.focus();
     fireEvent.keyDown(first, { key: "ArrowDown" });
     // Arrows only move focus on a phone: nothing drilled, focus on the next row.
@@ -159,6 +174,7 @@ describe("ArchiveBrowser", () => {
   it("keeps focus in the Icons grid when a folder opens and when going up", async () => {
     renderAt("/materials/?view=icons");
     const judiciary = await screen.findByRole("button", { name: /Judiciary/ });
+    await catalogueLoaded();
     judiciary.focus();
     fireEvent.click(judiciary);
     await waitFor(() => expect(location).toContain("path=judiciary"));
@@ -170,6 +186,8 @@ describe("ArchiveBrowser", () => {
 
   it("adds a history entry per level when drilling into folders by keyboard on desktop", async () => {
     renderAt("/materials/?view=columns&path=judiciary");
+    // Shelves are placed by the catalogue's folders, so wait until it is in.
+    await screen.findByRole("option", { name: /Supreme Court/ });
     const row = await screen.findByRole("option", { name: /Judiciary/ });
     row.focus();
     fireEvent.keyDown(row, { key: "ArrowRight" });

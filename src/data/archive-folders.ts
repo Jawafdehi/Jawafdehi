@@ -6,11 +6,14 @@
  * vocabulary (प्रतिवेदन | Reports, प्रेस विज्ञप्ति | Press releases, कारबाही |
  * Enforcement actions, …) so the page shows one language, never a mix.
  *
- * PREVIEW-STAGE MAPPING. The end state is a folder (and bilingual names) on
- * each source in the API's source registry, so new sources file themselves.
- * Until that API change lands, this frontend config keyed by source token is
- * the mapping. A source the tree does not mention still appears: it is filed
- * under अन्य | Others automatically (`withUnfiled`), from its API row.
+ * WHERE THINGS GO comes from the API (JAW-87): every row of
+ * /api/document-sources/ carries the `folder` (and optional `subfolder`) its
+ * source is filed under, and the response lists the folders themselves, in
+ * display order with both names. So a source added through the registry lands
+ * in its folder with no release. What stays here is presentation only: how a
+ * source's documents are grouped into an office and named series
+ * (`ARCHIVE_SHELVES`). A shelf goes in the folder of its sources; a source no
+ * shelf mentions gets its own leaf in its folder, from its API row.
  *
  * Counts are never stored here: a leaf's count comes live from
  * /api/document-sources/ through `seriesCount`, and a folder's is the sum of
@@ -25,6 +28,8 @@ import {
 import {
   listedSources,
   type BilingualLabel,
+  type DocumentSourceEntry,
+  type DocumentSourceFolder,
   type DocumentSourcesResponse,
 } from "@/lib/document-sources";
 
@@ -107,128 +112,126 @@ const LAW_KINDS = [
   "court-rules",
 ] as const;
 
-/** The folder tree. The top level shows in THIS order; every level below is sorted for display by `sortTree`. */
-export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
-  branch("judiciary", { ne: "न्यायपालिका", en: "Judiciary" }, 2, [
-    branch("supreme-court", { ne: "सर्वोच्च अदालत", en: "Supreme Court" }, 2, [
-      leaf("supreme-court-precedents", "nkp", { ne: "नजिर", en: "Precedents" }),
-      leaf("supreme-court-annual-reports", "judiciary_report", W.annualReports, {
-        kindExclude: ["judicial-council-annual-report", "special-court-annual-report"],
-      }),
-    ]),
-    curated("kanun-patrika", { ne: "नेपाल कानुन पत्रिका", en: "Nepal Kanoon Patrika" }),
-    branch("special-court", { ne: "विशेष अदालत", en: "Special Court" }, 2, [
-      leaf("special-court-judgments", "special_court_order", W.judgments),
-      leaf("special-court-annual-reports", "judiciary_report", W.annualReports, {
-        kind: "special-court-annual-report",
-      }),
-    ]),
-    branch("judicial-council", { ne: "न्याय परिषद्", en: "Judicial Council" }, 2, [
-      leaf("judicial-council-annual-reports", "judiciary_report", W.annualReports, {
-        kind: "judicial-council-annual-report",
-      }),
-    ]),
-    leaf("court-orders", "court_order", { ne: "अदालती आदेश", en: "Court orders" }),
-    leaf("court-filings", "court_filing", { ne: "अदालतमा दायर निवेदन", en: "Court filings" }),
+/**
+ * The office and series shelves, in no particular order: each lands in the
+ * folder the API files its sources under, and every level below the top folders
+ * is sorted for display by `sortTree`. A section comment says where a shelf's
+ * sources are filed today, for readers only.
+ */
+export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
+  // Judiciary
+  branch("supreme-court", { ne: "सर्वोच्च अदालत", en: "Supreme Court" }, 2, [
+    leaf("supreme-court-precedents", "nkp", { ne: "नजिर", en: "Precedents" }),
+    leaf("supreme-court-annual-reports", "judiciary_report", W.annualReports, {
+      kindExclude: ["judicial-council-annual-report", "special-court-annual-report"],
+    }),
+  ]),
+  curated("kanun-patrika", { ne: "नेपाल कानुन पत्रिका", en: "Nepal Kanoon Patrika" }),
+  branch("special-court", { ne: "विशेष अदालत", en: "Special Court" }, 2, [
+    leaf("special-court-judgments", "special_court_order", W.judgments),
+    leaf("special-court-annual-reports", "judiciary_report", W.annualReports, {
+      kind: "special-court-annual-report",
+    }),
+  ]),
+  branch("judicial-council", { ne: "न्याय परिषद्", en: "Judicial Council" }, 2, [
+    leaf("judicial-council-annual-reports", "judiciary_report", W.annualReports, {
+      kind: "judicial-council-annual-report",
+    }),
+  ]),
+  leaf("court-orders", "court_order", { ne: "अदालती आदेश", en: "Court orders" }),
+  leaf("court-filings", "court_filing", { ne: "अदालतमा दायर निवेदन", en: "Court filings" }),
+
+  // Government bodies
+  branch("ciaa", { ne: "अख्तियार दुरुपयोग अनुसन्धान आयोग", en: "Commission for the Investigation of Abuse of Authority" }, 1, [
+    curated("ciaa-press-releases", W.pressReleases),
+    leaf("ciaa-press-releases-uploads", "press_release", W.pressReleasesUploads),
+    curated("ciaa-annual-reports", W.annualReports),
+  ]),
+  branch("attorney-general", { ne: "महान्यायाधिवक्ताको कार्यालय", en: "Office of the Attorney General" }, 5, [
+    curated("charge-sheets", W.chargeSheets),
+    leaf("charge-sheets-uploads", "charge_sheet", W.chargeSheetsUploads),
+    leaf("attorney-general-annual-reports", "attorney_general_report", W.annualReports),
+  ]),
+  branch("auditor-general", { ne: "महालेखापरीक्षकको कार्यालय", en: "Office of the Auditor General" }, 3, [
+    curated("auditor-general-reports", W.annualReports),
+    curated("province-audit-reports", { ne: "प्रदेश लेखापरीक्षण प्रतिवेदन", en: "Provincial audit reports" }),
+    curated("audit-journal", { ne: "लेखापरीक्षण जर्नल", en: "Audit journal" }),
+    curated("audit-bulletin", { ne: "लेखापरीक्षण बुलेटिन", en: "Audit bulletin" }),
+    curated("oag-publications", { ne: "अन्य प्रकाशन", en: "Other publications" }),
+  ]),
+  branch("opmcm", { ne: "प्रधानमन्त्री तथा मन्त्रिपरिषद्को कार्यालय", en: "Office of the Prime Minister and Council of Ministers" }, 4, [
+    leaf("cabinet-decisions", "cabinet_decision", { ne: "मन्त्रिपरिषद्का निर्णय", en: "Cabinet decisions" }),
+  ]),
+  branch("ppmo", { ne: "सार्वजनिक खरिद अनुगमन कार्यालय", en: "Public Procurement Monitoring Office" }, 6, [
+    leaf("tender-notices", "bolpatra", { ne: "बोलपत्र सूचना (विद्युतीय खरिद प्रणाली)", en: "Tender notices (electronic procurement)" }),
+    leaf("ppmo-publications", "ppmo", W.publications),
+    leaf("ppmo-blacklist", "ppmo_blacklist", { ne: "कालोसूची", en: "Blacklist" }),
+  ]),
+  branch("finance-ministry", { ne: "अर्थ मन्त्रालय", en: "Ministry of Finance" }, 7, [
+    leaf("project-financing", "dfmis", { ne: "विकास आयोजना वित्तीय विवरण", en: "Project financing records" }),
+  ]),
+  branch("dri", { ne: "राजस्व अनुसन्धान विभाग", en: "Department of Revenue Investigation" }, 8, [
+    leaf("dri-releases-reports", "dri", { ne: "प्रेस विज्ञप्ति र प्रतिवेदन", en: "Press releases and reports" }),
+  ]),
+  branch("dmli", { ne: "सम्पत्ति शुद्धीकरण अनुसन्धान विभाग", en: "Department of Money Laundering Investigation" }, 4, [
+    leaf("dmli-press-releases", "dmli", W.pressReleases, { kind: "dmli-press-release" }),
+    leaf("dmli-reports", "dmli", W.reports, { kindExclude: ["dmli-press-release"] }),
+  ]),
+  branch("nepal-police", { ne: "नेपाल प्रहरी", en: "Nepal Police" }, 6, [
+    leaf("nepal-police-press-releases", "nepal_police", W.pressReleases),
+  ]),
+  branch("koshi-province", { ne: "कोशी प्रदेश", en: "Koshi Province" }, 2, [
+    leaf("koshi-budget", "province/koshi", { ne: "बजेट विवरण", en: "Budget lines" }),
+  ]),
+  // Government bodies › Regulators
+  branch("nrb", { ne: "नेपाल राष्ट्र बैंक", en: "Nepal Rastra Bank" }, 3, [
+    leaf("nrb-enforcement", "nrb", W.enforcement, { kind: "enforcement-action" }),
+    leaf("nrb-reports", "nrb", W.reports, { kindExclude: ["enforcement-action"] }),
+  ]),
+  branch("sebon", { ne: "नेपाल धितोपत्र बोर्ड", en: "Securities Board of Nepal (SEBON)" }, 5, [
+    leaf("sebon-enforcement", "sebon", W.enforcement),
+  ]),
+  branch("insurance-authority", { ne: "नेपाल बीमा प्राधिकरण", en: "Nepal Insurance Authority" }, 7, [
+    leaf("insurance-enforcement", "nia", W.enforcement),
   ]),
 
-  branch("government", { ne: "सरकारी निकाय", en: "Government bodies" }, 1, [
-    branch("ciaa", { ne: "अख्तियार दुरुपयोग अनुसन्धान आयोग", en: "Commission for the Investigation of Abuse of Authority" }, 1, [
-      curated("ciaa-press-releases", W.pressReleases),
-      leaf("ciaa-press-releases-uploads", "press_release", W.pressReleasesUploads),
-      curated("ciaa-annual-reports", W.annualReports),
-    ]),
-    branch("attorney-general", { ne: "महान्यायाधिवक्ताको कार्यालय", en: "Office of the Attorney General" }, 5, [
-      curated("charge-sheets", W.chargeSheets),
-      leaf("charge-sheets-uploads", "charge_sheet", W.chargeSheetsUploads),
-      leaf("attorney-general-annual-reports", "attorney_general_report", W.annualReports),
-    ]),
-    branch("auditor-general", { ne: "महालेखापरीक्षकको कार्यालय", en: "Office of the Auditor General" }, 3, [
-      curated("auditor-general-reports", W.annualReports),
-      curated("province-audit-reports", { ne: "प्रदेश लेखापरीक्षण प्रतिवेदन", en: "Provincial audit reports" }),
-      curated("audit-journal", { ne: "लेखापरीक्षण जर्नल", en: "Audit journal" }),
-      curated("audit-bulletin", { ne: "लेखापरीक्षण बुलेटिन", en: "Audit bulletin" }),
-      curated("oag-publications", { ne: "अन्य प्रकाशन", en: "Other publications" }),
-    ]),
-    branch("opmcm", { ne: "प्रधानमन्त्री तथा मन्त्रिपरिषद्को कार्यालय", en: "Office of the Prime Minister and Council of Ministers" }, 4, [
-      leaf("cabinet-decisions", "cabinet_decision", { ne: "मन्त्रिपरिषद्का निर्णय", en: "Cabinet decisions" }),
-    ]),
-    branch("ppmo", { ne: "सार्वजनिक खरिद अनुगमन कार्यालय", en: "Public Procurement Monitoring Office" }, 6, [
-      leaf("tender-notices", "bolpatra", { ne: "बोलपत्र सूचना (विद्युतीय खरिद प्रणाली)", en: "Tender notices (electronic procurement)" }),
-      leaf("ppmo-publications", "ppmo", W.publications),
-      leaf("ppmo-blacklist", "ppmo_blacklist", { ne: "कालोसूची", en: "Blacklist" }),
-    ]),
-    branch("finance-ministry", { ne: "अर्थ मन्त्रालय", en: "Ministry of Finance" }, 7, [
-      leaf("project-financing", "dfmis", { ne: "विकास आयोजना वित्तीय विवरण", en: "Project financing records" }),
-    ]),
-    branch("dri", { ne: "राजस्व अनुसन्धान विभाग", en: "Department of Revenue Investigation" }, 8, [
-      leaf("dri-releases-reports", "dri", { ne: "प्रेस विज्ञप्ति र प्रतिवेदन", en: "Press releases and reports" }),
-    ]),
-    branch("dmli", { ne: "सम्पत्ति शुद्धीकरण अनुसन्धान विभाग", en: "Department of Money Laundering Investigation" }, 4, [
-      leaf("dmli-press-releases", "dmli", W.pressReleases, { kind: "dmli-press-release" }),
-      leaf("dmli-reports", "dmli", W.reports, { kindExclude: ["dmli-press-release"] }),
-    ]),
-    branch("nepal-police", { ne: "नेपाल प्रहरी", en: "Nepal Police" }, 6, [
-      leaf("nepal-police-press-releases", "nepal_police", W.pressReleases),
-    ]),
-    branch("koshi-province", { ne: "कोशी प्रदेश", en: "Koshi Province" }, 2, [
-      leaf("koshi-budget", "province/koshi", { ne: "बजेट विवरण", en: "Budget lines" }),
-    ]),
-    branch("regulators", { ne: "नियामक निकाय", en: "Regulators" }, 3, [
-      branch("nrb", { ne: "नेपाल राष्ट्र बैंक", en: "Nepal Rastra Bank" }, 3, [
-        leaf("nrb-enforcement", "nrb", W.enforcement, { kind: "enforcement-action" }),
-        leaf("nrb-reports", "nrb", W.reports, { kindExclude: ["enforcement-action"] }),
-      ]),
-      branch("sebon", { ne: "नेपाल धितोपत्र बोर्ड", en: "Securities Board of Nepal (SEBON)" }, 5, [
-        leaf("sebon-enforcement", "sebon", W.enforcement),
-      ]),
-      branch("insurance-authority", { ne: "नेपाल बीमा प्राधिकरण", en: "Nepal Insurance Authority" }, 7, [
-        leaf("insurance-enforcement", "nia", W.enforcement),
-      ]),
-    ]),
+  // Laws
+  // legal_corpus split by kind (`jawafdehi:datasetBucket`, written by the
+  // API's classify_legal_corpus). A document with no kind lands in "Other".
+  branch("nepal-laws", { ne: "नेपालको कानुन", en: "Nepal's laws" }, 5, [
+    leaf("constitution", "legal_corpus", { ne: "संविधान", en: "Constitution" }, { kind: "law-constitution" }),
+    leaf("acts", "legal_corpus", { ne: "ऐन", en: "Acts" }, { kind: "law-act" }),
+    leaf("ordinances", "legal_corpus", { ne: "अध्यादेश", en: "Ordinances" }, { kind: "law-ordinance" }),
+    leaf("bills", "legal_corpus", { ne: "विधेयक", en: "Bills" }, { kind: "law-bill" }),
+    leaf("regulations", "legal_corpus", { ne: "नियमावली", en: "Regulations" }, { kind: "law-regulation" }),
+    leaf("procedures", "legal_corpus", { ne: "कार्यविधि र निर्देशिका", en: "Procedures and directives" }, {
+      kind: "law-procedure",
+    }),
+    leaf("court-rules", "legal_corpus", { ne: "अदालती नियमावली", en: "Court rules" }, { kind: "court-rules" }),
+    leaf("other-laws", "legal_corpus", { ne: "अन्य", en: "Other" }, {
+      kindExclude: LAW_KINDS,
+    }),
   ]),
+  curated("legal-templates", { ne: "कानुनी ढाँचा", en: "Legal templates" }),
+  // The Nepal Gazette (JAW-82). One series for now; it gains the gazette's own
+  // volume › part › issue layout once that hierarchy is in the data.
+  leaf("rajpatra", "rajpatra", { ne: "राजपत्र", en: "Nepal Rajpatra" }),
 
-  branch("laws", { ne: "कानुन", en: "Laws" }, 5, [
-    // legal_corpus split by kind (`jawafdehi:datasetBucket`, written by the
-    // API's classify_legal_corpus). A document with no kind lands in "Other".
-    branch("nepal-laws", { ne: "नेपालको कानुन", en: "Nepal's laws" }, 5, [
-      leaf("constitution", "legal_corpus", { ne: "संविधान", en: "Constitution" }, { kind: "law-constitution" }),
-      leaf("acts", "legal_corpus", { ne: "ऐन", en: "Acts" }, { kind: "law-act" }),
-      leaf("ordinances", "legal_corpus", { ne: "अध्यादेश", en: "Ordinances" }, { kind: "law-ordinance" }),
-      leaf("bills", "legal_corpus", { ne: "विधेयक", en: "Bills" }, { kind: "law-bill" }),
-      leaf("regulations", "legal_corpus", { ne: "नियमावली", en: "Regulations" }, { kind: "law-regulation" }),
-      leaf("procedures", "legal_corpus", { ne: "कार्यविधि र निर्देशिका", en: "Procedures and directives" }, {
-        kind: "law-procedure",
-      }),
-      leaf("court-rules", "legal_corpus", { ne: "अदालती नियमावली", en: "Court rules" }, { kind: "court-rules" }),
-      leaf("other-laws", "legal_corpus", { ne: "अन्य", en: "Other" }, {
-        kindExclude: LAW_KINDS,
-      }),
-    ]),
-    curated("legal-templates", { ne: "कानुनी ढाँचा", en: "Legal templates" }),
-    // The Nepal Gazette (JAW-82). One series for now; it gains the gazette's own
-    // volume › part › issue layout once that hierarchy is in the data.
-    leaf("rajpatra", "rajpatra", { ne: "राजपत्र", en: "Nepal Rajpatra" }),
-  ]),
+  // News
+  leaf("news-articles", "news", { ne: "समाचार लेख", en: "News articles" }),
+  leaf("ratopati", "ratopati", { ne: "रातोपाटी", en: "Ratopati" }),
+  leaf("setopati", "news_setopati", { ne: "सेतोपाटी", en: "Setopati" }),
+  leaf("shilapatra", "news_shilaptra", { ne: "शिलापत्र", en: "Shilapatra" }),
+  leaf("occrp", "occrp", { ne: "संगठित अपराध तथा भ्रष्टाचार रिपोर्टिङ परियोजना (OCCRP)", en: "Organized Crime and Corruption Reporting Project (OCCRP)" }),
+  leaf("social-media", "social_media", { ne: "सामाजिक सञ्जाल", en: "Social media posts" }),
 
-  branch("news", { ne: "समाचार", en: "News" }, 6, [
-    leaf("news-articles", "news", { ne: "समाचार लेख", en: "News articles" }),
-    leaf("ratopati", "ratopati", { ne: "रातोपाटी", en: "Ratopati" }),
-    leaf("setopati", "news_setopati", { ne: "सेतोपाटी", en: "Setopati" }),
-    leaf("shilapatra", "news_shilaptra", { ne: "शिलापत्र", en: "Shilapatra" }),
-    leaf("occrp", "occrp", { ne: "संगठित अपराध तथा भ्रष्टाचार रिपोर्टिङ परियोजना (OCCRP)", en: "Organized Crime and Corruption Reporting Project (OCCRP)" }),
-    leaf("social-media", "social_media", { ne: "सामाजिक सञ्जाल", en: "Social media posts" }),
-  ]),
+  // International
+  leaf("us-court-records", "us_court", { ne: "अमेरिकी संघीय अदालतका अभिलेख", en: "United States federal court records" }),
+  leaf("us-sec-enforcement", "us_sec", { ne: "अमेरिकी धितोपत्र तथा विनिमय आयोगका कारबाही", en: "United States Securities and Exchange Commission enforcement actions" }),
+  leaf("us-doj-agreements", "us_doj", { ne: "अमेरिकी न्याय विभागका सम्झौता", en: "United States Department of Justice agreements" }),
 
-  branch("international", { ne: "अन्तर्राष्ट्रिय", en: "International" }, 7, [
-    leaf("us-court-records", "us_court", { ne: "अमेरिकी संघीय अदालतका अभिलेख", en: "United States federal court records" }),
-    leaf("us-sec-enforcement", "us_sec", { ne: "अमेरिकी धितोपत्र तथा विनिमय आयोगका कारबाही", en: "United States Securities and Exchange Commission enforcement actions" }),
-    leaf("us-doj-agreements", "us_doj", { ne: "अमेरिकी न्याय विभागका सम्झौता", en: "United States Department of Justice agreements" }),
-  ]),
-
-  branch("others", { ne: "अन्य", en: "Others" }, 8, [
-    leaf("case-documents", "document", { ne: "मुद्दासम्बन्धी विविध कागजात", en: "Miscellaneous case documents" }),
-  ]),
+  // Others
+  leaf("case-documents", "document", { ne: "मुद्दासम्बन्धी विविध कागजात", en: "Miscellaneous case documents" }),
 ];
 
 export const UNFILED_FOLDER = "others";
@@ -247,17 +250,142 @@ function leavesOf(node: ArchiveNode): ArchiveLeaf[] {
   return node.type === "leaf" ? [node] : node.children.flatMap(leavesOf);
 }
 
+
 /**
- * The tree plus every listed source it does not mention, filed under अन्य |
- * Others from its API row, so a newly loaded source appears with no release.
+ * The folders to draw before the catalogue arrives (and if a response ever
+ * lacks `folders`): the API's vocabulary at the time of writing. The API's own
+ * list wins whenever it is there.
+ */
+export const DEFAULT_FOLDERS: readonly DocumentSourceFolder[] = [
+  { key: "judiciary", name: { ne: "न्यायपालिका", en: "Judiciary" } },
+  {
+    key: "government",
+    name: { ne: "सरकारी निकाय", en: "Government bodies" },
+    subfolders: [{ key: "regulators", name: { ne: "नियामक निकाय", en: "Regulators" } }],
+  },
+  { key: "laws", name: { ne: "कानुन", en: "Laws" } },
+  { key: "news", name: { ne: "समाचार", en: "News" } },
+  { key: "international", name: { ne: "अन्तर्राष्ट्रिय", en: "International" } },
+  { key: UNFILED_FOLDER, name: { ne: "अन्य", en: "Others" } },
+];
+
+/** Card tints per folder; presentation only. */
+const FOLDER_TINT: Record<string, number> = {
+  judiciary: 2,
+  government: 1,
+  regulators: 3,
+  laws: 5,
+  news: 6,
+  international: 7,
+  [UNFILED_FOLDER]: 8,
+};
+
+const bilingual = (name: BilingualLabel | null | undefined, fallback: string): Bilingual => ({
+  ne: name?.ne ?? "",
+  en: name?.en || fallback,
+});
+
+/** Empty folder branches (with their sub-folder branches), in the API's order. */
+function folderSkeleton(catalogue: DocumentSourcesResponse | undefined | null): ArchiveBranch[] {
+  const vocabulary = catalogue?.folders?.length ? catalogue.folders : DEFAULT_FOLDERS;
+  const folders = vocabulary.map((folder) => {
+    const tint = FOLDER_TINT[folder.key] ?? FOLDER_TINT[UNFILED_FOLDER];
+    return branch(
+      folder.key,
+      bilingual(folder.name, folder.key),
+      tint,
+      (folder.subfolders ?? []).map((sub) => branch(sub.key, bilingual(sub.name, sub.key), FOLDER_TINT[sub.key] ?? tint, [])),
+    );
+  });
+  // Unfiled sources need somewhere to go even if a response leaves Others out.
+  if (!folders.some((folder) => folder.slug === UNFILED_FOLDER)) {
+    folders.push(branch(UNFILED_FOLDER, bilingual(DEFAULT_FOLDERS.at(-1)!.name, UNFILED_FOLDER), 8, []));
+  }
+  return folders;
+}
+
+type Placement = { folder: string; subfolder?: string | null };
+
+/**
+ * Where a shelf goes: the folder of the first of its sources the API files
+ * (Others if the API gives none). A shelf with no source in the catalogue at
+ * all is not drawn: there is nothing in it.
+ */
+function shelfPlacement(
+  shelf: ArchiveNode,
+  rows: ReadonlyMap<string, DocumentSourceEntry>,
+): Placement | null {
+  const sources = leavesOf(shelf).map((entry) => entry.source);
+  const filed = sources.map((source) => rows.get(source)).find((row) => row?.folder);
+  if (filed?.folder) return { folder: filed.folder, subfolder: filed.subfolder };
+  return sources.some((source) => rows.has(source)) ? { folder: UNFILED_FOLDER } : null;
+}
+
+/**
+ * Put `node` into its folder, and into the sub-folder when that folder has
+ * one by that name; an unknown folder means Others. Sub-folders are the
+ * branches a folder starts with, before any shelf is placed (`subfolders`).
+ */
+function place(
+  tree: ArchiveBranch[],
+  subfolders: ReadonlyMap<ArchiveBranch, readonly ArchiveBranch[]>,
+  node: ArchiveNode,
+  where: Placement,
+): void {
+  const folder =
+    tree.find((entry) => entry.slug === where.folder) ?? tree.find((entry) => entry.slug === UNFILED_FOLDER)!;
+  const sub = where.subfolder
+    ? subfolders.get(folder)?.find((entry) => entry.slug === where.subfolder)
+    : undefined;
+  (sub ?? folder).children.push(node);
+}
+
+/**
+ * The whole tree for one catalogue: the API's folders, every shelf in the
+ * folder its sources are filed under, and every listed source no shelf
+ * mentions as its own leaf in its folder (Others when the API gives none), so
+ * a newly loaded source appears with no release. Empty sub-folders are dropped.
  */
 export function withUnfiled(
   catalogue: DocumentSourcesResponse | undefined | null,
   language = "en",
 ): ArchiveBranch[] {
-  // The top level keeps the tree's fixed order (damo: Judiciary, Government
+  const tree = folderSkeleton(catalogue);
+  const subfolders = new Map(
+    tree.map((folder) => [folder, folder.children.filter((child) => child.type === "branch")] as const),
+  );
+  const rows = new Map((catalogue?.sources ?? []).map((row) => [row.source, row] as const));
+  for (const shelf of ARCHIVE_SHELVES) {
+    const where = shelfPlacement(shelf, rows);
+    if (where) place(tree, subfolders, shelf, where);
+  }
+  const known = new Set(ARCHIVE_SHELVES.flatMap(leavesOf).map((entry) => entry.source));
+  for (const row of listedSources(catalogue)) {
+    if (known.has(row.source)) continue;
+    place(
+      tree,
+      subfolders,
+      {
+        type: "leaf",
+        slug: unfiledSlug(row.source),
+        source: row.source,
+        name: { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source },
+        apiName: row.name,
+      },
+      { folder: row.folder || UNFILED_FOLDER, subfolder: row.subfolder },
+    );
+  }
+  // The top level keeps the API's fixed order (damo: Judiciary, Government
   // bodies, Laws, News, International, Others); everything below it is sorted.
-  return fileUnfiled(catalogue).map((folder) => ({ ...folder, children: sortTree(folder.children, language) }));
+  return tree.map((folder) => ({
+    ...folder,
+    children: sortTree(
+      folder.children.filter(
+        (child) => !(subfolders.get(folder)?.includes(child as ArchiveBranch) && child.type === "branch" && !child.children.length),
+      ),
+      language,
+    ),
+  }));
 }
 
 /** "Others" folders and "Other …" series always sort last. */
@@ -281,21 +409,9 @@ export function sortTree<T extends ArchiveNode>(nodes: readonly T[], language: s
     );
 }
 
-function fileUnfiled(catalogue: DocumentSourcesResponse | undefined | null): ArchiveBranch[] {
-  const known = new Set(ARCHIVE_TREE.flatMap(leavesOf).map((entry) => entry.source));
-  const unfiled: ArchiveLeaf[] = listedSources(catalogue)
-    .filter((row) => !known.has(row.source))
-    .map((row) => ({
-      type: "leaf",
-      slug: unfiledSlug(row.source),
-      source: row.source,
-      name: { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source },
-      apiName: row.name,
-    }));
-  if (!unfiled.length) return [...ARCHIVE_TREE];
-  return ARCHIVE_TREE.map((folder) =>
-    folder.slug === UNFILED_FOLDER ? { ...folder, children: [...folder.children, ...unfiled] } : folder,
-  );
+/** A shelf leaf by slug, wherever (or whether) the catalogue files it. */
+export function shelfLeafBySlug(slug: string): ArchiveLeaf | undefined {
+  return ARCHIVE_SHELVES.flatMap(leavesOf).find((entry) => entry.slug === slug);
 }
 
 /** The leaf as a browsable series, for /materials/?series=<slug>. */

@@ -30,7 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { findLeafChain, leafSeries, withUnfiled } from "@/data/archive-folders";
+import { findLeafChain, leafSeries, shelfLeafBySlug, withUnfiled } from "@/data/archive-folders";
 import { ArchiveBreadcrumbs } from "@/components/materials/ArchiveBreadcrumbs";
 import { seriesBySlug, seriesCount, seriesScope } from "@/data/material-series";
 import { seriesBrowseHref, seriesForSourceKey } from "@/lib/document-source-series";
@@ -160,13 +160,15 @@ export default function MaterialSeriesBrowse({
     : slug
       ? findLeafChain(tree, (entry) => entry.slug === slug)
       : null;
-  const treeLeaf = treeChain?.[treeChain.length - 1];
+  // A shelf's series resolves even before the catalogue says which folder it
+  // is in, so its documents start loading at once (the trail follows).
+  const treeLeaf = treeChain?.[treeChain.length - 1] ?? (slug ? shelfLeafBySlug(slug) : undefined);
   const series = sourceKey
     ? seriesForSourceKey(sourcesQuery.data, sourceKey)
     : slug
       ? (seriesBySlug(slug) ??
-        (treeLeaf?.type === "leaf" && treeChain
-          ? leafSeries(treeLeaf, treeChain[0]?.type === "branch" ? treeChain[0].tint : 1)
+        (treeLeaf?.type === "leaf"
+          ? leafSeries(treeLeaf, treeChain?.[0]?.type === "branch" ? treeChain[0].tint : 1)
           : undefined))
       : undefined;
   const [searchParams, setSearchParams] = useSearchParams();

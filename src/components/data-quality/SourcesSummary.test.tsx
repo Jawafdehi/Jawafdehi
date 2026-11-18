@@ -15,14 +15,16 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/services/jds-api", () => ({ getDocumentSources: () => getDocumentSources() }));
 
 import { SourcesSummary } from "@/components/data-quality/SourcesSummary";
+import { filedRow } from "@/data/archive-folders.fixtures";
 
-const row = (source: string, publisher: string | null, count: number) => ({
-  source,
-  name: { en: `${source} name` },
-  publisher: publisher ? { en: publisher } : null,
-  labelled: true,
-  count,
-});
+const row = (source: string, publisher: string | null, count: number) =>
+  filedRow({
+    source,
+    name: { en: `${source} name` },
+    publisher: publisher ? { en: publisher } : null,
+    labelled: true,
+    count,
+  });
 
 // /data-quality no longer keeps its own table of sources: it summarises the
 // archive folders on /materials, from the same catalogue, and links into them.
