@@ -24,8 +24,8 @@
  * complement the shelves are a provable partition of whatever the source
  * actually contains.
  *
- * Counts do NOT live here — they are joined live from /api/statistics/ at
- * render time. This is a deliberately short, editorial list (the archive's
+ * Counts do NOT live here — they are joined live from /api/document-sources/
+ * at render time. This is a deliberately short, editorial list (the archive's
  * flagship publications); everything else — court orders, procurement
  * notices, news, the long tail — remains reachable through /search.
  *
@@ -43,7 +43,7 @@
  * reason; a test pins it, so adding one in the wrong place fails loudly.
  */
 
-import type { MaterialsMetrics } from "@/types/jds";
+import type { DocumentSourcesResponse } from "@/lib/document-sources";
 import type { ArchiveSearchParams } from "@/types/search";
 
 export interface MaterialSeries {
@@ -236,39 +236,37 @@ export function seriesScope(
 }
 
 /**
- * How many documents a series holds, from the /api/statistics/ materials block.
+ * How many documents a series holds, from `/api/document-sources/` — the same
+ * catalogue the "every source" list reads, so a shelf and its source can never
+ * disagree.
  *
- * Three shapes, because one source token can now carry several shelves:
- *  - no kind          → the whole token's `by_source` count (unchanged behaviour)
- *  - `kind`           → that (source, kind) row of `by_dataset_bucket`
- *  - `kindExclude`    → the token's total MINUS the excluded kinds' rows
+ * Three shapes, because one source token can carry several shelves:
+ *  - no kind          → the source's whole count
+ *  - `kind`           → that bucket's count in the source's `series`
+ *  - `kindExclude`    → the source's count MINUS the excluded buckets
  *
  * The complement is computed by subtraction rather than by summing the kinds it
  * does keep, so a kind this registry has never heard of is counted in "other"
  * instead of vanishing — the same reason the scope is an exclusion.
  *
- * Returns null while statistics are still loading, which the card renders as a
- * dash. An older API that does not send `by_dataset_bucket` yields 0 for a
- * kinded shelf rather than a wrong number.
+ * Returns null while the catalogue is still loading, which the card renders as
+ * a dash. A source the catalogue does not list counts 0.
  */
 export function seriesCount(
   series: MaterialSeries,
-  materials: MaterialsMetrics | undefined | null,
+  catalogue: DocumentSourcesResponse | undefined | null,
 ): number | null {
-  if (!materials) return null;
+  if (!catalogue) return null;
 
-  const sourceTotal =
-    materials.by_source?.find((row) => row.source === series.source)?.count ?? 0;
-  const buckets = materials.by_dataset_bucket ?? [];
+  const row = catalogue.sources.find((entry) => entry.source === series.source);
+  const sourceTotal = row?.count ?? 0;
   const bucketCount = (kind: string) =>
-    buckets.find((row) => row.source === series.source && row.dataset_bucket === kind)
-      ?.count ?? 0;
+    row?.series?.find((entry) => entry.bucket === kind)?.count ?? 0;
 
   if (series.kind) return bucketCount(series.kind);
   if (series.kindExclude?.length) {
     const claimed = series.kindExclude.reduce((sum, kind) => sum + bucketCount(kind), 0);
-    // Clamp: a statistics snapshot older than the index could in principle make
-    // the subtraction negative, and a card must never render "-3".
+    // Clamp: a card must never render "-3".
     return Math.max(0, sourceTotal - claimed);
   }
   return sourceTotal;

@@ -30,6 +30,10 @@ export interface DocumentSourceEntry {
   labelled: boolean;
   /** Documents visible to the public under this source. */
   count: number;
+  /** The kinds of document it holds (material type and count), largest first. */
+  types?: { type: string; count: number }[];
+  /** Its document-kind buckets (`dataset_bucket`), which curated shelves can narrow to. */
+  series?: { bucket: string; count: number }[];
 }
 
 export interface DocumentSourcesResponse {
@@ -84,4 +88,49 @@ export function documentSourceLabel(
   const row = response?.sources.find((entry) => entry.source === source);
   if (!row || !row.labelled) return null;
   return { name: pickLabel(row.name, language), publisher: pickLabel(row.publisher, language) };
+}
+
+/** Every document the catalogue counts, across all sources, named or not. */
+export function archiveTotal(response: DocumentSourcesResponse | undefined | null): number | null {
+  if (!response) return null;
+  return response.sources.reduce((sum, row) => sum + row.count, 0);
+}
+
+/** One publishing office and the listed sources it publishes. */
+export interface PublisherGroup {
+  key: string;
+  /** The office's name in the reader's language; the source's own name when it has no publisher. */
+  label: string;
+  count: number;
+  sources: DocumentSourceEntry[];
+}
+
+/**
+ * The listed sources grouped by publishing office, largest office first. This
+ * replaces the frontend's hard-coded institution map: an office is whatever the
+ * registry's `publisher` says, so a new source lands under its office (or on
+ * its own, when it names none) with no release.
+ */
+export function publisherGroups(
+  response: DocumentSourcesResponse | undefined | null,
+  language: string,
+): PublisherGroup[] {
+  const groups = new Map<string, PublisherGroup>();
+  for (const row of listedSources(response)) {
+    const publisherKey = (row.publisher?.en || row.publisher?.ne || "").trim().toLowerCase();
+    const key = publisherKey || `source:${row.source}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        key,
+        label: pickLabel(publisherKey ? row.publisher : row.name, language),
+        count: 0,
+        sources: [],
+      };
+      groups.set(key, group);
+    }
+    group.count += row.count;
+    group.sources.push(row);
+  }
+  return [...groups.values()].sort((a, b) => b.count - a.count);
 }

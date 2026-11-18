@@ -1822,41 +1822,8 @@
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
-      "combinedDescription": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
-      "tooltip": "Materials",
-      "table": {
-        "source": "Source",
-        "type": "Document type",
-        "types": "Document types",
-        "grouping": "Grouping",
-        "item": "Breakdown",
-        "count": "Documents",
-        "share": "Share"
-      },
-      "source": {
-        "ag": "Office of the Attorney General",
-        "nkp": "Nepal Kanun Patrika",
-        "courts": "Nepal Courts",
-        "ciaa": "Commission for the Investigation of Abuse of Authority (CIAA)",
-        "dfmis": "Development Finance Management Information System (DFMIS)",
-        "jawafdehi": "Jawafdehi original documents",
-        "koshi": "Koshi Province",
-        "ppmo": "Public Procurement Monitoring Office (PPMO)",
-        "auditorGeneral": "Office of the Auditor General",
-        "lawsOfNepal": "Laws of Nepal",
-        "news": "News media",
-        "socialMedia": "Social media",
-        "other": "Other"
-      },
-      "publishes": {
-        "dfmis": "Development-finance records",
-        "ppmo": "Blacklist / debarment records",
-        "koshi": "Provincial records",
-        "ciaa": "Annual reports",
-        "courts": "Court filings",
-        "nkp": "Journal issues"
-      }
+      "summary": "{{total}} documents from {{sources}} sources, published by {{publishers}} offices and outlets. The largest:",
+      "seeAll": "See every source"
     },
     "materialsByType": {
       "heading": "What materials are hosted",
@@ -2378,21 +2345,6 @@
       "untitled": "Untitled document",
       "previous": "Previous documents",
       "next": "Next documents"
-    },
-    "sourceDescriptions": {
-      "ag": "Charge sheets filed by the Office of the Attorney General.",
-      "nkp": "Precedents published in the Nepal Kanun Patrika.",
-      "courts": "Orders and verdicts from Nepal's courts.",
-      "ciaa": "Publications of the Commission for the Investigation of Abuse of Authority.",
-      "dfmis": "Development-finance records from DFMIS.",
-      "jawafdehi": "Original documents collected by Jawafdehi.",
-      "koshi": "Official records from Koshi Province.",
-      "ppmo": "Blacklist and debarment records from the PPMO.",
-      "auditorGeneral": "Audit reports from the Office of the Auditor General.",
-      "lawsOfNepal": "Nepali statutes, regulations and bills.",
-      "news": "News coverage archived as evidence.",
-      "socialMedia": "Public social-media posts archived as evidence.",
-      "other": "A document from the Jawafdehi archive."
     },
     "series": {
       "searchPlaceholder": "Search inside this series…",

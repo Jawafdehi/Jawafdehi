@@ -6,8 +6,10 @@ import {
   seriesFromDocumentSource,
 } from "@/lib/document-source-series";
 import {
+  archiveTotal,
   documentSourceLabel,
   listedSources,
+  publisherGroups,
   sourceBrowseHref,
   type DocumentSourcesResponse,
 } from "@/lib/document-sources";
@@ -119,5 +121,46 @@ describe("documentSourceLabel", () => {
   it("returns null for an unknown or unlabelled source", () => {
     expect(documentSourceLabel(RESPONSE, "mystery", "en")).toBeNull();
     expect(documentSourceLabel(undefined, "dri", "en")).toBeNull();
+  });
+});
+
+describe("publisherGroups", () => {
+  it("groups listed sources by publisher, largest office first", () => {
+    const groups = publisherGroups(
+      {
+        ready: true,
+        sources: [
+          ...RESPONSE.sources,
+          {
+            source: "ciaa_annual_report",
+            name: { en: "CIAA annual reports" },
+            publisher: { en: "CIAA", ne: "अख्तियार दुरुपयोग अनुसन्धान आयोग" },
+            labelled: true,
+            count: 42,
+          },
+        ],
+      },
+      "en",
+    );
+    expect(groups.map((group) => [group.label, group.count, group.sources.map((row) => row.source)])).toEqual([
+      ["CIAA", 3598, ["ciaa_press_release", "ciaa_annual_report"]],
+      ["Office of the Auditor General", 235, ["official_report"]],
+      ["Department of Revenue Investigation", 160, ["dri"]],
+      // No publisher: the source stands on its own, under its own name.
+      ["SEBON enforcement orders", 13, ["sebon"]],
+    ]);
+  });
+
+  it("names offices in Nepali when it can", () => {
+    const labels = publisherGroups(RESPONSE, "ne").map((group) => group.label);
+    expect(labels).toContain("राजस्व अनुसन्धान विभाग");
+    expect(labels).toContain("SEBON enforcement orders");
+  });
+});
+
+describe("archiveTotal", () => {
+  it("sums every source, named or not", () => {
+    expect(archiveTotal(RESPONSE)).toBe(3556 + 235 + 160 + 13 + 4 + 0);
+    expect(archiveTotal(undefined)).toBeNull();
   });
 });
