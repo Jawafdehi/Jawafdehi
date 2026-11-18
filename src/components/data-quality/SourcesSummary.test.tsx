@@ -24,10 +24,10 @@ const row = (source: string, publisher: string | null, count: number) => ({
   count,
 });
 
-// /data-quality no longer keeps its own table of sources: it summarises the one
-// list on /materials#sources, from the same catalogue, and links to it.
+// /data-quality no longer keeps its own table of sources: it summarises the
+// archive folders on /materials, from the same catalogue, and links into them.
 describe("SourcesSummary", () => {
-  it("states the totals, names the five largest offices and links to the full list", async () => {
+  it("states the totals and lists every archive folder with its count and link", async () => {
     getDocumentSources.mockResolvedValue({
       ready: true,
       sources: [
@@ -50,21 +50,25 @@ describe("SourcesSummary", () => {
     );
 
     const summary = await screen.findByText(/dataQuality.materialsBySource.summary/);
-    expect(summary.textContent).toContain('"total":"3,63,169"');
+    expect(summary.textContent).toContain('"total":"363,169"');
     expect(summary.textContent).toContain('"sources":"7"');
-    expect(summary.textContent).toContain('"publishers":"6"');
+    expect(summary.textContent).toContain('"folders":"6"');
 
-    const offices = screen.getAllByRole("listitem").map((item) => item.textContent);
-    expect(offices).toEqual([
-      "PPMO2,05,934",
-      "Office of the Attorney General99,673",
-      "court_order name43,288",
-      "Supreme Court10,554",
-      "CIAA3,556",
+    // Every top-level folder of the /materials archive, alphabetical, with its
+    // live count, each linking into that folder in place.
+    const folders = screen.getAllByRole("listitem").map((item) => item.textContent);
+    expect(folders).toEqual([
+      "Government bodies309,323",
+      "International0",
+      "Judiciary53,842",
+      "Laws0",
+      "News0",
+      "Others0",
     ]);
-    expect(
-      screen.getByRole("link", { name: /seeAll/ }).getAttribute("href"),
-    ).toBe("/materials/#sources");
+    expect(screen.getByRole("link", { name: /Government bodies/ }).getAttribute("href")).toBe(
+      "/materials/?path=government#archive",
+    );
+    expect(screen.getByRole("link", { name: /seeAll/ }).getAttribute("href")).toBe("/materials/#archive");
   });
 
   it("renders nothing until the catalogue arrives", () => {

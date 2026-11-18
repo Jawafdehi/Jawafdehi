@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -29,6 +29,10 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/Seo", () => ({ default: () => null }));
+// The browser has its own tests (ArchiveBrowser.test.tsx); here only its placement.
+vi.mock("@/components/materials/ArchiveBrowser", () => ({
+  ArchiveBrowser: () => <div data-testid="archive-browser" />,
+}));
 // jsdom implements no IntersectionObserver, which the reveal hook observes with.
 vi.mock("@/hooks/useRevealOnScroll", () => ({ useRevealOnScroll: () => ({ current: null }) }));
 vi.mock("@/services/jds-api", () => ({
@@ -102,13 +106,6 @@ function renderPage() {
   );
 }
 
-/** The count a named folder card shows, as rendered text. */
-function countFor(name: string): string {
-  const heading = screen.getByRole("heading", { name });
-  const text = heading.parentElement?.querySelector("p")?.textContent ?? "";
-  return text.replace("documents", "").trim();
-}
-
 beforeEach(() => {
   getStatistics.mockReset();
   searchArchive.mockReset();
@@ -117,40 +114,14 @@ beforeEach(() => {
   getDocumentSources.mockResolvedValue({ ready: true, sources: [] });
 });
 
-describe("MaterialsLanding folder counts", () => {
-  it("splits one source token's 228 documents across its five shelves", async () => {
-    getDocumentSources.mockResolvedValue(catalogue());
+describe("MaterialsLanding archive section", () => {
+  it("renders the archive browser in the #archive section, with the old anchors kept", async () => {
     renderPage();
-
-    await waitFor(() =>
-      expect(countFor("Auditor General annual reports")).toBe("18"),
-    );
-    expect(countFor("Province audit reports")).toBe("56");
-    expect(countFor("Audit journal")).toBe("21");
-    expect(countFor("Audit bulletin")).toBe("29");
-    // 228 − (18 + 56 + 21 + 29) = 104, by subtraction, so the one unclaimed
-    // `publication_other` row is counted here rather than dropped.
-    expect(countFor("Other Auditor General publications")).toBe("104");
-  });
-
-  it("shows a dash, not a zero, before the catalogue arrives", () => {
-    // A never-resolving request: the page must not claim the archive is empty.
-    getDocumentSources.mockReturnValue(new Promise(() => {}));
-    renderPage();
-
-    expect(countFor("Auditor General annual reports")).toBe("—");
-  });
-
-  it("falls back to a dash-free zero when a source lists no buckets", async () => {
-    getDocumentSources.mockResolvedValue(catalogue({ withBuckets: false }));
-    renderPage();
-
-    // Without bucket rows a kinded shelf reports 0 — visibly wrong but honest —
-    // while the shelves that only need the source's count stay correct. It must never fall back to the source total of 228, which
-    // would restate the bug this split fixed.
-    await waitFor(() => expect(countFor("Audit journal")).toBe("0"));
-    expect(countFor("Auditor General annual reports")).toBe("0");
-    expect(countFor("Other Auditor General publications")).toBe("228");
+    expect(await screen.findByTestId("archive-browser")).toBeTruthy();
+    const section = document.getElementById("archive");
+    expect(section?.contains(screen.getByTestId("archive-browser"))).toBe(true);
+    expect(document.getElementById("series")).toBeTruthy();
+    expect(document.getElementById("sources")).toBeTruthy();
   });
 });
 
@@ -176,7 +147,7 @@ describe("MaterialsLanding recently-added framing", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText(/The 2 newest of 5,79,249 documents in the archive\./),
+        screen.getByText(/The 2 newest of 579,249 documents in the archive\./),
       ).toBeTruthy(),
     );
 
@@ -191,60 +162,5 @@ describe("MaterialsLanding recently-added framing", () => {
 
     // Better to say nothing than to size the archive at zero.
     expect(screen.queryByText(/newest of/)).toBeNull();
-  });
-});
-
-// Sources the curated shelves do not cover (Revenue Investigation, SEBON…) were
-// unreachable from /materials. The page lists every source the API serves,
-// grouped by the office that publishes it, with each source's kinds.
-describe("MaterialsLanding every-source list", () => {
-  it("groups sources by publisher with kinds, counts and browse links", async () => {
-    getDocumentSources.mockResolvedValue({
-      ready: true,
-      sources: [
-        {
-          source: "ciaa_press_release",
-          name: { en: "CIAA press releases", ne: "अख्तियारका प्रेस विज्ञप्ति" },
-          publisher: { en: "CIAA" },
-          labelled: true,
-          count: 3556,
-          types: [{ type: "press_release", count: 3556 }],
-        },
-        {
-          source: "ciaa_annual_report",
-          name: { en: "CIAA annual reports" },
-          publisher: { en: "CIAA" },
-          labelled: true,
-          count: 42,
-          types: [{ type: "official_report", count: 42 }],
-        },
-        {
-          source: "dri",
-          name: { en: "Revenue Investigation releases and reports" },
-          publisher: { en: "Department of Revenue Investigation", ne: "राजस्व अनुसन्धान विभाग" },
-          labelled: true,
-          count: 160,
-          types: [{ type: "press_release", count: 159 }, { type: "official_report", count: 1 }],
-        },
-        { source: "unnamed", name: null, publisher: null, labelled: false, count: 9 },
-      ],
-    });
-    renderPage();
-
-    const ciaa = await screen.findByRole("region", { name: "CIAA" });
-    expect(ciaa.textContent).toContain("3,598");
-    expect(
-      within(ciaa).getByRole("link", { name: /CIAA press releases/ }).getAttribute("href"),
-    ).toBe("/materials/?series=ciaa-press-releases");
-    expect(within(ciaa).getByRole("link", { name: /CIAA annual reports/ })).toBeTruthy();
-
-    const dri = within(
-      screen.getByRole("region", { name: "Department of Revenue Investigation" }),
-    ).getByRole("link", { name: /Revenue Investigation releases and reports/ });
-    expect(dri.getAttribute("href")).toBe("/materials/?source=dri");
-    expect(dri.textContent).toContain("160");
-    expect(dri.textContent).toContain("dataQuality.materialsByType.type.pressRelease");
-    // Staff have not named it yet: not listed.
-    expect(document.querySelector('[data-source="unnamed"]')).toBeNull();
   });
 });

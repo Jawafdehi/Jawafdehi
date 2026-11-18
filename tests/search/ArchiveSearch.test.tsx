@@ -819,7 +819,9 @@ describe("ArchiveSearch", () => {
     // Catalogue-style labelled rows. Series is the curated registry name (not
     // the raw token or a schema.org class); Source is the publishing office, a
     // separate axis; Date resolves the BS-in-AD quirk to the AD pair for EN.
-    expect(metaValue("Series")).toBe("CIAA press releases");
+    expect(metaValue("Series")).toBe(
+      "Press releases of the Commission for the Investigation of Abuse of Authority",
+    );
     expect(metaValue("Date")).toBe("2026-03-11");
     // Office names live in the i18n catalogue, which no instance loads here,
     // so the value degrades to the raw source token.
