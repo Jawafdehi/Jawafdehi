@@ -106,6 +106,19 @@ function IconsView({ ctx }: Readonly<{ ctx: Ctx }>) {
   const folderPath = last?.type === "leaf" ? path.slice(0, -1) : path;
   const items = childrenAt(tree, folderPath);
   const gridRef = useRef<HTMLUListElement>(null);
+  // Opening a folder (or going up) replaces the focused tile: put focus on the
+  // first tile of the folder now shown, so the keyboard keeps working.
+  const refocus = useRef(false);
+  const folderKey = key(folderPath);
+  useEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    focusItem(gridRef.current, 0);
+  }, [folderKey]);
+  const open = (next: string[]) => {
+    refocus.current = true;
+    ctx.select(next, true);
+  };
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
     const items = [...(gridRef.current?.querySelectorAll<HTMLElement>("[data-item]") ?? [])];
@@ -119,7 +132,7 @@ function IconsView({ ctx }: Readonly<{ ctx: Ctx }>) {
       focusItem(gridRef.current, index + moves[event.key]);
     } else if (event.key === "Backspace" && folderPath.length) {
       event.preventDefault();
-      ctx.select(folderPath.slice(0, -1), true);
+      open(folderPath.slice(0, -1));
     }
   };
 
@@ -161,7 +174,7 @@ function IconsView({ ctx }: Readonly<{ ctx: Ctx }>) {
         return (
           <li key={node.slug}>
             {node.type === "branch" ? (
-              <button type="button" data-item data-node={node.slug} className={tile} onClick={() => ctx.select(nodePath, true)}>
+              <button type="button" data-item data-node={node.slug} className={tile} onClick={() => open(nodePath)}>
                 {body}
               </button>
             ) : (

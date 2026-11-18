@@ -262,8 +262,13 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
     const selected = wrapRef.current?.querySelectorAll<HTMLElement>('[aria-selected="true"]');
     // After a drill-down (phone) the selected folder is no longer on screen:
     // focus the first row of the column now shown instead of losing focus.
+    // A series' preview on a phone has no rows at all: focus its View all link
+    // (or the Back button), so the keyboard can carry on from there.
     const target =
-      selected?.[selected.length - 1] ?? wrapRef.current?.querySelector<HTMLElement>('[role="option"]');
+      selected?.[selected.length - 1] ??
+      wrapRef.current?.querySelector<HTMLElement>('[role="option"]') ??
+      wrapRef.current?.querySelector<HTMLElement>("[data-preview] a") ??
+      wrapRef.current?.querySelector<HTMLElement>("[data-back]");
     target?.focus();
   });
   useEffect(() => {
@@ -385,11 +390,27 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
     const backTo = last?.type === "leaf" ? parentPath : parentPath.slice(0, -1);
     const column = columns[columns.length - 1];
     return (
-      <div ref={wrapRef} className="rounded-xl border border-border">
+      <div
+        ref={wrapRef}
+        className="rounded-xl border border-border"
+        onKeyDown={(event) => {
+          // Left from anywhere outside the rows (the preview, the Back button)
+          // goes back, like Left on a row does.
+          if (event.key !== "ArrowLeft" || (event.target as HTMLElement).getAttribute("role") === "option") return;
+          if (!backTo.length && last?.type !== "leaf" && !parentPath.length) return;
+          event.preventDefault();
+          focusRequested.current = true;
+          ctx.select(backTo, true);
+        }}
+      >
         {(last?.type === "leaf" || parentPath.length > 0) && (
           <button
             type="button"
-            onClick={() => ctx.select(backTo, true)}
+            data-back
+            onClick={() => {
+              focusRequested.current = true;
+              ctx.select(backTo, true);
+            }}
             className="flex w-full items-center gap-1 border-b border-border px-3 py-2 text-sm text-primary"
           >
             <ChevronLeft aria-hidden="true" className="h-4 w-4" />

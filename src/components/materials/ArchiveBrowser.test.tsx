@@ -138,4 +138,26 @@ describe("ArchiveBrowser", () => {
     // Focus lands on the first row of the column now shown, not on the body.
     await waitFor(() => expect(document.activeElement?.getAttribute("role")).toBe("option"));
   });
+
+  it("moves focus into a series preview on a phone, and Left goes back", async () => {
+    renderAt("/materials/?view=columns&path=judiciary/supreme-court", { phone: true });
+    const row = await screen.findByRole("option", { name: /Precedents/ });
+    row.focus();
+    fireEvent.keyDown(row, { key: "Enter" });
+    await waitFor(() => expect(document.activeElement?.textContent).toMatch(/View all/));
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowLeft" });
+    await waitFor(() => expect(location).toBe("?view=columns&path=judiciary/supreme-court#archive"));
+  });
+
+  it("keeps focus in the Icons grid when a folder opens and when going up", async () => {
+    renderAt("/materials/?view=icons");
+    const judiciary = await screen.findByRole("button", { name: /Judiciary/ });
+    judiciary.focus();
+    fireEvent.click(judiciary);
+    await waitFor(() => expect(location).toContain("path=judiciary"));
+    await waitFor(() => expect(document.activeElement?.hasAttribute("data-item")).toBe(true));
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Backspace" });
+    await waitFor(() => expect(location).not.toContain("path="));
+    await waitFor(() => expect(document.activeElement?.hasAttribute("data-item")).toBe(true));
+  });
 });
