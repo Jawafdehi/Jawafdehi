@@ -230,6 +230,15 @@ export const ARCHIVE_TREE: readonly ArchiveBranch[] = [
 export const UNFILED_FOLDER = "others";
 const UNFILED_PREFIX = "source-";
 
+/**
+ * A path-safe slug for a source filed automatically. Source tokens can contain
+ * "/" (`province/koshi`), and `?path=` joins slugs with "/", so every character
+ * outside [a-z0-9_-] becomes "~" plus its code point: unique, and never a "/".
+ */
+export function unfiledSlug(source: string): string {
+  return UNFILED_PREFIX + source.replace(/[^a-z0-9_-]/gi, (ch) => `~${ch.codePointAt(0)!.toString(16)}`);
+}
+
 function leavesOf(node: ArchiveNode): ArchiveLeaf[] {
   return node.type === "leaf" ? [node] : node.children.flatMap(leavesOf);
 }
@@ -271,7 +280,7 @@ function fileUnfiled(catalogue: DocumentSourcesResponse | undefined | null): Arc
     .filter((row) => !known.has(row.source))
     .map((row) => ({
       type: "leaf",
-      slug: `${UNFILED_PREFIX}${row.source}`,
+      slug: unfiledSlug(row.source),
       source: row.source,
       name: { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source },
       apiName: row.name,

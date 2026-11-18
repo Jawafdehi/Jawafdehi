@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import ArchiveSearch from "./ArchiveSearch";
 import MaterialsLanding from "./MaterialsLanding";
@@ -41,14 +41,9 @@ export default function Materials() {
   const [searchParams] = useSearchParams();
 
   const series = searchParams.get("series");
-  const folder = searchParams.get("folder");
+
   const source = searchParams.get("source");
   const hasSearchIntent = SEARCH_PARAMS.some((param) => searchParams.has(param));
-
-  // The old ?folder=<path> preview URLs open the same folder in place.
-  if (folder) {
-    return <Navigate to={`/materials/?path=${encodeURI(folder)}#archive`} replace />;
-  }
 
   if (series) {
     return (

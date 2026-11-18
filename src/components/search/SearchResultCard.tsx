@@ -158,8 +158,8 @@ function MaterialResultCard({
   // the series: CIAA owns two series (press releases AND annual reports), and
   // one series spans several offices (press releases come from CIAA, CIB and
   // DMLI). Neither line implies the other, so the card carries both.
-  // From the API's source registry, the same labels /materials#sources groups
-  // by; the bare token only while the registry has not arrived.
+  // From the API's source registry; the bare token only while the registry has
+  // not arrived.
   const officeLabel = registryLabel?.publisher || registryLabel?.name || source || "";
   const title =
     pickLocalized(result.title, language) ||

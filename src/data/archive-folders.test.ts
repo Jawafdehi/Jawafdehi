@@ -8,6 +8,7 @@ import {
   leavesUnder,
   nodeCount,
   nodeName,
+  unfiledSlug,
   validPath,
   withUnfiled,
 } from "@/data/archive-folders";
@@ -99,5 +100,20 @@ describe("archive folder tree", () => {
     expect(chain.map((node) => node.slug)).toEqual(["judiciary", "supreme-court", "supreme-court-precedents"]);
     const leaf = chain.at(-1)!;
     expect(leaf.type === "leaf" && leafSeries(leaf).source).toBe("nkp");
+  });
+
+  it("gives an auto-filed source with a slash in its token a path-safe slug that resolves", () => {
+    const withSlash: DocumentSourcesResponse = {
+      ready: true,
+      sources: [{ ...row("province/bagmati", 3) }],
+    };
+    const tree = withUnfiled(withSlash);
+    const slug = unfiledSlug("province/bagmati");
+    expect(slug).not.toContain("/");
+    expect(unfiledSlug("province/bagmati")).not.toBe(unfiledSlug("province_bagmati"));
+    // ?path=others/<slug> must resolve all the way to the leaf.
+    expect(validPath(tree, ["others", slug])).toEqual(["others", slug]);
+    const chain = findLeafChain(tree, (leaf) => leaf.slug === slug)!;
+    expect(chain.at(-1)?.type === "leaf" && chain.at(-1)!.slug).toBe(slug);
   });
 });
