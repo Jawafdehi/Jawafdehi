@@ -65,13 +65,21 @@ export function describe(node: ArchiveNode, language: string): string {
   return curated ? pickLocalized(curated.description, language) : "";
 }
 
-export function CountLabel({ node, ctx, className }: Readonly<{ node: ArchiveNode; ctx: Ctx; className?: string }>) {
+export function CountLabel({
+  node,
+  ctx,
+  className,
+  compact = false,
+}: Readonly<{ node: ArchiveNode; ctx: Ctx; className?: string; compact?: boolean }>) {
   const { t } = useTranslation();
   const count = nodeCount(node, ctx.catalogue);
   return (
     <span className={cn("tabular-nums", className)}>
       {count === null ? "—" : formatArchiveCount(count, ctx.language)}{" "}
-      <span className="text-xs font-normal opacity-70">{t("materialsLanding.grid.documents", "documents")}</span>
+      {/* On a phone the List rows drop the word so long names have room. */}
+      <span className={cn("text-xs font-normal opacity-70", compact && "hidden sm:inline")}>
+        {t("materialsLanding.grid.documents", "documents")}
+      </span>
     </span>
   );
 }

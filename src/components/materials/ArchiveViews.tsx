@@ -153,7 +153,7 @@ export function ListView({ ctx }: Readonly<{ ctx: Ctx }>) {
             ) : (
               <FileText aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
-            <span title={nodeName(row.node, language)} className={cn("min-w-0 flex-1 truncate", row.level === 1 ? "font-semibold text-foreground" : "text-foreground")}>
+            <span title={nodeName(row.node, language)} className={cn("min-w-0 flex-1 break-words leading-snug", row.level === 1 ? "font-semibold text-foreground" : "text-foreground")}>
               {nodeName(row.node, language)}
             </span>
             {!isBranch && (
@@ -166,7 +166,7 @@ export function ListView({ ctx }: Readonly<{ ctx: Ctx }>) {
                 {t("materialsLanding.archive.seeDocuments", "View all")} →
               </Link>
             )}
-            <CountLabel node={row.node} ctx={ctx} className="w-32 shrink-0 text-right text-muted-foreground" />
+            <CountLabel node={row.node} ctx={ctx} compact className="shrink-0 text-right text-muted-foreground sm:w-32" />
           </li>
         );
       })}
