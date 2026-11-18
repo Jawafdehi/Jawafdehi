@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/date";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
+import { casePath } from "@/lib/case-links";
 
 // First page only — a court case is rarely cited by many Jawafdehi cases.
 const PAGE_SIZE = 20;
@@ -65,7 +66,7 @@ export function CourtCaseRelatedCases({ courtCaseIri }: { courtCaseIri: string }
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
-          const href = c.slug ? `/case/${c.slug}` : undefined;
+          const href = c.slug ? casePath(c.slug) : undefined;
 
           const row = (
             <div className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40">

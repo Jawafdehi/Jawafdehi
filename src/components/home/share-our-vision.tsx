@@ -55,7 +55,7 @@ export function ShareOurVision() {
                 className="mt-5 border-primary-foreground/45 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 asChild
               >
-                <Link to="/volunteer">
+                <Link to="/volunteer/">
                   {t("newsletter.vision.engage.cta")} <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
@@ -73,7 +73,7 @@ export function ShareOurVision() {
                 className="mt-5 border-primary-foreground bg-primary-foreground text-primary shadow-lg shadow-primary-foreground/10 hover:bg-primary-foreground/90 hover:text-primary"
                 asChild
               >
-                <Link to="/donate">{t("newsletter.vision.donate.cta")}</Link>
+                <Link to="/donate/">{t("newsletter.vision.donate.cta")}</Link>
               </Button>
             </div>
           </div>

@@ -66,7 +66,7 @@ export function DataPipeline() {
 
       <p className="mt-6">
         <Link
-          to="/our-process"
+          to="/our-process/"
           className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
         >
           {t("dataQuality.methodology.processLink", "Read how we research and verify each case")}

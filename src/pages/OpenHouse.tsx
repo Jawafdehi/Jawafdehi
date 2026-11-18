@@ -87,19 +87,19 @@ type NextStep = {
 const nextSteps: NextStep[] = [
   {
     icon: HeartHandshake,
-    to: "/donate",
+    to: "/donate/",
     labelKey: "openHouse.nextSteps.donate.label",
     descKey: "openHouse.nextSteps.donate.desc",
   },
   {
     icon: Users,
-    to: "/volunteer",
+    to: "/volunteer/",
     labelKey: "openHouse.nextSteps.volunteer.label",
     descKey: "openHouse.nextSteps.volunteer.desc",
   },
   {
     icon: FileWarning,
-    to: "/report",
+    to: "/report/",
     labelKey: "openHouse.nextSteps.report.label",
     descKey: "openHouse.nextSteps.report.desc",
   },

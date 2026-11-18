@@ -156,8 +156,8 @@ describe("AuthorProfile", () => {
     // Ordering is the API's job (newest published first); the page must not
     // re-sort and quietly disagree with it.
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
-      "/case/newest-case",
-      "/case/older-case",
+      "/case/newest-case/",
+      "/case/older-case/",
     ]);
   });
 

@@ -42,6 +42,7 @@ import {
 // adds no bundle weight here.
 import { searchArchive } from "@/services/search-api";
 import type { ArchiveSearchResult } from "@/types/search";
+import { casePath } from "@/lib/case-links";
 
 type SearchItem = {
   title: string;
@@ -249,7 +250,7 @@ function truncateText(value: string, maxLength: number): string {
 // icon, the `cases` group. Null when the hit has no usable case address.
 function caseResultToSearchItem(result: ArchiveSearchResult): SearchItem | null {
   const slug = result.card?.slug?.trim();
-  let to: string | null = slug ? `/case/${slug}/` : null;
+  let to: string | null = slug ? casePath(slug) : null;
   if (!to && result.url?.startsWith("/case/")) {
     to = result.url.endsWith("/") ? result.url : `${result.url}/`;
   }

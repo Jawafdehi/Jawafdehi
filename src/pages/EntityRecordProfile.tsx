@@ -355,7 +355,7 @@ export default function EntityRecordProfile() {
       <div className="layout-container">
         <div className="mb-6 flex items-center justify-between gap-2">
           <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link to="/search?type=entity">
+            <Link to="/search/?type=entity">
               <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
               Back to entities
             </Link>

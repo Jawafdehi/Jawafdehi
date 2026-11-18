@@ -219,7 +219,7 @@ export function CaseDetailBanner({
 
                 <span className="shrink-0 opacity-50">/</span>
 
-                <Link to="/cases" className="shrink-0 transition-colors hover:text-foreground">
+                <Link to="/cases/" className="shrink-0 transition-colors hover:text-foreground">
                   {casesLabel || t("nav.cases")}
                 </Link>
 

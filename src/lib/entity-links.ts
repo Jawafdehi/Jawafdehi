@@ -44,5 +44,9 @@ export function entityPath(iri: string | null | undefined): string | null {
   // path keeps the sitemap, the pre-render walk and every link component
   // agreeing with the edge about which entity URLs exist — they all come
   // through this function.
-  return isEntityRecordTail(tail) ? `/entity/${tail}` : null;
+  // Slash-terminated: that is the canonical form (EntityRecordProfile's
+  // rel=canonical, the sitemap), and the edge 301s the slashless one — so a
+  // slashless link costs every crawler and reader a redirect hop.
+  const clean = tail.replace(/\/+$/, "");
+  return isEntityRecordTail(clean) ? `/entity/${clean}/` : null;
 }

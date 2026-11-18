@@ -158,7 +158,7 @@ describe("CaseEntityCards — which parties flip at all", () => {
 
     expect(screen.queryByRole("button")).toBeNull();
     expect(container.querySelector("[data-flipped]")).toBeNull();
-    expect(screen.getByRole("link").getAttribute("href")).toBe("/entity/person/ram-shah");
+    expect(screen.getByRole("link").getAttribute("href")).toBe("/entity/person/ram-shah/");
   });
 
   it("treats a punctuation-only note as no note", () => {

@@ -15,6 +15,7 @@ import type {
   StreamEmbedValue,
   StreamImageValue,
 } from "@/types/cms";
+import { casePath } from "@/lib/case-links";
 
 // CMS rich-text/oEmbed HTML is authored by staff, but we sanitize as
 // defense-in-depth before injecting it. isomorphic-dompurify works under SSR.
@@ -132,7 +133,7 @@ const CaseBlock = ({ value }: { value: StreamCaseValue }) => {
   }
   return (
     <Link
-      to={`/case/${value.case.slug}`}
+      to={casePath(value.case.slug)}
       className="not-prose my-4 flex items-center justify-between gap-3 rounded-lg border border-primary/15 bg-primary-surface/[0.03] p-4 no-underline transition-colors hover:border-primary/30"
     >
       <span className="min-w-0">

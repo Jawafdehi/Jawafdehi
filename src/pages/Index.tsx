@@ -183,7 +183,7 @@ const Index = () => {
             <Reveal>
               <div className="text-center mt-10 mb-4 flex justify-center">
                 <Button variant="primary" size="xl" asChild className="group">
-                  <Link to="/search?type=case">
+                  <Link to="/search/?type=case">
                     {t("home.featuredCases.viewAll", "View all cases")}{" "}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
                   </Link>

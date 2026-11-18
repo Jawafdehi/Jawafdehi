@@ -266,7 +266,7 @@ export function NewsletterForm({
           {requiredMark}{" "}
           {t("newsletter.form.privacyPrefix")}{" "}
           <Link
-            to="/privacy"
+            to="/privacy/"
             className={cn(
               "text-primary underline hover:no-underline",
               inverted &&

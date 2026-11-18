@@ -13,6 +13,7 @@ import type { CaseImage } from "@/types/jds";
 import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 import { summarizeNames } from "@/utils/name-summary";
+import { casePath } from "@/lib/case-links";
 
 interface CaseCardProps {
   id: string;
@@ -76,7 +77,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
     if (!caseSlug) return;
     // Only navigate if not clicking on an inner link
     if (!(e.target as HTMLElement).closest("a")) {
-      navigate(`/case/${caseSlug}`);
+      navigate(casePath(caseSlug));
     }
   };
 
@@ -136,7 +137,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
             <h3 className="line-clamp-2 text-lg font-semibold leading-8 text-foreground">
               {caseSlug ? (
                 <Link
-                  to={`/case/${caseSlug}`}
+                  to={casePath(caseSlug)}
                   // Gradient-underline trick: a 2px accent line drawn by
                   // animating background-size, so it wraps correctly across
                   // the clamped two lines (a pseudo-element underline would
@@ -171,7 +172,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
           <CardFooter className="mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
             <Button variant="primary" asChild className="w-full rounded-2xl py-3" disabled={!caseSlug}>
               {caseSlug ? (
-                <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>{t("common.viewDetails")}</Link>
+                <Link to={casePath(caseSlug)} onClick={(e) => e.stopPropagation()}>{t("common.viewDetails")}</Link>
               ) : (
                 <span>{t("common.viewDetails")}</span>
               )}

@@ -84,18 +84,18 @@ export function Hero({
   }, []);
 
   const heroStats: HeroStat[] = [
-    { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
+    { value: casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search/?type=case" },
     {
       value: totalBigo,
       label: t("home.hero.stats.totalBigo"),
-      href: "/search?type=case",
+      href: "/search/?type=case",
       highlight: true,
     },
-    { value: materials, label: t("home.hero.stats.materials"), href: "/materials" },
+    { value: materials, label: t("home.hero.stats.materials"), href: "/materials/" },
     {
       value: courtCasesTracked,
       label: t("home.hero.stats.courtCasesTracked"),
-      href: "/search?type=courtcase",
+      href: "/search/?type=courtcase",
     },
   ];
 
@@ -142,7 +142,7 @@ export function Hero({
               size="lg"
               className="bg-accent font-bold text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90"
             >
-              <Link to="/report">
+              <Link to="/report/">
                 <FilePlus2 className="h-5 w-5" aria-hidden="true" />
                 {t("header.reportCase")}
               </Link>
@@ -154,7 +154,7 @@ export function Hero({
               size="lg"
               className="border-primary-foreground/30 bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
-              <Link to="/search?type=case">
+              <Link to="/search/?type=case">
                 <FolderSearch className="h-5 w-5" aria-hidden="true" />
                 {t("header.browseCases")}
               </Link>

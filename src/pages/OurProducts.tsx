@@ -42,7 +42,7 @@ const PRODUCTS: Product[] = [
     // The only internal destination in this list: the connect page, not the
     // repository. Someone reading this page wants to use the server, and the
     // README is a worse answer to that than the page with the URL on it.
-    to: "/mcp",
+    to: "/mcp/",
     description:
       "An MCP server that lets Claude, ChatGPT and other AI tools query the case archive, the people and offices we track, and court records.",
     tags: ["MCP Server", "AI Tooling", "Open Source"],
