@@ -30,6 +30,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { findLeafChain, leafSeries, withUnfiled } from "@/data/archive-folders";
+import { ArchiveBreadcrumbs } from "@/components/materials/ArchiveFolders";
 import { seriesBySlug, seriesScope } from "@/data/material-series";
 import { seriesBrowseHref, seriesForSourceKey } from "@/lib/document-source-series";
 import { documentSourcesQuery } from "@/lib/document-sources";
@@ -148,13 +150,24 @@ export default function MaterialSeriesBrowse({
   // source added after this release still gets a page; `?series=` is a curated shelf.
   const sourcesQuery = useQuery({
     ...documentSourcesQuery(),
-    enabled: Boolean(sourceKey),
     staleTime: 5 * 60 * 1000,
   });
+  // The archive tree names every series (curated shelves and the rest), and
+  // gives the page its breadcrumb trail.
+  const tree = withUnfiled(sourcesQuery.data);
+  const treeChain = sourceKey
+    ? findLeafChain(tree, (entry) => entry.source === sourceKey && !entry.kind && !entry.kindExclude)
+    : slug
+      ? findLeafChain(tree, (entry) => entry.slug === slug)
+      : null;
+  const treeLeaf = treeChain?.[treeChain.length - 1];
   const series = sourceKey
     ? seriesForSourceKey(sourcesQuery.data, sourceKey)
     : slug
-      ? seriesBySlug(slug)
+      ? (seriesBySlug(slug) ??
+        (treeLeaf?.type === "leaf" && treeChain
+          ? leafSeries(treeLeaf, treeChain[0]?.type === "branch" ? treeChain[0].tint : 1)
+          : undefined))
       : undefined;
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -249,7 +262,7 @@ export default function MaterialSeriesBrowse({
       [PARAM.end]: "",
     });
 
-  if (!series && sourceKey && sourcesQuery.isPending) {
+  if (!series && sourcesQuery.isPending) {
     return (
       <div className="layout-container py-12 md:py-16" aria-busy="true">
         <Skeleton className="h-10 w-2/3" />
@@ -261,7 +274,7 @@ export default function MaterialSeriesBrowse({
   // The source list could not be fetched: say so and offer a retry, rather
   // than claiming a real source does not exist. (Existing strings on purpose:
   // the locale catalogues ship in the initial bundle, which is at its budget.)
-  if (!series && sourceKey && sourcesQuery.isError) {
+  if (!series && sourcesQuery.isError) {
     return (
       <div className="layout-container py-24" role="alert">
         <p className="font-page-lede">
@@ -307,14 +320,18 @@ export default function MaterialSeriesBrowse({
         robots="noindex, follow"
       />
 
-      <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
-        <Link
-          to="/materials/"
-          className="rounded-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          ← {t("materialsLanding.series.backToArchive", "Back to the archive")}
-        </Link>
-      </nav>
+      {treeChain ? (
+        <ArchiveBreadcrumbs chain={treeChain} path={treeChain.map((node) => node.slug)} />
+      ) : (
+        <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+          <Link
+            to="/materials/"
+            className="rounded-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            ← {t("materialsLanding.series.backToArchive", "Back to the archive")}
+          </Link>
+        </nav>
+      )}
 
       <header className="mt-8">
         <h1 className="font-archive-hero-title">{name}</h1>

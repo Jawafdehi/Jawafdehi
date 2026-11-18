@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import Seo from "@/components/Seo";
-import { AllSourcesList } from "@/components/materials/AllSourcesList";
-import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
+import { ArchiveFolders } from "@/components/materials/ArchiveFolders";
 import { CapabilityRow } from "@/components/materials/CapabilityRow";
 import { FolderCard } from "@/components/materials/FolderCard";
 import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHeroBackdrop } from "@/components/ui/page-hero";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MATERIAL_SERIES, seriesBySlug, seriesCount } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
 import { archiveTotal, documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
@@ -173,7 +172,7 @@ export default function MaterialsLanding() {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg" className="active:scale-[0.98]">
-            <a href="#series">{t("materialsLanding.ctaBrowse", "Browse the archive")}</a>
+            <a href="#archive">{t("materialsLanding.ctaBrowse", "Browse the archive")}</a>
           </Button>
           <Button asChild variant="secondary" size="lg" className="active:scale-[0.98]">
             <a href={CHAT_URL} target="_blank" rel="noopener noreferrer">
@@ -217,39 +216,20 @@ export default function MaterialsLanding() {
         </div>
       </header>
 
-      {/* Browse by series. */}
+      {/* The archive as one folder tree (folder › office › series): replaces
+          the curated series shelf and the flat every-source list. Counts are
+          live; a source the tree does not know lands under Others. */}
       <section
         ref={gridRef}
-        id="series"
-        aria-labelledby="series-heading"
+        id="archive"
+        aria-labelledby="archive-heading"
         className="scroll-mt-24 border-t border-border"
       >
+        {/* Old anchors (#series, #sources) still land here. */}
+        <span id="series" className="block scroll-mt-24" aria-hidden="true" />
+        <span id="sources" className="block scroll-mt-24" aria-hidden="true" />
         <div className="layout-container py-16 md:py-24">
-          <h2 id="series-heading" className="font-archive-section-title">
-            {t("materialsLanding.grid.title", "Browse by series")}
-          </h2>
-          <ul className="mt-12 grid list-none grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {MATERIAL_SERIES.map((series) => (
-              <li key={series.slug} className="pt-4">
-                <FolderCard series={series} count={seriesCount(series, catalogue)} />
-              </li>
-            ))}
-            <li className="pt-4">
-              <BrowseAllFolderCard />
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Every source, live from the API — the complete list behind the
-          curated shelves, so a newly loaded source is never invisible here. */}
-      <section
-        id="sources"
-        aria-labelledby="sources-heading"
-        className="scroll-mt-24 border-t border-border"
-      >
-        <div className="layout-container py-16 md:py-24">
-          <AllSourcesList />
+          <ArchiveFolders />
         </div>
       </section>
 

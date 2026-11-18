@@ -1822,8 +1822,8 @@
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "summary": "{{total}} documents from {{sources}} sources, published by {{publishers}} offices and outlets. The largest:",
-      "seeAll": "See every source"
+      "summary": "{{total}} documents from {{sources}} sources, filed in {{folders}} folders:",
+      "seeAll": "Browse the archive"
     },
     "materialsByType": {
       "heading": "What materials are hosted",
@@ -2313,10 +2313,6 @@
     "placeholder": "Search documents & other materials"
   },
   "materialsLanding": {
-    "sources": {
-      "title": "Every source in the archive",
-      "lede": "Every office and publication we hold documents from. New sources appear here automatically."
-    },
     "title": "Documents & other materials — Nepal's public records",
     "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
     "heroTitle": "Nepal's public records. One archive.",
@@ -2381,6 +2377,11 @@
         "6-months": "Last 6 months",
         "1-year": "Last year"
       }
+    },
+    "archive": {
+      "root": "Archive",
+      "title": "Browse the archive",
+      "lede": "Every document we hold, filed by the institution that published it. Open a folder to see its offices and series."
     }
   },
   "courtCasesPage": {

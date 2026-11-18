@@ -11,6 +11,7 @@ import { lazyChunk } from "@/lib/chunk-reload";
 // select). Behind a dynamic import that is ~4 KB gzip off the entry chunk.
 // ArchiveSearch stays a static import: routes.tsx already imports it eagerly
 // for /search, so a dynamic one here would defer nothing and only cost a frame.
+const ArchiveFolderPage = lazy(lazyChunk(() => import("./ArchiveFolderPage"), (m) => m.default));
 const MaterialSeriesBrowse = lazy(lazyChunk(() => import("./MaterialSeriesBrowse"), (m) => m.default));
 
 /**
@@ -41,8 +42,18 @@ export default function Materials() {
   const [searchParams] = useSearchParams();
 
   const series = searchParams.get("series");
+  const folder = searchParams.get("folder");
   const source = searchParams.get("source");
   const hasSearchIntent = SEARCH_PARAMS.some((param) => searchParams.has(param));
+
+  // One folder / office of the archive tree (data/archive-folders).
+  if (folder) {
+    return (
+      <Suspense fallback={null}>
+        <ArchiveFolderPage path={folder.split("/").filter(Boolean)} />
+      </Suspense>
+    );
+  }
 
   if (series) {
     return (
