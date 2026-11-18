@@ -364,7 +364,10 @@ async function isCasePageOutOfRange(raw: string | undefined): Promise<boolean> {
   return totalPages !== null && page > totalPages;
 }
 
-async function fetchWithTimeout(url: string): Promise<Response | null> {
+async function fetchWithTimeout(
+  url: string,
+  redirect: RequestRedirect = 'follow',
+): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), META_FETCH_TIMEOUT_MS);
   try {
@@ -375,6 +378,7 @@ async function fetchWithTimeout(url: string): Promise<Response | null> {
     return await fetch(url, {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
+      redirect,
     });
   } catch {
     return null;
@@ -636,6 +640,56 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
+// How long a moved material's 301 is cached, at the edge and in browsers. A
+// day, matching the API's own redirect: long enough that a popular old link
+// costs one API call a day, short enough that moving a document BACK (a
+// correction must stay reversible) does not leave readers looping for long.
+const MATERIAL_MOVED_TTL_SECONDS = 86400;
+
+// A re-filed material: the API 301s its old address to the current one
+// (`Location: /api/materials/<source>/<ident>`). Turn that into a 301 between
+// the matching site pages, keeping the reader's query string. Returns null for a
+// Location that is not a material address, so the caller falls through to the
+// shell rather than sending anyone somewhere unexpected.
+function movedMaterialResponse(
+  request: Request,
+  tail: string,
+  apiResponse: Response,
+): Response | null {
+  const location = apiResponse.headers.get('Location');
+  if (!location) return null;
+  let path: string;
+  try {
+    path = new URL(location, JDS_API_BASE).pathname;
+  } catch {
+    return null;
+  }
+  const prefix = '/api/materials/';
+  if (!path.startsWith(prefix)) return null;
+  let movedTail: string;
+  try {
+    movedTail = path
+      .slice(prefix.length)
+      .replace(/\/+$/, '')
+      .split('/')
+      .map(decodeURIComponent)
+      .join('/');
+  } catch {
+    return null;
+  }
+  // Same gate as the incoming splat: the target becomes a URL on our origin.
+  if (!isMaterialTail(movedTail) || movedTail === tail) return null;
+  const target = new URL(`/material/${encodeMaterialTail(movedTail)}`, request.url);
+  target.search = new URL(request.url).search;
+  return new Response(null, {
+    status: 301,
+    headers: {
+      Location: target.toString(),
+      'Cache-Control': `public, max-age=${MATERIAL_MOVED_TTL_SECONDS}`,
+    },
+  });
+}
+
 // Inject share metadata and JSON-LD for a material page.
 //
 // Unlike cases and updates, this is not a gap-filler for records published since
@@ -664,10 +718,26 @@ async function handleMaterialMetaFallback(
   // renders an unrelated record into the head.
   if (!isMaterialTail(tail)) return notFoundShellResponse(request, env);
 
+  // A re-filed document's old address answers from the edge cache once it has
+  // been seen (see movedMaterialResponse); nothing else on this path is cached.
+  const cache = caches.default;
+  const cachedMove = await cache.match(request);
+  if (cachedMove) return cachedMove;
+
+  // `manual`, not the default `follow`: the API 301s a retired material address
+  // to the document's current one, and following it silently would render the
+  // moved document's head here under the OLD canonical.
   const apiResponse = await fetchWithTimeout(
     `${JDS_API_BASE}/materials/${encodeMaterialTail(tail)}/`,
+    'manual',
   );
   if (!apiResponse) return null;
+  if (apiResponse.status === 301 || apiResponse.status === 308) {
+    const moved = movedMaterialResponse(request, tail, apiResponse);
+    if (!moved) return null;
+    if (request.method === 'GET') await cache.put(request, moved.clone());
+    return moved;
+  }
   // A positive "no such material" — a retired ident, a soft-deleted row, or one
   // whose visibility is no longer LISTED. Unlike a timeout, that is an answer.
   if (apiResponse.status === 404) return notFoundShellResponse(request, env);
