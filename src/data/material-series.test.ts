@@ -187,6 +187,10 @@ describe("seriesCount", () => {
     expect(seriesCount(seriesBySlug("audit-journal")!, undefined)).toBeNull();
   });
 
+  it("shows a dash, not a premature zero, while the counts are not ready", () => {
+    expect(seriesCount(seriesBySlug("kanun-patrika")!, { ...catalogue, ready: false })).toBeNull();
+  });
+
   it("counts a plain series off its source's whole count", () => {
     expect(seriesCount(seriesBySlug("kanun-patrika")!, catalogue)).toBe(220);
   });

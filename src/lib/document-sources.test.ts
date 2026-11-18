@@ -163,4 +163,8 @@ describe("archiveTotal", () => {
     expect(archiveTotal(RESPONSE)).toBe(3556 + 235 + 160 + 13 + 4 + 0);
     expect(archiveTotal(undefined)).toBeNull();
   });
+
+  it("withholds the total while the counts are not ready", () => {
+    expect(archiveTotal({ ...RESPONSE, ready: false })).toBeNull();
+  });
 });
