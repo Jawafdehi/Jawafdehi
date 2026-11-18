@@ -642,7 +642,8 @@
       "Secretary": "Secretary",
       "Advisor": "Advisor",
       "Founding Member": "Founding Member",
-      "Member": "Member"
+      "Member": "Member",
+      "Board Member": "Board Member"
     }
   },
   "pagination": {
