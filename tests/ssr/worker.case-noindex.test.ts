@@ -67,7 +67,7 @@ describe('worker case-meta fallback: unlisted cases get noindex', () => {
   it('injects robots noindex for an IN_REVIEW (unlisted) case', async () => {
     stubCaseApi('IN_REVIEW');
     const res = await worker.fetch(
-      new Request('https://jawafdehi.org/case/some-case'),
+      new Request('https://jawafdehi.org/case/some-case/'),
       makeEnv(),
     );
     const html = await res.text();
@@ -80,7 +80,7 @@ describe('worker case-meta fallback: unlisted cases get noindex', () => {
   it('does NOT inject robots noindex for a PUBLISHED case', async () => {
     stubCaseApi('PUBLISHED');
     const res = await worker.fetch(
-      new Request('https://jawafdehi.org/case/some-case'),
+      new Request('https://jawafdehi.org/case/some-case/'),
       makeEnv(),
     );
     const html = await res.text();

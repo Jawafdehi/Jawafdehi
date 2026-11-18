@@ -69,7 +69,7 @@ describe('edge SSR record pages', () => {
     const env = makeEnv();
     const { ctx, fetch } = makeCtx(env);
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/entity/person/ram?utm_source=x'), env, ctx);
+    const res = await worker.fetch(new Request('https://jawafdehi.org/entity/person/ram/?utm_source=x'), env, ctx);
 
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('<h1>Server-rendered record</h1>');
@@ -117,7 +117,7 @@ describe('edge SSR record pages', () => {
     const env = makeEnv();
     const { ctx } = makeCtx(env);
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-case'), env, ctx);
+    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-case/'), env, ctx);
 
     expect(res.status).toBe(200);
     expect(res.headers.get('X-Edge-SSR')).toBe('fallback-timeout');
@@ -142,7 +142,7 @@ describe('edge SSR record pages', () => {
     const env = makeEnv();
     const { ctx } = makeCtx(env);
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/entity/person/gone'), env, ctx);
+    const res = await worker.fetch(new Request('https://jawafdehi.org/entity/person/gone/'), env, ctx);
 
     expect(res.status).toBe(404);
     expect(res.headers.get('Cache-Control')).toBe('no-store');
@@ -176,7 +176,7 @@ describe('edge SSR record pages', () => {
     const env = makeEnv({ EDGE_SSR: 'off' });
     const { ctx, fetch } = makeCtx(env);
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/entity/person/ram'), env, ctx);
+    const res = await worker.fetch(new Request('https://jawafdehi.org/entity/person/ram/'), env, ctx);
 
     expect(fetch).not.toHaveBeenCalled();
     expect(render).not.toHaveBeenCalled();

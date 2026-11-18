@@ -56,14 +56,15 @@ describe('pre-rendered routes must be eagerly imported', () => {
   // The static list above is not the whole of what gets pre-rendered, and the
   // gap is not theoretical: scripts/pre-render.ts also walks routes whose paths
   // come from the API at build time, so they can never appear in
-  // PRE_RENDERED_STATIC_ROUTES. /entity/* was made pre-rendered while still
+  // PRE_RENDERED_STATIC_ROUTES. /entity/* was once pre-rendered while still
   // lazy() and shipped 1,544 empty-titled Suspense stubs past a green run of
   // this very file, because this file only knew about the static half.
   //
   // Keep in step with the route blocks in scripts/pre-render.ts main(): a route
-  // belongs here once that script writes an index.html for it. /case/* is
-  // deliberately absent — cases are listed in the sitemap but not pre-rendered.
-  const DYNAMIC_PRE_RENDERED_ROUTES = ['/entity/*', '/updates/:slug'] as const;
+  // belongs here once that script writes an index.html for it. /case/* and
+  // /entity/* are deliberately absent — they are rendered on request by the
+  // Worker (worker.ts, "Edge SSR"), whose render waits for lazy chunks.
+  const DYNAMIC_PRE_RENDERED_ROUTES = ['/cases/page/:page', '/updates/:slug'] as const;
 
   it.each(DYNAMIC_PRE_RENDERED_ROUTES)(
     '%s (pre-rendered from API-derived paths) renders an eager component',

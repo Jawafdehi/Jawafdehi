@@ -82,11 +82,10 @@ export interface RenderResult {
 /**
  * Data the caller already holds, seeded into the cache instead of re-fetched.
  *
- * `scripts/pre-render.ts` renders one page per entity a published case cites —
- * ~2,500 of them. Fetching each record here cost one upstream call per page and
- * blew the API's 1000/hour anonymous throttle, which is what turned a green
- * build into a coin flip. The same records come back 25 at a time from
- * `/api/entities?ids=`, so the caller batches them and hands the record down.
+ * Built for the entity pre-render, which batched records 25 at a time from
+ * `/api/entities?ids=` instead of one call per page. That pre-render is gone
+ * (entity pages are rendered at the edge, one per request), so no caller seeds
+ * today; the hook is kept because it is cheap and tested.
  *
  * A seeded record must be byte-identical to what the per-page fetch would have
  * returned, or the pre-rendered HTML silently diverges from the live page. It

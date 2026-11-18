@@ -1390,6 +1390,33 @@ export default {
       }
     }
 
+    // Case and entity pages: slashless → slashed (301).
+    //
+    // Their canonical URL ends in a slash (CaseDetail's and EntityRecordProfile's
+    // canonical, the sitemap, the legacy redirects above). While the build
+    // pre-rendered them to <path>/index.html the assets binding 307'd the
+    // slashless form; nothing is pre-rendered for them any more (the edge renders
+    // them, see "Edge SSR" above), so this does that job, permanently, and
+    // without rendering the page twice under two cache keys.
+    //
+    // /material/* and /courtcase/* are canonical WITHOUT a slash and are left
+    // alone. The Location is rebuilt from a single leading slash so that a
+    // `//case/x` path cannot turn into a protocol-relative redirect off-site.
+    if (
+      (matched?.path === '/case/:id' || matched?.path === '/entity/*') &&
+      !path.endsWith('/') &&
+      (request.method === 'GET' || request.method === 'HEAD')
+    ) {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': `/${path.replace(/^\/+/, '')}/${url.search}`,
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Sitemaps come from the API through the cached EdgePages entrypoint.
     // /sitemap-site.xml, the site's own pages, is a static asset and never
     // reaches here: the assets binding answers first.
@@ -1426,8 +1453,9 @@ export default {
     // SPA fallback. Everything below is a path ASSETS does not hold.
     if (request.method !== 'GET' && request.method !== 'HEAD') return asset;
 
-    // Case / update detail pages published after the last build aren't
-    // pre-rendered, so the bare SPA shell would share with generic metadata.
+    // Case pages are not pre-rendered at all (the edge renders them) and update
+    // articles published after the last build are not either, so the bare SPA
+    // shell would share with generic metadata.
     // Inject the record's real Open Graph / Twitter tags so link previews are
     // correct on every platform. Numeric / court-ref case URLs are already
     // redirected to their canonical slug above, so only slugs reach here.

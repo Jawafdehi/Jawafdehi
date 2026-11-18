@@ -12,15 +12,17 @@ import { SITE_ROUTES, type RouteChrome, type RoutePath } from "@/data/site-route
 // lazily-imported page would pre-render as the "Loading…" fallback, shipping
 // empty HTML + wrong Helmet meta for that route. Therefore every PRE-RENDERED
 // route (see PRE_RENDERED_STATIC_ROUTES in src/data/site-routes.ts, plus the
-// dynamic /updates/:slug and /entity/* routes) MUST stay eager.
+// dynamic /cases/page/:page and /updates/:slug routes) MUST stay eager. Record
+// pages rendered at the edge (worker.ts, "Edge SSR") are not bound by this: the
+// edge render waits for every Suspense boundary.
 // Routes NOT pre-rendered are client-rendered regardless, so they are lazy()
 // below to keep them out of the public entry chunk.
 //
 // This list used to name /case/:id too. It is not pre-rendered: pre-render.ts
-// main() walks the static routes, the update slugs and the IRI entity paths, and
-// nothing else — cases are listed in the sitemap but rendered on the client.
-// /case/:id stays eager on first-paint grounds rather than pre-render ones,
-// since it is the most directly-linked page on the site.
+// main() walks the static routes, the case browse pages and the update slugs,
+// and nothing else — case and entity pages are rendered at the edge. /case/:id
+// stays eager on first-paint grounds rather than pre-render ones, since it is
+// the most directly-linked page on the site.
 // tests/ssr/prerendered-routes-eager.test.ts enforces the eager half of this,
 // for the dynamic routes as well as the static ones.
 import Index from "./pages/Index";
@@ -63,20 +65,18 @@ import Donate from "./pages/Donate";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import DocumentPreviewPage from "./pages/DocumentPreviewPage";
-// /entity/* became a PRE-RENDERED route when scripts/pre-render.ts started
-// emitting a page per case-cited entity, so the policy above makes it eager.
-// It was lazy() when that change was written and pre-rendered to exactly what
-// the policy predicts — 1,544 pages of Suspense fallback with an empty <title>,
-// the same failure /donate shipped in August. The build cannot catch this on its
-// own: renderToString does not throw on an unresolved boundary, it just returns
-// the fallback, so pre-render.ts writes the stub and exits 0.
+// /entity/* was pre-rendered at build time for a while, and was lazy() when that
+// started — it shipped 1,544 pages of Suspense fallback with an empty <title>.
+// It is rendered at the edge now (which waits for lazy chunks), so eager is no
+// longer REQUIRED here; it stays eager on the same first-paint grounds as
+// /case/:id.
 import EntityRecordProfile from "./pages/EntityRecordProfile";
 
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
 const DataQuality = lazy(() => import("./pages/DataQuality"));
 // /author/:slug is NOT pre-rendered (scripts/pre-render.ts emits the static
-// routes, the update slugs and the IRI entity paths — no author pages), so per
+// routes, the case browse pages and the update slugs — no author pages), so per
 // the split policy above it is safe and free to lazy-load. It was eager by
 // association with the other detail pages.
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
