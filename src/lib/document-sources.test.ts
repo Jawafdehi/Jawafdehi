@@ -6,6 +6,7 @@ import {
   seriesFromDocumentSource,
 } from "@/lib/document-source-series";
 import {
+  archiveTotal,
   documentSourceLabel,
   listedSources,
   sourceBrowseHref,
@@ -119,5 +120,16 @@ describe("documentSourceLabel", () => {
   it("returns null for an unknown or unlabelled source", () => {
     expect(documentSourceLabel(RESPONSE, "mystery", "en")).toBeNull();
     expect(documentSourceLabel(undefined, "dri", "en")).toBeNull();
+  });
+});
+
+describe("archiveTotal", () => {
+  it("sums every source, named or not", () => {
+    expect(archiveTotal(RESPONSE)).toBe(3556 + 235 + 160 + 13 + 4 + 0);
+    expect(archiveTotal(undefined)).toBeNull();
+  });
+
+  it("withholds the total while the counts are not ready", () => {
+    expect(archiveTotal({ ...RESPONSE, ready: false })).toBeNull();
   });
 });

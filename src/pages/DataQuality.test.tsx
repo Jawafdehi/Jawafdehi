@@ -24,7 +24,7 @@ const { stub } = vi.hoisted(() => ({
 vi.mock("@/components/data-quality/AccountabilityGap", () => ({ AccountabilityGap: stub("corruptionCases") }));
 vi.mock("@/components/data-quality/EntityBreakdown", () => ({ EntityBreakdown: stub("entities") }));
 vi.mock("@/components/data-quality/EvidenceBackbone", () => ({ EvidenceBackbone: stub("courtCases") }));
-vi.mock("@/components/data-quality/MaterialsBySource", () => ({ MaterialsBySource: stub("materialsBySource") }));
+vi.mock("@/components/data-quality/SourcesSummary", () => ({ SourcesSummary: stub("materialsBySource") }));
 vi.mock("@/components/data-quality/DataHonesty", () => ({ DataHonesty: stub("honesty") }));
 vi.mock("@/components/data-quality/DataPipeline", () => ({ DataPipeline: stub("methodology") }));
 vi.mock("@/components/data-quality/UseThisData", () => ({ UseThisData: stub("useData") }));

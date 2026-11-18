@@ -30,6 +30,10 @@ export interface DocumentSourceEntry {
   labelled: boolean;
   /** Documents visible to the public under this source. */
   count: number;
+  /** The kinds of document it holds (material type and count), largest first. */
+  types?: { type: string; count: number }[];
+  /** Its document-kind buckets (`dataset_bucket`), which curated shelves can narrow to. */
+  series?: { bucket: string; count: number }[];
 }
 
 export interface DocumentSourcesResponse {
@@ -84,4 +88,13 @@ export function documentSourceLabel(
   const row = response?.sources.find((entry) => entry.source === source);
   if (!row || !row.labelled) return null;
   return { name: pickLabel(row.name, language), publisher: pickLabel(row.publisher, language) };
+}
+
+/** Every document the catalogue counts, across all sources, named or not. */
+export function archiveTotal(response: DocumentSourcesResponse | undefined | null): number | null {
+  // `ready: false` means the counts are still being computed: say nothing
+  // rather than claim the archive is empty. (The API answers that state with a
+  // 503 today; this keeps the page honest if it ever arrives as a 200.)
+  if (!response?.ready) return null;
+  return response.sources.reduce((sum, row) => sum + row.count, 0);
 }

@@ -1822,41 +1822,8 @@
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
-      "combinedDescription": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
-      "tooltip": "Materials",
-      "table": {
-        "source": "Source",
-        "type": "Document type",
-        "types": "Document types",
-        "grouping": "Grouping",
-        "item": "Breakdown",
-        "count": "Documents",
-        "share": "Share"
-      },
-      "source": {
-        "ag": "Office of the Attorney General",
-        "nkp": "Nepal Kanun Patrika",
-        "courts": "Nepal Courts",
-        "ciaa": "Commission for the Investigation of Abuse of Authority (CIAA)",
-        "dfmis": "Development Finance Management Information System (DFMIS)",
-        "jawafdehi": "Jawafdehi original documents",
-        "koshi": "Koshi Province",
-        "ppmo": "Public Procurement Monitoring Office (PPMO)",
-        "auditorGeneral": "Office of the Auditor General",
-        "lawsOfNepal": "Laws of Nepal",
-        "news": "News media",
-        "socialMedia": "Social media",
-        "other": "Other"
-      },
-      "publishes": {
-        "dfmis": "Development-finance records",
-        "ppmo": "Blacklist / debarment records",
-        "koshi": "Provincial records",
-        "ciaa": "Annual reports",
-        "courts": "Court filings",
-        "nkp": "Journal issues"
-      }
+      "summary": "{{total}} documents from {{sources}} sources, filed in {{folders}} folders:",
+      "seeAll": "Browse the archive"
     },
     "materialsByType": {
       "heading": "What materials are hosted",
@@ -2346,10 +2313,6 @@
     "placeholder": "Search documents & other materials"
   },
   "materialsLanding": {
-    "sources": {
-      "title": "Every source in the archive",
-      "lede": "Every office and publication we hold documents from. New sources appear here automatically."
-    },
     "title": "Documents & other materials — Nepal's public records",
     "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
     "heroTitle": "Nepal's public records. One archive.",
@@ -2379,21 +2342,6 @@
       "previous": "Previous documents",
       "next": "Next documents"
     },
-    "sourceDescriptions": {
-      "ag": "Charge sheets filed by the Office of the Attorney General.",
-      "nkp": "Precedents published in the Nepal Kanun Patrika.",
-      "courts": "Orders and verdicts from Nepal's courts.",
-      "ciaa": "Publications of the Commission for the Investigation of Abuse of Authority.",
-      "dfmis": "Development-finance records from DFMIS.",
-      "jawafdehi": "Original documents collected by Jawafdehi.",
-      "koshi": "Official records from Koshi Province.",
-      "ppmo": "Blacklist and debarment records from the PPMO.",
-      "auditorGeneral": "Audit reports from the Office of the Auditor General.",
-      "lawsOfNepal": "Nepali statutes, regulations and bills.",
-      "news": "News coverage archived as evidence.",
-      "socialMedia": "Public social-media posts archived as evidence.",
-      "other": "A document from the Jawafdehi archive."
-    },
     "series": {
       "searchPlaceholder": "Search inside this series…",
       "searchSubmit": "Search this series",
@@ -2408,7 +2356,10 @@
       "backToArchive": "Back to the archive",
       "undated": "Undated",
       "openSource": "Open original source",
-      "download": "Download {{format}}"
+      "download": "Download {{format}}",
+      "notListable": "{{total}} documents are counted in this series, but they can't be listed here yet.",
+      "wholeSource": "Browse the whole source instead",
+      "showingTotal": "{{shown}} of {{total}}"
     },
     "filters": {
       "title": "Filter",
@@ -2428,6 +2379,20 @@
         "30-days": "Last 30 days",
         "6-months": "Last 6 months",
         "1-year": "Last year"
+      }
+    },
+    "archive": {
+      "root": "Archive",
+      "title": "Browse the archive",
+      "lede": "Every document we hold, filed by the institution that published it. Open a folder to see its offices and series.",
+      "seeDocuments": "View all",
+      "open": "Open",
+      "recent": "Recent documents",
+      "viewAs": "View as",
+      "views": {
+        "icons": "Icons",
+        "list": "List",
+        "columns": "Columns"
       }
     }
   },

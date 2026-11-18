@@ -1,21 +1,19 @@
 import {
-  Archive,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   BookOpen,
   Calendar,
   ClipboardList,
-  Database,
   File,
   FileText,
   Landmark,
-  MapPin,
   MessageSquare,
   Newspaper,
   Scale,
   ScrollText,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -24,7 +22,12 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { seriesBySource } from "@/data/material-series";
-import { sourceKeyFor } from "@/lib/material-source-labels";
+import { documentSourceLabel, documentSourcesQuery } from "@/lib/document-sources";
+import {
+  materialTypeForSchemaClass,
+  materialTypeForSource,
+} from "@/lib/material-series-labels";
+import { materialTypeKeyFor } from "@/lib/material-type-labels";
 import {
   formatLedgerDate,
   pickLocalized,
@@ -35,23 +38,20 @@ import type { LucideIcon } from "lucide-react";
 import type { RecentMaterial } from "@/lib/materials-landing";
 
 /**
- * One icon per publishing institution, keyed by sourceKeyFor()'s i18n keys so
- * every source token — registry series or long-tail — resolves to something.
+ * One icon per KIND of document (materialTypeKeyFor's keys), so every source,
+ * including one added after this release, resolves to something.
  */
-const SOURCE_ICONS: Record<string, LucideIcon> = {
-  ag: FileText,
-  nkp: BookOpen,
-  courts: Scale,
-  ciaa: Landmark,
-  dfmis: Database,
-  jawafdehi: Archive,
-  koshi: MapPin,
-  ppmo: ClipboardList,
-  auditorGeneral: ClipboardList,
-  lawsOfNepal: ScrollText,
+const TYPE_ICONS: Record<string, LucideIcon> = {
+  chargeSheet: FileText,
+  precedent: BookOpen,
+  courtOrder: Scale,
+  courtCase: Scale,
+  pressRelease: Landmark,
+  procurementNotice: ClipboardList,
+  officialReport: ClipboardList,
+  legalCorpus: ScrollText,
   news: Newspaper,
   socialMedia: MessageSquare,
-  other: File,
 };
 
 /** Matches the `gap-5` between slides, in px — the step the buttons scroll by. */
@@ -88,6 +88,8 @@ export function RecentMaterialsCarousel({
 }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
+  // Names a source no curated shelf covers (one cached request for the page).
+  const { data: catalogue } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
 
   const scrollerRef = useRef<HTMLUListElement>(null);
   // Both true is the "everything fits" case (desktop): neither button applies.
@@ -174,26 +176,28 @@ export function RecentMaterialsCarousel({
       >
         {materials.map(({ result, date }) => {
           const source = sourceFromMaterialUrl(result.url);
-          const sourceKey = sourceKeyFor(source ?? "");
           const series = source
             ? seriesBySource(source, result.extra?.dataset_bucket)
             : undefined;
+          const registryLabel = source ? documentSourceLabel(catalogue, source, language) : null;
           const seriesLabel = series
             ? pickLocalized(series.name, language)
-            : t(`dataQuality.materialsBySource.source.${sourceKey}`, source ?? "—");
-          const SourceIcon = SOURCE_ICONS[sourceKey] ?? File;
+            : registryLabel?.name || source || "—";
+          const typeKey = materialTypeKeyFor(
+            (source ? materialTypeForSource(source) : null) ??
+              materialTypeForSchemaClass(result.extra?.type),
+          );
+          const SourceIcon = TYPE_ICONS[typeKey] ?? File;
           const title =
             pickLocalized(result.title, language) ||
             t("materialsLanding.recent.untitled", "Untitled document");
           // The document's OWN description first; search snippets are empty
-          // outside a text query, and the series/institution lines only catch
-          // the ~⅓ of documents whose records carry no description.
+          // outside a text query, and the series/source lines only catch the
+          // ~⅓ of documents whose records carry no description.
           const snippet =
             pickLocalized(descriptions[result.id], language) ||
             pickLocalized(result.snippet, language) ||
-            (series
-              ? pickLocalized(series.description, language)
-              : t(`materialsLanding.sourceDescriptions.${sourceKey}`, ""));
+            (series ? pickLocalized(series.description, language) : "");
           return (
             <li
               key={result.id}

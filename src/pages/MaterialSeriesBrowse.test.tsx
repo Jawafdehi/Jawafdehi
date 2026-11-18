@@ -366,4 +366,35 @@ describe("MaterialSeriesBrowse for a whole source", () => {
       await screen.findByRole("heading", { name: "Revenue Investigation releases and reports" }),
     ).toBeTruthy();
   });
+
+  // A folder that shows a count must never lead to a bare "no documents" page.
+  it("never shows a bare empty page when the catalogue counts documents in the series", async () => {
+    getDocumentSources.mockResolvedValue({
+      ready: true,
+      sources: [
+        {
+          source: "legal_corpus",
+          name: { en: "Laws" },
+          publisher: null,
+          labelled: true,
+          count: 758,
+          series: [{ bucket: "law-constitution", count: 12 }],
+        },
+      ],
+    });
+    searchArchive.mockResolvedValue(response([], 0));
+    renderPage("/materials/?series=constitution", "constitution");
+
+    expect(await screen.findByText(/12 documents are counted in this series/)).toBeTruthy();
+    expect(screen.queryByText(/No documents are visible/)).toBeNull();
+    expect(screen.getByTestId("whole-source").getAttribute("href")).toBe("/materials/?source=legal_corpus");
+  });
+
+  it("keeps the plain empty state when the catalogue agrees the series is empty", async () => {
+    getDocumentSources.mockResolvedValue({ ready: true, sources: [] });
+    searchArchive.mockResolvedValue(response([], 0));
+    renderPage("/materials/?series=constitution", "constitution");
+
+    expect(await screen.findByText(/No documents are visible/)).toBeTruthy();
+  });
 });

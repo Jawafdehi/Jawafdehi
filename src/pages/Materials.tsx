@@ -41,6 +41,7 @@ export default function Materials() {
   const [searchParams] = useSearchParams();
 
   const series = searchParams.get("series");
+
   const source = searchParams.get("source");
   const hasSearchIntent = SEARCH_PARAMS.some((param) => searchParams.has(param));
 

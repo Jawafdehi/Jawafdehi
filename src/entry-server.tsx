@@ -12,7 +12,6 @@ import { searchArchive } from './services/search-api';
 import { featuredCasesQuery } from './queries/home';
 import {
   RECENT_MATERIALS_COUNT,
-  archiveStatisticsQuery,
   recentMaterialsQuery,
 } from './queries/materials-landing';
 import { CASES_PAGE_SIZE } from './lib/cases-pagination';
@@ -96,7 +95,11 @@ async function prefetch(
   // home hero, so prefetching here paints the KPI strip / sections server-side
   // instead of flashing empty until the client fetch resolves.
   if (/^\/data-quality\/?(?:[?#]|$)/.test(url)) {
-    await queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics });
+    // Plus the source catalogue its "where the evidence comes from" summary reads.
+    await Promise.allSettled([
+      queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
+      queryClient.prefetchQuery(documentSourcesQuery()),
+    ]);
     return;
   }
 
@@ -110,7 +113,6 @@ async function prefetch(
   if (/^\/materials\/?(?:#|$)/.test(url)) {
     const recentsQuery = recentMaterialsQuery();
     await Promise.allSettled([
-      queryClient.prefetchQuery(archiveStatisticsQuery()),
       queryClient.prefetchQuery(recentsQuery),
       queryClient.prefetchQuery(documentSourcesQuery()),
     ]);
