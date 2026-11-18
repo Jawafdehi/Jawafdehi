@@ -32,7 +32,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { findLeafChain, leafSeries, withUnfiled } from "@/data/archive-folders";
 import { ArchiveBreadcrumbs } from "@/components/materials/ArchiveBreadcrumbs";
-import { seriesBySlug, seriesScope } from "@/data/material-series";
+import { seriesBySlug, seriesCount, seriesScope } from "@/data/material-series";
 import { seriesBrowseHref, seriesForSourceKey } from "@/lib/document-source-series";
 import { documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
@@ -238,6 +238,11 @@ export default function MaterialSeriesBrowse({
   // The true corpus total, not "how many have been fetched" — the old label
   // counted the latter and called it the former.
   const total = documentsQuery.data?.pages[0]?.count ?? 0;
+  // What the folder that links here says this series holds. When an UNFILTERED
+  // listing comes back empty while that number is above zero, the two disagree
+  // (e.g. a kind counted in the catalogue but not yet searchable), and an
+  // "empty" page would contradict the folder: say so and offer the whole source.
+  const catalogueCount = series ? seriesCount(series, sourcesQuery.data) : null;
   const activeDateFilterCount =
     filters.preset !== "all" || filters.startDate || filters.endDate ? 1 : 0;
 
@@ -469,8 +474,21 @@ export default function MaterialSeriesBrowse({
               <p className="font-page-lede">
                 {query || activeDateFilterCount
                   ? t("materialsLanding.filters.noMatches", "No documents match these filters.")
-                  : t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
+                  : catalogueCount
+                    ? t(
+                        "materialsLanding.series.notListable",
+                        "{{total}} documents are counted in this series, but they can't be listed here yet.",
+                        { total: formatArchiveCount(catalogueCount, language) },
+                      )
+                    : t("materialsLanding.series.empty", "No documents are visible in this series right now.")}
               </p>
+              {!query && !activeDateFilterCount && catalogueCount ? (
+                <Button asChild variant="outline" className="mt-5">
+                  <Link to={`/materials/?source=${encodeURIComponent(series.source)}`} data-testid="whole-source">
+                    {t("materialsLanding.series.wholeSource", "Browse the whole source instead")}
+                  </Link>
+                </Button>
+              ) : null}
               {query || activeDateFilterCount ? (
                 <Button variant="outline" className="mt-5" onClick={clearAllFilters}>
                   {t("materialsLanding.filters.clear", "Clear filters")}

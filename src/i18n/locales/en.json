@@ -2356,7 +2356,9 @@
       "backToArchive": "Back to the archive",
       "undated": "Undated",
       "openSource": "Open original source",
-      "download": "Download {{format}}"
+      "download": "Download {{format}}",
+      "notListable": "{{total}} documents are counted in this series, but they can't be listed here yet.",
+      "wholeSource": "Browse the whole source instead"
     },
     "filters": {
       "title": "Filter",
