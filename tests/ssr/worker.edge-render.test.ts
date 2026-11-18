@@ -48,14 +48,27 @@ describe('renderEdgePage', () => {
     expect(bundle.setPrerenderToken).toHaveBeenCalledWith('tok');
   });
 
-  it('tags a case by the slug the API answered with as well', async () => {
+  it('sends a superseded case slug to the current one instead of rendering a duplicate', async () => {
+    // The API follows a case's slug history, so the old URL's render comes back
+    // holding the case under its current slug. Rendering it would serve a second
+    // 200 copy of the page with only a canonical pointing away.
     const bundle = bundleWith(async () =>
       result({
         dehydratedState: { queries: [{ queryKey: ['case', 'old'], state: { data: { slug: 'new' } } }] },
       }),
     );
-    const outcome = await renderEdgePage(bundle, 'case', 'old', '/case/old', CONFIG);
-    expect(outcome.kind === 'ok' && outcome.tails).toEqual(['old', 'new']);
+    const outcome = await renderEdgePage(bundle, 'case', 'old', '/case/old/', CONFIG);
+    expect(outcome).toEqual({ kind: 'moved', location: '/case/new/' });
+  });
+
+  it('renders a case requested under its current slug', async () => {
+    const bundle = bundleWith(async () =>
+      result({
+        dehydratedState: { queries: [{ queryKey: ['case', 'current'], state: { data: { slug: 'current' } } }] },
+      }),
+    );
+    const outcome = await renderEdgePage(bundle, 'case', 'current', '/case/current/', CONFIG);
+    expect(outcome.kind === 'ok' && outcome.tails).toEqual(['current']);
   });
 
   it('reports a 404 from the API as not found', async () => {
