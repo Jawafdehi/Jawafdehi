@@ -1,4 +1,4 @@
-import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "lucide-react";
+import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram, Youtube } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { usBoard, nepalBoard, advisors, members, pastMembers } from "@/data/team";
 import type { Contact } from "@/data/team";
@@ -17,6 +17,7 @@ const ContactIcon = ({ contact }: { contact: Contact }) => {
     github: <Github className="h-4 w-4" />,
     website: <Globe className="h-4 w-4" />,
     instagram: <Instagram className="h-4 w-4" />,
+    youtube: <Youtube className="h-4 w-4" />,
   }[contact.type];
 
   return (

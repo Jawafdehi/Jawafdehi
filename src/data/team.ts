@@ -1,4 +1,11 @@
-export type ContactType = "email" | "facebook" | "linkedin" | "github" | "website" | "instagram";
+export type ContactType =
+  | "email"
+  | "facebook"
+  | "linkedin"
+  | "github"
+  | "website"
+  | "instagram"
+  | "youtube";
 
 export interface Contact {
   type: ContactType;
@@ -124,6 +131,18 @@ export const advisors: TeamMember[] = [
     description: "",
     tags: ["Advisor"],
     contacts: [],
+  },
+  // Name, role and links from his signed advisor acceptance form
+  // (2026-11-18, invitation letter ५१२), which consents to this listing.
+  {
+    displayName: { en: "Tanka Dahal", ne: "टंक दाहाल" },
+    thumb: "/assets/teammembers/tanka.webp",
+    description: "Software Engineer and IT expert",
+    tags: ["Advisor"],
+    contacts: [
+      { type: "youtube", value: "https://www.youtube.com/@techtanka" },
+      { type: "facebook", value: "https://www.facebook.com/tanka.dahal/" },
+    ],
   },
 ];
 
