@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fetchWithRetry } from './build-fetch.ts';
 
 const ok = (body = '{}') => new Response(body, { status: 200 });
-const status = (code: number) => new Response('', { status: code });
+const status = (code: number) => new Response('error', { status: code });
 const abortError = () => Object.assign(new Error('aborted'), { name: 'AbortError' });
 
 function harness(responses: Array<Response | Error>) {
@@ -87,5 +87,13 @@ describe('fetchWithRetry', () => {
       }),
     ).rejects.toThrow(/timed out after 5ms .*gave up after 2 tries/);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('releases the body of an answer it retries, so no connection is held open', async () => {
+    const discarded = status(503);
+    const cancel = vi.spyOn(discarded.body!, 'cancel');
+    const h = harness([discarded, ok()]);
+    await fetchWithRetry('https://api.example/x', h);
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 });

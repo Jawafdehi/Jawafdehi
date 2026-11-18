@@ -57,6 +57,10 @@ export async function fetchWithRetry(url: string, options: BuildFetchOptions = {
       const res = await fetchImpl(url, { signal: controller.signal, headers });
       if (!isRetryableStatus(res.status) || attempt === attempts) return res;
       lastError = new Error(`API error ${res.status} fetching ${url}`);
+      // Release the discarded answer's connection before the next try: Node's
+      // fetch does not reliably free an unread body, and a run of 5xx answers
+      // during the case-list walk would otherwise hold connections open.
+      await res.body?.cancel().catch(() => {});
     } catch (err) {
       lastError =
         err instanceof Error && err.name === 'AbortError'
