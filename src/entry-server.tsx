@@ -24,7 +24,6 @@ import { http } from './services/http';
 import { documentSourcesQuery } from './lib/document-sources';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
-import type { JawafEntity } from './types/jds';
 
 // Re-exported so `scripts/pre-render.ts` can install the build's bearer token on
 // THIS bundle. The script imports the compiled `dist/server/entry-server.js`,
@@ -253,26 +252,6 @@ async function prefetch(
     await queryClient.prefetchQuery({
       queryKey: ['case', slug],
       queryFn: () => getCaseById(slug),
-    });
-    return;
-  }
-
-  // Entity profile page — LEGACY numeric route (/entity/<id>). Must stay ahead of
-  // the IRI branch below, which would otherwise swallow it.
-  // Anchored to a SINGLE all-digit segment, which is what the legacy route is —
-  // an IRI is always prefix/slug, so it never has one. Unanchored, this read
-  // /entity/2070-b-s/foo as legacy entity 2070 and prefetched the wrong record
-  // under the wrong key: NES prefixes may legally start with digits
-  // (jawafdehi_shared/entities/ids.py allows [a-z0-9_]+).
-  const entityMatch = url.match(/^\/entity\/(\d+)(?:[?#]|$)/);
-  if (entityMatch) {
-    const entityId = parseInt(entityMatch[1]);
-    await queryClient.prefetchQuery({
-      queryKey: ['jds-entity', entityId],
-      queryFn: async () => {
-        const res = await http.get<JawafEntity>(`/api/entities/${entityId}/`);
-        return res.data;
-      },
     });
     return;
   }
