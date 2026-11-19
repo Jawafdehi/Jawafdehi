@@ -84,8 +84,8 @@ describe("sourceFromMaterialUrl", () => {
 });
 
 describe("formatArchiveCount", () => {
-  it("groups in the Indian system for both languages", () => {
-    expect(formatArchiveCount(345886, "en")).toBe("3,45,886");
+  it("groups internationally in English", () => {
+    expect(formatArchiveCount(345886, "en")).toBe("345,886");
   });
 
   it("uses Devanagari digits in Nepali", () => {

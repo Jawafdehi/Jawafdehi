@@ -69,6 +69,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Trash2 } from "@/components/icons";
+import { casePath } from "@/lib/case-links";
 
 const str = (v: unknown): string => (v == null ? "" : String(v));
 // An image-library id read back off a loaded case. Null for "no image", which is
@@ -772,7 +773,7 @@ export default function AdminCaseForm() {
             {caseState === "PUBLISHED" ? (
               <Button asChild variant="outline" size="sm">
                 <a
-                  href={`/case/${form.slug}`}
+                  href={casePath(form.slug)}
                   target="_blank"
                   rel="noopener"
                 >

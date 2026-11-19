@@ -45,7 +45,7 @@ export default function PaymentSuccess() {
                 size="lg"
                 className="font-button h-11 min-w-0 flex-1 rounded-full bg-primary-surface px-2.5 text-primary-foreground shadow-md shadow-primary-surface/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-surface/90 md:h-12 md:min-w-[14rem] md:px-7"
               >
-                <Link to="/search?type=case">
+                <Link to="/search/?type=case">
                   <Archive className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
                   Explore archive
                 </Link>

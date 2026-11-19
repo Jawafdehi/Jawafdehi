@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { summarizeNames } from "@/utils/name-summary";
 import { caseTagLabel } from "@/lib/case-tags";
+import { casePath } from "@/lib/case-links";
 
 type FeaturedCaseSpotlightProps = {
   slug?: string | null;
@@ -67,7 +68,7 @@ export function FeaturedCaseSpotlight({
   const handleCardClick = (e: React.MouseEvent) => {
     if (!caseSlug) return;
     if (!(e.target as HTMLElement).closest("a")) {
-      navigate(`/case/${caseSlug}`);
+      navigate(casePath(caseSlug));
     }
   };
 
@@ -118,7 +119,7 @@ export function FeaturedCaseSpotlight({
         <h3 className="font-home-display mt-5 text-2xl sm:text-3xl lg:text-4xl">
           {caseSlug ? (
             <Link
-              to={`/case/${caseSlug}`}
+              to={casePath(caseSlug)}
               className="rounded-sm outline-none transition-colors hover:text-primary-foreground/85 focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary-surface"
               onClick={(e) => e.stopPropagation()}
             >
@@ -163,7 +164,7 @@ export function FeaturedCaseSpotlight({
             variant="primary"
           >
             {caseSlug ? (
-              <Link to={`/case/${caseSlug}`} onClick={(e) => e.stopPropagation()}>
+              <Link to={casePath(caseSlug)} onClick={(e) => e.stopPropagation()}>
                 {t("common.viewDetails")}
               </Link>
             ) : (

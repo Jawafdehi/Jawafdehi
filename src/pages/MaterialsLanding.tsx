@@ -4,16 +4,35 @@ import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
-import { AllSourcesList } from "@/components/materials/AllSourcesList";
-import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
-import { FolderCard } from "@/components/materials/FolderCard";
+import { lazyChart } from "@/components/charts/lazy";
 import { ArrowLink } from "@/components/ui/arrow-link";
-import { MATERIAL_SERIES, seriesCount, seriesSearchPath } from "@/data/material-series";
+import { MATERIAL_SERIES } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
+import { archiveTotal, documentSourcesQuery } from "@/lib/document-sources";
 import { formatArchiveCount } from "@/lib/materials-landing";
-import { archiveStatisticsQuery } from "@/queries/materials-landing";
 import { CHAT_URL } from "@/lib/external-links";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
+
+// The archive browser (folder tree, views, its bilingual name table) is its own
+// chunk: the initial bundle is at its budget, and the browser is interactive UI
+// the reader reaches by scrolling. Loaded in an effect via `lazyChart`, NOT
+// lazy() + <Suspense>, which renderToString cannot pre-render (see
+// components/charts/lazy.tsx); the pre-rendered page carries the placeholder.
+function ArchivePlaceholder() {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-[24rem]">
+      <h2 id="archive-heading" className="font-home-display text-3xl text-primary md:text-4xl">
+        {t("materialsLanding.archive.title", "Browse the archive")}
+      </h2>
+      <p className="mt-3 text-lg leading-8 text-muted-foreground">{t("materialsLanding.series.loading", "Loading…")}</p>
+    </div>
+  );
+}
+const ArchiveBrowser = lazyChart<Record<string, never>>(
+  () => import("@/components/materials/ArchiveBrowser").then((m) => m.ArchiveBrowser),
+  () => <ArchivePlaceholder />,
+);
 
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
@@ -22,13 +41,14 @@ export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
 
-  const { data: statistics } = useQuery({ ...archiveStatisticsQuery(), staleTime: 5 * 60 * 1000 });
+  // One catalogue for every count on this page — the total and the archive
+  // browser's folders — so none of them can disagree with another.
+  const { data: catalogue } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
 
-  // Counts come from `seriesCount` rather than a by_source lookup here: a shelf
-  // can now be narrower than its source token (five of them scope
-  // `official_report`), so the arithmetic differs per shelf and lives with the
-  // registry that defines it.
-  const materials = statistics?.materials;
+  // Shelf counts come from `seriesCount`: a shelf can be narrower than its
+  // source token (five of them scope `official_report`), so the arithmetic
+  // differs per shelf and lives with the registry that defines it.
+  const total = archiveTotal(catalogue);
 
   const gridRef = useRevealOnScroll<HTMLElement>();
 
@@ -83,7 +103,7 @@ export default function MaterialsLanding() {
             name: series.name.ne,
             alternateName: series.name.en,
             description: series.description.ne,
-            url: `${SITE_URL}${seriesSearchPath(series.slug)}`,
+            url: `${SITE_URL}/materials/?series=${series.slug}`,
             creator: { "@id": `${SITE_URL}/#organization` },
             license: CC_BY_NC_URL,
             isAccessibleForFree: true,
@@ -155,7 +175,7 @@ export default function MaterialsLanding() {
                 {t("materialsLanding.stats.documents", "Documents")}
               </dt>
               <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
-                {materials ? formatArchiveCount(materials.total, language) : "—"}
+                {total !== null ? formatArchiveCount(total, language) : "—"}
               </dd>
             </div>
             <div>
@@ -168,41 +188,20 @@ export default function MaterialsLanding() {
         </div>
       </header>
 
-      {/* Browse by series. */}
+      {/* The archive as one folder tree (folder › office › series): replaces
+          the curated series shelf and the flat every-source list. Counts are
+          live; a source the tree does not know lands under Others. */}
       <section
         ref={gridRef}
-        id="series"
-        aria-labelledby="series-heading"
+        id="archive"
+        aria-labelledby="archive-heading"
         className="scroll-mt-24"
       >
+        {/* Old anchors (#series, #sources) still land here. */}
+        <span id="series" className="block scroll-mt-24" aria-hidden="true" />
+        <span id="sources" className="block scroll-mt-24" aria-hidden="true" />
         <div className="layout-container py-16 md:py-24">
-          {/* A smaller title than a page section's, with one line under it:
-              the folders are the content, the heading only names the shelf. */}
-          <h2 id="series-heading" className="font-home-display text-3xl text-primary md:text-4xl">
-            {t("materialsLanding.grid.title", "Browse by series")}
-          </h2>
-          <p className="mt-3 max-w-2xl text-lg leading-8 text-muted-foreground">
-            {t("materialsLanding.grid.subtitle", "Each series is one kind of record, from the body that published it.")}
-          </p>
-          {/* Nine series and the way out: five across makes two even rows. */}
-          <ul className="mt-10 grid list-none grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-5">
-            {MATERIAL_SERIES.map((series) => (
-              <li key={series.slug}>
-                <FolderCard series={series} count={seriesCount(series, materials)} />
-              </li>
-            ))}
-            <li>
-              <BrowseAllFolderCard />
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Every source, live from the API: the complete list behind the curated
-          series, so a newly loaded source is never invisible here. */}
-      <section id="sources" aria-labelledby="sources-heading" className="scroll-mt-24">
-        <div className="layout-container pb-16 md:pb-24">
-          <AllSourcesList />
+          <ArchiveBrowser />
         </div>
       </section>
     </div>

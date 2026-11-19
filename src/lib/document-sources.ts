@@ -30,11 +30,28 @@ export interface DocumentSourceEntry {
   labelled: boolean;
   /** Documents visible to the public under this source. */
   count: number;
+  /** The kinds of document it holds (material type and count), largest first. */
+  types?: { type: string; count: number }[];
+  /** Its document-kind buckets (`dataset_bucket`), which curated shelves can narrow to. */
+  series?: { bucket: string; count: number }[];
+  /** The archive folder the registry files it under (a `folders` key); null for a legacy token with no registry row. */
+  folder?: string | null;
+  /** An optional sub-folder inside `folder` (e.g. regulators); null when it sits in the folder itself. */
+  subfolder?: string | null;
+}
+
+/** A folder of the archive browser, as `/api/document-sources/` names it. */
+export interface DocumentSourceFolder {
+  key: string;
+  name: BilingualLabel;
+  subfolders?: { key: string; name: BilingualLabel }[];
 }
 
 export interface DocumentSourcesResponse {
   /** False while the statistics snapshot behind the counts is still building. */
   ready: boolean;
+  /** Every folder in display order with both names (JAW-87); absent from an older API. */
+  folders?: DocumentSourceFolder[];
   sources: DocumentSourceEntry[];
 }
 
@@ -85,4 +102,13 @@ export function documentSourceLabel(
   const row = response?.sources.find((entry) => entry.source === source);
   if (!row || !row.labelled) return null;
   return { name: pickLabel(row.name, language), publisher: pickLabel(row.publisher, language) };
+}
+
+/** Every document the catalogue counts, across all sources, named or not. */
+export function archiveTotal(response: DocumentSourcesResponse | undefined | null): number | null {
+  // `ready: false` means the counts are still being computed: say nothing
+  // rather than claim the archive is empty. (The API answers that state with a
+  // 503 today; this keeps the page honest if it ever arrives as a 200.)
+  if (!response?.ready) return null;
+  return response.sources.reduce((sum, row) => sum + row.count, 0);
 }

@@ -125,7 +125,7 @@ describe("CourtCaseProfile (redesigned layout)", () => {
 
     // The breadcrumb leads back to the court cases in search.
     const crumb = screen.getByRole("navigation", { name: "breadcrumb" });
-    expect(crumb.querySelector('a[href="/search?type=courtcase"]')).not.toBeNull();
+    expect(crumb.querySelector('a[href="/search/?type=courtcase"]')).not.toBeNull();
 
     // The record title sits above compact, inline metadata rows.
     expect(await screen.findByRole("heading", { level: 1, name: "सहकारी ठगी" })).toBeTruthy();

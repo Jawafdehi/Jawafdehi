@@ -282,7 +282,7 @@ export function McpAccess() {
           <p>{t("mcp.signIn.body")}</p>
           <p className="mt-3">
             {t("mcp.signIn.privacy")}{" "}
-            <Link to="/privacy#ai-assistants" className={linkClass}>
+            <Link to="/privacy/#ai-assistants" className={linkClass}>
               {t("mcp.signIn.privacyLink")}
             </Link>
           </p>
@@ -306,7 +306,7 @@ export function McpAccess() {
         <>
           <p>{t("mcp.support.body")}</p>
           <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-            <Link to="/feedback" className={linkClass}>
+            <Link to="/feedback/" className={linkClass}>
               {t("mcp.support.feedbackLink")}
             </Link>
             <a href={`mailto:${SUPPORT_EMAIL}`} className={linkClass}>

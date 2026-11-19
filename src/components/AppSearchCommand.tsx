@@ -42,6 +42,11 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+// Already in the entry chunk (Cases, the home typeahead), so live case search
+// adds no bundle weight here.
+import { searchArchive } from "@/services/search-api";
+import type { ArchiveSearchResult } from "@/types/search";
+import { casePath } from "@/lib/case-links";
 
 type SearchItem = {
   title: string;
@@ -58,6 +63,11 @@ type SearchItem = {
 const MIN_DYNAMIC_SEARCH_TERM_LENGTH = 2;
 const DEFAULT_VISIBLE_GROUPS = new Set<SearchIndexGroup>(["pages", "updates"]);
 const MAX_VISIBLE_RESULTS = 24;
+// Cases are not in /search-index.json (the build no longer walks the archive),
+// so they are asked of the search API live, after a pause in typing.
+const CASE_SEARCH_DEBOUNCE_MS = 250;
+const CASE_SEARCH_PAGE_SIZE = 8;
+const NO_CASE_ITEMS: SearchItem[] = [];
 
 let cachedSearchIndexEntries: SearchIndexEntry[] | null = null;
 let searchIndexRequest: Promise<SearchIndexEntry[]> | null = null;
@@ -232,6 +242,42 @@ function renderHighlightedQuery(text: string, query: string) {
   );
 }
 
+function plainText(value: string | null | undefined): string {
+  return (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function truncateText(value: string, maxLength: number): string {
+  return value.length <= maxLength ? value : `${value.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+// A case hit from /api/search/ as a palette item, shaped like the entries the
+// build used to write into search-index.json: canonical slashed path, the case
+// icon, the `cases` group. Null when the hit has no usable case address.
+function caseResultToSearchItem(result: ArchiveSearchResult): SearchItem | null {
+  const slug = result.card?.slug?.trim();
+  let to: string | null = slug ? casePath(slug) : null;
+  if (!to && result.url?.startsWith("/case/")) {
+    to = result.url.endsWith("/") ? result.url : `${result.url}/`;
+  }
+  if (!to) return null;
+
+  const title =
+    plainText(result.title?.en || result.title?.ne || result.card?.title) || to;
+  const description = truncateText(
+    plainText(result.card?.short_description || result.snippet?.en || result.snippet?.ne),
+    180,
+  );
+  return {
+    title,
+    description,
+    to,
+    keywords: ["case", ...(slug ? [slug] : [])],
+    icon: FileText,
+    group: "cases",
+    lines: [],
+  };
+}
+
 type AppSearchCommandProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -294,7 +340,64 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
   const isDynamicSearchEnabled = searchTerms.some(
     (term) => term.length >= MIN_DYNAMIC_SEARCH_TERM_LENGTH,
   );
-  const visibleSearchItems = useMemo(
+  // Debounced, so a fast typist costs one request rather than one per key.
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
+  useEffect(() => {
+    const handle = setTimeout(
+      () => setDebouncedSearchValue(searchValue.trim()),
+      CASE_SEARCH_DEBOUNCE_MS,
+    );
+    return () => clearTimeout(handle);
+  }, [searchValue]);
+  const isCaseSearchEnabled =
+    open &&
+    getSearchTerms(debouncedSearchValue).some(
+      (term) => term.length >= MIN_DYNAMIC_SEARCH_TERM_LENGTH,
+    );
+  // A plain effect rather than useQuery, on purpose: this component is in the
+  // Navbar, so it renders on the server for every page, and a (disabled)
+  // useQuery would still leave a pending entry in the SSR query cache, which
+  // the pre-render's prefetch report reads as a failed prefetch. Effects never
+  // run on the server.
+  //
+  // Results are stored with the term they answer and shown only while that term
+  // is still what is typed, so a slow answer for an earlier term never lands
+  // under a newer one. Errors are swallowed: the palette keeps its local results.
+  const [caseResults, setCaseResults] = useState<{ term: string; items: SearchItem[] } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!isCaseSearchEnabled) return undefined;
+    let cancelled = false;
+    const term = debouncedSearchValue;
+    searchArchive({
+      q: term,
+      type: "case",
+      sort: "relevance",
+      page_size: CASE_SEARCH_PAGE_SIZE,
+      include_facets: false,
+    })
+      .then((response) => {
+        if (cancelled) return;
+        const items = (response?.results ?? [])
+          .filter((result) => result.type === "case")
+          .map(caseResultToSearchItem)
+          .filter((item): item is SearchItem => item !== null);
+        setCaseResults({ term, items });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearchValue, isCaseSearchEnabled]);
+  const caseItems =
+    isCaseSearchEnabled &&
+    caseResults?.term === debouncedSearchValue &&
+    debouncedSearchValue === searchValue.trim()
+      ? caseResults.items
+      : NO_CASE_ITEMS;
+
+  const localSearchItems = useMemo(
     () => {
       const searchableItems = isDynamicSearchEnabled
         ? searchItems
@@ -309,6 +412,17 @@ export function AppSearchCommand({ open, onOpenChange }: Readonly<AppSearchComma
     },
     [isDynamicSearchEnabled, searchItems, searchTerms],
   );
+  // Local matches first, then live case hits, deduped by path.
+  const visibleSearchItems = useMemo(() => {
+    if (caseItems.length === 0) return localSearchItems;
+    const seen = new Set(localSearchItems.map((item) => item.to));
+    const extra = caseItems.filter((item) => {
+      if (seen.has(item.to)) return false;
+      seen.add(item.to);
+      return true;
+    });
+    return [...localSearchItems, ...extra];
+  }, [caseItems, localSearchItems]);
 
   const navigateTo = (item: SearchItem) => {
     onOpenChange(false);

@@ -644,7 +644,8 @@
       "items": [
         {
           "q": "Can I give monthly instead of once?",
-          "a": "Yes. Zeffy and PayPal both support recurring gifts, so you can choose one-time or monthly support before confirming your donation."
+          "a": "Yes. Zeffy and PayPal both support recurring gifts, so you can choose one-time or monthly support before confirming your donation.",
+          "site": "org"
         },
         {
           "q": "Where exactly does the money go?",
@@ -652,7 +653,8 @@
         },
         {
           "q": "Are my donations tax-deductible?",
-          "a": "For US taxpayers, yes. Jawafdehi Initiative Inc. (US EIN 42-3114954) is a 501(c)(3) tax-exempt nonprofit, so gifts to it are tax-deductible to the extent allowed by law. Donations made through our Nepal entity are not deductible under US law. Email us if you need a receipt."
+          "a": "For US taxpayers, yes. Jawafdehi Initiative Inc. (US EIN 42-3114954) is a 501(c)(3) tax-exempt nonprofit, so gifts to it are tax-deductible to the extent allowed by law. Donations made through our Nepal entity are not deductible under US law. Email us if you need a receipt.",
+          "site": "org"
         },
         {
           "q": "Can I support Jawafdehi without donating money?",
@@ -660,7 +662,13 @@
         },
         {
           "q": "Will I get a receipt?",
-          "a": "If you give through **Zeffy** or **PayPal Giving Fund**, a receipt is emailed to you automatically. For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org** with your transfer details and we will confirm your contribution."
+          "a": "If you give through **Zeffy** or **PayPal Giving Fund**, a receipt is emailed to you automatically. For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org** with your transfer details and we will confirm your contribution.",
+          "site": "org"
+        },
+        {
+          "q": "Will I get a receipt?",
+          "a": "For QR or bank-transfer donations, email us at **inquiry@jawafdehi.org.np** with your transfer details and we will confirm your contribution.",
+          "site": "np"
         }
       ]
     },
@@ -704,23 +712,22 @@
   },
   "team": {
     "hero": {
-      "builtBy": "Built by",
-      "nepaliVolunteers": "Nepali volunteers",
-      "forNepal": "for Nepal",
-      "description": "Jawafdehi runs entirely on volunteer effort from Nepali citizens across technology, research, journalism, and public policy. No corporate interests. No government funding. Just people who believe accountability matters."
+      "title": "Our Team"
     },
     "sections": {
-      "nepalBoard": "Nepal Board",
       "advisors": "Advisors",
       "usBoard": "US Board",
-      "usBoardNote": "Jawafdehi Initiative Inc. is a separate entity registered in the US, distinct from Jawafdehi Initiative Nepal.",
       "currentMembers": "Consultants and Volunteers",
-      "pastMembers": "Former Consultants and Volunteers"
+      "pastMembers": "Former Consultants and Volunteers",
+      "board": "Nepal Board"
     },
     "tags": {
       "Chairman": "Chairman",
       "Secretary": "Secretary",
-      "Advisor": "Advisor"
+      "Advisor": "Advisor",
+      "Founding Member": "Founding Member",
+      "General Member": "General Member",
+      "Board Member": "Board Member"
     }
   },
   "pagination": {
@@ -1511,7 +1518,37 @@
     },
     "errorTitle": "This court case didn't load",
     "error": "Something went wrong on our side. Please try again in a moment.",
-    "notFoundTitle": "Court case not found"
+    "notFoundTitle": "Court case not found",
+    "chain": {
+      "heading": "Appeal history",
+      "nav": "Appeal history",
+      "note": "Jawafdehi linked these cases from court records; the courts do not publish these links. Each link shows our estimate of how likely it is to be right.",
+      "stage": {
+        "initial": "First court",
+        "appeal": "Appeal",
+        "review": "Review"
+      },
+      "thisCase": "This case",
+      "registered": "Registered {{date}}",
+      "decided": "Decided {{date}}",
+      "appealOf": "Appeal of",
+      "probablyAppealOf": "Probably an appeal of",
+      "oneOf": "Possibly an appeal of one of these. We could not tell which:",
+      "eachOf": "Appeal of each of:",
+      "likely": "{{pct}} likely"
+    },
+    "orders": {
+      "heading": "Court orders ({{count}})",
+      "nav": "Court orders",
+      "read": "Read",
+      "notReadable": "Text not available yet",
+      "undated": "Date not recorded",
+      "kind": {
+        "judgment": "Judgment",
+        "order": "Order",
+        "unknown": "Court order"
+      }
+    }
   },
   "dataQuality": {
     "title": "Data Quality & Coverage",
@@ -1771,41 +1808,8 @@
     },
     "materialsBySource": {
       "heading": "Where the evidence comes from",
-      "description": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
-      "combinedDescription": "Every one of the {{total}} source materials traces back to a public office or record. This is where they originate — and the kind of document each office contributes.",
-      "tooltip": "Materials",
-      "table": {
-        "source": "Source",
-        "type": "Document type",
-        "types": "Document types",
-        "grouping": "Grouping",
-        "item": "Breakdown",
-        "count": "Documents",
-        "share": "Share"
-      },
-      "source": {
-        "ag": "Office of the Attorney General",
-        "nkp": "Nepal Kanun Patrika",
-        "courts": "Nepal Courts",
-        "ciaa": "Commission for the Investigation of Abuse of Authority (CIAA)",
-        "dfmis": "Development Finance Management Information System (DFMIS)",
-        "jawafdehi": "Jawafdehi original documents",
-        "koshi": "Koshi Province",
-        "ppmo": "Public Procurement Monitoring Office (PPMO)",
-        "auditorGeneral": "Office of the Auditor General",
-        "lawsOfNepal": "Laws of Nepal",
-        "news": "News media",
-        "socialMedia": "Social media",
-        "other": "Other"
-      },
-      "publishes": {
-        "dfmis": "Development-finance records",
-        "ppmo": "Blacklist / debarment records",
-        "koshi": "Provincial records",
-        "ciaa": "Annual reports",
-        "courts": "Court filings",
-        "nkp": "Journal issues"
-      }
+      "summary": "{{total}} documents from {{sources}} sources, filed in {{folders}} folders:",
+      "seeAll": "Browse the archive"
     },
     "materialsByType": {
       "heading": "What materials are hosted",
@@ -2322,10 +2326,6 @@
     "placeholder": "Search documents & other materials"
   },
   "materialsLanding": {
-    "sources": {
-      "title": "Every source in the archive",
-      "lede": "Every office and publication we hold documents from. New sources appear here automatically."
-    },
     "title": "Documents & other materials — Nepal's public records",
     "metaDescription": "Nepal's public records in one open archive: CIAA reports, charge sheets, Kanun Patrika precedents, court orders and procurement notices — free to search, cite and reuse.",
     "heroTitle": "Nepal's public records. One archive.",
@@ -2342,21 +2342,6 @@
     "recent": {
       "untitled": "Untitled document"
     },
-    "sourceDescriptions": {
-      "ag": "Charge sheets filed by the Office of the Attorney General.",
-      "nkp": "Precedents published in the Nepal Kanun Patrika.",
-      "courts": "Orders and verdicts from Nepal's courts.",
-      "ciaa": "Publications of the Commission for the Investigation of Abuse of Authority.",
-      "dfmis": "Development-finance records from DFMIS.",
-      "jawafdehi": "Original documents collected by Jawafdehi.",
-      "koshi": "Official records from Koshi Province.",
-      "ppmo": "Blacklist and debarment records from the PPMO.",
-      "auditorGeneral": "Audit reports from the Office of the Auditor General.",
-      "lawsOfNepal": "Nepali statutes, regulations and bills.",
-      "news": "News coverage archived as evidence.",
-      "socialMedia": "Public social-media posts archived as evidence.",
-      "other": "A document from the Jawafdehi archive."
-    },
     "series": {
       "searchPlaceholder": "Search inside this series…",
       "searchSubmit": "Search this series",
@@ -2371,7 +2356,10 @@
       "backToArchive": "Back to the archive",
       "undated": "Undated",
       "openSource": "Open original source",
-      "download": "Download {{format}}"
+      "download": "Download {{format}}",
+      "notListable": "{{total}} documents are counted in this series, but they can't be listed here yet.",
+      "wholeSource": "Browse the whole source instead",
+      "showingTotal": "{{shown}} of {{total}}"
     },
     "filters": {
       "title": "Filter",
@@ -2397,6 +2385,20 @@
     "stats": {
       "documents": "Documents",
       "licence": "Licence"
+    },
+    "archive": {
+      "root": "Archive",
+      "title": "Browse the archive",
+      "lede": "Every document we hold, filed by the institution that published it. Open a folder to see its offices and series.",
+      "seeDocuments": "View all",
+      "open": "Open",
+      "recent": "Recent documents",
+      "viewAs": "View as",
+      "views": {
+        "icons": "Icons",
+        "list": "List",
+        "columns": "Columns"
+      }
     }
   },
   "courtCasesPage": {
@@ -2623,7 +2625,8 @@
           {
             "id": "financial-support",
             "question": "How can I support Jawafdehi financially?",
-            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **Zeffy** or **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
+            "answer": "You can support us by **Nepal bank transfer**, by scanning our **FonePay or NepalPay QR**, or from outside Nepal through **Zeffy** or **PayPal Giving Fund**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit.",
+            "answerNp": "You can support us by **Nepal bank transfer** or by scanning our **FonePay or NepalPay QR**. Your contribution **primarily supports employment** — paying the people who research, verify, and maintain the archive — along with the hosting and tooling that keep it running and free to use. Jawafdehi takes no profit."
           },
           {
             "id": "help-without-donating",

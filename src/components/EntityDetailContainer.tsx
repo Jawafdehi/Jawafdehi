@@ -22,6 +22,7 @@ import { getPrimaryName, getAttribute, getEmail, getPhone, getWebsite, getDescri
 import type { Case as JDSCase, EntityCaseRelationship } from '@/types/jds';
 import { formatDate } from '@/utils/date';
 import { caseTagLabel } from '@/lib/case-tags';
+import { casePath } from "@/lib/case-links";
 
 interface EntityDetailContainerProps {
   entityId?: string;
@@ -125,7 +126,7 @@ export function EntityDetailContainer({
         <CardContent className="p-12 text-center">
           <p className="text-muted-foreground">{t("entityDetail.entityNotFound")}</p>
           <Button asChild className="mt-4">
-            <Link to="/search?type=entity">{t("entityDetail.backToEntities")}</Link>
+            <Link to="/search/?type=entity">{t("entityDetail.backToEntities")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -306,7 +307,7 @@ export function EntityDetailContainer({
                     <div key={caseItem.id} className="border-b border-border pb-4 last:border-0">
                       <div className="flex justify-between items-start mb-2">
                         {caseItem.slug ? (
-                          <Link to={`/case/${caseItem.slug}`} className="font-medium hover:text-primary hover:underline">
+                          <Link to={casePath(caseItem.slug)} className="font-medium hover:text-primary hover:underline">
                             {caseItem.title}
                           </Link>
                         ) : (
@@ -362,7 +363,7 @@ export function EntityDetailContainer({
                     <div key={caseItem.id} className="border-b border-border pb-4 last:border-0">
                       <div className="flex justify-between items-start mb-2">
                         {caseItem.slug ? (
-                          <Link to={`/case/${caseItem.slug}`} className="font-medium hover:text-primary hover:underline">
+                          <Link to={casePath(caseItem.slug)} className="font-medium hover:text-primary hover:underline">
                             {caseItem.title}
                           </Link>
                         ) : (

@@ -24,7 +24,7 @@ export function ReportCaseCta() {
           <h2 className="font-home-section-title text-primary-foreground">{t("reportCta.title")}</h2>
           <p className="mt-4 max-w-xl text-lg leading-8 text-primary-foreground/75">{t("reportCta.description")}</p>
           <Button variant="accent" size="lg" asChild className="mt-8">
-            <Link to="/report">
+            <Link to="/report/">
               <FilePlus2 aria-hidden="true" />
               {t("report.trigger")}
             </Link>

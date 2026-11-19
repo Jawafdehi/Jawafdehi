@@ -301,7 +301,7 @@ export function NewsletterForm({
           {t("newsletter.form.privacyPrefix")}{" "}
           {/* A new tab, so following the link never loses what was typed. */}
           <Link
-            to="/privacy"
+            to="/privacy/"
             target="_blank"
             rel="noopener noreferrer"
             className={cn(

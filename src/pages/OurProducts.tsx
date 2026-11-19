@@ -110,8 +110,8 @@ function ChatPreview() {
 const PRODUCTS: Product[] = [
   // /mcp and /likhit are internal: the page with the setup on it is a better
   // first answer than a README, and it links the source.
-  { key: "mcp", name: "Jawafdehi MCP", to: "/mcp", preview: McpPreview },
-  { key: "likhit", name: "likhit", to: "/likhit", preview: LikhitPreview },
+  { key: "mcp", name: "Jawafdehi MCP", to: "/mcp/", preview: McpPreview },
+  { key: "likhit", name: "likhit", to: "/likhit/", preview: LikhitPreview },
   { key: "api", name: "Jawafdehi API", href: `${API_BASE_URL}/api/swagger/`, preview: ApiPreview },
   { key: "chat", name: "AI Research Chat", href: CHAT_URL, preview: ChatPreview },
 ];

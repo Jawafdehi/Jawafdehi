@@ -10,12 +10,19 @@ import {
 } from "@/components/ui/accordion";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
+import type { SiteVariant } from "@/lib/site-host";
 import { cn } from "@/lib/utils";
 
 export type FaqSectionItem = {
   id: string;
   question: string;
   answers: string[];
+  /**
+   * Shown on one public site only (src/lib/site-host.ts). The caller drops the
+   * other site's items on the client; this marks them for the pre-rendered
+   * HTML, where CSS hides them before first paint.
+   */
+  site?: SiteVariant;
 };
 
 type FaqSectionProps = {
@@ -88,6 +95,7 @@ export function FaqSection({
                   <AccordionItem
                     key={item.id}
                     value={item.id}
+                    data-site-variant={item.site}
                     className={faqCardClassName}
                   >
                     <AccordionTrigger className="min-h-[4.25rem] gap-5 px-5 py-5 text-left text-[17px] font-normal leading-7 text-primary no-underline transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:px-6 [&>svg]:hidden">

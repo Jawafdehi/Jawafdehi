@@ -88,7 +88,7 @@ function stubCaseApi() {
 
 async function caseHead(indexHtml = INDEX_HTML): Promise<string> {
   const res = await worker.fetch(
-    new Request('https://jawafdehi.org/case/some-case'),
+    new Request('https://jawafdehi.org/case/some-case/'),
     makeEnv(indexHtml),
   );
   return res.text();

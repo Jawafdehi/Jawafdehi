@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ReviewRow } from "@/components/casework/ReviewRow";
 import { ReviewResultView } from "@/components/casework/ReviewResultView";
 import { Loader2, ArrowLeft, ExternalLink, RefreshCw, Play } from "@/components/icons";
+import { casePath } from "@/lib/case-links";
 
 // Get the HTTP status / conflicting review id off an axios error without
 // pulling in axios types here.
@@ -200,7 +201,7 @@ export default function CaseworkCaseReviews() {
               <div className="font-mono text-xs text-muted-foreground">{slug}</div>
               <h1 className="text-lg font-bold">{title}</h1>
               <a
-                href={`/case/${slug}`}
+                href={casePath(slug)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 mt-1 text-xs text-primary hover:underline"

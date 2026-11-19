@@ -50,10 +50,10 @@ describe("Mcp page", () => {
     expect(emails.length).toBeGreaterThan(0);
     for (const link of emails) expect(link.getAttribute("href")).toBe("mailto:inquiry@jawafdehi.org");
     expect(screen.getByRole("link", { name: en.mcp.support.feedbackLink }).getAttribute("href")).toBe(
-      "/feedback",
+      "/feedback/",
     );
     expect(screen.getByRole("link", { name: en.mcp.signIn.privacyLink }).getAttribute("href")).toBe(
-      "/privacy#ai-assistants",
+      "/privacy/#ai-assistants",
     );
   });
 

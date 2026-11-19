@@ -4,6 +4,13 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query";
 export interface FailedQuery {
   queryKey: QueryKey;
   reason: string;
+  /**
+   * The HTTP status the API answered with, when it answered at all. Absent for
+   * a timeout or a network failure. The edge renderer reads it to tell "this
+   * record does not exist" (404 → a real 404) from "the API did not answer"
+   * (→ the cached copy or the meta-injection shell).
+   */
+  status?: number;
 }
 
 /** What a route's SSR prefetch asked for, and what it actually delivered. */
@@ -46,9 +53,17 @@ export function reportPrefetch(queryClient: QueryClient): PrefetchReport {
     if (query.state.status === "success") {
       fulfilled.push(query.queryKey);
     } else {
+      const failure = query.state.error as {
+        response?: { status?: unknown };
+        statusCode?: unknown;
+      } | null;
+      // axios errors carry response.status; JDSApiError (services/jds-api.ts)
+      // re-wraps them and keeps only statusCode.
+      const status = failure?.response?.status ?? failure?.statusCode;
       failed.push({
         queryKey: query.queryKey,
         reason: describeFailure(query.state.error, query.state.status),
+        ...(typeof status === "number" ? { status } : {}),
       });
     }
   }

@@ -18,9 +18,20 @@ import {
   type PrefetchReport,
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
-import { entityPath } from '../src/lib/entity-links.ts';
 import { WHATS_NEW, whatsNewPostPath } from '../src/data/whats-new.ts';
 import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
+import { fetchWithRetry } from './build-fetch.ts';
+import { injectIntoTemplate } from '../src/lib/ssr-template.ts';
+
+// What this script renders: the fixed top-level routes, the What's new posts
+// and the update articles — a few hundred pages, whatever the size of the
+// archive. Record pages (/case/*, /entity/*, /material/*, /courtcase/*) are NOT
+// rendered here: the Worker renders them on request and caches them (see the
+// "Edge SSR" section of worker.ts). It used to pre-render every case and up to
+// 10,000 entities, which meant walking the whole case archive on every build,
+// thousands of upstream calls, and a dist/ that crept toward Cloudflare's
+// 20,000-file ceiling. The /cases browse pages main renders are gone on this
+// branch: /cases redirects into /search.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -30,25 +41,11 @@ const ROOT = join(__dirname, '..');
 // anything a visitor or a crawler will see. Not set in CI, deliberately.
 const ALLOW_EMPTY_PREFETCH = process.env.PRERENDER_ALLOW_EMPTY_PREFETCH === '1';
 
-// How much of the archive to pre-render. `full` renders a page per case-cited
-// entity — ~2,700 of them, and growing with the corpus; `static` renders only
-// the fixed top-level routes and the update articles.
-//
-// Why this exists: the entity corpus is the expensive part of the build, and it
-// is only worth paying for on something a crawler will read. Until now every
-// build rendered all of it — the PR check, the Cloudflare preview build for each
-// branch, and the production deploy alike — against the live production API,
-// anonymously. Two of those run on the same push and drain the same anonymous
-// throttle bucket (1000/hour, THROTTLE_RATE_ANON), so whichever finished second
-// took a wall of 429s and failed the build. Batching the entity lookups bought
-// headroom and did not fix it, because the contention is between builds.
-//
-// ⚠️ The default is `full`, and that direction is deliberate. A build that
-// should have been cheap and was expensive wastes a few minutes; a production
-// deploy that should have been full and was static silently publishes the site
-// with ~2,700 pages missing, which is invisible until search traffic dies weeks
-// later. Opt OUT explicitly, where the build is known to be disposable; never
-// opt in from the deploy side.
+// `full` | `static`. Both now render exactly the same set of pages: the only
+// thing that told them apart was the case and entity pre-render, which is gone.
+// Still accepted and still validated, because `build:preview` sets `static` and
+// deploy-production.yml leaves it at the default, and a typo here should keep
+// failing loudly rather than be silently ignored.
 const SCOPE = process.env.PRERENDER_SCOPE ?? 'full';
 if (SCOPE !== 'full' && SCOPE !== 'static') {
   console.error(
@@ -56,118 +53,6 @@ if (SCOPE !== 'full' && SCOPE !== 'static') {
   );
   process.exit(1);
 }
-const RENDER_ENTITY_PAGES = SCOPE === 'full';
-
-// Ceiling on pre-rendered ENTITY pages. Not a performance tuning knob — it is
-// what keeps the deploy under Cloudflare's hard limit of 20,000 static asset
-// files per Worker version, which the build silently crossed in October 2026
-// and which froze production on an old bundle for days (error 10304, and the
-// only symptom is a failed deploy days after the publishing that caused it).
-//
-// A CEILING rather than a rule like "cited by 2+ cases", because a rule still
-// grows with the corpus. Capped, the asset count stops tracking the entity
-// corpus and only grows with case pages (~1 file each), which buys thousands of
-// cases of headroom instead of a few hundred.
-//
-//   assets ≈ 2,712 fixed (case pages, pagination, JS/CSS) + ENTITY_LIMIT
-//
-// so 10,000 lands near 12,700 against the 20,000 ceiling. Raise it the day the
-// account moves to Workers Paid (limit 100,000) — that is why it is an env var
-// and not a constant.
-const ENTITY_LIMIT = Number(process.env.PRERENDER_ENTITY_LIMIT ?? 10_000);
-if (!Number.isInteger(ENTITY_LIMIT) || ENTITY_LIMIT < 1) {
-  console.error(
-    `[pre-render] ERROR: PRERENDER_ENTITY_LIMIT must be a positive integer, got ${JSON.stringify(
-      process.env.PRERENDER_ENTITY_LIMIT,
-    )}.`,
-  );
-  process.exit(1);
-}
-
-/**
- * The entity pages to pre-render, best first, capped at ENTITY_LIMIT.
- *
- * Ranked by citation count, then by the newest citing case, then by path.
- *
- * The tie-break is the load-bearing part, not a detail. ~90% of cited entities
- * (15,867 of 17,585 as of 2026-10-10) are cited by EXACTLY ONE case, so a cut at
- * 10,000 falls inside one enormous tie. Ordered only by count, which entities
- * land above the line would depend on object iteration order and would differ
- * between builds — thousands of pages appearing and disappearing on every
- * deploy, churning the asset list and the search-engine view of the site. The
- * full key is deterministic: identical inputs give an identical list.
- *
- * Recency is the tie-break because it is the only other well-populated signal.
- * `weight` is 0 on virtually every case and `bigo` is frequently null, so
- * neither can order the tie; an entity named in a recent case is also the one
- * readers are most likely to be looking for.
- *
- * Entities below the cut are NOT lost — they fall through to the edge renderer
- * like any other un-pre-rendered route.
- */
-function rankEntityPaths(
-  paths: string[],
-  citations: Map<string, { count: number; newest: string }>,
-): string[] {
-  if (paths.length <= ENTITY_LIMIT) return paths;
-  // Code-unit comparison, NOT localeCompare: with no explicit locale that reads
-  // the runtime's default, so Devanagari paths could tie-break one way in this
-  // container and another way in Cloudflare's — which is the exact
-  // build-to-build churn the ranking exists to prevent. `<`/`>` is locale-free
-  // and total, and ISO dates order correctly under it anyway.
-  const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-  const ranked = [...paths].sort((a, b) => {
-    const x = citations.get(a);
-    const y = citations.get(b);
-    return (
-      (y?.count ?? 0) - (x?.count ?? 0) ||
-      order(y?.newest ?? '', x?.newest ?? '') ||
-      order(a, b)
-    );
-  });
-  const dropped = ranked.length - ENTITY_LIMIT;
-  console.warn(
-    `[pre-render] entity cap: rendering the top ${ENTITY_LIMIT} of ${ranked.length} ` +
-      `cited entities; ${dropped} fall through to the edge renderer. ` +
-      `Raise PRERENDER_ENTITY_LIMIT once the Workers plan allows more assets.`,
-  );
-  return ranked.slice(0, ENTITY_LIMIT);
-}
-
-// Case pages cost one upstream call each — the detail endpoint is per-slug and
-// has no batch form, unlike entities — so a full build spends ~2,600 of them
-// here (2,629 published cases on 2026-10-19). This number moves fast and in
-// steps, not smoothly: it was ~463 on 2026-10-03 and 2,627 by 2026-10-13,
-// because cases arrive in bulk imports. Re-measure it before sizing anything on
-// it; the full build is the phase nearest Workers Builds' unraisable 20-minute
-// ceiling.
-// That is affordable only because it happens alone: on a push to `main` GitHub
-// runs `build:preview` (static) while Cloudflare's "Deploy default branch"
-// trigger runs the full build, so the two are not competing for the same
-// 1000/hour anonymous bucket. Keep it that way; two concurrent full builds put
-// this back over the cap.
-const RENDER_CASE_PAGES = SCOPE === 'full';
-
-// Share of case pages that may fail to render before the build gives up. One
-// timed-out request is noise and the edge fallback covers it; a tenth of the
-// archive missing is a broken API wearing the same costume.
-const CASE_SKIP_TOLERANCE = 0.02;
-
-// A `full` build must authenticate. It reads the whole archive — thousands of
-// requests in a few minutes — and the anonymous cap is 1000/hour, so running one
-// anonymously no longer fits: the production build on 2026-10-03 spent ~1,010
-// and passed only on the synced throttle's approximate accounting.
-//
-// Fail BEFORE the work rather than after. Without this the symptom of a dropped
-// CI secret is eight minutes of rendering followed by a wall of 429s and a
-// refusal to publish, which reads like an API outage rather than a missing
-// variable. `static` builds are untouched: they make a few dozen calls and have
-// no reason to hold a credential.
-//
-// `PRERENDER_ANONYMOUS=1` opts out, for a local `bun run build` by someone who
-// has no credentials and does not need them. Not set in CI, deliberately — the
-// same arrangement as PRERENDER_ALLOW_EMPTY_PREFETCH above.
-const ALLOW_ANONYMOUS_FULL_BUILD = process.env.PRERENDER_ANONYMOUS === '1';
 
 interface RouteConfig {
   path: string;
@@ -191,103 +76,8 @@ interface RenderResult {
   prefetch: PrefetchReport;
 }
 
-interface PaginatedCaseList {
-  count: number;
-  next: string | null;
-  results: Array<{
-    id: number;
-    slug?: string | null;
-    title?: string | null;
-    description?: string | null;
-    updated_at: string;
-    // Only used to rank entities for the pre-render cap (see ENTITY_LIMIT): it
-    // is the tie-break for the ~90% of entities cited by exactly one case.
-    case_publish_date?: string | null;
-    // No numeric `id`: the 2026-06 IRI remodel re-keyed entity binds onto the
-    // canonical NES `@id` IRI and the case serializer stopped emitting one.
-    entities: Array<{ nes_id: string | null; display_name?: string | null }>;
-  }>;
-}
-
 const API_BASE = 'https://api.jawafdehi.org/api';
 const CONCURRENCY = 5;
-
-// Mirrors MAX_BATCH_SIZE in the API's entities/views.py. Over it the endpoint
-// 400s with BATCH_SIZE_EXCEEDED, so raising this needs the server raised first.
-const ENTITY_BATCH_SIZE = 25;
-
-const FETCH_TIMEOUT_MS = 10_000;
-
-/** `GET /api/entities?ids=` — the batch form of the per-entity detail endpoint. */
-interface EntityBatchResponse {
-  entities: unknown[];
-  total: number;
-  requested: number;
-  /** Refs that resolved to nothing. Absent when empty. */
-  not_found?: string[];
-  /** requested IRI → survivor IRI, for merge tombstones. Absent when empty. */
-  redirected?: Record<string, string>;
-}
-
-async function fetchJson<T>(url: string): Promise<T> {
-  // Authenticated when the build has credentials. These calls (the case list and
-  // the entity batches) go out from this script rather than through the SSR
-  // bundle's axios client, so they need the header attached here too — the
-  // bundle's own requests get it from setPrerenderToken in main().
-  const headers = await buildAuthHeaders();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  let res: Response;
-  try {
-    res = await fetch(url, { signal: controller.signal, headers });
-  } catch (err) {
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
-  if (!res.ok) throw new Error(`API error ${res.status} fetching ${url}`);
-  return (await res.json()) as T;
-}
-
-/**
- * The case archive. `sample` stops after one page.
- *
- * A `full` build needs every case: it renders a page per slug and ranks entities
- * by citation. A `static` build renders neither, but it is NOT true that it has
- * no use for the list — the loop that builds `renderableCases` also pushes every
- * case into search-index.json. Skipping the fetch outright took that index from
- * 2,652 entries to 23 and stopped CI exercising caseToSearchEntry and the
- * no-slug warning at all.
- *
- * So sample rather than skip: one page still exercises those paths, still proves
- * the API is reachable through the same try/catch (which is what
- * PRERENDER_ALLOW_EMPTY_PREFETCH needs in order to keep working), and costs ~2.5 s
- * against the ~145 s a 132-call sweep at the default page_size of 20 was costing
- * every preview build.
- *
- * page_size is honoured by /api/cases/ and is NOT capped at 50 the way
- * /api/materials/ and /api/search/ are.
- */
-const SAMPLE_PAGE_SIZE = 200;
-
-async function fetchAllCases(
-  { sample = false }: { sample?: boolean } = {},
-): Promise<PaginatedCaseList['results']> {
-  const all: PaginatedCaseList['results'] = [];
-  let url: string | null = sample
-    ? `${API_BASE}/cases/?page_size=${SAMPLE_PAGE_SIZE}`
-    : `${API_BASE}/cases/`;
-  while (url) {
-    const data: PaginatedCaseList = await fetchJson<PaginatedCaseList>(url);
-    all.push(...data.results);
-    if (sample) break;
-    url = data.next;
-  }
-  return all;
-}
 
 async function withConcurrency<T>(
   items: T[],
@@ -305,64 +95,6 @@ async function withConcurrency<T>(
   await Promise.all(workers);
 }
 
-/**
- * Entity records for `iris`, keyed by the IRI that was REQUESTED.
- *
- * One upstream call per entity page is what made this build a coin flip: ~2,500
- * pages, one `/api/entities/<tail>` each, against the API's 1000/hour anonymous
- * throttle (`THROTTLE_RATE_ANON`). Past the cap the records come back 429, the
- * pages render against an empty cache, and the guard at the end of this script
- * correctly refuses to publish them. The same records come back 25 at a time
- * from `/api/entities?ids=`, which is ~100 calls instead of ~2,500.
- *
- * ENTITY_BATCH_SIZE mirrors the API's own cap (`MAX_BATCH_SIZE` in
- * `entities/views.py`); over it the endpoint 400s with BATCH_SIZE_EXCEEDED.
- *
- * Keyed by the REQUESTED IRI rather than each document's own `@id`, because the
- * two differ for a merge tombstone: it resolves to its survivor. The detail
- * endpoint hides that behind a 301 the HTTP client follows, while the batch
- * reports it in `redirected` and returns the survivor's document. Keying on
- * `@id` would leave every tombstoned entity unseeded.
- *
- * Anything unresolved is simply absent from the map, and the caller falls back
- * to a per-page fetch — slower, never wrong.
- */
-async function fetchEntityRecords(iris: string[]): Promise<Map<string, unknown>> {
-  const chunks: string[][] = [];
-  for (let i = 0; i < iris.length; i += ENTITY_BATCH_SIZE) {
-    chunks.push(iris.slice(i, i + ENTITY_BATCH_SIZE));
-  }
-
-  const byRequestedIri = new Map<string, unknown>();
-  await withConcurrency(chunks, CONCURRENCY, async (chunk) => {
-    const params = new URLSearchParams({ ids: chunk.join(',') });
-    let body: EntityBatchResponse;
-    try {
-      body = await fetchJson<EntityBatchResponse>(`${API_BASE}/entities?${params}`);
-    } catch (err) {
-      // Deliberately not fatal: each entity in this chunk falls back to its own
-      // fetch, so a flaky batch costs speed rather than correctness.
-      console.warn(
-        `[pre-render] WARNING: entity batch of ${chunk.length} failed; ` +
-        `those records fall back to per-page fetches:`, err,
-      );
-      return;
-    }
-
-    const byId = new Map<string, unknown>();
-    for (const doc of body.entities ?? []) {
-      const id = (doc as { '@id'?: unknown })?.['@id'];
-      if (typeof id === 'string') byId.set(id, doc);
-    }
-    for (const iri of chunk) {
-      const doc = byId.get(body.redirected?.[iri] ?? iri);
-      if (doc !== undefined) byRequestedIri.set(iri, doc);
-    }
-  });
-
-  return byRequestedIri;
-}
-
 // renderToString does not throw when it hits an unresolved Suspense boundary — it
 // returns the fallback and a <template data-msg="The server did not finish this
 // Suspense boundary..."> marker, and the build happily writes that to disk and
@@ -378,11 +110,10 @@ async function fetchEntityRecords(iris: string[]): Promise<Map<string, unknown>>
 const SUSPENSE_STUB_MARKER = 'did not finish this Suspense boundary';
 
 // Its own type because the per-route loops below are deliberately tolerant — one
-// unrenderable update or entity warns and is skipped rather than failing a
-// deploy. A lazy page is the opposite kind of problem: it fails EVERY route in
-// that family identically, so "skip and carry on" would quietly publish a site
-// with no entity pages at all while the sitemap still advertised 1,579 of them.
-// Those loops rethrow this one.
+// unrenderable update warns and is skipped rather than failing a deploy. A lazy
+// page is the opposite kind of problem: it fails EVERY route in that family
+// identically, so "skip and carry on" would quietly publish a site with the
+// whole family missing. Those loops rethrow this one.
 class SuspenseStubError extends Error {
   override readonly name = 'SuspenseStubError';
 }
@@ -477,45 +208,6 @@ function staticRouteOutFile(path: string): string {
   return join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
 }
 
-function injectIntoTemplate(template: string, result: RenderResult): string {
-  const { html, helmetContext, dehydratedState } = result;
-  const h = helmetContext.helmet;
-  const title = h?.title?.toString() ?? '';
-  const meta = [
-    h?.meta?.toString() ?? '',
-    h?.link?.toString() ?? '',
-    h?.script?.toString() ?? '',
-    h?.style?.toString() ?? '',
-    h?.noscript?.toString() ?? '',
-  ].filter(s => s.trim()).join('\n    ');
-  const json = JSON.stringify(dehydratedState).replace(/<\//g, '<\\/');
-  const stateScript = `<script id="__REACT_QUERY_STATE__" type="application/json">${json}</script>`;
-
-  // A page may override the document language via Helmet's <html lang="…" />.
-  // Only the title and the meta block were substituted here, so that override
-  // was silently dropped and every pre-rendered page shipped index.html's
-  // lang="ne" — including /research/corruption-accountability, which is served
-  // English-only and declares lang="en". A crawler then read Nepali markup
-  // language with an en_US og:locale, which is the same contradiction #300 set
-  // out to remove, just from the other side.
-  //
-  // Narrow on purpose: lang is the only attribute any page overrides, and
-  // rewriting the whole <html> tag from htmlAttributes would drop the
-  // translate="no" the template carries.
-  const lang = h?.htmlAttributes?.toString().match(/lang="([^"]+)"/)?.[1];
-
-  return template
-    .replace('<!--app-html-->', () => html)
-    .replace('<!--helmet-title-->', () => title)
-    .replace('<!--helmet-meta-->', () => meta)
-    .replace('<!--dehydrated-state-->', () => stateScript)
-    .replace(/<html lang="[^"]*"/, (match) => (lang ? `<html lang="${lang}"` : match));
-}
-
-function stripHtml(value: string | null | undefined): string {
-  return (value ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) {
     return value;
@@ -606,67 +298,21 @@ function withSearchLines(entry: SearchIndexEntry, html: string): SearchIndexEntr
   };
 }
 
-// Cases carry no `lines`: they are not pre-rendered (see the case block in
-// main()), so there is no rendered HTML to mine. Nothing is lost — the 32 lines
-// this used to attach were the header and footer, identical for all 67 cases and
-// containing no case text at all. Title and description come from the API, which
-// is where they always came from.
-function caseToSearchEntry(
-  caseItem: PaginatedCaseList['results'][number],
-  slug: string,
-): SearchIndexEntry {
-  const title = stripHtml(caseItem.title) || `Case ${caseItem.id}`;
-  const description = truncate(stripHtml(caseItem.description), 180);
-
-  return {
-    path: `/case/${slug}`,
-    title,
-    // Slugs embed the court reference (case-081-cr-0090-…), so indexing the slug
-    // makes "081-CR-0090" find the case even when the title never spells it out.
-    keywords: ['case', 'corruption', 'archive', String(caseItem.id), slug, title],
-    descriptionKey: description ? undefined : 'searchCommand.descriptions.caseDetail',
-    description,
-    icon: 'FileText',
-    group: 'cases',
-  };
-}
-
-// Entities carry no `lines`, for the same reason cases do not (above). An entity
-// page renders its identity rail and then fetches the record client-side, so the
-// only text in the pre-rendered HTML is the chrome every page shares — nav,
-// footer, the event banner. Attaching it multiplied dist/search-index.json by
-// ~21x (441 KB -> 9.4 MB, 54 KB -> 180 KB gzip) across 1,544 entities and filled
-// the command palette with entries whose searchable body was the site header.
-// Title and keywords come from the case bind, which is where they came from
-// anyway, so nothing is lost by dropping the lines.
-function entityToSearchEntry(path: string, name: string | null | undefined): SearchIndexEntry {
-  // The `<prefix>/<slug>` tail is the only human-readable handle left once the
-  // numeric id is gone, so it stands in for the title when a bind carries no
-  // display_name.
-  const tail = path.replace('/entity/', '');
-  const title = stripHtml(name) || tail;
-
-  return {
-    path,
-    title,
-    descriptionKey: 'searchCommand.descriptions.entityDetail',
-    keywords: ['entity', 'person', 'organization', 'official', tail, title],
-    icon: 'Building2',
-    group: 'entities',
-  };
-}
-
 async function main() {
-  if (SCOPE === 'full' && !hasBuildCredentials() && !ALLOW_ANONYMOUS_FULL_BUILD) {
-    console.error(
-      '[pre-render] ERROR: a full build needs API credentials.\n' +
-        '  Set PRERENDER_CLIENT_ID and PRERENDER_CLIENT_SECRET (the sa-prerender machine\n' +
-        '  user; credentials are in OpenBao at kv/jawafdehi/private/prerender/creds).\n' +
-        '  Rendering the whole archive anonymously exceeds the 1000/hour anonymous cap.\n' +
-        '  To build locally without them anyway: PRERENDER_ANONYMOUS=1, or the cheaper\n' +
-        '  `bun run build:preview`.',
+  // Credentials are optional. A build now makes a few hundred calls — one
+  // search per case browse page (~220) plus the static routes' prefetches —
+  // which fits under the 1000/hour anonymous cap even with the CI check and the
+  // Cloudflare preview build running on the same push. Production still sets
+  // PRERENDER_CLIENT_ID/SECRET, so it keeps its own throttle bucket rather than
+  // competing with readers; their absence is worth a warning, not a failed
+  // build. (The old hard requirement, and its PRERENDER_ANONYMOUS escape hatch,
+  // existed for the full-archive walk, which is gone.)
+  if (!hasBuildCredentials()) {
+    console.warn(
+      '[pre-render] WARNING: no PRERENDER_CLIENT_ID/PRERENDER_CLIENT_SECRET — fetching anonymously.\n' +
+        '  Fine for a local or preview build; production should set them (the sa-prerender\n' +
+        '  machine user, kv/jawafdehi/private/prerender/creds in OpenBao).',
     );
-    process.exit(1);
   }
 
   // Copy client assets (JS/CSS/etc.) from dist/client/ into dist/ so they're
@@ -689,7 +335,7 @@ async function main() {
   // Dynamic import of SSR bundle (built by `vite build --ssr`, not available at type-check time)
   // @ts-expect-error: module only exists after `vite build --ssr`
   const serverEntry = await import('../dist/server/entry-server.js') as {
-    render: (url: string, seed?: { entityRecord?: unknown }) => Promise<RenderResult>;
+    render: (url: string) => Promise<RenderResult>;
     setPrerenderToken: (token: string | null) => void;
   };
   const { render } = serverEntry;
@@ -722,95 +368,23 @@ async function main() {
     }
   };
 
-  // Fetch cases and entity IDs.
-  //
-  // `static` scope samples one page instead of sweeping all 132. The sweep cost
-  // 145 s of a 496 s preview build on 2026-10-19 and nothing in that scope
-  // renders a case or an entity page from it — but it is NOT unused there: the
-  // loop below also pushes every case into search-index.json. See fetchAllCases.
-  //
-  // Keeping the fetch (rather than skipping it) is also what keeps
-  // PRERENDER_ALLOW_EMPTY_PREFETCH working: that opt-out depends on this
-  // try/catch setting `apiReachable`, and every later API call is gated on it.
-  const SAMPLE_CASES = !(RENDER_ENTITY_PAGES || RENDER_CASE_PAGES);
-  let cases: PaginatedCaseList['results'] = [];
-  let apiReachable = true;
+  // Is the API reachable? One cheap search call (retried like every build
+  // fetch). When it is not, the build fails here — every page that prefetches
+  // would ship empty — unless PRERENDER_ALLOW_EMPTY_PREFETCH=1, in which case
+  // the static routes are rendered with an empty cache.
   try {
-    cases = await fetchAllCases({ sample: SAMPLE_CASES });
-    console.log(
-      SAMPLE_CASES
-        ? `[pre-render] PRERENDER_SCOPE=static — sampled ${cases.length} cases (not the full archive)`
-        : `[pre-render] Fetched ${cases.length} cases`,
-    );
+    const probe = await fetchWithRetry(`${API_BASE}/search/?type=case&page_size=1`, {
+      headers: await buildAuthHeaders(),
+    });
+    if (!probe.ok) throw new Error(`API error ${probe.status} probing ${API_BASE}`);
+    await probe.body?.cancel().catch(() => {});
   } catch (err) {
-    // Rendering static routes only was the tolerant default. It is not tolerable
-    // for a deploy: every page that prefetches anything would be published empty,
-    // and no case or entity page would be published at all.
     if (!ALLOW_EMPTY_PREFETCH) {
       console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
       console.error('[pre-render] Building with no API access? Set PRERENDER_ALLOW_EMPTY_PREFETCH=1.');
       process.exit(1);
     }
     console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
-    apiReachable = false;
-  }
-
-  // Entity pages worth pre-rendering are exactly the ones a published case
-  // cites — the same rule the public entity search applies (`case_count >= 1`,
-  // see `entities/search_visibility.py` in the API). `cases` is the published
-  // set, so its binds give that rule for free.
-  //
-  // This block used to map `e.id`, a numeric field the IRI remodel deleted, so
-  // it resolved to [] and NO entity page was pre-rendered or listed.
-  //
-  // Keyed by page path but retaining the IRI, because the batch lookup below
-  // addresses entities by IRI while everything downstream addresses them by
-  // path. Insertion order is first-appearance order, matching the Set-based
-  // dedupe this replaced, so the emitted page order is unchanged.
-  const iriByPath = new Map<string, string>();
-  //: How many published cases cite each entity, and the newest of those cases —
-  //: the two halves of the ranking below. Both are free here: `cases` already
-  //: carries every bind, so nothing extra is fetched.
-  const citations = new Map<string, { count: number; newest: string }>();
-  if (apiReachable && RENDER_ENTITY_PAGES) {
-    for (const caseItem of cases) {
-      const published = caseItem.case_publish_date ?? '';
-      // A case may name the same person twice (accused AND related). That is
-      // ONE citation — "cited by 2 cases" has to mean two cases.
-      const seen = new Set<string>();
-      for (const entity of caseItem.entities) {
-        const path = entityPath(entity.nes_id);
-        if (!path || !entity.nes_id || seen.has(path)) continue;
-        seen.add(path);
-        if (!iriByPath.has(path)) iriByPath.set(path, entity.nes_id);
-        const prev = citations.get(path);
-        if (prev) {
-          prev.count += 1;
-          if (published > prev.newest) prev.newest = published;
-        } else {
-          citations.set(path, { count: 1, newest: published });
-        }
-      }
-    }
-  }
-  const entityPaths = rankEntityPaths([...iriByPath.keys()], citations);
-  // Drop the IRIs that did not make the cut, so the batch record fetch below
-  // asks only for pages that will actually be rendered.
-  const kept = new Set(entityPaths);
-  for (const path of [...iriByPath.keys()]) {
-    if (!kept.has(path)) iriByPath.delete(path);
-  }
-
-  // Said once, loudly, and at the top rather than buried in the page log: a
-  // static-scope build is NOT the site. It is missing every entity page, and the
-  // sitemap it ships still advertises them, because `scripts/sitemap.ts` derives
-  // from the API rather than from what was rendered.
-  if (!RENDER_ENTITY_PAGES) {
-    console.warn(
-      '[pre-render] PRERENDER_SCOPE=static — entity pages are NOT being rendered.\n' +
-      '  This build is for a PR check or a branch preview. Do NOT publish it to\n' +
-      '  production: the archive would go live with every entity page missing.',
-    );
   }
 
   // Render static routes
@@ -867,172 +441,9 @@ async function main() {
     }
   }
 
-  if (apiReachable) {
-    // Case pages, one file per slug at dist/case/<slug>/index.html.
-    //
-    // ⚠️ This block used to emit nothing, and the reason it did is worth keeping
-    // in view, because re-introducing it would be worse than never having
-    // pre-rendered at all. The first attempt wrote one file per NUMERIC id. The
-    // case detail API is keyed on slug, so SSR fetched nothing and all 67 files
-    // were the same chrome-only shell — no case text, empty <title>, no Open
-    // Graph or canonical. A static asset wins over the SPA fallback, so those
-    // blank files SHADOWED worker.ts's handleCaseMetaFallback, which fetches the
-    // case at the edge and injects real metadata. Emitting nothing was strictly
-    // better than emitting that.
-    //
-    // What changed is that the pages now have content. `/case/:id` has had a
-    // slug-keyed prefetch branch in entry-server.tsx since, so render() returns
-    // the real case, and CaseDetail's <Seo> emits a superset of what the Worker
-    // fallback does — same title, description, canonical, share image, article
-    // times and the `noindex` for non-PUBLISHED records, plus two <link
-    // rel=alternate> tags the fallback has no way to produce. The fallback still
-    // covers every case published since the last build, because ASSETS 404s for
-    // those and the request falls through to it.
-    //
-    // Why it is worth 463 upstream calls: measured against production on
-    // 2026-10-02, every case page served a body byte-identical to the home
-    // page's — 8 sampled at random gave 8 distinct <title> values and ONE
-    // distinct body, sha 75dce34c, 5,251 characters, the same bytes the home
-    // page serves. The case text existed only after JS ran. To a crawl
-    // scheduler that is 463 copies of the home page, and it is the other half of
-    // why they sit in "Discovered - currently not indexed".
-    //
-    // ⚠️ A case UNPUBLISHED or re-slugged after a build leaves a stale file that
-    // shadows the fallback until the next deploy, where before it would 404
-    // correctly. That is the cost of serving these statically; it is bounded by
-    // deploy cadence, and the API only lists PUBLISHED cases so nothing
-    // unpublished is written in the first place.
-    const renderableCases: Array<{ caseItem: PaginatedCaseList['results'][number]; slug: string }> = [];
-    for (const caseItem of cases) {
-      const slug = caseItem.slug?.trim();
-      if (!slug) {
-        console.warn(
-          `[pre-render] Case ${caseItem.id} has no slug; omitting from the search ` +
-          `index rather than linking it to a URL that cannot resolve.`,
-        );
-        continue;
-      }
-      // Cases carry no `lines` even now that there is rendered HTML to mine:
-      // search-index.json is downloaded by every visitor, and 463 case bodies
-      // would dwarf the rest of it. Title and description come from the API.
-      searchEntries.push(caseToSearchEntry(caseItem, slug));
-      renderableCases.push({ caseItem, slug });
-    }
-
-    if (RENDER_CASE_PAGES) {
-      // ⚠️ Cases do NOT go through `notePrefetch`, and that is the one thing in
-      // this block most likely to look like an oversight. The shared guard fails
-      // the whole build when a pre-rendered route came back with an empty cache,
-      // which is right for a static route or an entity page: there is no other
-      // way to serve those, so publishing a skeleton is the only alternative and
-      // it is worse than failing.
-      //
-      // A case has another way to be served. If no file is written the URL falls
-      // through to worker.ts's handleCaseMetaFallback, which fetches the record
-      // at the edge and injects real metadata — the path that served every case
-      // before this block existed. So for a case the right response to "the data
-      // did not arrive" is to write NOTHING, not to fail the deploy and not to
-      // write the file anyway.
-      //
-      // Writing it anyway is specifically the old bug: a static asset beats the
-      // SPA fallback, so a shell with an empty cache would SHADOW the working
-      // edge path and serve a blank page where a correct one used to be.
-      //
-      // Measured on the first full build that rendered all 463: exactly one case
-      // timed out at 10s. One transient timeout should not stop a deploy.
-      let skipped = 0;
-      await withConcurrency(renderableCases, CONCURRENCY, async ({ slug }) => {
-        const path = `/case/${slug}`;
-        const outFile = join(ROOT, 'dist', 'case', slug, 'index.html');
-        try {
-          const result = await render(path);
-          if (result.prefetch.failed.length > 0) {
-            skipped += 1;
-            const why = result.prefetch.failed.map((f) => f.reason).join('; ');
-            console.warn(
-              `[pre-render] WARNING: ${path} rendered with no case data (${why}); ` +
-              `writing no file so the edge metadata fallback serves it.`,
-            );
-            return;
-          }
-          await writeHtml(outFile, injectIntoTemplate(template, result));
-          console.log(`[pre-render] ✓ ${path}`);
-        } catch (err) {
-          if (err instanceof SuspenseStubError) throw err;
-          skipped += 1;
-          console.warn(`[pre-render] WARNING: Skipping case ${slug}:`, err);
-          if (err instanceof Error) console.error(err.stack);
-        }
-      });
-
-      const rendered = renderableCases.length - skipped;
-      console.log(`[pre-render] Rendered ${rendered} case pages, ${skipped} left to the edge fallback`);
-
-      // Tolerating one timeout is not the same as tolerating a broken API. Past
-      // this share something is wrong with the data layer rather than with the
-      // network, and shipping a build where most of the archive quietly reverted
-      // to the fallback would hide it for as long as nobody looked.
-      const skipLimit = Math.ceil(renderableCases.length * CASE_SKIP_TOLERANCE);
-      if (skipped > skipLimit) {
-        console.error(
-          `[pre-render] ERROR: ${skipped} of ${renderableCases.length} case pages could not be\n` +
-          `  rendered, over the ${Math.round(CASE_SKIP_TOLERANCE * 100)}% tolerance (${skipLimit}).\n` +
-          `  That is a data-layer problem, not a flaky request. Refusing to publish.`,
-        );
-        process.exit(1);
-      }
-    } else {
-      console.log(
-        `[pre-render] PRERENDER_SCOPE=static — ${renderableCases.length} case pages NOT rendered; ` +
-        `they fall through to worker.ts's edge metadata fallback.`,
-      );
-    }
-
-    const entityNames = new Map<string, string | null | undefined>();
-    for (const caseItem of cases) {
-      for (const entity of caseItem.entities) {
-        const path = entityPath(entity.nes_id);
-        if (path && !entityNames.has(path)) {
-          entityNames.set(path, entity.display_name);
-        }
-      }
-    }
-
-    // Every entity record up front, ~25 per call, so rendering a page costs no
-    // upstream request at all. See fetchEntityRecords for why this is not one
-    // fetch per page any more.
-    const entityRecords = await fetchEntityRecords([...iriByPath.values()]);
-    const unseeded = entityPaths.length - entityRecords.size;
-    console.log(
-      `[pre-render] Fetched ${entityRecords.size} entity records in ` +
-      `${Math.ceil(entityPaths.length / ENTITY_BATCH_SIZE)} batched calls` +
-      (unseeded > 0 ? ` (${unseeded} unresolved, falling back to per-page fetches)` : ''),
-    );
-
-    // Render entity routes. The output directory mirrors the multi-segment
-    // `<prefix>/<slug>` tail (e.g. dist/entity/person/ram-shah/index.html), the
-    // same shape the `/entity/*` splat route resolves at runtime.
-    await withConcurrency(entityPaths, CONCURRENCY, async (path) => {
-      const outFile = join(ROOT, 'dist', ...path.split('/').filter(Boolean), 'index.html');
-      const iri = iriByPath.get(path);
-      const entityRecord = iri === undefined ? undefined : entityRecords.get(iri);
-      try {
-        const result = await render(path, { entityRecord });
-        const html = injectIntoTemplate(template, result);
-        await writeHtml(outFile, html);
-        notePrefetch(path, result);
-        searchEntries.push(entityToSearchEntry(path, entityNames.get(path)));
-        console.log(`[pre-render] ✓ ${path}`);
-      } catch (err) {
-        if (err instanceof SuspenseStubError) throw err;
-        console.warn(`[pre-render] WARNING: Skipping entity ${path}:`, err);
-        if (err instanceof Error) console.error(err.stack);
-      }
-    });
-  } else {
-    console.log('[pre-render] Skipping case and entity routes (API unreachable)');
-  }
-
+  // Static routes and updates only. Cases are searched live from the API by the
+  // command palette (src/components/AppSearchCommand.tsx), so the index no
+  // longer needs the archive walk that used to fill it.
   await writeSearchIndex(searchEntries);
 
   if (prefetchFailures.length > 0) {

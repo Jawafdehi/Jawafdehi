@@ -270,6 +270,82 @@ export interface CourtCase {
   // reader must treat them as optional and default to [].
   hearings?: CourtCaseHearing[];
   entities?: CourtCaseEntity[];
+  /**
+   * The court orders this case references (JAW-76), oldest first (undated last). Always present
+   * on an API that ships the field (possibly []); ABSENT on an older API, which
+   * every reader must treat the same as an empty list.
+   */
+  orders?: CourtCaseOrder[];
+  /**
+   * The case's appeal history across courts, first court first (JAW-1); `[]` when
+   * the case is in none. ABSENT on an API older than the appeal-links table, which
+   * readers treat the same as `[]`. Linked by Jawafdehi, not the court.
+   */
+  court_chain?: CourtChainStep[];
+  /** Says the links are Jawafdehi's, not the court's. */
+  court_chain_note?: string;
+}
+
+/** One case a chain step was appealed from, with its own probability. */
+export interface CourtChainSource {
+  /** e.g. `https://jawafdehi.org/courtcase/special/075-cr-0048`. */
+  courtcase_iri: string;
+  /** Estimated chance (0-1) that this link is correct. */
+  probability: number;
+}
+
+/**
+ * One court case in an appeal history. Never names a party.
+ *
+ * `appealed_from` with one entry is a plain link. With several, it is either a
+ * set ("appeal of ONE of these"; each candidate's probability is below the
+ * step's, which is their sum) or an appeal of EACH of them (the step's
+ * probability is the lowest of theirs).
+ */
+export interface CourtChainStep {
+  /** `initial` for the first court; `appeal` or `review` after it. */
+  stage: string;
+  courtcase_iri: string;
+  court: string;
+  case_number: string;
+  case_type: string | null;
+  start: string | null;
+  start_bs: string | null;
+  end: string | null;
+  end_bs: string | null;
+  verdict_type: string | null;
+  /** True for the case the page is about. */
+  this_case: boolean;
+  /** Absent on `initial` steps. */
+  probability?: number;
+  /** Absent on `initial` steps. */
+  appealed_from?: CourtChainSource[];
+  linked_on?: string;
+}
+
+/**
+ * What kind of court order a listed order is. The API sends `verdict` (the case
+ * is decided) or `order`; `judgment` is a tolerated alias of `verdict`, and
+ * `unknown` is the frontend's own fallback label for anything else.
+ */
+export type CourtCaseOrderKind = "verdict" | "judgment" | "order" | "unknown";
+
+/**
+ * One entry in a court case's order list. Deliberately carries no title: an
+ * order's title names the parties, so the list shows only kind and date.
+ */
+export interface CourtCaseOrder {
+  /** Material IRI, e.g. `https://jawafdehi.org/material/court_order/special.076-cr-0438`. */
+  iri: string;
+  /**
+   * One of {@link CourtCaseOrderKind} today. Typed as string so a kind the API
+   * adds later still renders (as a generic "Court order").
+   */
+  kind: string;
+  order_date_bs: string | null;
+  order_date_ad: string | null;
+  /** False when the order's text has not been extracted yet. */
+  readable: boolean;
 }
 
 /** One credited author on a case's public byline, resolved from their profile.

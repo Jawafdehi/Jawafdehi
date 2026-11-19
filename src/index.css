@@ -747,3 +747,9 @@ html[data-site="np"] [data-site-variant="org"] {
     display: none;
   }
 }
+
+/* <SiteOnly inline> (src/components/SiteOnly.tsx): a variant inside running
+   text, e.g. a per-host email address, stays inline when shown. */
+html[data-site="np"] [data-site-variant="np"][data-site-inline] {
+  display: inline;
+}

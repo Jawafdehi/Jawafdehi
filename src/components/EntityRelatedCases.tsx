@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "@/components/icons";
 
-import { getCasesCitingEntity } from "@/services/jds-api";
+import { entityRelatedCasesQuery } from "@/queries/related-cases";
 import { Badge } from "@/components/ui/badge";
 import { CaseTagBadge } from "@/components/CaseBadge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +20,7 @@ import {
 import { caseVerdictForum } from "@/utils/case-stages";
 import { accusedAppeal, appealBadgeClass, appealWithForumLabel } from "@/utils/appeal-verdict";
 import type { Case } from "@/types/jds";
+import { casePath } from "@/lib/case-links";
 
 // Relationship role -> i18n label key. Mirrors the case-side relation labels so
 // the reverse view reads the same as the forward (case detail) view.
@@ -38,7 +39,6 @@ const ROLE_LABEL_KEY: Record<string, string> = {
 // One page holds the lot: the corpus is small (the busiest entity has ~20
 // cases) and the list scrolls inside its column, so nothing is left behind a
 // "+N more" line short of an entity with over fifty citations.
-const PAGE_SIZE = 50;
 
 // accused + alleged form the emphasized top tier (matches the server ordering).
 function isAccusedTier(role: string): boolean {
@@ -75,8 +75,7 @@ export function EntityRelatedCases({
   const language = i18n.language === "ne" ? "ne" : "en";
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["entity-related-cases", entityIri],
-    queryFn: () => getCasesCitingEntity(entityIri, { page_size: PAGE_SIZE }),
+    ...entityRelatedCasesQuery(entityIri),
     enabled: entityIri.length > 0,
     retry: false,
     staleTime: 5 * 60 * 1000,
@@ -162,7 +161,7 @@ export function EntityRelatedCases({
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
-          const href = c.slug ? `/case/${c.slug}` : undefined;
+          const href = c.slug ? casePath(c.slug) : undefined;
           const showOutcome = accused && shouldShowOutcome(outcome);
           // Same rule as the case page; see `accusedAppeal`.
           const bind = (c.entities ?? []).find(

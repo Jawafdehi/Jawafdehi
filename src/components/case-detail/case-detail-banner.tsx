@@ -195,7 +195,7 @@ export function CaseDetailBanner({
         <PageBreadcrumb
           items={[
             { label: homeLabel || t("nav.home"), to: "/" },
-            { label: casesLabel || t("nav.cases"), to: "/search?type=case" },
+            { label: casesLabel || t("nav.cases"), to: "/search/?type=case" },
             { label: breadcrumbCase },
           ]}
         />

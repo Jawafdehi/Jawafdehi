@@ -318,7 +318,7 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
           {/* Says plainly that this also subscribes them to the newsletter. One
               shared list is fine; doing it silently is not. */}
           {t("openHouse.signup.consent")}{" "}
-          <Link to="/privacy" className="underline underline-offset-2">
+          <Link to="/privacy/" className="underline underline-offset-2">
             {t("openHouse.signup.consentPrivacyLink")}
           </Link>
           .

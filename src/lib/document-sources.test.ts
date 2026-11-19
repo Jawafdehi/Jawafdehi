@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  seriesBrowseHref,
+  seriesForSourceKey,
+  seriesFromDocumentSource,
+} from "@/lib/document-source-series";
+import {
+  archiveTotal,
   documentSourceLabel,
   listedSources,
   sourceBrowseHref,
   type DocumentSourcesResponse,
 } from "@/lib/document-sources";
+import { seriesBySlug } from "@/data/material-series";
 
 /** Rows as /api/document-sources/ served them in production (2026-11-16). */
 const RESPONSE: DocumentSourcesResponse = {
@@ -71,6 +78,34 @@ describe("sourceBrowseHref", () => {
   });
 });
 
+describe("seriesFromDocumentSource", () => {
+  it("builds a browsable series from the API row", () => {
+    const series = seriesFromDocumentSource(RESPONSE.sources[2]);
+    expect(series).toMatchObject({
+      slug: "source:dri",
+      source: "dri",
+      name: { en: "Revenue Investigation releases and reports", ne: "" },
+      description: {
+        en: "Press releases on cases filed, and reports (dri.gov.np).",
+        ne: "राजस्व अनुसन्धान विभाग",
+      },
+    });
+    expect(series.tint).toBeGreaterThanOrEqual(1);
+    expect(series.tint).toBeLessThanOrEqual(8);
+    expect(seriesBrowseHref(series)).toBe("/materials/?source=dri");
+  });
+
+  it("keeps curated series on their ?series= address", () => {
+    expect(seriesBrowseHref(seriesBySlug("charge-sheets")!)).toBe("/materials/?series=charge-sheets");
+  });
+
+  it("finds a listed source by key, and nothing for an unlisted one", () => {
+    expect(seriesForSourceKey(RESPONSE, "sebon")?.name.en).toBe("SEBON enforcement orders");
+    expect(seriesForSourceKey(RESPONSE, "mystery")).toBeUndefined();
+    expect(seriesForSourceKey(RESPONSE, "nope")).toBeUndefined();
+  });
+});
+
 describe("documentSourceLabel", () => {
   it("reads Nepali first in Nepali, falling back to English", () => {
     expect(documentSourceLabel(RESPONSE, "dri", "ne")).toEqual({
@@ -85,5 +120,16 @@ describe("documentSourceLabel", () => {
   it("returns null for an unknown or unlabelled source", () => {
     expect(documentSourceLabel(RESPONSE, "mystery", "en")).toBeNull();
     expect(documentSourceLabel(undefined, "dri", "en")).toBeNull();
+  });
+});
+
+describe("archiveTotal", () => {
+  it("sums every source, named or not", () => {
+    expect(archiveTotal(RESPONSE)).toBe(3556 + 235 + 160 + 13 + 4 + 0);
+    expect(archiveTotal(undefined)).toBeNull();
+  });
+
+  it("withholds the total while the counts are not ready", () => {
+    expect(archiveTotal({ ...RESPONSE, ready: false })).toBeNull();
   });
 });

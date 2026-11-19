@@ -277,6 +277,8 @@ describe("CaseDetail AI-generated labels", () => {
   const withTimeline = (extra: Partial<CaseDetailType> = {}): CaseDetailType => ({
     ...makeCase("ai-case"),
     timeline: [{ date: "2024-03-12", title: "Charge sheet filed", description: "" }],
+    description: "विशेष अदालतमा आरोपपत्र दायर।",
+    key_allegations: ["सरकारी रकम हिनामिना"],
     ...extra,
   });
   const aiFlags = (container: HTMLElement) =>
@@ -332,5 +334,41 @@ describe("CaseDetail AI-generated labels", () => {
       allegations: "false",
       timeline: "false",
     });
+  });
+});
+
+describe("CaseDetail empty sections", () => {
+  // Most CIAA-sourced cases have no curated allegations yet. Rendering the
+  // heading over "उपलब्ध छैन" put the same empty block on ~70% of case pages.
+  const sectionIds = (container: HTMLElement) =>
+    ["allegations", "overview"].filter(
+      (name) => container.querySelector(`[data-testid="section-${name}"]`) !== null,
+    );
+
+  it("leaves out an allegations section and an overview with nothing in them", async () => {
+    getCaseById.mockResolvedValue({
+      ...makeCase("thin-case"),
+      key_allegations: ["", "  "],
+      description: "",
+      timeline: [{ date: "2024-03-12", title: "Charge sheet filed", description: "" }],
+    });
+
+    const { container } = renderAt("thin-case");
+
+    await waitFor(() => expect(container.querySelector('[data-testid="section-timeline"]')).not.toBeNull());
+    expect(sectionIds(container)).toEqual([]);
+  });
+
+  it("renders them when they have content", async () => {
+    getCaseById.mockResolvedValue({
+      ...makeCase("full-case"),
+      key_allegations: ["सरकारी रकम हिनामिना"],
+      description: "विशेष अदालतमा आरोपपत्र दायर।",
+    });
+
+    const { container } = renderAt("full-case");
+
+    await waitFor(() => expect(container.querySelector('[data-testid="section-overview"]')).not.toBeNull());
+    expect(sectionIds(container)).toEqual(["allegations", "overview"]);
   });
 });
