@@ -43,6 +43,8 @@ import {
 import { ShareButton } from "@/components/ShareButton";
 import { seriesBySource } from "@/data/material-series";
 import { getMaterialSourceLinks } from "@/lib/material-links";
+import { StaffOriginals } from "@/components/materials/StaffOriginals";
+import { staffOriginalsOf } from "@/lib/staff-originals";
 import {
   materialBilingual as bilingual,
   materialCanonicalUrl,
@@ -212,6 +214,8 @@ export default function MaterialProfile() {
     : { en: "", ne: "" };
   const fullTextStr = fullText.en || fullText.ne;
   const links = getMaterialSourceLinks(data);
+  // Present only for staff holding the unredacted permission (the API adds it).
+  const staffOriginals = staffOriginalsOf(data);
   const [previewDocument, setPreviewDocument] =
     useState<PreviewDocument | null>(null);
   // The transcript opens in its own reader rather than inside a tab panel: it
@@ -585,6 +589,10 @@ export default function MaterialProfile() {
                     </p>
                   ) : null}
                 </section>
+
+                {staffOriginals ? (
+                  <StaffOriginals tail={tail} flags={staffOriginals} />
+                ) : null}
 
                 <section aria-labelledby="material-actions-heading">
                   <h2

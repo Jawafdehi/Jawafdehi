@@ -59,9 +59,22 @@ function extensionOf(href: string): string {
  * (our MARKDOWN transcript, or our RAW/ALTERNATE/PERMALINK file) hosted on OUR
  * storage is dropped whenever its redacted counterpart is in the same list.
  * Publisher-hosted links and documents with no redacted copy are untouched.
+ * A link into the private originals bucket is always dropped.
  */
 const OUR_STORAGE_HOSTS = new Set(["s3.jawafdehi.org"]);
+// The staff-only bucket's link identifier. Never a routed host: a link to it is
+// dead for everyone, so it is never rendered. Staff reach those files through
+// the signed "Staff only" buttons instead.
+const PRIVATE_ORIGINALS_HOSTS = new Set(["private-originals.jawafdehi.org"]);
 const ORIGINAL_FILE_ROLES = new Set(["RAW", "ALTERNATE", "PERMALINK"]);
+
+function isPrivateCopy(href: string): boolean {
+  try {
+    return PRIVATE_ORIGINALS_HOSTS.has(new URL(href).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
 
 function isOurCopy(href: string): boolean {
   try {
@@ -79,6 +92,7 @@ export function withholdUnredacted<T>(
   const roles = new Set(items.map((i) => (roleOf(i) || "RAW").toUpperCase()));
   return items.filter((item) => {
     const href = hrefOf(item);
+    if (href && isPrivateCopy(href)) return false;
     if (!href || !isOurCopy(href)) return true;
     const role = (roleOf(item) || "RAW").toUpperCase();
     if (role === "MARKDOWN") return !roles.has("REDACTED_MARKDOWN");

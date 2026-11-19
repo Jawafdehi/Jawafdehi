@@ -12,7 +12,9 @@ const getMaterialPageRange = vi.fn();
 const listMaterialTables = vi.fn();
 const getMaterialTable = vi.fn();
 const listMaterialFigures = vi.fn();
+const getMaterialOriginal = vi.fn();
 vi.mock("@/services/datalake-api", () => ({
+  getMaterialOriginal: (...args: unknown[]) => getMaterialOriginal(...args),
   getMaterial: (...args: unknown[]) => getMaterial(...args),
   listMaterialPages: (...args: unknown[]) => listMaterialPages(...args),
   getMaterialPage: (...args: unknown[]) => getMaterialPage(...args),
@@ -687,5 +689,26 @@ describe("MaterialProfile — reaching the transcript", () => {
     await screen.findByRole("tab", { name: /Contents/i });
 
     expect(screen.queryByRole("button", { name: /Read the transcript/i })).toBeNull();
+  });
+});
+
+describe("MaterialProfile staff originals", () => {
+  it("shows no staff section on a public payload", async () => {
+    getMaterial.mockResolvedValue(material({}));
+    renderPage();
+    await screen.findByRole("heading", { level: 1 });
+    expect(screen.queryByTestId("staff-originals")).toBeNull();
+    expect(screen.queryByRole("button", { name: "View original" })).toBeNull();
+  });
+
+  it("shows the staff buttons when the API marks the payload as staff", async () => {
+    getMaterial.mockResolvedValue(
+      material({ "jawafdehi:staffOriginals": { document: true, transcript: true } }),
+    );
+    renderPage();
+    expect(await screen.findByTestId("staff-originals")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "View original" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Download original" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Unredacted transcript" })).toBeTruthy();
   });
 });
