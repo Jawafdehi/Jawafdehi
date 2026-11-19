@@ -300,8 +300,11 @@ export function NewsletterForm({
         >
           {requiredMark}{" "}
           {t("newsletter.form.privacyPrefix")}{" "}
+          {/* A new tab, so following the link never loses what was typed. */}
           <Link
             to="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
             className={cn(
               "text-primary underline hover:no-underline",
               footer && "text-[var(--footer-fg)] decoration-[var(--footer-border-hover)]",

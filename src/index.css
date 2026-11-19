@@ -224,6 +224,9 @@ All colors MUST be HSL.
     --primary: var(--base-navy);
     --primary-surface: var(--base-navy);
     --primary-foreground: var(--base-cream);
+    /* The footer's navy: the brand navy taken deeper, so every page closes on
+       a darker ground than it opens with. */
+    --footer-surface: 217 64% 8%;
 
     /* Light slate - secondary surfaces */
     --secondary: 215 28% 83%;
