@@ -210,7 +210,7 @@ export const Footer = () => {
             {t("footer.disclaimer")}
           </p>
 
-          <div className="flex shrink-0 flex-wrap gap-2">
+          <div className="flex w-full shrink-0 justify-between sm:w-auto sm:flex-wrap sm:justify-start sm:gap-2">
             {socialLinks.map(({ label, href, icon: Icon }) => (
               <a
                 key={label}
@@ -218,9 +218,10 @@ export const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  // Bare icons, no disc behind them. 36px box (32px on phones, so
-                  // all nine fit one row at 390px), tappable 4px past each edge;
-                  // the 8px gap keeps neighbours from overlapping. Brightens on hover.
+                  // Bare icons, no disc behind them. 36px box, tappable 4px past
+                  // each edge; the 8px gap keeps neighbours from overlapping. On
+                  // phones a 32px box, spread across the full width so all nine
+                  // stay on one row down to 320px. Brightens on hover.
                   "relative inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full text-[var(--footer-link)] transition-colors duration-200 after:absolute after:-inset-1 after:content-['']",
                   "hover:text-[var(--footer-fg)]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
