@@ -54,6 +54,7 @@ import {
   materialRobots,
   materialTypeLabel,
 } from "@/lib/material-meta";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
 //
@@ -377,7 +378,7 @@ export default function MaterialProfile() {
                                   <a
                                     href={row.value}
                                     target="_blank"
-                                    rel="noopener noreferrer"
+                                    rel={ORIGINAL_DOCUMENT_REL}
                                     title={decodedUrl(row.value)}
                                     className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:no-underline"
                                   >
@@ -509,7 +510,7 @@ export default function MaterialProfile() {
                         variant="ghost"
                         className="h-auto min-h-11 justify-start gap-3 px-4 py-2.5 text-left"
                       >
-                        <a href={link.href} target="_blank" rel="noopener noreferrer">
+                        <a href={link.href} target="_blank" rel={ORIGINAL_DOCUMENT_REL}>
                           <ExternalLink
                             className="h-4 w-4 shrink-0"
                             aria-hidden="true"
@@ -527,7 +528,7 @@ export default function MaterialProfile() {
                           <a
                             href={link.href}
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel={ORIGINAL_DOCUMENT_REL}
                           >
                             <Download
                               className="h-4 w-4 shrink-0 text-accent"
@@ -547,7 +548,7 @@ export default function MaterialProfile() {
                         <a
                           href={data.url}
                           target="_blank"
-                          rel="noopener noreferrer"
+                          rel={ORIGINAL_DOCUMENT_REL}
                         >
                           <ExternalLink
                             className="h-4 w-4 shrink-0"

@@ -89,6 +89,8 @@ describe("MaterialProfile — overflow-safe rendering", () => {
     expect(link.getAttribute("href")).toBe(LONG_URL);
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel") || "").toContain("noopener");
+    // An original source document: our pages must not pass it crawl priority.
+    expect((link.getAttribute("rel") || "").split(" ")).toContain("nofollow");
     expect(screen.queryByText(/%E0%A5/)).toBeNull();
   });
 

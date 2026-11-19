@@ -107,6 +107,9 @@ const CARD_FETCH_TIMEOUT_MS = 10000;
 // edit (new photo, corrected role) reaches a shared link.
 const AUTHOR_CARD_TTL_SECONDS = 86400;
 
+// X-Robots-Tag for every response that serves an original source document.
+const ORIGINAL_DOCUMENT_ROBOTS = 'noindex, nofollow, noarchive';
+
 const DOCUMENT_PREVIEW_ALLOWED_HOSTS = new Set([
   'ngm-store.jawafdehi.org',
   's3.jawafdehi.org',
@@ -331,6 +334,15 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
   headers.set('Content-Type', upstream.headers.get('Content-Type') || 'application/octet-stream');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Cache-Control', upstream.ok ? 'public, max-age=3600' : 'no-store');
+  // This route serves ORIGINAL source files (court orders, charge sheets, scans)
+  // under jawafdehi.org, the one host the zone-wide Cloudflare noindex rule
+  // exempts. Originals can carry private data that only our redacted
+  // transcripts and case pages may expose to search, so they must never be
+  // indexed. A header rather than a robots.txt Disallow: Disallow stops the
+  // fetch, so Google could still list the URL from a link and could never read
+  // a noindex to drop one it already has. Fresh `Headers` above, so the
+  // upstream bucket's own X-Robots-Tag would otherwise be lost here.
+  headers.set('X-Robots-Tag', ORIGINAL_DOCUMENT_ROBOTS);
 
   const contentLength = upstream.headers.get('Content-Length');
   if (contentLength) headers.set('Content-Length', contentLength);

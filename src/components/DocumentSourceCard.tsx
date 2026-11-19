@@ -12,6 +12,7 @@ import type {
   SourceLink,
   SourceLinkRole,
 } from "@/types/jds";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 interface DocumentSourceCardProps {
   /**
@@ -307,7 +308,7 @@ export function DocumentSourceCard({
           <ul>
             {printLinks.map((link) => (
               <li key={link.link}>
-                <a href={link.link}>{link.link}</a>
+                <a href={link.link} rel={ORIGINAL_DOCUMENT_REL}>{link.link}</a>
               </li>
             ))}
           </ul>
@@ -386,7 +387,7 @@ export function DocumentSourceCard({
                       <a
                         href={action.href}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel={ORIGINAL_DOCUMENT_REL}
                         aria-label={ariaLabel}
                       >
                         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -406,7 +407,7 @@ export function DocumentSourceCard({
                     <a
                       href={visiblePermalinkLink.link}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel={ORIGINAL_DOCUMENT_REL}
                       aria-label={`${t("documentSource.role.permalink")} ${t("documentSource.opensInNewTab")}`}
                     >
                       <LinkIcon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -449,7 +450,7 @@ export function DocumentSourceCard({
                       <a
                         href={action.href}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel={ORIGINAL_DOCUMENT_REL}
                         aria-label={ariaLabel}
                       >
                         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
