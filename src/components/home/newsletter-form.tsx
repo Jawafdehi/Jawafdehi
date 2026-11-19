@@ -19,9 +19,9 @@ type NewsletterFormProps = {
   /** High-contrast variant for use on primary/dark backgrounds. */
   inverted?: boolean;
   /**
-   * The footer's form: placeholder-only fields, name and email side by side
-   * from sm up, coloured from the footer's own --footer-* tokens so
-   * it follows the footer from navy (light) to cream (dark).
+   * The footer's form: name and email stacked in plain white boxes, then the
+   * consent line and a crimson Subscribe (the navbar's Donate button). Text
+   * around the boxes takes the footer's own --footer-* tokens.
    */
   footer?: boolean;
   submitLabel: string;
@@ -159,9 +159,10 @@ export function NewsletterForm({
       inverted &&
         "border-primary-foreground/25 bg-primary-foreground text-foreground placeholder:text-muted-foreground focus-visible:ring-primary-foreground focus-visible:ring-offset-primary",
       footer &&
-        "h-11 rounded-full border-[var(--footer-border)] bg-[var(--footer-soft)] px-4 text-[var(--footer-fg)] placeholder:text-[var(--footer-muted)] hover:border-[var(--footer-border-hover)] focus-visible:ring-[var(--footer-fg)] focus-visible:ring-offset-0",
+        "h-11 rounded-lg border-transparent bg-white px-3.5 text-base text-primary shadow-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[var(--footer-title)] focus-visible:ring-offset-0 md:text-[15px]",
       hasError &&
         "border-accent ring-1 ring-accent focus-visible:ring-accent focus-visible:ring-offset-2",
+      hasError && footer && "ring-2 ring-[var(--footer-title)] ring-offset-0",
     );
   const fieldErrorClassName = cn(
     "text-sm font-medium text-destructive",
@@ -172,14 +173,12 @@ export function NewsletterForm({
   const submitButton = (
     <Button
       type="submit"
-      variant="primary"
+      variant={footer ? "accent" : "primary"}
       disabled={status === "submitting"}
       className={cn(
         compact && "w-full",
         inverted &&
           "bg-primary-foreground text-primary shadow-primary-foreground/10 hover:bg-primary-foreground/90",
-        footer &&
-          "h-11 rounded-full bg-[var(--footer-fg)] px-5 text-[var(--footer-bg)] shadow-none transition-transform duration-150 hover:bg-[var(--footer-fg)]/90 active:scale-[0.97]",
       )}
     >
       {status === "submitting" ? t("newsletter.form.submitting") : submitLabel}
@@ -188,7 +187,7 @@ export function NewsletterForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className={cn("space-y-4 text-left", className)}>
-      <div className={cn("space-y-4", footer && "grid gap-3 space-y-0 sm:grid-cols-2 sm:items-start")}>
+      <div className={cn("space-y-4", footer && "space-y-3")}>
       <div className="space-y-1.5">
         <Label htmlFor={`${fieldId}-first-name`} className={labelClassName}>
           {t("newsletter.form.firstName")}
