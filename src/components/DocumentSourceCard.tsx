@@ -7,6 +7,7 @@ import { DocumentPreviewDialog, type PreviewDocument } from "@/components/Docume
 import { SourceTypeBadge } from "@/components/SourceTypeBadge";
 import { Button } from "@/components/ui/button";
 import { materialTail } from "@/services/datalake-api";
+import { withholdUnredacted } from "@/lib/material-links";
 import type {
   EvidenceMaterial,
   SourceLink,
@@ -71,9 +72,15 @@ const normalizeRole = (
 const resolveLinks = (material: EvidenceMaterial | null): SourceLink[] => {
   if (!material || !Array.isArray(material.urls)) return [];
 
-  return material.urls
-    .filter((u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link))
-    .map((u) => ({ link: u.link.trim(), role: normalizeRole(u.role, u.link) }));
+  const valid = material.urls.filter(
+    (u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link),
+  );
+  // Staff-only originals never render, whatever the payload carries. Uses the
+  // raw roles (REDACTED_* would otherwise be normalised to RAW first).
+  return withholdUnredacted(valid, (u) => u.link, (u) => u.role).map((u) => ({
+    link: u.link.trim(),
+    role: normalizeRole(u.role, u.link),
+  }));
 };
 
 /**
