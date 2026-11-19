@@ -3,6 +3,7 @@ import { Download, Eye, FileText, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   getMaterialOriginal,
   type OriginalArtifact,
@@ -70,7 +71,8 @@ export function StaffOriginals({ tail, flags }: { tail: string; flags: StaffOrig
         <Lock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         Staff only
       </h2>
-      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+      <Separator className="mt-3" />
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
         Unredacted. Do not share these files or their links.
       </p>
       <div className="mt-4 grid gap-3">
