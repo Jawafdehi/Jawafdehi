@@ -31,15 +31,28 @@ export function StaffOriginals({ tail, flags }: { tail: string; flags: StaffOrig
     const publisher = artifact === "document" && flags.documentHostedBy === "publisher";
     // Opened inside the click, before the request: a window opened after an
     // await is a popup, and mobile Safari blocks it.
-    const tab = !download || publisher ? window.open("about:blank", "_blank") : null;
+    const needsTab = !download || publisher;
+    const tab = needsTab ? window.open("about:blank", "_blank") : null;
+    if (needsTab && !tab) {
+      // Never fall back to navigating this page: View would replace it.
+      toast.error("Your browser blocked the new tab. Allow pop-ups for this site and try again.");
+      return;
+    }
     if (tab) tab.opener = null;
     setBusy(id);
     try {
       const link = await getMaterialOriginal(tail, artifact, download);
-      if (tab) tab.location.href = link.url;
-      // Ours, signed as an attachment: downloads without leaving the page.
-      else if (link.hosted_by === "us") window.location.assign(link.url);
-      else window.open(link.url, "_blank", "noopener");
+      if (tab) {
+        tab.location.href = link.url;
+      } else if (link.hosted_by === "us") {
+        // Ours, signed as an attachment: downloads without leaving the page.
+        window.location.assign(link.url);
+      } else {
+        // A publisher's file we did not expect (stale flags): its own tab.
+        const late = window.open(link.url, "_blank");
+        if (late) late.opener = null;
+        else toast.error("Your browser blocked the new tab. Allow pop-ups for this site and try again.");
+      }
     } catch {
       tab?.close();
       toast.error("Could not open the original. Your session may have expired; sign in again.");

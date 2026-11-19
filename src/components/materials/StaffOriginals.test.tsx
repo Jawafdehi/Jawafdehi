@@ -96,4 +96,13 @@ describe("StaffOriginals", () => {
     await waitFor(() => expect(tab.location.href).toBe("https://ciaa.gov.np/a.pdf"));
     expect(assign).not.toHaveBeenCalled();
   });
+
+  it("stops with a message, without requesting or navigating, when the tab is blocked", async () => {
+    openSpy.mockReturnValue(null);
+    render(<StaffOriginals tail="ag/1" flags={{ document: true, transcript: false }} />);
+    fireEvent.click(screen.getByRole("button", { name: "View original" }));
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(getMaterialOriginal).not.toHaveBeenCalled();
+    expect(assign).not.toHaveBeenCalled();
+  });
 });
