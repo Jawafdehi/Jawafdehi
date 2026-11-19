@@ -26,16 +26,20 @@ export function StaffOriginals({ tail, flags }: { tail: string; flags: StaffOrig
 
   async function open(artifact: OriginalArtifact, download: boolean) {
     const id = `${artifact}:${download ? "download" : "view"}`;
+    // A publisher's file is its own URL, served with headers we do not control,
+    // so "download" could replace this page with it: give it a tab too.
+    const publisher = artifact === "document" && flags.documentHostedBy === "publisher";
     // Opened inside the click, before the request: a window opened after an
     // await is a popup, and mobile Safari blocks it.
-    const tab = download ? null : window.open("about:blank", "_blank");
+    const tab = !download || publisher ? window.open("about:blank", "_blank") : null;
     if (tab) tab.opener = null;
     setBusy(id);
     try {
       const link = await getMaterialOriginal(tail, artifact, download);
       if (tab) tab.location.href = link.url;
-      // An attachment response downloads without leaving the page.
-      else window.location.assign(link.url);
+      // Ours, signed as an attachment: downloads without leaving the page.
+      else if (link.hosted_by === "us") window.location.assign(link.url);
+      else window.open(link.url, "_blank", "noopener");
     } catch {
       tab?.close();
       toast.error("Could not open the original. Your session may have expired; sign in again.");

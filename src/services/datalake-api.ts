@@ -123,6 +123,8 @@ export async function getMaterial(iriOrTail: string): Promise<Material> {
 export interface StaffOriginals {
   document: boolean;
   transcript: boolean;
+  /** Who serves the original document: a publisher's file is its own URL. */
+  documentHostedBy?: "us" | "publisher" | null;
 }
 
 export type OriginalArtifact = "document" | "transcript";

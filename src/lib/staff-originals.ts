@@ -7,6 +7,13 @@ export function staffOriginalsOf(data: unknown): StaffOriginals | null {
   ];
   if (!value || typeof value !== "object") return null;
   const flags = value as Partial<StaffOriginals>;
-  const result = { document: flags.document === true, transcript: flags.transcript === true };
+  const result: StaffOriginals = {
+    document: flags.document === true,
+    transcript: flags.transcript === true,
+    documentHostedBy:
+      flags.documentHostedBy === "us" || flags.documentHostedBy === "publisher"
+        ? flags.documentHostedBy
+        : null,
+  };
   return result.document || result.transcript ? result : null;
 }

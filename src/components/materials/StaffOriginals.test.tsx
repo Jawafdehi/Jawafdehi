@@ -23,7 +23,7 @@ describe("staffOriginalsOf", () => {
   it("reads the staff flags", () => {
     expect(
       staffOriginalsOf({ "jawafdehi:staffOriginals": { document: true, transcript: "yes" } }),
-    ).toEqual({ document: true, transcript: false });
+    ).toEqual({ document: true, transcript: false, documentHostedBy: null });
   });
 });
 
@@ -67,7 +67,7 @@ describe("StaffOriginals", () => {
   });
 
   it("downloads in place without opening a tab", async () => {
-    getMaterialOriginal.mockResolvedValue({ url: "https://signed.example/t.md?sig=2" });
+    getMaterialOriginal.mockResolvedValue({ url: "https://signed.example/t.md?sig=2", hosted_by: "us" });
     render(<StaffOriginals tail="ag/1" flags={{ document: true, transcript: true }} />);
     fireEvent.click(screen.getByRole("button", { name: "Download unredacted transcript" }));
     await waitFor(() => expect(assign).toHaveBeenCalledWith("https://signed.example/t.md?sig=2"));
@@ -81,5 +81,19 @@ describe("StaffOriginals", () => {
     fireEvent.click(screen.getByRole("button", { name: "View original" }));
     await waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(tab.close).toHaveBeenCalled();
+  });
+
+  it("opens a publisher-hosted original in a tab even for download, never in place", async () => {
+    getMaterialOriginal.mockResolvedValue({ url: "https://ciaa.gov.np/a.pdf", hosted_by: "publisher" });
+    render(
+      <StaffOriginals
+        tail="ag/1"
+        flags={{ document: true, transcript: false, documentHostedBy: "publisher" }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Download original" }));
+    expect(openSpy).toHaveBeenCalledWith("about:blank", "_blank");
+    await waitFor(() => expect(tab.location.href).toBe("https://ciaa.gov.np/a.pdf"));
+    expect(assign).not.toHaveBeenCalled();
   });
 });
