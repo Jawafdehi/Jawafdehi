@@ -2408,11 +2408,9 @@
     "placeholder": "Search court cases"
   },
   "newsletter": {
-    "modal": {
-      "title": "Stay Informed on Corruption in Nepal.",
-      "description": "Subscribe to the Jawafdehi newsletter for our latest documented cases and important updates in the fight for accountability.",
-      "submit": "Keep Me Updated",
-      "disclaimer": "Jawafdehi will periodically send newsletters and other updates. You can unsubscribe from all emails at any time."
+    "signup": {
+      "title": "Subscribe to our newsletter",
+      "submit": "Subscribe"
     },
     "form": {
       "firstName": "First name",

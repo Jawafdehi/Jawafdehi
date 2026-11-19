@@ -28,6 +28,13 @@ vi.mock("@/lib/site-host", async (importOriginal) => ({
 
 import { Footer } from "@/components/Footer";
 
+// The newsletter form's Radix checkbox measures itself; jsdom has no ResizeObserver.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof ResizeObserver;
+
 // Every way the US entity is identified. None may reach the .org.np footer.
 const US_ENTITY = [/Inc\./, /501\(c\)/, /EIN/, /42-3114954/, /Michigan/];
 

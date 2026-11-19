@@ -10,6 +10,7 @@ import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { API_BASE_URL } from "@/services/http";
 import { cn } from "@/lib/utils";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { NewsletterForm } from "@/components/home/newsletter-form";
 import { currentSiteVariant } from "@/lib/site-host";
 
 type FooterLink = {
@@ -249,6 +250,14 @@ export const Footer = () => {
               ))}
             </div>
 
+            {/* The newsletter, in the footer rather than a timed pop-up: under
+                the badges, where a reader who reached the end of a page already is. */}
+            <section aria-labelledby="footer-newsletter-title" className="max-w-md pt-2">
+              <h2 id="footer-newsletter-title" className="mb-3 text-sm font-medium text-[var(--footer-fg)]">
+                {t("newsletter.signup.title")}
+              </h2>
+              <NewsletterForm footer submitLabel={t("newsletter.signup.submit")} />
+            </section>
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:gap-x-10">

@@ -178,12 +178,12 @@ describe('served image weight', () => {
 
   it('resolves every generated asset this PR repointed a reference at', () => {
     // Nothing resolves a `public/` string reference at build time, so a typo here
-    // 404s in silence. The team thumbs are covered above; these are the other four.
+    // 404s in silence. The team thumbs are covered above; these are the others.
     const refs: Array<[string, string]> = [
       ['src/components/data-sources.tsx', '/assets/ciaa.webp'],
       ['src/components/data-sources.tsx', '/assets/cib.webp'],
       ['src/lib/case-images.ts', '/assets/placeholder.webp'],
-      ['src/components/home/newsletter-signup-modal.tsx', '/assets/logo.svg'],
+      ['src/components/Footer.tsx', '/assets/logo.svg'],
     ];
     const broken = refs.filter(([file, ref]) => {
       const referenced = readFileSync(resolve(ROOT, file), 'utf8').includes(ref);
