@@ -118,6 +118,46 @@ export async function getMaterial(iriOrTail: string): Promise<Material> {
   }
 }
 
+/** Which originals `getMaterialOriginal` can hand a permitted caller. Present on
+ *  the payload ONLY for staff holding the unredacted permission. */
+export interface StaffOriginals {
+  document: boolean;
+  transcript: boolean;
+}
+
+export type OriginalArtifact = "document" | "transcript";
+
+/** A short-lived signed link to an original (or the publisher's own URL). */
+export interface OriginalFileLink {
+  url: string;
+  expires_in: number | null;
+  filename: string | null;
+  content_type: string | null;
+  hosted_by: "us" | "publisher";
+}
+
+/**
+ * Staff only: a signed URL for the original document or our unredacted
+ * transcript. The API answers 403 to anyone without the permission, so a
+ * caller that is not staff gets an error here, never a link.
+ */
+export async function getMaterialOriginal(
+  iriOrTail: string,
+  artifact: OriginalArtifact,
+  download: boolean,
+): Promise<OriginalFileLink> {
+  const tail = encodeTail(materialTail(iriOrTail));
+  const params = new URLSearchParams({ artifact });
+  if (download) params.set("download", "1");
+  const endpoint = `/api/materials/${tail}/original-file?${params}`;
+  try {
+    const response = await http.get<OriginalFileLink>(endpoint);
+    return response.data;
+  } catch (error) {
+    handleDataLakeError(error, endpoint);
+  }
+}
+
 // ─── document content: pages, tables, figures ───────────────────────────────
 //
 // What is INSIDE a document, served by `/content?type=…` alongside the JSON-LD.

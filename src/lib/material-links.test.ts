@@ -66,3 +66,23 @@ describe("getMaterialSourceLinks withholds staff-only originals", () => {
     expect(hrefs).toEqual([ours("orig.md")]);
   });
 });
+
+describe("getMaterialSourceLinks never renders a private-bucket link", () => {
+  it("drops a link into the staff-only originals bucket, even with no redacted sibling", () => {
+    const material = {
+      "@id": "https://jawafdehi.org/material/ag/1",
+      associatedMedia: [
+        {
+          contentUrl: `https://private-originals.jawafdehi.org/case_uploads/${"b".repeat(64)}.md`,
+          "jawafdehi:linkRole": "MARKDOWN",
+        },
+        {
+          contentUrl: "https://ciaa.gov.np/charge-sheet.pdf",
+          "jawafdehi:linkRole": "RAW",
+        },
+      ],
+    } as Material;
+    const hrefs = getMaterialSourceLinks(material).map((l) => l.href);
+    expect(hrefs).toEqual(["https://ciaa.gov.np/charge-sheet.pdf"]);
+  });
+});
