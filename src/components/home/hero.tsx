@@ -43,9 +43,16 @@ export function Hero() {
         <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
           {t("home.hero.eyebrow")}
         </p>
-        {/* Devanagari runs wider per character, so Nepali gets a wider measure. */}
-        <h1 className="font-home-display mt-5 max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[22ch]">
-          {t("home.hero.title")}
+        {/* Nepali is set at 0.8 of the English size: its 1.28 leading (which
+            the matras need) then lands on the same line pitch as English's
+            1.02, so the headline is the same height in both languages.
+            Devanagari runs wider per character, so it gets a wider measure.
+            Three slots so the crimson phrase can sit mid-sentence; the spaces
+            live in the strings, since Nepali's tail joins the phrase (…ता|को). */}
+        <h1 className="font-home-display mt-5 max-w-[16ch] text-[clamp(2.4rem,5.2vw,4.5rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[22ch] [:root[lang=ne]_&]:text-[clamp(1.92rem,4.16vw,3.6rem)]">
+          {t("home.hero.titleLead")}
+          <span className="hero-ink text-[hsl(var(--accent-on-dark))]">{t("home.hero.titleHighlight")}</span>
+          {t("home.hero.titleTail")}
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-8 text-primary-foreground/75">{t("home.hero.description")}</p>
         <div className="flex">

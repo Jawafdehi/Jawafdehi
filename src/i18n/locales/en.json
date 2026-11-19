@@ -287,7 +287,9 @@
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "title": "Nepal's digital archive of public accountability.",
+      "titleLead": "Nepal's digital archive of ",
+      "titleHighlight": "public accountability",
+      "titleTail": ".",
       "caps": {
         "line1": "Accountability",
         "line2": "has no",
