@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 import type { MaterialSourceLink } from "@/lib/material-links";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 const ACTION_BUTTON_CLASS = "h-9 w-28 justify-center px-3";
 const ICON_ACTION_BUTTON_CLASS = "h-9 w-9 rounded-full p-0";
@@ -152,7 +153,7 @@ export function MaterialCard({
             <a
               href={link.href}
               target="_blank"
-              rel="noopener noreferrer"
+              rel={ORIGINAL_DOCUMENT_REL}
               aria-label={
                 link.isExternal
                   ? t("materialsLanding.series.openSource", "Open original source")

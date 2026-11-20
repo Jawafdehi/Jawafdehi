@@ -41,6 +41,8 @@ import {
 import { ShareButton } from "@/components/ShareButton";
 import { seriesBySource, seriesSearchPath } from "@/data/material-series";
 import { getMaterialSourceLinks } from "@/lib/material-links";
+import { StaffOriginals } from "@/components/materials/StaffOriginals";
+import { staffOriginalsOf } from "@/lib/staff-originals";
 import {
   materialBilingual as bilingual,
   materialCanonicalUrl,
@@ -55,6 +57,7 @@ import {
   MATERIAL_CARD_HEIGHT,
   MATERIAL_CARD_WIDTH,
 } from "@/lib/material-meta";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
 //
@@ -222,6 +225,8 @@ export default function MaterialProfile() {
     : { en: "", ne: "" };
   const fullTextStr = fullText.en || fullText.ne;
   const links = getMaterialSourceLinks(data);
+  // Present only for staff holding the unredacted permission (the API adds it).
+  const staffOriginals = staffOriginalsOf(data);
   const [previewDocument, setPreviewDocument] =
     useState<PreviewDocument | null>(null);
   // The transcript opens in its own reader rather than inside a tab panel: it
@@ -289,7 +294,7 @@ export default function MaterialProfile() {
                   <a
                     href={row.value}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel={ORIGINAL_DOCUMENT_REL}
                     title={decodedUrl(row.value)}
                     className="inline-flex items-center gap-1 text-primary underline decoration-primary/25 underline-offset-4 transition-colors hover:decoration-primary"
                   >
@@ -545,7 +550,7 @@ export default function MaterialProfile() {
                         variant="ghost"
                         className={ASIDE_ACTION}
                       >
-                        <a href={link.href} target="_blank" rel="noopener noreferrer">
+                        <a href={link.href} target="_blank" rel={ORIGINAL_DOCUMENT_REL}>
                           <ExternalLink
                             className="h-4 w-4 shrink-0"
                             aria-hidden="true"
@@ -563,7 +568,7 @@ export default function MaterialProfile() {
                           <a
                             href={link.href}
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel={ORIGINAL_DOCUMENT_REL}
                           >
                             <Download
                               className="h-4 w-4 shrink-0 text-accent"
@@ -583,7 +588,7 @@ export default function MaterialProfile() {
                         <a
                           href={data.url}
                           target="_blank"
-                          rel="noopener noreferrer"
+                          rel={ORIGINAL_DOCUMENT_REL}
                         >
                           <ExternalLink
                             className="h-4 w-4 shrink-0"
@@ -620,6 +625,10 @@ export default function MaterialProfile() {
                     </p>
                   ) : null}
                 </section>
+
+                {staffOriginals ? (
+                  <StaffOriginals tail={tail} flags={staffOriginals} />
+                ) : null}
 
                 <section aria-labelledby="material-actions-heading">
                   <h2 id="material-actions-heading" className="text-[15px] text-muted-foreground">

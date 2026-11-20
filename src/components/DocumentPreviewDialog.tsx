@@ -23,6 +23,7 @@ import {
 import { ClientOnly } from "@/components/ClientOnly";
 import { getDocumentProxyUrl, getDocumentViewerUrl } from "@/utils/document-preview-url";
 import { lazyChunk } from "@/lib/chunk-reload";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 const PdfDocumentPreview = lazy(lazyChunk(() => import("@/components/PdfDocumentPreview"), (m) => m.PdfDocumentPreview));
 
@@ -248,7 +249,7 @@ export function DocumentPreviewViewer({
 
         {!fullPage && (
           <Button asChild variant="ghost" size="sm" className="hidden rounded-full text-white hover:bg-white/10 hover:text-white sm:inline-flex">
-            <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
+            <a href={viewerUrl} target="_blank" rel={ORIGINAL_DOCUMENT_REL}>
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               {t("documentPreview.openInNewTab")}
             </a>
@@ -256,7 +257,7 @@ export function DocumentPreviewViewer({
         )}
 
         <Button asChild variant="ghost" size="sm" className="rounded-full text-white hover:bg-white/10 hover:text-white">
-          <a href={downloadUrl} download target="_blank" rel="noopener noreferrer">
+          <a href={downloadUrl} download target="_blank" rel={ORIGINAL_DOCUMENT_REL}>
             <Download className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">{t("documentPreview.download")}</span>
           </a>
