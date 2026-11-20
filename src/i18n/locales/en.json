@@ -2231,6 +2231,9 @@
       "by": "by {{name}}"
     },
     "blog": {
+      "subtitle": "Staff write posts in the Newsroom and submit them; an admin approves each one before it appears on /blog.",
+      "new": "Write a post",
+      "review": "Awaiting approval",
       "loadError": "Could not load blog posts."
     }
   },
