@@ -123,16 +123,16 @@ export default function MaterialsLanding() {
           products (MCP, likhit) keep theirs. Left-aligned like /mcp, with the
           holdings stated underneath instead of a decorative shelf. The -mt/pt
           pair slides the navy behind the transparent navbar. */}
-      <header className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
+      <header className="relative isolate hero-under-chrome overflow-hidden bg-primary-surface">
         <div aria-hidden="true" className="absolute inset-0 -z-10">
           <ShaderBackdrop design="diamond" />
-          {/* Navy pooled behind the copy column and under the navbar, so the
+          {/* Navy pooled behind the copy column and under the social bar and navbar, so the
               text always sits on plain navy. */}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface)/0.9)_40%,transparent_75%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_100px,transparent_210px)]" />
         </div>
 
-        <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center pb-16 pt-12 md:pb-20">
+        <div className="layout-container flex min-h-[calc(100svh-2.5rem-76px)] flex-col justify-center pb-16 pt-12 md:pb-20">
           <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
             {t("materialsLanding.heroEyebrow", "The archive's documents")}
           </p>
