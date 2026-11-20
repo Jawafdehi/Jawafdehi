@@ -1,4 +1,4 @@
-// The archive in three panels, under the hero: the MCP that brings it into an
+// The archive in three panels, under the figures: the MCP that brings it into an
 // AI assistant (the one navy panel), what is in it, and how a case is followed
 // from charge sheet to verdict. Each panel shows its idea with a small
 // piece of interface rather than a paragraph.
@@ -22,10 +22,10 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
   ];
 
   return (
-    <section aria-labelledby="archive-bento-title" className="pb-12 pt-20 md:pb-16 md:pt-28">
+    <section aria-labelledby="archive-bento-title" className="pb-12 pt-6 md:pb-16 md:pt-10">
       <div className="layout-container">
         <Reveal>
-          <SplitHeading id="archive-bento-title" lead={t("home.bento.titleLead")} rest={t("home.bento.titleRest")} />
+          <SplitHeading id="archive-bento-title" restOnNewLine lead={t("home.bento.titleLead")} rest={t("home.bento.titleRest")} />
         </Reveal>
 
         {/* Three panels, no borders, three different surfaces: the MCP on a

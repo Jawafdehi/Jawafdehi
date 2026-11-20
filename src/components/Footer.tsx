@@ -102,7 +102,7 @@ export const Footer = () => {
     { label: t("nav.faq"), to: "/faq/" },
     { label: t("footer.pressKit"), to: "/press-kit/" },
     { label: t("footer.mcp"), to: "/mcp/" },
-    { label: t("footer.whatsNew"), to: "/updates/?filter=whats-new" },
+    { label: t("footer.whatsNew"), to: "/updates/?filter=product" },
     { label: t("footer.likhit"), to: "/likhit/" },
     { label: t("footer.githubRepo"), to: "https://github.com/Jawafdehi/Jawafdehi", external: true },
     { label: t("footer.siteStatus"), to: "https://stats.uptimerobot.com/lwVRcc5suC", external: true },
@@ -129,9 +129,10 @@ export const Footer = () => {
         // pages, and from the home page's report band the step down to the
         // deeper footer navy does.
         "relative isolate overflow-hidden bg-[var(--footer-bg)] text-[var(--footer-fg)]",
-        // --footer-surface: the brand navy taken deeper (index.css). Not
-        // --primary, which becomes light ink in dark and would paint it cream.
-        "[--footer-bg:hsl(var(--footer-surface))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.6)] [--footer-link:hsl(var(--primary-foreground)/0.72)]",
+        // --navy-deep: the brand navy taken deeper, so every page closes on a
+        // darker ground than it opens with. Not --primary, which becomes light
+        // ink in dark and would paint it cream.
+        "[--footer-bg:hsl(var(--navy-deep))] [--footer-fg:hsl(var(--primary-foreground))] [--footer-muted:hsl(var(--primary-foreground)/0.6)] [--footer-link:hsl(var(--primary-foreground)/0.72)]",
         // Was #FF000E on this branch — pure red, and a hex literal this branch's
         // own lint rule forbids. #285 replaced it with the token on main; taking
         // main's side, which also matches the dark override below.

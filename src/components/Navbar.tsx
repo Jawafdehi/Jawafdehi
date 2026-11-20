@@ -410,23 +410,25 @@ export function Navbar() {
                 <Search className="h-4 w-4" />
               </Button>
 
-            <Button asChild variant="accent" className="text-[15px]">
+            {/* Both actions keep the width of their longer (Nepali) label, so
+                switching language never slides the toggle and search along. */}
+            <Button asChild variant="accent" className="min-w-[9rem] text-[15px]">
               <Link to="/donate/">
                 <HeartHandshake aria-hidden="true" />
                 {t("nav.donate")}
               </Link>
             </Button>
 
-            {/* Grey fill, no outline: the secondary action in the same voice as
-                the nav track and the search page's chips. */}
+            {/* A soft white fill over the navy hero; solid navy once the header
+                turns white, beside the crimson Donate. */}
             <Button
               asChild
               variant="ghost"
               className={cn(
-                "text-[15px] font-normal",
+                "min-w-[11.75rem] text-[15px] font-normal",
                 overDarkHero
-                  ? "bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-                  : "bg-muted text-primary hover:bg-primary/[0.08]",
+                  ? "bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/[0.16] hover:text-primary-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
               )}
             >
               {/* Markets the MCP connector: the archive inside the reader's own AI tool. */}

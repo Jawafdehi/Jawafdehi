@@ -50,7 +50,7 @@ export function MaterialFilterPanel({
   return (
     <div
       className={cn(
-        "font-filter-panel overflow-hidden rounded-2xl border-0 bg-surface shadow-elev-md",
+        "font-filter-panel overflow-hidden rounded-[20px] border border-border/70 bg-background shadow-none",
         className,
       )}
     >

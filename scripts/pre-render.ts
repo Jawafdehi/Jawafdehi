@@ -23,7 +23,7 @@ import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-a
 import { fetchWithRetry } from './build-fetch.ts';
 import { injectIntoTemplate } from '../src/lib/ssr-template.ts';
 
-// What this script renders: the fixed top-level routes, the What's new posts
+// What this script renders: the fixed top-level routes, the product-update posts
 // and the update articles — a few hundred pages, whatever the size of the
 // archive. Record pages (/case/*, /entity/*, /material/*, /courtcase/*) are NOT
 // rendered here: the Worker renders them on request and caches them (see the

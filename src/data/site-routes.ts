@@ -352,7 +352,7 @@ export const SITE_ROUTES = [
   // One post per changelog entry (src/data/whats-new.ts), pre-rendered by
   // scripts/pre-render.ts from the entry list. Two segments, so it never
   // competes with /updates/:slug.
-  { path: "/updates/whats-new/:id", chrome: "app" },
+  { path: "/updates/product/:id", chrome: "app" },
   { path: "/updates/:slug", chrome: "app" },
   { path: "/data-quality", chrome: "app" },
   { path: "/newsletter/confirmed", chrome: "app" },
@@ -373,7 +373,7 @@ export const SITE_ROUTES = [
   { path: "/cases", chrome: "app" },
   { path: "/cases/page/:page", chrome: "app" },
   { path: "/courtcases", chrome: "app" },
-  // Folded into Updates & News (?filter=whats-new); the edge 301s it.
+  // Folded into Updates & News (?filter=product); the edge 301s it.
   { path: "/whats-new", chrome: "app" },
 ] as const satisfies readonly SiteRoute[];
 

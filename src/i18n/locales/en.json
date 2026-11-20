@@ -236,12 +236,12 @@
     },
     "pressKit": "Press Kit",
     "mcp": "Jawafdehi MCP",
-    "whatsNew": "What's new",
+    "whatsNew": "Product updates",
     "likhit": "likhit"
   },
   "home": {
     "bento": {
-      "titleLead": "Nepal's accountability record,",
+      "titleLead": "Nepal's judicial and governance record,",
       "titleRest": "in one open archive.",
       "archive": {
         "label": "The archive",
@@ -1407,17 +1407,17 @@
     "filter": {
       "NEWS": "News",
       "UPDATE": "Updates",
-      "WHATS_NEW": "What's new"
+      "PRODUCT": "Product updates"
     },
     "category": {
       "NEWS": "News",
-      "UPDATE": "Update"
+      "UPDATE": "Update",
+      "PRODUCT": "Product update"
     },
     "error": "We couldn't load updates right now. Please try again later.",
     "empty": "No updates have been published yet.",
     "errorTitle": "Updates didn't load",
-    "emptyTitle": "Nothing here yet",
-    "articlesHeading": "News and updates"
+    "emptyTitle": "Nothing here yet"
   },
   "share": {
     "share": "Share",
@@ -2959,16 +2959,14 @@
   },
   "whatsNew": {
     "meta": {
-      "title": "What's new",
+      "title": "Product updates",
       "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
     },
-    "title": "What's new in Jawafdehi",
+    "title": "Product updates from Jawafdehi",
     "lastUpdated": "Last updated {{date}}",
-    "filterLabel": "Show updates for",
     "all": "All",
     "more": "More",
-    "seeAll": "Everything that's new",
-    "seeAllTagged": "All {{tag}} updates",
+    "seeAll": "All product updates",
     "tags": {
       "archive": "Archive",
       "mcp": "MCP",
@@ -2976,8 +2974,9 @@
       "likhit": "Likhit",
       "chat": "Chat"
     },
-    "homeHeading": "What's new",
-    "mcpHeading": "What's new in the MCP"
+    "homeHeading": "Product updates",
+    "mcpHeading": "MCP updates",
+    "moreHeading": "More product updates"
   },
   "likhit": {
     "meta": {
@@ -2990,7 +2989,7 @@
       "benchmark": "Read the benchmark",
       "source": "Source on GitHub",
       "pypi": "PyPI",
-      "whatsNew": "What's new",
+      "whatsNew": "Release notes",
       "lede": "<name>likhit</name> is Jawafdehi's open-source converter for Nepali documents: PDFs, scans and old .doc files in, clean Markdown out."
     },
     "install": {
@@ -3059,7 +3058,7 @@
       "guidePrefix": "Full redaction guide on"
     },
     "copy": "Copy",
-    "whatsNewHeading": "What's new in likhit",
+    "whatsNewHeading": "likhit updates",
     "pitch": {
       "titleA": "Nepali PDFs in.",
       "titleB": "Clean Markdown out.",

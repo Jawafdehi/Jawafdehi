@@ -167,8 +167,7 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      // The archive elevation scale — tokens in src/index.css. Elevation
-      // changes animate shadow and translateY together; see FolderCard.
+      // The archive elevation scale — tokens in src/index.css.
       boxShadow: {
         "elev-xs": "var(--shadow-elev-xs)",
         "elev-sm": "var(--shadow-elev-sm)",

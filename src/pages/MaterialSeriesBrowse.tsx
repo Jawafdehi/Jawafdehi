@@ -366,7 +366,7 @@ export default function MaterialSeriesBrowse({
               "Search inside this series…",
             )}
             submitLabel={t("materialsLanding.series.searchSubmit", "Search this series")}
-            inputClassName="bg-surface shadow-elev-xs"
+            inputClassName="bg-background"
           />
         </form>
         <p className="whitespace-nowrap text-sm text-muted-foreground">
@@ -385,7 +385,7 @@ export default function MaterialSeriesBrowse({
           >
             <SelectTrigger
               aria-label={t("materialsLanding.series.sortLabel", "Sort")}
-              className="h-12 min-w-40 rounded-full bg-surface px-4 shadow-elev-xs"
+              className="h-12 min-w-40 rounded-full bg-background px-4"
             >
               <SelectValue />
             </SelectTrigger>
@@ -459,7 +459,7 @@ export default function MaterialSeriesBrowse({
               {Array.from({ length: 6 }, (_, index) => (
                 <Card
                   key={index}
-                  className="flex items-center justify-between gap-6 rounded-xl border-0 bg-surface p-5 shadow-elev-md"
+                  className="flex items-center justify-between gap-6 rounded-[20px] border border-border/70 bg-background p-5 shadow-none"
                 >
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-5 w-4/5" />
@@ -472,7 +472,7 @@ export default function MaterialSeriesBrowse({
           ) : null}
 
           {!documentsQuery.isLoading && documents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-surface-2/50 px-6 py-12 text-center">
+            <div className="rounded-[20px] border border-border/70 bg-muted/40 px-6 py-12 text-center">
               <p className="font-page-lede">
                 {query || activeDateFilterCount
                   ? t("materialsLanding.filters.noMatches", "No documents match these filters.")

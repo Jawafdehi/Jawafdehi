@@ -1,7 +1,8 @@
-// One changelog entry as a post on Updates & News (/updates/whats-new/<id>),
+// One product update (a changelog entry) as a post on Updates & News
+// (/updates/product/<id>),
 // set like a CMS article (ArticleView): breadcrumb, the product and the date,
 // the title in the display face, the text, and the entry's link as the way on.
-// Underneath, the next few entries as a small bento, so a reader keeps going.
+// Underneath, the next few product updates as feed tiles, so a reader keeps going.
 // Entries are static (src/data/whats-new.ts), so every post is pre-rendered.
 import { ArrowRight, ArrowUpRight, Calendar } from "@/components/icons";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { Seo } from "@/components/Seo";
 import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
-import { WhatsNewBento } from "@/components/whats-new/whats-new-bento";
+import { ProductTile } from "@/components/updates/feed-tiles";
 import { WHATS_NEW, entryById, whatsNewListPath, whatsNewPostPath } from "@/data/whats-new";
 import NotFound from "@/pages/NotFound";
 import { formatDateForLanguage } from "@/utils/date";
@@ -44,7 +45,6 @@ export default function WhatsNewPost() {
               { label: t("nav.home"), to: "/" },
               { label: t("updates.title"), to: "/updates" },
               { label: t("whatsNew.homeHeading"), to: whatsNewListPath() },
-              { label: entry.title[lang] },
             ]}
           />
           <article className="mt-8 md:mt-10">
@@ -76,11 +76,17 @@ export default function WhatsNewPost() {
           </article>
 
           {more.length > 0 ? (
-            <section aria-labelledby="more-whats-new" className="mt-20 border-t border-border/70 pt-12">
-              <h2 id="more-whats-new" className="font-home-display mb-8 text-3xl text-primary md:text-4xl">
-                {t("whatsNew.homeHeading")}
+            <section aria-labelledby="more-product-updates" className="mt-20 border-t border-border/70 pt-12">
+              <h2 id="more-product-updates" className="font-home-display mb-8 text-3xl text-primary md:text-4xl">
+                {t("whatsNew.moreHeading", "More product updates")}
               </h2>
-              <WhatsNewBento entries={more} />
+              <ul className="grid list-none grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+                {more.map((other) => (
+                  <li key={other.id}>
+                    <ProductTile entry={other} />
+                  </li>
+                ))}
+              </ul>
             </section>
           ) : null}
         </div>

@@ -101,25 +101,6 @@ export function formatArchiveCount(value: number, language: string): string {
 }
 
 /**
- * Folder tint utilities by index. Tailwind must see every class literally,
- * so the tint number resolves through this table, never interpolation.
- */
-const FOLDER_TINT_CLASSES: Record<number, string> = {
-  1: "bg-folder-1",
-  2: "bg-folder-2",
-  3: "bg-folder-3",
-  4: "bg-folder-4",
-  5: "bg-folder-5",
-  6: "bg-folder-6",
-  7: "bg-folder-7",
-  8: "bg-folder-8",
-};
-
-export function folderTintClass(tint: number): string {
-  return FOLDER_TINT_CLASSES[tint] ?? FOLDER_TINT_CLASSES[1];
-}
-
-/**
  * Language-aware pick from a bilingual pair, falling back across languages,
  * KEEPING any markup the value carries.
  *

@@ -173,14 +173,18 @@ async function prefetch(
     return;
   }
 
-  // Updates/News list page
-  if (url === '/updates') {
+  // Updates/News list page, with or without the trailing slash (the canonical
+  // form) or a ?filter=: an exact '/updates' missed '/updates/', which then
+  // shipped skeletons and waited on the CMS in the browser.
+  if (/^\/updates\/?(?:[?#]|$)/.test(url)) {
     await queryClient.prefetchQuery({ queryKey: ['cms-articles'], queryFn: () => getArticles() });
     return;
   }
 
-  // Article detail page (slug is everything after /updates/ up to /?#)
-  const updateMatch = url.match(/^\/updates\/([^/?#]+)/);
+  // Article detail page (slug is everything after /updates/ up to /?#). Not a
+  // product update (/updates/product/<id>): those are static data, and matching
+  // them asked the CMS for an article called "product" on every render.
+  const updateMatch = url.match(/^\/updates\/(?!product\/)([^/?#]+)/);
   if (updateMatch) {
     const slug = decodeURIComponent(updateMatch[1]);
     await queryClient.prefetchQuery({

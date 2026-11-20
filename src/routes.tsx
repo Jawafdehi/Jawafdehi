@@ -137,7 +137,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/openhouse": <OpenHouse />,
   "/updates": <Updates />,
   "/updates/preview": <UpdatePreview />,
-  "/updates/whats-new/:id": <WhatsNewPost />,
+  "/updates/product/:id": <WhatsNewPost />,
   "/updates/:slug": <UpdateDetail />,
   "/faq": <FaqPage />,
   "/about": <About />,
@@ -150,7 +150,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/donate": <Donate />,
   "/products": <OurProducts />,
   "/mcp": <Mcp />,
-  // Folded into Updates & News: the changelog is its "What's new" filter.
+  // Folded into Updates & News: the changelog is its "Product updates" filter.
   "/whats-new": <WhatsNewRedirect />,
   "/likhit": <Likhit />,
   "/saptahik": <WeeklyMeetings />,

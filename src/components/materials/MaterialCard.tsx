@@ -85,7 +85,7 @@ export function MaterialCard({
   titleNode?: ReactNode;
   /** Internal details path (`/material/<source>/<ident>`). */
   href: string;
-  /** The compact italic register line: series/institution · date. */
+  /** The compact register line: series/institution · date. */
   metaLine?: string;
   /** Labelled catalogue rows; takes precedence over `metaLine` when given. */
   metaRows?: readonly MaterialMetaRow[];
@@ -126,7 +126,7 @@ export function MaterialCard({
         {metaRows ? (
           <MaterialMeta rows={metaRows} />
         ) : metaLine ? (
-          <p className="mt-1.5 text-sm italic text-muted-foreground">{metaLine}</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">{metaLine}</p>
         ) : null}
         {description ? (
           <p className="mt-3 line-clamp-3 break-words text-sm leading-5 text-muted-foreground">

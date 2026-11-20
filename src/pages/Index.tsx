@@ -106,13 +106,13 @@ const Index = () => {
 
       <div className="flex-1">
         <Hero />
-        <ArchiveBento casesDocumented={getStatValue(stats?.published_cases)} />
         <ArchiveFigures
           casesDocumented={getStatValue(stats?.published_cases)}
           totalBigo={getStatValue(stats?.total_bigo, formatBigo)}
           materials={getStatValue(stats?.materials?.total)}
           courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
         />
+        <ArchiveBento casesDocumented={getStatValue(stats?.published_cases)} />
 
 
         {/* ── What we're building ── */}
@@ -200,8 +200,8 @@ const Index = () => {
         {/* Partners after the report band: the white strip keeps the band's
             navy from running into the footer's. */}
         <ReportCaseCta />
-        {/* What's new, compact: the latest from the changelog (src/data/whats-new.ts). */}
-        <WhatsNewSection id="whats-new" heading={t("whatsNew.homeHeading")} compact />
+        {/* Product updates, compact: the latest from the changelog (src/data/whats-new.ts). */}
+        <WhatsNewSection id="product-updates" heading={t("whatsNew.homeHeading")} compact />
         <SupportingPartner />
       </div>
     </div>

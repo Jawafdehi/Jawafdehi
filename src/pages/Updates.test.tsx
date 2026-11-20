@@ -76,7 +76,7 @@ describe("Updates feed", () => {
     expect(screen.getByText("Story 2").closest("a")?.getAttribute("data-shape")).toBe("picture");
     expect(screen.getByText("Story 3").closest("a")?.getAttribute("data-shape")).toBe("text");
     // An even grid: no story spans more than one cell.
-    for (const item of document.querySelectorAll('ul[data-feed="articles"] > li')) {
+    for (const item of document.querySelectorAll('ul[data-feed="updates"] > li')) {
       expect(item.className).not.toContain("span");
     }
   });
@@ -99,49 +99,55 @@ describe("Updates feed", () => {
     const { container } = renderPage();
 
     await screen.findByText("Story 1");
-    const className = container.querySelector('ul[data-feed="articles"]')?.className ?? "";
+    const className = container.querySelector('ul[data-feed="updates"]')?.className ?? "";
     expect(className).toContain("md:grid-cols-2");
     expect(className).toContain("lg:grid-cols-3");
   });
 });
 
-// The platform changelog (src/data/whats-new.ts) lives here too: a bento band in
-// "All", the whole of it under ?filter=whats-new (where /whats-new redirects).
-describe("Updates — What's new", () => {
-  it("shows the changelog as a bento band above the articles in All", async () => {
-    getArticles.mockResolvedValue([article(1)]);
+// Product updates (the changelog, src/data/whats-new.ts) are the third kind of
+// post: in "All" they sit in the one feed with the stories, by date; under
+// ?filter=product (where /whats-new redirects) they are the whole feed.
+describe("Updates — product updates", () => {
+  const productTiles = (root: ParentNode) => root.querySelectorAll('ul[data-feed="updates"] a[data-shape="product"]');
+
+  it("mixes product updates into one feed in All, newest first, with no second section", async () => {
+    getArticles.mockResolvedValue([article(1, { date: "2000-01-01" })]);
     const { container } = renderPage();
 
     await screen.findByText("Story 1");
-    const bento = container.querySelector('ul[data-feed="whats-new"]');
-    expect(bento?.querySelectorAll(":scope > li").length).toBe(Math.min(5, WHATS_NEW.length));
-    // Each tile opens its own post.
-    expect(bento?.querySelector("a")?.getAttribute("href")).toMatch(/^\/updates\/whats-new\//);
-    // The band comes first, the articles after it.
-    const feeds = [...container.querySelectorAll("ul[data-feed]")].map((ul) => ul.getAttribute("data-feed"));
-    expect(feeds).toEqual(["whats-new", "articles"]);
+    expect(container.querySelectorAll("ul[data-feed]").length).toBe(1);
+    expect(productTiles(container).length).toBe(WHATS_NEW.length);
+    // Each product tile opens its own post.
+    expect(productTiles(container)[0].getAttribute("href")).toMatch(/^\/updates\/product\//);
+    // The oldest story sorts last.
+    const items = container.querySelectorAll('ul[data-feed="updates"] > li');
+    expect(items[items.length - 1].textContent).toContain("Story 1");
   });
 
-  it("shows every entry and no articles under ?filter=whats-new", async () => {
-    getArticles.mockResolvedValue([article(1)]);
-    const { container } = renderPage("/updates?filter=whats-new");
-
-    await screen.findAllByRole("link");
-    expect(container.querySelectorAll('ul[data-feed="whats-new"] > li').length).toBe(WHATS_NEW.length);
-    expect(container.querySelector('ul[data-feed="articles"]')).toBeNull();
-    expect(screen.getByRole("button", { name: "What's new" }).getAttribute("aria-pressed")).toBe("true");
+  it("shows only product updates under ?filter=product, without waiting on the CMS", () => {
+    const { container } = renderPage("/updates?filter=product");
+    expect(productTiles(container).length).toBe(WHATS_NEW.length);
+    expect(screen.queryByText("Story 1")).toBeNull();
+    expect(screen.getByRole("button", { name: "Product updates" }).getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("narrows to one product with ?tag=", async () => {
-    const { container } = renderPage("/updates?filter=whats-new&tag=mcp");
-    const expected = WHATS_NEW.filter((entry) => entry.tags.includes("mcp")).length;
-    expect(container.querySelectorAll('ul[data-feed="whats-new"] > li').length).toBe(expected);
+  it("has no per-product filter under Product updates", () => {
+    renderPage("/updates?filter=product&tag=mcp");
+    expect(screen.getAllByRole("group").length).toBe(1);
+    expect(productTiles(document).length).toBe(WHATS_NEW.length);
   });
 
-  it("leaves the changelog out of News and Updates", async () => {
+  it("leaves product updates out of News and Updates", async () => {
     getArticles.mockResolvedValue([article(1, { category: "NEWS" })]);
     const { container } = renderPage("/updates?filter=news");
     await screen.findByText("Story 1");
-    expect(container.querySelector('ul[data-feed="whats-new"]')).toBeNull();
+    expect(productTiles(container).length).toBe(0);
+  });
+
+  it("names the pills All, News, Updates, Product updates, in that order", () => {
+    renderPage();
+    const group = screen.getByRole("group", { name: "Show" });
+    expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["All", "News", "Updates", "Product updates"]);
   });
 });

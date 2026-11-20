@@ -13,7 +13,7 @@ const renderAt = (url: string) =>
     <HelmetProvider>
       <MemoryRouter initialEntries={[url]}>
         <Routes>
-          <Route path="/updates/whats-new/:id" element={<WhatsNewPost />} />
+          <Route path="/updates/product/:id" element={<WhatsNewPost />} />
         </Routes>
       </MemoryRouter>
     </HelmetProvider>,
@@ -35,11 +35,11 @@ describe("WhatsNewPost", () => {
     renderAt(whatsNewPostPath(entry.id));
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(hrefs).not.toContain(whatsNewPostPath(entry.id));
-    expect(hrefs.filter((h) => h?.startsWith("/updates/whats-new/")).length).toBe(Math.min(3, WHATS_NEW.length - 1));
+    expect(hrefs.filter((h) => h?.startsWith("/updates/product/")).length).toBe(Math.min(3, WHATS_NEW.length - 1));
   });
 
   it("is a 404 for an unknown entry", () => {
-    renderAt("/updates/whats-new/no-such-entry");
+    renderAt("/updates/product/no-such-entry");
     // The site's NotFound page, not an empty post.
     expect(document.body.textContent).toMatch(/isn't in the archive|अभिलेखमा छैन/);
   });
