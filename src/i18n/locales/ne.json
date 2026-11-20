@@ -336,8 +336,9 @@
       "label": "अभिलेख अंकमा"
     },
     "blog": {
-      "heading": "ब्लगबाट",
-      "viewAll": "सबै ब्लग पोस्टहरू"
+      "heading": "हालैका ब्लग",
+      "viewAll": "सबै ब्लग पोस्ट",
+      "readMore": "थप पढ्नुहोस्"
     }
   },
   "ourProcess": {
@@ -2993,9 +2994,9 @@
       "likhit": "लिखित",
       "chat": "च्याट"
     },
-    "homeHeading": "उत्पादन अपडेट",
     "mcpHeading": "MCP का अपडेट",
-    "moreHeading": "थप उत्पादन अपडेट"
+    "moreHeading": "थप उत्पादन अपडेट",
+    "homeHeading": "उत्पादन अपडेट"
   },
   "likhit": {
     "meta": {

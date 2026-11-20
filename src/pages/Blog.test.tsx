@@ -8,7 +8,7 @@ import type { ArticleListItem } from "@/types/cms";
 
 // Passthrough translations so assertions don't depend on i18n resources.
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
+  useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key, i18n: { language: "en" } }),
 }));
 
 const getArticles = vi.fn();
@@ -69,14 +69,16 @@ describe("Blog page", () => {
 });
 
 describe("Home BlogSection", () => {
-  it("shows only the latest few posts and links to /blog", async () => {
+  it("shows the two latest posts and links to /blog", async () => {
     getArticles.mockResolvedValue([1, 2, 3, 4, 5].map(article));
     wrap(<BlogSection />);
 
     expect(await screen.findByText("Post 1")).toBeTruthy();
     expect(screen.getAllByRole("listitem")).toHaveLength(HOME_BLOG_POST_COUNT);
     expect(screen.queryByText(`Post ${HOME_BLOG_POST_COUNT + 1}`)).toBeNull();
-    expect(screen.getByRole("link", { name: /All blog posts/ }).getAttribute("href")).toBe("/blog");
+    expect(screen.getByRole("link", { name: /All blog posts|home\.blog\.viewAll/ }).getAttribute("href")).toBe("/blog/");
+    // Each post links to its own page under /blog.
+    expect(screen.getAllByRole("link", { name: /Post 1/ })[0].getAttribute("href")).toMatch(/^\/(blog|updates)\//);
   });
 
   it("renders nothing when there are no posts", async () => {

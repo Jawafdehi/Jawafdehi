@@ -3,7 +3,6 @@ import { CaseCard } from "@/components/CaseCard";
 import { Hero } from "@/components/home/hero";
 import { ArchiveBento } from "@/components/home/archive-bento";
 import { ArchiveFigures } from "@/components/home/archive-figures";
-import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Reveal } from "@/components/ui/reveal";
 import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { BlogSection } from "@/components/home/blog-section";
@@ -194,8 +193,7 @@ const Index = () => {
         {/* Partners after the report band: the white strip keeps the band's
             navy from running into the footer's. */}
         <ReportCaseCta />
-        {/* Product updates, compact: the latest from the changelog (src/data/whats-new.ts). */}
-        <WhatsNewSection id="product-updates" heading={t("whatsNew.homeHeading")} compact />
+        {/* Recent blogs: the latest blog posts, linking to /blog. */}
         <BlogSection />
         <SupportingPartner />
       </div>

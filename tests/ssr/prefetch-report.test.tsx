@@ -4,12 +4,18 @@ import { StaticRouter } from "react-router-dom/server";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const { searchArchiveMock, getStatisticsMock } = vi.hoisted(() => ({
+const { searchArchiveMock, getStatisticsMock, getArticlesMock } = vi.hoisted(() => ({
   searchArchiveMock: vi.fn(),
   getStatisticsMock: vi.fn(),
+  getArticlesMock: vi.fn(),
 }));
 
 vi.mock("@/services/search-api", () => ({ searchArchive: searchArchiveMock }));
+// The home page's Recent blogs reads the CMS; here it answers with no posts.
+vi.mock("@/services/cms-api", () => ({
+  getArticles: getArticlesMock,
+  getArticleBySlug: vi.fn(),
+}));
 vi.mock("@/services/jds-api", () => ({
   getStatistics: getStatisticsMock,
   getCaseById: vi.fn(),
@@ -21,15 +27,20 @@ const { ThemeProvider } = await import("@/components/ThemeProvider");
 const { reportPrefetch } = await import("@/lib/ssr-prefetch");
 const { featuredCasesQuery } = await import("@/queries/home");
 
+const { blogPostsQuery } = await import("@/queries/blog");
+
 const FEATURED_KEY = [...featuredCasesQuery().queryKey];
+const BLOG_KEY = [...blogPostsQuery().queryKey];
 
 beforeEach(() => {
   searchArchiveMock.mockReset();
   getStatisticsMock.mockReset();
+  getArticlesMock.mockReset();
+  getArticlesMock.mockResolvedValue([]);
 });
 
 describe("what render() reports about its own prefetch", () => {
-  it("reports nothing failed when the homepage got both of its queries", async () => {
+  it("reports nothing failed when the homepage got all of its queries", async () => {
     getStatisticsMock.mockResolvedValue({ total_cases: 75 });
     searchArchiveMock.mockResolvedValue({ results: [], count: 0 });
 
@@ -37,11 +48,11 @@ describe("what render() reports about its own prefetch", () => {
 
     expect(prefetch.failed).toEqual([]);
     expect(prefetch.fulfilled).toEqual(
-      expect.arrayContaining([["statistics"], FEATURED_KEY]),
+      expect.arrayContaining([["statistics"], FEATURED_KEY, BLOG_KEY]),
     );
   });
 
-  it("names the one query that failed while its sibling succeeded", async () => {
+  it("names the one query that failed while its siblings succeeded", async () => {
     getStatisticsMock.mockResolvedValue({ total_cases: 75 });
     searchArchiveMock.mockRejectedValue(new Error("Request failed with status code 400"));
 
@@ -50,7 +61,8 @@ describe("what render() reports about its own prefetch", () => {
     const { html, prefetch } = await render("/");
 
     expect(html.length).toBeGreaterThan(0);
-    expect(prefetch.fulfilled).toEqual([["statistics"]]);
+    expect(prefetch.fulfilled).toEqual(expect.arrayContaining([["statistics"], BLOG_KEY]));
+    expect(prefetch.fulfilled).not.toContainEqual(FEATURED_KEY);
     expect(prefetch.failed).toEqual([
       { queryKey: FEATURED_KEY, reason: "Request failed with status code 400" },
     ]);

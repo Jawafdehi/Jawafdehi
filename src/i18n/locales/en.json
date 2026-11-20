@@ -336,8 +336,9 @@
       "label": "The archive in figures"
     },
     "blog": {
-      "heading": "From the blog",
-      "viewAll": "All blog posts"
+      "heading": "Recent blogs",
+      "viewAll": "All blog posts",
+      "readMore": "Read more"
     }
   },
   "ourProcess": {
@@ -2993,9 +2994,9 @@
       "likhit": "Likhit",
       "chat": "Chat"
     },
-    "homeHeading": "Product updates",
     "mcpHeading": "MCP updates",
-    "moreHeading": "More product updates"
+    "moreHeading": "More product updates",
+    "homeHeading": "Product updates"
   },
   "likhit": {
     "meta": {
