@@ -58,13 +58,12 @@ describe("Navbar — the Open House entry", () => {
   it("appears in the desktop about dropdown", async () => {
     renderNavbar();
 
-    // Opened by keyboard, not click: Radix's trigger reacts to pointerdown, so
-    // fireEvent.click never opens it. Enter also exercises the keyboard path.
+    // Opened by keyboard: Enter exercises the keyboard path of the mega menu.
     fireEvent.keyDown(screen.getByRole("button", { name: /nav\.about/ }), { key: "Enter" });
 
     await waitFor(() => {
       const link = screen
-        .getAllByRole("menuitem")
+        .getAllByRole("link")
         .find((el) => el.getAttribute("href") === "/openhouse/");
       expect(link).toBeTruthy();
       expect(link?.textContent).toContain("nav.openHouse");
@@ -92,12 +91,13 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
 
     fireEvent.keyDown(screen.getByRole("button", { name: /Archive/ }), { key: "Enter" });
 
+    // The header's "Connect your AI" button also links to /mcp, so look for the
+    // dropdown's own entry by its text rather than taking the first /mcp link.
     await waitFor(() => {
       const link = screen
-        .getAllByRole("menuitem")
-        .find((el) => el.getAttribute("href") === "/mcp/");
+        .getAllByRole("link")
+        .find((el) => el.getAttribute("href") === "/mcp/" && el.textContent?.includes("Jawafdehi MCP"));
       expect(link).toBeTruthy();
-      expect(link?.textContent).toContain("Jawafdehi MCP");
     });
   });
 
@@ -115,16 +115,24 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // The menu entry and the active-state path check were two lists of the same
   // paths, and they drifted the moment /mcp was added to only one: the entry
   // appeared, and the Archive trigger went dark on the page it led to. The
-  // check is derived from the menu now, and this covers it. /courtcases is the
+  // check is derived from the menu now, and this covers it. /search is the
   // control — without it, a test that stopped exercising the active state at
   // all would still pass.
-  // Both forms: the links are slash-terminated (the canonical URL), and the
-  // slashed path is what a visitor's address bar actually holds.
-  it.each(["/mcp", "/courtcases", "/mcp/", "/courtcases/"])("keeps the Archive trigger active on %s", (path) => {
+  //
+  // The active item is a pill inside the nav track: white on light pages,
+  // full-white text with no fill on the dark heroes (/mcp), where the at-rest
+  // header is light-on-dark.
+  it.each([
+    // Both forms: the links are slash-terminated (the canonical URL), and the
+    // slashed path is what a visitor's address bar actually holds.
+    ["/mcp", "text-primary-foreground"],
+    ["/mcp/", "text-primary-foreground"],
+    ["/search", "bg-surface"],
+    ["/search/", "bg-surface"],
+  ])("keeps the Archive trigger active on %s", (path, activeClass) => {
     renderNavbar(path);
 
-    expect(screen.getByRole("button", { name: /Archive/ }).className).toContain(
-      "text-foreground/82",
-    );
+    const classes = screen.getByRole("button", { name: /Archive/ }).className.split(/\s+/);
+    expect(classes).toContain(activeClass);
   });
 });

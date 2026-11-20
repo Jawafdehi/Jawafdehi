@@ -18,7 +18,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, FileText, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, X } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +28,7 @@ import {
   MAX_PAGE_SPAN,
   type ContentPageStub,
 } from "@/services/datalake-api";
+import { formatCount } from "@/utils/number";
 
 /**
  * Pages per request.
@@ -195,7 +196,7 @@ export function TranscriptReader({
 
   const coverage =
     pages !== undefined && pagesRead !== undefined
-      ? `${pagesRead.toLocaleString()} of ${pages.toLocaleString()} pages readable`
+      ? `${formatCount(pagesRead)} of ${formatCount(pages)} pages readable`
       : "";
 
   return (

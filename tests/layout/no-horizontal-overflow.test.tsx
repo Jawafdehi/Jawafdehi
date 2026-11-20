@@ -82,13 +82,12 @@ describe.each([
     ).not.toContain('whitespace-nowrap');
     expect(classes).toContain('whitespace-normal');
 
-    // `w-fit` sizes the button to that label. Full width on phones, hug from sm up.
+    // `w-fit` sizes the button to that label. The CTA fills its tile instead.
     expect(
       classes,
-      'the CTA hugs its content at phone widths again — use `w-full sm:w-fit`.',
+      'the CTA hugs its content at phone widths again — keep it `w-full`.',
     ).not.toContain('w-fit');
     expect(classes).toContain('w-full');
-    expect(classes).toContain('sm:w-fit');
   });
 });
 
@@ -109,9 +108,11 @@ describe('the /donate headline can wrap its emphasised phrase', () => {
       join(SRC, 'components/donate/hero.tsx'),
       'utf8',
     );
-    const headline = /<h1[\s\S]*?<\/h1>/.exec(source);
+    // The headline is LightHero's `title` prop (LightHero renders the <h1>),
+    // so the guard reads that prop up to the description that follows it.
+    const headline = /title=\{[\s\S]*?description=/.exec(source);
 
-    expect(headline, 'the donate hero no longer renders an <h1>').not.toBeNull();
+    expect(headline, 'the donate hero no longer passes a headline as `title`').not.toBeNull();
     expect(
       headline![0],
       'the donate headline pins its emphasis to one line. Any localisation ' +

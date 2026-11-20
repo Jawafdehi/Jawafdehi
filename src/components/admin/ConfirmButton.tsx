@@ -10,7 +10,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button, type ButtonProps } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 
 interface ConfirmButtonProps {
   // The action to run once confirmed. Kept async so the dialog can show a

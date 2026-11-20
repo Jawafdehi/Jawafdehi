@@ -100,7 +100,7 @@ describe("/donate on jawafdehi.org is unchanged", () => {
         <DonationFaq />
       </>,
     );
-    expect(html).toMatch(/data-site-variant="org"><div class="mt-5"[^>]*>/);
+    expect(html).toMatch(/data-site-variant="org"><div class="hidden md:block md:invisible"[^>]*>/);
     expect(html).toMatch(/data-site-variant="org"[^>]*>[\s\S]*?Are my donations tax-deductible\?/);
     expect(html).toMatch(/data-site-variant="np"/);
   });

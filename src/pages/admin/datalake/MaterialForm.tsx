@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Paperclip, Plus, Trash2, Upload } from "lucide-react";
+import { Paperclip, Plus, Trash2, Upload } from "@/components/icons";
 
 type Doc = Record<string, unknown>;
 

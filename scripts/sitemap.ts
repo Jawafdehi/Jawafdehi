@@ -5,8 +5,7 @@
 // 50k URLs per child file, only published / listed / name-gated records) is what
 // the Worker serves at jawafdehi.org/sitemap.xml, with this file added as one
 // more <sitemap> entry (see the sitemap section of worker.ts). So this script
-// no longer walks the case archive: one count call for the browse pages and the
-// CMS article list are all it fetches, and the build stops depending on the
+// no longer walks the case archive: the CMS article list is all it fetches, and the build stops depending on the
 // archive being fast (JAW-80).
 import { writeFile, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
@@ -15,8 +14,8 @@ import {
   PRE_RENDERED_STATIC_ROUTES,
   shouldIncludeStaticRouteInSitemap,
 } from '../src/data/site-routes.ts';
-import { caseBrowsePagePaths } from './case-browse-pages.ts';
 import { buildAuthHeaders } from './build-auth.ts';
+import { WHATS_NEW, whatsNewPostPath } from '../src/data/whats-new.ts';
 import { fetchWithRetry } from './build-fetch.ts';
 import type { ArticleListItem, WagtailListResponse } from './cms-types.ts';
 
@@ -120,25 +119,16 @@ async function main() {
     process.exit(1);
   }
 
-  // Pages 2..N of the case browse. `/cases/` itself comes from the static route
-  // list above, so drop the first path here rather than emitting it twice.
-  //
-  // Listing pages belong in the sitemap even though they are reachable by link:
-  // they are how a crawler that has only ever seen the home page finds its way
-  // to case pages nothing else links to.
-  const casePageEntries = (await caseBrowsePagePaths(API_BASE))
-    .slice(1)
-    .map(path => urlEntry(`${CANONICAL}${path}`));
 
   const entries: string[] = [
     ...PRE_RENDERED_STATIC_ROUTES
       .filter(shouldIncludeStaticRouteInSitemap)
       .map(r => urlEntry(`${CANONICAL}${withTrailingSlash(r.path)}`)),
-    ...casePageEntries,
+    ...WHATS_NEW.map(e => urlEntry(`${CANONICAL}${withTrailingSlash(whatsNewPostPath(e.id))}`, e.date)),
     ...articles
       .filter(a => a.meta.slug)
       .map(a => urlEntry(
-        `${CANONICAL}/updates/${a.meta.slug}`,
+        `${CANONICAL}/${a.category === 'BLOG' ? 'blog' : 'updates'}/${a.meta.slug}`,
         toYMD(a.date || a.meta.first_published_at || new Date().toISOString()),
       )),
   ];

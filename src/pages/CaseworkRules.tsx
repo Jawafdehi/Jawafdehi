@@ -3,7 +3,7 @@ import CaseworkLayout from "@/components/CaseworkLayout";
 import { listRules, getConfig, updateConfig } from "@/services/casework-api";
 import type { CaseworkRule, ReviewConfig } from "@/types/casework";
 import { Input } from "@/components/ui/input";
-import { Loader2, ChevronDown, Lock, ShieldAlert } from "lucide-react";
+import { Loader2, ChevronDown, Lock, ShieldAlert } from "@/components/icons";
 import { mdToHtml, categoryColor, kindColor } from "@/lib/casework-ui";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 

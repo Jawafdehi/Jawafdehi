@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 
 import {
   formatArchiveCount,
-  pickRecentMaterials,
   resolveMaterialDate,
   sourceFromMaterialUrl,
 } from "./materials-landing";
@@ -66,35 +65,6 @@ function hit(url: string, date?: string, date_bs?: string): ArchiveSearchResult 
   };
 }
 
-describe("pickRecentMaterials", () => {
-  it("re-orders by RESOLVED date, so BS-in-AD rows stop outranking newer documents", () => {
-    // sort=newest puts the BS-fielded 2082-11-27 (= 2026-03-11 AD) first; the
-    // genuinely newer 2026-08-24 AD document must win after resolution.
-    const results = [
-      hit("/material/court_order/a", "2082-11-27"),
-      hit("/material/ciaa_press_release/b", "2026-08-24"),
-      hit("/material/nkp/c", "2021-04-07", "2078-01-25"),
-    ];
-    const picked = pickRecentMaterials(results, 3, NOW);
-    expect(picked.map((entry) => entry.result.url)).toEqual([
-      "/material/ciaa_press_release/b",
-      "/material/court_order/a",
-      "/material/nkp/c",
-    ]);
-  });
-
-  it("drops undated documents and honours the count", () => {
-    const results = [
-      hit("/material/news/a"),
-      hit("/material/news/b", "2026-01-01"),
-      hit("/material/news/c", "2025-01-01"),
-    ];
-    const picked = pickRecentMaterials(results, 1, NOW);
-    expect(picked).toHaveLength(1);
-    expect(picked[0].result.url).toBe("/material/news/b");
-  });
-});
-
 describe("sourceFromMaterialUrl", () => {
   it("extracts the source token from a material path or full IRI", () => {
     expect(sourceFromMaterialUrl("/material/nkp/9851")).toBe("nkp");
@@ -114,8 +84,8 @@ describe("sourceFromMaterialUrl", () => {
 });
 
 describe("formatArchiveCount", () => {
-  it("groups internationally in English", () => {
-    expect(formatArchiveCount(345886, "en")).toBe("345,886");
+  it("groups the lakh/crore way in English too", () => {
+    expect(formatArchiveCount(345886, "en")).toBe("3,45,886");
   });
 
   it("uses Devanagari digits in Nepali", () => {

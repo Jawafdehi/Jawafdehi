@@ -90,8 +90,8 @@ describe('AnimatedCount', () => {
     expect(html, 'server-rendered a placeholder 0, which is a false figure').not.toMatch(/>0</);
   });
 
-  it('groups a bare number when the caller has no formatted string', () => {
-    expect(renderToString(<AnimatedCount end={2245189} />)).toContain('2,245,189');
+  it('groups a bare number the lakh/crore way when the caller has no formatted string', () => {
+    expect(renderToString(<AnimatedCount end={2245189} />)).toContain('22,45,189');
   });
 
   it('still shows the real figure after mount while off screen', () => {
@@ -175,13 +175,7 @@ describe('AnimatedCount', () => {
     expect(container.textContent).toMatch(/^Rs .* Kharab$/);
   });
 
-  // `separator` is a public prop, so the static text has to honour it or the two
-  // halves of this component disagree the moment anyone passes something else.
-  it('honours `separator` in the fallback text', () => {
-    expect(renderToString(<AnimatedCount end={2245189} separator="." />)).toContain('2.245.189');
-  });
-
-  // countup.js renders at `decimals: 0` by default, i.e. rounded — so the static
+  // The count-up runs at `decimals: 0` by default, i.e. rounded — so the static
   // text has to round too, or the figure changes as it hands over.
   it('rounds like countup.js does, rather than showing decimals it would drop', () => {
     const html = renderToString(<AnimatedCount end={1234.5} />);

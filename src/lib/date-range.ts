@@ -44,8 +44,7 @@ export type DatePreset = (typeof DATE_PRESETS)[number];
  * A `Date` as `YYYY-MM-DD` in the LOCAL zone.
  *
  * Not `toISOString().slice(0, 10)`: that is UTC, so any local time before 05:45
- * in Nepal formats as yesterday. Same helper, same reason, as the one in
- * `MaterialSeriesBrowse`.
+ * in Nepal formats as yesterday.
  */
 export function localIsoDate(date: Date): string {
   const year = date.getFullYear();

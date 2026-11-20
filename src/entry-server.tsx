@@ -14,14 +14,7 @@ import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { featuredCasesQuery } from './queries/home';
 import { courtCaseIri, courtCaseRelatedCasesQuery, entityRelatedCasesQuery } from './queries/related-cases';
-import { casesSearchQuery } from './queries/cases';
-import {
-  RECENT_MATERIALS_COUNT,
-  recentMaterialsQuery,
-} from './queries/materials-landing';
-import { pickRecentMaterials } from './lib/materials-landing';
-import { getAllPages, getMaterial, materialTail } from './services/datalake-api';
-import type { ArchiveSearchResponse } from './types/search';
+import { getAllPages } from './services/datalake-api';
 import { http } from './services/http';
 import { documentSourcesQuery } from './lib/document-sources';
 import { reportPrefetch } from './lib/ssr-prefetch';
@@ -168,63 +161,35 @@ async function prefetch(
     return;
   }
 
-  // Materials landing page (BARE /materials only — ?series= and ?q= views are
-  // client-rendered). The query factories are the SHARED definitions
-  // (queries/materials-landing.ts), so keys and params match the page exactly
-  // and the pre-rendered HTML carries the real archive figures. After the
-  // recents resolve, the four shown documents are prefetched too — their own
-  // records carry the descriptions the cards render (search snippets are
-  // empty when browsing).
+  // Materials landing page (BARE /materials only — ?series= and ?source= are
+  // client-rendered, ?q= redirects into /search on the client). The source
+  // catalogue is the SHARED definition (lib/document-sources.ts), so the key
+  // matches the page exactly and the pre-rendered HTML carries the real
+  // archive total.
   if (/^\/materials\/?(?:#|$)/.test(url)) {
-    const recentsQuery = recentMaterialsQuery();
     await Promise.allSettled([
-      queryClient.prefetchQuery(recentsQuery),
       queryClient.prefetchQuery(documentSourcesQuery()),
     ]);
-    const recents = queryClient.getQueryData<ArchiveSearchResponse>(recentsQuery.queryKey);
-    if (recents) {
-      const picks = pickRecentMaterials(recents.results, RECENT_MATERIALS_COUNT);
-      await Promise.allSettled(
-        picks.map(({ result }) => {
-          const tail = materialTail(result.id);
-          return queryClient.prefetchQuery({
-            queryKey: ['datalake-material', tail],
-            queryFn: () => getMaterial(tail),
-          });
-        }),
-      );
-    }
     return;
   }
 
-  // Cases list page: OpenSearch-backed case browse, via Django /api/search proxy.
-  //
-  // `/cases` is page one and `/cases/page/N` is the rest. Prefetching the page
-  // actually being rendered is the whole point of pre-rendering these: without
-  // it every page in the sequence would ship the same empty cache, so a crawler
-  // would see 39 URLs whose bodies are identical chrome and conclude — correctly
-  // — that 38 of them are duplicates.
-  //
-  // The key comes from the same factory Cases.tsx uses: a hand-copied key here
-  // drifted once (#440) and served every listing page as a skeleton.
-  // Retried like the case pages: the build renders all ~238 listing pages at
-  // once, and a single ECONNRESET or 503 among them fails the whole build (it
-  // did on 2026-11-18, twice on main and once on a PR).
-  const casesMatch = url.match(/^\/cases(?:\/page\/(\d+))?\/?(?:[?#]|$)/);
-  if (casesMatch) {
-    const page = casesMatch[1] ? Number(casesMatch[1]) : 1;
-    await queryClient.prefetchQuery({ ...casesSearchQuery('', page), ...transientRetry });
-    return;
-  }
-
-  // Updates/News list page
-  if (url === '/updates') {
+  // Updates/News list page, with or without the trailing slash (the canonical
+  // form) or a ?filter=: an exact '/updates' missed '/updates/', which then
+  // shipped skeletons and waited on the CMS in the browser.
+  if (/^\/updates\/?(?:[?#]|$)/.test(url)) {
     await queryClient.prefetchQuery({ queryKey: ['cms-articles'], queryFn: () => getArticles() });
     return;
   }
+  // The blog lists only BLOG articles, under its own key; Updates & News leaves them out.
+  if (/^\/blog\/?(?:[?#]|$)/.test(url)) {
+    await queryClient.prefetchQuery({ queryKey: ['cms-articles', 'BLOG'], queryFn: () => getArticles('BLOG') });
+    return;
+  }
 
-  // Article detail page (slug is everything after /updates/ up to /?#)
-  const updateMatch = url.match(/^\/updates\/([^/?#]+)/);
+  // Article detail page: the slug after /updates/ or /blog/ up to /?#. Not a
+  // product update (/updates/product/<id>): those are static data, and matching
+  // them asked the CMS for an article called "product" on every render.
+  const updateMatch = url.match(/^\/(?:updates\/(?!product\/)|blog\/)([^/?#]+)/);
   if (updateMatch) {
     const slug = decodeURIComponent(updateMatch[1]);
     await queryClient.prefetchQuery({

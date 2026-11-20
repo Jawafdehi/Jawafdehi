@@ -7,7 +7,9 @@
  */
 @layer base {
   :root {
-    --font-family-app: Helvetica, Arial, "Noto Sans Devanagari", sans-serif;
+    /* English reads in Inter throughout, body as well as headlines, so a page
+       never mixes Inter titles with a system or Noto Latin body. */
+    --font-family-app: "Inter", Helvetica, Arial, "Noto Sans Devanagari", sans-serif;
     /* Headlines are pinned to ONE face per locale — Inter in English, Vesper
        Libre in Nepali (see the [lang="ne"] block). Before this, headline roles
        were split three ways: some took --font-family-app (i.e. Helvetica, a
@@ -143,6 +145,35 @@
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-home-hero-leading);
     max-inline-size: min(100%, var(--font-home-hero-measure));
+  }
+
+  /* The homepage's display voice: Inter at regular weight, set large and
+     tight, as in the 2026-11 hero shader explorations. Nepali keeps the
+     heading family (Vesper) at medium weight with its own leading, since
+     Devanagari needs room for matras and must never be letterspaced tight. */
+  .font-home-display {
+    font-family: "Inter", var(--font-family-heading);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+  }
+
+  :root[lang="ne"] .font-home-display {
+    font-family: var(--font-family-heading);
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.28;
+  }
+
+  /* Section headings on the home page, one step down from the hero so the
+     sections below never compete with it. */
+  .font-home-section-title {
+    @apply font-home-display text-3xl md:text-[2.75rem];
+    /* The display face's 1.02 is for one-line heroes; a section title wraps,
+       and at 1.02 its second line touched the first. 1.1 in English. Nepali
+       keeps the display face's own 1.28 (:root[lang="ne"] .font-home-display,
+       below), which its matras and conjuncts need. */
+    line-height: 1.1;
   }
 
   .font-hero-title {
@@ -366,9 +397,13 @@
     @apply mt-6 mb-4;
   }
 
+  /* The subheadings INSIDE a case's own text (its overview, missing
+     details): one and two steps under the 28px section heading on a 1.2
+     ratio — 22px, then 19px — so an authored h2 never outranks the section
+     it sits in. */
   .font-subsection-title,
   .content-prose h2 {
-    @apply text-xl font-semibold text-primary md:text-2xl;
+    @apply text-xl font-semibold text-primary md:text-[1.375rem];
     font-family: var(--font-family-heading);
     letter-spacing: var(--font-heading-tracking);
     line-height: var(--font-heading-leading);
@@ -378,11 +413,13 @@
      the per-locale headline pin rather than a hardcoded serif. Sized like
      .font-subsection-title but bolded — Vesper reads lighter than the sans at
      equal weight, and the Nepali locale is the one this role was tuned on. */
+  /* The section heading of a reading-heavy detail page (a case, a court
+     case): the display face at ~1.55x the 18px body (28px; 24px on a phone),
+     the ratio long-form pages keep between a section and its text. Also the
+     hook print.css restyles. */
   .font-case-section-title {
-    @apply text-xl font-bold text-primary md:text-2xl;
-    font-family: var(--font-family-heading);
-    letter-spacing: var(--font-heading-tracking);
-    line-height: var(--font-heading-leading);
+    @apply font-home-display text-2xl text-primary md:text-[1.75rem];
+    line-height: 1.2;
   }
 
   .content-prose h2 {
@@ -398,7 +435,7 @@
   }
 
   .content-prose h3 {
-    @apply mt-4 mb-2 md:text-xl;
+    @apply mt-4 mb-2 md:text-[1.1875rem];
   }
 
   .content-prose h4 {

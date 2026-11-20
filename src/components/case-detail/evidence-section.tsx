@@ -14,7 +14,7 @@ export function EvidenceSection({
   if (evidence.length === 0) return null;
 
   return (
-    <section id="evidence" className="mb-12 scroll-mt-28 max-w-4xl">
+    <section id="evidence" className="mb-16 scroll-mt-28">
       <CaseSectionHeading>{title}</CaseSectionHeading>
 
       <div className="text-primary/75">

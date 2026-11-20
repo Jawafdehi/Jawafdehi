@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Columns3, LayoutGrid, List } from "lucide-react";
+import { ArrowRight, ChevronRight, Columns3, FileText, Folder, LayoutGrid, List } from "@/components/icons";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -18,7 +18,7 @@ import {
 import { MATERIAL_SERIES } from "@/data/material-series";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { documentSourcesQuery, type DocumentSourcesResponse } from "@/lib/document-sources";
-import { folderTintClass, formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
+import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
 import { lazyChunk } from "@/lib/chunk-reload";
 import { cn } from "@/lib/utils";
 
@@ -54,11 +54,6 @@ export interface Ctx {
   openLeaf: (path: string[]) => void;
 }
 
-export function tintOf(tree: readonly ArchiveBranch[], path: readonly string[]): number {
-  const top = tree.find((folder) => folder.slug === path[0]);
-  return top?.tint ?? 1;
-}
-
 export function describe(node: ArchiveNode, language: string): string {
   if (node.type === "branch") return node.children.map((child) => nodeName(child, language)).join(" · ");
   const curated = MATERIAL_SERIES.find((series) => series.slug === node.slug);
@@ -77,7 +72,7 @@ export function CountLabel({
     <span className={cn("tabular-nums", className)}>
       {count === null ? "—" : formatArchiveCount(count, ctx.language)}{" "}
       {/* On a phone the List rows drop the word so long names have room. */}
-      <span className={cn("text-xs font-normal opacity-70", compact && "hidden sm:inline")}>
+      <span className={cn("font-normal", compact && "hidden sm:inline")}>
         {t("materialsLanding.grid.documents", "documents")}
       </span>
     </span>
@@ -90,10 +85,10 @@ export function SeeDocuments({ node, className }: Readonly<{ node: ArchiveNode; 
   return (
     <Link
       to={leafHref(node)}
-      className={cn("inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-accent", className)}
+      className={cn("group inline-flex items-center gap-1.5 text-[15px] font-medium text-primary transition-colors hover:text-accent", className)}
     >
       {t("materialsLanding.archive.seeDocuments", "View all")}
-      <ChevronRight aria-hidden="true" className="h-4 w-4" />
+      <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
     </Link>
   );
 }
@@ -148,36 +143,34 @@ function IconsView({ ctx }: Readonly<{ ctx: Ctx }>) {
     <ul
       ref={gridRef}
       onKeyDown={onKeyDown}
-      className="grid list-none grid-cols-1 gap-x-6 gap-y-10 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
     >
       {items.map((node) => {
         const nodePath = [...folderPath, node.slug];
-        const tint = node.type === "branch" ? node.tint : tintOf(tree, nodePath);
+        const Glyph = node.type === "branch" ? Folder : FileText;
+        // A hairline card, the site's card: a grey glyph tile, the name, what
+        // is inside, and the count pinned to the foot so a row of tiles lines
+        // up. The arrow slides in on hover to say the tile opens.
         const body = (
-          <>
-            <div
-              aria-hidden="true"
-              className={cn(
-                "absolute -top-[14px] left-0 h-[20px] w-[38%] rounded-t-[8px] [transform:skewX(-8deg)] [transform-origin:bottom_left]",
-                folderTintClass(tint),
-              )}
-            />
-            <div className={cn("relative overflow-hidden rounded-2xl rounded-tl-none p-1.5", folderTintClass(tint))}>
-              <div className="flex min-h-[9.5rem] flex-col justify-between rounded-xl border border-surface/60 bg-surface/70 p-4 text-left backdrop-blur-[12px]">
-                <div>
-                  <h3 className="text-lg font-medium leading-snug text-primary">{nodeName(node, language)}</h3>
-                  <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-foreground/70">{describe(node, language)}</p>
-                </div>
-                <CountLabel node={node} ctx={ctx} className="mt-3 text-lg font-semibold text-primary" />
-              </div>
+          <div className="flex h-full flex-col rounded-[20px] border border-border/70 bg-background p-5 text-left sm:min-h-[11rem] transition-[border-color] duration-200 ease-out group-hover:border-primary/25">
+            <div className="flex items-start justify-between">
+              <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary">
+                <Glyph className="h-5 w-5" />
+              </span>
+              <ArrowRight
+                aria-hidden="true"
+                className="h-4 w-4 -translate-x-1 text-muted-foreground opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
+              />
             </div>
-          </>
+            <h3 className="mt-4 text-lg leading-snug text-primary sm:mt-5">{nodeName(node, language)}</h3>
+            <p className="mt-1.5 line-clamp-2 text-[15px] leading-6 text-muted-foreground">{describe(node, language)}</p>
+            <CountLabel node={node} ctx={ctx} className="mt-auto pt-4 text-[15px] text-primary" />
+          </div>
         );
         const tile = cn(
-          "font-material-folder group relative block w-full rounded-2xl outline-none shadow-elev-md",
-          "transition-[transform,box-shadow] duration-200 ease-out-strong hover:-translate-y-1 hover:shadow-elev-lg",
-          "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+          "group block h-full w-full rounded-[20px] outline-none transition-transform duration-150 ease-out active:scale-[0.99]",
+          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "motion-reduce:transition-none motion-reduce:active:scale-100",
         );
         return (
           <li key={node.slug}>
@@ -209,22 +202,22 @@ function Breadcrumbs({ ctx }: Readonly<{ ctx: Ctx }>): ReactNode {
   const { t } = useTranslation();
   const chain = resolvePath(ctx.tree, ctx.path) ?? [];
   return (
-    <nav aria-label="breadcrumb" className="min-w-0 text-sm text-muted-foreground">
+    <nav aria-label="breadcrumb" className="min-w-0 text-base text-muted-foreground">
       <ol className="flex list-none flex-wrap items-center gap-x-2 gap-y-1">
         <li>
-          <button type="button" onClick={() => ctx.select([], true)} className={cn("hover:text-foreground", !chain.length && "text-foreground")}>
+          <button type="button" onClick={() => ctx.select([], true)} className={cn("transition-colors hover:text-primary", !chain.length && "text-primary")}>
             {t("materialsLanding.archive.root", "Archive")}
           </button>
         </li>
         {chain.map((node, index) => (
           <li key={node.slug} className="flex items-center gap-2">
-            <span aria-hidden="true">›</span>
+            <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground/70" />
             {index === chain.length - 1 ? (
-              <span aria-current="page" className="text-foreground">
+              <span aria-current="page" className="text-primary">
                 {nodeName(node, ctx.language)}
               </span>
             ) : (
-              <button type="button" onClick={() => ctx.select(ctx.path.slice(0, index + 1), true)} className="hover:text-foreground">
+              <button type="button" onClick={() => ctx.select(ctx.path.slice(0, index + 1), true)} className="transition-colors hover:text-primary">
                 {nodeName(node, ctx.language)}
               </button>
             )}
@@ -259,7 +252,12 @@ export function ArchiveBrowser() {
   const urlView = params.get("view");
   const view: ArchiveView = isView(urlView) ? urlView : (storedView ?? (isMobile ? "list" : "columns"));
   const rawPath = (params.get("path") ?? "").split("/").filter(Boolean);
-  const path = validPath(tree, rawPath);
+  const chosenPath = validPath(tree, rawPath);
+  // Columns never open on an empty pane: with nothing chosen, the first folder
+  // is open, as file browsers land on a selected folder. Not written to the
+  // URL, so /materials/ stays the plain address. Phones drill one level at a
+  // time and start at the top.
+  const path = chosenPath.length || view !== "columns" || isMobile || !tree[0] ? chosenPath : [tree[0].slug];
   const pathKey = key(path);
 
   const update = (changes: { view?: ArchiveView; path?: string[] }, push: boolean) => {
@@ -304,14 +302,17 @@ export function ArchiveBrowser() {
 
   return (
     <div>
-      <h2 id="archive-heading" className="font-archive-section-title">
-        {t("materialsLanding.archive.title", "Browse the archive")}
-      </h2>
-      <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{t("materialsLanding.archive.lede", "")}</p>
-
-      <div className="sticky top-16 z-10 -mx-2 mt-8 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-background/90 px-2 py-2 backdrop-blur">
-        <Breadcrumbs ctx={ctx} />
-        <div role="group" aria-label={t("materialsLanding.archive.viewAs", "View as")} className="flex shrink-0 rounded-lg border border-border p-0.5">
+      {/* The title and line on the left, the view switcher on the right: no
+          toolbar row of its own. Columns and the list show where you are, so
+          only the icon grid, which drills in, carries a way back up. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+        <div className="min-w-0">
+          <h2 id="archive-heading" className="font-archive-section-title">
+            {t("materialsLanding.archive.title", "Browse the archive")}
+          </h2>
+          <p className="mt-3 max-w-2xl text-lg leading-8 text-muted-foreground">{t("materialsLanding.archive.lede", "")}</p>
+        </div>
+        <div role="group" aria-label={t("materialsLanding.archive.viewAs", "View as")} className="flex shrink-0 rounded-full bg-muted p-1">
           {ARCHIVE_VIEWS.map((option) => {
             const Icon = VIEW_ICONS[option];
             const label = t(`materialsLanding.archive.views.${option}`, option);
@@ -325,8 +326,8 @@ export function ArchiveBrowser() {
                 data-view={option}
                 onClick={() => chooseView(option)}
                 className={cn(
-                  "flex h-8 w-9 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                  view === option ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+                  "flex h-8 w-10 items-center justify-center rounded-full outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+                  view === option ? "bg-background text-primary shadow-[0_1px_2px_rgba(14,31,59,0.08)]" : "text-muted-foreground hover:text-primary",
                 )}
               >
                 <Icon aria-hidden="true" className="h-4 w-4" />
@@ -335,8 +336,13 @@ export function ArchiveBrowser() {
           })}
         </div>
       </div>
+      {view === "icons" && path.length > 0 ? (
+        <div className="mt-6">
+          <Breadcrumbs ctx={ctx} />
+        </div>
+      ) : null}
 
-      <div className="mt-6" data-archive-view={view}>
+      <div className="mt-8" data-archive-view={view}>
         {view === "icons" ? (
           <IconsView ctx={ctx} />
         ) : (

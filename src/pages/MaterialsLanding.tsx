@@ -1,25 +1,15 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight } from "@/components/icons";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { lazyChart } from "@/components/charts/lazy";
-import { CapabilityRow } from "@/components/materials/CapabilityRow";
-import { FolderCard } from "@/components/materials/FolderCard";
-import { RecentMaterialsCarousel } from "@/components/materials/RecentMaterialsCarousel";
-import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/eyebrow";
-import { PageHeroBackdrop } from "@/components/ui/page-hero";
-import { Skeleton } from "@/components/ui/skeleton";
-import { MATERIAL_SERIES, seriesBySlug } from "@/data/material-series";
+import { ArrowLink } from "@/components/ui/arrow-link";
+import { MATERIAL_SERIES, seriesSearchPath } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
-import { archiveTotal, documentSourcesQuery } from "@/lib/document-sources";
-import { formatArchiveCount, pickRecentMaterials } from "@/lib/materials-landing";
-import {
-  RECENT_MATERIALS_COUNT,
-  recentMaterialsQuery,
-} from "@/queries/materials-landing";
-import { getMaterial, materialTail } from "@/services/datalake-api";
+import { documentSourcesQuery } from "@/lib/document-sources";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 // The archive browser (folder tree, views, its bilingual name table) is its own
@@ -31,10 +21,10 @@ function ArchivePlaceholder() {
   const { t } = useTranslation();
   return (
     <div className="min-h-[24rem]">
-      <h2 id="archive-heading" className="font-archive-section-title">
+      <h2 id="archive-heading" className="font-home-display text-3xl text-primary md:text-4xl">
         {t("materialsLanding.archive.title", "Browse the archive")}
       </h2>
-      <p className="mt-3 text-sm text-muted-foreground">{t("materialsLanding.series.loading", "Loading…")}</p>
+      <p className="mt-3 text-lg leading-8 text-muted-foreground">{t("materialsLanding.series.loading", "Loading…")}</p>
     </div>
   );
 }
@@ -43,60 +33,19 @@ const ArchiveBrowser = lazyChart<Record<string, never>>(
   () => <ArchivePlaceholder />,
 );
 
-const CHAT_URL = "https://chat.jawafdehi.org";
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
-/** The three folders on the hero shelf — flagship series, front one linked. */
-const SHELF_BACK_SLUGS = ["kanun-patrika", "charge-sheets"] as const;
-const SHELF_FRONT_SLUG = "ciaa-annual-reports";
 
 export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
 
-  // One catalogue for every count on this page — the shelves, the total and
-  // the every-source list — so none of them can disagree with another.
-  const { data: catalogue } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
-  const { data: recentResponse } = useQuery({ ...recentMaterialsQuery(), staleTime: 5 * 60 * 1000 });
-
-  // Shelf counts come from `seriesCount`: a shelf can be narrower than its
-  // source token (five of them scope `official_report`), so the arithmetic
-  // differs per shelf and lives with the registry that defines it.
-  const total = archiveTotal(catalogue);
-
-  const recents = recentResponse
-    ? pickRecentMaterials(recentResponse.results, RECENT_MATERIALS_COUNT)
-    : null;
-
-  // Each recent card shows ITS OWN document's description — search hits carry
-  // none when browsing. Four ~1KB fetches, on the same query key the document
-  // page uses, so clicking through hits a warm cache.
-  const recentDetails = useQueries({
-    queries: (recents ?? []).map(({ result }) => {
-      const tail = materialTail(result.id);
-      return {
-        queryKey: ["datalake-material", tail] as const,
-        queryFn: () => getMaterial(tail),
-        staleTime: 5 * 60 * 1000,
-      };
-    }),
-  });
-  const descriptions: Record<string, { ne?: string | null; en?: string | null }> = {};
-  (recents ?? []).forEach(({ result }, index) => {
-    const detail = recentDetails[index]?.data;
-    if (!detail?.description) return;
-    descriptions[result.id] =
-      typeof detail.description === "string"
-        ? { ne: detail.description, en: detail.description }
-        : detail.description;
-  });
+  // Starts the catalogue request with the page, so the archive browser's
+  // folder counts (the same query) are ready by the time it mounts.
+  useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
 
   const gridRef = useRevealOnScroll<HTMLElement>();
-  const capabilitiesRef = useRevealOnScroll<HTMLElement>();
-  const recentRef = useRevealOnScroll<HTMLElement>();
 
-  const shelfFront = seriesBySlug(SHELF_FRONT_SLUG);
-  const shelfBack = SHELF_BACK_SLUGS.map((slug) => seriesBySlug(slug));
 
   const title = `${t("materialsLanding.title", "Documents & other materials — Nepal's public records")} | ${SITE_NAME}`;
   const description = t(
@@ -148,7 +97,7 @@ export default function MaterialsLanding() {
             name: series.name.ne,
             alternateName: series.name.en,
             description: series.description.ne,
-            url: `${SITE_URL}/materials/?series=${series.slug}`,
+            url: `${SITE_URL}${seriesSearchPath(series.slug)}`,
             creator: { "@id": `${SITE_URL}/#organization` },
             license: CC_BY_NC_URL,
             isAccessibleForFree: true,
@@ -169,71 +118,50 @@ export default function MaterialsLanding() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Seo>
 
-      {/* Hero: a centered stack — stat eyebrow, title, lede, CTA pair — with
-          the folder shelf as the big visual beneath, over the site's shared
-          hero backdrop (the same accent blobs as /about and /team). The
-          -mt/pt pair slides the glow behind the transparent navbar. */}
-      <header className="relative isolate -mt-[76px] overflow-hidden bg-background pt-[76px]">
-        <PageHeroBackdrop />
-        <div className="layout-container relative z-10 pb-16 pt-14 text-center md:pb-24 md:pt-20">
-        {total !== null && (
-          <Eyebrow className="tabular-nums">
-            {formatArchiveCount(total, language)}{" "}
-            {t("materialsLanding.grid.documents", "documents")}
-          </Eyebrow>
-        )}
-        <h1 className="font-archive-hero-title mx-auto mt-4 max-w-3xl">
-          {t("materialsLanding.heroTitle", "Nepal's public records. One archive.")}
-        </h1>
-        <p className="font-page-lede mx-auto mt-5 max-w-xl">
-          {t(
-            "materialsLanding.heroLede",
-            "Documents collected from government bodies — searchable, citable, always open.",
-          )}
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg" className="active:scale-[0.98]">
-            <a href="#archive">{t("materialsLanding.ctaBrowse", "Browse the archive")}</a>
-          </Button>
-          <Button asChild variant="secondary" size="lg" className="active:scale-[0.98]">
-            <a href={CHAT_URL} target="_blank" rel="noopener noreferrer">
-              {t("materialsLanding.ctaAsk", "Ask the AI assistant")} →
-            </a>
-          </Button>
+      {/* Hero: the archive's own navy stage with the home page's diamond field
+          — /materials is the archive, so it wears the archive's shader; the
+          products (MCP, likhit) keep theirs. Left-aligned like /mcp, with the
+          holdings stated underneath instead of a decorative shelf. The -mt/pt
+          pair slides the navy behind the transparent navbar. */}
+      <header className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <ShaderBackdrop design="diamond" />
+          {/* Navy pooled behind the copy column and under the navbar, so the
+              text always sits on plain navy. */}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface))_0%,hsl(var(--primary-surface)/0.9)_40%,transparent_75%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--primary-surface))_0px,hsl(var(--primary-surface))_60px,transparent_170px)]" />
         </div>
 
-        {/* The shelf, pure scenery: three textless folders that load stacked
-            behind the front one and fan out. Base classes are the FINAL pose
-            (what no-JS and reduced-motion get); the fan-out keyframes must
-            end on the same pose. */}
-        <div className="relative mx-auto mt-16 hidden w-full max-w-xl sm:block md:mt-20">
-          {shelfBack[0] && (
-            <FolderCard
-              decorative
-              series={shelfBack[0]}
-              count={null}
-              className="absolute -left-2 top-2 w-[46%] -rotate-[6deg] animate-fan-out-left motion-reduce:animate-none"
-            />
-          )}
-          {shelfBack[1] && (
-            <FolderCard
-              decorative
-              series={shelfBack[1]}
-              count={null}
-              className="absolute -right-2 top-2 w-[46%] rotate-[6deg] animate-fan-out-right motion-reduce:animate-none"
-            />
-          )}
-          {shelfFront && (
-            <FolderCard
-              decorative
-              series={shelfFront}
-              count={null}
-              elevation="lg"
-              heroSheets
-              className="relative mx-auto mt-10 w-[54%]"
-            />
-          )}
-        </div>
+        <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center pb-16 pt-12 md:pb-20">
+          <p className="font-eyebrow text-sm tracking-[0.06em] text-[hsl(var(--accent-on-dark))] md:text-base">
+            {t("materialsLanding.heroEyebrow", "The archive's documents")}
+          </p>
+          <h1 className="font-home-display mt-5 max-w-[16ch] text-[clamp(2.6rem,6vw,5.25rem)] text-primary-foreground [:root[lang=ne]_&]:max-w-[20ch]">
+            {t("materialsLanding.heroTitle", "Nepal's public records. One archive.")}
+          </h1>
+          <p className="mt-6 max-w-2xl text-xl leading-8 text-primary-foreground/80 md:text-2xl md:leading-9">
+            {t(
+              "materialsLanding.heroLede",
+              "Documents collected from government bodies — searchable, citable, always open.",
+            )}
+          </p>
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+            {/* The redesign's pill with the round arrow (ui/arrow-link): straight
+                into archive search, on its Materials tab. */}
+            <ArrowLink to="/search?type=material" tone="light">
+              {t("materialsLanding.ctaBrowse", "Browse the archive")}
+            </ArrowLink>
+            {/* The archive inside the reader's own AI tool: the MCP page. The same
+                soft white fill as the header's Connect your AI on navy. */}
+            <Link
+              to="/mcp/"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-foreground/10 px-5 text-base text-primary-foreground transition-colors duration-150 hover:bg-primary-foreground/[0.16] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+            >
+              {t("materialsLanding.ctaConnect", "Connect your AI")}
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          </div>
+
         </div>
       </header>
 
@@ -244,7 +172,7 @@ export default function MaterialsLanding() {
         ref={gridRef}
         id="archive"
         aria-labelledby="archive-heading"
-        className="scroll-mt-24 border-t border-border"
+        className="scroll-mt-24"
       >
         {/* Old anchors (#series, #sources) still land here. */}
         <span id="series" className="block scroll-mt-24" aria-hidden="true" />
@@ -253,117 +181,6 @@ export default function MaterialsLanding() {
           <ArchiveBrowser />
         </div>
       </section>
-
-      {/* Capabilities, on the navy fill with its one sanctioned wash. */}
-      <section
-        ref={capabilitiesRef}
-        aria-labelledby="capabilities-heading"
-        className="relative isolate overflow-hidden border-t border-border bg-primary-surface"
-      >
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(120%_120%_at_20%_-10%,hsl(var(--primary-surface))_45%,hsl(var(--navy-deep))_100%)]"
-        />
-        <div className="layout-container grid gap-10 py-16 md:py-24 lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-4">
-            <h2
-              id="capabilities-heading"
-              className="font-archive-section-title font-archive-title-inverse"
-            >
-              {t("materialsLanding.capabilities.title", "The archive works for you")}
-            </h2>
-            <p className="mt-4 max-w-sm leading-relaxed text-primary-foreground/70">
-              {t(
-                "materialsLanding.capabilities.lede",
-                "Read it, question it, or take all of it — the records stay public either way.",
-              )}
-            </p>
-          </div>
-          <div className="divide-y divide-primary-foreground/15 lg:col-span-8">
-            <CapabilityRow
-              index={1}
-              title={t("materialsLanding.capabilities.downloadTitle", "Download everything")}
-              line={t(
-                "materialsLanding.capabilities.downloadLine",
-                "Open any series and follow every document to its source file.",
-              )}
-            />
-            <CapabilityRow
-              index={2}
-              title={t("materialsLanding.capabilities.askTitle", "Ask the AI assistant")}
-              line={t(
-                "materialsLanding.capabilities.askLine",
-                "Put a question to the archive in Nepali or English and get cited answers.",
-              )}
-            />
-            <CapabilityRow
-              index={3}
-              title={t("materialsLanding.capabilities.analyzeTitle", "Analyze in bulk")}
-              line={t(
-                "materialsLanding.capabilities.analyzeLine",
-                "The structured data is open (CC BY-NC) — build on it from our GitHub.",
-              )}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Recently added. */}
-      <section
-        ref={recentRef}
-        aria-labelledby="recent-heading"
-        className="border-t border-border"
-      >
-        <div className="layout-container py-16 md:py-24">
-          {recents ? (
-            <RecentMaterialsCarousel
-              materials={recents}
-              descriptions={descriptions}
-              heading={
-                <div>
-                  <h2 id="recent-heading" className="font-archive-section-title">
-                    {t("materialsLanding.recent.title", "Recently added")}
-                  </h2>
-                  {/* Four cards with nothing around them read as the whole
-                      holding — a reviewer counted three news items here and
-                      asked why we only have those three. Say what the slice is
-                      and where the rest live. */}
-                  {total !== null && (
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      <span className="tabular-nums">
-                        {t("materialsLanding.recent.slice", {
-                          shown: formatArchiveCount(recents.length, language),
-                          total: formatArchiveCount(total, language),
-                          defaultValue:
-                            "The {{shown}} newest of {{total}} documents in the archive.",
-                        })}
-                      </span>{" "}
-                      <Link
-                        to="/materials/?sort=newest"
-                        className="font-medium text-primary underline underline-offset-4 hover:text-primary/75"
-                      >
-                        {t("materialsLanding.recent.browseAll", "Browse all documents")}
-                      </Link>
-                    </p>
-                  )}
-                </div>
-              }
-            />
-          ) : (
-            <>
-              <h2 id="recent-heading" className="font-archive-section-title pb-10">
-                {t("materialsLanding.recent.title", "Recently added")}
-              </h2>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <Skeleton key={index} className="min-h-[320px] w-full rounded-xl" />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
     </div>
   );
 }

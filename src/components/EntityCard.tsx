@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, User, MapPin } from "lucide-react";
+import { Building2, User, MapPin } from "@/components/icons";
 import { Entity } from "@/services/api";
 import { getPrimaryName, getAttribute } from "@/utils/entity-helpers";
 import { entityPath } from "@/lib/entity-links";

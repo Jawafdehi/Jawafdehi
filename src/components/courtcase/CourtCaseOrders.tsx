@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import type { CourtCaseOrder, CourtCaseOrderKind } from "@/types/jds";
 import { materialTail } from "@/services/datalake-api";
 import { convertToBS, formatDate } from "@/utils/date";
@@ -67,7 +67,7 @@ export function CourtCaseOrders({ orders }: Readonly<CourtCaseOrdersProps>) {
     <section id="orders" aria-labelledby="orders-heading" className="scroll-mt-28">
       <h2
         id="orders-heading"
-        className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+        className="font-case-section-title"
       >
         {t("courtCaseProfile.orders.heading", {
           count: list.length,
@@ -85,7 +85,7 @@ export function CourtCaseOrders({ orders }: Readonly<CourtCaseOrdersProps>) {
               key={`${order.iri}-${idx}`}
               className="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-3 text-base sm:text-lg"
             >
-              <span className="font-semibold text-foreground">{t(label.key, label.fallback)}</span>
+              <span className="font-normal text-primary">{t(label.key, label.fallback)}</span>
               <span className="text-muted-foreground" aria-hidden="true">·</span>
               <span className="text-foreground">
                 {date ?? t("courtCaseProfile.orders.undated", "Date not recorded")}

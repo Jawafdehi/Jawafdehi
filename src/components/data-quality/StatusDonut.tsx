@@ -7,6 +7,9 @@ import {
 } from "recharts";
 
 import { useMounted } from "@/hooks/useMounted";
+import { ChartReveal } from "@/components/charts/chart-reveal";
+import { chartMotion } from "@/lib/chart-motion";
+import { formatCount } from "@/utils/number";
 
 export interface DonutSegment {
   key: string;
@@ -38,7 +41,7 @@ export function StatusDonut({
   }
 
   const ariaLabel = `${centerLabel}: ${centerValue}. ${data
-    .map((s) => `${s.label} ${s.value.toLocaleString()}`)
+    .map((s) => `${s.label} ${formatCount(s.value)}`)
     .join(", ")}`;
 
   return (
@@ -48,6 +51,7 @@ export function StatusDonut({
         role="img"
         aria-label={ariaLabel}
       >
+        <ChartReveal>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -60,14 +64,15 @@ export function StatusDonut({
               outerRadius={92}
               paddingAngle={data.length > 1 ? 2 : 0}
               stroke="none"
-              isAnimationActive={false}
+              isAnimationActive={chartMotion()}
+            animationDuration={900}
             >
               {data.map((s) => (
                 <Cell key={s.key} fill={s.color} />
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number, name) => [value.toLocaleString(), name]}
+              formatter={(value: number, name) => [formatCount(value), name]}
               contentStyle={{
                 borderRadius: 8,
                 border: "1px solid hsl(var(--border))",
@@ -76,11 +81,12 @@ export function StatusDonut({
             />
           </PieChart>
         </ResponsiveContainer>
+        </ChartReveal>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-2xl font-bold tabular-nums text-primary">
+          <span className="text-3xl font-medium tabular-nums text-primary">
             {centerValue}
           </span>
-          <span className="text-xs text-muted-foreground">{centerLabel}</span>
+          <span className="text-sm text-muted-foreground">{centerLabel}</span>
         </div>
       </div>
 
@@ -88,17 +94,17 @@ export function StatusDonut({
         {segments.map((s) => {
           const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
           return (
-            <li key={s.key} className="flex items-center gap-2 text-sm">
+            <li key={s.key} className="flex items-center gap-2 text-base">
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: s.color }}
                 aria-hidden="true"
               />
               <span className="text-muted-foreground">{s.label}</span>
-              <span className="ml-auto font-mono font-semibold tabular-nums text-foreground">
-                {s.value.toLocaleString()}
+              <span className="ml-auto font-medium tabular-nums text-primary">
+                {formatCount(s.value)}
               </span>
-              <span className="w-10 text-right font-mono tabular-nums text-muted-foreground">
+              <span className="w-10 text-right tabular-nums text-muted-foreground">
                 {pct}%
               </span>
             </li>

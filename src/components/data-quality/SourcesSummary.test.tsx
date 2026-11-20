@@ -52,7 +52,7 @@ describe("SourcesSummary", () => {
     );
 
     const summary = await screen.findByText(/dataQuality.materialsBySource.summary/);
-    expect(summary.textContent).toContain('"total":"363,169"');
+    expect(summary.textContent).toContain('"total":"3,63,169"');
     expect(summary.textContent).toContain('"sources":"7"');
     expect(summary.textContent).toContain('"folders":"6"');
 
@@ -61,7 +61,7 @@ describe("SourcesSummary", () => {
     const folders = screen.getAllByRole("listitem").map((item) => item.textContent);
     expect(folders).toEqual([
       "Judiciary53,842",
-      "Government bodies309,323",
+      "Government bodies3,09,323",
       "Laws0",
       "News0",
       "International0",

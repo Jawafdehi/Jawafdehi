@@ -18,12 +18,13 @@ import {
   MessageSquare,
   Network,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { useCaseworkAuth } from "@/context/CaseworkAuthContext";
 import { hasNesWriteAccess, hasNgmWriteAccess, isModerator } from "@/lib/roles";
 import { listCases } from "@/services/admin-api";
 import { listReviewsGrouped } from "@/services/casework-api";
+import { formatCount } from "@/utils/number";
 
 // Landing page for the unified admin panel. The top row is live "situational"
 // metrics (queue depth, published, drafts, AI reviews) that double as nav
@@ -167,7 +168,7 @@ function MetricValue({ value, loadingLabel }: { value: Count; loadingLabel: stri
   }
   return (
     <span className="text-3xl font-bold tabular-nums">
-      {value === undefined ? "—" : value.toLocaleString()}
+      {value === undefined ? "—" : formatCount(value)}
     </span>
   );
 }

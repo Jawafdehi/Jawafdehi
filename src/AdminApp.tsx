@@ -28,6 +28,7 @@ import FirmForm from "./pages/admin/datalake/FirmForm";
 import AdminCases from "./pages/admin/jawafdehi/AdminCases";
 import AdminCaseForm from "./pages/admin/jawafdehi/AdminCaseForm";
 import Moderation from "./pages/admin/casework/Moderation";
+import AdminBlog from "./pages/admin/Blog";
 import AdminFeedback from "./pages/admin/Feedback";
 import AdminFeedbackDetail from "./pages/admin/FeedbackDetail";
 import CaseworkLogin from "./pages/CaseworkLogin";
@@ -164,6 +165,7 @@ const AdminApp = () => (
               /api/sources/ write endpoint. Evidence is linked as material IRIs
               on the case; manage docs under Data Lake → Materials. */}
           {/* Casework (folded in from /portal) */}
+          <Route path="blog" element={<AdminBlog />} />
           <Route path="proposals" element={<CaseworkProposals />} />
           {/* Deep link from the case-update notification. Same page: the id only
               chooses which row opens, so a stale or deleted id still lands on a

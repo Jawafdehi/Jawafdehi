@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Mail, Phone, MessageCircle, HelpCircle, Loader2, AlertCircle, Plus, X, Instagram, Facebook, Paperclip, Clock } from "lucide-react";
+import { Mail, Phone, MessageCircle, HelpCircle, Loader2, AlertCircle, Plus, X, Instagram, Facebook, Paperclip, Clock } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -227,8 +227,8 @@ export function FeedbackForm({
                 />
             </div>
 
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-semibold text-sm">{t("feedback.contactInfo")}</h3>
+            <div className="space-y-4 rounded-[22px] bg-muted/60 p-5">
+                <h3 className="text-[15px] text-primary">{t("feedback.contactInfo")}</h3>
                 <div className="space-y-2">
                     <Label htmlFor="name">{t("feedback.name")}</Label>
                     <Input
@@ -340,7 +340,7 @@ export function FeedbackForm({
 
             <Button 
                 type="submit" 
-                className="w-full" 
+                className="h-12 w-full rounded-full text-[15px]" 
                 disabled={isSubmitting || isRateLimited}
             >
                 {isSubmitting ? (

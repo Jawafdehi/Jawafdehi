@@ -80,7 +80,9 @@ describe('slashless case and entity URLs 301 to the slashed canonical form', () 
   it.each([
     '/material/document/oag-11353',
     '/courtcase/achhamdc/078-c1-0053',
-    '/cases',
+    // Was /cases, which this branch retires: it 301s into /search (see
+    // retiredBrowseType), so it no longer exercises "left alone".
+    '/search',
     '/about',
   ])('leaves %s (canonical without a slash) alone', async (path) => {
     const res = await get(path);

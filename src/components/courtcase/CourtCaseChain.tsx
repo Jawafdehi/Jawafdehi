@@ -62,7 +62,7 @@ function SourceRef({
   if (known?.this_case) {
     // The case the page is about: named, never linked to itself.
     return (
-      <span className="font-semibold text-foreground">
+      <span className="font-normal text-primary">
         {formatCourtName(court, lang)} {caseNumber}
       </span>
     );
@@ -151,7 +151,7 @@ export function CourtCaseChain({ chain }: Readonly<CourtCaseChainProps>) {
     <section id="appeals" aria-labelledby="appeals-heading" className="scroll-mt-28">
       <h2
         id="appeals-heading"
-        className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+        className="font-case-section-title"
       >
         {t("courtCaseProfile.chain.heading", "Appeal history")}
       </h2>
@@ -187,18 +187,18 @@ export function CourtCaseChain({ chain }: Readonly<CourtCaseChainProps>) {
                 aria-hidden="true"
               />
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+                <span className="text-sm text-muted-foreground">
                   {stageLabel(t, step.stage)}
                 </span>
                 {step.this_case ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm text-primary">
                     {t("courtCaseProfile.chain.thisCase", "This case")}
                   </span>
                 ) : null}
               </div>
               <div className="mt-1 text-base sm:text-lg">
                 {step.this_case ? (
-                  <span className="font-semibold text-foreground">
+                  <span className="font-normal text-primary">
                     {formatCourtName(step.court, lang)} {step.case_number}
                   </span>
                 ) : (

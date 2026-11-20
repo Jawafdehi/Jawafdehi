@@ -1,7 +1,7 @@
 import bs from "bikram-sambat";
 
 import { adToBS, toNepaliNumerals } from "@/utils/bs-calendar";
-import { formatIndianNumber } from "@/utils/number";
+import { formatCount, formatIndianNumber } from "@/utils/number";
 
 import type { ArchiveSearchResult, SearchResultExtra } from "@/types/search";
 
@@ -75,35 +75,6 @@ export function resolveMaterialDate(
   return { ad: date, bs: adToBsString(date) };
 }
 
-/** A search hit paired with its resolved date, ready for the recents table. */
-export interface RecentMaterial {
-  result: ArchiveSearchResult;
-  date: ResolvedMaterialDate;
-}
-
-/**
- * Order material search hits by real recency and keep the newest `count`.
- *
- * The search backend's `sort=newest` compares the raw `date` field, so the
- * BS-in-AD quirk above floats mis-fielded dates (year 2082 "AD") over
- * genuinely newer documents. Re-sorting on the RESOLVED AD date puts the list
- * back in true order; undated documents are dropped — a "recently added"
- * table cannot honestly place them.
- */
-export function pickRecentMaterials(
-  results: readonly ArchiveSearchResult[],
-  count: number,
-  currentAdYear: number = new Date().getFullYear(),
-): RecentMaterial[] {
-  return results
-    .map((result) => ({ result, date: resolveMaterialDate(result.extra, currentAdYear) }))
-    .filter((entry): entry is RecentMaterial & { date: { ad: string } } =>
-      Boolean(entry.date.ad),
-    )
-    .sort((a, b) => b.date.ad.localeCompare(a.date.ad))
-    .slice(0, count);
-}
-
 /**
  * The data-lake source token embedded in a material URL
  * (`/material/<source>/<ident>`). Sources may themselves contain slashes
@@ -120,32 +91,13 @@ export function sourceFromMaterialUrl(url: string): string | null {
 }
 
 /**
- * An archive figure in the reader's numerals: international grouping in
- * English ("345,886"), Nepali grouping and Devanagari digits in Nepali
- * ("३,४५,८८६"), so each language reads the way its readers write numbers.
+ * An archive figure in the reader's numerals: lakh/crore grouping in both
+ * languages, the site's rule for counts ("3,45,886"), with Devanagari digits
+ * in Nepali ("३,४५,८८६").
  */
 export function formatArchiveCount(value: number, language: string): string {
-  if (!language?.startsWith("ne")) return value.toLocaleString("en-US");
+  if (!language?.startsWith("ne")) return formatCount(value);
   return formatIndianNumber(value).replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
-}
-
-/**
- * Folder tint utilities by index. Tailwind must see every class literally,
- * so the tint number resolves through this table, never interpolation.
- */
-const FOLDER_TINT_CLASSES: Record<number, string> = {
-  1: "bg-folder-1",
-  2: "bg-folder-2",
-  3: "bg-folder-3",
-  4: "bg-folder-4",
-  5: "bg-folder-5",
-  6: "bg-folder-6",
-  7: "bg-folder-7",
-  8: "bg-folder-8",
-};
-
-export function folderTintClass(tint: number): string {
-  return FOLDER_TINT_CLASSES[tint] ?? FOLDER_TINT_CLASSES[1];
 }
 
 /**

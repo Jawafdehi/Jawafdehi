@@ -55,7 +55,7 @@ export function DonationJourney() {
               than introducing the stages under it. */}
           <h2
             id="donate-journey-title"
-            className="text-2xl font-bold text-foreground md:text-3xl"
+            className="font-home-section-title text-primary"
           >
             {t("donate.impact.title")}
           </h2>
@@ -66,7 +66,7 @@ export function DonationJourney() {
 
         <div className="mx-auto mt-8 max-w-6xl md:mt-10">
           {/* Stage 1 — the spine: donor → initiative. */}
-          <p className="mb-3 text-center font-mono text-xs font-semibold uppercase tracking-wider text-accent">
+          <p className="font-eyebrow mb-4 text-center text-sm text-accent">
             {t("donate.journey.stageGive")}
           </p>
           {/* The donors themselves are the first node. A generic "you" icon sat
@@ -82,7 +82,7 @@ export function DonationJourney() {
               between to restate. */}
           <div className="flex flex-col items-center gap-2">
             <DonorComb />
-            <span className="text-sm font-semibold text-primary">
+            <span className="text-base text-primary">
               {t("donate.journey.you")}
             </span>
           </div>
@@ -94,18 +94,18 @@ export function DonationJourney() {
           />
 
           {/* Stage 2 — what the money covers. */}
-          <p className="mb-3 text-center font-mono text-xs font-semibold uppercase tracking-wider text-accent">
+          <p className="font-eyebrow mb-4 text-center text-sm text-accent">
             {t("donate.journey.stageAllocated")}
           </p>
           <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {impactItems.map((item, index) => (
               <li
                 key={item.title}
-                className="rounded-lg border border-border bg-card p-4"
+                className="rounded-[22px] bg-muted p-5"
               >
                 <span
                   aria-hidden="true"
-                  className="font-mono text-xs font-semibold text-accent"
+                  className="font-home-display text-xl tabular-nums text-accent"
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>
@@ -113,7 +113,7 @@ export function DonationJourney() {
                     repeated what the title already said, and four of them was
                     the bulk of this section's height. The copy is still in
                     `donate.impact.items[].desc` if it is ever wanted back. */}
-                <h3 className="mt-2 text-base font-bold leading-snug text-foreground">
+                <h3 className="mt-3 text-lg font-normal leading-snug text-primary">
                   {item.title}
                 </h3>
               </li>
@@ -128,16 +128,16 @@ export function DonationJourney() {
 
           {/* Stage 3 — what it becomes. Navy cards so outcomes read as the
               destination of the journey, not four more cost lines. */}
-          <p className="mb-3 text-center font-mono text-xs font-semibold uppercase tracking-wider text-accent">
+          <p className="font-eyebrow mb-4 text-center text-sm text-accent">
             {t("donate.journey.stageBecomes")}
           </p>
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {outcomeItems.map((item) => (
               <li
                 key={item.title}
-                className="rounded-lg bg-primary p-4 text-primary-foreground"
+                className="rounded-[22px] bg-primary-surface p-5 text-primary-foreground"
               >
-                <h3 className="text-base font-bold leading-snug">
+                <h3 className="text-lg font-normal leading-snug">
                   {item.title}
                 </h3>
                 <p className="mt-1.5 text-sm leading-6 text-primary-foreground/75">
@@ -147,7 +147,7 @@ export function DonationJourney() {
             ))}
           </ul>
 
-          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-6 text-foreground/60">
+          <p className="mx-auto mt-8 max-w-2xl text-center text-base leading-7 text-muted-foreground">
             {t("donate.transparency.description")}
           </p>
         </div>

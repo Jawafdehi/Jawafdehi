@@ -13,7 +13,7 @@ import {
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { adminErrorMessage } from "@/services/admin-api";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "@/components/icons";
 
 interface DeleteButtonProps {
   // The async delete call (already bound to its resource key).

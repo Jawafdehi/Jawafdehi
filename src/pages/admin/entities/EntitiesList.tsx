@@ -9,7 +9,7 @@ import { FormError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 import {
   Table,
   TableBody,
@@ -18,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, RefreshCw, Search } from "lucide-react";
+import { Loader2, RefreshCw, Search } from "@/components/icons";
+import { formatCount } from "@/utils/number";
 
 const PAGE_SIZE = 50;
 
@@ -90,7 +91,7 @@ export default function EntitiesList() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Entities</h1>
           <p className="text-sm text-muted-foreground">
-            {total.toLocaleString()} entities
+            {formatCount(total)} entities
           </p>
         </div>
         <div className="flex gap-2">
@@ -175,7 +176,7 @@ export default function EntitiesList() {
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          {from}–{to} of {total.toLocaleString()}
+          {from}–{to} of {formatCount(total)}
         </span>
         <div className="flex gap-2">
           <Button

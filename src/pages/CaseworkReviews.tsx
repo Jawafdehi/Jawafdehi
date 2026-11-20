@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { CaseSearchCombobox } from "@/components/casework/CaseSearchCombobox";
 import { dispositionColor, statusColor, fmtDate, scoreBand } from "@/lib/casework-ui";
-import { Loader2, Repeat, ChevronRight } from "lucide-react";
+import { Loader2, Repeat, ChevronRight } from "@/components/icons";
 
 const PAGE_SIZE = 20;
 

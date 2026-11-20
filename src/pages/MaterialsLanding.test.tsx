@@ -114,6 +114,16 @@ beforeEach(() => {
   getDocumentSources.mockResolvedValue({ ready: true, sources: [] });
 });
 
+// The hero states no totals or licence: the archive below counts its folders.
+describe("MaterialsLanding hero", () => {
+  it("offers browsing and connecting an AI, and no holdings line", async () => {
+    getDocumentSources.mockResolvedValue(catalogue());
+    renderPage();
+    expect(screen.getByRole("link", { name: /Connect your AI/ }).getAttribute("href")).toBe("/mcp/");
+    expect(screen.queryByText("CC BY-NC")).toBeNull();
+  });
+});
+
 describe("MaterialsLanding archive section", () => {
   it("renders the archive browser in the #archive section, with the old anchors kept", async () => {
     renderPage();
@@ -125,42 +135,3 @@ describe("MaterialsLanding archive section", () => {
   });
 });
 
-// A reviewer read the four "Recently added" cards as the archive's whole news
-// holding and asked why we only had those three articles. The carousel is the
-// newest slice of 579,249 documents; it has to say so.
-describe("MaterialsLanding recently-added framing", () => {
-  const recent = (id: string, date: string) => ({
-    id,
-    url: `/material/news/${id}`,
-    title: { en: id, ne: id },
-    snippet: { en: "", ne: "" },
-    extra: { date },
-  });
-
-  it("says what slice the carousel is, and links to the rest", async () => {
-    getDocumentSources.mockResolvedValue(catalogue());
-    searchArchive.mockResolvedValue({
-      results: [recent("a", "2026-10-02"), recent("b", "2026-09-30")],
-      count: 2,
-    });
-    renderPage();
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(/The 2 newest of 579,249 documents in the archive\./),
-      ).toBeTruthy(),
-    );
-
-    const browseAll = screen.getByRole("link", { name: "Browse all documents" });
-    expect(browseAll.getAttribute("href")).toBe("/materials/?sort=newest");
-  });
-
-  it("claims no total before the catalogue arrives", () => {
-    getDocumentSources.mockReturnValue(new Promise(() => {}));
-    searchArchive.mockResolvedValue({ results: [recent("a", "2026-10-02")], count: 1 });
-    renderPage();
-
-    // Better to say nothing than to size the archive at zero.
-    expect(screen.queryByText(/newest of/)).toBeNull();
-  });
-});

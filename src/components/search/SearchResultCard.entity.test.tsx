@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { SearchResultCard } from "@/components/search/SearchResultCard";
 import type { ArchiveSearchResult } from "@/types/search";
@@ -29,9 +30,13 @@ const hit = (over: Partial<ArchiveSearchResult> = {}): ArchiveSearchResult => ({
 
 const renderHit = (result: ArchiveSearchResult, viewMode: "list" | "card" = "card") =>
   render(
-    <MemoryRouter>
-      <SearchResultCard result={result} viewMode={viewMode} />
-    </MemoryRouter>,
+    // Queries never resolve here (no network): the card renders its glyph,
+    // which is what these tests assert around.
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter>
+        <SearchResultCard result={result} viewMode={viewMode} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 
 // Every place-kind entity in the index — `Place`, `AdministrativeArea`,

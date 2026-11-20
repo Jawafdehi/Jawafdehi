@@ -1,18 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  ARCHIVE_SHELVES,
-  childrenAt,
-  findLeafChain,
-  leafSeries,
-  leavesUnder,
-  nodeCount,
-  nodeName,
-  shelfLeafBySlug,
-  unfiledSlug,
-  validPath,
-  withUnfiled,
-} from "@/data/archive-folders";
+import { ARCHIVE_SHELVES, childrenAt, findLeafChain, leafSeries, leavesUnder, nodeCount, nodeName, shelfLeafBySlug, unfiledSlug, validPath, withUnfiled, leafHref, archiveSeriesBySlug } from "@/data/archive-folders";
 import { filedRow } from "@/data/archive-folders.fixtures";
 import type { DocumentSourcesResponse } from "@/lib/document-sources";
 
@@ -222,5 +210,25 @@ describe("archive folders from the API (JAW-87)", () => {
   it("resolves a shelf's series before the catalogue has loaded", () => {
     expect(shelfLeafBySlug("dri-releases-reports")?.source).toBe("dri");
     expect(shelfLeafBySlug("nope")).toBeUndefined();
+  });
+});
+
+describe("a folder opens as the archive search", () => {
+  it("sends a shelf leaf to /search with ?series=", () => {
+    expect(leafHref(shelfLeafBySlug("acts")!)).toBe("/search?type=material&series=acts");
+  });
+
+  it("sends a source the shelves do not file to /search with ?source=", () => {
+    expect(leafHref({ type: "leaf", slug: unfiledSlug("mystery"), source: "mystery", name: { ne: "", en: "Mystery" } })).toBe(
+      "/search?type=material&source=mystery",
+    );
+  });
+
+  it("resolves a non-curated leaf to its scope, named with its folder", () => {
+    const acts = archiveSeriesBySlug("acts");
+    expect(acts?.source).toBe("legal_corpus");
+    expect(acts?.kind).toBe("law-act");
+    expect(acts?.name.en).toMatch(/· Acts$/);
+    expect(archiveSeriesBySlug("no-such-shelf")).toBeUndefined();
   });
 });

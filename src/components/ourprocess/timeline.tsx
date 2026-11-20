@@ -13,29 +13,27 @@ const STEP_KEYS = [
 export function ProcessTimeline() {
   const { t } = useTranslation();
 
+  // Six steps as hairline cards: the number in the display face and crimson,
+  // the step's name, then its line.
   return (
-    <section className="bg-muted/10 py-12 md:py-16">
+    <section className="pb-20 pt-4 md:pb-28">
       <div className="layout-container">
-        <div className="grid grid-cols-1 gap-9 md:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:gap-16">
+        <ol className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {STEP_KEYS.map((key, index) => {
             const number = String(index + 1).padStart(2, "0");
             return (
-              <article key={key} className="relative">
-                <div className="mb-4 flex min-h-14 items-end gap-4">
-                  <div className=" flex-shrink-0 text-5xl font-black leading-none text-accent/80  md:text-4xl">
-                    {number}
-                  </div>
-                  <h3 className=" text-xl font-bold leading-tight tracking-normal text-foreground md:text-2xl">
-                    {t(`ourProcess.steps.${key}.title`)}
-                  </h3>
-                </div>
-                <p className="font-paragraph font-paragraph-muted max-w-[34rem]">
+              <li key={key} className="flex flex-col rounded-[28px] border border-border/70 bg-surface p-6 md:p-7">
+                <span className="font-home-display text-3xl tabular-nums text-accent">{number}</span>
+                <h3 className="mt-8 text-xl font-normal leading-snug text-primary md:text-2xl">
+                  {t(`ourProcess.steps.${key}.title`)}
+                </h3>
+                <p className="mt-3 text-base leading-7 text-muted-foreground">
                   {t(`ourProcess.steps.${key}.description`)}
                 </p>
-              </article>
+              </li>
             );
           })}
-        </div>
+        </ol>
       </div>
     </section>
   );

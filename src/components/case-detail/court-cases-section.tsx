@@ -46,7 +46,7 @@ export function CourtCasesSection({
   if (courtCases.length === 0) return null;
 
   return (
-    <section id="court-case" className="mb-12 scroll-mt-28 max-w-4xl">
+    <section id="court-case" className="mb-16 scroll-mt-28">
       <CaseSectionHeading>{title}</CaseSectionHeading>
 
       <div className="space-y-4 text-primary/75">

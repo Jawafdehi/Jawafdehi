@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -37,10 +37,9 @@ const PaginationLink = ({ className, isActive, size = "icon", ...props }: Pagina
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-        size,
-      }),
+      buttonVariants({ variant: "ghost", size }),
+      PAGE_CLASS,
+      isActive && ACTIVE_PAGE_CLASS,
       className,
     )}
     {...props}
@@ -51,7 +50,7 @@ PaginationLink.displayName = "PaginationLink";
 const PaginationPrevious = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => {
   const { t } = useTranslation();
   return (
-  <PaginationLink aria-label={t("pagination.goToPrevPage")} size="default" className={cn("gap-1 pl-2.5", className)} {...props}>
+  <PaginationLink aria-label={t("pagination.goToPrevPage")} size="default" className={cn("w-auto gap-1.5 px-3 font-medium text-primary", className)} {...props}>
     <ChevronLeft className="h-4 w-4" />
     <span>{t("pagination.previous")}</span>
   </PaginationLink>
@@ -62,7 +61,7 @@ PaginationPrevious.displayName = "PaginationPrevious";
 const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => {
   const { t } = useTranslation();
   return (
-  <PaginationLink aria-label={t("pagination.goToNextPage")} size="default" className={cn("gap-1 pr-2.5", className)} {...props}>
+  <PaginationLink aria-label={t("pagination.goToNextPage")} size="default" className={cn("w-auto gap-1.5 px-3 font-medium text-primary", className)} {...props}>
     <span>{t("pagination.next")}</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
@@ -71,12 +70,22 @@ const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof Pag
 PaginationNext.displayName = "PaginationNext";
 
 const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
-  <span aria-hidden className={cn("flex h-9 w-9 items-center justify-center", className)} {...props}>
+  <span aria-hidden className={cn("flex h-10 w-8 items-center justify-center text-muted-foreground", className)} {...props}>
     <MoreHorizontal className="h-4 w-4" />
     <span className="sr-only">More pages</span>
   </span>
 );
 PaginationEllipsis.displayName = "PaginationEllipsis";
+
+// The pager's look, shared by the composable pieces above and PaginationControls:
+// no borders anywhere. Pages are plain numbers in a circle that fills
+// grey on hover; the current page keeps that grey fill. Previous/Next are text
+// with a chevron, navy when they go somewhere and grey when they cannot.
+const PAGE_CLASS =
+  "h-10 w-10 rounded-full p-0 text-[15px] font-normal text-primary/75 transition-colors hover:bg-muted hover:text-primary";
+const ACTIVE_PAGE_CLASS = "pointer-events-none bg-muted font-medium text-primary";
+const STEP_CLASS =
+  "h-10 gap-1.5 rounded-full px-3.5 text-[15px] font-medium text-primary transition-colors hover:bg-muted disabled:opacity-100 disabled:text-muted-foreground/60";
 
 type PageControlProps = {
   targetPage: number;
@@ -208,16 +217,16 @@ const PaginationControls = ({
   const pageItems = getPageItems(safePage, totalPages);
   return (
     <Pagination className={cn("mt-8", className)}>
-      <PaginationContent className="w-full justify-between gap-2 sm:w-auto sm:justify-center sm:gap-1">
+      <PaginationContent className="w-full justify-between gap-2 sm:w-auto sm:justify-center sm:gap-1.5">
         <PaginationItem>
           <PageControl
-            className="h-10 rounded-full px-4"
+            className={STEP_CLASS}
             disabled={safePage <= 1}
             hrefFor={hrefFor}
             label={t("pagination.goToPrevPage")}
             onPageChange={onPageChange}
             targetPage={safePage - 1}
-            variant="outline"
+            variant="ghost"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline">{t("pagination.previous")}</span>
@@ -231,10 +240,7 @@ const PaginationControls = ({
                 <PaginationEllipsis />
               ) : (
                 <PageControl
-                  className={cn(
-                    "h-10 w-10 rounded-full p-0",
-                    item === safePage && "pointer-events-none",
-                  )}
+                  className={cn(PAGE_CLASS, item === safePage && ACTIVE_PAGE_CLASS)}
                   current={item === safePage}
                   // The current page links to itself in link mode. That is the
                   // one self-link worth keeping: it is what `aria-current` is
@@ -244,7 +250,7 @@ const PaginationControls = ({
                   label={t("pagination.goToPage", { page: item })}
                   onPageChange={onPageChange}
                   targetPage={item}
-                  variant={item === safePage ? "default" : "ghost"}
+                  variant="ghost"
                 >
                   {item}
                 </PageControl>
@@ -254,20 +260,20 @@ const PaginationControls = ({
         </div>
 
         <PaginationItem className="sm:hidden">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-[15px] text-muted-foreground">
             {t("pagination.pageOf", { page: safePage, totalPages })}
           </span>
         </PaginationItem>
 
         <PaginationItem>
           <PageControl
-            className="h-10 rounded-full px-4"
+            className={STEP_CLASS}
             disabled={safePage >= totalPages}
             hrefFor={hrefFor}
             label={t("pagination.goToNextPage")}
             onPageChange={onPageChange}
             targetPage={safePage + 1}
-            variant="outline"
+            variant="ghost"
           >
             <span className="hidden sm:inline">{t("pagination.next")}</span>
             <ChevronRight className="h-4 w-4" />

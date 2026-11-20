@@ -56,7 +56,7 @@ describe("DataHonesty", () => {
     // Group denominator context is shown (the "· of N" heading span, distinct
     // from the per-row "N of M" counts).
     expect(
-      screen.getByText(`· of ${ngm.court_cases_total.toLocaleString()}`),
+      screen.getByText(`· of ${ngm.court_cases_total.toLocaleString("en-IN")}`),
     ).toBeTruthy();
   });
 

@@ -119,25 +119,29 @@ const bigoGroup = () =>
 const dateGroup = () => screen.getByRole("group", { name: /Record date/ });
 
 describe("SearchFilters — बिगो range control", () => {
-  it("renders a two-thumb range slider and both amount fields", async () => {
+  it("offers five preset ranges and a custom range, and no slider", async () => {
+    // Usability research on range filters finds the typed fields are the part a
+    // range control cannot lose, and a slider's only real benefit is
+    // exploration — which labelled presets do better. So: presets, plus the
+    // fields one click away.
     renderFilters("case");
     const group = await bigoGroup();
-    expect(within(group).getAllByRole("slider")).toHaveLength(2);
-    expect(within(group).getByLabelText("Min (Rs)")).toBeTruthy();
-    expect(within(group).getByLabelText("Max (Rs)")).toBeTruthy();
+    expect(within(group).queryAllByRole("slider")).toHaveLength(0);
+    expect(within(group).getAllByRole("button", { pressed: false })).toHaveLength(5);
+    expect(within(group).getByRole("button", { name: "Custom range" })).toBeTruthy();
+    expect(within(group).queryByLabelText("Min (Rs)")).toBeNull();
   });
 
   it("stays under five blocks — this shares a column with four other groups", async () => {
     // The panel reached nine blocks once (readout, chart, axis, three lines of
     // help text, two fields, a preset, a count) and read as the heaviest thing in
-    // the sidebar. Track, axis, fields and one status line is the budget.
+    // the sidebar. Presets, the custom-range link and one status line is the budget.
     renderFilters("case");
     expect((await bigoGroup()).children.length).toBeLessThanOrEqual(5);
   });
 
   it("carries no instructional copy", async () => {
-    // A control that needs explaining is the wrong control. A range slider with
-    // text inputs beneath it is the pattern every price filter uses.
+    // A control that needs explaining is the wrong control.
     renderFilters("case");
     const group = await bigoGroup();
     expect(within(group).queryByText(/Shift/i)).toBeNull();
@@ -145,46 +149,37 @@ describe("SearchFilters — बिगो range control", () => {
     expect(within(group).queryByTestId("bigo-histogram")).toBeNull();
   });
 
-  it("names each thumb, and spells the amount out for a screen reader", async () => {
-    // aria-valuenow is necessarily a ladder INDEX; "7 of 20" tells a listener
-    // nothing about money, so each thumb carries the formatted amount instead.
-    renderFilters("case", { min: 10_000_000 });
-    const [low, high] = within(await bigoGroup()).getAllByRole("slider");
-    expect(low.getAttribute("aria-label")).toBe("Minimum amount");
-    expect(low.getAttribute("aria-valuetext")).toBe("Rs 1.00 Crore");
-    expect(high.getAttribute("aria-label")).toBe("Maximum amount");
-    // No upper bound set, so that thumb sits on the bracketing edge.
-    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+  it("commits a preset's bounds, and clears it when chosen again", async () => {
+    const onCommit = vi.fn();
+    const { rerender } = renderFilters("case", { onCommit });
+    fireEvent.click(within(await bigoGroup()).getByRole("button", { name: "Rs 1 – 10 crore" }));
+    expect(onCommit).toHaveBeenLastCalledWith({ min: 10_000_000, max: 100_000_000 });
+
+    rerender(
+      <SearchFilters
+        bigoExtent={CORPUS}
+        bigoMax={100_000_000}
+        bigoMin={10_000_000}
+        facets={emptyFacets}
+        onBigoCommit={onCommit}
+        onClear={vi.fn()}
+        onToggle={vi.fn()}
+        selected={{ entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [] }}
+        selectedType="case"
+      />,
+    );
+    const active = within(await bigoGroup()).getByRole("button", { name: "Rs 1 – 10 crore" });
+    expect(active.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(active);
+    expect(onCommit).toHaveBeenLastCalledWith({});
   });
 
-  it("announces a bound that snaps to a ladder END, rather than 'No minimum'", async () => {
-    // Regression. aria-valuetext was derived from the thumb's ladder POSITION,
-    // and `indexToBound` returns undefined at either end because an end-parked
-    // thumb means "no bound". But a literal bound can snap to an end and still
-    // be in force: the live ladder floor is रु 20,000, so ?bigo_min=25000 lands
-    // the thumb on index 0 while the filter, the URL and the pill all carry
-    // रु 25,000. A screen reader was told "No minimum" about an applied minimum.
-    //
-    // The position is a rendering detail; the announcement is a claim about the
-    // filter, so at rest it reports the COMMITTED bound.
+  it("opens the custom fields for a bound that matches no preset", async () => {
+    // A shared link like ?bigo_min=25000 has to show what is in force.
     renderFilters("case", { min: 25_000 });
-    const [low] = within(await bigoGroup()).getAllByRole("slider");
-    expect(low.getAttribute("aria-valuetext")).toBe("Rs 25,000");
-  });
-
-  it("announces an upper bound snapped to the ladder ceiling", async () => {
-    // The same failure on the other end: the ladder tops out at रु 1.00 Kharab,
-    // so anything from ~रु 75 अरब up parks the thumb on the last index.
-    renderFilters("case", { max: 80_000_000_000 });
-    const [, high] = within(await bigoGroup()).getAllByRole("slider");
-    expect(high.getAttribute("aria-valuetext")).toBe("Rs 80.00 Arab");
-  });
-
-  it("still says 'No minimum'/'No maximum' when a side genuinely has no bound", async () => {
-    renderFilters("case");
-    const [low, high] = within(await bigoGroup()).getAllByRole("slider");
-    expect(low.getAttribute("aria-valuetext")).toBe("No minimum");
-    expect(high.getAttribute("aria-valuetext")).toBe("No maximum");
+    const group = await bigoGroup();
+    expect(within(group).queryAllByRole("button", { pressed: true })).toHaveLength(0);
+    expect((within(group).getByLabelText("Min (Rs)") as HTMLInputElement).value).toBe("25,000");
   });
 
   it("opens the sidebar, above the term facets", async () => {
@@ -250,7 +245,9 @@ describe("SearchFilters — बिगो range control", () => {
   it("commits a typed minimum on blur", async () => {
     const onCommit = vi.fn();
     renderFilters("case", { onCommit });
-    const field = within(await bigoGroup()).getByLabelText("Min (Rs)");
+    const group = await bigoGroup();
+    fireEvent.click(within(group).getByRole("button", { name: "Custom range" }));
+    const field = within(group).getByLabelText("Min (Rs)");
     fireEvent.change(field, { target: { value: "10000000" } });
     fireEvent.blur(field);
     expect(onCommit).toHaveBeenCalledWith({ min: 10_000_000, max: undefined });
@@ -282,16 +279,14 @@ describe("SearchFilters — बिगो range control", () => {
     expect(within(await bigoGroup()).queryByText(/recorded amount/)).toBeNull();
   });
 
-  it("says what the filter can reach at all when unfiltered", async () => {
-    // ~9% of cases record no amount and are excluded by ANY bound, since a range
-    // clause cannot match an absent field. With no distribution on screen, this
-    // line is the only warning before a reader narrows into an empty page.
+  it("offers a custom range as the last row of the presets", async () => {
     renderFilters("case");
-    expect(
-      within(await bigoGroup()).getByText(
-        "Filtering by amount includes only the 75 cases with a recorded amount.",
-      ),
-    ).toBeTruthy();
+    const group = within(await bigoGroup());
+    const rows = group.getAllByRole("button");
+    expect(rows.at(-1)?.textContent).toContain("Custom range");
+    expect(rows.at(-1)?.getAttribute("aria-expanded")).toBe("false");
+    // No explanatory caveat under the control.
+    expect(group.queryByText(/recorded amount/)).toBeNull();
   });
 });
 
@@ -607,7 +602,7 @@ describe("SearchFilters — document type facet", () => {
     const labels = within(group)
       .getAllByRole("checkbox")
       .map((box) => box.getAttribute("aria-label") ?? "");
-    expect(labels).toHaveLength(8); // collapsed to the first 8 of 10
+    expect(labels).toHaveLength(10); // ten or fewer show in full
     expect(labels[0]).toContain("materialsByType.type.procurementNotice");
     expect(labels[0]).toContain("205826");
     // Never the bare token, which is the failure this branch exists to prevent.
@@ -616,20 +611,27 @@ describe("SearchFilters — document type facet", () => {
     );
   });
 
-  it("keeps the rarest types reachable behind More", () => {
+  it("keeps the rarest types in view: ten or fewer options never collapse", () => {
     // social_media has 10 documents and legal_corpus 13, against
-    // procurement_notice's 205,826. They sit past the 8-row collapse, so the
-    // group must offer a way to them — otherwise the long tail of the corpus is
-    // unfilterable.
+    // procurement_notice's 205,826. A group of up to ten shows every option,
+    // so the long tail of the corpus is never hidden behind a button.
     renderFilters("material", { facets });
     const group = screen.getByRole("group", { name: /Document type/ });
-    expect(within(group).getAllByRole("checkbox")).toHaveLength(8);
-    fireEvent.click(within(group).getByRole("button", { name: /More/i }));
     const labels = within(group)
       .getAllByRole("checkbox")
       .map((box) => box.getAttribute("aria-label") ?? "");
     expect(labels).toHaveLength(MATERIAL_TYPE_FACET.length);
     expect(labels.some((label) => label.includes("socialMedia"))).toBe(true);
+    expect(within(group).queryByRole("button", { name: /Show all/i })).toBeNull();
+  });
+
+  it("collapses a longer group to its top five, behind 'Show all N'", () => {
+    const many = Array.from({ length: 77 }, (_, i) => ({ name: `District ${i + 1}`, count: 1000 - i }));
+    renderFilters("case", { facets: { ...facets, district: many } });
+    const group = screen.getByRole("group", { name: /District/ });
+    expect(within(group).getAllByRole("checkbox")).toHaveLength(5);
+    fireEvent.click(within(group).getByRole("button", { name: /Show all/i }));
+    expect(within(group).getAllByRole("checkbox")).toHaveLength(77);
   });
 
   it("is absent on every tab but Materials", () => {
@@ -645,9 +647,12 @@ describe("SearchFilters — document type facet", () => {
 });
 
 describe("SearchFilters — record date control", () => {
-  it("offers the presets and both exact fields", () => {
+  it("offers the presets, with both exact fields behind Custom range", () => {
     renderFilters("material");
     const group = dateGroup();
+    // The fields stay folded until asked for, like the amount filter's.
+    expect(within(group).queryByLabelText("From (AD)")).toBeNull();
+    fireEvent.click(within(group).getByRole("button", { name: "Custom range" }));
     expect(within(group).getByLabelText("From (AD)")).toBeTruthy();
     expect(within(group).getByLabelText("To (AD)")).toBeTruthy();
     expect(
@@ -728,16 +733,8 @@ describe("SearchFilters — record date control", () => {
     );
   });
 
-  it("states the coverage caveat only while unfiltered", () => {
-    // A range clause cannot match a document with no date, so any bound silently
-    // drops them. Nothing else on the page says so, and without it their
-    // disappearance reads as "there are none" rather than "this filter cannot
-    // see them". Once a bound IS set the note is spent, and the column is shared.
-    const { unmount } = renderFilters("material");
-    expect(within(dateGroup()).getByText(/recorded date/)).toBeTruthy();
-    unmount();
-
-    renderFilters("material", { dateFrom: "2020-01-01" });
+  it("carries no explanatory caveat", () => {
+    renderFilters("material");
     expect(within(dateGroup()).queryByText(/recorded date/)).toBeNull();
   });
 

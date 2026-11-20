@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Eye, FileText, Lock } from "lucide-react";
+import { Download, Eye, FileText, Lock } from "@/components/icons";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

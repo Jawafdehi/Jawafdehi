@@ -25,10 +25,8 @@ describe("the route table", () => {
   it("derives the pre-rendered subset from rows carrying page metadata", () => {
     expect(PRE_RENDERED_STATIC_ROUTES.map((route) => route.path)).toEqual([
       "/",
-      "/cases",
       "/search",
       "/faq",
-      "/research/corruption-accountability",
       "/our-process",
       "/commitment",
       "/press-kit",
@@ -40,15 +38,16 @@ describe("the route table", () => {
       "/team",
       "/products",
       "/mcp",
+      "/likhit",
       "/openhouse",
       "/saptahik",
+      "/blog",
       "/updates",
       "/feedback",
       "/report",
       "/privacy",
       "/terms",
       "/materials",
-      "/courtcases",
     ]);
   });
 
@@ -73,6 +72,7 @@ describe("isKnownRoute", () => {
     "/report/",
     "/updates/preview",
     "/updates/an-article",
+    "/blog/a-post",
     "/entity/organization/np/gov/tu",
     "/entity/person/ram-shah",
     "/material/ngm/some-doc",

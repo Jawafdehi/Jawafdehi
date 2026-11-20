@@ -3,7 +3,7 @@
 // organisation / place glyph. Almost no NES record carries an image, so the
 // glyph is the designed default rather than an error state.
 import { useState } from "react";
-import { Building2, MapPin, User } from "lucide-react";
+import { Building2, MapPin, User } from "@/components/icons";
 
 import { cn } from "@/lib/utils";
 import type { EntityKind } from "@/utils/entity-helpers";

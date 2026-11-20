@@ -1,37 +1,22 @@
 import { useTranslation } from "react-i18next";
 import { Cta } from "@/components/home/cta";
 import { Seo } from "@/components/Seo";
-import { VolunteerHero } from "@/components/volunteer/hero";
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
+import { ArrowLink } from "@/components/ui/arrow-link";
+import { LightHero } from "@/components/ui/light-hero";
+import { Panel } from "@/components/ui/panel";
 import {
-  BookOpen,
   BriefcaseBusiness,
-  FlaskConical,
-  Globe,
   GraduationCap,
   Laptop,
-  Megaphone,
+  Mail,
   Scale,
-  Search,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/icons";
 import { SITE_URL } from "@/utils/seo";
 
-type TeamEntry = {
-  icon: LucideIcon;
-  nameKey: string;
-  responsibilityKeys: string[];
-};
-
-const teamConfigs: Array<{ icon: LucideIcon; nameKey: string; respKey: string }> = [
-  { icon: Search, nameKey: "volunteer.teams.dataScraping", respKey: "volunteer.teams.dataScrapingResponsibilities" },
-  { icon: Megaphone, nameKey: "volunteer.teams.outreach", respKey: "volunteer.teams.outreachResponsibilities" },
-  { icon: Globe, nameKey: "volunteer.teams.platformDevelopment", respKey: "volunteer.teams.platformDevelopmentResponsibilities" },
-  { icon: BookOpen, nameKey: "volunteer.teams.corruptionCompilation", respKey: "volunteer.teams.corruptionCompilationResponsibilities" },
-  { icon: FlaskConical, nameKey: "volunteer.teams.corruptionResearch", respKey: "volunteer.teams.corruptionResearchResponsibilities" },
-];
-
 type VolunteerProfile = {
-  icon: LucideIcon;
+  icon: IconComponent;
   titleKey: string;
   descKey: string;
 };
@@ -61,106 +46,90 @@ const getProfiles = (): VolunteerProfile[] => [
 
 const Volunteer = () => {
   const { t } = useTranslation();
-  const teams: TeamEntry[] = teamConfigs.map((cfg) => ({
-    icon: cfg.icon,
-    nameKey: cfg.nameKey,
-    responsibilityKeys: t(cfg.respKey, { returnObjects: true }) as string[],
-  }));
   const profiles = getProfiles();
   return (
-  <div className="min-h-screen flex flex-col bg-background">
-    <Seo
-      title="Volunteer with Us — Jawafdehi"
-      description="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator."
-      canonicalUrl={`${SITE_URL}/volunteer/`}
-    />
+    <div className="min-h-screen flex flex-col bg-background">
+      <Seo
+        title="Volunteer with Us — Jawafdehi"
+        description="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator."
+        canonicalUrl={`${SITE_URL}/volunteer/`}
+      />
 
-    <main id="main-content" className="flex-1">
-      <VolunteerHero />
+      <main id="main-content" className="flex-1">
+        <LightHero
+          id="volunteer-hero"
+          eyebrow={t("volunteer.hero.eyebrow")}
+          title={
+            <>
+              {t("volunteer.hero.helpBuild")}{" "}
+              <span className="text-accent">{t("volunteer.hero.permanentAccountability")}</span>{" "}
+              {t("volunteer.hero.record")}
+            </>
+          }
+          description={t("volunteer.hero.description")}
+          actions={
+            <>
+              <ArrowLink href="https://github.com/Jawafdehi">
+                {t("volunteer.hero.github")}
+              </ArrowLink>
+              <a
+                href="mailto:report@jawafdehi.org"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-colors hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Mail className="h-4 w-4" aria-hidden="true" />
+                {t("volunteer.hero.email")}
+              </a>
+            </>
+          }
+        />
 
-      {/* Who we're looking for */}
-      <section id="who-we-need" className="bg-muted/10 pt-12 pb-10 md:pt-14 md:pb-12 lg:pt-16">
-        <div className="layout-container">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="font-eyebrow mb-3">
-              {t("volunteer.whoCanJoin.eyebrow")}
-            </p>
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+        {/* Who we're looking for: four grey panels, the icon in a white disc. */}
+        <section id="who-we-need" aria-labelledby="who-we-need-title" className="pt-8 md:pt-12">
+          <div className="layout-container">
+            <h2 id="who-we-need-title" className="font-home-section-title text-primary">
               {t("volunteer.whoCanJoin.title")}
             </h2>
-            <p className="mt-4 text-base leading-7 text-foreground/70">
-              {t("volunteer.whoCanJoin.description")}
-            </p>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("volunteer.whoCanJoin.description")}</p>
+            <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {profiles.map(({ icon: Icon, titleKey, descKey }) => (
+                <li key={titleKey}>
+                  <Panel className="min-h-[14rem]">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-primary">
+                      <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.6} />
+                    </span>
+                    <h3 className="mt-auto pt-8 text-xl font-normal leading-snug text-primary">{t(titleKey)}</h3>
+                    <p className="mt-2 text-[15px] leading-6 text-muted-foreground">{t(descKey)}</p>
+                  </Panel>
+                </li>
+              ))}
+            </ul>
           </div>
+        </section>
 
-          <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 lg:grid-cols-4 lg:gap-10">
-            {profiles.map(({ icon: Icon, titleKey, descKey }) => (
-              <div key={titleKey} className="mx-auto flex max-w-[16rem] flex-col items-center text-center">
-                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-primary-surface/[0.07] text-primary">
-                  <Icon aria-hidden="true" className="h-10 w-10" strokeWidth={1.45} />
-                </div>
-                <h3 className="mb-2 text-lg font-bold leading-tight text-foreground">{t(titleKey)}</h3>
-                <p className="text-sm leading-6 text-foreground/70">{t(descKey)}</p>
+        {/* The global community, as one navy band. */}
+        <section aria-labelledby="global-community-title" className="pt-16 md:pt-24">
+          <div className="layout-container">
+            <div className="relative isolate overflow-hidden rounded-[28px] bg-primary-surface px-6 py-12 md:px-12 md:py-16">
+              <div aria-hidden="true" className="absolute inset-0 -z-10 [mask-image:linear-gradient(to_left,#000_20%,transparent_75%)]">
+                <ShaderBackdrop design="lines" />
               </div>
-            ))}
+              <p className="font-eyebrow text-sm text-[hsl(var(--accent-on-dark))]">{t("volunteer.globalCommunity.eyebrow")}</p>
+              <h2
+                id="global-community-title"
+                className="font-home-display mt-4 max-w-2xl text-3xl leading-tight text-primary-foreground md:text-4xl"
+              >
+                {t("volunteer.globalCommunity.title")}
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg leading-8 text-primary-foreground/75">
+                {t("volunteer.globalCommunity.description")}
+              </p>
+            </div>
           </div>
+        </section>
 
-          <div className="mx-auto mt-12 max-w-3xl text-center">
-            <p className="font-eyebrow mb-3">
-              {t("volunteer.globalCommunity.eyebrow")}
-            </p>
-            <h2 className="mb-4 text-2xl font-bold tracking-normal text-foreground md:text-3xl">
-              {t("volunteer.globalCommunity.title")}
-            </h2>
-            <p className="font-paragraph font-paragraph-foreground">
-              {t("volunteer.globalCommunity.description")}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Teams */}
-      <section id="volunteer-teams" className="bg-muted/20 pt-10 pb-12 md:pt-12 md:pb-14">
-        <div className="layout-container">
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <p className="font-eyebrow mb-3">
-              {t("volunteer.teams.eyebrow")}
-            </p>
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              {t("volunteer.teams.title")}
-            </h2>
-            <p className="mt-4 text-base leading-7 text-foreground/70">
-              {t("volunteer.teams.description")}
-            </p>
-          </div>
-
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {teams.map(({ icon: Icon, nameKey, responsibilityKeys }) => (
-              <div key={nameKey} className="rounded-lg border border-primary/10 bg-background/70 p-6 shadow-sm shadow-primary-surface/5">
-                <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary-surface/[0.07] text-primary">
-                    <Icon aria-hidden="true" className="h-6 w-6" strokeWidth={1.55} />
-                  </div>
-                  <h3 className="text-lg font-bold leading-tight text-foreground">{t(nameKey)}</h3>
-                </div>
-                <ul className="space-y-3">
-                  {responsibilityKeys.map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-sm leading-6 text-foreground/70">
-                      <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <Cta />
-    </main>
-
-  </div>
+        <Cta />
+      </main>
+    </div>
   );
 };
 

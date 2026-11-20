@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { CircleX, HeartHandshake, Headphones } from "lucide-react";
+import { CircleX, HeartHandshake, Headphones } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 

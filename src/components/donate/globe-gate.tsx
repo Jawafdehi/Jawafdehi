@@ -49,12 +49,14 @@ export function GlobeGate() {
     if ("requestIdleCallback" in window) {
       idleId = window.requestIdleCallback(arm, { timeout: 2500 });
     } else {
-      timerId = window.setTimeout(arm, 1200);
+      // The DOM types assume requestIdleCallback exists, which narrows
+      // `window` to never here; globalThis keeps the Safari fallback typed.
+      timerId = globalThis.setTimeout(arm, 1200) as unknown as number;
     }
     return () => {
       cancelled = true;
       if (idleId) window.cancelIdleCallback(idleId);
-      if (timerId) window.clearTimeout(timerId);
+      if (timerId) globalThis.clearTimeout(timerId);
     };
   }, []);
 

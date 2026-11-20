@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { Loader2, Plus, Search, Trash2 } from "@/components/icons";
 
 // Display the bilingual/plain name of an entity search hit.
 function entityName(e: Record<string, unknown>): string {

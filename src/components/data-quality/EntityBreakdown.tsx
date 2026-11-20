@@ -9,6 +9,7 @@ import {
 } from "@/lib/entity-filter-links";
 import { personSectorKey } from "@/lib/person-sector-labels";
 import { BreakdownBar } from "./BreakdownBar";
+import { formatCount } from "@/utils/number";
 
 /**
  * "Who we hold to account." Tracked entities — most are individual
@@ -38,27 +39,27 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
   }
 
   return (
-    <section className="border-t border-border pt-10">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem] md:leading-tight">
+    <section>
+      <h2 className="font-case-section-title">
         {t("dataQuality.entities.heading", "Who we hold to account")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {t(
           "dataQuality.entities.description",
           "{{people}} of {{total}} tracked entities are individual people. The rest are the institutions they act through.",
-          { people: people.toLocaleString(), total: nes.total.toLocaleString() },
+          { people: formatCount(people), total: formatCount(nes.total) },
         )}
       </p>
       <Link
         to={entityTypeSearchHref(["Person"])}
-        className="mt-2 inline-block text-sm font-medium text-accent hover:underline"
+        className="mt-2 inline-flex min-h-6 items-center text-[15px] text-accent hover:underline"
       >
         {t("dataQuality.entities.browsePeople", "Browse all people")} →
       </Link>
 
       {groups.length > 0 && (
         <>
-          <p className="mt-6 mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mt-6 mb-1 text-[15px] text-muted-foreground">
             {t("dataQuality.entities.institutionsLabel", "Institutions we track")}
           </p>
           <BreakdownBar
@@ -98,7 +99,7 @@ function PersonsBySector({
 
   return (
     <div className="mt-8">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="mb-2 text-[15px] text-muted-foreground">
         {t("dataQuality.entities.sectorHeading", "What positions the people hold")}
       </p>
       <BreakdownBar

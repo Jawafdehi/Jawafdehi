@@ -19,6 +19,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   ClipboardCheck,
+  Newspaper,
   FileText,
   Inbox,
   LayoutDashboard,
@@ -29,7 +30,7 @@ import {
   Gavel,
   ScrollText,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/icons";
 
 // The unified admin panel mounts at /admin (folds in the old /portal casework
 // pages). Auth: OIDC + an internal role. The API is the authorization
@@ -90,6 +91,7 @@ const NAV: NavGroup[] = [
     headingKey: "admin.nav.casesGroup",
     items: [
       { to: "/admin/jawafdehi/cases", labelKey: "admin.nav.cases", icon: FileText },
+      { to: "/admin/blog", labelKey: "admin.nav.blog", icon: Newspaper, canAccess: isModerator },
     ],
   },
   {

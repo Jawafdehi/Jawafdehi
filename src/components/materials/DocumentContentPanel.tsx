@@ -45,11 +45,9 @@ import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  BarChart3,
   ChevronDown,
-  FileSpreadsheet,
   Maximize2,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { lazyChart } from "@/components/charts/lazy";
 import { chartKind, pieIsSafe, plotFigure, tooManySeries } from "@/lib/content-figure";
@@ -69,6 +67,7 @@ import { useDebounced } from "@/hooks/use-debounced";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
 import { rememberListScroll } from "@/lib/contents-scroll";
 import { captionOr } from "@/lib/content-captions";
+import { formatCount } from "@/utils/number";
 
 /** The marker a reader sees beside any value that was read off a chart image. */
 const ESTIMATE_MARK = "≈";
@@ -83,13 +82,16 @@ const ESTIMATE_MARK = "≈";
  */
 const TABLE_ROW_PREVIEW = 50;
 
+/** Rows a Tables or Charts listing shows before its "Show all" pill. */
+const LIST_PREVIEW = 20;
+
 function nepaliSafe(value: string, fallback: string): string {
   return captionOr(value, fallback);
 }
 
 function formatValue(value: number | null): string {
   if (value === null) return "—";
-  return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return formatCount(value, { maximumFractionDigits: 2 });
 }
 
 // ─── charts ─────────────────────────────────────────────────────────────────
@@ -182,7 +184,7 @@ export function FigureBody({ figure }: { figure: ContentFigure }) {
                       {series.name}
                     </td>
                   ) : null}
-                  <td className="w-px whitespace-nowrap py-1.5 text-right font-mono text-[15px] tabular-nums text-foreground">
+                  <td className="w-px whitespace-nowrap py-1.5 text-right text-[15px] tabular-nums text-foreground">
                     {point.estimated ? (
                       <span
                         className="text-muted-foreground"
@@ -244,38 +246,39 @@ function ContentRow({
   const [open, setOpen] = useState(false);
 
   return (
-    <li className="flex flex-wrap items-center border-b border-border/70 last:border-b-0">
+    <li className="flex flex-wrap items-center gap-x-2 border-b border-border/70 last:border-b-0">
       {/* The disclosure and the link are SIBLINGS, never nested: an anchor
           inside a button is invalid, and browsers resolve it by making one of
-          the two unclickable. */}
+          the two unclickable. The chevron sits at the row's END, after the
+          page number, so the titles line up flush with the heading above. */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex min-h-11 flex-1 items-center gap-3 py-3 text-left hover:bg-muted/40"
+        className="group flex min-h-12 min-w-0 flex-1 items-center gap-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-180",
-          )}
-          aria-hidden="true"
-        />
-        <span className="min-w-0 flex-1 break-words text-base text-foreground">
+        <span className="min-w-0 flex-1 break-words text-base leading-7 text-primary transition-colors group-hover:text-accent">
           {title}
         </span>
         {note ? (
           <span className="shrink-0 text-sm text-muted-foreground">{note}</span>
         ) : null}
+        <span data-page-no className="shrink-0 text-sm tabular-nums text-muted-foreground">
+          {/* Sighted readers get the page number from its position in the
+              right-hand column; a screen reader gets "page 18" rather than a
+              bare 18 with no way to tell what it is. */}
+          <span className="sr-only">page </span>
+          <span aria-hidden="true">p. </span>
+          {pageNo}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180",
+          )}
+          aria-hidden="true"
+        />
       </button>
-
-      <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
-        {/* Sighted readers get the page number from its position in the
-            right-hand column; a screen reader gets "तालिका २.१ 18" and no
-            way to tell what the 18 is. */}
-        <span className="sr-only">page </span>
-        {pageNo}
-      </span>
 
       {openHref ? (
         <Link
@@ -286,7 +289,7 @@ function ContentRow({
           // ScrollToTop runs on every `search` change and has already zeroed
           // window.scrollY by the time any effect of ours gets to look at it.
           onClick={() => rememberListScroll()}
-          className="flex min-h-11 shrink-0 items-center pl-2 text-muted-foreground hover:text-primary"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {/* `Maximize2`, not an external-link or a bare arrow. This navigates
               WITHIN the site and in the same tab, so the external-link glyph
@@ -299,7 +302,7 @@ function ContentRow({
       ) : null}
 
       {open ? (
-        <div className="w-full basis-full pb-5 pl-7">{children}</div>
+        <div className="w-full basis-full pb-6 pt-1">{children}</div>
       ) : null}
     </li>
   );
@@ -522,7 +525,7 @@ function MarkdownTable({
           onClick={onShowAll}
           className="mt-2 min-h-11 text-sm text-primary underline underline-offset-2 hover:no-underline"
         >
-          Show all {body.length.toLocaleString()} rows
+          Show all {formatCount(body.length)} rows
         </button>
       ) : null}
     </>
@@ -623,8 +626,8 @@ function TableList({ tail, items }: { tail: string; items: ContentTableStub[] })
 /**
  * The placeholder a listing shows while it loads.
  *
- * Rows of the same shape as the real ones — a chevron, a title and a
- * right-hand page number — so the section does not resize under the reader
+ * Rows of the same shape as the real ones — a title and a right-hand page
+ * number — so the section does not resize under the reader
  * when the listing lands. `count` comes from the material payload, so the
  * placeholder is even the right LENGTH for short sections.
  */
@@ -636,9 +639,8 @@ function ListSkeleton({ count }: { count: number }) {
       {Array.from({ length: rows }, (_, i) => (
         <li
           key={i}
-          className="flex min-h-11 items-center gap-3 border-b border-border/70 py-3 last:border-b-0"
+          className="flex min-h-12 items-center gap-4 border-b border-border/70 py-3 last:border-b-0"
         >
-          <Skeleton className="h-4 w-4 shrink-0 rounded-sm" />
           <Skeleton
             className="h-4 flex-1"
             style={{ maxWidth: `${70 - ((i * 7) % 25)}%` }}
@@ -687,7 +689,6 @@ function ContentSection<T>({
   id,
   title,
   count,
-  icon,
   toolbar,
   query,
   load,
@@ -696,7 +697,6 @@ function ContentSection<T>({
   id: string;
   title: string;
   count: number;
-  icon?: ReactNode;
   /** Shown on the heading line, right-aligned, only while the section is open. */
   toolbar?: ReactNode;
   /** The narrowing the API is being asked for. Part of the request, so part of
@@ -706,6 +706,7 @@ function ContentSection<T>({
   render: (items: T[]) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const narrowed = query?.trim() || "";
   const { data, isLoading, isError } = useQuery({
     queryKey: ["datalake-material-content", id, narrowed],
@@ -722,29 +723,28 @@ function ContentSection<T>({
   if (count < 1) return null;
 
   return (
-    <section aria-labelledby={`${id}-heading`} className="border-t border-border/70">
+    <section aria-labelledby={`${id}-heading`}>
       {/* The filter rides on the heading line rather than under it: it belongs
           to the section, and a row of its own pushed the first table a whole
           control-height further down a list the reader is trying to scan.
           Wraps below the title on narrow screens, where there is no room
           beside it. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border/70 pb-3">
         <h3 id={`${id}-heading`} className="min-w-0 flex-1">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            className="flex w-full items-center gap-3 text-left"
+            className="group flex min-h-11 items-center gap-2.5 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
+            <span className="text-xl leading-8 text-primary transition-colors group-hover:text-accent">{title}</span>
             <ChevronDown
               className={cn(
-                "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
                 open && "rotate-180",
               )}
               aria-hidden="true"
             />
-            {icon}
-            <span className="text-xl font-semibold text-foreground">{title}</span>
           </button>
         </h3>
         {open && toolbar ? (
@@ -753,20 +753,31 @@ function ContentSection<T>({
       </div>
 
       {open ? (
-        <div className="pb-6">
+        <div className="pb-2">
           {isLoading ? <ListSkeleton count={count} /> : null}
           {isError ? (
             <p className="text-base text-muted-foreground">
               That list could not be loaded. Try again.
             </p>
           ) : null}
-          {/* The list scrolls inside its own box. 145 tables — or one opened
-              table 50 rows deep — pushed the Charts heading so far down the
-              page that reaching it meant scrolling past everything above it.
-              Bounded here, the section below stays within reach, and a wheel
-              that runs out of list carries on down the page as usual. */}
+          {/* The first LIST_PREVIEW rows, then a "Show all" pill. 145 tables
+              listed in full pushed the Charts heading so far down that reaching
+              it meant scrolling past everything; this used to be an inner
+              scroll box, which hid the list behind a second scrollbar. The
+              filter above still searches all of them. */}
           {data ? (
-            <div className="max-h-[70vh] overflow-y-auto pr-1">{render(data)}</div>
+            <>
+              {render(showAll ? data : data.slice(0, LIST_PREVIEW))}
+              {!showAll && data.length > LIST_PREVIEW ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAll(true)}
+                  className="mt-4 inline-flex min-h-10 items-center rounded-full bg-muted px-4 text-sm text-primary transition-[background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]"
+                >
+                  Show all <span className="ml-1 tabular-nums">{data.length}</span>
+                </button>
+              ) : null}
+            </>
           ) : null}
         </div>
       ) : null}
@@ -803,12 +814,11 @@ export function DocumentContentPanel({
   const figureQuery = useDebounced(figureFilter);
 
   return (
-    <div className="p-5 md:p-8">
+    <div className="space-y-10">
       <ContentSection
         id={`${tail}-tables`}
         title="Tables"
         count={tables}
-        icon={<FileSpreadsheet className="h-4 w-4 text-accent" aria-hidden="true" />}
         toolbar={
           <FilterBox
             label="Filter tables by caption or page"
@@ -827,7 +837,6 @@ export function DocumentContentPanel({
         id={`${tail}-figures`}
         title="Charts"
         count={figures}
-        icon={<BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />}
         toolbar={
           <FilterBox
             label="Filter charts by title or page"

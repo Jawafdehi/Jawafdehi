@@ -1,9 +1,10 @@
-import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram, Youtube } from "lucide-react";
+import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram, Youtube } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { usBoard, nepalBoard, generalMembers, advisors, members, pastMembers } from "@/data/team";
 import type { Contact, TeamMember } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
+import { PageHero } from "@/components/ui/page-hero";
 import { Seo } from "@/components/Seo";
 import { SITE_URL } from "@/utils/seo";
 
@@ -24,7 +25,7 @@ const ContactIcon = ({ contact }: { contact: Contact }) => {
       href={href}
       target={contact.type !== "email" ? "_blank" : undefined}
       rel={contact.type !== "email" ? "noopener noreferrer" : undefined}
-      className="text-muted-foreground hover:text-primary transition-colors"
+      className="-m-2 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={contact.type}
     >
       {icon}
@@ -41,82 +42,75 @@ const OurTeam = () => {
   const lang = (i18n.language?.startsWith("ne") ? "ne" : "en") as "en" | "ne";
 
   const renderMember = (member: TeamMember) => (
-            <TeamCard key={member.displayName.en}>
-              {/* Photo */}
-              <div className="mb-5">
-                {member.thumb ? (
-                  <img
-                    src={member.thumb}
-                    alt={member.displayName.en}
-                    // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio
-                    // the phone gates run at — so 504 is the ceiling the
-                    // generated avatars are sized to, capped at whatever the
-                    // source actually has (9 of the 22 are smaller).
-                    //
-                    // The attributes do NOT prevent a reflow here: `h-28 w-28`
-                    // already fixes the box at 112x112 before the image loads,
-                    // measured. They are the declared intrinsic size and the
-                    // aspect ratio, which is worth stating for its own sake —
-                    // but the reflow argument belongs to data-sources.tsx,
-                    // where `w-auto` leaves the width to the aspect ratio.
-                    width={504}
-                    height={504}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-28 w-28 rounded-full object-cover ring-4 ring-background shadow-md"
-                  />
-                ) : (
-                  <div className="h-28 w-28 rounded-full bg-primary-surface/10 flex items-center justify-center ring-4 ring-background shadow-md">
-                    <Users className="h-12 w-12 text-primary/40" />
-                  </div>
-                )}
-              </div>
+    <TeamCard key={member.displayName.en}>
+      {/* Photo */}
+      <div className="mb-5 w-full">
+        {member.thumb ? (
+          <img
+            src={member.thumb}
+            alt={member.displayName.en}
+            // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio the phone
+            // gates run at — so 504 is the ceiling the generated avatars are
+            // sized to, capped at whatever the source actually has. They are
+            // the declared intrinsic size and the aspect ratio.
+            width={504}
+            height={504}
+            loading="lazy"
+            decoding="async"
+            className="h-20 w-20 rounded-full bg-muted object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <Users className="h-8 w-8 text-primary/40" />
+          </div>
+        )}
+      </div>
 
-              {/* Name */}
-              <h3 className="text-lg font-bold text-foreground mb-0.5">
-                {member.displayName[lang] ?? member.displayName.en}
-              </h3>
-              {lang === "en" && member.displayName.ne && (
-                <p className="text-sm text-muted-foreground/60 mb-3">{member.displayName.ne}</p>
-              )}
+      {/* Name */}
+      <h3 className="text-xl font-normal leading-snug text-primary">
+        {member.displayName[lang] ?? member.displayName.en}
+      </h3>
+      {lang === "en" && member.displayName.ne && (
+        <p className="mt-0.5 text-sm text-muted-foreground">{member.displayName.ne}</p>
+      )}
 
-              {/* Description */}
-              {member.description && (
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
-                  {member.description}
-                </p>
-              )}
+      {/* Description */}
+      {member.description && (
+        <p className="mt-3 flex-1 text-base leading-7 text-muted-foreground">
+          {member.description}
+        </p>
+      )}
 
-              {/* Tags */}
-              {member.tags && member.tags.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
-                  {member.tags.map((tag) => {
-                    const colorClasses = OFFICER_TITLES.has(tag)
-                      ? "bg-primary/10 text-primary"
-                      : tag === "Founding Member"
-                        ? "bg-success-strong/10 text-success-strong"
-                        : "bg-info/10 text-info";
-                    return (
-                      <span
-                        key={tag}
-                        className={`font-meta inline-flex items-center rounded-full px-2.5 py-0.5 ${colorClasses}`}
-                      >
-                        {t(`team.tags.${tag}`, { defaultValue: tag })}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
+      {/* Tags */}
+      {member.tags && member.tags.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          {member.tags.map((tag) => {
+            const colorClasses = OFFICER_TITLES.has(tag)
+              ? "bg-primary/10 text-primary"
+              : tag === "Founding Member"
+                ? "bg-accent/10 text-accent"
+                : "bg-muted text-primary/80";
+            return (
+              <span
+                key={tag}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm ${colorClasses}`}
+              >
+                {t(`team.tags.${tag}`, { defaultValue: tag })}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
-              {/* Social links */}
-              {member.contacts.length > 0 && (
-                <div className="flex items-center gap-3 pt-4 border-t border-border w-full justify-center">
-                  {member.contacts.map((contact, i) => (
-                    <ContactIcon key={i} contact={contact} />
-                  ))}
-                </div>
-              )}
-            </TeamCard>
+      {/* Social links */}
+      {member.contacts.length > 0 && (
+        <div className="mt-5 flex w-full items-center gap-3 border-t border-border/70 pt-4">
+          {member.contacts.map((contact, i) => (
+            <ContactIcon key={i} contact={contact} />
+          ))}
+        </div>
+      )}
+    </TeamCard>
   );
 
   return (
@@ -128,26 +122,42 @@ const OurTeam = () => {
       />
 
       <main id="main-content" className="flex-1">
-        {/* Board (wide) beside Advisors (narrow column) */}
-        <section id="board" className="py-12 md:py-16">
-          <div className="layout-container grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-12 lg:gap-10">
-            <div className="space-y-12">
+        <PageHero
+          id="team-hero"
+          description={t("team.hero.description")}
+          title={
+            <>
+              {t("team.hero.builtBy")}{" "}
+              <span className="text-accent sm:whitespace-nowrap">
+                {t("team.hero.nepaliVolunteers")}
+              </span>
+              <span className="block text-primary">{t("team.hero.forNepal")}</span>
+            </>
+          }
+        />
+
+        {/* The boards (wide) beside the Advisors (a narrow column). */}
+        <section id="board" aria-labelledby="nepal-board-title" className="pt-16 md:pt-24">
+          <div className="layout-container grid grid-cols-1 gap-16 lg:grid-cols-[3fr_1fr] lg:gap-10">
+            <div className="space-y-16 md:space-y-24">
               <div id="nepal-board">
-                <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.board", "Nepal Board")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <h2 id="nepal-board-title" className="font-home-section-title text-primary">
+                  {t("team.sections.board", "Nepal Board")}
+                </h2>
+                <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {[...nepalBoard, ...generalMembers].map(renderMember)}
                 </div>
               </div>
               <div id="us-board">
-                <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.usBoard", "US Board")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <h2 className="font-home-section-title text-primary">{t("team.sections.usBoard", "US Board")}</h2>
+                <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {usBoard.map(renderMember)}
                 </div>
               </div>
             </div>
-            <div id="advisors" className="order-first lg:order-none lg:border-l lg:border-border lg:pl-10">
-              <h2 className="text-2xl font-bold text-primary mb-8">{t("team.sections.advisors", "Advisors")}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-8">
+            <div id="advisors" className="order-first lg:order-none lg:border-l lg:border-border/70 lg:pl-10">
+              <h2 className="font-home-section-title text-primary">{t("team.sections.advisors", "Advisors")}</h2>
+              <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
                 {advisors.map(renderMember)}
               </div>
             </div>
@@ -162,10 +172,10 @@ const OurTeam = () => {
             data: pastMembers,
           },
         ].map(({ id, heading, data }) => (
-          <section key={id} id={id} className="py-12 md:py-16">
+          <section key={id} id={id} aria-labelledby={`${id}-title`} className="pt-16 md:pt-24 last-of-type:pb-4">
             <div className="layout-container">
-              <h2 className="text-2xl font-bold text-primary mb-8">{heading}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <h2 id={`${id}-title`} className="font-home-section-title text-primary">{heading}</h2>
+              <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {data.map(renderMember)}
               </div>
             </div>

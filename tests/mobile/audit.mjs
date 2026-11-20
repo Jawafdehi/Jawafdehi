@@ -55,7 +55,6 @@ export const ROUTES = [
   ["/our-process", "our-process"],
   ["/commitment", "commitment"],
   ["/faq", "faq"],
-  ["/research/corruption-accountability", "research"],
   ["/products", "products"],
   ["/saptahik", "saptahik"],
   ["/privacy", "privacy"],

@@ -1,5 +1,5 @@
 import { useMemo, useState, type ComponentProps } from "react";
-import { Braces, Check, Copy, ExternalLink } from "lucide-react";
+import { Braces, Check, Copy, ExternalLink } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import {

@@ -27,15 +27,14 @@ import { lazyChunk } from "@/lib/chunk-reload";
  * The control renders only under `selectedType === "case"`, and `/search`
  * defaults to `type=all` (`utils/archive-search-params`: an unknown or absent
  * type is rewritten to `all`, deliberately, so a fresh search is not scoped to
- * one under-populated type). `/materials` and `/court-cases` pin a non-case
- * type. So on every cold load the chunk is NOT fetched; it is fetched when the
- * reader chooses the Cases tab, which is a click, which is the textbook case
+ * one under-populated type). So a cold load of /search does NOT fetch the
+ * chunk; it is fetched when the reader chooses the Cases tab (or arrives on
+ * `?type=case`, e.g. via the /cases redirect), which is the textbook case
  * for a dynamic import — the same reasoning as `LazyQRCode`, where the code
  * cannot be needed before the dialog opens.
  *
- * It is in no pre-rendered HTML either. `/search` and `/courtcases` are
- * pre-rendered, but the pre-renderer passes no query string, so `selectedType`
- * is `all` there and this subtree never renders. The split policy in
+ * It is in no pre-rendered HTML either. `/search` is pre-rendered, but the
+ * pre-renderer passes no query string, so `selectedType` is `all` there and this subtree never renders. The split policy in
  * `src/routes.tsx` — renderToString does not await Suspense, so a lazy boundary
  * inside pre-rendered output would publish a fallback — therefore does not bite.
  */

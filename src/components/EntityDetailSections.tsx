@@ -15,7 +15,7 @@ import {
   Tag,
   Vote,
   ExternalLink,
-} from 'lucide-react';
+} from "@/components/icons";
 import type { Entity, Candidacy } from '@/types/entity';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -25,6 +25,7 @@ import {
   translateSymbolName as translateSymbolNameUtil
 } from '@/lib/translate-dynamic-content';
 import { getTagDescription } from '@/config/tag-descriptions';
+import { formatCount } from "@/utils/number";
 
 interface EntityDetailSectionsProps {
   entity: Entity;
@@ -103,11 +104,14 @@ function formatAttributeValue(value: unknown): string | Record<string, unknown> 
   // Handle objects
   if (typeof value === 'object' && value !== null) {
     const obj = value as Record<string, unknown>;
-    
+    // A LangText structure: en / ne, each { value }.
+    const en = obj.en as { value?: string } | undefined;
+    const ne = obj.ne as { value?: string } | undefined;
+
     // Check if it's a LangText structure (has en/ne with value)
-    if (obj.en?.value || obj.ne?.value) {
-      const enValue = obj.en?.value;
-      const neValue = obj.ne?.value;
+    if (en?.value || ne?.value) {
+      const enValue = en?.value;
+      const neValue = ne?.value;
       
       // Show both if they exist and are different
       if (enValue && neValue && enValue !== neValue) {
@@ -433,7 +437,7 @@ export function EntityDetailSections({ entity }: EntityDetailSectionsProps) {
                       {candidacy.votes_received !== undefined && candidacy.votes_received !== null && (
                         <p className="text-sm mt-2">
                           <span className="text-muted-foreground">{t('entityDetail.votes')}:</span>{' '}
-                          <span className="font-medium">{candidacy.votes_received.toLocaleString()}</span>
+                          <span className="font-medium">{formatCount(candidacy.votes_received)}</span>
                         </p>
                       )}
                     </div>

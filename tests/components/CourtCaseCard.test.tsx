@@ -157,11 +157,11 @@ describe("CourtCaseCard", () => {
     expect(
       screen.getByRole("heading", { name: "नेपाली सेनामा अवकाश उमेरको विवाद" })
         .className,
-    ).toContain("sm:text-xl");
+    ).toContain("text-[17px]");
     expect(
       screen.getByRole("heading", { name: "नेपाली सेनामा अवकाश उमेरको विवाद" })
         .className,
-    ).toContain("sm:leading-7");
+    ).toContain("leading-6");
     expect(screen.getByText("079-WO-0811")).toBeTruthy();
     expect(screen.getByText("079-WO-0811").className).not.toContain("truncate");
     expect(screen.getByText("Supreme Court").className).not.toContain("truncate");

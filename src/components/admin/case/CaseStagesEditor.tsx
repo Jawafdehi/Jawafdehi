@@ -1,6 +1,6 @@
 import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "@/components/icons";
 
 import DatePairInput from "@/components/admin/DatePairInput";
 import { FieldError } from "@/components/admin/FormError";

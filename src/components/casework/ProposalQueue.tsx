@@ -35,7 +35,7 @@ import {
   Pencil,
   Search,
   X,
-} from "lucide-react";
+} from "@/components/icons";
 
 type Decision = "approved" | "rejected";
 

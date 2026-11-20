@@ -2,6 +2,7 @@ import { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
+import { LegalPage as LegalShell } from "@/components/legal-page";
 import { legalBody } from "@/pages/legal/bodies";
 import { SITE_URL } from "@/utils/seo";
 
@@ -56,54 +57,36 @@ export default function LegalPage({
         canonicalUrl={`${SITE_URL}${path}`}
       />
 
-      <main id="main-content" className="flex-1">
-        <section
-          id={`${id}-hero`}
-          className="bg-gradient-to-br from-primary-surface via-navy-dark to-foreground py-16 md:py-20"
+      <LegalShell
+        id={`${id}-hero`}
+        eyebrow={lang === "en" ? "Legal" : "कानूनी"}
+        title={text.title}
+        updated={text.lastUpdated}
+        heroExtra={
+          <button
+            type="button"
+            lang={lang === "en" ? "ne" : "en"}
+            onClick={() => void i18n.changeLanguage(lang === "en" ? "ne" : "en")}
+            className="mt-5 inline-flex min-h-11 items-center rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {text.switchLabel}
+          </button>
+        }
+        bodyProps={{ "data-legal-body": id, lang }}
+      >
+        <Suspense
+          fallback={
+            prerendered ? (
+              <div
+                className="contents"
+                dangerouslySetInnerHTML={{ __html: prerendered }}
+              />
+            ) : null
+          }
         >
-          <div className="layout-container">
-            <div className="max-w-3xl">
-              <h1 className="font-page-title font-page-title-inverse mb-4">
-                {text.title}
-              </h1>
-              <p className="font-page-lede font-page-lede-inverse">
-                {text.lastUpdated}
-              </p>
-              <button
-                type="button"
-                lang={lang === "en" ? "ne" : "en"}
-                onClick={() => void i18n.changeLanguage(lang === "en" ? "ne" : "en")}
-                className="mt-4 text-sm font-semibold text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {text.switchLabel}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-12 md:py-16">
-          <div className="layout-container">
-            <div
-              data-legal-body={id}
-              lang={lang}
-              className="font-paragraph content-prose max-w-3xl mx-auto"
-            >
-              <Suspense
-                fallback={
-                  prerendered ? (
-                    <div
-                      className="contents"
-                      dangerouslySetInnerHTML={{ __html: prerendered }}
-                    />
-                  ) : null
-                }
-              >
-                <Body />
-              </Suspense>
-            </div>
-          </div>
-        </section>
-      </main>
+          <Body />
+        </Suspense>
+      </LegalShell>
     </div>
   );
 }

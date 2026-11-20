@@ -70,14 +70,14 @@ describe("summarisePrefetchFailures", () => {
   it("names every route, key and cause", () => {
     const summary = summarisePrefetchFailures([
       { route: "/", failed: [{ queryKey: ["statistics"], reason: "boom" }] },
-      { route: "/cases", failed: [{ queryKey: ["cases-search", { q: "" }], reason: "404" }] },
+      { route: "/updates", failed: [{ queryKey: ["cms-articles"], reason: "404" }] },
     ]);
 
     expect(summary).toBe(
       [
         "2 pre-rendered routes lost data that was prefetched for them:",
         '  / — ["statistics"]: boom',
-        '  /cases — ["cases-search",{"q":""}]: 404',
+        '  /updates — ["cms-articles"]: 404',
       ].join("\n"),
     );
   });

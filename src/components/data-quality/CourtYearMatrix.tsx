@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { DataLakeMetrics } from "@/types/jds";
 import { useIsNarrow } from "@/hooks/useIsNarrow";
 import { bsYearRows, bsYearWithAd } from "@/lib/data-quality";
+import { formatCount } from "@/utils/number";
 
 /** Court levels in institutional order; anything else sorts after. */
 const COURT_ORDER = ["district", "high", "supreme", "special"];
@@ -93,7 +94,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
     <div>
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-3">
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
           {t("dataQuality.courtCases.filterCourt", "Court level")}
           <select
             value={levelFilter}
@@ -108,7 +109,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
           {t("dataQuality.courtCases.filterYear", "Year")}
           <select
             value={yearFilter}
@@ -137,7 +138,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
         <table className="w-full border-separate border-spacing-1 text-sm">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-background px-2 py-1 text-left text-xs font-semibold text-muted-foreground" />
+              <th className="sticky left-0 bg-background px-2 py-1 text-left text-xs font-normal text-muted-foreground" />
               {/* Sighted readers get the bare year and take the calendar from the
                   section heading, which a screen reader announcing a single cell
                   never reaches — so the header's accessible name carries it. Naming
@@ -147,13 +148,13 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
               {visibleYears.map((y) => (
                 <th
                   key={y}
-                  className="px-2 py-1 text-center font-mono text-xs font-semibold tabular-nums text-muted-foreground"
+                  className="px-2 py-1 text-center text-xs font-normal tabular-nums text-muted-foreground"
                 >
                   <span aria-hidden="true">{y}</span>
                   <span className="sr-only">{bsYearWithAd(y, t)}</span>
                 </th>
               ))}
-              <th className="px-2 py-1 text-right text-xs font-semibold text-muted-foreground">
+              <th className="px-2 py-1 text-right text-xs font-normal text-muted-foreground">
                 {t("dataQuality.courtCases.total", "Total")}
               </th>
             </tr>
@@ -171,8 +172,8 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                   return (
                     <td
                       key={year}
-                      title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${bsYearWithAd(year, t)}: ${count.toLocaleString()}`}
-                      className="rounded px-2 py-2 text-center font-mono text-[11px] tabular-nums"
+                      title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${bsYearWithAd(year, t)}: ${formatCount(count)}`}
+                      className="rounded px-2 py-2 text-center text-xs tabular-nums"
                       style={{
                         backgroundColor:
                           count > 0
@@ -186,12 +187,12 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                       <span aria-hidden="true">
                         {count > 0 ? formatCompact(count) : "·"}
                       </span>
-                      <span className="sr-only">{count.toLocaleString()}</span>
+                      <span className="sr-only">{formatCount(count)}</span>
                     </td>
                   );
                 })}
-                <td className="px-2 py-2 text-right font-mono text-xs font-semibold tabular-nums text-foreground">
-                  {rowTotal(type).toLocaleString()}
+                <td className="px-2 py-2 text-right text-xs font-medium tabular-nums text-primary">
+                  {formatCount(rowTotal(type))}
                 </td>
               </tr>
             ))}
@@ -204,7 +205,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           than left implicit — a heatmap that quietly drops columns misreads as a
           complete record. */}
       {narrow && (yearsTrimmed || showAllYears) && filteredYears.length > NARROW_YEAR_LIMIT && (
-        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
           {yearsTrimmed && (
             <span>
               {t(
@@ -217,7 +218,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
           <button
             type="button"
             onClick={() => setShowAllYears((v) => !v)}
-            className="rounded-md px-1 font-medium text-foreground underline underline-offset-2 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-md px-1 font-medium text-foreground underline underline-offset-2 hover:text-primary/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {showAllYears
               ? t("dataQuality.courtCases.showRecentYears", "Show recent years only")
@@ -227,7 +228,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
       )}
 
       {/* Legend */}
-      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
         <span>{t("dataQuality.courtCases.legendLabel", "Case volume")}</span>
         <span>{t("dataQuality.courtCases.legendLow", "fewer")}</span>
         <span

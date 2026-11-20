@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState, type ComponentProps, type FunctionComponent } from "react";
 import type { DiscussionEmbed as DiscussionEmbedType } from "disqus-react";
 import { useTranslation } from "react-i18next";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
 import { lazyChart } from "@/components/charts/lazy";
 
 // disqus-react, deferred out of the initial payload. The embed is already
@@ -105,50 +102,47 @@ export function DisqusComments({ caseId, caseTitle, caseUrl }: DisqusCommentsPro
     setShouldLoad(true);
   };
 
+  // The discussion in the case page's own terms: a section heading at the
+  // reading size, one line under it, and the comments in a hairline card.
+  // It used to be a grey slab with a rule, an icon and a bold 24px title.
   return (
     <section
       ref={sectionRef}
-      className="mt-12 mb-8 disqus-comments print:hidden bg-transparent p-0 shadow-none sm:rounded-2xl sm:bg-card/40 sm:p-8 sm:shadow-sm"
+      className="disqus-comments mb-8 mt-16 print:hidden"
       aria-labelledby="comments-heading"
     >
-      <Separator className="mb-8" />
-      
-      <div className="flex items-center gap-3 mb-4">
-        <MessageSquare className="h-6 w-6 text-primary" aria-hidden="true" />
-        <h2 
-          id="comments-heading" 
-          className="text-2xl font-bold text-foreground"
-        >
-          {t("caseDetail.comments.title")}
-        </h2>
-      </div>
-      
-      <p className="text-muted-foreground mb-6">
+      <h2 id="comments-heading" className="font-case-section-title">
+        {t("caseDetail.comments.title")}
+      </h2>
+      <p className="mb-6 mt-2 text-lg leading-8 text-muted-foreground">
         {t("caseDetail.comments.joinDiscussion")}
       </p>
 
       {!isVisible && (
         // Placeholder before section comes into view
-        <div className="space-y-4 rounded-xl border border-dashed border-muted-foreground/30 bg-background/70 p-4 sm:p-5">
-          <Skeleton className="h-12 w-full rounded-md" />
-          <Skeleton className="h-32 w-full rounded-md" />
+        <div className="space-y-4 rounded-[24px] border border-border/70 bg-surface p-5 sm:p-6">
+          <Skeleton className="h-12 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
         </div>
       )}
 
       {isVisible && !shouldLoad && (
-        // Section is visible but user hasn't triggered load yet
-        <div className="flex flex-col items-center justify-center py-8 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 px-4 text-center">
-          <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
-          <p className="text-muted-foreground mb-4">{t("caseDetail.comments.loading")}</p>
-          <Button onClick={handleLoadComments} variant="default" className="min-w-40">
+        // Section is visible but the reader hasn't loaded the comments yet
+        <div className="flex flex-col items-center justify-center rounded-[24px] border border-border/70 bg-surface px-4 py-10 text-center">
+          <p className="mb-5 text-base text-muted-foreground">{t("caseDetail.comments.loading")}</p>
+          <button
+            type="button"
+            onClick={handleLoadComments}
+            className="inline-flex min-h-11 items-center rounded-full bg-primary-surface px-5 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             {t("caseDetail.comments.loadComments")}
-          </Button>
+          </button>
         </div>
       )}
 
       {shouldLoad && (
         // Disqus widget loaded
-        <div className="rounded-xl border border-border/70 bg-background p-3 sm:p-4 shadow-inner">
+        <div className="rounded-[24px] border border-border/70 bg-surface p-4 sm:p-6">
           <LazyDiscussionEmbed
             shortname={disqusShortname}
             config={disqusConfig}

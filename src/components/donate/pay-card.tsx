@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink, HeartHandshake } from "lucide-react";
+import { Check, Copy, ExternalLink, Globe, HeartHandshake, MapPin } from "@/components/icons";
 import { SiPaypal } from "react-icons/si";
 
+import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,9 +11,10 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { trackEvent, type DonateAction, type DonateMethod } from "@/utils/analytics";
 import { SiteOnly } from "@/components/SiteOnly";
 import { currentSiteVariant } from "@/lib/site-host";
-import { trackEvent } from "@/utils/analytics";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
 // same entity; they differ only in what the donor sees at checkout.
@@ -151,24 +153,27 @@ function CopyRow({
   display: string;
   copyText: string;
   copyAria: string;
-  action: string;
-  trackMethod: string;
+  action: DonateAction;
+  trackMethod: DonateMethod;
   mono?: boolean;
 }) {
   const { t } = useTranslation();
   const { copied, failed, copy } = useCopyFeedback();
 
   return (
-    <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-accent/70">
+    // One row of the details table (OKX, Kraken): the label in its own column
+    // from lg up, the value, and the copy button at the row's end where the
+    // thumb expects it. On a phone the label sits above the value.
+    <div className="grid gap-x-6 py-1.5 lg:grid-cols-[6.5rem_minmax(0,1fr)] lg:items-center">
+      <dt className="text-sm text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-0.5 flex items-center gap-1">
+      <dd className="flex min-w-0 items-center gap-2">
         <span
           className={
             mono
-              ? "min-w-0 select-all break-all font-mono text-base font-medium tracking-wide text-primary"
-              : "min-w-0 select-all text-sm font-medium leading-5 text-card-foreground"
+              ? "min-w-0 select-all break-all text-base tabular-nums text-primary"
+              : "min-w-0 select-all text-base leading-6 text-primary"
           }
         >
           {display}
@@ -210,7 +215,7 @@ function CopyRow({
         </button>
       </dd>
       {failed ? (
-        <p className="mt-1 text-xs font-medium text-destructive">
+        <p className="text-sm text-destructive lg:col-start-2">
           {t("donate.ways.copyFailed")}
         </p>
       ) : null}
@@ -223,11 +228,11 @@ function CopyRow({
 // AbroadPanel). `trackMethod` names the context in analytics. Every row is
 // copyable — donors paste each field into their banking app — and each row owns
 // its feedback state independently.
-function BankDetails({ trackMethod }: { trackMethod: string }) {
+function BankDetails({ trackMethod }: { trackMethod: DonateMethod }) {
   const { t } = useTranslation();
 
   return (
-    <dl className="grid gap-2.5">
+    <dl>
       <CopyRow
         label={t("donate.ways.nepali.nameLabel")}
         display={t("donate.ways.nepali.accountName")}
@@ -257,46 +262,47 @@ function BankDetails({ trackMethod }: { trackMethod: string }) {
   );
 }
 
+// The card follows the shader cards on /likhit and /mcp: the words on the mist
+// on the left, the working part on a frosted white panel on the right. Each
+// route therefore comes in two halves — its words and its action — rendered
+// into those two columns.
+// The one tile both actions sit on: the QR's white card, so switching routes
+// swaps the contents of the same object rather than a different box.
+const ACTION_TILE =
+  "overflow-hidden rounded-2xl bg-surface shadow-[0_1px_2px_rgba(14,31,59,0.06),0_8px_24px_-12px_rgba(14,31,59,0.18)]";
+
 // Nepal — the two Nepali QR networks, plus direct bank transfer.
-function NepalPanel() {
+function NepalWords() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <h3 className="text-lg leading-7 text-primary">{t("donate.ways.nepali.qrTitle")}</h3>
+      <p className="mt-1 max-w-xl text-base leading-7 text-muted-foreground">
+        {t("donate.ways.nepali.qrDescription")}
+      </p>
+      {/* The details you copy sit with the words, straight on the card; the
+          code you scan is the action on the right. On a phone this comes first:
+          someone on their phone cannot scan a code shown on that phone, but can
+          copy a number. */}
+      <div className="mt-4">
+        <BankDetails trackMethod="nepal_bank" />
+      </div>
+    </>
+  );
+}
+
+// The network switch and its code, centred in the frosted panel.
+function NepalAction() {
   const { t } = useTranslation();
   // FonePay first: it is the wider-reach network of the two.
   const [wallet, setWallet] = useState<WalletId>("fonepay");
 
   return (
-    <div>
-      <p className="text-base font-semibold leading-6 text-primary">
-        {t("donate.ways.nepali.qrTitle")}
-      </p>
-      <p className="mt-1.5 text-sm leading-5 text-card-foreground/70">
-        {t("donate.ways.nepali.qrDescription")}
-      </p>
-
-      <div
-        role="group"
-        aria-label={t("donate.ways.nepali.walletSwitchAria")}
-        className="mt-4 inline-flex gap-1 rounded-full bg-muted/60 p-1"
-      >
-        {WALLETS.map(({ id }) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={id === wallet}
-            onClick={() => setWallet(id)}
-            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-              id === wallet
-                ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
-                : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-            }`}
-          >
-            {t(`donate.ways.nepali.wallets.${id}.label`)}
-          </button>
-        ))}
-      </div>
-
+    <div className="flex w-full flex-col items-center">
       {/* Both networks stay mounted so switching never re-fetches, and the two
-          images share one canvas size so the card cannot shift height. */}
-      <div className="mt-3 w-[180px] overflow-hidden rounded-md bg-white p-2">
+          images share one canvas size so nothing shifts height. The code's own
+          white is the tile: no panel behind it. */}
+      <div className={ACTION_TILE + " w-full max-w-[18rem] bg-white"}>
         {WALLETS.map(({ id, src }) => (
           <img
             key={id}
@@ -311,8 +317,26 @@ function NepalPanel() {
         ))}
       </div>
 
-      <div className="mt-5 border-t border-border/60 pt-4">
-        <BankDetails trackMethod="nepal_bank" />
+      <div
+        role="group"
+        aria-label={t("donate.ways.nepali.walletSwitchAria")}
+        className="mt-3 inline-flex gap-1 rounded-full border border-border/60 bg-surface/90 p-1 backdrop-blur-sm"
+      >
+        {WALLETS.map(({ id }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={id === wallet}
+            onClick={() => setWallet(id)}
+            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+              id === wallet
+                ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
+                : "rounded-full px-3.5 py-1.5 text-sm text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
+            }`}
+          >
+            {t(`donate.ways.nepali.wallets.${id}.label`)}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -322,11 +346,12 @@ function NepalPanel() {
 // link. Shared by both rails so they cannot drift apart — in particular the CTA
 // classes, which are load-bearing:
 //
-// `whitespace-normal` and `w-full` until `sm`, because each label is a sentence
-// in Nepali ("PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्").
-// `buttonVariants`' base string is `whitespace-nowrap`, and `w-fit` then sizes
-// the button to that unbreakable line — 350px of min-content, which floors the
-// grid track and overflows a 320px phone. See
+// `whitespace-normal` and `w-full` at every width: the rail sits in a fixed
+// tile, so the button fills it, and each label is a sentence in Nepali
+// ("PayPal Giving Fund मार्फत आर्थिक सहयोग गर्नुहोस्"). `buttonVariants`' base
+// string is `whitespace-nowrap`; sized to fit that unbreakable line (`w-fit`)
+// it was 350px of min-content, which floors the grid track and overflows a
+// 320px phone. See
 // tests/layout/no-horizontal-overflow.test.tsx. `h-auto` because a wrapped
 // label no longer fits `size="sm"`'s 36px.
 function AbroadRail({
@@ -350,21 +375,27 @@ function AbroadRail({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="inline-flex items-center gap-1.5">
+    // Built like the QR tile on the other route: a visual on top (where the
+    // code sits there), the name, line and button under it — so both routes
+    // show the same object, the same height, with no hole in the middle.
+    <div className="flex flex-1 flex-col">
+      <span
+        aria-hidden="true"
+        className="-mx-6 -mt-6 flex h-40 items-center justify-center bg-muted/70 [&>svg]:h-12 [&>svg]:w-12"
+      >
         {icon}
-        <span className={`text-base font-bold ${brandClassName}`}>
-          {t(`donate.ways.us.${id}.title`)}
-        </span>
       </span>
-      <p className="text-sm leading-5 text-card-foreground/70">
+      <span className={`mt-5 text-lg leading-7 ${brandClassName}`}>
+        {t(`donate.ways.us.${id}.title`)}
+      </span>
+      <p className="mb-6 mt-1 text-base leading-7 text-muted-foreground">
         {t(`donate.ways.us.${id}.detail`)}
       </p>
       <Button
         asChild
         variant={variant}
         size="sm"
-        className="mt-1 h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center sm:w-fit"
+        className="mt-auto h-auto w-full min-w-0 gap-1.5 whitespace-normal py-2.5 text-center"
       >
         <a
           href={href}
@@ -417,7 +448,25 @@ function AbroadRail({
 // (Wise/Remitly/Western Union) straight into the Nepal account — that was
 // withdrawn as non-compliant, not merely redundant. Do not reinstate it without
 // a written legal sign-off.
-function AbroadPanel() {
+function AbroadWords() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <h3 className="text-lg leading-7 text-primary">{t("donate.ways.us.whoFor")}</h3>
+      {/* Who actually receives the money, and under which EIN. A disclosure,
+          not a pitch, so it is grey rather than crimson. Worded without naming
+          a rail, so it stays true whether one route shows or both. */}
+      <p className="mt-1 max-w-xl text-base leading-7 text-muted-foreground">
+        {t("donate.ways.us.proceedsNote")}
+      </p>
+      <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+        {t("donate.ways.us.capitalControlNote")}
+      </p>
+    </>
+  );
+}
+
+function AbroadAction() {
   const { t } = useTranslation();
   const [zeffyOpen, setZeffyOpen] = useState(false);
   // Mount the iframe on first open and leave it mounted, so closing and
@@ -425,30 +474,12 @@ function AbroadPanel() {
   const [zeffyLoaded, setZeffyLoaded] = useState(false);
 
   return (
-    <div>
-      <p className="text-sm font-medium text-accent">
-        {t("donate.ways.us.whoFor")}
-      </p>
-      {/* Who actually receives the money, and under which EIN. It is a
-          disclosure, not a pitch, so it is grey rather than crimson — the
-          accent above it is the lead-in that says who this panel is for.
-          Crimson also failed AA here in dark mode (4.11:1 against the sunk
-          card at 12px, which needs 4.5). card-foreground/70 is 5.21:1 light
-          and 7.83:1 dark.
-
-          Worded without naming a rail, so it stays true whether the panel
-          shows one route or both. It said "Either option" while two rails were
-          visible; with PayPal hidden that counted a route a donor cannot
-          see. */}
-      <p className="mt-2 text-xs font-medium leading-5 text-card-foreground/70">
-        {t("donate.ways.us.proceedsNote")}
-      </p>
-
+    <div className={ACTION_TILE + " flex h-full flex-col p-6"}>
       {/* Zeffy carries the filled button. The outlined PayPal rail below it is
           hidden (see SHOW_PAYPAL), so in practice this is a single rail — the
           gap and column direction are kept so restoring PayPal needs no layout
           work. */}
-      <div className="mt-5 flex flex-col gap-5 border-t border-border/60 pt-5">
+      <div className="flex flex-1 flex-col gap-5">
         <AbroadRail
           id="zeffy"
           href={ZEFFY_FORM_URL}
@@ -479,15 +510,6 @@ function AbroadPanel() {
             variant="outline"
           />
         ) : null}
-      </div>
-
-      <div className="mt-5 border-t border-border/60 pt-4">
-        {/* /70 rather than /60: at 12px the lighter tint is 3.89:1 on the card
-            in light mode, under the 4.5 AA floor. Same grey as the proceeds
-            note above, so the two disclosures read as one register. */}
-        <p className="text-xs leading-5 text-card-foreground/70">
-          {t("donate.ways.us.capitalControlNote")}
-        </p>
       </div>
 
       {/* Zeffy's hosted form, framed. `allow="payment"` is what lets the Payment
@@ -542,7 +564,15 @@ function guessRegion(): Region {
  * The tab auto-selects from the visitor's timezone after hydration, but only
  * until they touch it — a manual toggle always wins.
  */
-export function PayCard() {
+/** The active route shows; the inactive one is gone on phones and only
+ * invisible (still holding its space) from md up. */
+const routeClass = (active: boolean) =>
+  active ? "" : "hidden md:block md:invisible";
+
+export function PayCard({
+  header,
+  footer,
+}: Readonly<{ header?: ReactNode; footer?: ReactNode }>) {
   const { t } = useTranslation();
   const [region, setRegion] = useState<Region>("nepal");
   const userChoseRef = useRef(false);
@@ -557,58 +587,98 @@ export function PayCard() {
   }, []);
 
   return (
-    <article className="flex flex-col rounded-lg bg-card p-6 text-card-foreground shadow-lg md:p-7">
-      {/* jawafdehi.org.np is the Nepal company's site and does not ask for
-          gifts to the US entity: it shows only the Nepal panel (the company's
-          own bank account and QR codes), with no region switch. jawafdehi.org
-          keeps both. */}
-      <SiteOnly site="org">
+    // The /likhit and /mcp shader card: one hairline card on the mist, the
+    // heading with the route switch beside it, then that route's words on the
+    // left and the working part on a frosted white panel on the right. Both routes stay mounted
+    // (the inactive one is `hidden`), so switching keeps a chosen wallet and a
+    // part-filled Zeffy form.
+    <article className="relative isolate mx-auto max-w-5xl overflow-hidden rounded-[28px] border border-border/70 bg-surface p-6 text-card-foreground md:p-8">
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        <ShaderBackdrop design="mist" />
+      </div>
+
+      {/* The heading and the route switch share the top line. */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        {header}
+        {/* jawafdehi.org.np is the Nepal company's site and does not ask for
+            gifts to the US entity: it shows only the Nepal route (the
+            company's own bank account and QR codes), with no region switch.
+            jawafdehi.org keeps both. */}
+        <SiteOnly site="org">
         <div
           role="group"
           aria-label={t("donate.ways.title")}
-          className="grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1"
+          className="flex w-full gap-1 rounded-full border border-border/60 bg-surface/90 p-1 backdrop-blur-sm md:inline-flex md:w-fit"
         >
-          {REGIONS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={id === region}
-              onClick={() => {
-                userChoseRef.current = true;
-                setRegion(id);
-                trackEvent("donate_click", {
-                  method: "region_toggle",
-                  action: id,
-                });
-              }}
-              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                id === region
-                  ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
-                  : "rounded-md px-3 py-2 text-sm font-semibold text-primary/70 transition-colors hover:bg-primary/10 hover:text-primary"
-              }`}
-            >
-              {t(
-                id === "nepal"
-                  ? "donate.ways.nepali.title"
-                  : "donate.ways.us.title",
-              )}
-            </button>
-          ))}
+          {REGIONS.map((id) => {
+            const selected = id === region;
+            const Icon = id === "nepal" ? MapPin : Globe;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => {
+                  userChoseRef.current = true;
+                  setRegion(id);
+                  trackEvent("donate_click", {
+                    method: "region_toggle",
+                    action: id,
+                  });
+                }}
+                className={cn(
+                  "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full px-2 text-sm transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97] min-[360px]:whitespace-nowrap md:flex-none md:px-4",
+                  selected
+                    ? "bg-primary text-primary-foreground"
+                    : "text-primary/70 hover:bg-primary/10 hover:text-primary",
+                )}
+              >
+                <Icon className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
+                {t(
+                  id === "nepal"
+                    ? "donate.ways.nepali.title"
+                    : "donate.ways.us.title",
+                )}
+              </button>
+            );
+          })}
         </div>
-      </SiteOnly>
-
-      {/* No gap above the Nepal panel when there is no region switch over it. */}
-      <div
-        className={currentSiteVariant() === "np" ? undefined : "mt-5"}
-        hidden={region !== "nepal"}
-      >
-        <NepalPanel />
+        </SiteOnly>
       </div>
-      <SiteOnly site="org">
-        <div className="mt-5" hidden={region !== "abroad"}>
-          <AbroadPanel />
+
+      {/* Words on the left with the contact row on the card's bottom edge,
+          level with the foot of the action tile; the action in a fixed column
+          on the right spanning both rows, so the card is only as tall as its
+          tallest column. From md up both routes share one grid cell on
+          each side (the inactive one only invisible), so switching never makes
+          the card jump; on phones the inactive route is gone entirely. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_18rem] md:grid-rows-[auto_1fr] md:gap-x-12 md:gap-y-8 lg:gap-x-16">
+        <div className="grid min-w-0 md:col-start-1 md:row-start-1 md:[&>*]:[grid-area:1/1]">
+          <div className={routeClass(region === "nepal")}>
+            <NepalWords />
+          </div>
+          <SiteOnly site="org">
+            <div className={routeClass(region === "abroad")}>
+              <AbroadWords />
+            </div>
+          </SiteOnly>
         </div>
-      </SiteOnly>
+
+        <div className="grid min-w-0 md:col-start-2 md:row-span-2 md:row-start-1 md:[&>*]:[grid-area:1/1]">
+          <div className={routeClass(region === "nepal")}>
+            <div className="flex justify-center">
+              <NepalAction />
+            </div>
+          </div>
+          <SiteOnly site="org">
+            <div className={routeClass(region === "abroad")}>
+              <AbroadAction />
+            </div>
+          </SiteOnly>
+        </div>
+
+        {footer ? <div className="md:col-start-1 md:row-start-2 md:self-end">{footer}</div> : null}
+      </div>
     </article>
   );
 }

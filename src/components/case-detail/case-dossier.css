@@ -8,7 +8,8 @@
 }
 .case-dossier-main { display: grid; min-width: 0; gap: 24px; }
 .case-dossier-facts { display: grid; gap: 18px; }
-.case-dossier-facts > div { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+.case-dossier-facts > div { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 16px; }
+.case-dossier-facts dd { margin: 0; }
 .case-dossier-facts > div > * { min-width: 0; overflow-wrap: anywhere; }
 
 /* The timeline occupies the dossier column. Steps start at its left edge;
@@ -70,91 +71,105 @@
 .case-stage-node { flex: 0 0 270px; min-width: 0; overflow-wrap: anywhere; text-align: left; }
 .case-stage-timeline-wrap[data-single="true"] .case-stage-node { flex: 1 0 0; }
 .case-stage-node > p { margin-right: 16px; }
-.case-stage-step { display: flex; align-items: center; height: 18px; margin-bottom: 10px; }
+/* The marker row: a small navy disc per stage on a hairline track. Concluded
+   stages are filled; a stage still running is an open ring, and the track
+   leading into it is dashed — "not yet" without a colour of its own. (It was an
+   18px sky-blue disc on a 4px bar: the loudest thing in the card, saying the
+   least.) */
+.case-stage-step { display: flex; align-items: center; height: 10px; margin-bottom: 14px; }
+/* One stage is a date, not a timeline: no lone marker on an empty track. */
+.case-stage-timeline-wrap[data-single="true"] .case-stage-step { display: none; }
 .case-stage-dot {
-  flex: 0 0 18px;
-  height: 18px;
+  flex: 0 0 10px;
+  height: 10px;
   border-radius: 50%;
   background: hsl(var(--primary));
 }
 .case-stage-connector {
   flex: 1;
-  height: 4px;
-  margin: 0 5px;
-  background: hsl(var(--primary));
+  height: 1px;
+  margin: 0 8px;
+  background: hsl(var(--border));
 }
-.case-stage-node[data-pending="true"] .case-stage-dot,
+.case-stage-node[data-pending="true"] .case-stage-dot {
+  background: hsl(var(--background));
+  box-shadow: inset 0 0 0 1.5px hsl(var(--primary));
+}
 .case-stage-node[data-pending="true"] .case-stage-connector {
-  background: hsl(var(--info));
+  background: repeating-linear-gradient(to right, hsl(var(--border)) 0 4px, transparent 4px 8px);
 }
 
-/* The type scale inside a node. ONE dominant line, and it is the date: the
-   stage names are repeating vocabulary a reader skims past, while the date is
-   what actually differs node to node. Setting stage, forum and date in the
-   same weight left nothing to scan by, so the stage name is demoted to an
-   eyebrow and the forum and BS date sit under the date as supporting rank. */
+/* The type scale inside a node, on the card's own scale (15px labels over
+   16px values): the stage name as a grey label, the date as the one line that
+   leads, in Inter with tabular figures like every number on the site; the
+   other calendar and the forum under it, the note last. */
 .case-stage-eyebrow {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.45;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
   color: hsl(var(--muted-foreground));
 }
-
 .case-stage-date {
-  margin: 5px 0 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.5;
-  color: hsl(var(--primary));
-}
-/* The same fact in the other calendar, so it sits directly under its AD line
-   and recedes rather than reading as a second date. */
-.case-stage-date-alt {
-  margin: 2px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: hsl(var(--primary) / .7);
-}
-.case-stage-forum {
-  margin: 7px 0 0;
-  font-size: 14px;
+  margin: 4px 0 0;
+  font-size: 16px;
   font-weight: 500;
   line-height: 1.5;
-  color: hsl(var(--primary) / .75);
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--primary));
 }
-.case-stage-timeline .case-stage-note {
-  margin: 7px 0 0;
-  font-size: 12px;
+.case-stage-date-alt {
+  margin: 2px 0 0;
+  font-size: 14px;
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
   color: hsl(var(--muted-foreground));
 }
-@media (min-width: 768px) {
-  .case-stage-date,
-  .case-stage-forum { font-size: 16px; }
-  .case-stage-date-alt,
-  .case-stage-timeline .case-stage-note { font-size: 14px; }
+.case-stage-forum {
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: hsl(var(--primary) / .8);
+}
+.case-stage-timeline .case-stage-note {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Print keeps the stacked label-left / value-right rows (see CaseStageDates'
    `compact` variant): a rail that scrolls has no meaning on paper. */
 .case-dossier-courts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 8px; }
+/* The byline is a column of the facts card, divided off by a hairline (above
+   it on a phone, beside it from 901px), not a grey box inside the card. */
 .case-dossier-sidebar {
   min-width: 0;
-  padding: 20px;
-  border-radius: 20px;
-  background: hsl(var(--muted) / .45);
+  padding-top: 20px;
+  border-top: 1px solid hsl(var(--border) / .7);
   overflow-wrap: anywhere;
 }
 .case-dossier-sidebar:empty { display: none; }
 .case-dossier-sidebar [data-testid="author-card"] { background: transparent; padding: 8px 0; }
 .case-dossier-sidebar a[data-testid="author-card"]:hover { background: hsl(var(--primary) / .09); }
 .case-dossier-sidebar [data-testid="case-byline-authors"] { flex-direction: column; }
-.case-dossier-sidebar [data-testid="case-byline-published"] { font-size: 12px; line-height: 1.7; margin-bottom: 14px; }
+.case-dossier-sidebar [data-testid="case-byline-published"] { font-size: 14px; line-height: 1.6; margin-bottom: 16px; font-variant-numeric: tabular-nums; }
 .case-dossier-sidebar [data-testid="case-byline-published"] span { display: block; }
-.case-dossier-sidebar .case-byline > .uppercase { text-transform: none; letter-spacing: normal; }
+/* The byline on the card's own scale: a 15px grey label like the facts' labels,
+   names at 16px like their values, roles at 14px. */
+.case-dossier-sidebar .case-byline { font-size: 15px; }
+.case-dossier-sidebar .case-byline > .uppercase {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 15px;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+.case-dossier-sidebar [data-testid="author-card"] span > span:first-child { font-size: 16px; font-weight: 500; line-height: 1.4; }
+.case-dossier-sidebar [data-testid="author-card"] span > span + span { font-size: 14px; line-height: 1.45; }
 @media (min-width: 901px) {
   .case-dossier:has(.case-byline) { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
+  .case-dossier-sidebar { padding: 0 0 0 32px; border-top: 0; border-left: 1px solid hsl(var(--border) / .7); }
 }
 @media (max-width: 600px) {
   .case-dossier-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }

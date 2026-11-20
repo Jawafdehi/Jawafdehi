@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Mail, Paperclip, Save } from "lucide-react";
+import { Loader2, Mail, Paperclip, Save } from "@/components/icons";
 
 interface FeedbackCardProps {
   row: FeedbackSubmissionRow;

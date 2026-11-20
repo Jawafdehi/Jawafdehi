@@ -57,13 +57,64 @@ export function formatNPR(value: number, includeDecimals: boolean = false): stri
   return `NRs. ${formatted}`;
 }
 
+const NEPALI_UNITS: Record<string, string> = { Rs: "रु.", Lakh: "लाख", Crore: "करोड", Arab: "अर्ब", Kharab: "खर्ब" };
+const NEPALI_DIGITS = "०१२३४५६७८९";
+
+/**
+ * A formatted figure in the reader's language. English is returned as is; in
+ * Nepali the units and digits are Nepali: "Rs 2.72 Kharab" -> "रु. २.७२ खर्ब",
+ * "23.12 Lakh" -> "२३.१२ लाख". Grouping is already lakh/crore in both.
+ */
+export function localiseNumber(text: string, language?: string): string {
+  if (!language?.startsWith("ne")) return text;
+  return text
+    .replace(/\b(Rs|Lakh|Crore|Arab|Kharab)\b/g, (unit) => NEPALI_UNITS[unit])
+    .replace(/\d/g, (digit) => NEPALI_DIGITS[Number(digit)]);
+}
+
+/**
+ * The site's one rule for counts: Nepali (lakh/crore) digit grouping in both
+ * languages, so an exact figure reads the same way as the amounts beside it.
+ * Example: 2311969 -> "23,11,969"
+ */
+export function formatCount(value: number, options?: Intl.NumberFormatOptions, language?: string): string {
+  return localiseNumber(value.toLocaleString("en-IN", options), language);
+}
+
+/**
+ * A headline count in Nepali units, as formatBigo does for money: under a lakh
+ * it stays exact ("2,847"); from a lakh up it is written in Lakh or Crore with
+ * at most two decimals ("23.12 Lakh", "1.5 Crore").
+ */
+export function compactCountParts(value: number): { value: number; decimals: number; unit: string } {
+  const abs = Math.abs(value);
+  const scale = abs >= 10_000_000 ? { div: 10_000_000, unit: " Crore" } : abs >= 100_000 ? { div: 100_000, unit: " Lakh" } : null;
+  if (!scale) return { value: Math.round(value), decimals: 0, unit: "" };
+  const scaled = Number((value / scale.div).toFixed(2));
+  const decimals = Number.isInteger(scaled) ? 0 : Number.isInteger(scaled * 10) ? 1 : 2;
+  return { value: scaled, decimals, unit: scale.unit };
+}
+
+export function formatCompactCount(value: number, language?: string): string {
+  const { value: scaled, decimals, unit } = compactCountParts(value);
+  return localiseNumber(
+    `${formatCount(scaled, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${unit}`,
+    language,
+  );
+}
+
 /**
  * Formats large NPR amounts using Nepali numeric units (Lakh, Crore, Arab, Kharab).
  * Example: 24_940_110         -> "Rs 2.49 Crore"
  * Example: 3_620_000_000      -> "Rs 3.62 Arab"
  * Example: 250_000_000_000    -> "Rs 2.50 Kharab"
+ * Pass the reader's language for Nepali units and digits ("रु. २.५० खर्ब").
  */
-export function formatBigo(amount: number | null | undefined): string {
+export function formatBigo(amount: number | null | undefined, language?: string): string {
+  return localiseNumber(formatBigoEnglish(amount), language);
+}
+
+function formatBigoEnglish(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || amount === 0) return "Rs 0";
 
   const absAmount = Math.abs(amount);

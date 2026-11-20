@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export interface Release {
@@ -33,43 +32,38 @@ function groupReleases(releases: Release[]) {
   );
 }
 
+/**
+ * The date column: the AD date as the lead line in Inter's tabular figures,
+ * the BS date under it in grey. Plain text, no pill — the same treatment as
+ * the stage rail in the case's facts card.
+ */
 function TimelineDatePill({ date, version }: Pick<Release, "date" | "version">) {
-  const primaryDate = (
-    <Badge className="flex min-h-7 w-auto justify-end rounded-full border border-primary/10 bg-primary-surface/10 px-3.5 py-1 text-sm font-medium text-primary shadow-none hover:bg-primary-surface/20">
-      {version}
-    </Badge>
-  );
-
-  if (!date) return primaryDate;
-
   return (
-    <div className="flex flex-col items-end gap-1">
-      {primaryDate}
-      <span className="max-w-36 text-right text-xs font-medium leading-snug text-primary/65">
-        {date}
-      </span>
+    <div className="flex flex-col gap-0.5 md:items-end md:text-right">
+      <span className="text-base font-medium leading-6 tabular-nums text-primary">{version}</span>
+      {date ? <span className="text-sm leading-5 tabular-nums text-muted-foreground">{date}</span> : null}
     </div>
   );
 }
 
 /**
  * The grouped timeline list only — the section heading belongs to the caller,
- * so the case page can render the shared `CaseSectionHeading` (editorial serif
- * + crimson rule) like every other case-detail section.
+ * so the case page can render the shared `CaseSectionHeading` like every
+ * other case-detail section.
  */
 const ChangelogContent = ({ className, releases }: ChangelogContentProps) => {
   const groupedReleases = groupReleases(releases);
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="space-y-9">
+      <div className="space-y-10">
         {groupedReleases.map((group, groupIndex) => (
           <section
             key={`${group.year || "timeline"}-${groupIndex}`}
             aria-label={group.year ? `${group.year} timeline` : undefined}
           >
             {group.year ? (
-              <h3 className="mb-5 text-xl font-semibold leading-7 text-primary">
+              <h3 className="mb-5 text-[15px] leading-6 tabular-nums text-muted-foreground">
                 {group.year}
               </h3>
             ) : null}
@@ -85,15 +79,14 @@ const ChangelogContent = ({ className, releases }: ChangelogContentProps) => {
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <div className="sticky top-[4.75rem] flex size-6 items-center justify-center max-sm:top-5">
-                    <span className="flex size-[1.125rem] shrink-0 items-center justify-center rounded-full bg-accent/20">
-                      <span className="size-3 rounded-full bg-accent/85" />
-                    </span>
+                  {/* A small navy marker on a hairline, like the stage rail. */}
+                  <div className="sticky top-[4.75rem] flex h-6 w-4 items-center justify-center max-sm:top-5">
+                    <span className="size-2.5 shrink-0 rounded-full bg-primary" />
                   </div>
-                  <span className="-mt-2.5 w-px flex-1 border-l border-primary/20" />
+                  <span className="w-px flex-1 bg-border" />
                 </div>
 
-                <div className="flex flex-1 flex-col gap-2 md:gap-4 pb-6 md:pb-11 pl-3 md:pl-6 lg:pl-9">
+                <div className="flex flex-1 flex-col gap-2 pb-8 pl-4 md:gap-3 md:pb-10 md:pl-8">
                   <div className="flex flex-col gap-2 md:hidden">
                     <TimelineDatePill date={release.date} version={release.version} />
                   </div>

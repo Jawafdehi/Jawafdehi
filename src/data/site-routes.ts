@@ -4,6 +4,7 @@ export type SearchIconName =
   | "Bot"
   | "Building2"
   | "FileText"
+  | "FileType"
   | "HeartHandshake"
   | "Home"
   | "Info"
@@ -121,25 +122,6 @@ export const SITE_ROUTES = [
     sitemapTitle: "Jawafdehi — Nepal Open Corruption Database",
   },
   {
-    path: "/cases",
-    chrome: "app",
-    titleKey: "header.browseCases",
-    descriptionKey: "searchCommand.descriptions.cases",
-    keywords: ["cases", "corruption", "archive"],
-    icon: "Search",
-    sitemapTitle: "Cases — Jawafdehi",
-  },
-  {
-    // Pages 2..N of the case browse; page 1 is "/cases" above. Carries no
-    // StaticPageMeta on purpose, which is what keeps it out of
-    // PRE_RENDERED_STATIC_ROUTES and out of the search index: the page count
-    // depends on how many cases exist, so the URL list cannot be a constant.
-    // scripts/pre-render.ts renders these from the live count and
-    // scripts/sitemap.ts lists them, both via casesPagePaths.
-    path: "/cases/page/:page",
-    chrome: "app",
-  },
-  {
     path: "/search",
     chrome: "app",
     titleKey: "searchCommand.pageTitles.archiveSearch",
@@ -156,15 +138,6 @@ export const SITE_ROUTES = [
     keywords: ["faq", "questions", "answers", "reporting", "privacy", "volunteer", "funding"],
     icon: "BookOpen",
     sitemapTitle: "FAQ — Jawafdehi",
-  },
-  {
-    path: "/research/corruption-accountability",
-    chrome: "app",
-    titleKey: "research.corruption.meta.title",
-    descriptionKey: "research.corruption.meta.description",
-    keywords: ["research", "corruption", "conviction rate", "ciaa", "special court", "accountability", "report"],
-    icon: "FileText",
-    sitemapTitle: "Corruption Accountability — Jawafdehi",
   },
   {
     path: "/our-process",
@@ -270,6 +243,15 @@ export const SITE_ROUTES = [
     sitemapTitle: "Connect to Jawafdehi MCP — Jawafdehi",
   },
   {
+    path: "/likhit",
+    chrome: "app",
+    titleKey: "likhit.meta.title",
+    descriptionKey: "searchCommand.descriptions.likhit",
+    keywords: ["likhit", "markdown", "pdf", "doc", "docx", "ocr", "devanagari", "nepali", "converter", "markitdown"],
+    icon: "FileType",
+    sitemapTitle: "likhit — Nepali documents to Markdown — Jawafdehi",
+  },
+  {
     path: "/openhouse",
     chrome: "app",
     titleKey: "nav.openHouse",
@@ -288,11 +270,20 @@ export const SITE_ROUTES = [
     sitemapTitle: "Weekly Corruption Series — Jawafdehi",
   },
   {
+    path: "/blog",
+    chrome: "app",
+    titleKey: "nav.blog",
+    descriptionKey: "searchCommand.descriptions.blog",
+    keywords: ["blog", "posts", "stories", "articles", "explainer"],
+    icon: "Newspaper",
+    sitemapTitle: "Blog — Jawafdehi",
+  },
+  {
     path: "/updates",
     chrome: "app",
     titleKey: "nav.updates",
     descriptionKey: "searchCommand.descriptions.updates",
-    keywords: ["updates", "news", "posts"],
+    keywords: ["updates", "news", "posts", "what's new", "changelog", "release", "new features"],
     icon: "Newspaper",
     sitemapTitle: "Updates — Jawafdehi",
   },
@@ -346,13 +337,12 @@ export const SITE_ROUTES = [
   { path: "/entity/*", chrome: "app" },
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },
-  // Data-lake single-type browse pages (unified-archive search, type-pinned).
-  //
-  // Both render ArchiveSearch with the record type pinned (see Materials.tsx and
-  // CourtCases.tsx). They carried no page metadata until 2026-08-11, so they were
-  // filtered out of PRE_RENDERED_STATIC_ROUTES below and never pre-rendered: a
-  // crawl or a share of either got index.html's bare shell. Metadata in the
-  // component cannot fix that on its own, because nothing runs the client render.
+  // The materials landing page. It carried no page
+  // metadata until 2026-08-11, so it was filtered out of
+  // PRE_RENDERED_STATIC_ROUTES below and never pre-rendered: a crawl or a share
+  // got index.html's bare shell. Metadata in the component cannot fix that on its
+  // own, because nothing runs the client render. Its old ?series= and ?q= views
+  // now redirect into /search (see Materials.tsx).
   {
     path: "/materials",
     chrome: "app",
@@ -362,22 +352,18 @@ export const SITE_ROUTES = [
     icon: "FileText",
     sitemapTitle: "Documents & Other Materials — Jawafdehi",
   },
-  {
-    path: "/courtcases",
-    chrome: "app",
-    titleKey: "courtCasesPage.heading",
-    descriptionKey: "courtCasesPage.description",
-    keywords: ["court", "cases", "hearings", "orders", "supreme", "special", "district", "judiciary"],
-    icon: "ShieldCheck",
-    sitemapTitle: "Court Cases — Jawafdehi",
-  },
   // Wagtail headless preview target.
   // The Wagtail headless preview target: an unsaved draft. previewSecurityHeaders()
   // in worker.ts already sends noindex for it alongside the CSP that scopes
   // framing to the CMS; this declares the same fact on the route itself so the
   // table is the one place that says which routes are not indexable.
   { path: "/updates/preview", chrome: "app", noindex: true },
+  // One post per changelog entry (src/data/whats-new.ts), pre-rendered by
+  // scripts/pre-render.ts from the entry list. Two segments, so it never
+  // competes with /updates/:slug.
+  { path: "/updates/product/:id", chrome: "app" },
   { path: "/updates/:slug", chrome: "app" },
+  { path: "/blog/:slug", chrome: "app" },
   { path: "/data-quality", chrome: "app" },
   { path: "/newsletter/confirmed", chrome: "app" },
   { path: "/newsletter/unsubscribe/:token", chrome: "app" },
@@ -391,6 +377,14 @@ export const SITE_ROUTES = [
   { path: "/entities", chrome: "app" },
   { path: "/information", chrome: "app" },
   { path: "/moderation", chrome: "app", noindex: true },
+  // The case and court-case browse pages folded into /search the same way
+  // /entities did: every search lives on the one route. Kept as redirects, with
+  // no page metadata, so old links and indexed URLs still land somewhere.
+  { path: "/cases", chrome: "app" },
+  { path: "/cases/page/:page", chrome: "app" },
+  { path: "/courtcases", chrome: "app" },
+  // Folded into Updates & News (?filter=product); the edge 301s it.
+  { path: "/whats-new", chrome: "app" },
 ] as const satisfies readonly SiteRoute[];
 
 // Every path the SPA will render, as a React Router pattern.

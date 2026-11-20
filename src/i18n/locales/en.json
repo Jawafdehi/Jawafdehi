@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "entities": "Entities",
+    "blog": "Blog",
     "updates": "Updates",
     "cases": "Cases",
     "about": "About",
@@ -23,7 +24,21 @@
     "courtCases": "Court cases",
     "research": "Research",
     "faq": "FAQ",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "desc": {
+      "search": "Every case, person and document in one search.",
+      "materials": "Reports, charge sheets and notices, by series.",
+      "courtcases": "Corruption cases through the Special Court.",
+      "research": "What the prosecution record tells us.",
+      "mcp": "The archive inside your AI assistant.",
+      "about": "Who we are and why the archive exists.",
+      "openhouse": "Come meet the team and see the work.",
+      "process": "How a case goes from document to record.",
+      "commitment": "The promises we hold ourselves to.",
+      "team": "The people who build and keep the archive.",
+      "products": "Open tools built on the archive.",
+      "faq": "Short answers to common questions."
+    }
   },
   "weeklyMeetings": {
     "eyebrow": "Currently on pause",
@@ -130,8 +145,8 @@
     "title": "Jawafdehi.org",
     "subtitle": "Nepal",
     "reportCase": "Report Case",
-    "askAiAssistant": "Ask AI Assistant",
-    "browseCases": "Browse Cases"
+    "browseCases": "Browse Cases",
+    "connectYourAi": "Connect your AI"
   },
   "searchCommand": {
     "title": "Search Jawafdehi",
@@ -155,6 +170,7 @@
       "terms": "Terms of Service"
     },
     "descriptions": {
+      "blog": "Read stories and notes from the Jawafdehi team.",
       "home": "Return to the Jawafdehi homepage.",
       "cases": "Open the dedicated case search and browsing page.",
       "archiveSearch": "Search cases, entities, locations, and evidence documents in one archive.",
@@ -178,8 +194,13 @@
       "entityDetail": "Open a tracked person, office, or organization.",
       "faq": "Read answers to common questions about Jawafdehi, reporting, verification, data use, privacy, volunteering, funding, and legal disclaimers.",
       "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
-      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol."
-    }
+      "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
+      "whatsNew": "See the latest changes to the archive, the MCP and the API.",
+      "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter."
+    },
+    "hintMove": "to move",
+    "hintOpen": "to open",
+    "hintClose": "to close"
   },
   "footer": {
     "title": "Jawafdehi",
@@ -196,9 +217,6 @@
     "feedback": "Feedback",
     "accountabilityNoExpiry": "Accountability has no expiry.",
     "permanentArchive": "Nepal's permanent public archive of CIAA corruption cases, free forever, built by Nepali volunteers.",
-    "builtByNepali": "Built by Nepali",
-    "publicDomain": "Open data",
-    "openSource": "Open source",
     "platform": "Platform",
     "allDataPublicDomain": "Case data is free to reuse under CC BY-NC.",
     "privacy": "Privacy Policy",
@@ -219,27 +237,68 @@
       "linktree": "Linktree"
     },
     "pressKit": "Press Kit",
-    "mcp": "Jawafdehi MCP"
+    "mcp": "Jawafdehi MCP",
+    "whatsNew": "Product updates",
+    "likhit": "likhit"
   },
   "home": {
+    "bento": {
+      "titleLead": "Nepal's judicial and governance record,",
+      "titleRest": "in one open archive.",
+      "archive": {
+        "label": "The archive",
+        "title": "Every case, court record and public document, searchable.",
+        "chips": [
+          "Corruption cases",
+          "Court cases",
+          "People & offices",
+          "Government documents",
+          "Audit findings",
+          "& more"
+        ],
+        "casesLabel": "corruption cases",
+        "cta": "Browse the archive"
+      },
+      "follow": {
+        "label": "Follow a case",
+        "title": "From charge sheet to verdict.",
+        "steps": {
+          "chargeSheet": "CIAA charge sheet",
+          "specialCourt": "Special Court hearings",
+          "supremeCourt": "Supreme Court appeal"
+        },
+        "body": "Charge sheets, hearings and verdicts are linked, so one case reads from start to finish."
+      },
+      "ask": {
+        "label": "Ask your AI",
+        "title": "The archive, inside Claude and ChatGPT.",
+        "question": "How many corruption cases did the CIAA file in 2081/82?",
+        "answer": "Here are the CIAA's 2081/82 filings, each linked to its charge sheet, Special Court hearings and verdict.",
+        "cta": "Connect your AI"
+      }
+    },
     "hero": {
       "eyebrow": "Accountability has no expiry.",
-      "titlePrefix": "Nepal's Permanent",
-      "titleHighlight": "Corruption Case",
-      "titleSuffix": "Archive",
-      "description": "Search Nepal's public accountability archive in one place. Find corruption cases, tracked people and offices, updates, and Jawafdehi resources.",
-      "searchLabel": "Search the Jawafdehi archive",
-      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
-      "searchSubmit": "Search Jawafdehi",
-      "suggestionsLabel": "Case suggestions",
+      "description": "Corruption cases, court records and the documents behind them, in one open archive. Read it here, or connect it to your AI tool.",
       "stats": {
         "casesDocumented": "Corruption cases documented",
         "totalBigo": "Total embezzled amount",
         "materials": "Documents & other materials",
         "courtCasesTracked": "Court cases tracked"
       },
-      "coverageLink": "See what we cover",
-      "scrollCue": "Scroll"
+      "titleLead": "Nepal's digital archive of ",
+      "titleHighlight": "public accountability",
+      "titleTail": ".",
+      "caps": {
+        "line1": "Accountability",
+        "line2": "has no",
+        "line3": "expiry"
+      },
+      "searchArchive": "Search the archive",
+      "searchLabel": "Search the Jawafdehi archive",
+      "searchPlaceholder": "Search cases, people, offices, locations, or allegations",
+      "searchSubmit": "Search Jawafdehi",
+      "suggestionsLabel": "Case suggestions"
     },
     "featuredCases": {
       "heading": "Featured Cases",
@@ -272,6 +331,13 @@
       "description": "Help us hold public entities accountable. Report allegations of misconduct and contribute to transparency in governance.",
       "reportAllegation": "Report an Allegation",
       "submitFeedback": "Submit Feedback"
+    },
+    "figures": {
+      "label": "The archive in figures"
+    },
+    "blog": {
+      "heading": "From the blog",
+      "viewAll": "All blog posts"
     }
   },
   "ourProcess": {
@@ -396,7 +462,8 @@
       "record": "record",
       "description": "Jawafdehi runs entirely on volunteer effort. Whether you are a technology enthusiast, a working professional, a legal expert, or a student, if you believe corruption should not be forgotten, there is a place for you here.",
       "github": "Find us on GitHub",
-      "email": "Email us"
+      "email": "Email us",
+      "eyebrow": "Volunteer"
     },
     "whoCanJoin": {
       "eyebrow": "Who can join",
@@ -621,12 +688,40 @@
   },
   "products": {
     "hero": {
-      "eyebrow": "Our Products",
-      "openSource": "Open source,",
-      "freeToUse": "free to use",
-      "builtForCivicGood": "built for civic good",
-      "description": "The components we build are open source and free to use. The full stack is public on GitHub — built by Nepali volunteers and made available to anyone who wants to build on top of it.",
-      "github": "GitHub"
+      "eyebrow": "What we build",
+      "title": "Our products",
+      "description": "Use Nepal's corruption cases, court records and public documents in your own work: from an AI assistant, from code, or straight from a scanned page."
+    },
+    "items": {
+      "mcp": {
+        "kind": "MCP server",
+        "line": "Ask Claude or ChatGPT about any case, and get the record back with its sources.",
+        "cta": "Connect your AI"
+      },
+      "likhit": {
+        "kind": "Python library",
+        "line": "Nepali PDFs and scans in, clean Markdown out.",
+        "cta": "See how it works"
+      },
+      "api": {
+        "kind": "REST API",
+        "line": "Every case, entity and court record, open to your code.",
+        "cta": "Read the API docs"
+      },
+      "chat": {
+        "kind": "Web app",
+        "line": "Plain-language questions, answers that cite the record.",
+        "cta": "Open the chat"
+      }
+    },
+    "preview": {
+      "chatQuestion": "Which cases did the CIAA file at the Special Court this month?",
+      "sourceCharge": "Charge sheet",
+      "sourceCourt": "Special Court"
+    },
+    "groups": {
+      "research": "For research and reporting",
+      "developers": "For developers"
     }
   },
   "team": {
@@ -634,11 +729,11 @@
       "title": "Our Team"
     },
     "sections": {
-      "board": "Nepal Board",
-      "usBoard": "US Board",
       "advisors": "Advisors",
+      "usBoard": "US Board",
       "currentMembers": "Consultants and Volunteers",
-      "pastMembers": "Former Consultants and Volunteers"
+      "pastMembers": "Former Consultants and Volunteers",
+      "board": "Nepal Board"
     },
     "tags": {
       "Chairman": "Chairman",
@@ -795,7 +890,9 @@
       "label": "AI-generated",
       "explanation": "This section was written by AI from sources the Jawafdehi team has received. It may contain errors. If you spot an error, please let us know.",
       "explainLabel": "What does AI-generated mean?"
-    }
+    },
+    "failedToLoadLine": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundLine": "It may have been moved or the link may be mistyped. Search the archive for it."
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
@@ -1058,7 +1155,8 @@
       "whatsappLabel": "WhatsApp",
       "socialTitle": "Our social accounts",
       "socialDescription": "These are the only accounts we run. A social message is public or semi-public — do not put case details in one; ask us to move to email or WhatsApp instead.",
-      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp."
+      "templatesDescription": "A structured template for a longer case write-up. Send the completed file by email or WhatsApp.",
+      "eyebrow": "Report"
     },
     "submitAnother": "Submit another report",
     "howToReachYou": "How we can reach you"
@@ -1115,12 +1213,39 @@
     "attachment": "Attachment",
     "attachmentOptional": "optional",
     "attachmentMaxSize": "Maximum file size: 10 MB",
-    "attachmentTooLarge": "File is too large. Maximum size is 10 MB."
+    "attachmentTooLarge": "File is too large. Maximum size is 10 MB.",
+    "eyebrow": "Feedback",
+    "other": {
+      "title": "Other ways to reach us",
+      "line": "For a correction to a case, a lead, or a longer conversation.",
+      "email": {
+        "name": "Email",
+        "line": "report@jawafdehi.org"
+      },
+      "discord": {
+        "name": "Discord",
+        "line": "Talk to the team and volunteers"
+      },
+      "github": {
+        "name": "GitHub issues",
+        "line": "Report a bug in the open"
+      }
+    }
   },
   "notFound": {
     "title": "404",
-    "message": "Oops! Page not found",
-    "returnHome": "Return to Home"
+    "heading": "This page isn't in the archive.",
+    "line": "The link may be old or mistyped. The case, person or document you wanted is probably still here — search for it.",
+    "searchLabel": "Search the archive",
+    "searchPlaceholder": "Search cases, people and documents",
+    "ways": {
+      "home": "Home",
+      "cases": "Cases",
+      "materials": "Documents",
+      "courtcases": "Court cases",
+      "updates": "Updates"
+    },
+    "waysLabel": "Elsewhere on Jawafdehi"
   },
   "common": {
     "changeLanguage": "Change language",
@@ -1133,7 +1258,10 @@
     "nameSummary": {
       "withOthers_one": "{{name}} with {{count}} other",
       "withOthers_other": "{{name}} with {{count}} others"
-    }
+    },
+    "copied": "Copied",
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "copy": "Copy"
   },
   "themeToggle": {
     "toggleTheme": "Toggle theme",
@@ -1271,7 +1399,21 @@
     "member": "Member",
     "representative": "Representative",
     "federalParliament": "Federal Parliament",
-    "viewSource": "View Source"
+    "viewSource": "View Source",
+    "breadcrumb": "People & organizations",
+    "notFoundTitle": "Not in the registry",
+    "notFoundLine": "This person or organization could not be found in the registry.",
+    "errorTitle": "This profile didn't load",
+    "errorLine": "Something went wrong on our side. Please try again in a moment."
+  },
+  "blog": {
+    "eyebrow": "From the team",
+    "title": "Blog",
+    "description": "Stories, explainers, and notes from the people building Jawafdehi.",
+    "error": "We couldn't load blog posts right now. Please try again later.",
+    "errorTitle": "The blog didn't load",
+    "empty": "No blog posts have been published yet.",
+    "emptyTitle": "Nothing here yet"
   },
   "updates": {
     "title": "Updates & News",
@@ -1281,7 +1423,25 @@
     "documentsAndResources": "Documents & Resources",
     "view": "View",
     "loading": "Loading updates",
-    "loadingUpdate": "Loading update"
+    "loadingUpdate": "Loading update",
+    "eyebrow": "From the team",
+    "all": "All",
+    "filterLabel": "Show",
+    "filter": {
+      "NEWS": "News",
+      "UPDATE": "Updates",
+      "PRODUCT": "Product updates"
+    },
+    "category": {
+      "NEWS": "News",
+      "UPDATE": "Update",
+      "BLOG": "Blog",
+      "PRODUCT": "Product update"
+    },
+    "error": "We couldn't load updates right now. Please try again later.",
+    "empty": "No updates have been published yet.",
+    "errorTitle": "Updates didn't load",
+    "emptyTitle": "Nothing here yet"
   },
   "share": {
     "share": "Share",
@@ -1339,24 +1499,6 @@
     "contents": "Contents",
     "summary": "Case summary",
     "parties": "Parties",
-    "chain": {
-      "heading": "Appeal history",
-      "nav": "Appeal history",
-      "note": "Jawafdehi linked these cases from court records; the courts do not publish these links. Each link shows our estimate of how likely it is to be right.",
-      "stage": {
-        "initial": "First court",
-        "appeal": "Appeal",
-        "review": "Review"
-      },
-      "thisCase": "This case",
-      "registered": "Registered {{date}}",
-      "decided": "Decided {{date}}",
-      "appealOf": "Appeal of",
-      "probablyAppealOf": "Probably an appeal of",
-      "oneOf": "Possibly an appeal of one of these. We could not tell which:",
-      "eachOf": "Appeal of each of:",
-      "likely": "{{pct}} likely"
-    },
     "vs": "VS",
     "noParties": "No party recorded",
     "showMore": "Show {{count}} more",
@@ -1389,7 +1531,35 @@
       "details": "Details",
       "judge": "Judge",
       "remarks": "Remarks",
-      "empty": "No hearings or activity recorded yet for this court case."
+      "empty": "No hearings or activity recorded yet for this court case.",
+      "emptyTitle": "No hearings yet"
+    },
+    "source": {
+      "heading": "Source",
+      "title": "Jawafdehi Governance Archive",
+      "description": "Court listings, hearings and orders harvested from Nepal's public court records.",
+      "view": "View source"
+    },
+    "errorTitle": "This court case didn't load",
+    "error": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundTitle": "Court case not found",
+    "chain": {
+      "heading": "Appeal history",
+      "nav": "Appeal history",
+      "note": "Jawafdehi linked these cases from court records; the courts do not publish these links. Each link shows our estimate of how likely it is to be right.",
+      "stage": {
+        "initial": "First court",
+        "appeal": "Appeal",
+        "review": "Review"
+      },
+      "thisCase": "This case",
+      "registered": "Registered {{date}}",
+      "decided": "Decided {{date}}",
+      "appealOf": "Appeal of",
+      "probablyAppealOf": "Probably an appeal of",
+      "oneOf": "Possibly an appeal of one of these. We could not tell which:",
+      "eachOf": "Appeal of each of:",
+      "likely": "{{pct}} likely"
     },
     "orders": {
       "heading": "Court orders ({{count}})",
@@ -1401,203 +1571,6 @@
         "judgment": "Judgment",
         "order": "Order",
         "unknown": "Court order"
-      }
-    },
-    "source": {
-      "heading": "Source",
-      "title": "Jawafdehi Governance Archive",
-      "description": "Court listings, hearings and orders harvested from Nepal's public court records.",
-      "view": "View source"
-    }
-  },
-  "research": {
-    "corruption": {
-      "meta": {
-        "title": "Where Nepal's corruption accountability leaks",
-        "description": "A quantitative read of CIAA corruption prosecutions at Nepal's Special Court — conviction rates, the charge types that stick, and where accountability is lost."
-      },
-      "hero": {
-        "eyebrow": "Research · Corruption Accountability",
-        "title": "Where Nepal's corruption accountability actually leaks",
-        "lead": "How many complaints become cases, how those cases resolve, and which charges the system convicts — drawn from court records ingested from Nepal's judiciary and the CIAA's own annual reports. Every figure links to the record behind it.",
-        "snapshot": "Based on a 14-fiscal-year analysis of court records (FY2069/70–2082/83) and the CIAA's annual reports through FY2081/82, the most recent published.",
-        "methodologyLink": "How we built and cross-checked these numbers →",
-        "englishOnlyNotice": "This report is currently available in English only."
-      },
-      "funnel": {
-        "eyebrow": "The funnel",
-        "heading": "Between 0.2% and 0.3% of complaints end in a conviction",
-        "lead": "In FY2081/82 the CIAA registered 28,554 new complaints. Most were screened out at intake — only 947 (3.3%) went to a full investigation — and of those it prosecuted 137, roughly one in seven. Apply this archive's measured conviction rates and somewhere between 62 and 84 of them end in a conviction: the low end counts only cases where the charge was upheld outright, the high end also counts the partial verdicts. Both are defensible readings, so we publish the range rather than pick one.",
-        "ofComplaints": "{{pct}}% of complaints",
-        "caption": "Complaint, investigation and prosecution counts: CIAA 35th annual report (FY 2081/82), cross-checked against the court records. The steep drop is at intake screening, not the courtroom — most complaints never warrant a full investigation (many are outside the CIAA's jurisdiction or evidence-free); of those it does investigate, it prosecutes about 1 in 7. The conviction stage is a projection and a range, not a count: it applies this archive's measured 45% full-conviction rate across all 14 years to the filed count for the floor, and its 61% including-partial rate for the ceiling. It is what cases like these have historically done — not a tally of how those particular 137 were decided.",
-        "stage": {
-          "complaints": "Complaints to the CIAA",
-          "investigated": "Complaints fully investigated",
-          "filed": "Prosecutions filed",
-          "convicted": "Convictions (est., full → incl. partial)",
-          "investigatedNote": "only 3.3% go to a full investigation",
-          "filedNote": "≈1 in 7 investigated are prosecuted",
-          "convictedNote": "≈45% of prosecuted cases convict fully, ≈61% including partial"
-        },
-        "workloadTitle": "Why this starts at {{intake}} and not {{workload}}",
-        "workloadBody": "You will more often see {{workload}} complaints quoted for FY2081/82, and that number is also the CIAA's own. It is the Commission's total workload: {{intake}} complaints newly registered during the year plus {{carried}} still open from previous years. Both appear in the same table of the 35th report. A funnel that starts at {{workload}} would count those {{carried}} a second time, having already counted them in an earlier year, so this one starts at new intake — which also makes the percentage at each stage smaller and more conservative than the headline version."
-      },
-      "cite": {
-        "ciaa35": "CIAA 35th annual report",
-        "ciaaReports": "CIAA annual reports",
-        "courtRecords": "Browse the court records",
-        "chargeSheets": "Charge sheets"
-      },
-      "crossCheck": {
-        "eyebrow": "Cross-check",
-        "heading": "Do the two records agree?",
-        "lead": "The CIAA's annual reports and the Special Court's register are independent accounts of the same events — the Commission deciding to prosecute, and the court opening a docket. Across {{years}} fiscal years they agree to {{gap}}%: {{ciaa}} filings the CIAA published against {{register}} comparable cases in the register, and no single year differs by more than {{worst}}. Where they diverge, one offence dominates. In the {{netYears}} years whose reports break filings down by offence, the register runs {{net}} cases ahead, and {{fake}} of those {{net}} are fake-credential cases alone.",
-        "caseLevelLead": "For the {{years}} years where the gap is widest we checked it case by case, matching the accused named in the reports' own filing tables against the accused named in the register. The direction of the divergence turns out to be the opposite of what a missing-records story would predict: every one of the {{listed}} cases the CIAA says it filed is in the register. What the register holds instead is {{surplus}} fake-credential cases that those years' own filing tables never list.",
-        "surplusTitle": "Why {{n}} register cases are missing from the CIAA's own tables",
-        "surplusSub": "Two of these reasons are documented rather than inferred. Five cases are a difference of principle about which year a filing belongs to: the CIAA attributes it to the year the Commission decided to prosecute, the court to the year the docket was registered — and all five appear in the previous year's report, with decision dates in Ashadh and filing dates that match the register's registration date to the day. Four more are absent from one year's report but described in the next report as prosecutions the CIAA filed at the Special Court and won: one CIAA document contradicting another.",
-        "surplusTooltip": "Cases",
-        "caption": "Filing counts from the CIAA's annual reports, cross-checked against the Special Court register. The register side removes {{excluded}} cases in three streams the CIAA does not file — 98 money laundering (mixed bribery-and-laundering dockets included there rather than counted separately), 33 petitions filed against the CIAA itself, and 23 offences outside its jurisdiction — an exclusion that is marginally over-broad, since the FY2081/82 report shows the CIAA filed two money-laundering cases itself. Three limits travel with this: only {{years}} of the 14 years and one of the 13 offence families have been checked at case level; {{unexplained}} of the {{surplus}} surplus cases remain unexplained; and the reading that the annual report under-counts its own fake-credential filings is established for four specific cases and well supported for the rest, not proven for all."
-      },
-      "outcome": {
-        "convicted": "Convicted",
-        "partial": "Partial",
-        "acquitted": "Acquitted"
-      },
-      "outcomes": {
-        "eyebrow": "Outcomes",
-        "heading": "Fewer than half of decided prosecutions end in a clean conviction",
-        "donutCenter": "cases decided",
-        "lead": "Of {{n}} decided cases with a clear verdict, {{conv}}% end in a full conviction, {{acq}}% in outright acquittal, and {{part}}% in partial conviction — so {{less}}% end in something less than a clean conviction.",
-        "note": "The CIAA puts its own “success” rate at {{ciaa}}% because it counts partial convictions as successes. That figure is comparable to the top of our range, not the bottom: on the CIAA's own definition this archive gives {{incl}}%, higher than the Commission's number rather than lower. Set {{ciaa}}% against our {{full}}% and you are comparing two different definitions of the word.",
-        "grainTitle": "What these numbers count, and what “partial” covers",
-        "grainCases": "These are cases, not people. The court records one verdict per case and publishes no outcome for each accused separately, so nothing here is a per-person conviction rate and none of it should be read as the share of individuals convicted. A single case may have one accused or a dozen.",
-        "grainPartial": "That is also why the middle category does two jobs at once. A partial verdict (आंशिक ठहर) covers a case where one accused was convicted on some charges and cleared of others, AND a case with several accused where some were convicted and others acquitted. The court's record does not distinguish the two, so neither can we. A partial verdict tells you the prosecution did not fail outright; it does not tell you how many people were convicted, or of what.",
-        "grainFull": "“Full conviction” (ठहर) is the strict reading: the charge was upheld against the case as the court framed it. It is the one category that cannot be read two ways, which is why it anchors the low end of every range on this page — {{full}}% here, {{incl}}% once partial verdicts are counted as convictions too. Neither endpoint is the whole truth. Reporting only {{full}}% treats every mixed verdict as a failure; reporting only {{incl}}% treats a case where one junior official was convicted and everyone senior walked as a win. The court's record cannot tell those apart, so we give you both numbers and never a single one on its own."
-      },
-      "byCharge": {
-        "eyebrow": "What actually sticks",
-        "heading": "Conviction depends overwhelmingly on what was charged",
-        "lead": "Two charges carry the court. Fake-credential cases convict at {{fakePct}}% and supply {{fakeShare}}% of every full conviction. Bribery — the largest docket on the court, {{briberyDecided}} decided cases — convicts at {{briberyPct}}%, the second-highest rate of any charge and a shade above the court average, and supplies another {{briberyShare}}%. Between them that is four in five convictions. It is the rest of the docket that mostly fails: embezzlement, illicit enrichment and loss to government all convert in the low twenties or below, and illegal benefit sits at the bottom on {{benefitPct}}%.",
-        "avgLine": "45% court average",
-        "caption": "Decided cases per charge type, split by outcome — {{n}} of the {{clean}} cases with a clear verdict; the rest carry charge text we could not classify. Money laundering keeps its own row here even though it sits outside the substantive corpus, because it is prosecuted under a separate statute. Every rate is per case, never per accused. Cited to the underlying charge sheets and court records."
-      },
-      "justice": {
-        "eyebrow": "Which bench you draw",
-        "heading": "Full-conviction rates run from 78% to 21% across the court's benches",
-        "lead": "The court records one verdict per case and no individual vote, so this is a property of the panels a justice sat on rather than of the justice: every panel member is credited with the panel's outcome, and a judge who dissented is credited with it too. Dot size is scaled to caseload. Sitting on the same court, hearing the same prosecutor, benches diverge more than threefold — but descriptively, not causally: some of that spread is the charge mix and the era a bench sat in, which the two sections above set out.",
-        "bandHigh": "Convicts more (>55%)",
-        "bandMid": "Near average",
-        "bandLow": "Acquits more (<37%)",
-        "avgLine": "court avg 45%",
-        "caption": "Justices who sat on at least {{min}} decided cases — {{n}} of the 41 in the record; below that a rate turns on a handful of verdicts and means little. Because every member of a panel is credited with the panel's outcome, the {{n}} shown are credited with {{decisions}} decisions between them, well above the {{cases}} cases those decisions came from."
-      },
-      "overTime": {
-        "eyebrow": "Over time",
-        "heading": "The court convicts far less than it used to",
-        "lead": "In its first three years the Special Court fully convicted roughly {{early}}% of the corruption cases it decided; across FY2079/80–2082/83 that fell to about {{recent}}%. Acquittals have drawn level rather than taken over: across those recent years they slightly outnumber full convictions, {{acq}} to {{conv}}, but in only {{aheadYears}} of the 14 years did they finish a year ahead.",
-        "rateTitle": "Outcome mix by verdict year",
-        "rateSub": "Share of decided cases by verdict fiscal year. Acquittals spike above full convictions in FY2078/79 and FY2080/81 — and edge ahead again in FY2082/83 — but they do not stay there.",
-        "decompTitle": "Is the decline real? Easy wins vs. core graft",
-        "decompSub": "Documentary fake-credential cases — which convict at ~90% — fell from {{start}}% of the decided docket to as little as {{min}}%. Core financial graft converts at much the same level now as it did then: {{coreEarly}}% across the first three years against {{coreRecent}}% across the last four. So the headline decline is mostly that change of mix — the easy wins leaving — not the court convicting serious graft any less. Read the dashed line as a level, not a trend: it swings from {{coreHigh}}% in FY{{coreHighYear}} to {{coreLow}}% in FY{{coreLowYear}} because in some years only a few dozen core-graft cases were decided.",
-        "seriesAll": "All charges",
-        "seriesCore": "Core graft (excl. fake credential)",
-        "avgLine": "45% cumulative",
-        "caption": "Full-conviction rate by verdict fiscal year, case-grain, from Special Court records."
-      },
-      "pace": {
-        "eyebrow": "Pace",
-        "heading": "How long a prosecution takes, and when they arrive"
-      },
-      "volume": {
-        "eyebrow": "The docket",
-        "heading": "What the court is actually asked to try",
-        "trendTitle": "Cases filed vs. decided, by year",
-        "trendSub": "Fiscal year. The filing peak (FY2076/77) precedes the decided peak (FY2080/81) by ~4 years.",
-        "filed": "Filed",
-        "decided": "Decided",
-        "paceTitle": "Time to verdict, and the backlog",
-        "paceSub": "By filing cohort. Cohorts through FY2079/80 took a median {{peak}} months at their slowest (FY{{peakYear}}); {{pending}} cases filed since are still awaiting a verdict.",
-        "months": "Median months to verdict",
-        "backlog": "Awaiting verdict",
-        "provisional": "Provisional (cohort still open)",
-        "mixByYearTitle": "How the charge mix shifted, by year",
-        "mixPercentToggle": "Show as 100%",
-        "mixByYearSub": "Register cases by fiscal filing year — {{n}} of the {{corpus}}, money laundering excluded. “Other” folds together seven smaller charge families and the matters whose charge text could not be classified. Fake-credential cases (crimson) dominated the early docket — about 70% in FY2069/70 — then fell to single digits by FY2077/78–2079/80, with a rebound in FY2080/81. The illegal-benefit charge was barely used before FY2078/79 (a single earlier case, in FY2069/70) and loss to government grew.",
-        "mixLabels": {
-          "bribery": "Bribery",
-          "fake": "Fake credential",
-          "embezzlement": "Embezzlement",
-          "benefit": "Illegal benefit",
-          "loss": "Loss to government",
-          "other": "Other"
-        },
-        "monthTitle": "When cases are filed, by Nepali month",
-        "monthSub": "Mean cases filed per Nepali month across FY2069/70–2082/83; error bars show ±1 standard deviation. Filings peak in Ashadh — the fiscal year-end — and trough in Kartik, the Dashain/Tihar festival month.",
-        "monthMean": "Mean cases filed",
-        "monthSd": "±1 SD",
-        "monthCaption": "Bars are the mean across the 14 fiscal years FY2069/70–2082/83 — all complete for filings, which is what this chart measures; the most recent cases are filed but many are still awaiting a verdict. Whiskers are ±1 standard deviation, i.e. how much each month swings from year to year. Registration date from Special Court records."
-      },
-      "gaps": {
-        "eyebrow": "Where the gap is",
-        "heading": "Attrition concentrates at the CIAA stage — then we lose the trail",
-        "intake": {
-          "owner": "CIAA",
-          "title": "Complaint intake & screening",
-          "body": "In FY2081/82, 28,554 new complaints arrived and 137 prosecutions came out the far end — near 0.5%. Most are screened out here: shelved, referred elsewhere, or closed for want of evidence or jurisdiction, and much of that is legitimate. But it happens with no public verdict on any individual complaint, which makes this both the largest drop in the pipeline and the least visible."
-        },
-        "charging": {
-          "owner": "CIAA",
-          "title": "Investigation & charging",
-          "body": "Of the complaints it fully investigates the CIAA prosecutes about 1 in 7, and what it charges shapes the outcome more than anything the court does. Two charges do almost all the work: fake credentials convict at {{fakePct}}% and bribery at {{briberyPct}}%, and between them they account for four in five convictions. Take those two out and the rest of the docket converts at {{rest}}%."
-        },
-        "adjudication": {
-          "owner": "Special Court",
-          "title": "Trial & verdict",
-          "body": "{{acq}}% of decided cases end in outright acquittal and {{less}}% in something short of a clean conviction, with more than a threefold spread across benches. Year to year the full-conviction rate has swung from about 86% to about 14%."
-        },
-        "appeal": {
-          "owner": "Supreme Court",
-          "title": "Appeal",
-          "body": "We can see how many appeals are filed: in FY2081/82 alone the CIAA appealed {{appeals}} Special Court verdicts to the Supreme Court, and defendants appeal their convictions too. We cannot see how they end. They clearly do end — the CIAA filed {{reviews}} review petitions that same year against Supreme Court rulings on its own appeals — but our court records hold no decision for them and we have not found the outcomes published anywhere as data. So we cannot tell you how often a Special Court verdict survives on appeal. That is a gap in what we have, not a claim that the answer is unknowable."
-        },
-        "recovery": {
-          "owner": "State",
-          "title": "Recovery & sanction",
-          "body": "Billions of rupees in damages are demanded each year — Rs 6.02 billion in FY2081/82 alone. How much of it is ever collected, and whether those convicted serve a meaningful sanction, we do not know: we have not found a source that tracks either, and we hold no data of our own on it. It may be recorded somewhere we have not looked. What we can say is that we cannot follow the money past the verdict."
-        },
-        "lead": "Follow one complaint from the day it is filed to the day someone is sanctioned for it. Five stages, two institutions — and our record of it runs out before the end.",
-        "caption": "The dashed stages mark the limits of our own record, not a verdict on what happens inside them. We can see what goes in — appeals filed, damages demanded, both published by the CIAA. We have not been able to find what comes out. Whether that is because nobody publishes it or because we have not looked in the right place, we cannot tell from here, so we are not going to claim the stronger version. If you know of a dataset, report or registry covering appeal outcomes or amounts recovered, please tell us and we will fold it in.",
-        "captionSource": " · Appeal and damages figures: ",
-        "noDataLabel": "No data yet"
-      },
-      "appendix": {
-        "eyebrow": "Methodology",
-        "heading": "How this report was built and cross-checked",
-        "summary": "Full methodology, discrepancies & limits",
-        "sourcesLead": "Two independent public records, cross-checked against each other — and both browsable on Jawafdehi. Complaint, investigation and prosecution counts come from the CIAA's own annual reports; conviction outcomes come from our mirror of Nepal's Special Court and wider judiciary. Where the two overlap — the cases filed each year — they agree to 1.2%, and the section above sets out case by case where they do not. Every figure on this page links to the record behind it.",
-        "corpus": "Corpus. Of ~12,600 Special Court records, most are procedural petitions. We isolate CIAA prosecutions as the Special Court's -CR- criminal register — 2,949 cases filed FY2069/70–2082/83 (the register is the definition; no plaintiff filter) — of which 2,795 are substantive corruption charges after removing money-laundering (a separate statute, 93 cases) and unclassified matters (61).",
-        "funnel": "The funnel. Of the 28,554 complaints newly registered in FY2081/82, only 947 (3.3%) went to a full investigation; most of the rest were screened out at intake — shelved or referred — much of it legitimate (outside the CIAA's jurisdiction, no supporting evidence, or duplicates). Of the complaints it fully investigated, the CIAA filed charges in 137 — about 1 in 7. The 37,026 “दर्ता” headline for the same year is the Commission's total workload, which adds 8,472 complaints carried over unresolved from earlier years; starting the funnel there would count those twice. So “0.5% of all complaints reach court” and “~1 in 7 of the complaints it investigates is prosecuted” are both true and measure different stages.",
-        "outcomes": "Outcomes. Verdicts are coded per hearing as convicted / acquitted / partial; each case is taken at its terminal deciding hearing. The conviction rate is over the 2,728 register cases carrying an unambiguous ठहर / आंशिक / सफाई disposition. That is a different set from the 2,740 whose case status reads फैसला (which the filed-vs-decided trend counts), and neither contains the other: 2,628 cases are in both, 112 are marked decided but carry no hearing with a recorded disposition, and 100 carry a disposition without the corresponding status.",
-        "derivedVerdicts": "Where a verdict came from. Cases that reached the mirror without ever appearing on a published cause list carry no court-published disposition, so the only way to count them at all is to read the verdict out of the judgment text. {{n}} verdicts were recovered that way (37 conviction, 26 acquittal, 6 partial) and every one of them is EXCLUDED from every rate on this page — a rate that quietly mixed court-published and machine-read verdicts would misrepresent its own source. We report the number rather than filtering silently.",
-        "dates": "Dates. Verdict dates are parsed from the case status text; filings from the registration date. Bikram Sambat dates throughout; by-year charts bin by fiscal year (Shrawan–Ashadh).",
-        "overTime": "Over time. Yearly rates are grouped by verdict fiscal year; the sharp rise in acquittals from FY2078/79 is a genuine surge in the record, not a coding artifact. Time-to-verdict is measured by filing cohort: cohorts through FY2079/80 are essentially fully decided, but recent cohorts are still open, so their apparent speed reflects only the cases already resolved (survivorship) and is drawn as provisional.",
-        "justice": "Per-justice. Attribution is bench-grain: every member of a panel is credited with the panel's outcome, so this describes the benches a justice sat on, not that justice's individual effect. The chart shows only justices with at least 30 decided cases — 39 of the 41 in the record — so it is a filtered view. It is descriptive, and small differences are noise.",
-        "discrepancy": "Discrepancy with CIAA figures. The CIAA's {{ciaa}}% “success” rate for FY2081/82 counts full and partial convictions together — its 35th report states it as 87 full plus 120 partial of 393 verdicts. That is the same definition as the top of our range ({{incl}}%), not the bottom ({{full}}%, full convictions only) — and on that aligned footing this archive comes out above the CIAA's figure, not below it. So the two differ by period at least as much as by definition: the CIAA's is one volatile year (its published rates range from 33% to 88%), ours is cumulative across 14. Never compare them without aligning both.",
-        "crossCheck": "The cross-check. Matching the reports' per-case filing tables to the register is name matching, not a key lookup: the early high-divergence years print no case number at all, and a case number alone does not identify a court in any event — the same NNN-CR-NNNN format is used by the Special Court, the Supreme Court and the district courts, so a number lifted out of its column resolves to the wrong case. Names were matched after folding Devanagari spelling variants, and the residue was resolved by hand on the date: every pair we accepted matches the printed filing date to the register's registration date to the day. Three pairs were accepted this way and are flagged as such in the published data, so a reader who rejects them can re-derive the totals without them.",
-        "entity": "Identity. Only ~7% of distinct defendants (607 of 8,321) are resolved to a canonical, cross-referenced identity, so office-level and repeat-offender cuts are deferred as low-confidence.",
-        "likhitPre": "Reading the source PDFs. The CIAA reports are Nepali-language PDFs set in legacy Devanagari fonts that ordinary tools garble. We convert them to clean, checkable Markdown with ",
-        "likhitName": "likhit",
-        "likhitPost": " — Jawafdehi's open-source universal Nepali document-to-markdown converter — then verify every figure by eye against the original page.",
-        "limits": "Limits. These are the records in the archive as of the snapshot date ({{bs}} BS); figures update as new records are mirrored. Appellate outcomes are largely missing from what we hold, and we have not found any source for amounts actually recovered — so treat both as open questions on our side rather than settled absences. Corrections and pointers to sources we have missed are welcome.",
-        "grain": "Grain. One verdict per case, because that is all the court publishes — there is no per-accused outcome in the record, so no figure on this page is a per-person rate. “Partial” therefore covers both a single accused convicted on some charges only and a multi-accused case split between conviction and acquittal; the two are indistinguishable in the source."
-      },
-      "sources": {
-        "heading": "Sources — all in-platform",
-        "ciaaReports": "CIAA annual reports (complaints, prosecutions filed, amounts claimed)",
-        "pressReleases": "CIAA charge-sheet announcements",
-        "chargeSheets": "Charge sheets (abhiyog patra)",
-        "courtRecords": "Special Court records (outcomes, charge types, verdict dates)",
-        "dataQuality": "Live coverage counts"
       }
     }
   },
@@ -1749,7 +1722,7 @@
     },
     "backbone": {
       "heading": "The record base behind every case",
-      "description": "Each case is cross-checked against millions of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
+      "description": "Each case is cross-checked against lakhs of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
       "courtRecords": "Court records",
       "courts": "Courts covered",
       "entities": "Entities tracked",
@@ -1764,7 +1737,7 @@
     },
     "courtCases": {
       "heading": "Court cases",
-      "description": "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
+      "description": "Each case is cross-checked against lakhs of public court records. This is the judicial record base the investigation stands on.",
       "trendHeading": "Court cases filed per year (Bikram Sambat)",
       "trendTooltip": "Court cases",
       "matrixHeading": "Court records by level and year (Bikram Sambat)",
@@ -1881,7 +1854,9 @@
         "manuscript": "Manuscripts",
         "other": "Other"
       }
-    }
+    },
+    "errorTitle": "The figures didn't load",
+    "eyebrow": "Open data"
   },
   "admin": {
     "common": {
@@ -1925,6 +1900,7 @@
       "reviews": "Reviews",
       "rules": "Rules",
       "moderation": "Moderation",
+      "blog": "Blog",
       "feedback": "Feedback"
     },
     "dashboard": {
@@ -2253,6 +2229,9 @@
       "sentBack": "Sent back to draft",
       "movedTo": "Moved to {{state}}",
       "by": "by {{name}}"
+    },
+    "blog": {
+      "loadError": "Could not load blog posts."
     }
   },
   "cookieConsent": {
@@ -2267,7 +2246,6 @@
     "heading": "Archive Search",
     "description": "Search Jawafdehi's public accountability archive across cases, people, offices, locations, allegations, and evidence documents.",
     "searchLabel": "Search the Jawafdehi archive",
-    "placeholder": "Search cases, people, offices, locations, or allegations",
     "submit": "Search archive",
     "coverageLink": "See what we cover",
     "searching": "Searching archive",
@@ -2297,8 +2275,6 @@
       },
       "bigoMinField": "Min (Rs)",
       "bigoMaxField": "Max (Rs)",
-      "bigoNote_one": "Filtering by amount includes only the {{count}} case with a recorded amount.",
-      "bigoNote_other": "Filtering by amount includes only the {{count}} cases with a recorded amount.",
       "bigoMinThumb": "Minimum amount",
       "bigoMaxThumb": "Maximum amount",
       "bigoNoMin": "No minimum",
@@ -2307,7 +2283,6 @@
       "date": "Record date",
       "dateFromField": "From (AD)",
       "dateToField": "To (AD)",
-      "dateNote": "Filtering by date includes only documents with a recorded date.",
       "dateRange": {
         "any": "Any date",
         "between": "{{from}} – {{to}}",
@@ -2334,7 +2309,17 @@
         "MetropolitanCity": "Metropolitan cities",
         "SubMetropolitanCity": "Sub-metropolitan cities",
         "Place": "Places"
-      }
+      },
+      "bigoCustom": "Custom range",
+      "bigoPresets": {
+        "under1cr": "Under Rs 1 crore",
+        "1to10cr": "Rs 1 – 10 crore",
+        "10to100cr": "Rs 10 – 100 crore",
+        "1to10arab": "Rs 1 – 10 arab",
+        "over10arab": "Over Rs 10 arab"
+      },
+      "bigoChip": "Amount",
+      "series": "Series"
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",
@@ -2342,7 +2327,26 @@
     "filterLess": "Less",
     "filterNoMatch": "No matches",
     "materialSource": "Source",
-    "materialDate": "Date"
+    "materialDate": "Date",
+    "filterShowAll": "Show all {{count}}",
+    "filterShowFewer": "Show fewer",
+    "allFilters": "All filters",
+    "clearAll": "Clear all",
+    "filtersLabel": "Filters",
+    "clearFilter": "Clear {{filter}}",
+    "clear": "Clear search",
+    "viewResults": "View results",
+    "placeholders": {
+      "all": "Search the archive",
+      "case": "Search cases",
+      "entity": "Search people, offices and places",
+      "material": "Search documents",
+      "courtcase": "Search court cases by name or number"
+    },
+    "empty": {
+      "title": "No archive records found",
+      "line": "Try a broader term or remove one of the filters."
+    }
   },
   "materialsPage": {
     "heading": "Documents & other materials",
@@ -2355,29 +2359,15 @@
     "heroTitle": "Nepal's public records. One archive.",
     "heroLede": "Documents collected from government bodies — searchable, citable, always open.",
     "ctaBrowse": "Browse the archive",
-    "ctaAsk": "Ask the AI assistant",
     "grid": {
       "title": "Browse by series",
       "documents": "documents",
-      "browseAll": "Browse all series"
-    },
-    "capabilities": {
-      "title": "The archive works for you",
-      "lede": "Read it, question it, or take all of it — the records stay public either way.",
-      "downloadTitle": "Download everything",
-      "downloadLine": "Open any series and follow every document to its source file.",
-      "askTitle": "Ask the AI assistant",
-      "askLine": "Put a question to the archive in Nepali or English and get cited answers.",
-      "analyzeTitle": "Analyze in bulk",
-      "analyzeLine": "The structured data is open (CC BY-NC) — build on it from our GitHub."
+      "browseAll": "Browse all series",
+      "browseAllLine": "Search every document",
+      "subtitle": "Each series is one kind of record, from the body that published it."
     },
     "recent": {
-      "title": "Recently added",
-      "slice": "The {{shown}} newest of {{total}} documents in the archive.",
-      "browseAll": "Browse all documents",
-      "untitled": "Untitled document",
-      "previous": "Previous documents",
-      "next": "Next documents"
+      "untitled": "Untitled document"
     },
     "series": {
       "searchPlaceholder": "Search inside this series…",
@@ -2418,6 +2408,7 @@
         "1-year": "Last year"
       }
     },
+    "heroEyebrow": "The archive's documents",
     "archive": {
       "root": "Archive",
       "title": "Browse the archive",
@@ -2431,7 +2422,8 @@
         "list": "List",
         "columns": "Columns"
       }
-    }
+    },
+    "ctaConnect": "Connect your AI"
   },
   "courtCasesPage": {
     "heading": "Court cases",
@@ -2439,11 +2431,9 @@
     "placeholder": "Search court cases"
   },
   "newsletter": {
-    "modal": {
-      "title": "Stay Informed on Corruption in Nepal.",
-      "description": "Subscribe to the Jawafdehi newsletter for our latest documented cases and important updates in the fight for accountability.",
-      "submit": "Keep Me Updated",
-      "disclaimer": "Jawafdehi will periodically send newsletters and other updates. You can unsubscribe from all emails at any time."
+    "signup": {
+      "title": "Subscribe to our newsletter",
+      "submit": "Subscribe"
     },
     "form": {
       "firstName": "First name",
@@ -2605,6 +2595,16 @@
         "title": "Using the data",
         "questions": [
           {
+            "id": "connect-ai",
+            "question": "How do I use the archive from Claude, ChatGPT or another AI tool?",
+            "answer": "Add the Jawafdehi MCP server, `https://api.jawafdehi.org/mcp`, to your AI tool. **MCP** (Model Context Protocol) is an open standard that lets AI assistants use outside tools and data. In Claude, open Settings → Connectors and add a custom connector; in ChatGPT, open Plugins and add a custom MCP server. In Claude Code, run `claude mcp add --transport http jawafdehi https://api.jawafdehi.org/mcp`. It is **free**, and needs a free Jawafdehi account: you sign in once when you first connect. Step-by-step instructions are at jawafdehi.org/mcp."
+          },
+          {
+            "id": "ai-accuracy",
+            "question": "Can an AI assistant get our cases wrong?",
+            "answer": "Yes, it can. The MCP tools return the archive's own records together with links to the source documents, so every claim an assistant makes can be checked against the original. **Always check before you quote or publish.** The tools are read-only: an assistant can read the archive but cannot change it."
+          },
+          {
             "id": "reuse-information",
             "question": "Can I reuse the information — for journalism, research, or advocacy?",
             "answer": "Yes — for **non-commercial** use. Published case data is licensed under **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**: you may read, share, and build on it for non-commercial purposes — journalism, research, education, advocacy — as long as you **credit Jawafdehi.org**. For **commercial** use, you'll need a separate license from us (which carries ethical-use terms) — write to inquiry@jawafdehi.org. We deliberately do **not** place the data in the public domain, so the archive stays the single authoritative, correctable source."
@@ -2703,7 +2703,12 @@
       "github": "GitHub",
       "website": "their website",
       "twitter": "X"
-    }
+    },
+    "errorTitle": "This profile didn't load",
+    "error": "Something went wrong on our side. Please try again in a moment.",
+    "notFoundTitle": "Profile not found",
+    "seeTeam": "Meet the team",
+    "browseCases": "Browse the cases"
   },
   "pressKit": {
     "meta": {
@@ -2777,11 +2782,10 @@
     },
     "type": {
       "title": "Typography",
-      "displayRoleNepali": "Headlines — Nepali",
-      "displayRoleLatin": "Headlines — English",
-      "bodyRole": "Body and UI",
-      "monoRole": "Figures, dates, case references",
-      "note": "Headlines are pinned to one face per language: Vesper Libre for Nepali, Inter for English. Vesper Libre covers both Latin and Devanagari, so a bilingual Nepali headline stays in one typeface. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics."
+      "displayRoleNepali": "Titles — Nepali",
+      "bodyRole": "Body — Nepali",
+      "note": "English reads in Inter throughout, titles and body alike. Nepali titles are set in Vesper Libre and Nepali body text in Noto Sans Devanagari. Devanagari needs looser leading than Latin because of matra stacking — please don’t set Devanagari copy on Latin metrics.",
+      "latinRole": "Titles and body — English"
     },
     "contact": {
       "title": "Contact",
@@ -2797,29 +2801,163 @@
       "description": "Connect Claude, ChatGPT and other AI tools to Jawafdehi's accountability archive over the Model Context Protocol. One server URL; sign in with a free Jawafdehi account."
     },
     "hero": {
-      "eyebrow": "Model Context Protocol",
-      "title": "Jawafdehi",
-      "titleAccent": "MCP",
-      "description": "Connect Nepal's permanent accountability archive to the AI tool you already use."
+      "back": "Back to the archive",
+      "title": "Nepal's accountability record, inside your favourite AI.",
+      "description": "Ask a question in plain language. Your AI assistant searches Nepal's corruption and audit records and answers with links to the original documents."
     },
-    "endpoint": {
-      "copyLabel": "Copy the server URL"
-    },
-    "clients": {
-      "title": "Add it to your AI tool",
+    "copied": "Copied",
+    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
+    "connect": {
+      "title": "Set it up",
+      "copyAddress": "Copy the server address",
       "copyCommand": "Copy the command",
-      "claude": {
-        "name": "Claude",
-        "appLabel": "Claude app and claude.ai",
-        "appSteps": "Open Customize → Connectors, choose Add → Add custom connector, paste the server URL, then sign in.",
-        "cliLabel": "Claude Code"
+      "copyConfig": "Copy the configuration",
+      "importantLabel": "Important:",
+      "clients": {
+        "claude": {
+          "name": "Claude",
+          "steps": [
+            "Open Customize → Connectors, then Add → Add custom connector.",
+            "Name it Jawafdehi, with this URL:",
+            "Authentication: Sign in now. Click Add, then Connect, and sign in with Google."
+          ],
+          "important": "Under OAuth client, choose Register automatically, not the “Recommended” option.",
+          "after": "Ask a question that mentions Jawafdehi; click Always allow when asked.",
+          "platforms": [
+            "Web",
+            "Desktop",
+            "Mobile"
+          ]
+        },
+        "chatgpt": {
+          "name": "ChatGPT",
+          "steps": [
+            "Open chatgpt.com/plugins, then Add → Add custom MCP server.",
+            "Name it Jawafdehi, with this server URL:",
+            "Click Create as a plugin, then Connect Jawafdehi and sign in with Google."
+          ],
+          "after": "In a chat, type @Jawafdehi before your question; click Always allow when asked.",
+          "platforms": [
+            "Web"
+          ]
+        },
+        "claudeCode": {
+          "name": "Claude Code",
+          "steps": [
+            "Run these in your terminal:",
+            "Sign in with Google when the browser opens."
+          ],
+          "platforms": [
+            "Terminal"
+          ]
+        },
+        "codex": {
+          "name": "Codex",
+          "steps": [
+            "Add this to ~/.codex/config.toml:",
+            "Type /mcp in Codex to check it is connected. The ChatGPT desktop app shares this setting (Settings → MCP servers)."
+          ],
+          "platforms": [
+            "CLI",
+            "IDE",
+            "ChatGPT desktop app"
+          ]
+        }
       },
-      "openai": {
-        "name": "OpenAI",
-        "appLabel": "ChatGPT",
-        "appSteps": "Open Plugins, select +, then Add custom MCP server. Paste the server URL, then sign in.",
-        "cliLabel": "Codex CLI"
-      }
+      "worksIn": "Works in"
+    },
+    "overview": {
+      "problemLabel": "The problem",
+      "problem": "The evidence on corruption in Nepal is public, but it is scattered. Auditor General reports run to a thousand pages of scanned Nepali; CIAA charge sheets sit on one website, verdicts on dozens of court websites, procurement notices on Bolpatra.",
+      "problemPoint": "Connecting one official, one project or one public body across all of it takes a reporter days.",
+      "whatLabel": "What it is",
+      "what": "Jawafdehi has gathered these records into one open database. The Jawafdehi MCP is a connector that plugs that database into Claude or ChatGPT.",
+      "whatPoint": "You ask; the assistant searches the records, reads the documents and answers with sources."
+    },
+    "inside": {
+      "title": "What's inside",
+      "stats": [
+        {
+          "value": "2,836",
+          "label": "published corruption and accountability cases"
+        },
+        {
+          "value": "Rs 2.34 Kharab",
+          "label": "alleged in those cases"
+        },
+        {
+          "value": "23 Lakh",
+          "label": "court case records from 97 courts"
+        },
+        {
+          "value": "~1 Lakh",
+          "label": "Attorney General charge-sheet records"
+        },
+        {
+          "value": "2.05 Lakh",
+          "label": "procurement notices (Bolpatra)"
+        },
+        {
+          "value": "43,000",
+          "label": "court orders, plus 10,500 Supreme Court precedents"
+        },
+        {
+          "value": "3,500",
+          "label": "CIAA press releases"
+        },
+        {
+          "value": "~220",
+          "label": "Auditor General reports: federal, provincial, SOE"
+        }
+      ]
+    },
+    "questions": {
+      "title": "Questions you can try asking",
+      "items": [
+        {
+          "question": "Show me every corruption case involving Sugat Ratna Kansakar: the charge sheet, the hearings and the verdict.",
+          "answer": "Found the wide-body purchase case 080-CR-0145: the charges, all 24 Special Court hearings, his conviction, and the CIAA's pending Supreme Court appeal."
+        },
+        {
+          "question": "Pick one of the Auditor General's findings about Nepal Airlines and tell me whether anyone involved is also facing a corruption case.",
+          "answer": "Linked the audit's A330 loan finding to Special Court case 080-CR-0145: who was convicted and acquitted, and the pending appeal."
+        },
+        {
+          "question": "ललिता निवास जग्गा प्रकरणमा अख्तियारले कसकसलाई मुद्दा चलायो, र विशेष अदालतको फैसला के भयो?",
+          "answer": "Answered in Nepali: 175 defendants by group, who was convicted and acquitted, and the CIAA's appeal."
+        },
+        {
+          "question": "Which corruption cases did the Special Court decide in FY 2082/83, and how many ended in conviction?",
+          "answer": "103 decisions in the data: 24 full convictions, 35 partial, 41 acquittals, with a warning that the first half of the year is missing."
+        }
+      ],
+      "answerLabel": "Jawafdehi MCP"
+    },
+    "pilot": {
+      "title": "Join the pilot",
+      "tagline": "Try it on a real story.",
+      "body": "For a small group of journalists and researchers, in Claude or ChatGPT.",
+      "steps": [
+        "Free access during the pilot",
+        "A 20-minute setup and demo call",
+        "Use it on a real story for a few weeks",
+        "Tell us what was useful and what was missing"
+      ],
+      "join": "Write to",
+      "whatsapp": "Or message us on WhatsApp",
+      "youGet": "What you get",
+      "weAsk": "What we ask"
+    },
+    "demo": {
+      "title": "See it in action",
+      "label": "A demo of the Jawafdehi MCP in Claude and ChatGPT"
+    },
+    "skill": {
+      "title": "Teach your AI the archive",
+      "body": "Connecting gives your AI the tools; the jawafdehi-archive skill teaches it to use them well: which tool answers which question, keeping the accused apart from the convicted, and citing a source for every claim.",
+      "claudeCode": "Claude Code",
+      "others": "Cursor, Codex and other agents",
+      "copy": "Copy the install command"
     },
     "signIn": {
       "title": "Sign in once",
@@ -2832,22 +2970,126 @@
       "body": "Published accountability cases, the people and offices Jawafdehi tracks, court cases and their hearings, source documents, read-only queries over the court records, and a Bikram Sambat date converter. Every public tool only reads, except one: it sends your feedback to the Jawafdehi team when you ask it to, after showing you the message.",
       "courtNames": "Court records: anyone can look up a single case by its number and see its parties, as on the court's own website. In lists, searches and queries, party names are shown for corruption-related cases; for other cases they are replaced with placeholders such as “plaintiff-1”. Searching every court party by name is for Jawafdehi staff only."
     },
-    "examples": {
-      "title": "Try asking",
-      "items": [
-        "Find Jawafdehi cases about bribes at land survey offices (नापी कार्यालय) and summarise each one, with links.",
-        "How many corruption cases did the Special Court register in each fiscal year since 2078 BS?",
-        "What does Jawafdehi have on the Nepal Electricity Authority? List the cases, court records and documents.",
-        "Convert 2083-07-29 BS to an AD date."
-      ],
-      "note": "Your AI tool answers from Jawafdehi's records and should cite them. Check anything important against the linked case or document; nothing here is legal advice."
-    },
     "support": {
       "title": "Help",
       "body": "Something not working, or a record looks wrong? Ask your AI tool to send feedback to Jawafdehi, use our feedback page, or email us.",
       "feedbackLink": "Feedback page"
+    }
+  },
+  "whatsNew": {
+    "meta": {
+      "title": "Product updates",
+      "description": "The latest changes to the Jawafdehi archive and the tools around it: new records, new features, and updates to the MCP and the API."
     },
-    "copied": "Copied",
-    "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand."
+    "title": "Product updates from Jawafdehi",
+    "lastUpdated": "Last updated {{date}}",
+    "all": "All",
+    "more": "More",
+    "seeAll": "All product updates",
+    "tags": {
+      "archive": "Archive",
+      "mcp": "MCP",
+      "api": "API",
+      "likhit": "Likhit",
+      "chat": "Chat"
+    },
+    "homeHeading": "Product updates",
+    "mcpHeading": "MCP updates",
+    "moreHeading": "More product updates"
+  },
+  "likhit": {
+    "meta": {
+      "title": "likhit — Nepali documents to Markdown",
+      "description": "likhit is Jawafdehi's open-source MarkItDown plugin for Nepali documents: Devanagari repair, layout-aware Markdown, optional OCR for scanned pages, and legacy .doc support."
+    },
+    "hero": {
+      "title": "Nepali documents, converted",
+      "titleAccent": "faithfully",
+      "benchmark": "Read the benchmark",
+      "source": "Source on GitHub",
+      "pypi": "PyPI",
+      "whatsNew": "Release notes",
+      "lede": "<name>likhit</name> is Jawafdehi's open-source converter for Nepali documents: PDFs, scans and old .doc files in, clean Markdown out."
+    },
+    "install": {
+      "copyLabel": "Copy the install command"
+    },
+    "features": {
+      "repair": {
+        "name": "Devanagari repair",
+        "body": "Recovers conjuncts and matras that ordinary extraction turns into replacement characters."
+      },
+      "layout": {
+        "name": "Layout-aware Markdown",
+        "body": "Reconstructs reading order and tables instead of emitting a flat character dump."
+      },
+      "ocr": {
+        "name": "OCR when needed",
+        "body": "Falls back to a vision model on image-only pages, which no text layer can serve."
+      },
+      "legacy": {
+        "name": "Legacy formats",
+        "body": "Reads the .doc and Preeti-era files government archives are actually made of."
+      },
+      "title": "What it does"
+    },
+    "cli": {
+      "title": "Convert from the command line",
+      "copyCommand": "Copy the command",
+      "short": "<cmd>likhit-save</cmd> runs MarkItDown with the plugin on and writes the Markdown for you. No Python needed.",
+      "cases": {
+        "one": "One file",
+        "many": "Many files",
+        "pages": "A page range",
+        "keep": "Keep personal data in",
+        "plugin": "As a MarkItDown plugin"
+      }
+    },
+    "ocr": {
+      "title": "Turn on OCR for scanned pages",
+      "copyRecipe": "Copy the setup",
+      "local": {
+        "name": "A model on your own machine",
+        "body": "Ollama, llama.cpp or vLLM — all three serve an OpenAI-compatible endpoint, and no page image leaves the machine."
+      },
+      "bedrock": {
+        "name": "Bedrock, through a gateway",
+        "body": "Bedrock does not speak the OpenAI API, so run a translating proxy in front of it. The proxy picks up your AWS credentials the usual way, and likhit only ever sees an OpenAI endpoint."
+      },
+      "hosted": {
+        "name": "A hosted API",
+        "body": "Point at any OpenAI-compatible provider. For Gemini, set the Google key alone and likhit selects Google's OpenAI-compatible base URL for you."
+      },
+      "short": "Scanned pages need a vision model. likhit works with any OpenAI-compatible endpoint; pick where yours runs."
+    },
+    "privacy": {
+      "title": "Taking personal data out",
+      "copyCommand": "Copy the command",
+      "short": "Citizenship numbers, dates of birth and phone numbers come out before anything is written. Four tiers; strict is the default.",
+      "tiersShort": {
+        "none": "Removes nothing.",
+        "identifiers": "Citizenship numbers and dates of birth.",
+        "contact": "Adds phone numbers and email addresses.",
+        "strict": "Adds bank accounts, age and passports."
+      },
+      "redactPdf": "Redact a PDF",
+      "default": "Default",
+      "guidePrefix": "Full redaction guide on"
+    },
+    "copy": "Copy",
+    "whatsNewHeading": "likhit updates",
+    "pitch": {
+      "titleA": "Nepali PDFs in.",
+      "titleB": "Clean Markdown out.",
+      "body": "likhit repairs broken Devanagari, keeps the tables, reads the scans, and takes personal details out before anything is written.",
+      "redacted": "# citizenship numbers: redacted"
+    }
+  },
+  "materialProfile": {
+    "breadcrumb": "Documents",
+    "notFoundTitle": "Document not found",
+    "notFoundLine": "This material could not be found in the Jawafdehi governance archive.",
+    "errorTitle": "This document didn't load",
+    "errorLine": "Something went wrong on our side. Please try again in a moment."
   }
 }

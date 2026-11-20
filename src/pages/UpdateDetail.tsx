@@ -4,6 +4,7 @@ import { getArticleBySlug } from "@/services/cms-api";
 import { ArticleView } from "@/components/ArticleView";
 import { ArticleViewSkeleton } from "@/components/ArticleViewSkeleton";
 import { Seo } from "@/components/Seo";
+import { articlePath } from "@/lib/article-path";
 import NotFound from "./NotFound";
 import { previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL, truncateMeta } from "@/utils/seo";
 
@@ -24,7 +25,7 @@ const UpdateDetail = () => {
         return <NotFound />;
     }
 
-    const canonicalUrl = `${SITE_URL}/updates/${article.meta.slug}`;
+    const canonicalUrl = `${SITE_URL}${articlePath(article)}`;
     // Prefer the dedicated social rendition: 1200x630 JPEG, which is the shape
     // unfurlers ask for. `thumbnail` is a 16:9 WebP, so it's only the fallback
     // for the window where the API hasn't shipped `og_image` yet.

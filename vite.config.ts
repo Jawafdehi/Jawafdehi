@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import fs from "node:fs";
 import { componentTagger } from "lovable-tagger";
-import type { PluginOption } from "vite";
+import type { Plugin, PluginOption } from "vite";
 
 // Bundle-treemap plugin, loaded ONLY when ANALYZE=true. Kept as an optional
 // dynamic import (not a top-level import) so the dependency need not be present
@@ -28,7 +28,7 @@ async function analyzePlugin(): Promise<PluginOption | null> {
   }
 }
 
-function serveGeneratedSearchIndex() {
+function serveGeneratedSearchIndex(): Plugin {
   return {
     name: "serve-generated-search-index",
     configureServer(server) {
@@ -63,7 +63,7 @@ function getPreviewFilename(targetUrl: URL): string {
   return lastSegment ? decodeURIComponent(lastSegment).replace(/["\\]/g, "") : "document";
 }
 
-function serveDocumentPreview() {
+function serveDocumentPreview(): Plugin {
   return {
     name: "serve-document-preview",
     configureServer(server) {

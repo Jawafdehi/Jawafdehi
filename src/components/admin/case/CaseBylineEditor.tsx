@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "@/components/icons";
 import { listCaseAuthorCandidates } from "@/services/admin-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

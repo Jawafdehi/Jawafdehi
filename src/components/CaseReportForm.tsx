@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, CheckCircle2, Clock, Loader2, Paperclip, Upload, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Loader2, Paperclip, Upload, X } from "@/components/icons";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

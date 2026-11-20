@@ -503,17 +503,21 @@ describe("MaterialProfile — the Contents tab is a table of contents", () => {
 
     const button = await screen.findByRole("button", { name: /तालिका २\.१/ });
     const row = button.closest("li")!;
-    // Title, then the page number in its own right-hand column, then the
-    // affordance that opens it full size — rather than a "page 18 · 9×4" line
-    // under the title.
-    const kids = [...row.children];
-    const pageCell = kids.find((el) => el.textContent?.trim() === "page 18")!;
+    // Title, then the page number in its own right-hand column ("p. 18"), then
+    // the affordance that opens it full size — rather than a "page 18 · 9×4"
+    // line under the title.
+    const pageCell = row.querySelector<HTMLElement>("[data-page-no]")!;
     expect(pageCell).toBeTruthy();
-    // Carried for a screen reader, which gets no help from the column.
+    expect(pageCell.textContent?.replace(/\s+/g, " ").trim()).toBe("page p. 18");
+    // Carried for a screen reader, which gets no help from the column; the
+    // visible "p." is hidden from it so it does not hear "page p. 18".
     expect(pageCell.querySelector(".sr-only")?.textContent).toBe("page ");
+    expect(pageCell.querySelector('[aria-hidden="true"]')?.textContent).toBe("p. ");
     // The open affordance sits AFTER the number, not before it.
-    const openEl = kids.find((el) => el.tagName === "A")!;
-    expect(kids.indexOf(openEl)).toBeGreaterThan(kids.indexOf(pageCell));
+    const openEl = row.querySelector("a")!;
+    expect(
+      pageCell.compareDocumentPosition(openEl) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     // The table's shape is not advertised before anyone has opened it.
     expect(row.textContent).not.toMatch(/9×4/);
   });

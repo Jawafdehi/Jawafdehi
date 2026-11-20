@@ -11,7 +11,7 @@ import { FormError } from "@/components/admin/FormError";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Pencil, Plus, Search } from "lucide-react";
+import { Loader2, Pencil, Plus, Search } from "@/components/icons";
 
 type Row = Record<string, unknown>;
 

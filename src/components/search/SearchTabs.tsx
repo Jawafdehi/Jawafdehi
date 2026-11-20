@@ -1,7 +1,7 @@
 import { useRef, type KeyboardEvent } from "react";
 
 import type { ArchiveSearchType } from "@/types/search";
-import { cn } from "@/lib/utils";
+import { chipVariants } from "@/components/ui/chip";
 
 type SearchTabsProps = {
   activeType: ArchiveSearchType;
@@ -54,7 +54,10 @@ export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) 
   return (
     <div
       aria-label="Record type"
-      className="flex gap-6 overflow-x-auto border-b border-border sm:gap-8"
+      // -m-1 p-1: the row scrolls sideways, and a scroller clips whatever
+      // spills past its box, which cut the focus ring off every pill. The
+      // padding gives the ring room; the negative margin keeps alignment.
+      className="-m-1 flex min-w-0 gap-1 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
     >
       {tabs.map((tab, index) => {
@@ -62,12 +65,9 @@ export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) 
         return (
           <button
             aria-selected={isActive}
-            className={cn(
-              "relative inline-flex min-h-11 shrink-0 items-center px-0.5 text-sm transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-center after:bg-accent after:transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isActive
-                ? "font-semibold text-primary after:scale-x-100"
-                : "font-medium text-muted-foreground after:scale-x-0 hover:text-primary",
-            )}
+            // The shared switcher pill (ui/chip), so these tabs and every
+            // other pill group on the site are one component.
+            className={chipVariants({ active: isActive })}
             key={tab.type}
             onClick={() => onChange(typeParam(tab.type))}
             onKeyDown={(event) => handleKeyDown(event, index)}

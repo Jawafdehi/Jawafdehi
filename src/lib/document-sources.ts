@@ -11,7 +11,7 @@
  * up here with no frontend release.
  */
 
-import { MATERIAL_SERIES } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesSearchPath } from "@/data/material-series";
 import { getDocumentSources } from "@/services/jds-api";
 
 export interface BilingualLabel {
@@ -74,16 +74,17 @@ export function listedSources(response: DocumentSourcesResponse | undefined | nu
 }
 
 /**
- * Where to browse one source. A source that a curated shelf covers whole
- * (one shelf, no kind narrowing) links to that shelf, keeping its editorial
- * wording. Every other source gets the generic per-source view.
+ * Where to browse one source: the Documents tab of the archive search, filtered.
+ * A source that a curated series covers whole (one series, no kind narrowing)
+ * opens as that series, keeping its editorial wording; every other source opens
+ * as a plain source filter.
  */
 export function sourceBrowseHref(source: string): string {
   const curated = MATERIAL_SERIES.filter((series) => series.source === source);
   if (curated.length === 1 && !curated[0].kind && !curated[0].kindExclude) {
-    return `/materials/?series=${curated[0].slug}`;
+    return seriesSearchPath(curated[0].slug);
   }
-  return `/materials/?source=${encodeURIComponent(source)}`;
+  return `/search?type=material&source=${encodeURIComponent(source)}`;
 }
 
 /** A bilingual label in the reader's language, falling back to the other one. */

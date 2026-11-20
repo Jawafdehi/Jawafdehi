@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search } from "@/components/icons";
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatIndianNumber } from "@/utils/number";
+import { DisclosureRow, OptionList, OptionMarker } from "@/components/search/filter-controls";
 import type {
   ArchiveSearchFacets,
   ArchiveSearchType,
@@ -14,10 +16,12 @@ import type {
 } from "@/types/search";
 import { BigoRangeFilterSkeleton } from "@/components/search/BigoRangeFilterSkeleton";
 import { DateRangeFilter } from "@/components/search/DateRangeFilter";
+import { SeriesFilter } from "@/components/search/SeriesFilter";
 import { LazyBigoRangeFilter } from "@/components/search/LazyBigoRangeFilter";
 import type { BigoExtent } from "@/lib/bigo-range";
 import type { DateBounds } from "@/lib/date-range";
 import { getFacetItemLabel } from "@/utils/case-entities";
+import { filterGroupsFor } from "@/components/search/filter-groups";
 
 export type SidebarFilterName =
   | "entity_type"
@@ -38,53 +42,13 @@ export type SidebarFilterName =
  * sidebar. Neither number is a data limit, so the group cannot show everything
  * and cannot be scanned; it needs both a cut and a way to search past it.
  */
-const COLLAPSED_COUNT = 8;
-const SEARCHABLE_THRESHOLD = 8;
-
-// `title` is the English fallback; `titleKey` resolves the Nepali label from the
-// bilingual bundle (see src/i18n/locales/*.json → archiveSearch.filters).
-const FILTER_GROUPS: {
-  name: SidebarFilterName;
-  titleKey: string;
-  title: string;
-}[] = [
-  {
-    name: "entity_type",
-    titleKey: "archiveSearch.filters.entityType",
-    title: "Entity type",
-  },
-  {
-    name: "court_type",
-    titleKey: "archiveSearch.filters.courtType",
-    title: "Court level",
-  },
-  {
-    name: "province",
-    titleKey: "archiveSearch.filters.province",
-    title: "Province",
-  },
-  {
-    name: "district",
-    titleKey: "archiveSearch.filters.district",
-    title: "District",
-  },
-  {
-    name: "court",
-    titleKey: "archiveSearch.filters.court",
-    title: "Court",
-  },
-  {
-    name: "material_type",
-    titleKey: "archiveSearch.filters.materialType",
-    title: "Document type",
-  },
-  {
-    name: "case_type",
-    titleKey: "archiveSearch.filters.caseType",
-    title: "Case type",
-  },
-  { name: "tags", titleKey: "archiveSearch.filters.tags", title: "Tags" },
-];
+// A group of up to TRUNCATE_ABOVE options shows them all: a reader takes in ten
+// at a glance (Province's seven never hide). Past that, the top COLLAPSED_COUNT
+// by count show, with a search box and "Show all N" (Baymard Institute's
+// guidance for long facet lists).
+const TRUNCATE_ABOVE = 10;
+const COLLAPSED_COUNT = 5;
+const SEARCHABLE_THRESHOLD = TRUNCATE_ABOVE;
 
 type SearchFiltersProps = {
   facets: ArchiveSearchFacets;
@@ -104,6 +68,12 @@ type SearchFiltersProps = {
   dateFrom?: string;
   dateTo?: string;
   onDateCommit: (bounds: DateBounds) => void;
+  /** The series in force on the Documents tab (a registry slug), and its setter. */
+  series?: string;
+  onSeriesChange?: (slug: string | undefined) => void;
+  /** "panel" (default): its own grey surface and header. "sheet": bare, for
+   * the "All filters" sheet. */
+  variant?: "panel" | "sheet";
 };
 
 export function SearchFilters({
@@ -119,22 +89,39 @@ export function SearchFilters({
   dateFrom,
   dateTo,
   onDateCommit,
+  series,
+  onSeriesChange,
+  variant = "panel",
 }: Readonly<SearchFiltersProps>) {
   const { t } = useTranslation();
+  // In the "All filters" sheet the sheet supplies the title, the Clear action
+  // and the surface, so the panel drops all three.
+  const inSheet = variant === "sheet";
 
   return (
     <aside
       aria-label="Archive search filters"
-      className="space-y-4 rounded-xl bg-card p-4"
+      // In the sheet each group's legend is a real section title — navy, a
+      // size up — so the drawer's structure reads at a glance. The chips'
+      // popovers name their group on the chip, so they keep the quiet label.
+      className={
+        inSheet
+          ? "space-y-8 [&_legend]:mb-2.5 [&_legend]:text-base [&_legend]:font-medium [&_legend]:text-primary"
+          : "space-y-5 rounded-[22px] bg-muted px-4 py-4"
+      }
     >
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-sm font-bold tracking-tight text-foreground">
-          Filters
-        </h2>
-        <Button className="h-11 px-3 text-xs" onClick={onClear} variant="ghost">
-          Clear
-        </Button>
-      </div>
+      {/* Not rendered at all in the sheet: even hidden it is the first child,
+          so space-y pushed the first group a full gap below the sheet title. */}
+      {inSheet ? null : (
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-base font-medium text-primary">
+            Filters
+          </h2>
+          <Button className="h-9 px-3 text-sm font-normal text-muted-foreground hover:text-primary" onClick={onClear} variant="ghost">
+            Clear
+          </Button>
+        </div>
+      )}
 
       {/*
         FIRST in the sidebar, ABOVE the term facets. It used to sit under the
@@ -177,6 +164,9 @@ export function SearchFilters({
         actually supports it — 93% of materials carry a date. Widening this to
         court cases is a one-line change to this condition once someone wants it.
       */}
+      {selectedType === "material" && onSeriesChange ? (
+        <SeriesFilter onChange={onSeriesChange} value={series} />
+      ) : null}
       {selectedType === "material" ? (
         <DateRangeFilter
           from={dateFrom}
@@ -184,46 +174,7 @@ export function SearchFilters({
           to={dateTo}
         />
       ) : null}
-      {FILTER_GROUPS
-        // "Entity type" only makes sense while browsing Entities — for every
-        // other record type (or "all") its buckets are either irrelevant or,
-        // as originally reported, collapse to a single confusing value.
-        .filter(({ name }) => {
-          if (name === "entity_type") return selectedType === "entity";
-          // Court facets are intentionally absent from the all-records view:
-          // applying one there hides unrelated entity/material/case results,
-          // while the control itself is only useful once Court cases is selected.
-          if (name === "court" || name === "court_type") {
-            return selectedType === "courtcase";
-          }
-          // District/Province are no longer court facets. They now carry SUBJECT
-          // geography — which district a record is ABOUT — and court cases,
-          // Jawafdehi cases and entities all populate them (the API resolves a
-          // case's own `location` bind and promotes it onto the entities that
-          // case cites). So the control belongs on all three tabs, not just the
-          // one that used to own the field.
-          //
-          // Still withheld from "all records", and for the ORIGINAL reason
-          // rather than inertia: materials carry no geography at all, so a
-          // ticked district would silently drop 346k of the 398k documents
-          // through a control the reader cannot see from that tab. The same
-          // argument that keeps `material_type` off the other tabs keeps this
-          // one off the combined view. Enabling it there is a one-line change if
-          // "everything about Kathmandu" turns out to be worth losing materials
-          // for.
-          if (name === "district" || name === "province") {
-            return (
-              selectedType === "courtcase" ||
-              selectedType === "case" ||
-              selectedType === "entity"
-            );
-          }
-          // Document type is scoped the same way, and for the same reason: only
-          // materials carry one, so the buckets are empty everywhere else and a
-          // stale token would narrow another tab through an invisible control.
-          if (name === "material_type") return selectedType === "material";
-          return true;
-        })
+      {filterGroupsFor(selectedType)
         .map(({ name, titleKey, title }) => (
           <FilterGroup
             items={facets[name]}
@@ -275,7 +226,7 @@ export function SearchFiltersSkeleton({
   return (
     <aside
       aria-hidden="true"
-      className="space-y-4 rounded-xl bg-card p-4"
+      className="space-y-5 rounded-[22px] bg-muted px-4 py-4"
     >
       <div className="flex h-8 items-center justify-between gap-4">
         <Skeleton className="h-4 w-14" />
@@ -346,18 +297,25 @@ export function SearchFiltersSkeleton({
   );
 }
 
-function FilterGroup({
+export function FilterGroup({
   items,
   name,
   onToggle,
   selectedValues,
   title,
+  inPopover = false,
 }: Readonly<{
   items: SearchFacetItem[];
   name: SidebarFilterName;
   onToggle: (name: SidebarFilterName, value: string) => void;
   selectedValues: string[];
   title: string;
+  /**
+   * In a chip's popover the whole list shows and the panel scrolls, under a
+   * search box pinned to its top: the popover already IS the "more", so a
+   * "Show all" inside it was a second click to reach the same options.
+   */
+  inPopover?: boolean;
 }>) {
   const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
@@ -402,7 +360,7 @@ function FilterGroup({
   // instant; below that it is chrome over five options.
   const isSearchable = labelled.length > SEARCHABLE_THRESHOLD;
   // While searching, show every match — the reader has already narrowed.
-  const isCollapsed = !expanded && !needle && matches.length > COLLAPSED_COUNT;
+  const isCollapsed = !inPopover && !expanded && !needle && matches.length > TRUNCATE_ABOVE;
   const visible = isCollapsed ? matches.slice(0, COLLAPSED_COUNT) : matches;
   const hiddenCount = matches.length - visible.length;
 
@@ -412,15 +370,16 @@ function FilterGroup({
     // min-w-0: <fieldset> defaults to min-width:min-content and ignores width
     // constraints, so a long facet name would overflow the viewport on mobile.
     <fieldset className="min-w-0 space-y-2">
-      <legend className="mb-1.5 text-sm font-semibold text-foreground">
+      <legend className="mb-1.5 text-sm text-muted-foreground">
         {title}
       </legend>
 
       {isSearchable ? (
+        <div className={cn(inPopover && "sticky -top-3 z-10 -mx-3 !-mt-3 bg-popover px-3 pb-1 pt-3")}>
         <div className="relative">
           <Search
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           />
           {/* font-input rather than a raw size: a sub-16px field zooms the
               page on iOS when focused. The class is 16px on touch and 14px
@@ -429,7 +388,7 @@ function FilterGroup({
             aria-label={t("archiveSearch.filterSearch", "Search {{filter}}", {
               filter: title,
             })}
-            className="h-9 rounded-full pl-9 font-input"
+            className="h-10 rounded-full border-border bg-surface pl-9 font-input shadow-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/[0.07] focus-visible:ring-offset-0"
             id={searchId}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("archiveSearch.filterSearch", "Search {{filter}}", {
@@ -439,67 +398,56 @@ function FilterGroup({
             value={query}
           />
         </div>
+        </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-1.5">
+      {/* A quiet checklist: a small box, the label, the count in grey on the
+          right. Compact and scannable where a cloud of bordered pills was not. */}
+      <OptionList>
         {visible.map(({ item, label }) => {
           const isChecked = selectedValues.includes(item.name);
           return (
             <label
               className={cn(
-                "inline-flex min-h-9 max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors",
-                "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-                isChecked
-                  ? "border-primary bg-primary-surface text-primary-foreground"
-                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                "flex min-h-10 cursor-pointer items-center gap-3 rounded-xl px-2.5 text-[15px] transition-colors",
+                // Keyboard focus only: the sheet focuses its first control on open,
+                // and a ring on a row nobody tabbed to reads as a selection.
+                "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-1",
+                isChecked ? "text-primary" : "text-primary/80 hover:bg-muted hover:text-primary",
               )}
               key={item.name}
               title={label}
             >
-              {/* Visually hidden but still the real control: the pill IS the
+              {/* Visually hidden but still the real control: the row IS the
                   checkbox, so the role, checked state and accessible name stay
-                  exactly as they were before the restyle. */}
+                  exactly as they were. */}
               <Checkbox
                 aria-label={`${label}: ${item.count} results`}
                 checked={isChecked}
                 className="sr-only"
                 onCheckedChange={() => onToggle(name, item.name)}
               />
-              <span className="min-w-0 truncate">{label}</span>
-              <span
-                aria-hidden="true"
-                className="shrink-0 text-xs tabular-nums opacity-70"
-              >
-                {item.count}
+              <OptionMarker checked={isChecked} shape="box" />
+              <span className="min-w-0 flex-1 truncate">{label}</span>
+              <span aria-hidden="true" className="shrink-0 text-[13px] tabular-nums text-muted-foreground">
+                {formatIndianNumber(item.count)}
               </span>
             </label>
           );
         })}
+      </OptionList>
 
-        {hiddenCount > 0 ? (
-          <Button
-            className="h-9 rounded-full px-3 text-sm font-normal"
-            onClick={() => setExpanded(true)}
-            size="sm"
-            type="button"
-            variant="secondary"
-          >
-            {t("archiveSearch.filterMore", "More")}
-          </Button>
-        ) : null}
-
-        {expanded && !needle && matches.length > COLLAPSED_COUNT ? (
-          <Button
-            className="h-9 rounded-full px-3 text-sm font-normal"
-            onClick={() => setExpanded(false)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            {t("archiveSearch.filterLess", "Less")}
-          </Button>
-        ) : null}
-      </div>
+      {/* One row that shows the rest and then folds them away again, in the
+          list's own column — not a ghost button floating under it. */}
+      {!inPopover && (hiddenCount > 0 || (expanded && !needle && matches.length > TRUNCATE_ABOVE)) ? (
+        <OptionList>
+          <DisclosureRow open={hiddenCount === 0} onClick={() => setExpanded(hiddenCount > 0)}>
+            {hiddenCount > 0
+              ? t("archiveSearch.filterShowAll", "Show all {{count}}", { count: matches.length })
+              : t("archiveSearch.filterShowFewer", "Show fewer")}
+          </DisclosureRow>
+        </OptionList>
+      ) : null}
 
       {needle && matches.length === 0 ? (
         <p className="px-1 text-sm text-muted-foreground">

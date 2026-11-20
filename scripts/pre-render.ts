@@ -13,23 +13,25 @@ import {
   type SearchIndexFile,
   type SearchIndexLine,
 } from '../src/data/site-routes.ts';
-import { CASES_PAGE_SIZE, caseBrowsePagePaths } from './case-browse-pages.ts';
 import {
   summarisePrefetchFailures,
   type PrefetchReport,
   type RoutePrefetchFailure,
 } from '../src/lib/ssr-prefetch.ts';
-import { buildAuthToken, hasBuildCredentials } from './build-auth.ts';
+import { WHATS_NEW, whatsNewPostPath } from '../src/data/whats-new.ts';
+import { buildAuthHeaders, buildAuthToken, hasBuildCredentials } from './build-auth.ts';
+import { fetchWithRetry } from './build-fetch.ts';
 import { injectIntoTemplate } from '../src/lib/ssr-template.ts';
 
-// What this script renders: the fixed top-level routes, case browse pages
-// 2..N and the update articles — a few hundred pages, whatever the size of the
+// What this script renders: the fixed top-level routes, the product-update posts
+// and the update articles — a few hundred pages, whatever the size of the
 // archive. Record pages (/case/*, /entity/*, /material/*, /courtcase/*) are NOT
 // rendered here: the Worker renders them on request and caches them (see the
 // "Edge SSR" section of worker.ts). It used to pre-render every case and up to
 // 10,000 entities, which meant walking the whole case archive on every build,
 // thousands of upstream calls, and a dist/ that crept toward Cloudflare's
-// 20,000-file ceiling.
+// 20,000-file ceiling. The /cases browse pages main renders are gone on this
+// branch: /cases redirects into /search.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -366,19 +368,16 @@ async function main() {
     }
   };
 
-  // Is the API reachable? Answered by the case count the browse pages need
-  // anyway (one call), so the probe costs nothing extra. When it is not, the
-  // build fails here — every page that prefetches would ship empty — unless
-  // PRERENDER_ALLOW_EMPTY_PREFETCH=1, in which case the static routes are
-  // rendered with an empty cache and the browse pages are skipped.
-  //
-  // ⚠️ The page count comes from caseBrowsePagePaths() — the search index, the
-  // same count Cases.tsx pages against — never from a case list. See
-  // scripts/case-browse-pages.ts for why the two can disagree.
-  let casePagePaths: string[] = [];
-  let apiReachable = true;
+  // Is the API reachable? One cheap search call (retried like every build
+  // fetch). When it is not, the build fails here — every page that prefetches
+  // would ship empty — unless PRERENDER_ALLOW_EMPTY_PREFETCH=1, in which case
+  // the static routes are rendered with an empty cache.
   try {
-    casePagePaths = (await caseBrowsePagePaths(API_BASE)).slice(1);
+    const probe = await fetchWithRetry(`${API_BASE}/search/?type=case&page_size=1`, {
+      headers: await buildAuthHeaders(),
+    });
+    if (!probe.ok) throw new Error(`API error ${probe.status} probing ${API_BASE}`);
+    await probe.body?.cancel().catch(() => {});
   } catch (err) {
     if (!ALLOW_EMPTY_PREFETCH) {
       console.error('[pre-render] ERROR: the API is unreachable, so every pre-rendered page would ship empty:', err);
@@ -386,7 +385,6 @@ async function main() {
       process.exit(1);
     }
     console.warn('[pre-render] WARNING: API unreachable, rendering static routes only:', err);
-    apiReachable = false;
   }
 
   // Render static routes
@@ -408,46 +406,21 @@ async function main() {
     }
   }
 
-  // Render pages 2..N of the case browse. Page 1 is `/cases`, already rendered
-  // above as a static route.
-  //
-  // These are the crawl path into the archive: the only links to every case
-  // page, now that the case pages themselves are rendered at the edge. One
-  // render and one search call per page (~220), concurrent, in every scope —
-  // pagination that silently stopped emitting pages is exactly the regression
-  // a preview build should catch.
-  //
-  // A failure here is fatal: a missing listing page breaks the chain that
-  // reaches every page after it. Record the first ordinary error, let the pool
-  // drain, then exit — rather than calling process.exit() from inside a worker
-  // while other renders are mid-write. SuspenseStubError still rejects the pool
-  // immediately; it is a code-level mistake, not a flaky request.
-  if (apiReachable) {
-    let browseFailure: { path: string; err: unknown } | null = null;
-    await withConcurrency(casePagePaths, CONCURRENCY, async (path) => {
-      if (browseFailure) return;
-      const outFile = join(ROOT, 'dist', path.replace(/^\//, ''), 'index.html');
-      try {
-        const result = await render(path);
-        await writeHtml(outFile, injectIntoTemplate(template, result));
-        notePrefetch(path, result);
-        console.log(`[pre-render] ✓ ${path}`);
-      } catch (err) {
-        if (err instanceof SuspenseStubError) throw err;
-        browseFailure ??= { path, err };
-      }
-    });
-    if (browseFailure) {
-      console.error(`[pre-render] ERROR rendering ${browseFailure.path}:`, browseFailure.err);
-      if (browseFailure.err instanceof Error) console.error(browseFailure.err.stack);
+  // One post per changelog entry (src/data/whats-new.ts). Static data, so every
+  // entry is known at build time. A failure fails the build like a static route.
+  for (const entry of WHATS_NEW) {
+    const path = whatsNewPostPath(entry.id);
+    const outFile = join(ROOT, 'dist', path.slice(1), 'index.html');
+    try {
+      const result = await render(path);
+      await writeHtml(outFile, injectIntoTemplate(template, result));
+      notePrefetch(path, result);
+      console.log(`[pre-render] ✓ ${path}`);
+    } catch (err) {
+      console.error(`[pre-render] ERROR rendering ${path}:`, err);
+      if (err instanceof Error) console.error(err.stack);
       process.exit(1);
     }
-    console.log(
-      `[pre-render] Case browse: ${casePagePaths.length + 1} pages ` +
-      `(${CASES_PAGE_SIZE} per page)`,
-    );
-  } else {
-    console.log('[pre-render] Skipping case browse pages (API unreachable)');
   }
 
   // Render update detail routes (static data — IDs are known at build time)

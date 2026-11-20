@@ -13,28 +13,20 @@ export function KeyAllegationsSection({
   aiGenerated = false,
 }: Readonly<KeyAllegationsSectionProps>) {
   return (
-    <section id="allegations" className="mb-12 scroll-mt-28 max-w-4xl">
+    <section id="allegations" className="mb-16 scroll-mt-28">
       <CaseSectionHeading aiGenerated={aiGenerated}>{title}</CaseSectionHeading>
 
-      <div className="text-primary/75">
-        <ul className="space-y-6">
-          {allegations.map((allegation, index) => (
-            <li key={index} className="flex items-start gap-4">
-              <span className="mt-1 shrink-0 text-lg font-bold leading-7 text-accent">
-                {index + 1}.
-              </span>
-              <p className="font-paragraph measure-prose">
-                {allegation}
-              </p>
-            </li>
-          ))}
-          {allegations.length === 0 && (
-            <li className="text-base italic leading-7 text-primary/75">
-              {emptyLabel}
-            </li>
-          )}
-        </ul>
-      </div>
+      {/* A plain numbered list: the number in Inter's tabular figures, set on
+          the text's first line, and space (no rules) between allegations. */}
+      <ol className="space-y-6">
+        {allegations.map((allegation, index) => (
+          <li key={index} className="flex items-baseline gap-4 sm:gap-5">
+            <span className="w-6 shrink-0 text-base font-medium tabular-nums text-accent">{index + 1}.</span>
+            <p className="measure-prose text-lg leading-8 text-primary/85">{allegation}</p>
+          </li>
+        ))}
+        {allegations.length === 0 && <li className="text-lg leading-8 text-muted-foreground">{emptyLabel}</li>}
+      </ol>
     </section>
   );
 }

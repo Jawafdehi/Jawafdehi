@@ -98,10 +98,10 @@ describe("ArchiveBrowser", () => {
     expect(screen.getAllByRole("listbox")).toHaveLength(3);
   });
 
-  it("shows a series' preview with a View all link that leaves for its listing", async () => {
+  it("shows a series' preview with a View all link into the archive search, scoped to it", async () => {
     renderAt("/materials/?view=columns&path=judiciary/supreme-court/supreme-court-precedents");
     const link = await screen.findByRole("link", { name: /View all/ });
-    expect(link.getAttribute("href")).toBe("/materials/?series=supreme-court-precedents");
+    expect(link.getAttribute("href")).toBe("/search?type=material&series=supreme-court-precedents");
     await waitFor(() => expect(document.querySelector("[data-preview]")?.textContent).toContain("10,554"));
   });
 

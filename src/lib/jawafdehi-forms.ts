@@ -9,6 +9,9 @@ import type {
   DocumentSourceType,
 } from "@/types/jds";
 import { CASE_STAGE_NAMES, isCaseStageName } from "@/utils/case-stages";
+
+// The admin screens import the case-state type from here, beside its values.
+export type { CaseState };
 import type { PatchOp } from "@/services/admin-api";
 import { isValidEntityIri } from "@/lib/datalake-forms";
 import { parseCourtCaseRef } from "@/utils/courtCaseRef";

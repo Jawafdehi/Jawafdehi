@@ -40,20 +40,38 @@ export type AnalyticsEvent =
   | {
       name: 'donate_click';
       params: {
-        method: 'nepal_bank' | 'zeffy' | 'paypal' | 'nav';
-        action:
-          | 'copy_account'
-          | 'outbound'
-          // Zeffy opens in a dialog, so its donors never fire `outbound` —
-          // separate tokens keep "opened the form" distinguishable from "left
-          // for PayPal" instead of merging them into one meaningless number.
-          | 'modal_open'
-          | 'give_now'
-          | 'contact';
+        // The rails, `nav`, the hero's contact channels, and the Nepal /
+        // abroad switch (`region_toggle`, whose action is the side chosen).
+        method: DonateMethod;
+        action: DonateAction;
         link_url?: string;
       };
     }
   | { name: 'allegation_submitted'; params?: Record<string, never> };
+
+export type DonateMethod =
+  | 'nepal_bank'
+  | 'zeffy'
+  | 'paypal'
+  | 'nav'
+  | 'email'
+  | 'facebook'
+  | 'whatsapp'
+  | 'region_toggle';
+
+export type DonateAction =
+  | 'copy_account'
+  | 'copy_name'
+  | 'copy_bank'
+  | 'outbound'
+  // Zeffy opens in a dialog, so its donors never fire `outbound` — separate
+  // tokens keep "opened the form" distinguishable from "left for PayPal"
+  // instead of merging them into one meaningless number.
+  | 'modal_open'
+  | 'give_now'
+  | 'contact'
+  | 'nepal'
+  | 'abroad';
 
 type AnalyticsEventParams<T extends AnalyticsEvent['name']> =
   Extract<AnalyticsEvent, { name: T }>['params'];

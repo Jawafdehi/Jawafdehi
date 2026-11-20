@@ -11,9 +11,8 @@
 import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 
-import { Badge } from "@/components/ui/badge";
 import { EntityIdentity } from "@/components/EntityIdentity";
 import { Reveal } from "@/components/ui/reveal";
 import type { JawafEntity } from "@/types/jds";
@@ -107,7 +106,11 @@ function entityKind(jawafEntity: JawafEntity, entity: Entity | null) {
 // for the first ~100ms, which reads as lag on a hover.)
 const EASE_OUT = "[transition-timing-function:cubic-bezier(0.23,1,0.32,1)]";
 
-const SURFACE = "bg-muted/50 transition-colors duration-200 group-hover:bg-muted/70";
+// Hairline cards, as everywhere in the redesign; the border darkens on hover.
+// Strips a badge's fill, border and padding, keeping only its text colour.
+const TEXT_ONLY = "border-0 bg-transparent px-0 py-0 shadow-none dark:bg-transparent";
+
+const SURFACE = "border border-border/70 bg-surface transition-colors duration-200 group-hover:border-primary/25";
 
 // Flip: the back face is pre-rotated and both faces hide their backface; the
 // inner wrapper rotates whenever the card is `revealed` (data-flipped).
@@ -224,25 +227,26 @@ function EntityCard({ jawafEntity, entity, language, forum, appeal }: Readonly<E
       {showOutcome && (
         // Stacked, not side by side: the appeal line reads as a qualifier of
         // the verdict above it.
-        <div className="mt-3 flex flex-col items-center gap-1">
-          <Badge variant="outline" className={outcomeBadgeClass(jawafEntity.outcome)}>
+        // No pills: the verdict is a line of text under the name, in its
+        // outcome colour (convicted red, acquitted green…) without the fill.
+        <div className="mt-2.5 flex flex-col items-center gap-0.5 text-sm leading-5">
+          <span className={cn(outcomeBadgeClass(jawafEntity.outcome), TEXT_ONLY)}>
             {outcomeWithForumLabel(jawafEntity.outcome, outcomeForum, language)}
-          </Badge>
+          </span>
           {showAppeal && (
-            <Badge
-              variant="outline"
-              className={appealBadgeClass(appeal.result, jawafEntity.outcome)}
+            <span
+              className={cn(appealBadgeClass(appeal.result, jawafEntity.outcome), TEXT_ONLY)}
               data-testid="entity-card-appeal"
             >
               {appealWithForumLabel(appeal, language)}
-            </Badge>
+            </span>
           )}
         </div>
       )}
     </EntityIdentity>
   );
   const frontClass = cn(
-    "relative flex h-full min-h-[15rem] w-full flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center",
+    "relative flex h-full min-h-[13rem] w-full flex-col items-center justify-center gap-3 rounded-[20px] p-5 text-center",
     SURFACE,
   );
 
@@ -250,7 +254,7 @@ function EntityCard({ jawafEntity, entity, language, forum, appeal }: Readonly<E
   // put and the front itself links to the profile.
   if (!notes) {
     const staticClass = cn(
-      "group relative block h-full touch-manipulation rounded-2xl transition-transform duration-200 [-webkit-tap-highlight-color:transparent]",
+      "group relative block h-full touch-manipulation rounded-[20px] transition-transform duration-200 [-webkit-tap-highlight-color:transparent]",
       EASE_OUT,
       href &&
         "hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0",
@@ -295,7 +299,7 @@ function EntityCard({ jawafEntity, entity, language, forum, appeal }: Readonly<E
   // swap on hover, so a left-aligned details face made the text jump to the edge
   // the moment the card turned, while every neighbouring card stayed centred.
   const backClass = cn(
-    "absolute inset-0 flex flex-col gap-3 rounded-2xl p-4 text-center",
+    "absolute inset-0 flex flex-col gap-3 rounded-[20px] p-5 text-center",
     href && "cursor-pointer focus-visible:outline-none",
     SURFACE,
     FLIP_BACK,
@@ -323,7 +327,7 @@ function EntityCard({ jawafEntity, entity, language, forum, appeal }: Readonly<E
     <div
       ref={cardRef}
       className={cn(
-        "group relative h-full touch-manipulation rounded-2xl transition-transform duration-200 [-webkit-tap-highlight-color:transparent] [perspective:1200px]",
+        "group relative h-full touch-manipulation rounded-[20px] transition-transform duration-200 [-webkit-tap-highlight-color:transparent] [perspective:1200px]",
         EASE_OUT,
         "hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:hover:translate-y-0",
       )}
@@ -409,8 +413,8 @@ export function CaseEntityCards({
             aria-expanded={isExpanded}
             onClick={() => setIsExpanded((v) => !v)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-primary",
-              "transition-[transform,background-color,border-color] duration-150 hover:border-primary/30 hover:bg-muted/60 active:scale-[0.97]",
+              "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-muted px-5 text-[15px] text-primary",
+              "transition-[transform,background-color] duration-150 hover:bg-primary/[0.08] active:scale-[0.97]",
               EASE_OUT,
             )}
           >

@@ -88,9 +88,13 @@ export function getCaseBadgeClassName(kind: CaseBadgeKind, value?: string | null
     );
   }
 
+  // Tags are the quietest pill: grey fill, no border, no shadow, regular
+  // weight — the same grey as the search page's chips and tabs.
   return cn(
     basePillClassName,
-    "border-primary/10 bg-primary/5 text-primary/80 hover:bg-primary/10",
+    // 13px, not the pills' 12: tags are mostly Devanagari, whose conjuncts and
+    // vowel signs turn to smudge at 12px.
+    "border-transparent bg-muted text-[13px] font-normal leading-5 text-primary/75 shadow-none hover:bg-muted/70",
     className,
   );
 }

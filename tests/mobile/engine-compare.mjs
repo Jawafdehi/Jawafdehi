@@ -22,7 +22,7 @@ const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i
 const BASE = (arg("base", "https://jawafdehi.org") || "").replace(/\/$/, "");
 const OUT = arg("out", "test-results/mobile/engines");
 
-const ROUTES = [["/", "home"], ["/cases", "cases"], ["/search?q=%E0%A4%AC%E0%A5%88%E0%A4%82%E0%A4%95", "search-results"], ["/data-quality", "data-quality"], ["/report", "report-form"], ["/research/corruption-accountability", "research"], ["/donate", "donate"]];
+const ROUTES = [["/", "home"], ["/cases", "cases"], ["/search?q=%E0%A4%AC%E0%A5%88%E0%A4%82%E0%A4%95", "search-results"], ["/data-quality", "data-quality"], ["/report", "report-form"], ["/donate", "donate"]];
 
 // Deliberately narrow: layout-only signals, so engines are comparable.
 const SNAP = () => {

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, Eye, FileText, ArrowRight } from "lucide-react";
+import { Download, Eye, FileText, ArrowRight } from "@/components/icons";
 import DOMPurify from "isomorphic-dompurify";
 import { useTranslation } from "react-i18next";
 

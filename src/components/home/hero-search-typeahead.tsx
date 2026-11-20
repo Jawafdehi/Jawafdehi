@@ -11,11 +11,12 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, FileSearch } from "lucide-react";
+import { ArrowRight, FileSearch } from "@/components/icons";
 
 import { SearchBar } from "@/components/ui/search-bar";
 import { searchArchive } from "@/services/search-api";
 import { cn } from "@/lib/utils";
+import { OVERLAY_SURFACE } from "@/components/ui/overlay-styles";
 import type { ArchiveSearchResult, BilingualText } from "@/types/search";
 
 // Auto-language, same policy as SearchResultCard: prefer English, fall back to
@@ -134,7 +135,7 @@ export function HeroSearchTypeahead() {
   };
 
   return (
-    <form className="mt-8 w-full max-w-2xl" onSubmit={onSubmit}>
+    <form className="mt-8 w-full max-w-xl" onSubmit={onSubmit}>
       <label className="sr-only" htmlFor="hero-archive-search">
         {t("home.hero.searchLabel")}
       </label>
@@ -150,8 +151,10 @@ export function HeroSearchTypeahead() {
             activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined
           }
           autoComplete="off"
-          inputClassName="h-14 rounded-full border-transparent bg-background text-base shadow-[0_24px_60px_-20px_hsl(var(--primary-foreground)/0.25)]"
-          buttonClassName="h-11 w-11 bg-accent text-accent-foreground hover:bg-accent/90"
+          // Height comes from SearchBar itself, as everywhere else; only the
+          // surface changes here, to read against the navy hero.
+          inputClassName="border-transparent bg-background shadow-[0_24px_60px_-20px_hsl(var(--primary-foreground)/0.25)]"
+          buttonClassName="bg-accent text-accent-foreground hover:bg-accent/90"
           onChange={(event) => {
             setQuery(event.target.value);
             setOpen(true);
@@ -174,7 +177,7 @@ export function HeroSearchTypeahead() {
             id={listboxId}
             role="listbox"
             aria-label={t("home.hero.suggestionsLabel")}
-            className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-border/70 bg-background p-1.5 text-left shadow-[0_24px_60px_-20px_hsl(var(--foreground)/0.35)]"
+            className={cn("absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden p-1.5 text-left", OVERLAY_SURFACE)}
           >
           {suggestions.map((result, index) => (
             <li
@@ -183,8 +186,8 @@ export function HeroSearchTypeahead() {
               role="option"
               aria-selected={index === activeIndex}
               className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-foreground transition-colors",
-                index === activeIndex ? "bg-secondary/70" : "hover:bg-secondary/40",
+                "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] text-primary/85 transition-colors",
+                index === activeIndex ? "bg-muted text-primary" : "hover:bg-muted/60",
               )}
               // preventDefault keeps the input focused so the blur handler
               // above cannot close the list before this click lands.

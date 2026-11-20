@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import ResourceTable, { type Column } from "@/components/admin/ResourceTable";
 import { listCourts } from "@/services/admin-api";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 
 type Row = Record<string, unknown>;
 const str = (v: unknown): string => (v == null ? "—" : String(v));

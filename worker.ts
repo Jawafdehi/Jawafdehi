@@ -2,8 +2,8 @@ import { WorkerEntrypoint } from 'cloudflare:workers';
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
 import { LEGACY_ENTITY_MAP } from './src/utils/legacyEntityMap';
 import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
+import { RESEARCH_URL } from './src/lib/external-links';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
-import { casesPageCount } from './src/lib/cases-pagination';
 import {
   encodeMaterialTail,
   isMaterialTail,
@@ -13,11 +13,15 @@ import {
   materialJsonLd,
   materialMetaDescription,
   materialMetaTitle,
+  materialCardUrl,
+  MATERIAL_CARD_WIDTH,
+  MATERIAL_CARD_HEIGHT,
   materialRobots,
   materialTypeLabel,
   type MaterialMetaSource,
 } from './src/lib/material-meta';
 import { JAWAFDEHI_WEEKLY_SERIES } from './src/config/constants';
+import { archiveSearchUrl, retiredBrowseType } from './src/lib/archive-redirect';
 import {
   AUTHOR_CARD_HEIGHT,
   AUTHOR_CARD_WIDTH,
@@ -105,7 +109,7 @@ const META_FETCH_TIMEOUT_MS = 4000;
 const CARD_FETCH_TIMEOUT_MS = 10000;
 // A day, matching the API's `s-maxage`. This is the window in which a profile
 // edit (new photo, corrected role) reaches a shared link.
-const AUTHOR_CARD_TTL_SECONDS = 86400;
+const AUTHOR_CARD_TTL_SECONDS = 86400; // also the document cards' TTL
 
 // X-Robots-Tag for every response that serves an original source document.
 const ORIGINAL_DOCUMENT_ROBOTS = 'noindex, nofollow, noarchive';
@@ -374,60 +378,6 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
 
 // Fetch with a hard timeout. Resolves to null (rather than throwing) on timeout,
 // network error, or non-OK status, so callers cleanly fall through to the SPA.
-/** Edge-cache key for the archive's page count. Not a real route; never served. */
-const CASE_PAGE_COUNT_CACHE_KEY = `${SITE_URL}/__internal/case-page-count`;
-// Five minutes. Long enough that a burst of bogus /cases/page/ requests costs
-// one upstream call rather than thousands, short enough that a newly published
-// page stops 404ing well before anyone notices.
-const CASE_PAGE_COUNT_TTL_SECONDS = 300;
-
-/**
- * Is this `/cases/page/:page` number past the end of the archive?
- *
- * Fails OPEN — an unreachable or slow API returns `false`, so the page is served
- * as a 200 rather than 404'd. That is the same call `fetchWithTimeout` documents
- * below and `handleCaseMetaFallback` makes: turning a live page into a 404 over a
- * backend blip is worse than the soft 404 this is replacing, because a 404 is
- * what actually removes a URL from the index.
- */
-async function isCasePageOutOfRange(raw: string | undefined): Promise<boolean> {
-  // Page 1 is `/cases`, so `/cases/page/1` is a second name for it and never
-  // valid. Non-numeric, zero, negative and padded forms are not pages at all —
-  // and none of them need the API to say so, which keeps `/cases/page/abc`
-  // floods off the upstream entirely.
-  if (!raw || !/^[1-9]\d*$/.test(raw)) return true;
-  const page = Number(raw);
-  if (page < 2) return true;
-
-  const cache = caches.default;
-  const key = new Request(CASE_PAGE_COUNT_CACHE_KEY);
-  let totalPages: number | null = null;
-
-  const cached = await cache.match(key);
-  if (cached) {
-    const parsed = Number(await cached.text());
-    totalPages = Number.isFinite(parsed) ? parsed : null;
-  } else {
-    const res = await fetchWithTimeout(`${JDS_API_BASE}/search/?type=case&page_size=1`);
-    if (!res?.ok) return false;
-    try {
-      const data = (await res.json()) as { count?: unknown };
-      if (typeof data.count !== 'number') return false;
-      totalPages = casesPageCount(data.count);
-    } catch {
-      return false;
-    }
-    await cache.put(
-      key,
-      new Response(String(totalPages), {
-        headers: { 'Cache-Control': `public, max-age=${CASE_PAGE_COUNT_TTL_SECONDS}` },
-      }),
-    );
-  }
-
-  return totalPages !== null && page > totalPages;
-}
-
 async function fetchWithTimeout(
   url: string,
   redirect: RequestRedirect = 'follow',
@@ -667,7 +617,7 @@ async function handleCaseMetaFallback(
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.
-async function handleUpdateMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
+async function handleUpdateMetaFallback(request: Request, env: Env, slug: string, basePath = '/updates'): Promise<Response | null> {
   const apiResponse = await fetchWithTimeout(
     `${CMS_API_BASE}/pages/?type=content.ArticlePage&slug=${encodeURIComponent(slug)}&fields=*`,
   );
@@ -690,7 +640,7 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
     stripHtml(typeof article.excerpt === 'string' ? article.excerpt : '') ||
     `An update from ${SITE_NAME}.`,
   );
-  const canonicalUrl = `${SITE_URL}/updates/${encodeURIComponent(slug)}`;
+  const canonicalUrl = `${SITE_URL}${basePath}/${encodeURIComponent(slug)}`;
   // The social rendition has to be picked HERE, not only in <Seo>: an unfurler
   // never runs the React app, so this worker-injected head is the only one it
   // sees. `og_image` is a 1200x630 JPEG — the ratio unfurlers want, and not the
@@ -847,11 +797,14 @@ async function handleMaterialMetaFallback(
     title: materialMetaTitle(displayName),
     description,
     canonicalUrl: materialCanonicalUrl(tail),
-    // Materials carry no image of their own, so the site card is the honest
-    // choice; no imageWidth/imageHeight, matching how buildMetaTags is called
-    // elsewhere for the shared fallback card.
-    imageUrl: SOCIAL_IMAGE_URL,
+    // The document's own composed card (its kind, its title, an invitation
+    // into the archive), never the site banner: every material used to unfurl
+    // identically. The card route falls back to the banner by itself when the
+    // API cannot answer, so this URL is always an image.
+    imageUrl: materialCardUrl(tail),
     imageAlt: displayName,
+    imageWidth: MATERIAL_CARD_WIDTH,
+    imageHeight: MATERIAL_CARD_HEIGHT,
     type: 'article',
     publishedTime:
       typeof material.datePublished === 'string' ? material.datePublished : null,
@@ -888,13 +841,40 @@ async function handleMaterialMetaFallback(
 // of serving an error: an unfurler that gets a non-image for og:image shows NO
 // image, which is worse than a generic one.
 async function handleAuthorCard(request: Request, slug: string): Promise<Response> {
+  return handleComposedCard(
+    request,
+    `${JDS_API_BASE}/authors/${encodeURIComponent(slug)}/og-card.jpg`,
+  );
+}
+
+// A document's composed share card, proxied exactly as the author card is.
+//
+// `/assets/og/material/*` matches at any depth, so the splat is checked with
+// isMaterialTail before it reaches a URL, for the same reason the material
+// head fallback checks it: `..` segments would otherwise normalise into a
+// different API endpoint. A bad tail gets the banner, not an error — it is
+// still an og:image URL, and an unfurler shown a non-image shows nothing.
+async function handleMaterialCard(request: Request, tail: string): Promise<Response> {
+  if (!isMaterialTail(tail)) {
+    return new Response(null, {
+      status: 302,
+      headers: { Location: SOCIAL_IMAGE_URL, 'Cache-Control': 'no-store' },
+    });
+  }
+  return handleComposedCard(
+    request,
+    `${JDS_API_BASE}/materials/${encodeMaterialTail(tail)}/og-card.jpg`,
+  );
+}
+
+// Shared by both cards: edge-cached for a day on success, the static banner on
+// any failure.
+async function handleComposedCard(request: Request, upstreamUrl: string): Promise<Response> {
   const cache = caches.default;
   const cached = await cache.match(request);
   if (cached) return cached;
 
-  const upstream = await fetchImageWithTimeout(
-    `${JDS_API_BASE}/authors/${encodeURIComponent(slug)}/og-card.jpg`,
-  );
+  const upstream = await fetchImageWithTimeout(upstreamUrl);
 
   if (!upstream || !upstream.ok) {
     // 404 (no such public author) and 503 (the API cannot shape the name) both
@@ -912,9 +892,10 @@ async function handleAuthorCard(request: Request, slug: string): Promise<Respons
       'Cache-Control': `public, max-age=${AUTHOR_CARD_TTL_SECONDS}`,
     },
   });
-  // Only successful responses are cached. The clone is required: the body is a
-  // stream and can be read once.
-  await cache.put(request, response.clone());
+  // Only successful GETs are cached: Cloudflare's cache.put throws on any other
+  // method, and these routes also answer HEAD. The clone is required: the body
+  // is a stream and can be read once.
+  if (request.method === 'GET') await cache.put(request, response.clone());
   return response;
 }
 
@@ -1271,6 +1252,23 @@ export default {
       return handleAuthorCard(request, decodeURIComponent(authorCardMatch[1]));
     }
 
+    // Document share cards, matched here for the same reason the author card
+    // is. The tail is percent-decoded per segment, the inverse of
+    // encodeMaterialTail, so a Devanagari ident reaches the API as itself.
+    const materialCardMatch = endpoint.match(/^\/assets\/og\/material\/(.+)\.jpg$/);
+    if (materialCardMatch) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response('Method Not Allowed', { status: 405 });
+      }
+      let tail: string;
+      try {
+        tail = materialCardMatch[1].split('/').map(decodeURIComponent).join('/');
+      } catch {
+        tail = '';
+      }
+      return handleMaterialCard(request, tail);
+    }
+
     // Latest YouTube uploads for the Weekly Series "Past presentations" section
     if (endpoint === '/api/latest-videos') {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -1332,6 +1330,35 @@ export default {
       });
     }
 
+    // The retired browse pages → the typed archive search (301), query string
+    // carried across. These were in the sitemap until they folded into /search;
+    // a permanent redirect at the edge is what tells crawlers they MOVED (a 200
+    // shell with a client-side <Navigate> reads as a duplicate instead), and it
+    // keeps a bookmarked filter working without JavaScript.
+    const retiredType = retiredBrowseType(endpoint);
+    if (retiredType) {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': archiveSearchUrl(retiredType, url.search),
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
+    // /whats-new folded into Updates & News, as its product updates — 301.
+    if (endpoint === '/whats-new') {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': '/updates/?filter=product',
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Short alias: /weekly → /saptahik (301)
     if (endpoint === '/weekly') {
       return new Response(null, {
@@ -1344,25 +1371,17 @@ export default {
       });
     }
 
-    // /research → the only research publication there is (302)
-    //
-    // The SPA has no /research route, so the bare path answered 404 even though
-    // it is the address people shorten to and type. It points at the single
-    // publication because that is currently the whole of the section.
-    //
-    // TEMPORARY, hence 302 rather than the permanent 301 /weekly uses above: once
-    // there is more than one research item this redirect goes away and /research
-    // becomes the section's own dashboard page. A 301 would by then be cached in
-    // browsers we cannot reach.
-    //
-    // Target carries the trailing slash the pre-rendered page is published at, so
-    // this is one hop rather than a 302 into the assets binding's own 307.
-    if (endpoint === '/research') {
+    // Research moved to its own site, research.jawafdehi.org, and the in-app
+    // report page was removed. The section's old addresses — the bare /research
+    // people type, and the report's own URL — 301 there, query string carried
+    // (so a reel's ?utm_source still arrives). Permanent: the section does not
+    // come back to this origin.
+    if (endpoint === '/research' || endpoint === '/research/corruption-accountability') {
       return new Response(null, {
-        status: 302,
+        status: 301,
         headers: {
-          'Location': '/research/corruption-accountability/' + url.search,
-          'Cache-Control': 'public, max-age=3600',
+          'Location': RESEARCH_URL + '/' + url.search,
+          'Cache-Control': 'public, max-age=86400',
           ...secHeaders,
         },
       });
@@ -1371,7 +1390,7 @@ export default {
     // Handle legacy numeric case redirects (301)
     //
     // Target carries the trailing slash the pre-rendered page is published at,
-    // for the same reason /research above does: without it this 301 lands on a
+    // because otherwise this 301 lands on a
     // URL that immediately 307s, so /case/212 cost two hops and the middle one
     // named a redirecting URL as its canonical. Search Console counted that as
     // "Duplicate, Google chose different canonical than user" on 16 URLs.
@@ -1521,8 +1540,13 @@ export default {
       const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id, fallback);
       if (metaResponse) return markFallback(metaResponse);
     }
-    if (matched?.path === '/updates/:slug' && matched.params.slug) {
-      const metaResponse = await handleUpdateMetaFallback(request, env, matched.params.slug);
+    if ((matched?.path === '/updates/:slug' || matched?.path === '/blog/:slug') && matched.params.slug) {
+      const metaResponse = await handleUpdateMetaFallback(
+        request,
+        env,
+        matched.params.slug,
+        matched.path === '/blog/:slug' ? '/blog' : '/updates',
+      );
       if (metaResponse) return metaResponse;
     }
     if (matched?.path === '/author/:slug' && matched.params.slug) {
@@ -1545,22 +1569,7 @@ export default {
     // link checkers the site had no broken links at all. The body is still the
     // shell so React Router renders the styled NotFound page — only the status
     // line changes, which is the part crawlers read.
-    //
-    // `/cases/page/:page` is the exception to "matched means real": the route
-    // pattern matches any number, so /cases/page/9999 used to be a 200 with the
-    // SPA's NotFound rendered into it. A soft 404 is worse than a 404 — the
-    // crawler keeps the URL and keeps coming back.
-    //
-    // ⚠️ "No pre-rendered file" is NOT the same as "out of range", and treating
-    // it that way is a real bug rather than a pedantic one. Publishing enough
-    // cases to add a page makes that page live immediately: /cases/page/39
-    // hydrates against the live count, sees 40 pages, and renders a Next link to
-    // a page the last build never wrote. So the range has to come from the same
-    // count the browse page itself uses.
-    const outOfRangeCasePage =
-      matched?.path === '/cases/page/:page' &&
-      (await isCasePageOutOfRange(matched.params.page));
-    const status = matched && !outOfRangeCasePage ? 200 : 404;
+    const status = matched ? 200 : 404;
     const spaResponse = new Response(indexResponse.body, {
       status,
       headers: indexResponse.headers,

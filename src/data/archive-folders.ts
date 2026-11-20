@@ -22,7 +22,9 @@
 
 import {
   MATERIAL_SERIES,
+  seriesBySlug,
   seriesCount,
+  seriesSearchPath,
   type MaterialSeries,
 } from "@/data/material-series";
 import {
@@ -480,8 +482,44 @@ export function folderHref(path: readonly string[]): string {
   return path.length ? `/materials/?path=${path.join("/")}#archive` : "/materials/#archive";
 }
 
+/**
+ * Where a leaf opens: the archive search on Documents, scoped to it. A shelf
+ * leaf (curated or a narrowed part of a source) travels as ?series=; a source
+ * the shelves do not file travels as ?source=. There is no page of its own.
+ */
 export function leafHref(entry: ArchiveLeaf): string {
-  return `/materials/?series=${entry.slug}`;
+  if (entry.slug.startsWith(UNFILED_PREFIX)) return `/search?type=material&source=${encodeURIComponent(entry.source)}`;
+  return seriesSearchPath(entry.slug);
+}
+
+/**
+ * Any shelf leaf as a series, by slug: the curated registry first, then the
+ * folder tree's own leaves (Acts, NRB enforcement…), named with their folder
+ * ("Laws · Acts") so a filter chip reads on its own.
+ */
+export function archiveSeriesBySlug(slug: string): MaterialSeries | undefined {
+  const curatedSeries = seriesBySlug(slug);
+  if (curatedSeries) return curatedSeries;
+  for (const shelf of ARCHIVE_SHELVES) {
+    const trail = findTrail(shelf, slug);
+    if (!trail) continue;
+    const entry = trail[trail.length - 1] as ArchiveLeaf;
+    const parent = trail[trail.length - 2];
+    const name = parent
+      ? { ne: `${parent.name.ne} · ${entry.name.ne}`, en: `${parent.name.en} · ${entry.name.en}` }
+      : entry.name;
+    return { ...leafSeries(entry), name, typeLabel: name };
+  }
+  return undefined;
+}
+
+function findTrail(node: ArchiveNode, slug: string): ArchiveNode[] | null {
+  if (node.type === "leaf") return node.slug === slug ? [node] : null;
+  for (const child of node.children) {
+    const trail = findTrail(child, slug);
+    if (trail) return [node, ...trail];
+  }
+  return null;
 }
 
 /** The node's name in one language. Only API-filed leaves can lack a pair. */
