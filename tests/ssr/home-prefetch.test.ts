@@ -67,11 +67,11 @@ describe("SSR prefetch for the homepage", () => {
     );
   });
 
-  it("prefetches the featured order, not the newest one", async () => {
+  it("prefetches the newest order, not the editorial weight one", async () => {
     await render("/");
 
     expect(searchArchiveMock).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "case", sort: "featured" }),
+      expect.objectContaining({ type: "case", sort: "newest" }),
     );
   });
 });

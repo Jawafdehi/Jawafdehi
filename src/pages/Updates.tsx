@@ -11,6 +11,7 @@ import { chipVariants } from "@/components/ui/chip";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { articlePath } from "@/lib/article-path";
 import { DotField, ProductTile } from "@/components/updates/feed-tiles";
 import { entriesFor } from "@/data/whats-new";
 import { getArticles } from "@/services/cms-api";
@@ -22,7 +23,8 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 // kind of post here, next to the CMS's News and Updates, all in one feed by
 // date. The filter lives in the URL (?filter=product) so the retired /whats-new
 // can redirect onto it.
-type Filter = "ALL" | ArticleCategory | "PRODUCT";
+// Blog posts have their own page (/blog), so Updates & News never filters to them.
+type Filter = "ALL" | Exclude<ArticleCategory, "BLOG"> | "PRODUCT";
 const FILTERS: Filter[] = ["ALL", "NEWS", "UPDATE", "PRODUCT"];
 const FILTER_PARAM: Record<Filter, string> = { ALL: "", NEWS: "news", UPDATE: "update", PRODUCT: "product" };
 const FILTER_LABEL: Record<Filter, string> = { ALL: "All", NEWS: "News", UPDATE: "Updates", PRODUCT: "Product updates" };
@@ -32,7 +34,7 @@ function readFilter(value: string | null): Filter {
 }
 
 /** The feed's grid: three across on desktop, two on a tablet, one on a phone. */
-const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols-3";
+export const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols-3";
 
 /**
  * One story, in the AngelList / Beside / Lightdash listing shape: no card
@@ -41,13 +43,13 @@ const FEED_GRID = "grid grid-cols-1 gap-x-6 gap-y-12 md:grid-cols-2 lg:grid-cols
  * with no picture gets a quiet patterned tile of the same size, so the grid
  * stays even. The whole story is the link; press scales it to 0.99.
  */
-function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
+export function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
   const { t } = useTranslation();
   const image = article.thumbnail?.url;
 
   return (
     <Link
-      to={`/updates/${article.meta.slug}`}
+      to={articlePath(article)}
       data-shape={image ? "picture" : "text"}
       className="group flex h-full flex-col rounded-[22px] transition-transform duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 motion-reduce:active:scale-100"
     >
@@ -70,7 +72,7 @@ function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
       <div className="flex flex-1 flex-col pt-5">
         <div className="flex items-center justify-between gap-3">
           <CaseTagBadge className="px-3 py-1 text-sm">
-            {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
+            {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : article.category === "BLOG" ? "Blog" : "Update")}
           </CaseTagBadge>
           <span className="inline-flex items-center gap-1.5 text-[15px] text-muted-foreground">
             <Calendar className="h-4 w-4" aria-hidden="true" />
@@ -91,7 +93,7 @@ function StoryTile({ article }: Readonly<{ article: ArticleListItem }>) {
 }
 
 /** The feed while it loads: the same grid, as quiet blocks. */
-function FeedSkeleton() {
+export function FeedSkeleton() {
   const { t } = useTranslation();
   return (
     <output aria-label={t("updates.loading", "Loading updates")} className={FEED_GRID}>
@@ -134,7 +136,8 @@ const Updates = () => {
     filter === "PRODUCT"
       ? []
       : (articles ?? [])
-          .filter((article) => filter === "ALL" || article.category === filter)
+          // Blog posts live on /blog, never in this feed.
+          .filter((article) => article.category !== "BLOG" && (filter === "ALL" || article.category === filter))
           .map((article) => ({ key: `a-${article.id}`, date: article.date, node: <StoryTile article={article} /> }));
   const products: FeedItem[] =
     filter === "ALL" || filter === "PRODUCT"

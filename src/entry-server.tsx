@@ -180,11 +180,16 @@ async function prefetch(
     await queryClient.prefetchQuery({ queryKey: ['cms-articles'], queryFn: () => getArticles() });
     return;
   }
+  // The blog lists only BLOG articles, under its own key; Updates & News leaves them out.
+  if (/^\/blog\/?(?:[?#]|$)/.test(url)) {
+    await queryClient.prefetchQuery({ queryKey: ['cms-articles', 'BLOG'], queryFn: () => getArticles('BLOG') });
+    return;
+  }
 
-  // Article detail page (slug is everything after /updates/ up to /?#). Not a
+  // Article detail page: the slug after /updates/ or /blog/ up to /?#. Not a
   // product update (/updates/product/<id>): those are static data, and matching
   // them asked the CMS for an article called "product" on every render.
-  const updateMatch = url.match(/^\/updates\/(?!product\/)([^/?#]+)/);
+  const updateMatch = url.match(/^\/(?:updates\/(?!product\/)|blog\/)([^/?#]+)/);
   if (updateMatch) {
     const slug = decodeURIComponent(updateMatch[1]);
     await queryClient.prefetchQuery({

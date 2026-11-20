@@ -11,7 +11,7 @@ export interface ArticleListItem {
     html_url?: string | null;
   };
   title: string;
-  category: 'UPDATE' | 'NEWS';
+  category: 'UPDATE' | 'NEWS' | 'BLOG';
   date: string;
   excerpt: string;
   thumbnail: {

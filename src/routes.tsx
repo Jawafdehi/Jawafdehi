@@ -45,6 +45,8 @@ import CaseDetail from "./pages/CaseDetail";
 import Feedback from "./pages/Feedback";
 import ReportCase from "./pages/ReportCase";
 import Updates from "./pages/Updates";
+// Pre-rendered, so it must stay eager — see the split policy above.
+import Blog from "./pages/Blog";
 import UpdateDetail from "./pages/UpdateDetail";
 // Pre-rendered (one page per changelog entry), so it must stay eager.
 import WhatsNewPost from "./pages/WhatsNewPost";
@@ -135,10 +137,12 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/feedback": <Feedback />,
   "/report": <ReportCase />,
   "/openhouse": <OpenHouse />,
+  "/blog": <Blog />,
   "/updates": <Updates />,
   "/updates/preview": <UpdatePreview />,
   "/updates/product/:id": <WhatsNewPost />,
   "/updates/:slug": <UpdateDetail />,
+  "/blog/:slug": <UpdateDetail />,
   "/faq": <FaqPage />,
   "/about": <About />,
   "/commitment": <Commitment />,

@@ -41,7 +41,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                         <article>
                             <header className="mb-10 max-w-4xl">
                                 <span className="inline-flex h-8 items-center rounded-full bg-muted px-3.5 text-sm text-primary">
-                                    {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : "Update")}
+                                    {t(`updates.category.${article.category}`, article.category === "NEWS" ? "News" : article.category === "BLOG" ? "Blog" : "Update")}
                                 </span>
                                 <h1 className="font-home-display mt-5 text-balance text-4xl text-primary sm:text-5xl [:root[lang=en]_&]:leading-[1.08]">
                                     {article.title}
