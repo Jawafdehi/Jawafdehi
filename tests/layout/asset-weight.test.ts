@@ -178,12 +178,12 @@ describe('served image weight', () => {
 
   it('resolves every generated asset this PR repointed a reference at', () => {
     // Nothing resolves a `public/` string reference at build time, so a typo here
-    // 404s in silence. The team thumbs are covered above; these are the other four.
+    // 404s in silence. The team thumbs are covered above; these are the others.
     const refs: Array<[string, string]> = [
       ['src/components/data-sources.tsx', '/assets/ciaa.webp'],
       ['src/components/data-sources.tsx', '/assets/cib.webp'],
       ['src/lib/case-images.ts', '/assets/placeholder.webp'],
-      ['src/components/home/newsletter-signup-modal.tsx', '/assets/logo.svg'],
+      ['src/components/Footer.tsx', '/assets/logo.svg'],
     ];
     const broken = refs.filter(([file, ref]) => {
       const referenced = readFileSync(resolve(ROOT, file), 'utf8').includes(ref);
@@ -246,13 +246,13 @@ describe('touch target sizes', () => {
     expect(icon).not.toMatch(/after:h-11|after:w-11/);
   });
 
-  it('keeps footer nav rows at 32px and social icons tappable at 44px', () => {
+  it('keeps footer nav rows at 32px and social icons tappable at 44px (40px on phones)', () => {
     const footer = readFileSync(resolve(SRC, 'components/Footer.tsx'), 'utf8');
-    // Rows: 32px, above WCAG 2.5.8's 24px. Social discs: drawn at 36px, the
-    // tap target reaches 44px through a pseudo-element 4px past each edge,
-    // with an 8px gap so neighbours never overlap.
+    // Rows: 32px, above WCAG 2.5.8's 24px. Social icons: a 36px box (32px on
+    // phones, so all nine fit one row at 390px), the tap target reaching 4px
+    // past each edge, with an 8px gap so neighbours never overlap.
     expect(footer).toContain("min-h-8");
-    expect(footer).toContain("h-9 w-9");
+    expect(footer).toContain("h-8 w-8 sm:h-9 sm:w-9");
     expect(footer).toContain("gap-2");
     expect(footer).toContain("after:-inset-1");
     expect(footer).not.toContain('min-h-9');

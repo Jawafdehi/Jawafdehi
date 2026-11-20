@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { DataLakeMetrics } from "@/types/jds";
 import { useIsNarrow } from "@/hooks/useIsNarrow";
 import { bsYearRows, bsYearWithAd } from "@/lib/data-quality";
+import { formatCount } from "@/utils/number";
 
 /** Court levels in institutional order; anything else sorts after. */
 const COURT_ORDER = ["district", "high", "supreme", "special"];
@@ -171,7 +172,7 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                   return (
                     <td
                       key={year}
-                      title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${bsYearWithAd(year, t)}: ${count.toLocaleString()}`}
+                      title={`${t(`dataQuality.backbone.courtType.${type}`, type)} · ${bsYearWithAd(year, t)}: ${formatCount(count)}`}
                       className="rounded px-2 py-2 text-center text-xs tabular-nums"
                       style={{
                         backgroundColor:
@@ -186,12 +187,12 @@ export function CourtYearMatrix({ ngm }: { ngm?: DataLakeMetrics }) {
                       <span aria-hidden="true">
                         {count > 0 ? formatCompact(count) : "·"}
                       </span>
-                      <span className="sr-only">{count.toLocaleString()}</span>
+                      <span className="sr-only">{formatCount(count)}</span>
                     </td>
                   );
                 })}
                 <td className="px-2 py-2 text-right text-xs font-medium tabular-nums text-primary">
-                  {rowTotal(type).toLocaleString()}
+                  {formatCount(rowTotal(type))}
                 </td>
               </tr>
             ))}

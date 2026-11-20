@@ -10,6 +10,7 @@ import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileVie
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
 import { getCourtCaseFull } from "@/services/datalake-api";
+import { courtCaseIri as buildCourtCaseIri } from "@/queries/related-cases";
 
 // The /courtcase/* splat tail is the courtcase IRI path component
 // `<court>/<case_number>` (e.g. `special/081-CR-0079`); we rebuild the canonical
@@ -45,21 +46,28 @@ export default function CourtCaseProfile() {
   // The canonical court-case @id IRI lowercases court + case number (matches the
   // backend build_courtcase_iri); use it as the JSON-LD `url` so the structured
   // data points at one canonical URL, not a mixed-case duplicate.
-  const courtCaseIri = parsed
-    ? `https://jawafdehi.org/courtcase/${parsed.court.toLowerCase()}/${parsed.caseNumber.toLowerCase()}`
-    : "";
+  const courtCaseIri = parsed ? buildCourtCaseIri(parsed.court, parsed.caseNumber) : "";
   const title = data
     ? `${caseNumber} — ${data.case_type || t("courtCaseProfile.fallbackTitle", "Court case")}`
     : caseNumber || t("courtCaseProfile.fallbackTitle", "Court case");
 
+  const orderCount = Array.isArray(data?.orders) ? data.orders.length : 0;
+  const chainCount = Array.isArray(data?.court_chain) ? data.court_chain.length : 0;
   const jumpSections = useMemo<CaseJumpSection[]>(
     () => [
       { id: "case-summary", label: t("courtCaseProfile.summary", "Case summary") },
       { id: "parties", label: t("courtCaseProfile.parties", "Parties") },
+      ...(chainCount > 0
+        ? [{ id: "appeals", label: t("courtCaseProfile.chain.nav", "Appeal history") }]
+        : []),
       { id: "activity", label: t("courtCaseProfile.activity.heading", "Case activity") },
+      // Only when the section renders (it hides on an empty or absent list).
+      ...(orderCount > 0
+        ? [{ id: "orders", label: t("courtCaseProfile.orders.nav", "Court orders") }]
+        : []),
       { id: "source", label: t("courtCaseProfile.source.heading", "Source") },
     ],
-    [t],
+    [t, orderCount, chainCount],
   );
 
   useEffect(() => {
@@ -147,7 +155,7 @@ export default function CourtCaseProfile() {
         <PageBreadcrumb className="mb-8 md:mb-10"
           items={[
             { label: t("nav.home"), to: "/" },
-            { label: t("nav.courtCases", "Court cases"), to: "/search?type=courtcase" },
+            { label: t("nav.courtCases", "Court cases"), to: "/search/?type=courtcase" },
             ...(parsed ? [{ label: parsed.caseNumber, mono: true }] : []),
           ]}
         />

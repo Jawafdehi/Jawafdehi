@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NEWSLETTER_PRIVACY_VERSION } from "@/config/newsletter";
-import { setNewsletterPromptState } from "@/lib/newsletter";
 import {
   EMAIL_PATTERN,
   WHATSAPP_PATTERN,
@@ -131,9 +130,6 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
         whatsapp: typedWhatsapp || undefined,
         organisation: forOrganisation ? organisation.trim() || undefined : undefined,
       });
-      // Stops the site-wide newsletter modal asking someone who just signed up
-      // to sign up. One shared list, so one shared "already done" flag.
-      setNewsletterPromptState("subscribed");
       setStatus("success");
     } catch (err) {
       setFormError(errorMessageFor(err, t));
@@ -322,7 +318,7 @@ export function OpenHouseSignupForm({ className }: Readonly<{ className?: string
           {/* Says plainly that this also subscribes them to the newsletter. One
               shared list is fine; doing it silently is not. */}
           {t("openHouse.signup.consent")}{" "}
-          <Link to="/privacy" className="underline underline-offset-2">
+          <Link to="/privacy/" className="underline underline-offset-2">
             {t("openHouse.signup.consentPrivacyLink")}
           </Link>
           .

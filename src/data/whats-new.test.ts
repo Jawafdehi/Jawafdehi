@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { SITE_ROUTES } from "@/data/site-routes";
-import { WHATS_NEW, WHATS_NEW_UPDATED, entriesFor, tagsInUse } from "@/data/whats-new";
+import { WHATS_NEW, WHATS_NEW_UPDATED, entriesFor } from "@/data/whats-new";
 
-describe("the What's new changelog", () => {
+describe("the product-updates changelog", () => {
   it("lists entries newest first, so the first one is the page's last-updated date", () => {
     const dates = WHATS_NEW.map((entry) => entry.date);
     expect(dates).toEqual([...dates].sort().reverse());
@@ -38,11 +38,5 @@ describe("the What's new changelog", () => {
     expect(home[0].pinned).toBe(true);
     expect(entriesFor({ limit: 2 })[0]).toBe(WHATS_NEW[0]);
     expect(entriesFor({ tag: "mcp" }).every((entry) => entry.tags.includes("mcp"))).toBe(true);
-  });
-
-  it("offers a filter only for tags some entry carries", () => {
-    for (const tag of tagsInUse()) {
-      expect(WHATS_NEW.some((entry) => entry.tags.includes(tag))).toBe(true);
-    }
   });
 });

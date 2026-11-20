@@ -4,7 +4,6 @@ import { MemoryRouter } from "react-router-dom";
 
 import { OpenHouseSignupForm } from "@/components/open-house/signup-form";
 import { JDSApiError, subscribeToNewsletter } from "@/services/jds-api";
-import { setNewsletterPromptState } from "@/lib/newsletter";
 
 // Passthrough i18n so assertions don't depend on translation resources.
 vi.mock("react-i18next", () => ({
@@ -21,7 +20,6 @@ vi.mock("@/services/jds-api", async () => {
   return { ...actual, subscribeToNewsletter: vi.fn() };
 });
 
-vi.mock("@/lib/newsletter", () => ({ setNewsletterPromptState: vi.fn() }));
 
 // The region pre-fill reads the browser timezone; pin it so the payload is
 // deterministic rather than dependent on where the test runs.
@@ -33,7 +31,6 @@ vi.mock("@/components/open-house/regions", async () => {
 });
 
 const subscribeMock = vi.mocked(subscribeToNewsletter);
-const promptMock = vi.mocked(setNewsletterPromptState);
 
 function renderForm() {
   return render(
@@ -76,16 +73,6 @@ describe("OpenHouseSignupForm", () => {
     expect(payload.region).toBe("gulf-middle-east");
     // Must keep starting with "openhouse" — the API keys the welcome off it.
     expect(payload.consentSource).toMatch(/^openhouse/);
-  });
-
-  it("marks the newsletter prompt as done, so the modal stops asking", async () => {
-    // One shared list: without this the site-wide modal would later ask someone
-    // who just signed up to sign up.
-    renderForm();
-    fillRequired();
-    fireEvent.submit(screen.getByRole("button", { name: /submit/i }).closest("form")!);
-
-    await waitFor(() => expect(promptMock).toHaveBeenCalledWith("subscribed"));
   });
 
   it("rejects a WhatsApp number the API would reject, without a round trip", async () => {

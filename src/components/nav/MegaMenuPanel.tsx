@@ -5,10 +5,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+import { ArrowUpRight } from "@/components/icons";
+
 import { MegaMenuArt, type MegaMenuArtTone, type MegaMenuShape } from "@/components/nav/mega-menu-art";
 import { cn } from "@/lib/utils";
 
-export type MegaMenuItem = { key: string; label: string; to: string };
+/** `external`: a site of ours off this one (research.jawafdehi.org), opened in a new tab. */
+export type MegaMenuItem = { key: string; label: string; to: string; external?: boolean };
 
 /** Each page's field: a shape that suits it, in the archive's blue or ember. */
 const ART: Record<string, { shape: MegaMenuShape; tone: MegaMenuArtTone }> = {
@@ -60,22 +63,39 @@ export function MegaMenuPanel({
               const isCurrent = activePath === item.to;
               return (
                 <li key={item.key}>
-                  <Link
-                    to={item.to}
-                    aria-current={isCurrent ? "page" : undefined}
-                    onPointerEnter={() => setHovered(item.key)}
-                    onFocus={() => setHovered(item.key)}
-                    onClick={onNavigate}
-                    className={cn(
+                  {(() => {
+                    const className = cn(
                       "block rounded-2xl px-4 py-3 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       hovered === item.key ? "bg-muted" : "hover:bg-muted",
-                    )}
-                  >
-                    <span className="block text-[17px] leading-6 text-primary">{item.label}</span>
-                    <span className="mt-0.5 block text-sm leading-5 text-muted-foreground">
-                      {t(`nav.desc.${item.key}`, "")}
-                    </span>
-                  </Link>
+                    );
+                    const body = (
+                      <>
+                        <span className="flex items-center gap-1.5 text-[17px] leading-6 text-primary">
+                          {item.label}
+                          {item.external ? <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : null}
+                        </span>
+                        <span className="mt-0.5 block text-sm leading-5 text-muted-foreground">
+                          {t(`nav.desc.${item.key}`, "")}
+                        </span>
+                      </>
+                    );
+                    const hover = { onPointerEnter: () => setHovered(item.key), onFocus: () => setHovered(item.key) };
+                    return item.external ? (
+                      <a href={item.to} target="_blank" rel="noopener noreferrer" onClick={onNavigate} className={className} {...hover}>
+                        {body}
+                      </a>
+                    ) : (
+                      <Link
+                        to={item.to}
+                        aria-current={isCurrent ? "page" : undefined}
+                        onClick={onNavigate}
+                        className={className}
+                        {...hover}
+                      >
+                        {body}
+                      </Link>
+                    );
+                  })()}
                 </li>
               );
             })}

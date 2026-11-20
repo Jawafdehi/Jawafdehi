@@ -52,7 +52,7 @@ export default function PaymentCancelled() {
                 size="lg"
                 className="font-button h-11 min-w-0 flex-1 rounded-full bg-accent px-2.5 text-accent-foreground shadow-md shadow-accent/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent/90 md:h-12 md:min-w-[15rem] md:px-7"
               >
-                <Link to="/donate">
+                <Link to="/donate/">
                   <HeartHandshake className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
                   Try donating again
                 </Link>

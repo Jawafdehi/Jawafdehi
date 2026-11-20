@@ -8,6 +8,7 @@ import { Calendar, ExternalLink, MapPin, User } from "@/components/icons";
 import { formatCaseDateRange } from "@/utils/date";
 import { useCaseImage } from "@/lib/use-case-image";
 import type { JawafEntity } from "@/types/jds";
+import { casePath } from "@/lib/case-links";
 
 const RELATION_PRIORITY: Record<string, number> = {
   accused: 1,
@@ -145,7 +146,7 @@ const EmbedCaseCard = () => {
         <div className="flex flex-1 flex-col px-5 py-4">
           <h3 className="font-home-display line-clamp-2 text-xl leading-snug text-primary">
             <Link
-              to={`/case/${caseData.slug || id}`}
+              to={casePath(caseData.slug || id)}
               target="_parent"
               className="rounded-sm decoration-primary/30 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
@@ -194,7 +195,7 @@ const EmbedCaseCard = () => {
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 border-t border-border/70 px-5 py-3">
           <Link
-            to={`/case/${caseData.slug || id}`}
+            to={casePath(caseData.slug || id)}
             target="_parent"
             className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary-surface px-3.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary-surface/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >

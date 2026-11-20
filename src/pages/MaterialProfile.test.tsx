@@ -12,7 +12,9 @@ const getMaterialPageRange = vi.fn();
 const listMaterialTables = vi.fn();
 const getMaterialTable = vi.fn();
 const listMaterialFigures = vi.fn();
+const getMaterialOriginal = vi.fn();
 vi.mock("@/services/datalake-api", () => ({
+  getMaterialOriginal: (...args: unknown[]) => getMaterialOriginal(...args),
   getMaterial: (...args: unknown[]) => getMaterial(...args),
   listMaterialPages: (...args: unknown[]) => listMaterialPages(...args),
   getMaterialPage: (...args: unknown[]) => getMaterialPage(...args),
@@ -89,6 +91,8 @@ describe("MaterialProfile — overflow-safe rendering", () => {
     expect(link.getAttribute("href")).toBe(LONG_URL);
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel") || "").toContain("noopener");
+    // An original source document: our pages must not pass it crawl priority.
+    expect((link.getAttribute("rel") || "").split(" ")).toContain("nofollow");
     expect(screen.queryByText(/%E0%A5/)).toBeNull();
   });
 
@@ -689,5 +693,26 @@ describe("MaterialProfile — reaching the transcript", () => {
     await screen.findByRole("tab", { name: /Contents/i });
 
     expect(screen.queryByRole("button", { name: /Read the transcript/i })).toBeNull();
+  });
+});
+
+describe("MaterialProfile staff originals", () => {
+  it("shows no staff section on a public payload", async () => {
+    getMaterial.mockResolvedValue(material({}));
+    renderPage();
+    await screen.findByRole("heading", { level: 1 });
+    expect(screen.queryByTestId("staff-originals")).toBeNull();
+    expect(screen.queryByRole("button", { name: "View original" })).toBeNull();
+  });
+
+  it("shows the staff buttons when the API marks the payload as staff", async () => {
+    getMaterial.mockResolvedValue(
+      material({ "jawafdehi:staffOriginals": { document: true, transcript: true } }),
+    );
+    renderPage();
+    expect(await screen.findByTestId("staff-originals")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "View original" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Download original" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Unredacted transcript" })).toBeTruthy();
   });
 });

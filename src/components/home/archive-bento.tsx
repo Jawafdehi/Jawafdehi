@@ -1,9 +1,11 @@
-// The archive in three panels, under the hero: the MCP that brings it into an
+// The archive in three panels, under the figures: the MCP that brings it into an
 // AI assistant (the one navy panel), what is in it, and how a case is followed
 // from charge sheet to verdict. Each panel shows its idea with a small
 // piece of interface rather than a paragraph.
 import { FileText, Gavel, Landmark } from "@/components/icons";
 import { useTranslation } from "react-i18next";
+
+import { localiseNumber } from "@/utils/number";
 
 import { ArrowLink } from "@/components/ui/arrow-link";
 import { PanelLabel } from "@/components/ui/panel";
@@ -13,7 +15,7 @@ import { SplitHeading } from "@/components/ui/split-heading";
 const PANEL_TITLE = "mt-2 font-home-display text-2xl leading-[1.15] md:text-[1.75rem]";
 
 export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: string }>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const chips = t("home.bento.archive.chips", { returnObjects: true }) as string[];
   const steps = [
     { Icon: FileText, label: t("home.bento.follow.steps.chargeSheet") },
@@ -22,10 +24,10 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
   ];
 
   return (
-    <section aria-labelledby="archive-bento-title" className="pb-12 pt-20 md:pb-16 md:pt-28">
+    <section aria-labelledby="archive-bento-title" className="pb-12 pt-6 md:pb-16 md:pt-10">
       <div className="layout-container">
         <Reveal>
-          <SplitHeading id="archive-bento-title" lead={t("home.bento.titleLead")} rest={t("home.bento.titleRest")} />
+          <SplitHeading id="archive-bento-title" restOnNewLine lead={t("home.bento.titleLead")} rest={t("home.bento.titleRest")} />
         </Reveal>
 
         {/* Three panels, no borders, three different surfaces: the MCP on a
@@ -79,7 +81,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
               {/* The label keeps body tracking (the display face's -0.035em ran
                   "corruption cases" together) and wraps as one unit. */}
               <p className="mt-auto flex flex-wrap items-baseline gap-x-3 pt-10 font-home-display text-5xl tabular-nums text-primary">
-                {casesDocumented}
+                {localiseNumber(casesDocumented, i18n.language)}
                 <span className="whitespace-nowrap font-sans text-lg tracking-normal text-muted-foreground">
                   {t("home.bento.archive.casesLabel")}
                 </span>

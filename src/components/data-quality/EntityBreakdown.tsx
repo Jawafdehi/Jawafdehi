@@ -9,6 +9,7 @@ import {
 } from "@/lib/entity-filter-links";
 import { personSectorKey } from "@/lib/person-sector-labels";
 import { BreakdownBar } from "./BreakdownBar";
+import { formatCount } from "@/utils/number";
 
 /**
  * "Who we hold to account." Tracked entities — most are individual
@@ -46,7 +47,7 @@ export function EntityBreakdown({ nes }: { nes?: EntityMetrics }) {
         {t(
           "dataQuality.entities.description",
           "{{people}} of {{total}} tracked entities are individual people. The rest are the institutions they act through.",
-          { people: people.toLocaleString(), total: nes.total.toLocaleString() },
+          { people: formatCount(people), total: formatCount(nes.total) },
         )}
       </p>
       <Link

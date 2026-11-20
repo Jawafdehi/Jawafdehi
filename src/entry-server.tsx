@@ -1,21 +1,24 @@
+import * as ReactDOMServer from 'react-dom/server';
 import { renderToString } from 'react-dom/server';
+import type { ReactElement } from 'react';
 import { StaticRouter } from 'react-router-dom/server';
 import { HelmetProvider } from 'react-helmet-async';
 import type { HelmetServerState } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider, dehydrate } from '@tanstack/react-query';
 import App from './App';
+import { registerEagerLegalBodies } from './pages/legal/bodies';
+import { EAGER_LEGAL_BODIES } from './pages/legal/eager-bodies';
 import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { featuredCasesQuery } from './queries/home';
-import { archiveStatisticsQuery } from './queries/materials-landing';
+import { courtCaseIri, courtCaseRelatedCasesQuery, entityRelatedCasesQuery } from './queries/related-cases';
 import { getAllPages } from './services/datalake-api';
 import { http } from './services/http';
 import { documentSourcesQuery } from './lib/document-sources';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
-import type { JawafEntity } from './types/jds';
 
 // Re-exported so `scripts/pre-render.ts` can install the build's bearer token on
 // THIS bundle. The script imports the compiled `dist/server/entry-server.js`,
@@ -23,6 +26,38 @@ import type { JawafEntity } from './types/jds';
 // source instead would configure a different module instance and silently leave
 // every outgoing request anonymous. See services/prerender-auth.ts.
 export { setPrerenderToken } from './services/prerender-auth';
+
+// The legal texts are lazy on the client but must render synchronously here,
+// or /privacy and /terms would pre-render empty (src/pages/legal/bodies.ts).
+registerEagerLegalBodies(EAGER_LEGAL_BODIES);
+
+/**
+ * Upper bound on every API request this bundle makes, in ms.
+ *
+ * The build leaves the client's timeouts alone (30 s default, 10 s for most
+ * jds-api calls). The Worker (edge SSR, see worker/edge-render.ts) caps them at
+ * a few seconds instead: a reader waiting on a cache miss is better served by
+ * the meta-injection shell after 4 s than by a page after 10. A CAP rather than
+ * a default because jds-api passes its own per-call `timeout`, which a default
+ * would not override. Same reason as setPrerenderToken for living here: the
+ * Worker holds the COMPILED bundle, which carries its own copy of the axios
+ * client.
+ */
+let apiTimeoutCap: number | null = null;
+let apiTimeoutInterceptor: number | null = null;
+
+export function setApiTimeout(ms: number): void {
+  if (!Number.isFinite(ms) || ms <= 0) return;
+  apiTimeoutCap = ms;
+  if (apiTimeoutInterceptor === null) {
+    apiTimeoutInterceptor = http.interceptors.request.use((config) => {
+      if (apiTimeoutCap !== null) {
+        config.timeout = config.timeout ? Math.min(config.timeout, apiTimeoutCap) : apiTimeoutCap;
+      }
+      return config;
+    });
+  }
+}
 
 // Just the part of an NES entity record this module needs: the canonical IRI that
 // keys the related-cases query. Deliberately not the full EntityRecord shape —
@@ -45,11 +80,10 @@ export interface RenderResult {
 /**
  * Data the caller already holds, seeded into the cache instead of re-fetched.
  *
- * `scripts/pre-render.ts` renders one page per entity a published case cites —
- * ~2,500 of them. Fetching each record here cost one upstream call per page and
- * blew the API's 1000/hour anonymous throttle, which is what turned a green
- * build into a coin flip. The same records come back 25 at a time from
- * `/api/entities?ids=`, so the caller batches them and hands the record down.
+ * Built for the entity pre-render, which batched records 25 at a time from
+ * `/api/entities?ids=` instead of one call per page. That pre-render is gone
+ * (entity pages are rendered at the edge, one per request), so no caller seeds
+ * today; the hook is kept because it is cheap and tested.
  *
  * A seeded record must be byte-identical to what the per-page fetch would have
  * returned, or the pre-rendered HTML silently diverges from the live page. It
@@ -61,17 +95,48 @@ export interface RenderSeed {
   entityRecord?: unknown;
 }
 
+/** How render() is being driven. */
+export interface RenderOptions {
+  /**
+   * Rendering one page on request at the edge, not the whole archive at build
+   * time. Turns off the transient retries below: they exist so one blip does
+   * not fail a 3,000-page build, but on a reader's request they turn a 4 s
+   * timeout into 18 s of waiting. At the edge a failed fetch falls back to the
+   * cached copy or the meta-injection shell instead.
+   */
+  edge?: boolean;
+}
+
 // Nothing here reports whether it worked: prefetchQuery swallows its own errors,
 // so a route whose every fetch failed is indistinguishable from one that had
 // nothing to fetch. render() reads the outcome off the cache instead, and
 // scripts/pre-render.ts fails the build on it — which is how a prefetch that
 // silently returned nothing for months (see getAccessToken in services/oidc.ts)
 // stops being a thing that can ship.
+/**
+ * Prefetch a query the page can do without. On failure the entry is removed
+ * rather than left in `error`: reportPrefetch would count it as failed, and the
+ * edge (worker/edge-render.ts) serves the fallback shell for any failed
+ * prefetch — so one slow related-cases call would cost the whole page its SSR.
+ * Removed, the component just fetches it on the client as it did before.
+ */
+async function prefetchOptional(
+  queryClient: QueryClient,
+  query: { queryKey: readonly unknown[]; queryFn: () => Promise<unknown> },
+): Promise<void> {
+  await queryClient.prefetchQuery({ ...query, retry: false });
+  if (queryClient.getQueryState(query.queryKey)?.status !== 'success') {
+    queryClient.removeQueries({ queryKey: query.queryKey, exact: true });
+  }
+}
+
 async function prefetch(
   url: string,
   queryClient: QueryClient,
   seed?: RenderSeed,
+  options?: RenderOptions,
 ): Promise<void> {
+  const transientRetry = options?.edge ? NO_RETRY : TRANSIENT_RETRY;
   // Home page: prefetch stats + the same featured-case search the client renders.
   // featuredCasesQuery() is the SHARED definition (queries/home.ts) — the key and
   // params must match pages/Index.tsx exactly or this prefetch fills a cache entry
@@ -88,34 +153,43 @@ async function prefetch(
   // home hero, so prefetching here paints the KPI strip / sections server-side
   // instead of flashing empty until the client fetch resolves.
   if (/^\/data-quality\/?(?:[?#]|$)/.test(url)) {
-    await queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics });
-    return;
-  }
-
-  // Materials landing page (BARE /materials only — with ?series= or ?q= it
-  // redirects into /search on the client). The query factory is the SHARED definition
-  // (queries/materials-landing.ts), so the key matches the page exactly and the
-  // pre-rendered HTML carries the real archive figures.
-  if (/^\/materials\/?(?:#|$)/.test(url)) {
+    // Plus the source catalogue its "where the evidence comes from" summary reads.
     await Promise.allSettled([
-      queryClient.prefetchQuery(archiveStatisticsQuery()),
+      queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
       queryClient.prefetchQuery(documentSourcesQuery()),
     ]);
     return;
   }
 
-  // Updates/News lists every non-blog article; /blog lists only BLOG ones, under its own key.
-  if (url === '/updates') {
+  // Materials landing page (BARE /materials only — ?series= and ?source= are
+  // client-rendered, ?q= redirects into /search on the client). The source
+  // catalogue is the SHARED definition (lib/document-sources.ts), so the key
+  // matches the page exactly and the pre-rendered HTML carries the real
+  // archive total.
+  if (/^\/materials\/?(?:#|$)/.test(url)) {
+    await Promise.allSettled([
+      queryClient.prefetchQuery(documentSourcesQuery()),
+    ]);
+    return;
+  }
+
+  // Updates/News list page, with or without the trailing slash (the canonical
+  // form) or a ?filter=: an exact '/updates' missed '/updates/', which then
+  // shipped skeletons and waited on the CMS in the browser.
+  if (/^\/updates\/?(?:[?#]|$)/.test(url)) {
     await queryClient.prefetchQuery({ queryKey: ['cms-articles'], queryFn: () => getArticles() });
     return;
   }
-  if (url === '/blog') {
+  // The blog lists only BLOG articles, under its own key; Updates & News leaves them out.
+  if (/^\/blog\/?(?:[?#]|$)/.test(url)) {
     await queryClient.prefetchQuery({ queryKey: ['cms-articles', 'BLOG'], queryFn: () => getArticles('BLOG') });
     return;
   }
 
-  // Article detail page (slug is everything after /updates/ up to /?#)
-  const updateMatch = url.match(/^\/(?:updates|blog)\/([^/?#]+)/);
+  // Article detail page: the slug after /updates/ or /blog/ up to /?#. Not a
+  // product update (/updates/product/<id>): those are static data, and matching
+  // them asked the CMS for an article called "product" on every render.
+  const updateMatch = url.match(/^\/(?:updates\/(?!product\/)|blog\/)([^/?#]+)/);
   if (updateMatch) {
     const slug = decodeURIComponent(updateMatch[1]);
     await queryClient.prefetchQuery({
@@ -137,7 +211,7 @@ async function prefetch(
     await queryClient.prefetchQuery({
       queryKey: ['case', slug],
       queryFn: () => getCaseById(slug),
-      ...TRANSIENT_RETRY,
+      ...transientRetry,
     });
     return;
   }
@@ -149,26 +223,6 @@ async function prefetch(
     await queryClient.prefetchQuery({
       queryKey: ['case', slug],
       queryFn: () => getCaseById(slug),
-    });
-    return;
-  }
-
-  // Entity profile page — LEGACY numeric route (/entity/<id>). Must stay ahead of
-  // the IRI branch below, which would otherwise swallow it.
-  // Anchored to a SINGLE all-digit segment, which is what the legacy route is —
-  // an IRI is always prefix/slug, so it never has one. Unanchored, this read
-  // /entity/2070-b-s/foo as legacy entity 2070 and prefetched the wrong record
-  // under the wrong key: NES prefixes may legally start with digits
-  // (jawafdehi_shared/entities/ids.py allows [a-z0-9_]+).
-  const entityMatch = url.match(/^\/entity\/(\d+)(?:[?#]|$)/);
-  if (entityMatch) {
-    const entityId = parseInt(entityMatch[1]);
-    await queryClient.prefetchQuery({
-      queryKey: ['jds-entity', entityId],
-      queryFn: async () => {
-        const res = await http.get<JawafEntity>(`/api/entities/${entityId}/`);
-        return res.data;
-      },
     });
     return;
   }
@@ -201,29 +255,36 @@ async function prefetch(
       return;
     }
 
-    await queryClient.prefetchQuery({
-      queryKey: ['entity-record', tail],
-      queryFn: async () => {
-        const res = await http.get<EntityRecordHead>(`/api/entities/${tail}`);
-        return res.data;
-      },
-      ...TRANSIENT_RETRY,
-    });
-
-    // NOT prefetched here: EntityRelatedCases' own query, keyed on the record's
-    // `@id`. So the related-cases column of a pre-rendered entity page is still
-    // its aria-busy skeleton — measured over a full build, 1,579 entity pages
-    // contained the skeleton and none contained a single href="/case/". The
-    // identity, title, description and facts are real; the case list is not.
+    // The related-cases column (EntityRelatedCases, keyed on the record's
+    // `@id`) is fetched alongside the record. It is the only link from an
+    // entity page to the cases that cite it, so leaving it out shipped every
+    // entity page with an aria-busy skeleton and no href="/case/" at all —
+    // crawlers could reach the 2,836 case pages from almost nowhere but the
+    // sitemap. The build used to skip it because ~3,158 calls drew 429s; entity
+    // pages are rendered one per request at the edge now (#488), so that cost
+    // no longer exists.
     //
-    // Fetching it per entity was tried and does not work: it doubles the build to
-    // ~3,158 upstream calls and api.jawafdehi.org answers 429. The fix is to
-    // SEED it rather than fetch it — pre-render.ts already holds every published
-    // case with its binds, so the citing set for an IRI is derivable in-process
-    // for zero extra calls, and the component sorts client-side so server order
-    // does not matter. That needs the list payload confirmed field-identical to
-    // /api/cases/?entity=, and a seed threaded through render(); deliberately
-    // left out of this PR rather than done hastily inside it.
+    // Fetched in parallel with the record, under the IRI the URL implies (an
+    // `@id` IS https://jawafdehi.org/entity/<tail>). If the record's actual @id
+    // turns out different, the speculative entry is dropped and the client
+    // fetches under the right key. Optional either way: a failure leaves the
+    // column to the client, it never fails the page.
+    const impliedIri = `https://jawafdehi.org/entity/${tail}`;
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: ['entity-record', tail],
+        queryFn: async () => {
+          const res = await http.get<EntityRecordHead>(`/api/entities/${tail}`);
+          return res.data;
+        },
+        ...transientRetry,
+      }),
+      prefetchOptional(queryClient, entityRelatedCasesQuery(impliedIri)),
+    ]);
+    const record = queryClient.getQueryData<EntityRecordHead>(['entity-record', tail]);
+    if (record && record['@id'] !== impliedIri) {
+      queryClient.removeQueries({ queryKey: ['entity-related-cases', impliedIri], exact: true });
+    }
     return;
   }
 
@@ -251,6 +312,9 @@ async function prefetch(
     const court = decodeURIComponent(courtcaseMatch[1]);
     const caseNumber = decodeURIComponent(courtcaseMatch[2]);
     const base = `/api/courtcases/${encodeURIComponent(court)}/${encodeURIComponent(caseNumber)}`;
+    // The cases citing this court case are its only links to case pages; see
+    // the entity branch above. Optional: a failure leaves them to the client.
+    const related = prefetchOptional(queryClient, courtCaseRelatedCasesQuery(courtCaseIri(court, caseNumber)));
     await queryClient.prefetchQuery({
       queryKey: ['datalake-courtcase', court, caseNumber],
       queryFn: async () => {
@@ -264,6 +328,7 @@ async function prefetch(
         return { ...core, hearings, entities };
       },
     });
+    await related;
     return;
   }
 }
@@ -297,17 +362,57 @@ const TRANSIENT_RETRY = {
   retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 4000),
 } as const;
 
-export async function render(url: string, seed?: RenderSeed): Promise<RenderResult> {
+const NO_RETRY = { retry: 0 } as const;
+
+/**
+ * Render to a string AFTER every Suspense boundary has resolved.
+ *
+ * `renderToString` cannot wait: a `lazy()` page renders as its fallback, which
+ * is why the build only pre-renders eager routes (see the split policy in
+ * src/routes.tsx). At the edge that would leave /material/* and /courtcase/* —
+ * both lazy, deliberately, to keep them out of the initial client bundle — as a
+ * skeleton. `renderToReadableStream` + `allReady` loads the lazy chunk on the
+ * server and emits the real page, without touching the client bundle.
+ *
+ * Only reachable in the Worker: React 18's Node build of react-dom/server has no
+ * renderToReadableStream, and the build never passes `edge`.
+ */
+async function renderComplete(tree: ReactElement): Promise<string> {
+  const renderStream = (ReactDOMServer as { renderToReadableStream?: RenderToReadableStream })
+    .renderToReadableStream;
+  if (!renderStream) return renderToString(tree);
+  let renderError: unknown = null;
+  const stream = await renderStream(tree, {
+    onError(error: unknown) {
+      renderError = error;
+    },
+  });
+  await stream.allReady;
+  const html = await new Response(stream).text();
+  if (renderError) throw renderError;
+  return html;
+}
+
+type RenderToReadableStream = (
+  children: ReactElement,
+  options?: { onError?: (error: unknown) => void },
+) => Promise<ReadableStream & { allReady: Promise<void> }>;
+
+export async function render(
+  url: string,
+  seed?: RenderSeed,
+  options?: RenderOptions,
+): Promise<RenderResult> {
   const helmetContext: { helmet?: HelmetServerState } = {};
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 0 } },
   });
 
-  await prefetch(url, queryClient, seed);
+  await prefetch(url, queryClient, seed, options);
   // Before the render, not after: see reportPrefetch.
   const prefetchReport = reportPrefetch(queryClient);
 
-  const html = renderToString(
+  const tree = (
     <ThemeProvider>
       <HelmetProvider context={helmetContext}>
         <QueryClientProvider client={queryClient}>
@@ -318,6 +423,7 @@ export async function render(url: string, seed?: RenderSeed): Promise<RenderResu
       </HelmetProvider>
     </ThemeProvider>
   );
+  const html = options?.edge ? await renderComplete(tree) : renderToString(tree);
 
   const dehydratedState = dehydrate(queryClient);
   return { html, helmetContext, dehydratedState, prefetch: prefetchReport };

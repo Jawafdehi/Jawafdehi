@@ -363,24 +363,10 @@ All colors MUST be HSL.
        alone — it is always blended under --primary-surface content. */
     --navy-deep: 217 62% 9%;
 
-    /* Series folder tints — the /materials archive's shelf palette. These
-       encode SERIES IDENTITY (folder card fills, series dots in tables), not
-       category or severity — for those use --tone-*. Pastel band (L 72–83%)
-       so --foreground ink passes AA on every one; assigned to series by
-       cycling in registry order (src/data/material-series.ts). */
-    --folder-1: 251 36% 83%;  /* #C9C3E3 lavender */
-    --folder-2: 126 17% 76%;  /* #B9CDBB sage */
-    --folder-3: 27 37% 76%;   /* #D9C1AD tan */
-    --folder-4: 205 27% 78%;  /* #B7C9D6 mist */
-    --folder-5: 45 35% 75%;   /* #D6CBA9 sand */
-    --folder-6: 0 28% 79%;    /* #D8B9B9 blush */
-    --folder-7: 169 19% 72%;  /* #A9C4BF sea */
-    --folder-8: 272 22% 81%;  /* #CFC4D9 lilac */
-
     /* Search-match highlight. Its own token, NOT --accent (crimson) or a
        --tone-*: a highlight marks WHERE THE QUERY MATCHED and carries no
        severity or category meaning, so it must not borrow a hue that does.
-       The sand of --folder-5, lightened so --foreground keeps AA on it. */
+       A light sand, so --foreground keeps AA on it. */
     --search-highlight: 45 78% 82%;
 
     /* Court tier — the four values the API's `court_type` facet holds.
@@ -515,14 +501,6 @@ All colors MUST be HSL.
     --shadow-elev-md: 0 8px 24px -8px hsl(0 0% 0% / 0.6);
     --shadow-elev-lg: 0 20px 48px -16px hsl(0 0% 0% / 0.65);
     --navy-deep: 217 55% 5%;
-    --folder-1: 251 26% 32%;
-    --folder-2: 126 14% 28%;
-    --folder-3: 27 27% 30%;
-    --folder-4: 205 22% 30%;
-    --folder-5: 45 26% 29%;
-    --folder-6: 0 21% 31%;
-    --folder-7: 169 16% 28%;
-    --folder-8: 272 17% 32%;
     /* Dark: a dim sand that reads as a highlight behind --foreground ink
        rather than as a light-mode swatch punched into a dark page. */
     --search-highlight: 45 42% 30%;
@@ -683,4 +661,70 @@ html[data-site="np"] [data-site-variant="np"] {
 }
 html[data-site="np"] [data-site-variant="org"] {
   display: none;
+}
+
+/* The home hero's page of record (components/home/hero.tsx). On load each line
+   writes itself in from the left, row by row; then a soft band of light passes
+   down the page now and then, like a document under a scanner. Transform and
+   opacity only. With reduced motion asked for, none of it runs and the record
+   simply stands, as it did before. */
+@keyframes record-write {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+@keyframes record-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  45% {
+    transform: translateY(100%);
+    opacity: 1;
+  }
+  46%,
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .record-write {
+    transform-origin: left center;
+    animation: record-write 700ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-delay: var(--record-delay, 0ms);
+  }
+  .record-scan {
+    animation: record-scan 9s cubic-bezier(0.77, 0, 0.175, 1) 1.8s infinite both;
+  }
+  /* The headline's crimson phrase inks in from white as the record's crimson
+     bars write themselves, so the words and the page are marked together.
+     Colour only: no clipping, nothing for Devanagari's matras to lose. */
+  .hero-ink {
+    animation: hero-ink 900ms cubic-bezier(0.23, 1, 0.32, 1) 550ms both;
+  }
+}
+@keyframes hero-ink {
+  from {
+    color: hsl(var(--primary-foreground));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .record-scan {
+    display: none;
+  }
+}
+
+/* <SiteOnly inline> (src/components/SiteOnly.tsx): a variant inside running
+   text, e.g. a per-host email address, stays inline when shown. */
+html[data-site="np"] [data-site-variant="np"][data-site-inline] {
+  display: inline;
 }

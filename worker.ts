@@ -1,5 +1,8 @@
+import { WorkerEntrypoint } from 'cloudflare:workers';
 import { LEGACY_CASE_MAP } from './src/utils/legacyCaseMap';
+import { LEGACY_ENTITY_MAP } from './src/utils/legacyEntityMap';
 import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
+import { RESEARCH_URL } from './src/lib/external-links';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
 import {
   encodeMaterialTail,
@@ -34,11 +37,61 @@ import {
   stripHtml,
   truncateMeta,
 } from './src/utils/seo';
+import { edgeApiTokenNoWait } from './worker/api-token';
+import { bundle as edgeBundle } from './worker/edge-bundle';
+import {
+  CACHE_CONTROL_BROWSER,
+  CACHE_CONTROL_FALLBACK,
+  EDGE_CDN_CACHE_CONTROL,
+  edgeKindForRoute,
+  pageTags,
+  parsePurgeBody,
+  routeTail,
+  verifyPurgeSignature,
+} from './worker/edge-cache';
+import { renderEdgePage } from './worker/edge-render';
+import {
+  API_ORIGIN,
+  SITEMAP_BROWSER_CACHE_CONTROL,
+  SITEMAP_CDN_CACHE_CONTROL,
+  SITEMAP_FETCH_TIMEOUT_MS,
+  sitemapUpstreamPath,
+  withCanonicalSlashes,
+  withSiteSitemap,
+} from './worker/sitemap';
 
 interface Env {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
+  // Edge SSR (see EdgePages below). Plain vars from wrangler.toml unless noted.
+  /** "off" turns edge rendering off; pages then get the meta-injection shell. */
+  EDGE_SSR?: string;
+  /** Per API call made while rendering. Default 4000. */
+  EDGE_SSR_API_TIMEOUT_MS?: string;
+  /** For the whole render (a court case makes several calls). Default 8000. */
+  EDGE_SSR_DEADLINE_MS?: string;
+  /** Secret: the sa-prerender machine user, for the API's throttle scope. Optional. */
+  EDGE_API_CLIENT_ID?: string;
+  /** Secret, as above. */
+  EDGE_API_CLIENT_SECRET?: string;
+  /** Secret: HMAC key the API signs /_cache/purge requests with. Unset = purge route off. */
+  CACHE_PURGE_SECRET?: string;
+}
+
+// The slice of the runtime's ExecutionContext this Worker uses. Optional
+// throughout: the unit tests call fetch(request, env) with no context at all.
+interface CachePurgeResult {
+  success: boolean;
+  errors?: Array<{ code?: number; message?: string }>;
+}
+interface EdgeCacheApi {
+  purge(options: { tags: string[] }): Promise<CachePurgeResult>;
+}
+interface WorkerContext {
+  waitUntil?(promise: Promise<unknown>): void;
+  exports?: { EdgePages?: { fetch(request: Request): Promise<Response> } };
+  cache?: EdgeCacheApi;
 }
 
 const JDS_API_BASE = 'https://api.jawafdehi.org/api';
@@ -57,6 +110,9 @@ const CARD_FETCH_TIMEOUT_MS = 10000;
 // A day, matching the API's `s-maxage`. This is the window in which a profile
 // edit (new photo, corrected role) reaches a shared link.
 const AUTHOR_CARD_TTL_SECONDS = 86400; // also the document cards' TTL
+
+// X-Robots-Tag for every response that serves an original source document.
+const ORIGINAL_DOCUMENT_ROBOTS = 'noindex, nofollow, noarchive';
 
 const DOCUMENT_PREVIEW_ALLOWED_HOSTS = new Set([
   'ngm-store.jawafdehi.org',
@@ -282,6 +338,15 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
   headers.set('Content-Type', upstream.headers.get('Content-Type') || 'application/octet-stream');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Cache-Control', upstream.ok ? 'public, max-age=3600' : 'no-store');
+  // This route serves ORIGINAL source files (court orders, charge sheets, scans)
+  // under jawafdehi.org, the one host the zone-wide Cloudflare noindex rule
+  // exempts. Originals can carry private data that only our redacted
+  // transcripts and case pages may expose to search, so they must never be
+  // indexed. A header rather than a robots.txt Disallow: Disallow stops the
+  // fetch, so Google could still list the URL from a link and could never read
+  // a noindex to drop one it already has. Fresh `Headers` above, so the
+  // upstream bucket's own X-Robots-Tag would otherwise be lost here.
+  headers.set('X-Robots-Tag', ORIGINAL_DOCUMENT_ROBOTS);
 
   const contentLength = upstream.headers.get('Content-Length');
   if (contentLength) headers.set('Content-Length', contentLength);
@@ -313,9 +378,13 @@ async function handleDocumentPreview(request: Request): Promise<Response> {
 
 // Fetch with a hard timeout. Resolves to null (rather than throwing) on timeout,
 // network error, or non-OK status, so callers cleanly fall through to the SPA.
-async function fetchWithTimeout(url: string): Promise<Response | null> {
+async function fetchWithTimeout(
+  url: string,
+  redirect: RequestRedirect = 'follow',
+  timeoutMs: number = META_FETCH_TIMEOUT_MS,
+): Promise<Response | null> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), META_FETCH_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     // Returned whatever the status, so callers can tell "the API says this
     // record does not exist" (404 → serve a real 404) apart from "the API did
@@ -324,6 +393,7 @@ async function fetchWithTimeout(url: string): Promise<Response | null> {
     return await fetch(url, {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
+      redirect,
     });
   } catch {
     return null;
@@ -438,12 +508,21 @@ async function fetchIndexHtml(request: Request, env: Env): Promise<string | null
   return indexResponse.text();
 }
 
-function metaHtmlResponse(html: string): Response {
+// How a meta fallback behaves when it is the second resort, after an edge
+// render that failed (see serveEdgePage): a shorter wait on the API, which has
+// just failed to answer once, and a shorter browser TTL, so the reader gets the
+// real page soon after the API recovers.
+interface MetaFallbackOptions {
+  timeoutMs?: number;
+  cacheControl?: string;
+}
+
+function metaHtmlResponse(html: string, cacheControl = 'public, max-age=300'): Response {
   return new Response(html, {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=300',
+      'Cache-Control': cacheControl,
       ...securityHeaders(),
     },
   });
@@ -451,12 +530,13 @@ function metaHtmlResponse(html: string): Response {
 
 // The SPA shell at 404. Used when the API positively reports that a detail
 // record does not exist — a renamed case slug, a deleted article. React Router
-// renders NotFound from this body; only the status line differs.
-async function notFoundShellResponse(request: Request, env: Env): Promise<Response | null> {
+// renders NotFound from this body; only the status line differs. 410 for a URL
+// that is gone for good (legacy numeric entity pages).
+async function notFoundShellResponse(request: Request, env: Env, status: 404 | 410 = 404): Promise<Response | null> {
   const indexHtml = await fetchIndexHtml(request, env);
   if (!indexHtml) return null;
   return new Response(indexHtml, {
-    status: 404,
+    status,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
@@ -467,8 +547,17 @@ async function notFoundShellResponse(request: Request, env: Env): Promise<Respon
 }
 
 // Inject share metadata for a published case not yet captured by pre-render.
-async function handleCaseMetaFallback(request: Request, env: Env, slug: string): Promise<Response | null> {
-  const apiResponse = await fetchWithTimeout(`${JDS_API_BASE}/cases/${encodeURIComponent(slug)}/`);
+async function handleCaseMetaFallback(
+  request: Request,
+  env: Env,
+  slug: string,
+  fallback: MetaFallbackOptions = {},
+): Promise<Response | null> {
+  const apiResponse = await fetchWithTimeout(
+    `${JDS_API_BASE}/cases/${encodeURIComponent(slug)}/`,
+    'follow',
+    fallback.timeoutMs,
+  );
   if (!apiResponse) return null;
   // Case slugs get renamed, and the old URL stays in circulation. The API
   // saying 404 is a positive answer, unlike a timeout.
@@ -524,7 +613,7 @@ async function handleCaseMetaFallback(request: Request, env: Env, slug: string):
     // out of search engines (only PUBLISHED is indexable). Share cards still work.
     robots: caseData.state === 'PUBLISHED' ? null : 'noindex, nofollow',
   });
-  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags), fallback.cacheControl);
 }
 
 // Inject share metadata for a CMS update/news article not yet pre-rendered.
@@ -585,6 +674,56 @@ async function handleUpdateMetaFallback(request: Request, env: Env, slug: string
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
+// How long a moved material's 301 is cached, at the edge and in browsers. A
+// day, matching the API's own redirect: long enough that a popular old link
+// costs one API call a day, short enough that moving a document BACK (a
+// correction must stay reversible) does not leave readers looping for long.
+const MATERIAL_MOVED_TTL_SECONDS = 86400;
+
+// A re-filed material: the API 301s its old address to the current one
+// (`Location: /api/materials/<source>/<ident>`). Turn that into a 301 between
+// the matching site pages, keeping the reader's query string. Returns null for a
+// Location that is not a material address, so the caller falls through to the
+// shell rather than sending anyone somewhere unexpected.
+function movedMaterialResponse(
+  request: Request,
+  tail: string,
+  apiResponse: Response,
+): Response | null {
+  const location = apiResponse.headers.get('Location');
+  if (!location) return null;
+  let path: string;
+  try {
+    path = new URL(location, JDS_API_BASE).pathname;
+  } catch {
+    return null;
+  }
+  const prefix = '/api/materials/';
+  if (!path.startsWith(prefix)) return null;
+  let movedTail: string;
+  try {
+    movedTail = path
+      .slice(prefix.length)
+      .replace(/\/+$/, '')
+      .split('/')
+      .map(decodeURIComponent)
+      .join('/');
+  } catch {
+    return null;
+  }
+  // Same gate as the incoming splat: the target becomes a URL on our origin.
+  if (!isMaterialTail(movedTail) || movedTail === tail) return null;
+  const target = new URL(`/material/${encodeMaterialTail(movedTail)}`, request.url);
+  target.search = new URL(request.url).search;
+  return new Response(null, {
+    status: 301,
+    headers: {
+      Location: target.toString(),
+      'Cache-Control': `public, max-age=${MATERIAL_MOVED_TTL_SECONDS}`,
+    },
+  });
+}
+
 // Inject share metadata and JSON-LD for a material page.
 //
 // Unlike cases and updates, this is not a gap-filler for records published since
@@ -606,6 +745,7 @@ async function handleMaterialMetaFallback(
   request: Request,
   env: Env,
   tail: string,
+  fallback: MetaFallbackOptions = {},
 ): Promise<Response | null> {
   // `/material/*` matches at any depth, so the splat is attacker-controlled and
   // is checked BEFORE it reaches a URL. See isMaterialTail: without this,
@@ -613,10 +753,27 @@ async function handleMaterialMetaFallback(
   // renders an unrelated record into the head.
   if (!isMaterialTail(tail)) return notFoundShellResponse(request, env);
 
+  // A re-filed document's old address answers from the edge cache once it has
+  // been seen (see movedMaterialResponse); nothing else on this path is cached.
+  const cache = caches.default;
+  const cachedMove = await cache.match(request);
+  if (cachedMove) return cachedMove;
+
+  // `manual`, not the default `follow`: the API 301s a retired material address
+  // to the document's current one, and following it silently would render the
+  // moved document's head here under the OLD canonical.
   const apiResponse = await fetchWithTimeout(
     `${JDS_API_BASE}/materials/${encodeMaterialTail(tail)}/`,
+    'manual',
+    fallback.timeoutMs,
   );
   if (!apiResponse) return null;
+  if (apiResponse.status === 301 || apiResponse.status === 308) {
+    const moved = movedMaterialResponse(request, tail, apiResponse);
+    if (!moved) return null;
+    if (request.method === 'GET') await cache.put(request, moved.clone());
+    return moved;
+  }
   // A positive "no such material" — a retired ident, a soft-deleted row, or one
   // whose visibility is no longer LISTED. Unlike a timeout, that is an answer.
   if (apiResponse.status === 404) return notFoundShellResponse(request, env);
@@ -666,7 +823,7 @@ async function handleMaterialMetaFallback(
   const jsonLd = materialJsonLd(material, displayName, materialDescriptionText(material));
   const head = `${metaTags}\n    <script type="application/ld+json">${jsonLd}</script>`;
 
-  return metaHtmlResponse(injectHeadMeta(indexHtml, head));
+  return metaHtmlResponse(injectHeadMeta(indexHtml, head), fallback.cacheControl);
 }
 
 // The author's composed share card, proxied from the platform API.
@@ -807,8 +964,258 @@ async function handleAuthorMetaFallback(
   return metaHtmlResponse(injectHeadMeta(indexHtml, metaTags));
 }
 
+// --------------------------------------------------------------------------
+// Edge SSR: record pages rendered on request, cached by Workers Cache
+//
+// /case/*, /entity/*, /material/* and /courtcase/* are rendered here from the
+// API when no pre-rendered file exists, so a crawler and a first paint get the
+// whole page, not a shell. The rendering happens in the EdgePages entrypoint,
+// and ONLY there, because that entrypoint is the one wrangler.toml puts Workers
+// Cache in front of. This default entrypoint stays uncached on purpose (it
+// carries redirects, 404s and per-route headers that must run every time), and
+// hands record pages to EdgePages through ctx.exports, which goes through the
+// cache: a hit returns the stored page without EdgePages running at all.
+//
+// Freshness: an hour at the edge, then stale-while-revalidate for 7 days, and
+// purge-on-change from the API (/_cache/purge, below) as the real mechanism.
+// Failure: on a timeout or API error EdgePages answers 5xx, so the cache keeps
+// serving its last good copy (stale-if-error, 7 days); with no copy at all,
+// serveEdgePage falls back to the meta-injection shell this Worker served before
+// edge SSR existed. A reader never gets a 5xx from a slow API.
+//
+// CPU: one render is ~25 ms (measured, JAW-80), over the Workers Free plan's
+// 10 ms. Workers Paid bills CPU time only, never time spent waiting on the API.
+// --------------------------------------------------------------------------
+
+const DEFAULT_EDGE_API_TIMEOUT_MS = 4000;
+const DEFAULT_EDGE_DEADLINE_MS = 8000;
+// After a render timed out, the meta fallback's own API call gets this long:
+// the API has just failed to answer once, so do not wait another 4 s on it.
+const FALLBACK_AFTER_TIMEOUT_MS = 1500;
+// Purge bodies are a list of at most 100 short tags.
+const MAX_PURGE_BODY_BYTES = 16 * 1024;
+
+// Headers EdgePages sets for the cache or for the gateway, never for a browser.
+const EDGE_INTERNAL_HEADERS = ['Cache-Tag', 'Cloudflare-CDN-Cache-Control', 'X-Edge-SSR-Reason'];
+
+function edgeSsrEnabled(env: Env): boolean {
+  return (env.EDGE_SSR ?? '').trim().toLowerCase() !== 'off';
+}
+
+function positiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function edgeMarker(status: number, marker: string, reason?: string): Response {
+  const headers: Record<string, string> = { 'Cache-Control': 'no-store', 'X-Edge-SSR': marker };
+  // Bounded and on one line: it is read by the gateway's log, nothing else.
+  if (reason) headers['X-Edge-SSR-Reason'] = reason.replace(/[\r\n]+/g, ' ').slice(0, 300);
+  return new Response(null, { status, headers });
+}
+
+// The cached side. Everything this returns with a 200 or a 301 is stored by
+// Workers Cache under the request's path (the host is NOT part of the key:
+// jawafdehi.org and jawafdehi.org.np share one copy, which is why nothing here
+// may depend on the host — the site variant is chosen client-side).
+async function handleEdgePageRequest(request: Request, env: Env, ctx?: WorkerContext): Promise<Response> {
+  const url = new URL(request.url);
+  if (normalizePath(url.pathname) === '/_cache/purge') return handleCachePurge(request, env, ctx);
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+  const sitemapPath = sitemapUpstreamPath(url.pathname, url.search);
+  if (sitemapPath) return handleSitemap(sitemapPath);
+
+  const matched = matchRoute(url.pathname);
+  const kind = edgeKindForRoute(matched?.path);
+  if (!matched || !kind) return edgeMarker(404, 'not-found', 'not an edge-rendered route');
+  const tail = routeTail(kind, matched.params);
+  // `/material/*` takes any depth, so the splat is attacker-controlled; the same
+  // gate as handleMaterialMetaFallback, applied before it becomes an API path.
+  if (!tail || (kind === 'material' && !isMaterialTail(tail))) return edgeMarker(404, 'not-found');
+
+  const outcome = await renderEdgePage(edgeBundle, kind, tail, normalizePath(url.pathname), {
+    apiTimeoutMs: positiveInt(env.EDGE_SSR_API_TIMEOUT_MS, DEFAULT_EDGE_API_TIMEOUT_MS),
+    deadlineMs: positiveInt(env.EDGE_SSR_DEADLINE_MS, DEFAULT_EDGE_DEADLINE_MS),
+    // Never wait on a token mint: see edgeApiTokenNoWait.
+    token: edgeApiTokenNoWait(env, ctx?.waitUntil ? (p) => ctx.waitUntil?.(p) : undefined),
+  });
+
+  switch (outcome.kind) {
+    case 'ok':
+      return new Response(outcome.html, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': CACHE_CONTROL_BROWSER,
+          'Cloudflare-CDN-Cache-Control': EDGE_CDN_CACHE_CONTROL,
+          'Cache-Tag': (await pageTags(kind, outcome.tails)).join(','),
+          'X-Edge-SSR': 'render',
+        },
+      });
+    case 'moved':
+      // Relative on purpose: the cached copy is shared by every host.
+      return new Response(null, {
+        status: 301,
+        headers: {
+          Location: outcome.location,
+          'Cache-Control': `public, max-age=${MATERIAL_MOVED_TTL_SECONDS}`,
+          'Cache-Tag': (await pageTags(kind, [tail])).join(','),
+          'X-Edge-SSR': 'moved',
+        },
+      });
+    case 'not_found':
+      return edgeMarker(404, 'not-found');
+    case 'timeout':
+      console.warn('[edge-ssr] render timed out', url.pathname, outcome.reason);
+      return edgeMarker(504, 'timeout', outcome.reason);
+    case 'error':
+      console.warn('[edge-ssr] render failed', url.pathname, outcome.reason);
+      return edgeMarker(503, 'error', outcome.reason);
+  }
+}
+
+// The request body as text, or null once it passes `maxBytes`. Read in chunks
+// and cancelled at the limit, because the route is reachable before the
+// signature is checked: a chunked upload with no Content-Length must not be
+// buffered whole just to be refused.
+async function readBodyLimited(request: Request, maxBytes: number): Promise<string | null> {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let total = 0;
+  let text = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
+// A sitemap from the API, cached like a page (see worker/sitemap.ts). On any
+// upstream failure: 5xx, so the cache keeps serving its last good copy.
+async function handleSitemap(upstreamPath: string): Promise<Response> {
+  const upstream = await fetchWithTimeout(`${API_ORIGIN}${upstreamPath}`, 'follow', SITEMAP_FETCH_TIMEOUT_MS);
+  const type = upstream?.headers.get('Content-Type') ?? '';
+  if (!upstream?.ok || !/xml/i.test(type)) {
+    console.warn('[edge-ssr] sitemap fetch failed', upstreamPath, upstream?.status ?? 'no response');
+    if (upstream?.status === 404) return edgeMarker(404, 'not-found');
+    return edgeMarker(503, 'error', `sitemap upstream ${upstream?.status ?? 'timeout'}`);
+  }
+  let body = withCanonicalSlashes(await upstream.text());
+  if (upstreamPath.startsWith('/sitemap.xml')) body = withSiteSitemap(body);
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': SITEMAP_BROWSER_CACHE_CONTROL,
+      'Cloudflare-CDN-Cache-Control': SITEMAP_CDN_CACHE_CONTROL,
+      'Cache-Tag': 'sitemap,ssr:all',
+      'X-Edge-SSR': 'sitemap',
+    },
+  });
+}
+
+// POST /_cache/purge from the API's case_events edge-purge consumer.
+//
+// Runs inside EdgePages because a Workers Cache purge only reaches the cache of
+// the entrypoint that calls it. POST is never cached, so this always runs.
+async function handleCachePurge(request: Request, env: Env, ctx?: WorkerContext): Promise<Response> {
+  if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+  const secret = env.CACHE_PURGE_SECRET?.trim();
+  if (!secret) return jsonResponse({ error: 'cache purge is not configured' }, 503, 0);
+
+  const declared = Number(request.headers.get('Content-Length') ?? '0');
+  if (declared > MAX_PURGE_BODY_BYTES) return jsonResponse({ error: 'body too large' }, 413, 0);
+  const body = await readBodyLimited(request, MAX_PURGE_BODY_BYTES);
+  if (body === null) return jsonResponse({ error: 'body too large' }, 413, 0);
+
+  const authentic = await verifyPurgeSignature({
+    secret,
+    timestamp: request.headers.get('X-Jawafdehi-Timestamp'),
+    signature: request.headers.get('X-Jawafdehi-Signature'),
+    body,
+    nowSeconds: Math.floor(Date.now() / 1000),
+  });
+  if (!authentic) return jsonResponse({ error: 'bad or stale signature' }, 401, 0);
+
+  const parsed = parsePurgeBody(body);
+  if (!parsed.ok) return jsonResponse({ error: parsed.error }, 400, 0);
+  if (!ctx?.cache) return jsonResponse({ error: 'Workers Cache is not available here' }, 501, 0);
+
+  const result = await ctx.cache.purge({ tags: parsed.tags });
+  if (!result.success) {
+    // Rate-limited or failed: tell the caller to retry later (it redelivers).
+    console.warn('[edge-ssr] cache purge failed', JSON.stringify(result.errors ?? []));
+    return jsonResponse({ error: 'purge failed', errors: result.errors ?? [] }, 429, 0);
+  }
+  return jsonResponse({ ok: true, purged: parsed.tags.length }, 200, 0);
+}
+
+// The uncached side: hand a record page to EdgePages (through the cache), then
+// turn its verdict into what the reader gets. Returns null when the caller
+// should carry on to the meta-injection shell with `fallback` options.
+async function serveEdgePage(
+  request: Request,
+  env: Env,
+  ctx: WorkerContext | undefined,
+  secHeaders: Record<string, string>,
+): Promise<{ response: Response } | { fallback: MetaFallbackOptions; marker: string }> {
+  const url = new URL(request.url);
+  // Path only: the query string would split the cache (utm_*, fbclid) for no
+  // difference in the rendered record. The browser re-renders with the real
+  // URL anyway (createRoot, not hydration). No incoming headers either:
+  // Authorization or Cookie on the forwarded request would make the cache
+  // BYPASS, and nothing the page renders depends on them.
+  // `redirect: 'manual'`: a `moved` verdict (a re-filed material, a superseded
+  // case slug) is a 301 for the READER. Followed here, it was silently replaced
+  // by a render of the target, served under the old URL as a 200 duplicate.
+  const inner = new Request(new URL(normalizePath(url.pathname), url.origin).toString(), {
+    method: request.method === 'HEAD' ? 'HEAD' : 'GET',
+    headers: { Accept: 'text/html' },
+    redirect: 'manual',
+  });
+
+  let res: Response;
+  try {
+    res = ctx?.exports?.EdgePages
+      ? await ctx.exports.EdgePages.fetch(inner)
+      : await handleEdgePageRequest(inner, env, ctx);
+  } catch (err) {
+    console.warn('[edge-ssr] EdgePages call failed', String((err as Error)?.message ?? err));
+    return { fallback: { cacheControl: CACHE_CONTROL_FALLBACK }, marker: 'fallback-error' };
+  }
+
+  if (res.status === 200 || res.status === 301) {
+    const response = new Response(res.body, res);
+    for (const name of EDGE_INTERNAL_HEADERS) response.headers.delete(name);
+    for (const [key, value] of Object.entries(secHeaders)) response.headers.set(key, value);
+    return { response };
+  }
+
+  const marker = res.headers.get('X-Edge-SSR');
+  if (res.status === 404 && marker === 'not-found') {
+    const notFound = await notFoundShellResponse(request, env);
+    if (notFound) return { response: notFound };
+  }
+  if (marker === 'timeout') {
+    return {
+      fallback: { timeoutMs: FALLBACK_AFTER_TIMEOUT_MS, cacheControl: CACHE_CONTROL_FALLBACK },
+      marker: 'fallback-timeout',
+    };
+  }
+  return { fallback: { cacheControl: CACHE_CONTROL_FALLBACK }, marker: 'fallback-error' };
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: WorkerContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     // Endpoints the Worker owns are matched on the trailing-slash-normalised
@@ -816,6 +1223,14 @@ export default {
     // pathname let /api/latest-videos/ miss its handler and fall through to the
     // SPA shell, which answered 200 with HTML where the caller expected JSON.
     const endpoint = normalizePath(path);
+
+    // Cache purges from the API. Handled inside EdgePages, whose cache it is.
+    if (endpoint === '/_cache/purge') {
+      if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+      return ctx?.exports?.EdgePages
+        ? ctx.exports.EdgePages.fetch(request)
+        : handleEdgePageRequest(request, env, ctx);
+    }
 
     // Handle oEmbed endpoint
     if (endpoint === '/oembed') {
@@ -932,6 +1347,18 @@ export default {
       });
     }
 
+    // /whats-new folded into Updates & News, as its product updates — 301.
+    if (endpoint === '/whats-new') {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': '/updates/?filter=product',
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
     // Short alias: /weekly → /saptahik (301)
     if (endpoint === '/weekly') {
       return new Response(null, {
@@ -944,25 +1371,17 @@ export default {
       });
     }
 
-    // /research → the only research publication there is (302)
-    //
-    // The SPA has no /research route, so the bare path answered 404 even though
-    // it is the address people shorten to and type. It points at the single
-    // publication because that is currently the whole of the section.
-    //
-    // TEMPORARY, hence 302 rather than the permanent 301 /weekly uses above: once
-    // there is more than one research item this redirect goes away and /research
-    // becomes the section's own dashboard page. A 301 would by then be cached in
-    // browsers we cannot reach.
-    //
-    // Target carries the trailing slash the pre-rendered page is published at, so
-    // this is one hop rather than a 302 into the assets binding's own 307.
-    if (endpoint === '/research') {
+    // Research moved to its own site, research.jawafdehi.org, and the in-app
+    // report page was removed. The section's old addresses — the bare /research
+    // people type, and the report's own URL — 301 there, query string carried
+    // (so a reel's ?utm_source still arrives). Permanent: the section does not
+    // come back to this origin.
+    if (endpoint === '/research' || endpoint === '/research/corruption-accountability') {
       return new Response(null, {
-        status: 302,
+        status: 301,
         headers: {
-          'Location': '/research/corruption-accountability/' + url.search,
-          'Cache-Control': 'public, max-age=3600',
+          'Location': RESEARCH_URL + '/' + url.search,
+          'Cache-Control': 'public, max-age=86400',
           ...secHeaders,
         },
       });
@@ -971,7 +1390,7 @@ export default {
     // Handle legacy numeric case redirects (301)
     //
     // Target carries the trailing slash the pre-rendered page is published at,
-    // for the same reason /research above does: without it this 301 lands on a
+    // because otherwise this 301 lands on a
     // URL that immediately 307s, so /case/212 cost two hops and the middle one
     // named a redirecting URL as its canonical. Search Console counted that as
     // "Duplicate, Google chose different canonical than user" on 16 URLs.
@@ -991,6 +1410,24 @@ export default {
       }
     }
 
+    // Legacy numeric entity URLs (/entity/<id>), retired with the JawafEntity
+    // table in July 2026. Google still holds ~90 of them, as 404s and soft 404s.
+    // An ID whose entity can be identified today 301s to its page; the rest are
+    // 410, which tells Google the page is gone for good rather than missing.
+    // See src/utils/legacyEntityMap.ts for how the mapping was made.
+    const legacyEntityMatch = path.match(/^\/entity\/(\d+)\/?$/);
+    if (legacyEntityMatch) {
+      const target = LEGACY_ENTITY_MAP[legacyEntityMatch[1]];
+      if (target) {
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': target, 'Cache-Control': 'public, max-age=86400', ...secHeaders },
+        });
+      }
+      const gone = await notFoundShellResponse(request, env, 410);
+      if (gone) return gone;
+    }
+
     // Court-case-ref case URLs: /case/081-CR-0116 → canonical slug (301)
     // Slash-terminated for the same reason as the numeric redirect above.
     const courtRefMatch = path.match(/^\/case\/(\d+-[A-Za-z]+-\d+)\/?$/);
@@ -1008,6 +1445,56 @@ export default {
       }
     }
 
+    // Case and entity pages: slashless → slashed (301).
+    //
+    // Their canonical URL ends in a slash (CaseDetail's and EntityRecordProfile's
+    // canonical, the sitemap, the legacy redirects above). While the build
+    // pre-rendered them to <path>/index.html the assets binding 307'd the
+    // slashless form; nothing is pre-rendered for them any more (the edge renders
+    // them, see "Edge SSR" above), so this does that job, permanently, and
+    // without rendering the page twice under two cache keys.
+    //
+    // /material/* and /courtcase/* are canonical WITHOUT a slash and are left
+    // alone. The Location is rebuilt from a single leading slash so that a
+    // `//case/x` path cannot turn into a protocol-relative redirect off-site.
+    if (
+      (matched?.path === '/case/:id' || matched?.path === '/entity/*') &&
+      !path.endsWith('/') &&
+      (request.method === 'GET' || request.method === 'HEAD')
+    ) {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': `/${path.replace(/^\/+/, '')}/${url.search}`,
+          'Cache-Control': 'public, max-age=86400',
+          ...secHeaders,
+        },
+      });
+    }
+
+    // Sitemaps come from the API through the cached EdgePages entrypoint.
+    // /sitemap-site.xml, the site's own pages, is a static asset and never
+    // reaches here: the assets binding answers first.
+    const sitemapPath = sitemapUpstreamPath(path, url.search);
+    if (sitemapPath && (request.method === 'GET' || request.method === 'HEAD')) {
+      const inner = new Request(new URL(sitemapPath, url.origin).toString(), {
+        method: request.method,
+        headers: { Accept: 'application/xml' },
+      });
+      const res = ctx?.exports?.EdgePages
+        ? await ctx.exports.EdgePages.fetch(inner)
+        : await handleEdgePageRequest(inner, env, ctx);
+      if (res.status === 200) {
+        const response = new Response(res.body, res);
+        for (const name of EDGE_INTERNAL_HEADERS) response.headers.delete(name);
+        return response;
+      }
+      return new Response(res.status === 404 ? 'Not Found' : 'Sitemap temporarily unavailable', {
+        status: res.status === 404 ? 404 : 503,
+        headers: { 'Cache-Control': 'no-store', 'Retry-After': '300', 'Content-Type': 'text/plain' },
+      });
+    }
+
     // Try to serve pre-rendered static asset
     const asset = await env.ASSETS.fetch(request);
     if (asset.status !== 404) {
@@ -1021,8 +1508,9 @@ export default {
     // SPA fallback. Everything below is a path ASSETS does not hold.
     if (request.method !== 'GET' && request.method !== 'HEAD') return asset;
 
-    // Case / update detail pages published after the last build aren't
-    // pre-rendered, so the bare SPA shell would share with generic metadata.
+    // Case pages are not pre-rendered at all (the edge renders them) and update
+    // articles published after the last build are not either, so the bare SPA
+    // shell would share with generic metadata.
     // Inject the record's real Open Graph / Twitter tags so link previews are
     // correct on every platform. Numeric / court-ref case URLs are already
     // redirected to their canonical slug above, so only slugs reach here.
@@ -1031,9 +1519,26 @@ export default {
     // routes out of it: /updates/preview is the Wagtail preview target, not an
     // article, and asking the CMS for an article named "preview" 404'd it.
     // Params come back percent-decoded.
+    //
+    // Record pages are rendered at the edge first (see serveEdgePage). Only when
+    // that fails with nothing cached do they get the meta-injection shell below,
+    // with a shorter API wait and a shorter browser TTL.
+    let fallback: MetaFallbackOptions = {};
+    let fallbackMarker: string | null = null;
+    if (edgeKindForRoute(matched?.path) && edgeSsrEnabled(env)) {
+      const edge = await serveEdgePage(request, env, ctx, secHeaders);
+      if ('response' in edge) return edge.response;
+      fallback = edge.fallback;
+      fallbackMarker = edge.marker;
+    }
+    const markFallback = (response: Response): Response => {
+      if (fallbackMarker) response.headers.set('X-Edge-SSR', fallbackMarker);
+      return response;
+    };
+
     if (matched?.path === '/case/:id' && matched.params.id) {
-      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id);
-      if (metaResponse) return metaResponse;
+      const metaResponse = await handleCaseMetaFallback(request, env, matched.params.id, fallback);
+      if (metaResponse) return markFallback(metaResponse);
     }
     if ((matched?.path === '/updates/:slug' || matched?.path === '/blog/:slug') && matched.params.slug) {
       const metaResponse = await handleUpdateMetaFallback(
@@ -1052,8 +1557,8 @@ export default {
     // is not a gap-filler like the three above — it is the only head these pages
     // get. The splat param carries `<source>/<ident>`, percent-decoded.
     if (matched?.path === '/material/*' && matched.params['*']) {
-      const metaResponse = await handleMaterialMetaFallback(request, env, matched.params['*']);
-      if (metaResponse) return metaResponse;
+      const metaResponse = await handleMaterialMetaFallback(request, env, matched.params['*'], fallback);
+      if (metaResponse) return markFallback(metaResponse);
     }
 
     const indexRequest = new Request(new URL('/', request.url).toString(), { method: 'GET' });
@@ -1077,7 +1582,18 @@ export default {
       // become real the moment a case is published.
       spaResponse.headers.set('Cache-Control', 'no-store');
       spaResponse.headers.set('X-Robots-Tag', 'noindex');
+    } else if (fallbackMarker) {
+      spaResponse.headers.set('Cache-Control', CACHE_CONTROL_FALLBACK);
+      markFallback(spaResponse);
     }
     return spaResponse;
   },
 };
+
+// The cached entrypoint. wrangler.toml turns Workers Cache on for this one and
+// off for the default export; see the Edge SSR section above.
+export class EdgePages extends WorkerEntrypoint<Env> {
+  async fetch(request: Request): Promise<Response> {
+    return handleEdgePageRequest(request, this.env, this.ctx as unknown as WorkerContext);
+  }
+}

@@ -1,19 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight } from "@/components/icons";
+import { ArrowRight } from "@/components/icons";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
-import { AllSourcesList } from "@/components/materials/AllSourcesList";
-import { BrowseAllFolderCard } from "@/components/materials/BrowseAllFolderCard";
-import { FolderCard } from "@/components/materials/FolderCard";
+import { lazyChart } from "@/components/charts/lazy";
 import { ArrowLink } from "@/components/ui/arrow-link";
-import { MATERIAL_SERIES, seriesCount, seriesSearchPath } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesSearchPath } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
-import { formatArchiveCount } from "@/lib/materials-landing";
-import { archiveStatisticsQuery } from "@/queries/materials-landing";
-import { CHAT_URL } from "@/lib/external-links";
+import { documentSourcesQuery } from "@/lib/document-sources";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
+
+// The archive browser (folder tree, views, its bilingual name table) is its own
+// chunk: the initial bundle is at its budget, and the browser is interactive UI
+// the reader reaches by scrolling. Loaded in an effect via `lazyChart`, NOT
+// lazy() + <Suspense>, which renderToString cannot pre-render (see
+// components/charts/lazy.tsx); the pre-rendered page carries the placeholder.
+function ArchivePlaceholder() {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-[24rem]">
+      <h2 id="archive-heading" className="font-home-display text-3xl text-primary md:text-4xl">
+        {t("materialsLanding.archive.title", "Browse the archive")}
+      </h2>
+      <p className="mt-3 text-lg leading-8 text-muted-foreground">{t("materialsLanding.series.loading", "Loading…")}</p>
+    </div>
+  );
+}
+const ArchiveBrowser = lazyChart<Record<string, never>>(
+  () => import("@/components/materials/ArchiveBrowser").then((m) => m.ArchiveBrowser),
+  () => <ArchivePlaceholder />,
+);
 
 const CC_BY_NC_URL = "https://creativecommons.org/licenses/by-nc/4.0/";
 
@@ -22,13 +40,9 @@ export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
 
-  const { data: statistics } = useQuery({ ...archiveStatisticsQuery(), staleTime: 5 * 60 * 1000 });
-
-  // Counts come from `seriesCount` rather than a by_source lookup here: a shelf
-  // can now be narrower than its source token (five of them scope
-  // `official_report`), so the arithmetic differs per shelf and lives with the
-  // registry that defines it.
-  const materials = statistics?.materials;
+  // Starts the catalogue request with the page, so the archive browser's
+  // folder counts (the same query) are ready by the time it mounts.
+  useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
 
   const gridRef = useRevealOnScroll<HTMLElement>();
 
@@ -137,72 +151,34 @@ export default function MaterialsLanding() {
             <ArrowLink to="/search?type=material" tone="light">
               {t("materialsLanding.ctaBrowse", "Browse the archive")}
             </ArrowLink>
-            <a
-              href={CHAT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded text-base text-primary-foreground/80 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+            {/* The archive inside the reader's own AI tool: the MCP page. The same
+                soft white fill as the header's Connect your AI on navy. */}
+            <Link
+              to="/mcp/"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-foreground/10 px-5 text-base text-primary-foreground transition-colors duration-150 hover:bg-primary-foreground/[0.16] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
             >
-              {t("materialsLanding.ctaAsk", "Ask the AI assistant")}
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-            </a>
+              {t("materialsLanding.ctaConnect", "Connect your AI")}
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
           </div>
 
-          {/* The holdings, stated: what a shelf of folders only implied. */}
-          <dl className="mt-14 flex flex-wrap gap-x-16 gap-y-6 md:mt-16">
-            <div>
-              <dt className="text-sm text-primary-foreground/55">
-                {t("materialsLanding.stats.documents", "Documents")}
-              </dt>
-              <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
-                {materials ? formatArchiveCount(materials.total, language) : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-primary-foreground/55">
-                {t("materialsLanding.stats.licence", "Licence")}
-              </dt>
-              <dd className="mt-1 text-2xl text-primary-foreground md:text-3xl">CC BY-NC</dd>
-            </div>
-          </dl>
         </div>
       </header>
 
-      {/* Browse by series. */}
+      {/* The archive as one folder tree (folder › office › series): replaces
+          the curated series shelf and the flat every-source list. Counts are
+          live; a source the tree does not know lands under Others. */}
       <section
         ref={gridRef}
-        id="series"
-        aria-labelledby="series-heading"
+        id="archive"
+        aria-labelledby="archive-heading"
         className="scroll-mt-24"
       >
+        {/* Old anchors (#series, #sources) still land here. */}
+        <span id="series" className="block scroll-mt-24" aria-hidden="true" />
+        <span id="sources" className="block scroll-mt-24" aria-hidden="true" />
         <div className="layout-container py-16 md:py-24">
-          {/* A smaller title than a page section's, with one line under it:
-              the folders are the content, the heading only names the shelf. */}
-          <h2 id="series-heading" className="font-home-display text-3xl text-primary md:text-4xl">
-            {t("materialsLanding.grid.title", "Browse by series")}
-          </h2>
-          <p className="mt-3 max-w-2xl text-lg leading-8 text-muted-foreground">
-            {t("materialsLanding.grid.subtitle", "Each series is one kind of record, from the body that published it.")}
-          </p>
-          {/* Nine series and the way out: five across makes two even rows. */}
-          <ul className="mt-10 grid list-none grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-5">
-            {MATERIAL_SERIES.map((series) => (
-              <li key={series.slug}>
-                <FolderCard series={series} count={seriesCount(series, materials)} />
-              </li>
-            ))}
-            <li>
-              <BrowseAllFolderCard />
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Every source, live from the API: the complete list behind the curated
-          series, so a newly loaded source is never invisible here. */}
-      <section id="sources" aria-labelledby="sources-heading" className="scroll-mt-24">
-        <div className="layout-container pb-16 md:pb-24">
-          <AllSourcesList />
+          <ArchiveBrowser />
         </div>
       </section>
     </div>

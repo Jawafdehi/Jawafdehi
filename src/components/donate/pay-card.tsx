@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { trackEvent, type DonateAction, type DonateMethod } from "@/utils/analytics";
+import { SiteOnly } from "@/components/SiteOnly";
+import { currentSiteVariant } from "@/lib/site-host";
 
 // US 501(c)(3) donation rails (Jawafdehi Initiative, Inc.). Both settle to the
 // same entity; they differ only in what the donor sees at checkout.
@@ -577,6 +579,9 @@ export function PayCard({
 
   useEffect(() => {
     if (userChoseRef.current) return;
+    // jawafdehi.org.np has no "abroad" panel (see below), so it never leaves
+    // the Nepal tab whatever the visitor's timezone.
+    if (currentSiteVariant() === "np") return;
     const guessed = guessRegion();
     if (guessed !== "nepal") setRegion(guessed);
   }, []);
@@ -595,6 +600,11 @@ export function PayCard({
       {/* The heading and the route switch share the top line. */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {header}
+        {/* jawafdehi.org.np is the Nepal company's site and does not ask for
+            gifts to the US entity: it shows only the Nepal route (the
+            company's own bank account and QR codes), with no region switch.
+            jawafdehi.org keeps both. */}
+        <SiteOnly site="org">
         <div
           role="group"
           aria-label={t("donate.ways.title")}
@@ -633,6 +643,7 @@ export function PayCard({
             );
           })}
         </div>
+        </SiteOnly>
       </div>
 
       {/* Words on the left with the contact row on the card's bottom edge,
@@ -646,9 +657,11 @@ export function PayCard({
           <div className={routeClass(region === "nepal")}>
             <NepalWords />
           </div>
-          <div className={routeClass(region === "abroad")}>
-            <AbroadWords />
-          </div>
+          <SiteOnly site="org">
+            <div className={routeClass(region === "abroad")}>
+              <AbroadWords />
+            </div>
+          </SiteOnly>
         </div>
 
         <div className="grid min-w-0 md:col-start-2 md:row-span-2 md:row-start-1 md:[&>*]:[grid-area:1/1]">
@@ -657,9 +670,11 @@ export function PayCard({
               <NepalAction />
             </div>
           </div>
-          <div className={routeClass(region === "abroad")}>
-            <AbroadAction />
-          </div>
+          <SiteOnly site="org">
+            <div className={routeClass(region === "abroad")}>
+              <AbroadAction />
+            </div>
+          </SiteOnly>
         </div>
 
         {footer ? <div className="md:col-start-1 md:row-start-2 md:self-end">{footer}</div> : null}

@@ -37,11 +37,9 @@ describe("Materials view routing", () => {
     expect(await screen.findByText("LANDING")).toBeTruthy();
   });
 
-  it("opens a series as a filter on the archive search", async () => {
+  it("opens a series as the archive search with that series applied", async () => {
     renderAt("/materials/?series=ciaa-annual-reports");
-    expect(
-      await screen.findByText("SEARCH AT /search/?type=material&series=ciaa-annual-reports"),
-    ).toBeTruthy();
+    expect(await screen.findByText("SEARCH AT /search/?type=material&series=ciaa-annual-reports")).toBeTruthy();
   });
 
   it("redirects a bare ?q= to /search, so existing deep links survive", async () => {
@@ -63,20 +61,13 @@ describe("Materials view routing", () => {
     expect(await screen.findByText("SEARCH AT /search/?type=material&material_type=report")).toBeTruthy();
   });
 
-  it("keeps a series' own query, sort and date range on the way", async () => {
-    // The retired series page searched inside its shelf with q/sort and kept its
-    // dates as from/to; search reads the same query and sort, and its own
-    // date_from/date_to.
-    renderAt("/materials/?series=charge-sheets&q=ujuri&sort=oldest&from=2080-01-01");
-    expect(
-      await screen.findByText(
-        "SEARCH AT /search/?type=material&series=charge-sheets&q=ujuri&sort=oldest&date_from=2080-01-01",
-      ),
-    ).toBeTruthy();
+  it("keeps a series' query and sort when it moves to the search", async () => {
+    renderAt("/materials/?series=charge-sheets&q=ujuri&sort=oldest");
+    expect(await screen.findByText("SEARCH AT /search/?type=material&series=charge-sheets&q=ujuri&sort=oldest")).toBeTruthy();
     await waitFor(() => expect(screen.queryByText("LANDING")).toBeNull());
   });
 
-  it("opens a whole source (?source=) as a filter on the archive search", async () => {
+  it("opens a whole source (?source=) as the search scoped to it", async () => {
     renderAt("/materials/?source=dri");
     expect(await screen.findByText("SEARCH AT /search/?type=material&source=dri")).toBeTruthy();
   });

@@ -67,6 +67,7 @@ import { useDebounced } from "@/hooks/use-debounced";
 import { columnWidths, dropEmptyColumns } from "@/lib/content-table";
 import { rememberListScroll } from "@/lib/contents-scroll";
 import { captionOr } from "@/lib/content-captions";
+import { formatCount } from "@/utils/number";
 
 /** The marker a reader sees beside any value that was read off a chart image. */
 const ESTIMATE_MARK = "≈";
@@ -90,7 +91,7 @@ function nepaliSafe(value: string, fallback: string): string {
 
 function formatValue(value: number | null): string {
   if (value === null) return "—";
-  return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return formatCount(value, { maximumFractionDigits: 2 });
 }
 
 // ─── charts ─────────────────────────────────────────────────────────────────
@@ -524,7 +525,7 @@ function MarkdownTable({
           onClick={onShowAll}
           className="mt-2 min-h-11 text-sm text-primary underline underline-offset-2 hover:no-underline"
         >
-          Show all {body.length.toLocaleString()} rows
+          Show all {formatCount(body.length)} rows
         </button>
       ) : null}
     </>

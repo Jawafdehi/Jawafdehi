@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setNewsletterPromptState } from "@/lib/newsletter";
 import { JDSApiError, subscribeToNewsletter } from "@/services/jds-api";
 import { cn } from "@/lib/utils";
 import { NEWSLETTER_PRIVACY_VERSION } from "@/config/newsletter";
@@ -19,6 +18,12 @@ type NewsletterFormProps = {
   compact?: boolean;
   /** High-contrast variant for use on primary/dark backgrounds. */
   inverted?: boolean;
+  /**
+   * The footer's form: name and email stacked in plain white boxes, then the
+   * consent line and a crimson Subscribe (the navbar's Donate button). Text
+   * around the boxes takes the footer's own --footer-* tokens.
+   */
+  footer?: boolean;
   submitLabel: string;
   onSubscribed?: () => void;
   className?: string;
@@ -42,6 +47,7 @@ export function NewsletterForm({
   withLastName = false,
   compact = false,
   inverted = false,
+  footer = false,
   submitLabel,
   onSubscribed,
   className,
@@ -64,6 +70,7 @@ export function NewsletterForm({
         className={cn(
           "flex flex-col items-center gap-6 py-6 text-center",
           inverted && "text-primary-foreground",
+          footer && "items-start py-2 text-left",
           className,
         )}
       >
@@ -71,6 +78,7 @@ export function NewsletterForm({
           className={cn(
             "h-20 w-20 shrink-0 stroke-[4] text-success",
             inverted && "text-primary-foreground",
+            footer && "h-10 w-10 stroke-[3] text-[var(--footer-title)]",
           )}
           aria-hidden="true"
         />
@@ -79,6 +87,7 @@ export function NewsletterForm({
             className={cn(
               "mx-auto max-w-md text-lg leading-7 text-primary",
               inverted && "text-primary-foreground",
+              footer && "mx-0 text-[var(--footer-fg)]",
             )}
           >
             {t("newsletter.form.successTitle")}
@@ -87,6 +96,7 @@ export function NewsletterForm({
             className={cn(
               "mx-auto mt-2 max-w-md text-base leading-7 text-muted-foreground",
               inverted && "text-primary-foreground/80",
+              footer && "mx-0 text-[var(--footer-link)]",
             )}
           >
             {t("newsletter.form.successMessage")}
@@ -119,11 +129,10 @@ export function NewsletterForm({
         lastName: withLastName ? lastName.trim() || undefined : undefined,
         email: email.trim(),
         consentAccepted: consented,
-        consentSource: compact ? "newsletter_modal" : "share_our_vision",
+        consentSource: footer ? "footer" : compact ? "newsletter_modal" : "share_our_vision",
         privacyVersion: NEWSLETTER_PRIVACY_VERSION,
         locale: i18n.resolvedLanguage ?? i18n.language,
       });
-      setNewsletterPromptState("subscribed");
       setStatus("success");
       onSubscribed?.();
     } catch (err) {
@@ -138,7 +147,8 @@ export function NewsletterForm({
     }
   };
 
-  const labelClassName = cn(compact && "sr-only", inverted && "text-primary-foreground");
+  const placeholders = compact || footer;
+  const labelClassName = cn(placeholders && "sr-only", inverted && "text-primary-foreground");
   const requiredMark = (
     <span aria-hidden="true" className="ml-1 text-accent">
       *
@@ -148,16 +158,36 @@ export function NewsletterForm({
     cn(
       inverted &&
         "border-primary-foreground/25 bg-primary-foreground text-foreground placeholder:text-muted-foreground focus-visible:ring-primary-foreground focus-visible:ring-offset-primary",
+      footer &&
+        "h-11 rounded-lg border-transparent bg-white px-3.5 text-base text-primary shadow-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[var(--footer-title)] focus-visible:ring-offset-0 md:text-[15px]",
       hasError &&
         "border-accent ring-1 ring-accent focus-visible:ring-accent focus-visible:ring-offset-2",
+      hasError && footer && "ring-2 ring-[var(--footer-title)] ring-offset-0",
     );
   const fieldErrorClassName = cn(
     "text-sm font-medium text-destructive",
     inverted && "text-primary-foreground",
+    footer && "text-[var(--footer-title)]",
+  );
+
+  const submitButton = (
+    <Button
+      type="submit"
+      variant={footer ? "accent" : "primary"}
+      disabled={status === "submitting"}
+      className={cn(
+        compact && "w-full",
+        inverted &&
+          "bg-primary-foreground text-primary shadow-primary-foreground/10 hover:bg-primary-foreground/90",
+      )}
+    >
+      {status === "submitting" ? t("newsletter.form.submitting") : submitLabel}
+    </Button>
   );
 
   return (
     <form onSubmit={handleSubmit} noValidate className={cn("space-y-4 text-left", className)}>
+      <div className={cn("space-y-4", footer && "space-y-3")}>
       <div className="space-y-1.5">
         <Label htmlFor={`${fieldId}-first-name`} className={labelClassName}>
           {t("newsletter.form.firstName")}
@@ -170,7 +200,7 @@ export function NewsletterForm({
           required
           aria-invalid={fieldErrors.firstName}
           aria-describedby={fieldErrors.firstName ? `${fieldId}-first-name-error` : undefined}
-          placeholder={compact ? `${t("newsletter.form.firstName")} *` : undefined}
+          placeholder={placeholders ? `${t("newsletter.form.firstName")} *` : undefined}
           value={firstName}
           onChange={(e) => {
             setFirstName(e.target.value);
@@ -196,7 +226,7 @@ export function NewsletterForm({
             id={`${fieldId}-last-name`}
             name="lastName"
             autoComplete="family-name"
-            placeholder={compact ? t("newsletter.form.lastName") : undefined}
+            placeholder={placeholders ? t("newsletter.form.lastName") : undefined}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className={getInputClassName(false)}
@@ -217,7 +247,7 @@ export function NewsletterForm({
           required
           aria-invalid={fieldErrors.email}
           aria-describedby={fieldErrors.email ? `${fieldId}-email-error` : undefined}
-          placeholder={compact ? `${t("newsletter.form.email")} *` : undefined}
+          placeholder={placeholders ? `${t("newsletter.form.email")} *` : undefined}
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
@@ -233,12 +263,15 @@ export function NewsletterForm({
           </p>
         )}
       </div>
+      </div>
 
       <div className="flex items-start gap-2">
         <Checkbox
           id={`${fieldId}-consent`}
           className={cn(
             "mt-0.5",
+            footer &&
+              "border-[var(--footer-border-hover)] bg-transparent data-[state=checked]:border-[var(--footer-fg)] data-[state=checked]:bg-[var(--footer-fg)] data-[state=checked]:text-[var(--footer-bg)] focus-visible:ring-[var(--footer-fg)] focus-visible:ring-offset-0",
             inverted &&
               "border-primary-foreground/70 bg-transparent text-primary data-[state=checked]:border-primary-foreground data-[state=checked]:bg-primary-foreground data-[state=checked]:text-primary focus-visible:ring-primary-foreground focus-visible:ring-offset-primary",
             fieldErrors.consent &&
@@ -261,14 +294,19 @@ export function NewsletterForm({
           className={cn(
             "text-sm font-normal text-muted-foreground",
             inverted && "text-primary-foreground/75",
+            footer && "text-[var(--footer-link)]",
           )}
         >
           {requiredMark}{" "}
           {t("newsletter.form.privacyPrefix")}{" "}
+          {/* A new tab, so following the link never loses what was typed. */}
           <Link
-            to="/privacy"
+            to="/privacy/"
+            target="_blank"
+            rel="noopener noreferrer"
             className={cn(
               "text-primary underline hover:no-underline",
+              footer && "text-[var(--footer-fg)] decoration-[var(--footer-border-hover)]",
               inverted &&
                 "text-primary-foreground decoration-primary-foreground/60 hover:decoration-primary-foreground",
             )}
@@ -294,24 +332,14 @@ export function NewsletterForm({
           className={cn(
             "text-sm font-medium text-destructive",
             inverted && "text-primary-foreground",
+            footer && "text-[var(--footer-title)]",
           )}
         >
           {formError}
         </p>
       )}
 
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={status === "submitting"}
-        className={cn(
-          compact && "w-full",
-          inverted &&
-            "bg-primary-foreground text-primary shadow-primary-foreground/10 hover:bg-primary-foreground/90",
-        )}
-      >
-        {status === "submitting" ? t("newsletter.form.submitting") : submitLabel}
-      </Button>
+      {submitButton}
     </form>
   );
 }

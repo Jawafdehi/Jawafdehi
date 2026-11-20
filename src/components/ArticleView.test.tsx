@@ -48,7 +48,7 @@ describe("ArticleView", () => {
     expect(screen.getByText("Body paragraph")).toBeTruthy();
     // Related case links to the public case page.
     const caseLink = screen.getByText("Related case title").closest("a");
-    expect(caseLink?.getAttribute("href")).toBe("/case/a-case");
+    expect(caseLink?.getAttribute("href")).toBe("/case/a-case/");
   });
 
   it("omits the related-cases section when there are none", () => {

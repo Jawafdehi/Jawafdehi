@@ -195,7 +195,7 @@ export function CaseDetailBanner({
         <PageBreadcrumb
           items={[
             { label: homeLabel || t("nav.home"), to: "/" },
-            { label: casesLabel || t("nav.cases"), to: "/search?type=case" },
+            { label: casesLabel || t("nav.cases"), to: "/search/?type=case" },
             { label: breadcrumbCase },
           ]}
         />
@@ -279,7 +279,7 @@ export function CaseDetailBanner({
                 <div>
                   <dt className={factLabelClass}>{t("caseDetail.embezzledAmount")}</dt>
                   <dd className="text-base font-medium leading-7 tabular-nums text-accent">
-                    {formatBigo(caseData.bigo)}
+                    {formatBigo(caseData.bigo, i18n.language)}
                   </dd>
                 </div>
               )}

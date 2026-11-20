@@ -28,6 +28,7 @@ import {
   MAX_PAGE_SPAN,
   type ContentPageStub,
 } from "@/services/datalake-api";
+import { formatCount } from "@/utils/number";
 
 /**
  * Pages per request.
@@ -195,7 +196,7 @@ export function TranscriptReader({
 
   const coverage =
     pages !== undefined && pagesRead !== undefined
-      ? `${pagesRead.toLocaleString()} of ${pages.toLocaleString()} pages readable`
+      ? `${formatCount(pagesRead)} of ${formatCount(pages)} pages readable`
       : "";
 
   return (

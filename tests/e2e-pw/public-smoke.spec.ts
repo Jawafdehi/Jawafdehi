@@ -6,6 +6,8 @@
 // over brittle text so they survive copy tweaks.
 import { test, expect, type Page } from "@playwright/test";
 
+import { caseLink } from "./selectors";
+
 // The cookie-consent banner's fixed bar can intercept clicks; pre-answer it.
 async function dismissConsent(page: Page) {
   await page.addInitScript(() => {
@@ -60,11 +62,11 @@ test("cases list renders and only public cases are shown", async ({ page }) => {
   await page.goto("/cases");
   // The published-case link is the positive control: this web-first assertion
   // waits for the list to load, so no separate networkidle is needed.
-  await expect(page.locator('a[href="/case/seed-published"]').first()).toBeVisible();
+  await expect(page.locator(caseLink("seed-published")).first()).toBeVisible();
   // Its non-public siblings (draft/in-review/closed) must NOT appear — assert on
   // the real seeded slugs, not a never-inserted marker.
   for (const slug of ["seed-draft", "seed-in-review", "seed-closed"]) {
-    await expect(page.locator(`a[href="/case/${slug}"]`)).toHaveCount(0);
+    await expect(page.locator(caseLink(slug))).toHaveCount(0);
   }
 });
 

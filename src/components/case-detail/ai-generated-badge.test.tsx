@@ -82,7 +82,7 @@ describe("CaseSectionHeading AI-generated label", () => {
 
     expect(screen.getByText("caseDetail.aiGenerated.explanation")).toBeTruthy();
     const link = screen.getByRole("link", { name: "nav.ourProcess" });
-    expect(link.getAttribute("href")).toBe("/our-process");
+    expect(link.getAttribute("href")).toBe("/our-process/");
 
     // A second tap closes it again.
     fireEvent.click(screen.getByTestId("ai-generated-badge"));

@@ -18,7 +18,7 @@ import {
   FEATURED_CASE_COUNT,
   FEATURED_CASE_GRID_COUNT,
 } from "@/queries/home";
-import { formatBigo } from "@/utils/number";
+import { formatBigo, formatCompactCount, formatCount } from "@/utils/number";
 import { useMemo } from "react";
 import { caseCardPropsFromSearchResult } from "@/lib/case-card-props";
 import { useTranslation } from "react-i18next";
@@ -37,13 +37,13 @@ const Index = () => {
   });
 
   // Shared loading/error/missing guard for the hero stats. With no formatter a
-  // resolved value renders as a plain grouped count; pass one (e.g. formatBigo
+  // resolved value renders as a count in lakh/crore grouping (formatCount); pass one (e.g. formatBigo
   // for the currency tile) to render it differently. A missing value (an absent
   // optional field on an older/pre-deploy payload) renders the "—" placeholder
   // rather than "0" / "Rs 0", so an absent stat never reads as a real zero.
   const getStatValue = (
     value: number | undefined,
-    format: (v: number) => string = (v) => v.toLocaleString(),
+    format: (v: number) => string = formatCount,
   ): string => {
     if (statsError || statsLoading || value == null) return "—";
     return format(value);
@@ -105,13 +105,13 @@ const Index = () => {
 
       <div className="flex-1">
         <Hero />
-        <ArchiveBento casesDocumented={getStatValue(stats?.published_cases)} />
         <ArchiveFigures
           casesDocumented={getStatValue(stats?.published_cases)}
           totalBigo={getStatValue(stats?.total_bigo, formatBigo)}
-          materials={getStatValue(stats?.materials?.total)}
-          courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
+          materials={getStatValue(stats?.materials?.total, formatCompactCount)}
+          courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total, formatCompactCount)}
         />
+        <ArchiveBento casesDocumented={getStatValue(stats?.published_cases)} />
 
 
         {/* ── What we're building ── */}
@@ -181,7 +181,7 @@ const Index = () => {
             <Reveal>
               <div className="text-center mt-10 flex justify-center">
                 <Button variant="primary" size="lg" asChild className="group">
-                  <Link to="/search?type=case">
+                  <Link to="/search/?type=case">
                     {t("home.featuredCases.viewAll", "View all cases")}{" "}
                     <ArrowRight className="transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
                   </Link>
@@ -194,8 +194,8 @@ const Index = () => {
         {/* Partners after the report band: the white strip keeps the band's
             navy from running into the footer's. */}
         <ReportCaseCta />
-        {/* What's new, compact: the latest from the changelog (src/data/whats-new.ts). */}
-        <WhatsNewSection id="whats-new" heading={t("whatsNew.homeHeading")} compact />
+        {/* Product updates, compact: the latest from the changelog (src/data/whats-new.ts). */}
+        <WhatsNewSection id="product-updates" heading={t("whatsNew.homeHeading")} compact />
         <BlogSection />
         <SupportingPartner />
       </div>

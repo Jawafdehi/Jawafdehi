@@ -1,11 +1,11 @@
 // The build's own API credential.
 //
-// `scripts/pre-render.ts` and `scripts/sitemap.ts` read the entire published
-// archive from the platform API on every production deploy — thousands of
-// requests in a few minutes. Done anonymously that competes with real visitors
-// for one 1000/hour bucket (`THROTTLE_RATE_ANON`), and the archive has outgrown
-// the cap: the production build on 2026-10-03 spent ~1,010 of 1,000 and passed
-// only because the synced throttle's accounting is approximate by design.
+// `scripts/pre-render.ts` and `scripts/sitemap.ts` call the platform API on
+// every deploy. Done anonymously that competes with real visitors for one
+// 1000/hour bucket (`THROTTLE_RATE_ANON`). When the build walked the whole
+// archive it outgrew the cap outright (the production build on 2026-10-03 spent
+// ~1,010 of 1,000); it now makes a few hundred calls, which fit, but sharing the
+// readers' bucket is still the wrong default for a production deploy.
 //
 // So the build authenticates, as the `sa-prerender` machine user. Its single
 // Zitadel role maps to a Django group with no permissions that is named by no
@@ -18,9 +18,8 @@
 // bundled, and the token is handed to the SSR bundle through its own export
 // surface (see src/services/prerender-auth.ts).
 //
-// Absent credentials are NOT an error here — a local `bun run build` and the
-// static-scope PR build both run fine anonymously. `pre-render.ts` is where a
-// full build decides that running anonymously is not acceptable.
+// Absent credentials are NOT an error — a local `bun run build` and the PR
+// build run fine anonymously; `pre-render.ts` warns about it and carries on.
 
 const TOKEN_ENDPOINT =
   process.env.PRERENDER_TOKEN_ENDPOINT || 'https://auth.jawafdehi.org/oauth/v2/token';

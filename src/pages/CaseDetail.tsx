@@ -55,6 +55,7 @@ import { isAiGenerated } from "@/utils/ai-generated";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import "@/styles/print.css";
+import { casePath } from "@/lib/case-links";
 
 function getGroupedEntities(entities: JawafEntity[]) {
   // Case entities are keyed on their NES @id IRI (the backend no longer returns
@@ -137,7 +138,7 @@ const CaseDetail = () => {
   useEffect(() => {
     const canonicalSlug = caseData?.slug;
     if (canonicalSlug && canonicalSlug !== id) {
-      navigate(`/case/${canonicalSlug}/`, { replace: true });
+      navigate(casePath(canonicalSlug), { replace: true });
     }
   }, [caseData?.slug, id, navigate]);
 
@@ -214,6 +215,13 @@ const CaseDetail = () => {
           currentLang,
         )
       : null;
+  // Sections with nothing in them are left out, heading and jump link alike,
+  // like the others below. Most CIAA-sourced cases have no curated allegations
+  // yet, and a heading followed by "उपलब्ध छैन" on ~70% of case pages is the same
+  // empty boilerplate repeated thousands of times, for readers and crawlers both.
+  const keyAllegations = (caseData?.key_allegations ?? []).filter((a) => typeof a === "string" && a.trim() !== "");
+  const hasAllegations = keyAllegations.length > 0;
+  const hasOverview = Boolean(caseData?.description?.trim());
   const hasTimeline = (caseData?.timeline || []).length > 0;
   const hasCourtCases = (caseData?.court_cases ?? []).length > 0;
   const hasEvidence = (caseData?.evidence ?? []).length > 0;
@@ -222,10 +230,10 @@ const CaseDetail = () => {
 
   const jumpSections = useMemo<CaseJumpSection[]>(() => {
     const sections: Array<CaseJumpSection | false> = [
-      { id: "allegations", label: t("caseDetail.allegations") },
+      hasAllegations && { id: "allegations", label: t("caseDetail.allegations") },
       hasInvolvedParties && { id: "parties-involved", label: t("caseDetail.partiesInvolved") },
       hasTimeline && { id: "timeline", label: t("caseDetail.timeline") },
-      { id: "overview", label: t("caseDetail.overview") },
+      hasOverview && { id: "overview", label: t("caseDetail.overview") },
       hasCourtCases && { id: "court-case", label: t("caseDetail.courtUpdates", "Court updates") },
       hasEvidence && { id: "evidence", label: t("caseDetail.evidence") },
       hasMissingDetails && { id: "missing-details", label: t("caseDetail.missingDetails") },
@@ -234,11 +242,13 @@ const CaseDetail = () => {
 
     return sections.filter((section): section is CaseJumpSection => Boolean(section));
   }, [
+    hasAllegations,
     hasCourtCases,
     hasEvidence,
     hasInvolvedParties,
     hasMissingDetails,
     hasNotes,
+    hasOverview,
     hasTimeline,
     t,
   ]);
@@ -350,7 +360,7 @@ const CaseDetail = () => {
   // Legacy /case/<numeric> URLs: replace with the canonical slug. This must
   // happen after all hooks have run so we don't violate rules-of-hooks.
   if (legacyTargetSlug) {
-    return <Navigate to={`/case/${legacyTargetSlug}/`} replace />;
+    return <Navigate to={casePath(legacyTargetSlug)} replace />;
   }
 
   if (isLoading) {
@@ -408,7 +418,7 @@ const CaseDetail = () => {
             }
             actions={
               <Link
-                to="/search?type=case"
+                to="/search/?type=case"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -666,7 +676,7 @@ const CaseDetail = () => {
                     {caseData.bigo != null && caseData.bigo > 0 && (
                       <div className="flex items-center text-muted-foreground">
                         <span className="text-sm">
-                          {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo)}
+                          {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo, i18n.language)}
                         </span>
                       </div>
                     )}
@@ -713,14 +723,16 @@ const CaseDetail = () => {
                         prefers-reduced-motion (content simply renders visible),
                         and the group class lets each CaseSectionHeading's
                         crimson rule draw in off the same trigger. */}
-                    <Reveal className="group">
-                      <KeyAllegationsSection
-                        aiGenerated={isAiGenerated(caseData.ai_generated_sections, "key_allegations")}
-                        allegations={caseData.key_allegations || []}
-                        emptyLabel={t("common.notAvailable")}
-                        title={t("caseDetail.allegations")}
-                      />
-                    </Reveal>
+                    {hasAllegations && (
+                      <Reveal className="group">
+                        <KeyAllegationsSection
+                          aiGenerated={isAiGenerated(caseData.ai_generated_sections, "key_allegations")}
+                          allegations={keyAllegations}
+                          emptyLabel={t("common.notAvailable")}
+                          title={t("caseDetail.allegations")}
+                        />
+                      </Reveal>
+                    )}
 
                     {hasInvolvedParties && (
                       <Reveal className="group">
@@ -752,13 +764,15 @@ const CaseDetail = () => {
                       </Reveal>
                     )}
 
-                    <Reveal className="group">
-                      <CaseOverviewSection
-                        aiGenerated={isAiGenerated(caseData.ai_generated_sections, "description")}
-                        description={caseData.description}
-                        title={t("caseDetail.overview")}
-                      />
-                    </Reveal>
+                    {hasOverview && (
+                      <Reveal className="group">
+                        <CaseOverviewSection
+                          aiGenerated={isAiGenerated(caseData.ai_generated_sections, "description")}
+                          description={caseData.description}
+                          title={t("caseDetail.overview")}
+                        />
+                      </Reveal>
+                    )}
 
                     <Reveal className="group">
                       <CourtCasesSection

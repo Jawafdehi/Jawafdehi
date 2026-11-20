@@ -5,7 +5,7 @@ import { entityPath, isEntityRecordTail } from "./entity-links";
 describe("entityPath", () => {
   it("keeps the prefix/slug tail as multiple path segments (not %2F)", () => {
     expect(entityPath("https://jawafdehi.org/entity/person/ram-shah")).toBe(
-      "/entity/person/ram-shah",
+      "/entity/person/ram-shah/",
     );
   });
 
@@ -28,7 +28,7 @@ describe("entityPath", () => {
 
   it("keeps deeper tails, which real location IRIs use", () => {
     expect(entityPath("https://jawafdehi.org/entity/location/country/nepal")).toBe(
-      "/entity/location/country/nepal",
+      "/entity/location/country/nepal/",
     );
   });
 });
@@ -58,6 +58,7 @@ describe("isEntityRecordTail", () => {
     expect(matched).not.toBeNull();
     const last = matched![matched!.length - 1];
     expect(last.route.path).toBe("/entity/*");
-    expect(last.params["*"]).toBe("person/ram-shah");
+    // The trailing slash is not a segment: EntityRecordProfile strips it.
+    expect(last.params["*"]).toBe("person/ram-shah/");
   });
 });

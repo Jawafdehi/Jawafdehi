@@ -42,7 +42,7 @@ describe('detail routes that the API says do not exist', () => {
   it('404s a case slug the API reports as missing', async () => {
     stubApi(() => new Response(JSON.stringify({ detail: 'Not found.' }), { status: 404 }));
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/case/renamed-away'), makeEnv());
+    const res = await worker.fetch(new Request('https://jawafdehi.org/case/renamed-away/'), makeEnv());
 
     expect(res.status).toBe(404);
     expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
@@ -87,7 +87,7 @@ describe('detail routes that the API says do not exist', () => {
       throw new Error('connection reset');
     });
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-live-case'), makeEnv());
+    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-live-case/'), makeEnv());
 
     expect(res.status).toBe(200);
   });
@@ -95,7 +95,7 @@ describe('detail routes that the API says do not exist', () => {
   it('keeps 200 when the API errors with a 500', async () => {
     stubApi(() => new Response('upstream exploded', { status: 500 }));
 
-    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-live-case'), makeEnv());
+    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-live-case/'), makeEnv());
 
     expect(res.status).toBe(200);
   });

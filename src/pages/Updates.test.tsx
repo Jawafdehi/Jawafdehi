@@ -5,6 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { ArticleListItem } from "@/types/cms";
+import { WHATS_NEW } from "@/data/whats-new";
 
 // Passthrough translations so assertions don't depend on i18n resources.
 vi.mock("react-i18next", () => ({
@@ -18,14 +19,14 @@ vi.mock("@/services/cms-api", () => ({
 
 import Updates from "@/pages/Updates";
 
-const renderPage = () => {
+const renderPage = (url = "/updates") => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/updates"]}>
+        <MemoryRouter initialEntries={[url]}>
           <Updates />
         </MemoryRouter>
       </QueryClientProvider>
@@ -75,7 +76,7 @@ describe("Updates feed", () => {
     expect(screen.getByText("Story 2").closest("a")?.getAttribute("data-shape")).toBe("picture");
     expect(screen.getByText("Story 3").closest("a")?.getAttribute("data-shape")).toBe("text");
     // An even grid: no story spans more than one cell.
-    for (const item of document.querySelectorAll("ul.grid > li")) {
+    for (const item of document.querySelectorAll('ul[data-feed="updates"] > li')) {
       expect(item.className).not.toContain("span");
     }
   });
@@ -98,8 +99,55 @@ describe("Updates feed", () => {
     const { container } = renderPage();
 
     await screen.findByText("Story 1");
-    const className = container.querySelector("ul.grid")?.className ?? "";
+    const className = container.querySelector('ul[data-feed="updates"]')?.className ?? "";
     expect(className).toContain("md:grid-cols-2");
     expect(className).toContain("lg:grid-cols-3");
+  });
+});
+
+// Product updates (the changelog, src/data/whats-new.ts) are the third kind of
+// post: in "All" they sit in the one feed with the stories, by date; under
+// ?filter=product (where /whats-new redirects) they are the whole feed.
+describe("Updates — product updates", () => {
+  const productTiles = (root: ParentNode) => root.querySelectorAll('ul[data-feed="updates"] a[data-shape="product"]');
+
+  it("mixes product updates into one feed in All, newest first, with no second section", async () => {
+    getArticles.mockResolvedValue([article(1, { date: "2000-01-01" })]);
+    const { container } = renderPage();
+
+    await screen.findByText("Story 1");
+    expect(container.querySelectorAll("ul[data-feed]").length).toBe(1);
+    expect(productTiles(container).length).toBe(WHATS_NEW.length);
+    // Each product tile opens its own post.
+    expect(productTiles(container)[0].getAttribute("href")).toMatch(/^\/updates\/product\//);
+    // The oldest story sorts last.
+    const items = container.querySelectorAll('ul[data-feed="updates"] > li');
+    expect(items[items.length - 1].textContent).toContain("Story 1");
+  });
+
+  it("shows only product updates under ?filter=product, without waiting on the CMS", () => {
+    const { container } = renderPage("/updates?filter=product");
+    expect(productTiles(container).length).toBe(WHATS_NEW.length);
+    expect(screen.queryByText("Story 1")).toBeNull();
+    expect(screen.getByRole("button", { name: "Product updates" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("has no per-product filter under Product updates", () => {
+    renderPage("/updates?filter=product&tag=mcp");
+    expect(screen.getAllByRole("group").length).toBe(1);
+    expect(productTiles(document).length).toBe(WHATS_NEW.length);
+  });
+
+  it("leaves product updates out of News and Updates", async () => {
+    getArticles.mockResolvedValue([article(1, { category: "NEWS" })]);
+    const { container } = renderPage("/updates?filter=news");
+    await screen.findByText("Story 1");
+    expect(productTiles(container).length).toBe(0);
+  });
+
+  it("names the pills All, News, Updates, Product updates, in that order", () => {
+    renderPage();
+    const group = screen.getByRole("group", { name: "Show" });
+    expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["All", "News", "Updates", "Product updates"]);
   });
 });

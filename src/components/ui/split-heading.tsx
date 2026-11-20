@@ -4,10 +4,27 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function SplitHeading({ lead, rest, className, id }: { lead: ReactNode; rest: ReactNode; className?: string; id?: string }) {
+// `restOnNewLine` puts the grey half on a line of its own from lg up, and drops
+// the measure so the navy statement can hold one line.
+export function SplitHeading({
+  lead,
+  rest,
+  className,
+  id,
+  restOnNewLine = false,
+}: {
+  lead: ReactNode;
+  rest: ReactNode;
+  className?: string;
+  id?: string;
+  restOnNewLine?: boolean;
+}) {
   return (
-    <h2 id={id} className={cn("font-home-section-title max-w-[22ch] text-primary", className)}>
-      {lead} <span className="text-muted-foreground/70">{rest}</span>
+    <h2
+      id={id}
+      className={cn("font-home-section-title text-primary", restOnNewLine ? "max-w-none" : "max-w-[22ch]", className)}
+    >
+      {lead} <span className={cn("text-muted-foreground/70", restOnNewLine && "lg:block")}>{rest}</span>
     </h2>
   );
 }

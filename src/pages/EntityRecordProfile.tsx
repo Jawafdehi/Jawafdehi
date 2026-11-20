@@ -359,7 +359,7 @@ export default function EntityRecordProfile() {
         <PageBreadcrumb
           items={[
             { label: t("nav.home"), to: "/" },
-            { label: t("entityDetail.breadcrumb", "People & organizations"), to: "/search?type=entity" },
+            { label: t("entityDetail.breadcrumb", "People & organizations"), to: "/search/?type=entity" },
             ...(data ? [{ label: displayName }] : []),
           ]}
         />

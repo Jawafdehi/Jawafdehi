@@ -72,7 +72,7 @@ describe('Property 14: Worker returns a real 404 for unrouted paths', () => {
   });
 
   it('still returns 200 for a routed path that is not pre-rendered', async () => {
-    for (const path of ['/donate/success', '/entity/organization/np/tu', '/newsletter/unsubscribe/tok3n']) {
+    for (const path of ['/donate/success', '/entity/organization/np/tu/', '/newsletter/unsubscribe/tok3n']) {
       const result = await worker.fetch(
         new Request(`https://jawafdehi.org${path}`),
         shellOnlyEnv('<html>shell</html>'),

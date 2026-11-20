@@ -7,6 +7,9 @@ import worker from '../../worker';
 // edge 307 the slashless form — so all 463 sitemap entries and all 463
 // rel=canonical values started pointing at a redirect, while every check stayed
 // green. These tests pin the two halves that a crawler reads.
+//
+// Case pages are no longer pre-rendered (the edge renders them); the Worker now
+// 301s the slashless form itself — see worker.record-trailing-slash.test.ts.
 
 const INDEX_HTML =
   '<!doctype html><html><head><title>Jawafdehi</title>\n' +
@@ -50,12 +53,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('the case canonical names the URL the page is pre-rendered at', () => {
-  it('ends in a slash, because /case/<slug> 307s to /case/<slug>/', async () => {
+describe('the case canonical names the slashed URL', () => {
+  it('ends in a slash, because /case/<slug> 301s to /case/<slug>/', async () => {
     stubCaseApi({ title: 'A case', slug: 'a-case', state: 'PUBLISHED', description: 'Body text.' });
 
     const res = await worker.fetch(
-      new Request('https://jawafdehi.org/case/a-case'),
+      new Request('https://jawafdehi.org/case/a-case/'),
       makeEnv() as never,
       {} as never,
     );
@@ -72,7 +75,7 @@ describe('the case canonical names the URL the page is pre-rendered at', () => {
     stubCaseApi({ title: 'A case', slug: 'current-slug', state: 'PUBLISHED', description: 'Body.' });
 
     const res = await worker.fetch(
-      new Request('https://jawafdehi.org/case/old-slug'),
+      new Request('https://jawafdehi.org/case/old-slug/'),
       makeEnv() as never,
       {} as never,
     );

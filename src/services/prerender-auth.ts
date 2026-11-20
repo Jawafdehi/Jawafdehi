@@ -1,10 +1,9 @@
 // The bearer token the BUILD uses, and nothing else.
 //
-// `scripts/pre-render.ts` fetches the whole published archive from the platform
-// API on every production deploy. Anonymously that competes with real visitors
-// for one 1000/hour bucket, and the archive outgrew the cap — so the build now
-// authenticates as the `sa-prerender` machine user, which exists purely to land
-// in its own throttle scope.
+// `scripts/pre-render.ts` calls the platform API a few hundred times on every
+// deploy. Anonymously that competes with real visitors for one 1000/hour
+// bucket — so a production build authenticates as the `sa-prerender` machine
+// user, which exists purely to land in its own throttle scope.
 //
 // WHY THIS MODULE EXISTS RATHER THAN AN ENV READ IN `oidc.ts`:
 // `pre-render.ts` imports the COMPILED `dist/server/entry-server.js`, which

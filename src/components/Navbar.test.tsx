@@ -64,7 +64,7 @@ describe("Navbar — the Open House entry", () => {
     await waitFor(() => {
       const link = screen
         .getAllByRole("link")
-        .find((el) => el.getAttribute("href") === "/openhouse");
+        .find((el) => el.getAttribute("href") === "/openhouse/");
       expect(link).toBeTruthy();
       expect(link?.textContent).toContain("nav.openHouse");
     });
@@ -77,7 +77,7 @@ describe("Navbar — the Open House entry", () => {
 
     await waitFor(() => {
       const links = screen.getAllByRole("link");
-      expect(links.some((el) => el.getAttribute("href") === "/openhouse")).toBe(true);
+      expect(links.some((el) => el.getAttribute("href") === "/openhouse/")).toBe(true);
     });
   });
 });
@@ -96,7 +96,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
     await waitFor(() => {
       const link = screen
         .getAllByRole("link")
-        .find((el) => el.getAttribute("href") === "/mcp" && el.textContent?.includes("Jawafdehi MCP"));
+        .find((el) => el.getAttribute("href") === "/mcp/" && el.textContent?.includes("Jawafdehi MCP"));
       expect(link).toBeTruthy();
     });
   });
@@ -108,7 +108,7 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
 
     await waitFor(() => {
       const links = screen.getAllByRole("link");
-      expect(links.some((el) => el.getAttribute("href") === "/mcp")).toBe(true);
+      expect(links.some((el) => el.getAttribute("href") === "/mcp/")).toBe(true);
     });
   });
 
@@ -123,8 +123,12 @@ describe("Navbar — the Jawafdehi MCP entry", () => {
   // full-white text with no fill on the dark heroes (/mcp), where the at-rest
   // header is light-on-dark.
   it.each([
+    // Both forms: the links are slash-terminated (the canonical URL), and the
+    // slashed path is what a visitor's address bar actually holds.
     ["/mcp", "text-primary-foreground"],
+    ["/mcp/", "text-primary-foreground"],
     ["/search", "bg-surface"],
+    ["/search/", "bg-surface"],
   ])("keeps the Archive trigger active on %s", (path, activeClass) => {
     renderNavbar(path);
 

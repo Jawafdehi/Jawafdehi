@@ -30,6 +30,7 @@ import {
   tooManySeries,
   type PlottedFigure,
 } from "@/lib/content-figure";
+import { formatCount } from "@/utils/number";
 
 /**
  * One extracted chart, redrawn.
@@ -66,7 +67,7 @@ const TOOLTIP_STYLE = {
 };
 
 const fmt = (v: number | null) =>
-  v === null ? "—" : v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  v === null ? "—" : formatCount(v, { maximumFractionDigits: 2 });
 
 type Row = Record<string, string | number | null>;
 

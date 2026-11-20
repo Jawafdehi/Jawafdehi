@@ -33,7 +33,7 @@ export default function NewsletterConfirmed() {
           description={t("newsletter.confirmed.message")}
           actions={
             <>
-              <Link to="/search?type=case" className={PILL_DARK}>
+              <Link to="/search/?type=case" className={PILL_DARK}>
                 {t("newsletter.confirmed.exploreCases")}
               </Link>
               <Link to="/" className={PILL}>

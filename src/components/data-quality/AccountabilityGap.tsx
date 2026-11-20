@@ -5,6 +5,7 @@ import { AnimatedCount } from "@/components/ui/animated-count";
 import type { CaseStatistics } from "@/types/jds";
 import { StatusDonut, type DonutSegment } from "./StatusDonut";
 import { AccountabilityFunnel, type FunnelStage } from "./AccountabilityFunnel";
+import { formatCount } from "@/utils/number";
 
 /**
  * The page centerpiece: corruption cases. Thousands of cases are documented and
@@ -22,7 +23,7 @@ export function AccountabilityGap({
   isLoading: boolean;
   isError: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const published = stats?.published_cases ?? 0;
   const investigating = stats?.cases_under_investigation ?? 0;
@@ -129,7 +130,7 @@ export function AccountabilityGap({
                   {t("dataQuality.gap.totalLabel", "Documented cases")}
                 </span>
                 <span className="text-3xl font-medium tabular-nums text-primary">
-                  <AnimatedCount end={documented} duration={1.2} />
+                  <AnimatedCount end={documented} duration={1.2} language={i18n.language} />
                 </span>
               </div>
             )}
@@ -151,7 +152,7 @@ export function AccountabilityGap({
             </p>
             {published > 0 && (
               <Link
-                to="/search?type=case"
+                to="/search/?type=case"
                 className="mt-3 inline-flex min-h-6 items-center text-[15px] text-accent hover:underline"
               >
                 {t("dataQuality.corruptionCases.browsePublished", "Browse published cases")} →
@@ -169,7 +170,7 @@ export function AccountabilityGap({
               ) : (
                 <StatusDonut
                   segments={ciaaSegments}
-                  centerValue={ciaaTotal.toLocaleString()}
+                  centerValue={formatCount(ciaaTotal)}
                   centerLabel={t("dataQuality.cases.donutCenter", "cases")}
                 />
               )}

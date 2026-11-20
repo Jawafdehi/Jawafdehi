@@ -49,7 +49,7 @@ const Mcp = () => {
         <McpAccess />
         <McpSkill />
         <McpPilot />
-        <WhatsNewSection id="mcp-whats-new" heading={t("whatsNew.mcpHeading")} tag="mcp" />
+        <WhatsNewSection id="mcp-updates" heading={t("whatsNew.mcpHeading")} tag="mcp" />
         <div className="pb-16 md:pb-24" />
       </main>
     </div>

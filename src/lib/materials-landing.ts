@@ -1,7 +1,7 @@
 import bs from "bikram-sambat";
 
 import { adToBS, toNepaliNumerals } from "@/utils/bs-calendar";
-import { formatIndianNumber } from "@/utils/number";
+import { formatCount, formatIndianNumber } from "@/utils/number";
 
 import type { ArchiveSearchResult, SearchResultExtra } from "@/types/search";
 
@@ -91,32 +91,13 @@ export function sourceFromMaterialUrl(url: string): string | null {
 }
 
 /**
- * An archive figure in the reader's numerals: Indian-system grouping in both
- * languages ("3,45,886"), Devanagari digits in Nepali ("३,४५,८८६").
+ * An archive figure in the reader's numerals: lakh/crore grouping in both
+ * languages, the site's rule for counts ("3,45,886"), with Devanagari digits
+ * in Nepali ("३,४५,८८६").
  */
 export function formatArchiveCount(value: number, language: string): string {
-  const grouped = formatIndianNumber(value);
-  if (!language.startsWith("ne")) return grouped;
-  return grouped.replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
-}
-
-/**
- * Folder tint utilities by index. Tailwind must see every class literally,
- * so the tint number resolves through this table, never interpolation.
- */
-const FOLDER_TINT_CLASSES: Record<number, string> = {
-  1: "bg-folder-1",
-  2: "bg-folder-2",
-  3: "bg-folder-3",
-  4: "bg-folder-4",
-  5: "bg-folder-5",
-  6: "bg-folder-6",
-  7: "bg-folder-7",
-  8: "bg-folder-8",
-};
-
-export function folderTintClass(tint: number): string {
-  return FOLDER_TINT_CLASSES[tint] ?? FOLDER_TINT_CLASSES[1];
+  if (!language?.startsWith("ne")) return formatCount(value);
+  return formatIndianNumber(value).replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
 }
 
 /**

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 import type { MaterialSourceLink } from "@/lib/material-links";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 const ACTION_BUTTON_CLASS = "h-9 w-28 justify-center px-3";
 const ICON_ACTION_BUTTON_CLASS = "h-9 w-9 rounded-full p-0";
@@ -85,7 +86,7 @@ export function MaterialCard({
   titleNode?: ReactNode;
   /** Internal details path (`/material/<source>/<ident>`). */
   href: string;
-  /** The compact italic register line: series/institution · date. */
+  /** The compact register line: series/institution · date. */
   metaLine?: string;
   /** Labelled catalogue rows; takes precedence over `metaLine` when given. */
   metaRows?: readonly MaterialMetaRow[];
@@ -126,7 +127,7 @@ export function MaterialCard({
         {metaRows ? (
           <MaterialMeta rows={metaRows} />
         ) : metaLine ? (
-          <p className="mt-1.5 text-sm italic text-muted-foreground">{metaLine}</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">{metaLine}</p>
         ) : null}
         {description ? (
           <p className="mt-3 line-clamp-3 break-words text-sm leading-5 text-muted-foreground">
@@ -152,7 +153,7 @@ export function MaterialCard({
             <a
               href={link.href}
               target="_blank"
-              rel="noopener noreferrer"
+              rel={ORIGINAL_DOCUMENT_REL}
               aria-label={
                 link.isExternal
                   ? t("materialsLanding.series.openSource", "Open original source")

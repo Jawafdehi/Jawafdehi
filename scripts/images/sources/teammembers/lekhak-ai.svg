@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="t">
+  <title id="t">Lekhak AI | लेखक AI</title>
+  <!-- Brand colours from jawafdehi-frontend public/assets/logo.svg + index.css:
+       navy #0E1F3B, crimson #B5242C, flag blue #05326E, blush #F2D4D7, cream #FFFDFA -->
+  <circle cx="256" cy="256" r="256" fill="#0E1F3B"/>
+  <circle cx="256" cy="256" r="232" fill="#05326E" opacity="0.35"/>
+
+  <!-- antenna -->
+  <path d="M256 128 V92" stroke="#F2D4D7" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="256" cy="80" r="22" fill="#B5242C" stroke="#FFFDFA" stroke-width="8"/>
+
+  <!-- ears -->
+  <rect x="98" y="218" width="40" height="92" rx="18" fill="#B5242C"/>
+  <rect x="374" y="218" width="40" height="92" rx="18" fill="#B5242C"/>
+
+  <!-- head -->
+  <rect x="124" y="124" width="264" height="252" rx="84" fill="#FFFDFA"/>
+  <!-- visor (the logo's database band) -->
+  <rect x="152" y="178" width="208" height="112" rx="56" fill="#0E1F3B"/>
+  <!-- eyes: friendly, slightly happy -->
+  <ellipse cx="208" cy="234" rx="22" ry="26" fill="#FFFDFA"/>
+  <ellipse cx="304" cy="234" rx="22" ry="26" fill="#FFFDFA"/>
+  <circle cx="215" cy="224" r="7" fill="#0E1F3B"/>
+  <circle cx="311" cy="224" r="7" fill="#0E1F3B"/>
+  <!-- cheeks -->
+  <circle cx="170" cy="318" r="16" fill="#F2D4D7"/>
+  <circle cx="342" cy="318" r="16" fill="#F2D4D7"/>
+  <!-- smile -->
+  <path d="M220 322 Q256 352 292 322" fill="none" stroke="#0E1F3B" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- pen (Lekhak = writer), crimson with cream nib, tucked bottom-right -->
+  <g transform="translate(372 352) rotate(40)">
+    <rect x="-17" y="-92" width="34" height="112" rx="10" fill="#B5242C" stroke="#FFFDFA" stroke-width="8"/>
+    <rect x="-17" y="-60" width="34" height="12" fill="#FFFDFA"/>
+    <path d="M-17 20 L17 20 L0 58 Z" fill="#FFFDFA" stroke="#FFFDFA" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="0" cy="36" r="5" fill="#0E1F3B"/>
+  </g>
+
+  <!-- AI badge -->
+  <rect x="176" y="398" width="160" height="62" rx="31" fill="#B5242C"/>
+  <!-- "AI" drawn as strokes so it renders identically without fonts -->
+  <g fill="none" stroke="#FFFDFA" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M220 446 L240 412 L260 446 M228 434 H252"/>
+    <path d="M286 412 V446 M276 412 H296 M276 446 H296"/>
+  </g>
+</svg>

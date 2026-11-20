@@ -6,6 +6,7 @@ import { Calendar, ArrowRight } from "@/components/icons";
 import { StreamField } from "@/components/StreamField";
 import { formatPublicationDate } from "@/utils/date";
 import type { Article } from "@/types/cms";
+import { casePath } from "@/lib/case-links";
 
 /**
  * Presentational article view shared by the public Updates detail page and the
@@ -28,7 +29,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                     <PageBreadcrumb
                       items={[
                         { label: t("nav.home"), to: "/" },
-                        { label: t("nav.updates", "Updates"), to: "/updates" },
+                        { label: t("nav.updates", "Updates"), to: "/updates/" },
                       ]}
                     />
 
@@ -82,7 +83,7 @@ export const ArticleView = ({ article }: { article: Article }) => {
                                     {article.related_cases.map((relatedCase) => (
                                         <Link
                                             key={relatedCase.id}
-                                            to={`/case/${relatedCase.slug}`}
+                                            to={casePath(relatedCase.slug)}
                                             className="group flex items-center justify-between gap-4 rounded-[20px] border border-border/70 bg-surface p-5 transition-[border-color] duration-200 ease-out hover:border-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
                                             <span className="text-[17px] leading-snug text-primary">{relatedCase.title}</span>

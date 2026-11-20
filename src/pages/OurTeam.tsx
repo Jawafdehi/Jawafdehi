@@ -1,7 +1,7 @@
-import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram } from "@/components/icons";
+import { Mail, Linkedin, Facebook, Github, Globe, Users, Instagram, Youtube } from "@/components/icons";
 import { useTranslation } from "react-i18next";
-import { usBoard, nepalBoard, advisors, members, pastMembers } from "@/data/team";
-import type { Contact } from "@/data/team";
+import { usBoard, nepalBoard, generalMembers, advisors, members, pastMembers } from "@/data/team";
+import type { Contact, TeamMember } from "@/data/team";
 import { Cta } from "@/components/home/cta";
 import { TeamCard } from "@/components/ui/card";
 import { PageHero } from "@/components/ui/page-hero";
@@ -17,6 +17,7 @@ const ContactIcon = ({ contact }: { contact: Contact }) => {
     github: <Github className="h-4 w-4" />,
     website: <Globe className="h-4 w-4" />,
     instagram: <Instagram className="h-4 w-4" />,
+    youtube: <Youtube className="h-4 w-4" />,
   }[contact.type];
 
   return (
@@ -39,6 +40,78 @@ const OFFICER_TITLES = new Set(["Chairman", "President", "Secretary", "Treasurer
 const OurTeam = () => {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language?.startsWith("ne") ? "ne" : "en") as "en" | "ne";
+
+  const renderMember = (member: TeamMember) => (
+    <TeamCard key={member.displayName.en}>
+      {/* Photo */}
+      <div className="mb-5 w-full">
+        {member.thumb ? (
+          <img
+            src={member.thumb}
+            alt={member.displayName.en}
+            // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio the phone
+            // gates run at — so 504 is the ceiling the generated avatars are
+            // sized to, capped at whatever the source actually has. They are
+            // the declared intrinsic size and the aspect ratio.
+            width={504}
+            height={504}
+            loading="lazy"
+            decoding="async"
+            className="h-20 w-20 rounded-full bg-muted object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <Users className="h-8 w-8 text-primary/40" />
+          </div>
+        )}
+      </div>
+
+      {/* Name */}
+      <h3 className="text-xl font-normal leading-snug text-primary">
+        {member.displayName[lang] ?? member.displayName.en}
+      </h3>
+      {lang === "en" && member.displayName.ne && (
+        <p className="mt-0.5 text-sm text-muted-foreground">{member.displayName.ne}</p>
+      )}
+
+      {/* Description */}
+      {member.description && (
+        <p className="mt-3 flex-1 text-base leading-7 text-muted-foreground">
+          {member.description}
+        </p>
+      )}
+
+      {/* Tags */}
+      {member.tags && member.tags.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          {member.tags.map((tag) => {
+            const colorClasses = OFFICER_TITLES.has(tag)
+              ? "bg-primary/10 text-primary"
+              : tag === "Founding Member"
+                ? "bg-accent/10 text-accent"
+                : "bg-muted text-primary/80";
+            return (
+              <span
+                key={tag}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm ${colorClasses}`}
+              >
+                {t(`team.tags.${tag}`, { defaultValue: tag })}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Social links */}
+      {member.contacts.length > 0 && (
+        <div className="mt-5 flex w-full items-center gap-3 border-t border-border/70 pt-4">
+          {member.contacts.map((contact, i) => (
+            <ContactIcon key={i} contact={contact} />
+          ))}
+        </div>
+      )}
+    </TeamCard>
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -63,127 +136,51 @@ const OurTeam = () => {
           }
         />
 
-        {/* Team sections */}
+        {/* The boards (wide) beside the Advisors (a narrow column). */}
+        <section id="board" aria-labelledby="nepal-board-title" className="pt-16 md:pt-24">
+          <div className="layout-container grid grid-cols-1 gap-16 lg:grid-cols-[3fr_1fr] lg:gap-10">
+            <div className="space-y-16 md:space-y-24">
+              <div id="nepal-board">
+                <h2 id="nepal-board-title" className="font-home-section-title text-primary">
+                  {t("team.sections.board", "Nepal Board")}
+                </h2>
+                <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {[...nepalBoard, ...generalMembers].map(renderMember)}
+                </div>
+              </div>
+              <div id="us-board">
+                <h2 className="font-home-section-title text-primary">{t("team.sections.usBoard", "US Board")}</h2>
+                <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {usBoard.map(renderMember)}
+                </div>
+              </div>
+            </div>
+            <div id="advisors" className="order-first lg:order-none lg:border-l lg:border-border/70 lg:pl-10">
+              <h2 className="font-home-section-title text-primary">{t("team.sections.advisors", "Advisors")}</h2>
+              <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                {advisors.map(renderMember)}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {[
-          { id: "nepal-board", heading: t("team.sections.nepalBoard", "Nepal Board"), data: nepalBoard },
-          { id: "advisors", heading: t("team.sections.advisors", "Advisors"), data: advisors },
-          {
-            id: "us-board",
-            heading: t("team.sections.usBoard", "US Board"),
-            // The US company's board is shown in English only: names, titles
-            // and the note, in both site languages.
-            note: t("team.sections.usBoardNote", { lng: "en" }),
-            data: usBoard,
-            englishOnly: true,
-          },
           { id: "members", heading: t("team.sections.currentMembers", "Consultants and Volunteers"), data: members },
           {
             id: "past-members",
             heading: t("team.sections.pastMembers", "Former Consultants and Volunteers"),
             data: pastMembers,
           },
-        ].map(
-          ({
-            id,
-            heading,
-            note,
-            data,
-            englishOnly,
-          }: {
-            id: string;
-            heading: string;
-            note?: string;
-            data: typeof members;
-            englishOnly?: boolean;
-          }) => (
+        ].map(({ id, heading, data }) => (
           <section key={id} id={id} aria-labelledby={`${id}-title`} className="pt-16 md:pt-24 last-of-type:pb-4">
             <div className="layout-container">
               <h2 id={`${id}-title`} className="font-home-section-title text-primary">{heading}</h2>
-              {note && <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">{note}</p>}
               <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {data.map((member) => (
-                  <TeamCard key={member.displayName.en}>
-                    {/* Photo */}
-                    <div className="mb-5 w-full">
-                      {member.thumb ? (
-                        <img
-                          src={member.thumb}
-                          alt={member.displayName.en}
-                          // 112 CSS px (h-28) at DPR 4.5 — the device pixel ratio
-                          // the phone gates run at — so 504 is the ceiling the
-                          // generated avatars are sized to, capped at whatever the
-                          // source actually has (9 of the 22 are smaller).
-                          //
-                          // The attributes do NOT prevent a reflow here: `h-28 w-28`
-                          // already fixes the box at 112x112 before the image loads,
-                          // measured. They are the declared intrinsic size and the
-                          // aspect ratio, which is worth stating for its own sake —
-                          // but the reflow argument belongs to data-sources.tsx,
-                          // where `w-auto` leaves the width to the aspect ratio.
-                          width={504}
-                          height={504}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-20 w-20 rounded-full bg-muted object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                          <Users className="h-8 w-8 text-primary/40" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <h3 className="text-xl font-normal leading-snug text-primary">
-                      {englishOnly ? member.displayName.en : (member.displayName[lang] ?? member.displayName.en)}
-                    </h3>
-                    {lang === "en" && !englishOnly && member.displayName.ne && (
-                      <p className="mt-0.5 text-sm text-muted-foreground">{member.displayName.ne}</p>
-                    )}
-
-                    {/* Description */}
-                    {member.description && (
-                      <p className="mt-3 flex-1 text-base leading-7 text-muted-foreground">
-                        {member.description}
-                      </p>
-                    )}
-
-                    {/* Tags */}
-                    {member.tags && member.tags.length > 0 && (
-                      <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                        {member.tags.map((tag) => {
-                          const colorClasses = OFFICER_TITLES.has(tag)
-                            ? "bg-primary/10 text-primary"
-                            : tag === "Founding Member"
-                              ? "bg-accent/10 text-accent"
-                              : "bg-muted text-primary/80";
-                          return (
-                            <span
-                              key={tag}
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm ${colorClasses}`}
-                            >
-                              {englishOnly ? tag : t(`team.tags.${tag}`, { defaultValue: tag })}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Social links */}
-                    {member.contacts.length > 0 && (
-                      <div className="mt-5 flex w-full items-center gap-3 border-t border-border/70 pt-4">
-                        {member.contacts.map((contact, i) => (
-                          <ContactIcon key={i} contact={contact} />
-                        ))}
-                      </div>
-                    )}
-                  </TeamCard>
-                ))}
+                {data.map(renderMember)}
               </div>
             </div>
           </section>
-        ),
-        )}
+        ))}
 
        <Cta/>
       </main>

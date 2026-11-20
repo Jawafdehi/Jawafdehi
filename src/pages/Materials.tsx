@@ -1,24 +1,21 @@
-import { archiveSearchUrl } from "@/lib/archive-redirect";
 import { Navigate, useSearchParams } from "react-router-dom";
+
+import { archiveSearchUrl } from "@/lib/archive-redirect";
 
 import MaterialsLanding from "./MaterialsLanding";
 
 /**
- * /materials is the archive's landing page and nothing else. Its two older
- * views now live on the archive search:
+ * /materials is the archive's landing page with its folder browser (?path=,
+ * ?view=). Everything else opens the archive search on Documents:
  *
- *   /materials/                → the landing page (pre-rendered)
- *   /materials/?series=<slug>  → /search?type=material&series=<slug>, the
- *                                series as a filter on the Documents tab
- *   /materials/?source=<key>   → /search?type=material&source=<key>, one whole
- *                                source from /api/document-sources/ as a filter
- *   /materials/?q=…&tags=…&…   → /search?type=material&q=…, as before
+ *   /materials/?series=<slug>  → /search?type=material&series=<slug>
+ *   /materials/?source=<key>   → /search?type=material&source=<key>
+ *   /materials/?q=…&tags=…&…   → /search?type=material&q=…
  *
- * Every param is carried across (see archiveSearchUrl), so a shared link to a
- * filtered shelf still opens on the same documents.
+ * A folder has no page of its own; it is the search with its scope applied.
+ * Every param is carried across (archiveSearchUrl), so a shared link to a
+ * series or a filtered search still opens on the same documents.
  */
-// Any of these means the visitor came for a search, not the landing. The
-// redirect carries EVERY param, not just these, so filters survive the move.
 const SEARCH_PARAMS = [
   "series",
   "source",
@@ -34,9 +31,8 @@ const SEARCH_PARAMS = [
 
 export default function Materials() {
   const [searchParams] = useSearchParams();
-  const hasSearchIntent = SEARCH_PARAMS.some((param) => searchParams.has(param));
 
-  if (hasSearchIntent) {
+  if (SEARCH_PARAMS.some((param) => searchParams.has(param))) {
     return <Navigate to={archiveSearchUrl("material", searchParams)} replace />;
   }
 

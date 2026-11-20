@@ -7,11 +7,13 @@ import { DocumentPreviewDialog, type PreviewDocument } from "@/components/Docume
 import { SourceTypeBadge } from "@/components/SourceTypeBadge";
 import { Button } from "@/components/ui/button";
 import { materialTail } from "@/services/datalake-api";
+import { withholdUnredacted } from "@/lib/material-links";
 import type {
   EvidenceMaterial,
   SourceLink,
   SourceLinkRole,
 } from "@/types/jds";
+import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
 
 interface DocumentSourceCardProps {
   /**
@@ -70,9 +72,15 @@ const normalizeRole = (
 const resolveLinks = (material: EvidenceMaterial | null): SourceLink[] => {
   if (!material || !Array.isArray(material.urls)) return [];
 
-  return material.urls
-    .filter((u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link))
-    .map((u) => ({ link: u.link.trim(), role: normalizeRole(u.role, u.link) }));
+  const valid = material.urls.filter(
+    (u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link),
+  );
+  // Staff-only originals never render, whatever the payload carries. Uses the
+  // raw roles (REDACTED_* would otherwise be normalised to RAW first).
+  return withholdUnredacted(valid, (u) => u.link, (u) => u.role).map((u) => ({
+    link: u.link.trim(),
+    role: normalizeRole(u.role, u.link),
+  }));
 };
 
 /**
@@ -307,7 +315,7 @@ export function DocumentSourceCard({
           <ul>
             {printLinks.map((link) => (
               <li key={link.link}>
-                <a href={link.link}>{link.link}</a>
+                <a href={link.link} rel={ORIGINAL_DOCUMENT_REL}>{link.link}</a>
               </li>
             ))}
           </ul>
@@ -391,7 +399,7 @@ export function DocumentSourceCard({
                       <a
                         href={action.href}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel={ORIGINAL_DOCUMENT_REL}
                         aria-label={ariaLabel}
                       >
                         <Icon className="h-4 w-4" aria-hidden="true" />
@@ -411,7 +419,7 @@ export function DocumentSourceCard({
                     <a
                       href={visiblePermalinkLink.link}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel={ORIGINAL_DOCUMENT_REL}
                       aria-label={`${t("documentSource.role.permalink")} ${t("documentSource.opensInNewTab")}`}
                     >
                       <LinkIcon className="h-4 w-4" aria-hidden="true" />
@@ -454,7 +462,7 @@ export function DocumentSourceCard({
                       <a
                         href={action.href}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel={ORIGINAL_DOCUMENT_REL}
                         aria-label={ariaLabel}
                       >
                         <Icon className="h-4 w-4" aria-hidden="true" />

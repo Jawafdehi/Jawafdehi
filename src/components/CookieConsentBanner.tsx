@@ -113,7 +113,7 @@ export function CookieConsentBanner() {
             components={{
               privacy: (
                 <Link
-                  to="/privacy"
+                  to="/privacy/"
                   className="text-primary underline hover:no-underline"
                 />
               ),

@@ -44,7 +44,7 @@ export default function AdminBlog() {
       </div>
 
       {error ? (
-        <FormError message={extractErrorMessage(error)} />
+        <FormError message={extractErrorMessage(error, t("admin.blog.loadError", "Could not load blog posts."))} />
       ) : isLoading ? (
         <Loader2 className="h-5 w-5 animate-spin" aria-label={t("common.loading", "Loading")} />
       ) : (data ?? []).length === 0 ? (

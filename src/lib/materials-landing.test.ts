@@ -84,7 +84,7 @@ describe("sourceFromMaterialUrl", () => {
 });
 
 describe("formatArchiveCount", () => {
-  it("groups in the Indian system for both languages", () => {
+  it("groups the lakh/crore way in English too", () => {
     expect(formatArchiveCount(345886, "en")).toBe("3,45,886");
   });
 

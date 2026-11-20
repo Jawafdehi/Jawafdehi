@@ -5,6 +5,7 @@ import {
   ChevronDown,
   HeartHandshake,
   Menu,
+  ArrowUpRight,
   Plug,
   Search,
 } from "@/components/icons";
@@ -21,12 +22,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { RESEARCH_URL } from "@/lib/external-links";
 
 type NavItem = {
   key: string;
   label: string;
   to: string;
   exact?: boolean;
+  /** A site of ours off this one, opened in a new tab (see MegaMenuItem). */
+  external?: boolean;
 };
 
 
@@ -57,9 +61,16 @@ const NAV_ICON_ON_DARK_CLASS = "text-primary-foreground/80 hover:bg-primary-fore
 
 /** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
 const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/", "/likhit", "/likhit/"]);
-// /materials opens on the navy landing only when it has no query: with one
-// (?series=, ?q=…) it redirects into /search (pages/Materials.tsx).
+// /materials opens on the navy landing unless its query sends it on to
+// /search (pages/Materials.tsx). The folder browser's own ?path= and ?view=
+// keep it on the landing, so they keep the header light-on-dark too.
 const MATERIALS_PATHS = new Set(["/materials", "/materials/"]);
+const MATERIALS_LANDING_PARAMS = new Set(["path", "view"]);
+
+function isMaterialsLanding(pathname: string, search: string): boolean {
+  if (!MATERIALS_PATHS.has(pathname)) return false;
+  return [...new URLSearchParams(search).keys()].every((name) => MATERIALS_LANDING_PARAMS.has(name));
+}
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -84,9 +95,9 @@ export function Navbar() {
   const navItems = useMemo<NavItem[]>(
     () => [
       { key: "home", label: t("nav.home"), to: "/", exact: true },
-      { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer" },
-      { key: "blog", label: t("nav.blog"), to: "/blog" },
-      { key: "updates", label: t("nav.updates"), to: "/updates" },
+      { key: "volunteer", label: t("nav.volunteer"), to: "/volunteer/" },
+      { key: "blog", label: t("nav.blog"), to: "/blog/" },
+      { key: "updates", label: t("nav.updates"), to: "/updates/" },
     ],
     [t],
   );
@@ -95,10 +106,11 @@ export function Navbar() {
   // entities included, via ?type=), so the menu carries no per-type browse links.
   const archiveNavItems = useMemo<NavItem[]>(
     () => [
-      { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search", exact: true },
-      { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials" },
-      { key: "research", label: t("nav.research", "Research"), to: "/research/corruption-accountability" },
-      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp" },
+      { key: "search", label: t("nav.searchArchive", "Search archive"), to: "/search/", exact: true },
+      { key: "materials", label: t("nav.materials", "Documents & other materials"), to: "/materials/" },
+      // Research lives on its own site now; the in-app report page is gone.
+      { key: "research", label: t("nav.research", "Research"), to: RESEARCH_URL, external: true },
+      { key: "mcp", label: t("nav.mcp", "Jawafdehi MCP"), to: "/mcp/" },
     ],
     [t],
   );
@@ -107,26 +119,29 @@ export function Navbar() {
   // maps this same list — so an entry added here appears in both.
   const aboutNavItems = useMemo<NavItem[]>(
     () => [
-      { key: "about", label: t("nav.about"), to: "/about", exact: true },
+      { key: "about", label: t("nav.about"), to: "/about/", exact: true },
       // Placed second rather than last: it is the only item in this group with
       // a live action behind it, and the one being shared with prospects.
-      { key: "openhouse", label: t("nav.openHouse"), to: "/openhouse" },
-      { key: "process", label: t("nav.ourProcess"), to: "/our-process" },
-      { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment" },
-      { key: "team", label: t("nav.team"), to: "/team" },
-      { key: "products", label: t("nav.products"), to: "/products" },
-      { key: "faq", label: t("nav.faq"), to: "/faq" },
+      { key: "openhouse", label: t("nav.openHouse"), to: "/openhouse/" },
+      { key: "process", label: t("nav.ourProcess"), to: "/our-process/" },
+      { key: "commitment", label: t("nav.ourCommitment"), to: "/commitment/" },
+      { key: "team", label: t("nav.team"), to: "/team/" },
+      { key: "products", label: t("nav.products"), to: "/products/" },
+      { key: "faq", label: t("nav.faq"), to: "/faq/" },
     ],
     [t],
   );
 
   const activeKey = useMemo(() => {
-    const path = location.pathname;
+    // Compared without the trailing slash: the links are slash-terminated (the
+    // canonical form) but a visitor can still arrive on either form.
+    const path = location.pathname.replace(/(.)\/+$/, "$1");
+    const sameAs = (to: string) => to.replace(/(.)\/+$/, "$1") === path;
 
     // Derived from aboutNavItems rather than a second hardcoded list of the
     // same paths: the two had to be edited together, so they would eventually
     // drift and the group's underline would go missing on a page inside it.
-    if (aboutNavItems.some((item) => item.to === path)) {
+    if (aboutNavItems.some((item) => sameAs(item.to))) {
       return "about";
     }
     // Derived from archiveNavItems for the same reason as the group above —
@@ -135,7 +150,7 @@ export function Navbar() {
     // extra entries below are the ones with no menu item of their own: the
     // detail-page prefixes.
     if (
-      archiveNavItems.some((item) => item.to === path) ||
+      archiveNavItems.some((item) => sameAs(item.to)) ||
       path.startsWith("/case/") ||
       path.startsWith("/material/") ||
       path.startsWith("/courtcase/") ||
@@ -144,7 +159,12 @@ export function Navbar() {
       return "archive";
     }
 
-    return navItems.find((item) => path === item.to || path.startsWith(`${item.to}/`))?.key ?? null;
+    return (
+      navItems.find((item) => {
+        const to = item.to.replace(/(.)\/+$/, "$1");
+        return path === to || path.startsWith(`${to}/`);
+      })?.key ?? null
+    );
   }, [location.pathname, navItems, aboutNavItems, archiveNavItems]);
 
   // The home and MCP heroes are full-bleed navy stages, and at rest the header
@@ -155,7 +175,7 @@ export function Navbar() {
   const overDarkHero =
     !isScrolled &&
     (DARK_HERO_PATHS.has(location.pathname) ||
-      (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
+      isMaterialsLanding(location.pathname, location.search));
 
   const [homeNavItem, ...secondaryNavItems] = navItems;
 
@@ -398,27 +418,29 @@ export function Navbar() {
                 <Search className="h-4 w-4" />
               </Button>
 
-            <Button asChild variant="accent" className="text-[15px]">
-              <Link to="/donate">
+            {/* Both actions keep the width of their longer (Nepali) label, so
+                switching language never slides the toggle and search along. */}
+            <Button asChild variant="accent" className="min-w-[9rem] text-[15px]">
+              <Link to="/donate/">
                 <HeartHandshake aria-hidden="true" />
                 {t("nav.donate")}
               </Link>
             </Button>
 
-            {/* Grey fill, no outline: the secondary action in the same voice as
-                the nav track and the search page's chips. */}
+            {/* A soft white fill over the navy hero; solid navy once the header
+                turns white, beside the crimson Donate. */}
             <Button
               asChild
               variant="ghost"
               className={cn(
-                "text-[15px] font-normal",
+                "min-w-[11.75rem] text-[15px] font-normal",
                 overDarkHero
-                  ? "bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-                  : "bg-muted text-primary hover:bg-primary/[0.08]",
+                  ? "bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/[0.16] hover:text-primary-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
               )}
             >
               {/* Markets the MCP connector: the archive inside the reader's own AI tool. */}
-              <Link to="/mcp">
+              <Link to="/mcp/">
                 <Plug aria-hidden="true" />
                 {t("header.connectYourAi")}
               </Link>
@@ -489,17 +511,31 @@ export function Navbar() {
                     </NavLink>
                   ) : null}
                   {/* Same order as the desktop row: Archive first, About last. */}
-                  {archiveNavItems.map((item) => (
-                    <NavLink
-                      key={item.key}
-                      to={item.to}
-                      end={item.exact}
-                      className={mobileNavLinkClass}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
+                  {archiveNavItems.map((item) =>
+                    item.external ? (
+                      <a
+                        key={item.key}
+                        href={item.to}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(mobileNavLinkClass({ isActive: false }), "inline-flex items-center gap-1.5")}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <NavLink
+                        key={item.key}
+                        to={item.to}
+                        end={item.exact}
+                        className={mobileNavLinkClass}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                      </NavLink>
+                    ),
+                  )}
                   {secondaryNavItems.map((item) => (
                     <NavLink
                       key={item.key}
@@ -531,7 +567,7 @@ export function Navbar() {
                     className="bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
                     onClick={() => setIsOpen(false)}
                   >
-                    <Link to="/donate">
+                    <Link to="/donate/">
                       <HeartHandshake aria-hidden="true" />
                       {t("nav.donate")}
                     </Link>
@@ -542,7 +578,7 @@ export function Navbar() {
                     size="navSheet"
                     onClick={() => setIsOpen(false)}
                   >
-                    <Link to="/mcp">
+                    <Link to="/mcp/">
                       <Plug aria-hidden="true" />
                       {t("header.connectYourAi")}
                     </Link>

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { AnimatedCount } from "@/components/ui/animated-count";
 import { cn } from "@/lib/utils";
+import { localiseNumber } from "@/utils/number";
 
 type ArchiveFiguresProps = {
   casesDocumented: string;
@@ -25,7 +26,7 @@ type Figure = {
 };
 
 export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const stats: Figure[] = [
     { value: props.casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
     { value: props.totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search?type=case", highlight: true },
@@ -48,7 +49,7 @@ export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
               highlight ? "text-accent" : "text-primary",
             )}
           >
-            <FigureValue value={value} />
+            <FigureValue value={value} language={i18n.language} />
           </p>
           {/* Sentence case, no letterspacing: uppercase+tracking split
               Devanagari matras in the Nepali locale (PR #359 review). */}
@@ -62,7 +63,9 @@ export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
   );
 }
 
-function FigureValue({ value }: Readonly<{ value: string }>) {
+// `value` arrives in English ("Rs 2.72 Kharab", "23.12 Lakh"); it is split
+// and counted in English digits, then drawn in the reader's language.
+function FigureValue({ value, language }: Readonly<{ value: string; language?: string }>) {
   // Finish pop: when the count-up lands, the figure does a brief settle-pop
   // (scale + brightness, .animate-stat-pop in index.css). onEnd only ever
   // fires when the animation actually ran, so static renders never pop.
@@ -74,14 +77,14 @@ function FigureValue({ value }: Readonly<{ value: string }>) {
   // fall through and render as-is.
   const match = /^(\D*?)(\d[\d,]*(?:\.\d+)?)(\D*)$/.exec(value);
   if (!match) {
-    return <>{value}</>;
+    return <>{localiseNumber(value, language)}</>;
   }
   const [, prefix, figure, suffix] = match;
   const numericValue = Number(figure.replace(/,/g, ""));
   const decimals = figure.includes(".") ? figure.split(".")[1].length : 0;
 
   if (!Number.isFinite(numericValue)) {
-    return <>{value}</>;
+    return <>{localiseNumber(value, language)}</>;
   }
 
   // `display={value}` keeps the pre-animation text byte-identical to what the
@@ -90,12 +93,13 @@ function FigureValue({ value }: Readonly<{ value: string }>) {
     <span className={cn(popped && "animate-stat-pop")}>
       <AnimatedCount
         end={numericValue}
-        display={value}
+        display={localiseNumber(value, language)}
         duration={0.9}
         decimals={decimals}
         prefix={prefix || undefined}
         suffix={suffix || undefined}
         onEnd={() => setPopped(true)}
+        language={language}
       />
     </span>
   );

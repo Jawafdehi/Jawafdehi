@@ -12,6 +12,7 @@ import {
 import type { DataLakeMetrics } from "@/types/jds";
 import { useMounted } from "@/hooks/useMounted";
 import { bsYearRows, bsYearWithAd } from "@/lib/data-quality";
+import { formatCount } from "@/utils/number";
 
 /** Compact axis ticks: 140000 -> "140k", 1500000 -> "1.5M". */
 function formatCompact(n: number): string {
@@ -43,7 +44,7 @@ export function CourtYearTrend({ ngm }: { ngm?: DataLakeMetrics }) {
   }
 
   const ariaLabel = `${t("dataQuality.courtCases.trendTooltip", "Court cases")}: ${data
-    .map((d) => `${bsYearWithAd(d.bs_year, t)} ${d.count.toLocaleString()}`)
+    .map((d) => `${bsYearWithAd(d.bs_year, t)} ${formatCount(d.count)}`)
     .join(", ")}`;
 
   return (
@@ -72,7 +73,7 @@ export function CourtYearTrend({ ngm }: { ngm?: DataLakeMetrics }) {
           />
           <Tooltip
             formatter={(v: number) => [
-              v.toLocaleString(),
+              formatCount(v),
               t("dataQuality.courtCases.trendTooltip", "Court cases"),
             ]}
             labelFormatter={(label) => bsYearWithAd(Number(label), t)}

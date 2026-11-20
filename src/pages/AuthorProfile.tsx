@@ -30,6 +30,7 @@ import {
   authorCardUrl,
 } from "@/utils/seo";
 import type { AuthorLink } from "@/types/jds";
+import { casePath } from "@/lib/case-links";
 
 // Same icon vocabulary as the team page (src/data/team.ts ContactType), so the
 // two surfaces render the same person the same way.
@@ -286,7 +287,7 @@ export default function AuthorProfile() {
                 return (
                   <li key={entry.slug}>
                     <Link
-                      to={`/case/${entry.slug}`}
+                      to={casePath(entry.slug)}
                       className="flex h-full flex-col rounded-[20px] border border-border/70 bg-surface p-5 transition-[border-color] duration-200 ease-out hover:border-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -312,7 +313,7 @@ export default function AuthorProfile() {
 
                       {entry.bigo != null && entry.bigo > 0 && (
                         <span className="mt-auto pt-3 text-sm font-medium tabular-nums text-accent">
-                          {formatBigo(entry.bigo)}
+                          {formatBigo(entry.bigo, i18n.language)}
                         </span>
                       )}
                     </Link>

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Gavel, Landmark } from "@/components/icons";
 
 import { AnimatedCount } from "@/components/ui/animated-count";
+import { compactCountParts, formatCompactCount } from "@/utils/number";
 import type { DataLakeMetrics } from "@/types/jds";
 import { bsYearRows } from "@/lib/data-quality";
 import { CourtYearMatrix } from "./CourtYearMatrix";
@@ -21,10 +22,26 @@ function ScaleTile({
     <div className="rounded-[20px] border border-border/70 bg-surface p-5">
       <div className="mb-3 text-accent">{icon}</div>
       <p className="text-3xl font-medium tabular-nums text-primary">
-        <AnimatedCount end={value} duration={1.2} />
+        {/* A headline figure: lakh/crore, as on the home page. */}
+        <ScaleValue value={value} />
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </div>
+  );
+}
+
+function ScaleValue({ value }: Readonly<{ value: number }>) {
+  const { i18n } = useTranslation();
+  const parts = compactCountParts(value);
+  return (
+    <AnimatedCount
+      end={parts.value}
+      decimals={parts.decimals}
+      suffix={parts.unit || undefined}
+      display={formatCompactCount(value, i18n.language)}
+      duration={1.2}
+      language={i18n.language}
+    />
   );
 }
 
@@ -46,7 +63,7 @@ export function EvidenceBackbone({ ngm }: { ngm?: DataLakeMetrics }) {
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {t(
           "dataQuality.courtCases.description",
-          "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
+          "Each case is cross-checked against lakhs of public court records. This is the judicial record base the investigation stands on.",
         )}
       </p>
 

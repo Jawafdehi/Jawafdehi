@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import { DateRangeFilter } from "@/components/search/DateRangeFilter";
 import { SeriesFilter } from "@/components/search/SeriesFilter";
-import { seriesBySlug } from "@/data/material-series";
+import { archiveSeriesBySlug } from "@/data/archive-folders";
 import { pickLocalized } from "@/lib/materials-landing";
 import {
   filterGroupsFor,
@@ -62,7 +62,7 @@ type SearchFilterBarProps = {
 
 /** The series' name in the reader's language, for its chip. */
 function seriesLabel(slug: string | undefined, language: string): string | undefined {
-  const series = slug ? seriesBySlug(slug) : undefined;
+  const series = slug ? archiveSeriesBySlug(slug) : undefined;
   return series ? pickLocalized(series.name, language) : undefined;
 }
 

@@ -400,7 +400,7 @@ const Likhit = () => {
 
         <PitchCard />
 
-        <WhatsNewSection id="likhit-whats-new" heading={t("likhit.whatsNewHeading")} tag="likhit" />
+        <WhatsNewSection id="likhit-updates" heading={t("likhit.whatsNewHeading")} tag="likhit" />
         <div className="pb-16 md:pb-24" />
       </main>
     </div>

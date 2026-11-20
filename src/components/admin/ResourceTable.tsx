@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader2, RefreshCw } from "@/components/icons";
+import { formatCount } from "@/utils/number";
 
 export interface Column<T> {
   header: string;
@@ -88,7 +89,7 @@ export default function ResourceTable<T>({
             <p className="text-sm text-muted-foreground">{description}</p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              {count.toLocaleString()} total
+              {formatCount(count)} total
             </p>
           )}
         </div>
@@ -156,7 +157,7 @@ export default function ResourceTable<T>({
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          {from}–{to} of {count.toLocaleString()}
+          {from}–{to} of {formatCount(count)}
         </span>
         <div className="flex gap-2">
           <Button

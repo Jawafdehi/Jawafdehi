@@ -1,6 +1,9 @@
 // The platform changelog: one dated, tagged list of what has changed in the
-// archive and the tools around it. /whats-new shows all of it; the home page
-// and each product page show a slice (see entriesFor).
+// archive and the tools around it. On Updates & News these are the "Product
+// updates", one kind of post beside the CMS's News and Updates in a single feed
+// (?filter=product shows only them); each entry has its own post at
+// /updates/product/<id>, and the home page and each product page show a slice
+// (see entriesFor). The old /whats-new redirects to the filtered list.
 //
 // Rules for an entry:
 //   * it has shipped — merged and live, never planned
@@ -122,7 +125,18 @@ export function entriesFor({
   return limit ? ordered.slice(0, limit) : ordered;
 }
 
-/** Tags that at least one entry carries, in WHATS_NEW_TAGS order. */
-export function tagsInUse(): WhatsNewTag[] {
-  return WHATS_NEW_TAGS.filter((tag) => WHATS_NEW.some((entry) => entry.tags.includes(tag)));
+/** An entry's own post, on Updates & News. */
+export function whatsNewPostPath(id: string): string {
+  return `/updates/product/${id}`;
 }
+
+/** The changelog's list: Updates & News, filtered to product updates. */
+export function whatsNewListPath(): string {
+  return "/updates/?filter=product";
+}
+
+/** One entry by its id, or undefined. */
+export function entryById(id: string | undefined): WhatsNewEntry | undefined {
+  return WHATS_NEW.find((entry) => entry.id === id);
+}
+

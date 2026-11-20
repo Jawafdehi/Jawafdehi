@@ -9,6 +9,7 @@ import {
 import { useMounted } from "@/hooks/useMounted";
 import { ChartReveal } from "@/components/charts/chart-reveal";
 import { chartMotion } from "@/lib/chart-motion";
+import { formatCount } from "@/utils/number";
 
 export interface DonutSegment {
   key: string;
@@ -40,7 +41,7 @@ export function StatusDonut({
   }
 
   const ariaLabel = `${centerLabel}: ${centerValue}. ${data
-    .map((s) => `${s.label} ${s.value.toLocaleString()}`)
+    .map((s) => `${s.label} ${formatCount(s.value)}`)
     .join(", ")}`;
 
   return (
@@ -71,7 +72,7 @@ export function StatusDonut({
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number, name) => [value.toLocaleString(), name]}
+              formatter={(value: number, name) => [formatCount(value), name]}
               contentStyle={{
                 borderRadius: 8,
                 border: "1px solid hsl(var(--border))",
@@ -101,7 +102,7 @@ export function StatusDonut({
               />
               <span className="text-muted-foreground">{s.label}</span>
               <span className="ml-auto font-medium tabular-nums text-primary">
-                {s.value.toLocaleString()}
+                {formatCount(s.value)}
               </span>
               <span className="w-10 text-right tabular-nums text-muted-foreground">
                 {pct}%

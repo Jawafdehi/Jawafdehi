@@ -3,3 +3,4 @@
 // origin in the browser, and these are links people follow off the page.
 export const CHAT_URL = "https://chat.jawafdehi.org";
 export const API_DOCS_URL = "https://api.jawafdehi.org/api/swagger/";
+export const RESEARCH_URL = "https://research.jawafdehi.org";

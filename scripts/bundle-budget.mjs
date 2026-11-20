@@ -338,6 +338,38 @@ const DIR = arg("dir", "dist/client");
 // 3–4 KB smaller (670.7 vs 674.5 KB here), so a limit set from a local number
 // fails CI. Deferring en.json (above) remains the way to win this back.
 //
+// Taken deliberately: since the 2026-11-15 tag cleanup, Case.tags holds ids like
+// `tax-evasion`, and every case card on the pre-rendered homepage and /cases shows
+// them at first paint. Deferring the names would paint the raw English id first —
+// in Nepali, on a Nepali-first site — and then swap it. The en.json lever above
+// is still the place to win this back.
+//
+// 683_800 leaves ~1,100 bytes over the measured branch, matching the headroom the
+// entries above leave.
+//
+// 2026-11: 683_800 → 685_000 for the court-case "Court orders" section (JAW-76).
+// Measured, same machine and method: main (a0141458) builds to 683,793 bytes —
+// 7 under the old line, the rest of #476's headroom having gone to #479 — and
+// this branch to 683,987, so the feature costs 194 bytes gzip. The component and
+// its page ride the existing lazy CourtCaseProfile chunk; the whole 194 is the
+// section's EN + NE strings in en.json / ne.json, which are eager. With 7 bytes
+// of headroom no form of a bilingual change fits, so the line moves. The en.json
+// lever above is still where to win this back.
+//
+// 685_000 leaves ~1,000 bytes over the measured branch, matching the headroom the
+// entries above leave.
+//
+// 2026-11: 685_000 → 674_700. Ratcheted DOWN, per the rule above: the Privacy
+// Policy and Terms of Service texts moved off the initial payload (Nepal-entity
+// legal pages, PR #502). They were eager page components; they are now lazy
+// chunks on the client (src/pages/legal/bodies.ts), with the server build handed
+// eager copies so the pre-render stays complete. The same PR added Nepali
+// versions of both, which would have cost ~14 KB gzip had they stayed eager.
+// Measured, same method: this branch builds to 673,612 bytes.
+//
+// 674_700 leaves ~1,100 bytes over the measured branch, matching the headroom the
+// entries above leave.
+//
 // 2026-11-16: merged with main's bilingual case tag names, the redesign had
 // drifted to 758.2 KB in CI (82.5 KB over), mostly from the Phosphor icon swap
 // (every icon component ships all six weights) and Sentry Replay riding in the
@@ -345,6 +377,10 @@ const DIR = arg("dir", "dist/client");
 // generated light/fill paths (scripts/gen-icon-paths.mjs, -52 KB) and Replay
 // loads on idle from its own chunk (src/lib/sentry-replay.ts, -36 KB). 665.9 KB
 // locally, so ~670 KB in CI.
+//
+// Merging main's 674_700 ratchet (above) into the redesign keeps the redesign's
+// own line: main's legal-page savings land on both, and the redesign's extra
+// first-paint weight (shaders, Inter, the record hero) is what 692_000 covers.
 const MAX_INITIAL_JS_GZIP = 692_000;
 const GOAL_INITIAL_JS_GZIP = 350_000;
 
@@ -361,8 +397,8 @@ const MUST_BE_DEFERRED = [
     marker: "recharts",
     why:
       "recharts + lodash + decimal.js-light + react-smooth were 110 KB gzip of " +
-      "the initial payload because ResearchCorruption (pre-rendered, therefore " +
-      "eagerly imported) imported the charts directly. Load them through " +
+      "the initial payload when a pre-rendered (therefore eagerly imported) " +
+      "page imported the charts directly. Load them through " +
       "lazyChart() in src/components/charts/lazy.tsx.",
   },
   {
