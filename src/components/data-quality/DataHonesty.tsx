@@ -6,6 +6,7 @@ import type {
   MaterialsMetrics,
 } from "@/types/jds";
 import { truncPct } from "@/lib/data-quality";
+import { formatCount } from "@/utils/number";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -53,8 +54,8 @@ function CompletenessBar({ item, t }: { item: HonestyItem; t: Translate }) {
       <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
         <span className="text-sm tabular-nums text-muted-foreground">
           {t("dataQuality.honesty.count", "{{part}} of {{total}}", {
-            part: item.part.toLocaleString(),
-            total: item.whole.toLocaleString(),
+            part: formatCount(item.part),
+            total: formatCount(item.whole),
           })}
         </span>
         {item.part === 0 && (
@@ -178,7 +179,7 @@ export function DataHonesty({
               <span className="font-normal normal-case tracking-normal text-muted-foreground/70">
                 {" · "}
                 {t("dataQuality.honesty.ofTotal", "of {{total}}", {
-                  total: g.total.toLocaleString(),
+                  total: formatCount(g.total),
                 })}
               </span>
             </p>

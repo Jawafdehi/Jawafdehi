@@ -14,6 +14,7 @@ import {
 import { MONO_STACK } from "@/lib/data-quality";
 import { useMounted } from "@/hooks/useMounted";
 import { useIsNarrow } from "@/hooks/useIsNarrow";
+import { formatCount } from "@/utils/number";
 
 export interface BreakdownItem {
   label: string;
@@ -65,7 +66,7 @@ export function BreakdownBar({
   // leaves between the bar end and its label.
   const END_LABEL_FONT_SIZE = 12;
   const widestLabelChars = Math.max(
-    ...data.map((d) => d.count.toLocaleString().length),
+    ...data.map((d) => formatCount(d.count).length),
     1,
   );
   const rightMargin = Math.max(
@@ -78,7 +79,7 @@ export function BreakdownBar({
   }
 
   const ariaLabel = `${tooltipLabel}: ${data
-    .map((d) => `${d.label} ${d.count.toLocaleString()}`)
+    .map((d) => `${d.label} ${formatCount(d.count)}`)
     .join(", ")}`;
 
   return (
@@ -102,7 +103,7 @@ export function BreakdownBar({
           />
           <Tooltip
             cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.4 }}
-            formatter={(value: number) => [value.toLocaleString(), tooltipLabel]}
+            formatter={(value: number) => [formatCount(value), tooltipLabel]}
             contentStyle={{
               borderRadius: 8,
               border: "1px solid hsl(var(--border))",
@@ -137,7 +138,7 @@ export function BreakdownBar({
             <LabelList
               dataKey="count"
               position="right"
-              formatter={(v: number) => v.toLocaleString()}
+              formatter={(v: number) => formatCount(v)}
               style={{
                 fontSize: END_LABEL_FONT_SIZE,
                 fontWeight: 600,

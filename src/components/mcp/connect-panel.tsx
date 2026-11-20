@@ -2,7 +2,7 @@
 // the pilot flyer's tested steps. Each panel is a quickstart-style stepper —
 // numbered markers, the one thing to copy (server address, commands
 // or config) inside the step that uses it, and a closing "try it" step — with
-// where it runs and what plan it needs in a quiet side column.
+// where it runs in a quiet side column.
 import { Check } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
@@ -65,10 +65,6 @@ export function ConnectPanel() {
           const steps = t(`${base}.steps`, { returnObjects: true }) as string[];
           const platforms = t(`${base}.platforms`, { returnObjects: true }) as string[];
           const hasAfter = i18n.exists(`${base}.after`);
-          const plan = [
-            i18n.exists(`${base}.requirement`) ? t(`${base}.requirement`) : null,
-            i18n.exists(`${base}.plan`) ? t(`${base}.plan`) : null,
-          ].filter(Boolean);
           return (
             <TabsContent key={key} value={key} className="mt-10 focus-visible:ring-offset-0">
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:gap-16">
@@ -97,14 +93,6 @@ export function ConnectPanel() {
                     <h3 className="text-sm text-muted-foreground">{t("mcp.connect.worksIn")}</h3>
                     <p className="mt-1 text-foreground">{Array.isArray(platforms) ? platforms.join(" · ") : null}</p>
                   </div>
-                  {plan.length > 0 ? (
-                    <div>
-                      <h3 className="text-sm text-muted-foreground">{t("mcp.connect.planLabel")}</h3>
-                      {plan.map((line) => (
-                        <p key={line} className="mt-1 text-foreground/80">{line}</p>
-                      ))}
-                    </div>
-                  ) : null}
                 </aside>
               </div>
             </TabsContent>

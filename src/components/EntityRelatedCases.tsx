@@ -230,7 +230,7 @@ export function EntityRelatedCases({
                   <p className="text-sm text-muted-foreground">
                     <span>{t("caseCard.bigo")}: </span>
                     <span className="font-medium tabular-nums text-accent">
-                      {formatBigo(c.bigo)}
+                      {formatBigo(c.bigo, i18n.language)}
                     </span>
                   </p>
                 ) : null}

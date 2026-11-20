@@ -232,7 +232,7 @@ function CaseCardTags({ tags, onTagClick }: Readonly<{ tags: string[]; onTagClic
 // detail page (`caseDetail.embezzledAmount`) so the same figure reads identically
 // on the card and on the record it links to.
 function BigoRow({ amount }: Readonly<{ amount?: number | null }>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   if (amount == null || amount <= 0) return null;
   return (
     <div className="flex min-w-0 items-center">
@@ -242,7 +242,7 @@ function BigoRow({ amount }: Readonly<{ amount?: number | null }>) {
           reading — clamping the whole row would eat the figure, not the label. */}
       <span className="min-w-0 truncate">{t("caseCard.bigo")}:</span>
       <span className="ml-1 shrink-0 font-medium text-accent">
-        {formatBigo(amount)}
+        {formatBigo(amount, i18n.language)}
       </span>
     </div>
   );

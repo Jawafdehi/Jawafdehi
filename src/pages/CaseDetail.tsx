@@ -676,7 +676,7 @@ const CaseDetail = () => {
                     {caseData.bigo != null && caseData.bigo > 0 && (
                       <div className="flex items-center text-muted-foreground">
                         <span className="text-sm">
-                          {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo)}
+                          {t("caseDetail.embezzledAmount")}: {formatBigo(caseData.bigo, i18n.language)}
                         </span>
                       </div>
                     )}

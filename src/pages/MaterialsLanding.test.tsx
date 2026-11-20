@@ -132,7 +132,7 @@ describe("MaterialsLanding holdings", () => {
     getDocumentSources.mockResolvedValue(catalogue());
     renderPage();
 
-    await waitFor(() => expect(screen.getByText("579,249")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("5,79,249")).toBeTruthy());
   });
 
   it("claims no total before the catalogue arrives", () => {

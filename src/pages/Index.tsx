@@ -18,7 +18,7 @@ import {
   FEATURED_CASE_COUNT,
   FEATURED_CASE_GRID_COUNT,
 } from "@/queries/home";
-import { formatBigo } from "@/utils/number";
+import { formatBigo, formatCompactCount, formatCount } from "@/utils/number";
 import { useMemo } from "react";
 import { caseCardPropsFromSearchResult } from "@/lib/case-card-props";
 import { useTranslation } from "react-i18next";
@@ -37,13 +37,13 @@ const Index = () => {
   });
 
   // Shared loading/error/missing guard for the hero stats. With no formatter a
-  // resolved value renders as a plain grouped count; pass one (e.g. formatBigo
+  // resolved value renders as a count in lakh/crore grouping (formatCount); pass one (e.g. formatBigo
   // for the currency tile) to render it differently. A missing value (an absent
   // optional field on an older/pre-deploy payload) renders the "—" placeholder
   // rather than "0" / "Rs 0", so an absent stat never reads as a real zero.
   const getStatValue = (
     value: number | undefined,
-    format: (v: number) => string = (v) => v.toLocaleString(),
+    format: (v: number) => string = formatCount,
   ): string => {
     if (statsError || statsLoading || value == null) return "—";
     return format(value);
@@ -109,8 +109,8 @@ const Index = () => {
         <ArchiveFigures
           casesDocumented={getStatValue(stats?.published_cases)}
           totalBigo={getStatValue(stats?.total_bigo, formatBigo)}
-          materials={getStatValue(stats?.materials?.total)}
-          courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total)}
+          materials={getStatValue(stats?.materials?.total, formatCompactCount)}
+          courtCasesTracked={getStatValue(stats?.ngm?.court_cases_total, formatCompactCount)}
         />
         <ArchiveBento casesDocumented={getStatValue(stats?.published_cases)} />
 

@@ -9,6 +9,7 @@ import { LightHero } from "@/components/ui/light-hero";
 import { JAWAFDEHI_EMAIL, JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { getStatistics } from "@/services/jds-api";
 import { trackEvent, type DonateMethod } from "@/utils/analytics";
+import { formatCount } from "@/utils/number";
 
 /** The channels a donor can actually reach a human on. Email is the record
  * channel for receipts and donation questions; Facebook and WhatsApp are where
@@ -55,7 +56,7 @@ function Stat({ value, label }: Readonly<{ value?: number; label: string }>) {
       {/* Inter tabular figures, per the press kit: a count should line up
           digit for digit as it loads. */}
       <dd className="text-3xl font-medium leading-none tracking-tight tabular-nums text-primary">
-        {typeof value === "number" ? value.toLocaleString() : "—"}
+        {typeof value === "number" ? formatCount(value) : "—"}
       </dd>
     </div>
   );

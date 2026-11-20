@@ -25,6 +25,7 @@ import {
   translateSymbolName as translateSymbolNameUtil
 } from '@/lib/translate-dynamic-content';
 import { getTagDescription } from '@/config/tag-descriptions';
+import { formatCount } from "@/utils/number";
 
 interface EntityDetailSectionsProps {
   entity: Entity;
@@ -436,7 +437,7 @@ export function EntityDetailSections({ entity }: EntityDetailSectionsProps) {
                       {candidacy.votes_received !== undefined && candidacy.votes_received !== null && (
                         <p className="text-sm mt-2">
                           <span className="text-muted-foreground">{t('entityDetail.votes')}:</span>{' '}
-                          <span className="font-medium">{candidacy.votes_received.toLocaleString()}</span>
+                          <span className="font-medium">{formatCount(candidacy.votes_received)}</span>
                         </p>
                       )}
                     </div>

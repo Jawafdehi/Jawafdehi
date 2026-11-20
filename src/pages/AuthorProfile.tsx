@@ -313,7 +313,7 @@ export default function AuthorProfile() {
 
                       {entry.bigo != null && entry.bigo > 0 && (
                         <span className="mt-auto pt-3 text-sm font-medium tabular-nums text-accent">
-                          {formatBigo(entry.bigo)}
+                          {formatBigo(entry.bigo, i18n.language)}
                         </span>
                       )}
                     </Link>

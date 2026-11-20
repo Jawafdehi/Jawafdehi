@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import i18n from "@/i18n/config";
 import en from "@/i18n/locales/en.json";
@@ -15,11 +16,13 @@ import Mcp from "@/pages/Mcp";
 
 const renderPage = () =>
   render(
-    <HelmetProvider>
-      <MemoryRouter>
-        <Mcp />
-      </MemoryRouter>
-    </HelmetProvider>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <HelmetProvider>
+        <MemoryRouter>
+          <Mcp />
+        </MemoryRouter>
+      </HelmetProvider>
+    </QueryClientProvider>,
   );
 
 afterEach(async () => {

@@ -1,7 +1,7 @@
 import bs from "bikram-sambat";
 
 import { adToBS, toNepaliNumerals } from "@/utils/bs-calendar";
-import { formatIndianNumber } from "@/utils/number";
+import { formatCount, formatIndianNumber } from "@/utils/number";
 
 import type { ArchiveSearchResult, SearchResultExtra } from "@/types/search";
 
@@ -91,12 +91,12 @@ export function sourceFromMaterialUrl(url: string): string | null {
 }
 
 /**
- * An archive figure in the reader's numerals: international grouping in
- * English ("345,886"), Nepali grouping and Devanagari digits in Nepali
- * ("३,४५,८८६"), so each language reads the way its readers write numbers.
+ * An archive figure in the reader's numerals: lakh/crore grouping in both
+ * languages, the site's rule for counts ("3,45,886"), with Devanagari digits
+ * in Nepali ("३,४५,८८६").
  */
 export function formatArchiveCount(value: number, language: string): string {
-  if (!language?.startsWith("ne")) return value.toLocaleString("en-US");
+  if (!language?.startsWith("ne")) return formatCount(value);
   return formatIndianNumber(value).replace(/\d/g, (digit) => toNepaliNumerals(Number(digit)));
 }
 

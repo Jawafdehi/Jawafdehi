@@ -682,32 +682,40 @@
   },
   "products": {
     "hero": {
-      "eyebrow": "Our Products",
-      "openSource": "Open source,",
-      "freeToUse": "free to use"
+      "eyebrow": "What we build",
+      "title": "Our products",
+      "description": "Use Nepal's corruption cases, court records and public documents in your own work: from an AI assistant, from code, or straight from a scanned page."
     },
     "items": {
       "mcp": {
         "kind": "MCP server",
-        "line": "Ask Claude or ChatGPT about any case, and get the record back with its sources."
+        "line": "Ask Claude or ChatGPT about any case, and get the record back with its sources.",
+        "cta": "Connect your AI"
       },
       "likhit": {
         "kind": "Python library",
-        "line": "Nepali PDFs and scans in, clean Markdown out."
+        "line": "Nepali PDFs and scans in, clean Markdown out.",
+        "cta": "See how it works"
       },
       "api": {
         "kind": "REST API",
-        "line": "Every case, entity and court record, open to your code."
+        "line": "Every case, entity and court record, open to your code.",
+        "cta": "Read the API docs"
       },
       "chat": {
         "kind": "Web app",
-        "line": "Plain-language questions, answers that cite the record."
+        "line": "Plain-language questions, answers that cite the record.",
+        "cta": "Open the chat"
       }
     },
     "preview": {
       "chatQuestion": "Which cases did the CIAA file at the Special Court this month?",
       "sourceCharge": "Charge sheet",
       "sourceCourt": "Special Court"
+    },
+    "groups": {
+      "research": "For research and reporting",
+      "developers": "For developers"
     }
   },
   "team": {
@@ -1698,7 +1706,7 @@
     },
     "backbone": {
       "heading": "The record base behind every case",
-      "description": "Each case is cross-checked against millions of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
+      "description": "Each case is cross-checked against lakhs of public records: court filings, tracked entities, and source documents. This is the raw material the investigation stands on.",
       "courtRecords": "Court records",
       "courts": "Courts covered",
       "entities": "Entities tracked",
@@ -1713,7 +1721,7 @@
     },
     "courtCases": {
       "heading": "Court cases",
-      "description": "Each case is cross-checked against millions of public court records. This is the judicial record base the investigation stands on.",
+      "description": "Each case is cross-checked against lakhs of public court records. This is the judicial record base the investigation stands on.",
       "trendHeading": "Court cases filed per year (Bikram Sambat)",
       "trendTooltip": "Court cases",
       "matrixHeading": "Court records by level and year (Bikram Sambat)",
@@ -2789,7 +2797,6 @@
       "copyCommand": "Copy the command",
       "copyConfig": "Copy the configuration",
       "importantLabel": "Important:",
-      "planLabel": "Plan",
       "clients": {
         "claude": {
           "name": "Claude",
@@ -2804,8 +2811,7 @@
             "Web",
             "Desktop",
             "Mobile"
-          ],
-          "plan": "The free plan works but runs out after about four research questions; Claude Pro removes that limit."
+          ]
         },
         "chatgpt": {
           "name": "ChatGPT",
@@ -2817,8 +2823,7 @@
           "after": "In a chat, type @Jawafdehi before your question; click Always allow when asked.",
           "platforms": [
             "Web"
-          ],
-          "plan": "Works on a free ChatGPT account."
+          ]
         },
         "claudeCode": {
           "name": "Claude Code",
@@ -2828,8 +2833,7 @@
           ],
           "platforms": [
             "Terminal"
-          ],
-          "requirement": "Paid Claude plan"
+          ]
         },
         "codex": {
           "name": "Codex",
@@ -2841,8 +2845,7 @@
             "CLI",
             "IDE",
             "ChatGPT desktop app"
-          ],
-          "plan": "Codex is included in every ChatGPT plan, Free included."
+          ]
         }
       },
       "worksIn": "Works in"
@@ -2863,19 +2866,19 @@
           "label": "published corruption and accountability cases"
         },
         {
-          "value": "Rs 23,383 cr",
+          "value": "Rs 2.34 Kharab",
           "label": "alleged in those cases"
         },
         {
-          "value": "2.3 million",
+          "value": "23 Lakh",
           "label": "court case records from 97 courts"
         },
         {
-          "value": "~100,000",
+          "value": "~1 Lakh",
           "label": "Attorney General charge-sheet records"
         },
         {
-          "value": "205,000",
+          "value": "2.05 Lakh",
           "label": "procurement notices (Bolpatra)"
         },
         {
@@ -2925,7 +2928,7 @@
         "Tell us what was useful and what was missing"
       ],
       "join": "Write to",
-      "contactName": "Damodar Dahal, President",
+      "whatsapp": "Or message us on WhatsApp",
       "youGet": "What you get",
       "weAsk": "What we ask"
     },

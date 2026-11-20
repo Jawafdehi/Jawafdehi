@@ -195,24 +195,25 @@ export function describeBigoRange(
   min: number | undefined,
   max: number | undefined,
   translate: (key: string, options?: Record<string, unknown>) => string,
+  language?: string,
 ): string {
   if (min !== undefined && max !== undefined) {
     return translate("archiveSearch.filters.bigoRange.between", {
       defaultValue: "{{min}} – {{max}}",
-      min: formatBigo(min),
-      max: formatBigo(max),
+      min: formatBigo(min, language),
+      max: formatBigo(max, language),
     });
   }
   if (min !== undefined) {
     return translate("archiveSearch.filters.bigoRange.from", {
       defaultValue: "{{min}} and above",
-      min: formatBigo(min),
+      min: formatBigo(min, language),
     });
   }
   if (max !== undefined) {
     return translate("archiveSearch.filters.bigoRange.upTo", {
       defaultValue: "Up to {{max}}",
-      max: formatBigo(max),
+      max: formatBigo(max, language),
     });
   }
   return translate("archiveSearch.filters.bigoRange.any", {

@@ -2,6 +2,8 @@
 import * as React from "react";
 import CountUp from "react-countup";
 
+import { formatCount, localiseNumber } from "@/utils/number";
+
 /**
  * A count-up figure that is already correct before it animates.
  *
@@ -50,23 +52,22 @@ export function AnimatedCount({
   end,
   display,
   duration = 0.9,
-  separator = ",",
   decimals = 0,
   prefix,
   suffix,
   onEnd,
+  language,
 }: Readonly<{
   /** The number to count up to. */
   end: number;
   /**
-   * What to show when not animating. Defaults to `end` rounded to a whole number
-   * and grouped with `separator` — which is what countup.js itself renders at its
-   * default `decimals: 0`, so the static text and the animated text agree.
+   * What to show when not animating. Defaults to `end` with `decimals` places in
+   * Nepali grouping (formatCount), the same formatting the count-up runs
+   * through, so the static text and the animated text agree.
    * Pass it explicitly when the caller already has the formatted string.
    */
   display?: string;
   duration?: number;
-  separator?: string;
   /** Decimal places the animated figure keeps (countup.js `decimals`). */
   decimals?: number;
   /** Constant text before the animated figure, e.g. "Rs ". */
@@ -79,8 +80,15 @@ export function AnimatedCount({
    * it for finish flourishes get exactly that: no animation, no flourish.
    */
   onEnd?: () => void;
+  /** The reader's language: Nepali draws every frame in Nepali digits and units. */
+  language?: string;
 }>) {
   const hostRef = React.useRef<HTMLSpanElement>(null);
+  const format = (n: number) =>
+    localiseNumber(
+      `${prefix ?? ""}${formatCount(n, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix ?? ""}`,
+      language,
+    );
   const [animate, setAnimate] = React.useState(false);
 
   React.useEffect(() => {
@@ -121,10 +129,10 @@ export function AnimatedCount({
       <CountUp
         end={end}
         duration={duration}
-        separator={separator}
         decimals={decimals}
-        prefix={prefix}
-        suffix={suffix}
+        // countup.js groups in threes; this keeps every frame in lakh/crore
+        // grouping. A formattingFn replaces prefix/suffix, so it adds them.
+        formattingFn={format}
         onEnd={onEnd}
       />
     );
@@ -132,7 +140,7 @@ export function AnimatedCount({
 
   return (
     <span ref={hostRef}>
-      {display ?? Math.round(end).toLocaleString("en-US").split(",").join(separator)}
+      {display ?? format(end)}
     </span>
   );
 }

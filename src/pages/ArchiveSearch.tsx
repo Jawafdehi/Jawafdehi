@@ -410,7 +410,7 @@ export default function ArchiveSearch() {
     ? {
         name: "bigo" as const,
         value: "bigo",
-        label: describeBigoRange(params.bigo_min, params.bigo_max, t),
+        label: describeBigoRange(params.bigo_min, params.bigo_max, t, i18n.language),
       }
     : null;
   // The date range gets its own single pill, on the same terms as बिगो: one

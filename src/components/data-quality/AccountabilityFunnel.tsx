@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCount } from "@/utils/number";
 
 export interface FunnelStage {
   key: string;
@@ -92,8 +93,8 @@ export function AccountabilityFunnel({
           upperShare == null ? fmtShare(share) : `${fmtShare(share)}–${fmtShare(upperShare)}`;
         const countLabel =
           stage.countUpper == null
-            ? stage.count.toLocaleString()
-            : `${stage.count.toLocaleString()}–${stage.countUpper.toLocaleString()}`;
+            ? formatCount(stage.count)
+            : `${formatCount(stage.count)}–${formatCount(stage.countUpper)}`;
 
         return (
           <li key={stage.key} className="transition-opacity duration-200 group-hover/rows:opacity-45 hover:!opacity-100">

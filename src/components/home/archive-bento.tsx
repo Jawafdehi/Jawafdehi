@@ -5,6 +5,8 @@
 import { FileText, Gavel, Landmark } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
+import { localiseNumber } from "@/utils/number";
+
 import { ArrowLink } from "@/components/ui/arrow-link";
 import { PanelLabel } from "@/components/ui/panel";
 import { Reveal } from "@/components/ui/reveal";
@@ -13,7 +15,7 @@ import { SplitHeading } from "@/components/ui/split-heading";
 const PANEL_TITLE = "mt-2 font-home-display text-2xl leading-[1.15] md:text-[1.75rem]";
 
 export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: string }>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const chips = t("home.bento.archive.chips", { returnObjects: true }) as string[];
   const steps = [
     { Icon: FileText, label: t("home.bento.follow.steps.chargeSheet") },
@@ -79,7 +81,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
               {/* The label keeps body tracking (the display face's -0.035em ran
                   "corruption cases" together) and wraps as one unit. */}
               <p className="mt-auto flex flex-wrap items-baseline gap-x-3 pt-10 font-home-display text-5xl tabular-nums text-primary">
-                {casesDocumented}
+                {localiseNumber(casesDocumented, i18n.language)}
                 <span className="whitespace-nowrap font-sans text-lg tracking-normal text-muted-foreground">
                   {t("home.bento.archive.casesLabel")}
                 </span>

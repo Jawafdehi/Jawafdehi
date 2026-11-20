@@ -2,6 +2,8 @@
 // Jawafdehi MCP pilot flyer (November 2026): the problem, what the connector
 // is, what the archive holds, two real answers, questions that work today,
 // and the pilot. Setup lives in connect-panel.tsx.
+import { FaWhatsapp } from "react-icons/fa";
+import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { ArrowUpRight, Check, Github } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -13,6 +15,9 @@ import { MistCarousel } from "@/components/ui/mist-carousel";
 import { Reveal } from "@/components/ui/reveal";
 import { CopyPill } from "@/components/copy-snippet";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { getStatistics } from "@/services/jds-api";
+import { formatBigo, formatCount } from "@/utils/number";
 
 function SectionHead({ title }: Readonly<{ title: string }>) {
   return (
@@ -47,9 +52,18 @@ export function McpOverview() {
 type Stat = { value: string; label: string };
 
 export function McpInside() {
-  const { t } = useTranslation();
-  const stats = t("mcp.inside.stats", { returnObjects: true }) as Stat[];
-  if (!Array.isArray(stats)) return null;
+  const { t, i18n } = useTranslation();
+  const authored = t("mcp.inside.stats", { returnObjects: true }) as Stat[];
+  // The first two figures (cases, money alleged) are live, from the same
+  // /api/statistics query as the home page, so the two pages never disagree.
+  // The typed values are the fallback while it loads or if it fails.
+  const { data: live } = useQuery({ queryKey: ["statistics"], queryFn: getStatistics, staleTime: 5 * 60 * 1000 });
+  if (!Array.isArray(authored)) return null;
+  const stats = authored.map((stat, index) => {
+    if (index === 0 && live?.published_cases != null) return { ...stat, value: formatCount(live.published_cases, undefined, i18n.language) };
+    if (index === 1 && live?.total_bigo != null) return { ...stat, value: formatBigo(live.total_bigo, i18n.language) };
+    return stat;
+  });
   // One grid, one size: the money alleged (the second figure) is the only
   // one set apart, by colour alone.
   return (
@@ -177,7 +191,17 @@ export function McpPilot() {
             inquiry@jawafdehi.org
             <ArrowUpRight aria-hidden="true" className="h-6 w-6 shrink-0 text-[hsl(var(--accent-on-dark))]" />
           </a>
-          <p className="mt-3 text-base text-primary-foreground/60">{t("mcp.pilot.contactName")}</p>
+          {/* Or on WhatsApp: the same number as the footer's WhatsApp link, its icon in WhatsApp green. */}
+          <p className="mt-8 text-sm text-primary-foreground/60 md:text-base">{t("mcp.pilot.whatsapp")}</p>
+          <a
+            href={JAWAFDEHI_SOCIALS.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-2.5 rounded text-xl text-primary-foreground underline decoration-primary-foreground/30 underline-offset-[6px] transition-colors hover:decoration-[hsl(var(--accent-on-dark))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 md:text-2xl"
+          >
+            <FaWhatsapp aria-hidden="true" className="h-5 w-5 shrink-0 text-[#25D366]" />
+            +977 976-8630501
+          </a>
         </Reveal>
         {/* Stretched to the left column's height with the two groups pushed
             apart, so both columns start and end on the same lines. */}
