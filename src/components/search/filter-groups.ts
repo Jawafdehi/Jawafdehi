@@ -42,6 +42,16 @@ export const FILTER_GROUPS: {
     title: "Document type",
   },
   {
+    name: "case_origin",
+    titleKey: "archiveSearch.filters.caseOrigin",
+    title: "Case origin",
+  },
+  {
+    name: "case_stage",
+    titleKey: "archiveSearch.filters.caseStage",
+    title: "Case status",
+  },
+  {
     name: "case_type",
     titleKey: "archiveSearch.filters.caseType",
     title: "Case type",
@@ -90,6 +100,9 @@ export function filterGroupsFor(selectedType?: ArchiveSearchType) {
       // materials carry one, so the buckets are empty everywhere else and a
       // stale token would narrow another tab through an invisible control.
       if (name === "material_type") return selectedType === "material";
+      // Origin and status describe Jawafdehi cases only: anywhere else their
+      // buckets are empty and a stale value would narrow through a hidden control.
+      if (name === "case_origin" || name === "case_stage") return selectedType === "case";
       return true;
     },
   );

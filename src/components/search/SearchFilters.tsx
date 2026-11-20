@@ -25,6 +25,8 @@ import { filterGroupsFor } from "@/components/search/filter-groups";
 
 export type SidebarFilterName =
   | "entity_type"
+  | "case_origin"
+  | "case_stage"
   | "case_type"
   | "tags"
   | "court"
@@ -177,7 +179,7 @@ export function SearchFilters({
       {filterGroupsFor(selectedType)
         .map(({ name, titleKey, title }) => (
           <FilterGroup
-            items={facets[name]}
+            items={facets[name] ?? []}
             key={name}
             name={name}
             onToggle={onToggle}

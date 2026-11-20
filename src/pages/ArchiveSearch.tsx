@@ -100,6 +100,8 @@ const archiveSearchPageSize = 12;
 const archiveSearchMaxOffsetResults = 10_000;
 const emptyFacets: ArchiveSearchFacets = {
   entity_type: [],
+  case_origin: [],
+  case_stage: [],
   case_type: [],
   tags: [],
   status: [],
@@ -307,6 +309,9 @@ export default function ArchiveSearch() {
     if (type !== "case") {
       next.delete("bigo_min");
       next.delete("bigo_max");
+      // Origin and status are Cases-only controls too.
+      next.delete("case_origin");
+      next.delete("case_stage");
     }
     // Document type and the date range are both material-scoped controls, so
     // they clear on the way out for the same reason.
@@ -361,6 +366,8 @@ export default function ArchiveSearch() {
     (
       [
         "entity_type",
+        "case_origin",
+        "case_stage",
         "case_type",
         "tags",
         "court",
@@ -387,6 +394,8 @@ export default function ArchiveSearch() {
 
   const selectedSidebarFilters = {
     entity_type: params.entity_type || [],
+    case_origin: params.case_origin || [],
+    case_stage: params.case_stage || [],
     case_type: params.case_type || [],
     tags: params.tags || [],
     court: params.court || [],
@@ -854,6 +863,10 @@ function readParams(
     ...(selectedRecordType === "material" ? readSeriesScope(searchParams) : {}),
     case_type: searchParams.getAll("case_type"),
     tags: searchParams.getAll("tags"),
+    // Cases-only, gated like court_type: a value carried onto another tab would
+    // narrow it through a control that tab does not show.
+    case_origin: selectedRecordType === "case" ? searchParams.getAll("case_origin") : [],
+    case_stage: selectedRecordType === "case" ? searchParams.getAll("case_stage") : [],
     // Date bounds, gated to the tab that renders the control. Read through
     // readDateParams for the same reason as the बिगो pair below: an inverted
     // range parses fine bound-by-bound, and normalization only heals the URL an

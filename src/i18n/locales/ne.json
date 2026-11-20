@@ -2232,6 +2232,9 @@
       "by": "{{name}} द्वारा"
     },
     "blog": {
+      "subtitle": "कर्मचारीले न्युजरूममा पोस्ट लेखेर पेस गर्छन्; /blog मा देखिनुअघि एडमिनले हरेक पोस्ट स्वीकृत गर्छन्।",
+      "new": "पोस्ट लेख्नुहोस्",
+      "review": "स्वीकृतिको पर्खाइमा",
       "loadError": "ब्लग पोस्टहरू लोड गर्न सकिएन।"
     }
   },
@@ -2320,7 +2323,25 @@
         "over10arab": "रु १० अर्बभन्दा बढी"
       },
       "bigoChip": "रकम",
-      "series": "शृङ्खला"
+      "series": "शृङ्खला",
+      "caseOrigin": "मुद्दाको स्रोत",
+      "caseStage": "मुद्दाको अवस्था",
+      "caseOriginValue": {
+        "ciaa": "अख्तियार",
+        "money_laundering": "सम्पत्ति शुद्धीकरण अनुसन्धान विभाग",
+        "public_prosecutor": "सरकारी वकिल",
+        "writ": "रिट",
+        "arbitration": "मध्यस्थता",
+        "other": "अन्य"
+      },
+      "caseStageValue": {
+        "under_investigation": "अनुसन्धानमा",
+        "at_special_court": "विशेष अदालतमा विचाराधीन",
+        "special_court_verdict": "विशेष अदालतको फैसला",
+        "at_supreme_court": "सर्वोच्च अदालतमा विचाराधीन",
+        "supreme_court_verdict": "सर्वोच्च अदालतको फैसला",
+        "other": "अन्य"
+      }
     },
     "materialSeries": "श्रृंखला",
     "filterSearch": "{{filter}} खोज्नुहोस्",

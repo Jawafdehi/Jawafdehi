@@ -182,8 +182,26 @@ function stressResult(result: ArchiveSearchResult, index: number): ArchiveSearch
   return r;
 }
 
+// Case origin and status, for an API that does not serve them yet (they need
+// the API's case_origin / case_stage facets and a reindex). Counts in the
+// proportions a 500-case sample of the corpus showed, so the filters can be
+// seen and used in development before the backend ships.
+const SAMPLE_CASE_ORIGIN = [
+  { name: "ciaa", count: 2_833 },
+  { name: "money_laundering", count: 10 },
+];
+const SAMPLE_CASE_STAGE = [
+  { name: "special_court_verdict", count: 1_330 },
+  { name: "supreme_court_verdict", count: 730 },
+  { name: "at_supreme_court", count: 600 },
+  { name: "at_special_court", count: 155 },
+  { name: "other", count: 29 },
+];
+
 function stressFacets(facets: ArchiveSearchFacets): ArchiveSearchFacets {
   const f = clone(facets);
+  if (!f.case_origin?.length) f.case_origin = clone(SAMPLE_CASE_ORIGIN);
+  if (!f.case_stage?.length) f.case_stage = clone(SAMPLE_CASE_STAGE);
   // Counts that need separators, a zero, and a label nobody translated.
   const longTail = (name: string, count: number) => ({ name, count });
   for (const key of Object.keys(f) as Array<keyof ArchiveSearchFacets>) {

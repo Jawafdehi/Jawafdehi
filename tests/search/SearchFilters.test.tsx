@@ -96,7 +96,7 @@ function renderFilters(
       onDateCommit={extra.onDateCommit ?? vi.fn()}
       onToggle={extra.onToggle ?? vi.fn()}
       selected={{
-        entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+        entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
         material_type: extra.selectedMaterialTypes ?? [],
       }}
       selectedType={selectedType}
@@ -164,7 +164,7 @@ describe("SearchFilters — बिगो range control", () => {
         onBigoCommit={onCommit}
         onClear={vi.fn()}
         onToggle={vi.fn()}
-        selected={{ entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [] }}
+        selected={{ entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [] }}
         selectedType="case"
       />,
     );
@@ -201,7 +201,7 @@ describe("SearchFilters — बिगो range control", () => {
         onClear={vi.fn()}
         onToggle={vi.fn()}
         selected={{
-          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+          entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
         }}
         selectedType="case"
       />,
@@ -454,7 +454,7 @@ describe("SearchFilters — court-case facets", () => {
         onClear={vi.fn()}
         onToggle={vi.fn()}
         selected={{
-          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+          entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
         }}
         selectedType="courtcase"
       />,
@@ -497,7 +497,7 @@ describe("SearchFilters — court-case facets", () => {
         onClear={vi.fn()}
         onToggle={vi.fn()}
         selected={{
-          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+          entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
         }}
         selectedType="courtcase"
       />,
@@ -539,7 +539,7 @@ describe("SearchFilters — court-case facets", () => {
         onClear={vi.fn()}
         onToggle={vi.fn()}
         selected={{
-          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+          entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
         }}
         selectedType="courtcase"
       />,
@@ -575,7 +575,7 @@ describe("SearchFilters — court-case facets", () => {
         onDateCommit={vi.fn()}
         onToggle={vi.fn()}
         selected={{
-          entity_type: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
+          entity_type: [], case_origin: [], case_stage: [], case_type: [], tags: [], court: [], court_type: [], district: [], province: [],
           material_type: [],
         }}
         selectedType="case"

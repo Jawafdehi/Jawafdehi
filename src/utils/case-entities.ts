@@ -180,6 +180,12 @@ export function getFacetItemLabel(
   if (facetName === "tags" && isCaseTag(item.name)) {
     return caseTagLabel(item.name, language);
   }
+  // Case origin and status are closed vocabularies the API derives at index
+  // time; an unknown token (a value added server-side first) reads humanized.
+  if (facetName === "case_origin" || facetName === "case_stage") {
+    const group = facetName === "case_origin" ? "caseOriginValue" : "caseStageValue";
+    return translate(`archiveSearch.filters.${group}.${item.name}`, humanize(item.name));
+  }
   // Court tier ("district") and court identifier ("kathmandudc") are different
   // vocabularies over the same names, so they take the two matching helpers.
   if (facetName === "court_type") return formatCourtType(item.name, language);

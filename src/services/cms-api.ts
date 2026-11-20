@@ -40,6 +40,19 @@ export async function getArticles(
   return res.data.items;
 }
 
+/**
+ * The Newsroom's Blog section (BlogIndexPage), where staff write posts for an
+ * admin to approve. Its page id is what the CMS's "add a page here" link needs;
+ * null when the section is not there yet (an API without the blog workflow).
+ */
+export async function getBlogIndexId(): Promise<number | null> {
+  const res = await http.get<WagtailListResponse<{ id: number }>>(`${CMS_BASE}/pages/`, {
+    params: { type: "content.BlogIndexPage", fields: "_" },
+    timeout: 10000,
+  });
+  return res.data.items[0]?.id ?? null;
+}
+
 /** Fetch a single published article by its slug, or null if not found. */
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
   const res = await http.get<WagtailListResponse<Article>>(`${CMS_BASE}/pages/`, {

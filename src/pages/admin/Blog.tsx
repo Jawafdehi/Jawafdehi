@@ -4,13 +4,18 @@ import { useTranslation } from "react-i18next";
 import { FormError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Loader2, Plus } from "@/components/icons";
+import { articlePath } from "@/lib/article-path";
 import { blogPostsQuery } from "@/queries/blog";
+import { getBlogIndexId } from "@/services/cms-api";
 import { extractErrorMessage } from "@/services/http";
 
-// Blog posts are authored in the Wagtail CMS (the API has no write endpoint for
-// articles), which lives on the API origin at /newsroom/. This page lists what
-// is published and hands off to Wagtail to write or edit. Drafts are not
-// returned by the public CMS API, so they only appear inside Wagtail.
+// Blog posts are written in the Wagtail Newsroom (on the API origin at
+// /newsroom/), in its Blog section. Staff can save and submit a post but not
+// publish it; an admin approves it there, editing first if they like
+// (meta-repo docs/2026-11-20-blog-approval). This page lists what is
+// published and hands off to the Newsroom to write, review or edit. Drafts and
+// posts awaiting approval are not served by the public CMS API, so they only
+// appear in the Newsroom.
 const API_ORIGIN = String(
   import.meta.env.VITE_JAWAFDEHI_API_BASE_URL || "https://api.jawafdehi.org",
 ).replace(/\/+$/, "");
@@ -21,6 +26,16 @@ export default function AdminBlog() {
   const { data, isLoading, error } = useQuery({
     ...blogPostsQuery(),
   });
+  const { data: blogIndexId } = useQuery({
+    queryKey: ["cms-blog-index"],
+    queryFn: getBlogIndexId,
+    staleTime: Infinity,
+  });
+  // Straight to a new post in the Blog section; the page tree if the section
+  // is not known yet.
+  const writeHref = blogIndexId
+    ? `${WAGTAIL_ADMIN}/pages/add/content/articlepage/${blogIndexId}/`
+    : `${WAGTAIL_ADMIN}/pages/`;
 
   return (
     <div className="space-y-6">
@@ -30,16 +45,26 @@ export default function AdminBlog() {
           <p className="mt-1 text-sm text-muted-foreground">
             {t(
               "admin.blog.subtitle",
-              "Posts are written in the Wagtail CMS. Published posts are listed here.",
+              "Staff write posts in the Newsroom and submit them; an admin approves each one before it appears on /blog.",
             )}
           </p>
         </div>
-        <Button asChild>
-          <a href={`${WAGTAIL_ADMIN}/pages/`} target="_blank" rel="noopener noreferrer">
-            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            {t("admin.blog.new", "New post in Wagtail")}
-          </a>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {/* The Newsroom dashboard's "Awaiting your review" is the approval
+              queue for admins. */}
+          <Button variant="outline" asChild>
+            <a href={`${WAGTAIL_ADMIN}/`} target="_blank" rel="noopener noreferrer">
+              {t("admin.blog.review", "Awaiting approval")}
+              <ExternalLink className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            </a>
+          </Button>
+          <Button asChild>
+            <a href={writeHref} target="_blank" rel="noopener noreferrer">
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+              {t("admin.blog.new", "Write a post")}
+            </a>
+          </Button>
+        </div>
       </div>
 
       {error ? (
@@ -60,7 +85,7 @@ export default function AdminBlog() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`/updates/${post.meta.slug}`} target="_blank" rel="noopener noreferrer">
+                  <a href={articlePath(post)} target="_blank" rel="noopener noreferrer">
                     {t("admin.blog.view", "View")}
                     <ExternalLink className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
                   </a>
