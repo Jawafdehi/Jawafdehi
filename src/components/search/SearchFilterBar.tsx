@@ -165,7 +165,7 @@ export function SearchFilterBar({
   const valueLabel = (name: SidebarFilterName) => {
     const values = selected[name];
     if (!values.length) return undefined;
-    const item = facets[name].find((entry) => entry.name === values[0]) ?? {
+    const item = (facets[name] ?? []).find((entry) => entry.name === values[0]) ?? {
       name: values[0],
     };
     const first = getFacetItemLabel(name, item, t, i18n.language);
@@ -272,7 +272,7 @@ export function SearchFilterBar({
           >
             <FilterGroup
               inPopover
-              items={facets[name]}
+              items={facets[name] ?? []}
               name={name}
               onToggle={onToggle}
               selectedValues={selected[name]}

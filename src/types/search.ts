@@ -52,6 +52,10 @@ export interface ArchiveSearchParams {
   entity_type?: string[];
   case_type?: string[];
   tags?: string[];
+  // Cases-only: where a case came from and where it has got to. Derived by the
+  // API at index time (cases.search_index.case_origin / case_stage).
+  case_origin?: string[];
+  case_stage?: string[];
   // Case-list lifecycle facet. API param is `status`; OpenSearch field is `case_status`.
   status?: string[];
   // Court-case location facets. They are meaningful only for court records, so
@@ -100,6 +104,9 @@ export interface ArchiveSearchFacets {
   case_type: SearchFacetItem[];
   tags: SearchFacetItem[];
   status: SearchFacetItem[];
+  // Absent from a response served before the API gained them, hence optional.
+  case_origin?: SearchFacetItem[];
+  case_stage?: SearchFacetItem[];
   court: SearchFacetItem[];
   court_type: SearchFacetItem[];
   district: SearchFacetItem[];

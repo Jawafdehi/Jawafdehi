@@ -2319,7 +2319,25 @@
         "over10arab": "Over Rs 10 arab"
       },
       "bigoChip": "Amount",
-      "series": "Series"
+      "series": "Series",
+      "caseOrigin": "Case origin",
+      "caseStage": "Case status",
+      "caseOriginValue": {
+        "ciaa": "CIAA",
+        "money_laundering": "DMLI (money laundering)",
+        "public_prosecutor": "Public prosecutor",
+        "writ": "Writ",
+        "arbitration": "Arbitration",
+        "other": "Other"
+      },
+      "caseStageValue": {
+        "under_investigation": "Under investigation",
+        "at_special_court": "At the Special Court",
+        "special_court_verdict": "Special Court verdict",
+        "at_supreme_court": "At the Supreme Court",
+        "supreme_court_verdict": "Supreme Court verdict",
+        "other": "Other"
+      }
     },
     "materialSeries": "Series",
     "filterSearch": "Search {{filter}}",
