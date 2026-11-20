@@ -121,6 +121,13 @@ export const generalMembers: TeamMember[] = [
 
 // Shown in its own section. A general member who is also an advisor carries both badges.
 export const advisors: TeamMember[] = [
+  {
+    displayName: { en: "Sharada Prasad Trital", ne: "शारदाप्रसाद त्रिताल" },
+    thumb: "/assets/teammembers/sharada.webp",
+    description: "Former Secretary, Government of Nepal",
+    tags: ["Advisor"],
+    contacts: [],
+  },
   // Name, role and links from his signed advisor acceptance form
   // (2026-11-18, invitation letter ५१२), which consents to this listing.
   {
