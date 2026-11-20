@@ -15,7 +15,6 @@ import {
   type ArchiveNode,
 } from "@/data/archive-folders";
 import { seriesScope } from "@/data/material-series";
-import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { formatArchiveCount, pickLocalized } from "@/lib/materials-landing";
 import { cn } from "@/lib/utils";
 import { searchArchive } from "@/services/search-api";
@@ -138,7 +137,7 @@ export function ListView({ ctx }: Readonly<{ ctx: Ctx }>) {
               if (isBranch) toggle(row.path);
             }}
             className={cn(
-              "flex min-h-12 cursor-pointer items-center gap-2.5 border-b border-border/70 py-2.5 pr-3 text-[15px] outline-none transition-colors duration-150",
+              "flex min-h-14 cursor-pointer items-center gap-3 border-b border-border/70 py-3 pr-3 text-base outline-none transition-colors duration-150",
               "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
               id === selectedKey && "bg-muted/60",
             )}
@@ -162,7 +161,7 @@ export function ListView({ ctx }: Readonly<{ ctx: Ctx }>) {
                 to={leafHref(row.node as never)}
                 tabIndex={-1}
                 onClick={(event) => event.stopPropagation()}
-                className="group inline-flex shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
+                className="group inline-flex shrink-0 items-center gap-1 text-[15px] text-muted-foreground transition-colors hover:text-primary"
               >
                 {t("materialsLanding.archive.seeDocuments", "View all")}
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
@@ -193,15 +192,22 @@ function RecentDocuments({ node }: Readonly<{ node: ArchiveNode }>) {
   if (!data?.results.length) return null;
   return (
     <div className="mt-6">
-      <h4 className="text-sm text-muted-foreground">
+      <h4 className="px-3 text-sm text-muted-foreground">
         {t("materialsLanding.archive.recent", "Recent documents")}
       </h4>
-      <ul className="mt-3 list-none space-y-2.5">
+      {/* The documents as rows, in the same shape as the folder rows beside
+          them: file icon, the title, the same rounded hover. */}
+      <ul className="mt-1.5 list-none">
         {data.results.map((result) => (
-          <li key={result.id} className="flex items-start gap-2.5 text-[15px] leading-6">
-            <FileText aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-            <Link to={result.url} className="line-clamp-2 text-primary underline-offset-4 hover:underline">
-              {pickLocalized(result.title, i18n.language) || t("materialsLanding.recent.untitled", "Untitled document")}
+          <li key={result.id}>
+            <Link
+              to={result.url}
+              className="flex items-start gap-3 rounded-xl px-3 py-2.5 text-base leading-6 text-primary transition-colors duration-150 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <FileText aria-hidden="true" className="mt-[3px] h-[18px] w-[18px] shrink-0 text-muted-foreground" />
+              <span className="line-clamp-2 min-w-0">
+                {pickLocalized(result.title, i18n.language) || t("materialsLanding.recent.untitled", "Untitled document")}
+              </span>
             </Link>
           </li>
         ))}
@@ -212,38 +218,33 @@ function RecentDocuments({ node }: Readonly<{ node: ArchiveNode }>) {
 
 function Preview({ node, nodePath, ctx, large = false }: Readonly<{ node: ArchiveNode; nodePath: string[]; ctx: Ctx; large?: boolean }>) {
   const { t } = useTranslation();
-  const chain = resolvePath(ctx.tree, nodePath) ?? [];
-  const trail = chain.slice(0, -1).map((step) => nodeName(step, ctx.language)).join(" › ");
   return (
-    // The site's light card (/likhit, /mcp): a hairline card on the mist shader.
-    <div data-preview={node.slug} className={cn("relative isolate overflow-hidden rounded-[20px] border border-border/70 bg-surface", large ? "p-6 md:p-8" : "p-6")}>
-      <div aria-hidden="true" className="absolute inset-0 -z-10">
-        <ShaderBackdrop design="mist" />
-      </div>
-      <div>
-        {trail && <p className="text-sm text-muted-foreground">{trail}</p>}
-        <h3 className={cn("font-home-display mt-1.5 leading-[1.15] text-primary", large ? "text-3xl" : "text-2xl")}>
+    // No card of its own: the preview is one more column of the browser, set
+    // straight on the page like the folder lists beside it.
+    <div data-preview={node.slug} className={large ? "py-2" : "py-1.5"}>
+      <div className="px-3">
+        <h3 className={cn("font-home-display leading-[1.15] text-primary", large ? "text-3xl" : "text-2xl")}>
           {nodeName(node, ctx.language)}
         </h3>
-        <CountLabel node={node} ctx={ctx} className={cn("mt-2 block text-primary", large ? "text-xl" : "text-lg")} />
+        <CountLabel node={node} ctx={ctx} className="mt-1.5 block text-base text-muted-foreground" />
         {describe(node, ctx.language) && (
-          <p className="mt-3 max-w-2xl text-[15px] leading-6 text-foreground/75">{describe(node, ctx.language)}</p>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-foreground/75">{describe(node, ctx.language)}</p>
         )}
-        <RecentDocuments node={node} />
-        <div className="mt-6">
+      </div>
+      <RecentDocuments node={node} />
+      <div className="mt-5 px-3">
           {node.type === "leaf" ? (
             <SeeDocuments node={node} />
           ) : (
             <button
               type="button"
               onClick={() => ctx.select([...nodePath, node.children[0].slug], true)}
-              className="group inline-flex items-center gap-1.5 text-[15px] font-medium text-primary transition-colors hover:text-accent"
+              className="group inline-flex items-center gap-1.5 text-base font-medium text-primary transition-colors hover:text-accent"
             >
               {t("materialsLanding.archive.open", "Open")}
               <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
             </button>
           )}
-        </div>
       </div>
     </div>
   );
@@ -353,7 +354,7 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
         role="listbox"
         aria-label={column.at.length ? nodeName(chain[column.at.length - 1], language) : t("materialsLanding.archive.root", "Archive")}
         data-col={ci}
-        className={cn("list-none p-1.5", compact ? "w-full" : "w-72 shrink-0 border-r border-border/70")}
+        className={cn("list-none p-1.5", compact ? "w-full" : "w-80 shrink-0 border-r border-border/70")}
       >
         {column.items.map((node, index) => {
           const selected = node.slug === selectedSlug;
@@ -368,18 +369,18 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
               onClick={() => ctx.select([...column.at, node.slug], true)}
               onKeyDown={(event) => onKeyDown(event, column, index)}
               className={cn(
-                "flex cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2 text-[15px] leading-6 text-primary outline-none transition-colors duration-150",
+                "flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 text-base leading-6 text-primary outline-none transition-colors duration-150",
                 "focus-visible:ring-2 focus-visible:ring-ring",
                 selected ? "bg-muted" : "hover:bg-muted/50",
               )}
             >
               {node.type === "branch" ? (
-                <Folder aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                <Folder aria-hidden="true" className="mt-[3px] h-[18px] w-[18px] shrink-0 text-muted-foreground" />
               ) : (
-                <FileText aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                <FileText aria-hidden="true" className="mt-[3px] h-[18px] w-[18px] shrink-0 text-muted-foreground" />
               )}
               <span className="min-w-0 flex-1 break-words">{nodeName(node, language)}</span>
-              <span className="mt-0.5 shrink-0 text-sm tabular-nums text-muted-foreground">
+              <span className="mt-px shrink-0 text-[15px] tabular-nums text-muted-foreground">
                 {nodeCount(node, ctx.catalogue) === null ? "—" : formatArchiveCount(nodeCount(node, ctx.catalogue) ?? 0, language)}
               </span>
               {node.type === "branch" && <ChevronRight aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/70" />}
@@ -426,7 +427,7 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
           </button>
         )}
         {last?.type === "leaf" ? (
-          <div className="p-2">
+          <div className="p-1.5">
             <Preview node={last} nodePath={path} ctx={ctx} />
           </div>
         ) : (
@@ -437,10 +438,10 @@ export function ColumnsView({ ctx, compact }: Readonly<{ ctx: Ctx; compact: bool
   }
 
   return (
-    <div ref={wrapRef} className="flex min-h-[24rem] overflow-x-auto rounded-[20px] border border-border/70">
+    <div ref={wrapRef} className="flex min-h-[28rem] overflow-x-auto rounded-[20px] border border-border/70">
       {columns.map(renderColumn)}
       {last?.type === "leaf" && (
-        <div className="min-w-[16rem] flex-1 p-3">
+        <div className="min-w-[18rem] flex-1 p-1.5">
           <Preview node={last} nodePath={path} ctx={ctx} />
         </div>
       )}

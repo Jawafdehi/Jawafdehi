@@ -2339,7 +2339,6 @@
     "heroTitle": "Nepal's public records. One archive.",
     "heroLede": "Documents collected from government bodies — searchable, citable, always open.",
     "ctaBrowse": "Browse the archive",
-    "ctaAsk": "Ask the AI assistant",
     "grid": {
       "title": "Browse by series",
       "documents": "documents",
@@ -2390,10 +2389,6 @@
       }
     },
     "heroEyebrow": "The archive's documents",
-    "stats": {
-      "documents": "Documents",
-      "licence": "Licence"
-    },
     "archive": {
       "root": "Archive",
       "title": "Browse the archive",
@@ -2407,7 +2402,8 @@
         "list": "List",
         "columns": "Columns"
       }
-    }
+    },
+    "ctaConnect": "Connect your AI"
   },
   "courtCasesPage": {
     "heading": "Court cases",

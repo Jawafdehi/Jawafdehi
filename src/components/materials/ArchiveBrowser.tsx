@@ -72,7 +72,7 @@ export function CountLabel({
     <span className={cn("tabular-nums", className)}>
       {count === null ? "—" : formatArchiveCount(count, ctx.language)}{" "}
       {/* On a phone the List rows drop the word so long names have room. */}
-      <span className={cn("text-xs font-normal opacity-70", compact && "hidden sm:inline")}>
+      <span className={cn("font-normal", compact && "hidden sm:inline")}>
         {t("materialsLanding.grid.documents", "documents")}
       </span>
     </span>
@@ -163,7 +163,7 @@ function IconsView({ ctx }: Readonly<{ ctx: Ctx }>) {
               />
             </div>
             <h3 className="mt-4 text-lg leading-snug text-primary sm:mt-5">{nodeName(node, language)}</h3>
-            <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">{describe(node, language)}</p>
+            <p className="mt-1.5 line-clamp-2 text-[15px] leading-6 text-muted-foreground">{describe(node, language)}</p>
             <CountLabel node={node} ctx={ctx} className="mt-auto pt-4 text-[15px] text-primary" />
           </div>
         );
@@ -202,7 +202,7 @@ function Breadcrumbs({ ctx }: Readonly<{ ctx: Ctx }>): ReactNode {
   const { t } = useTranslation();
   const chain = resolvePath(ctx.tree, ctx.path) ?? [];
   return (
-    <nav aria-label="breadcrumb" className="min-w-0 text-[15px] text-muted-foreground">
+    <nav aria-label="breadcrumb" className="min-w-0 text-base text-muted-foreground">
       <ol className="flex list-none flex-wrap items-center gap-x-2 gap-y-1">
         <li>
           <button type="button" onClick={() => ctx.select([], true)} className={cn("transition-colors hover:text-primary", !chain.length && "text-primary")}>
@@ -252,7 +252,12 @@ export function ArchiveBrowser() {
   const urlView = params.get("view");
   const view: ArchiveView = isView(urlView) ? urlView : (storedView ?? (isMobile ? "list" : "columns"));
   const rawPath = (params.get("path") ?? "").split("/").filter(Boolean);
-  const path = validPath(tree, rawPath);
+  const chosenPath = validPath(tree, rawPath);
+  // Columns never open on an empty pane: with nothing chosen, the first folder
+  // is open, as file browsers land on a selected folder. Not written to the
+  // URL, so /materials/ stays the plain address. Phones drill one level at a
+  // time and start at the top.
+  const path = chosenPath.length || view !== "columns" || isMobile || !tree[0] ? chosenPath : [tree[0].slug];
   const pathKey = key(path);
 
   const update = (changes: { view?: ArchiveView; path?: string[] }, push: boolean) => {
@@ -297,13 +302,16 @@ export function ArchiveBrowser() {
 
   return (
     <div>
-      <h2 id="archive-heading" className="font-archive-section-title">
-        {t("materialsLanding.archive.title", "Browse the archive")}
-      </h2>
-      <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{t("materialsLanding.archive.lede", "")}</p>
-
-      <div className="sticky top-16 z-10 -mx-2 mt-8 flex flex-wrap items-center justify-between gap-3 bg-background/90 px-2 py-2 backdrop-blur">
-        <Breadcrumbs ctx={ctx} />
+      {/* The title and line on the left, the view switcher on the right: no
+          toolbar row of its own. Columns and the list show where you are, so
+          only the icon grid, which drills in, carries a way back up. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+        <div className="min-w-0">
+          <h2 id="archive-heading" className="font-archive-section-title">
+            {t("materialsLanding.archive.title", "Browse the archive")}
+          </h2>
+          <p className="mt-3 max-w-2xl text-lg leading-8 text-muted-foreground">{t("materialsLanding.archive.lede", "")}</p>
+        </div>
         <div role="group" aria-label={t("materialsLanding.archive.viewAs", "View as")} className="flex shrink-0 rounded-full bg-muted p-1">
           {ARCHIVE_VIEWS.map((option) => {
             const Icon = VIEW_ICONS[option];
@@ -328,8 +336,13 @@ export function ArchiveBrowser() {
           })}
         </div>
       </div>
+      {view === "icons" && path.length > 0 ? (
+        <div className="mt-6">
+          <Breadcrumbs ctx={ctx} />
+        </div>
+      ) : null}
 
-      <div className="mt-6" data-archive-view={view}>
+      <div className="mt-8" data-archive-view={view}>
         {view === "icons" ? (
           <IconsView ctx={ctx} />
         ) : (

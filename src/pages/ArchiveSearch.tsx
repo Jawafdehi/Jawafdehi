@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { seriesBySlug, seriesScope } from "@/data/material-series";
+import { seriesScope } from "@/data/material-series";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight } from "@/components/icons";
 import { useTranslation } from "react-i18next";
@@ -56,6 +56,7 @@ import type {
   ArchiveSearchType,
 } from "@/types/search";
 import { describeBigoRange, readBigoBounds } from "@/lib/bigo-range";
+import { archiveSeriesBySlug } from "@/data/archive-folders";
 import {
   describeDateRange,
   readDateBounds,
@@ -429,7 +430,7 @@ export default function ArchiveSearch() {
   // The series in force, only while it can apply (Documents) and only when the
   // slug names a real shelf — the same conditions readParams scopes by.
   const activeSeries =
-    selectedRecordType === "material" && seriesBySlug(searchParams.get("series") ?? "")
+    selectedRecordType === "material" && archiveSeriesBySlug(searchParams.get("series") ?? "")
       ? (searchParams.get("series") ?? undefined)
       : undefined;
   const updateSeries = (slug: string | undefined) => {
@@ -792,7 +793,7 @@ function readDateParams(searchParams: URLSearchParams) {
 }
 
 function readSeriesScope(searchParams: URLSearchParams) {
-  const series = seriesBySlug(searchParams.get("series") ?? "");
+  const series = archiveSeriesBySlug(searchParams.get("series") ?? "");
   if (series) return seriesScope(series);
   // ?source=<key>: one whole source from /api/document-sources/ (JAW-65), for
   // the sources no curated series covers.

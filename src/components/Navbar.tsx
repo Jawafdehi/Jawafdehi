@@ -61,9 +61,16 @@ const NAV_ICON_ON_DARK_CLASS = "text-primary-foreground/80 hover:bg-primary-fore
 
 /** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
 const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/", "/likhit", "/likhit/"]);
-// /materials opens on the navy landing only when it has no query: with one
-// (?series=, ?q=…) it redirects into /search (pages/Materials.tsx).
+// /materials opens on the navy landing unless its query sends it on to
+// /search (pages/Materials.tsx). The folder browser's own ?path= and ?view=
+// keep it on the landing, so they keep the header light-on-dark too.
 const MATERIALS_PATHS = new Set(["/materials", "/materials/"]);
+const MATERIALS_LANDING_PARAMS = new Set(["path", "view"]);
+
+function isMaterialsLanding(pathname: string, search: string): boolean {
+  if (!MATERIALS_PATHS.has(pathname)) return false;
+  return [...new URLSearchParams(search).keys()].every((name) => MATERIALS_LANDING_PARAMS.has(name));
+}
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -167,7 +174,7 @@ export function Navbar() {
   const overDarkHero =
     !isScrolled &&
     (DARK_HERO_PATHS.has(location.pathname) ||
-      (MATERIALS_PATHS.has(location.pathname) && location.search === ""));
+      isMaterialsLanding(location.pathname, location.search));
 
   const [homeNavItem, ...secondaryNavItems] = navItems;
 

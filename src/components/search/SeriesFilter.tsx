@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { OptionList, RadioRow } from "@/components/search/filter-controls";
+import { archiveSeriesBySlug } from "@/data/archive-folders";
 import { MATERIAL_SERIES } from "@/data/material-series";
 import { pickLocalized } from "@/lib/materials-landing";
 
@@ -15,13 +16,18 @@ export function SeriesFilter({
   onChange,
 }: Readonly<{ value?: string; onChange: (slug: string | undefined) => void }>) {
   const { t, i18n } = useTranslation();
+  // A folder opened from /materials can be a shelf leaf the curated list does
+  // not carry (Laws · Acts); it leads the list, checked, so the filter in
+  // force is always one the reader can see and clear.
+  const offList = value && !MATERIAL_SERIES.some((series) => series.slug === value) ? archiveSeriesBySlug(value) : undefined;
+  const options = offList ? [offList, ...MATERIAL_SERIES] : MATERIAL_SERIES;
   return (
     <fieldset className="min-w-0 space-y-2">
       <legend className="mb-1.5 text-sm text-muted-foreground">
         {t("archiveSearch.filters.series", "Series")}
       </legend>
       <OptionList>
-        {MATERIAL_SERIES.map((series) => {
+        {options.map((series) => {
           const checked = series.slug === value;
           return (
             <RadioRow key={series.slug} checked={checked} onClick={() => onChange(checked ? undefined : series.slug)}>

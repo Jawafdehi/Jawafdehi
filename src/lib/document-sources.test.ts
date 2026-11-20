@@ -1,18 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  seriesBrowseHref,
-  seriesForSourceKey,
-  seriesFromDocumentSource,
-} from "@/lib/document-source-series";
-import {
   archiveTotal,
   documentSourceLabel,
   listedSources,
   sourceBrowseHref,
   type DocumentSourcesResponse,
 } from "@/lib/document-sources";
-import { seriesBySlug } from "@/data/material-series";
 
 /** Rows as /api/document-sources/ served them in production (2026-11-16). */
 const RESPONSE: DocumentSourcesResponse = {
@@ -75,34 +69,6 @@ describe("sourceBrowseHref", () => {
   it("browses a source no shelf knows about, so new sources are reachable", () => {
     expect(sourceBrowseHref("dri")).toBe("/search?type=material&source=dri");
     expect(sourceBrowseHref("province/koshi")).toBe("/search?type=material&source=province%2Fkoshi");
-  });
-});
-
-describe("seriesFromDocumentSource", () => {
-  it("builds a browsable series from the API row", () => {
-    const series = seriesFromDocumentSource(RESPONSE.sources[2]);
-    expect(series).toMatchObject({
-      slug: "source:dri",
-      source: "dri",
-      name: { en: "Revenue Investigation releases and reports", ne: "" },
-      description: {
-        en: "Press releases on cases filed, and reports (dri.gov.np).",
-        ne: "राजस्व अनुसन्धान विभाग",
-      },
-    });
-    expect(series.tint).toBeGreaterThanOrEqual(1);
-    expect(series.tint).toBeLessThanOrEqual(8);
-    expect(seriesBrowseHref(series)).toBe("/materials/?source=dri");
-  });
-
-  it("keeps curated series on their ?series= address", () => {
-    expect(seriesBrowseHref(seriesBySlug("charge-sheets")!)).toBe("/materials/?series=charge-sheets");
-  });
-
-  it("finds a listed source by key, and nothing for an unlisted one", () => {
-    expect(seriesForSourceKey(RESPONSE, "sebon")?.name.en).toBe("SEBON enforcement orders");
-    expect(seriesForSourceKey(RESPONSE, "mystery")).toBeUndefined();
-    expect(seriesForSourceKey(RESPONSE, "nope")).toBeUndefined();
   });
 });
 

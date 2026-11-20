@@ -1,16 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight } from "@/components/icons";
+import { ArrowRight } from "@/components/icons";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { lazyChart } from "@/components/charts/lazy";
 import { ArrowLink } from "@/components/ui/arrow-link";
-import { MATERIAL_SERIES } from "@/data/material-series";
+import { MATERIAL_SERIES, seriesSearchPath } from "@/data/material-series";
 import { useRevealOnScroll } from "@/hooks/useRevealOnScroll";
-import { archiveTotal, documentSourcesQuery } from "@/lib/document-sources";
-import { formatArchiveCount } from "@/lib/materials-landing";
-import { CHAT_URL } from "@/lib/external-links";
+import { documentSourcesQuery } from "@/lib/document-sources";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 // The archive browser (folder tree, views, its bilingual name table) is its own
@@ -41,14 +40,9 @@ export default function MaterialsLanding() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
 
-  // One catalogue for every count on this page — the total and the archive
-  // browser's folders — so none of them can disagree with another.
-  const { data: catalogue } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
-
-  // Shelf counts come from `seriesCount`: a shelf can be narrower than its
-  // source token (five of them scope `official_report`), so the arithmetic
-  // differs per shelf and lives with the registry that defines it.
-  const total = archiveTotal(catalogue);
+  // Starts the catalogue request with the page, so the archive browser's
+  // folder counts (the same query) are ready by the time it mounts.
+  useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
 
   const gridRef = useRevealOnScroll<HTMLElement>();
 
@@ -103,7 +97,7 @@ export default function MaterialsLanding() {
             name: series.name.ne,
             alternateName: series.name.en,
             description: series.description.ne,
-            url: `${SITE_URL}/materials/?series=${series.slug}`,
+            url: `${SITE_URL}${seriesSearchPath(series.slug)}`,
             creator: { "@id": `${SITE_URL}/#organization` },
             license: CC_BY_NC_URL,
             isAccessibleForFree: true,
@@ -157,34 +151,17 @@ export default function MaterialsLanding() {
             <ArrowLink to="/search?type=material" tone="light">
               {t("materialsLanding.ctaBrowse", "Browse the archive")}
             </ArrowLink>
-            <a
-              href={CHAT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded text-base text-primary-foreground/80 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+            {/* The archive inside the reader's own AI tool: the MCP page. The same
+                soft white fill as the header's Connect your AI on navy. */}
+            <Link
+              to="/mcp/"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-foreground/10 px-5 text-base text-primary-foreground transition-colors duration-150 hover:bg-primary-foreground/[0.16] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
             >
-              {t("materialsLanding.ctaAsk", "Ask the AI assistant")}
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-            </a>
+              {t("materialsLanding.ctaConnect", "Connect your AI")}
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
           </div>
 
-          {/* The holdings, stated: what a shelf of folders only implied. */}
-          <dl className="mt-14 flex flex-wrap gap-x-16 gap-y-6 md:mt-16">
-            <div>
-              <dt className="text-sm text-primary-foreground/55">
-                {t("materialsLanding.stats.documents", "Documents")}
-              </dt>
-              <dd className="mt-1 text-2xl tabular-nums text-primary-foreground md:text-3xl">
-                {total !== null ? formatArchiveCount(total, language) : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-primary-foreground/55">
-                {t("materialsLanding.stats.licence", "Licence")}
-              </dt>
-              <dd className="mt-1 text-2xl text-primary-foreground md:text-3xl">CC BY-NC</dd>
-            </div>
-          </dl>
         </div>
       </header>
 

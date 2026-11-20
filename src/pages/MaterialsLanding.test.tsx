@@ -114,6 +114,16 @@ beforeEach(() => {
   getDocumentSources.mockResolvedValue({ ready: true, sources: [] });
 });
 
+// The hero states no totals or licence: the archive below counts its folders.
+describe("MaterialsLanding hero", () => {
+  it("offers browsing and connecting an AI, and no holdings line", async () => {
+    getDocumentSources.mockResolvedValue(catalogue());
+    renderPage();
+    expect(screen.getByRole("link", { name: /Connect your AI/ }).getAttribute("href")).toBe("/mcp/");
+    expect(screen.queryByText("CC BY-NC")).toBeNull();
+  });
+});
+
 describe("MaterialsLanding archive section", () => {
   it("renders the archive browser in the #archive section, with the old anchors kept", async () => {
     renderPage();
@@ -125,21 +135,3 @@ describe("MaterialsLanding archive section", () => {
   });
 });
 
-// The hero states the archive's size from the same catalogue the archive
-// browser counts from, so the two can never disagree.
-describe("MaterialsLanding holdings", () => {
-  it("states the catalogue's total in the hero", async () => {
-    getDocumentSources.mockResolvedValue(catalogue());
-    renderPage();
-
-    await waitFor(() => expect(screen.getByText("5,79,249")).toBeTruthy());
-  });
-
-  it("claims no total before the catalogue arrives", () => {
-    getDocumentSources.mockReturnValue(new Promise(() => {}));
-    renderPage();
-
-    // Better to show a dash than to size the archive at zero.
-    expect(screen.getByText("—")).toBeTruthy();
-  });
-});
