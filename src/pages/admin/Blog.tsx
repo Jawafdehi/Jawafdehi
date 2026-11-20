@@ -5,7 +5,8 @@ import { FormError } from "@/components/admin/FormError";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Loader2, Plus } from "@/components/icons";
 import { articlePath } from "@/lib/article-path";
-import { getArticles, getBlogIndexId } from "@/services/cms-api";
+import { blogPostsQuery } from "@/queries/blog";
+import { getBlogIndexId } from "@/services/cms-api";
 import { extractErrorMessage } from "@/services/http";
 
 // Blog posts are written in the Wagtail Newsroom (on the API origin at
@@ -23,8 +24,7 @@ const WAGTAIL_ADMIN = `${API_ORIGIN}/newsroom`;
 export default function AdminBlog() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["cms-articles", "BLOG"],
-    queryFn: () => getArticles("BLOG"),
+    ...blogPostsQuery(),
   });
   const { data: blogIndexId } = useQuery({
     queryKey: ["cms-blog-index"],

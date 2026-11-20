@@ -613,6 +613,16 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* A navy hero that runs up behind the page chrome: the social bar (h-10,
+     transparent over a navy hero, components/SocialBar) and the navbar
+     (76px, transparent at rest over one, components/Navbar). Pulled up by
+     both and padded back down, so its colour and shader reach the top edge
+     with no band above it. Pages that open on a navy hero are listed in
+     lib/dark-hero.ts. */
+  .hero-under-chrome {
+    margin-top: calc(-1 * (2.5rem + 76px));
+    padding-top: calc(2.5rem + 76px);
+  }
   /* Hide the scrollbar on a horizontal snap row. The row's own arrow buttons
      and the snap points are the affordance; a scrollbar under the cards adds
      a second, redundant one — and on desktop the row does not overflow at

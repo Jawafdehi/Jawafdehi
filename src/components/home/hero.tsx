@@ -32,11 +32,11 @@ export function Hero() {
   const { t } = useTranslation();
 
   return (
-    <section id="hero" className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
+    <section id="hero" className="relative isolate hero-under-chrome overflow-hidden bg-primary-surface">
       {/* The words and the page of record share one row, so the lines run
           exactly from the top of the eyebrow to the bottom of the search,
           whatever the language or the headline's wrapping. */}
-      <div className="layout-container grid min-h-[calc(100svh-76px)] content-center py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,42%)] lg:gap-12">
+      <div className="layout-container grid min-h-[calc(100svh-2.5rem-76px)] content-center py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,42%)] lg:gap-12">
         <div className="col-start-1 row-start-1">
         {/* Upright and one step up from the eyebrow default, so the motto
             reads at a comfortable size on navy (--accent-on-dark is 4.6:1). */}

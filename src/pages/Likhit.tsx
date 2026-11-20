@@ -237,7 +237,7 @@ const Likhit = () => {
             it at rest (Navbar.tsx, DARK_HERO_PATHS). ── */}
         <section
           aria-labelledby="likhit-title"
-          className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]"
+          className="relative isolate hero-under-chrome overflow-hidden bg-primary-surface"
         >
           <div aria-hidden="true" className="absolute inset-0 -z-10">
             <ShaderBackdrop design="lines" />
@@ -250,7 +250,7 @@ const Likhit = () => {
               headline alone never mentioned it. The install command is the
               primary action, set as a terminal line; the places to read more
               sit beside it as quieter pills of the same height. */}
-          <div className="layout-container flex min-h-[min(780px,calc(100svh-76px))] flex-col justify-center pb-20 pt-12">
+          <div className="layout-container flex min-h-[min(780px,calc(100svh-2.5rem-76px))] flex-col justify-center pb-20 pt-12">
             <a
               href={CHANGELOG_URL}
               {...EXTERNAL}

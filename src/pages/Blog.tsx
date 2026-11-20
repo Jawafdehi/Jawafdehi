@@ -6,7 +6,7 @@ import { Seo } from "@/components/Seo";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { FEED_GRID, FeedSkeleton, StoryTile } from "@/pages/Updates";
-import { getArticles } from "@/services/cms-api";
+import { blogPostsQuery } from "@/queries/blog";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 /**
@@ -19,8 +19,7 @@ const Blog = () => {
   const { t } = useTranslation();
 
   const { data: articles, isLoading, isError } = useQuery({
-    queryKey: ["cms-articles", "BLOG"],
-    queryFn: () => getArticles("BLOG"),
+    ...blogPostsQuery(),
   });
 
   return (

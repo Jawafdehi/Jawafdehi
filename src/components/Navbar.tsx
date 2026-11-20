@@ -21,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { opensOnDarkHero } from "@/lib/dark-hero";
 import { cn } from "@/lib/utils";
 import { RESEARCH_URL } from "@/lib/external-links";
 
@@ -58,19 +59,6 @@ const NAV_GROUP_ON_DARK_CLASS = "bg-transparent";
 const NAV_ICON_CLASS =
   "border-transparent bg-transparent shadow-none hover:translate-y-0 hover:border-transparent hover:bg-secondary/35 hover:shadow-none";
 const NAV_ICON_ON_DARK_CLASS = "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground";
-
-/** Routes whose page opens on a full-bleed navy hero (see overDarkHero). */
-const DARK_HERO_PATHS = new Set(["/", "/mcp", "/mcp/", "/likhit", "/likhit/"]);
-// /materials opens on the navy landing unless its query sends it on to
-// /search (pages/Materials.tsx). The folder browser's own ?path= and ?view=
-// keep it on the landing, so they keep the header light-on-dark too.
-const MATERIALS_PATHS = new Set(["/materials", "/materials/"]);
-const MATERIALS_LANDING_PARAMS = new Set(["path", "view"]);
-
-function isMaterialsLanding(pathname: string, search: string): boolean {
-  if (!MATERIALS_PATHS.has(pathname)) return false;
-  return [...new URLSearchParams(search).keys()].every((name) => MATERIALS_LANDING_PARAMS.has(name));
-}
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -174,8 +162,7 @@ export function Navbar() {
   // navy-on-light treatment the moment it gains its opaque background.
   const overDarkHero =
     !isScrolled &&
-    (DARK_HERO_PATHS.has(location.pathname) ||
-      isMaterialsLanding(location.pathname, location.search));
+    opensOnDarkHero(location.pathname, location.search);
 
   const [homeNavItem, ...secondaryNavItems] = navItems;
 

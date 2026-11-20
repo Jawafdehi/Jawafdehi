@@ -60,14 +60,14 @@ function McpHero() {
   const { t } = useTranslation();
 
   return (
-    <section id="mcp-hero" className="relative isolate -mt-[76px] overflow-hidden bg-primary-surface pt-[76px]">
+    <section id="mcp-hero" className="relative isolate hero-under-chrome overflow-hidden bg-primary-surface">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <ShaderBackdrop design="grain" />
         {/* Navy pooled behind the copy column, so it reads over any frame. */}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--primary-surface)/0.85)_0%,hsl(var(--primary-surface)/0.4)_45%,transparent_70%)]" />
       </div>
 
-      <div className="layout-container flex min-h-[calc(100svh-76px)] flex-col justify-center pb-20 pt-10">
+      <div className="layout-container flex min-h-[calc(100svh-2.5rem-76px)] flex-col justify-center pb-20 pt-10">
         <Link
           to="/"
           className="group inline-flex min-h-6 w-fit items-center gap-2.5 rounded text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 focus-visible:ring-offset-4 focus-visible:ring-offset-primary-surface"

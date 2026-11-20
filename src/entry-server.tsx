@@ -13,6 +13,7 @@ import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { featuredCasesQuery } from './queries/home';
+import { blogPostsQuery } from './queries/blog';
 import { courtCaseIri, courtCaseRelatedCasesQuery, entityRelatedCasesQuery } from './queries/related-cases';
 import { getAllPages } from './services/datalake-api';
 import { http } from './services/http';
@@ -145,6 +146,7 @@ async function prefetch(
     await Promise.allSettled([
       queryClient.prefetchQuery({ queryKey: ['statistics'], queryFn: getStatistics }),
       queryClient.prefetchQuery(featuredCasesQuery()),
+      queryClient.prefetchQuery(blogPostsQuery()),
     ]);
     return;
   }
@@ -182,7 +184,7 @@ async function prefetch(
   }
   // The blog lists only BLOG articles, under its own key; Updates & News leaves them out.
   if (/^\/blog\/?(?:[?#]|$)/.test(url)) {
-    await queryClient.prefetchQuery({ queryKey: ['cms-articles', 'BLOG'], queryFn: () => getArticles('BLOG') });
+    await queryClient.prefetchQuery(blogPostsQuery());
     return;
   }
 
