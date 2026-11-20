@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { FileText, Gavel, Home, Newspaper, Scale, Search } from "@/components/icons";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 
 const WAYS_ON = [
@@ -67,7 +68,11 @@ const NotFound = () => {
           <ShaderBackdrop design="diamond" />
         </div>
 
-        <h1 className="font-home-display mt-6 max-w-2xl text-balance text-4xl text-primary sm:text-5xl">
+        {/* The "404" above is an image (a mask the shader shows through), so it
+            says nothing to a screen reader or to text search. This label says
+            it in words, in the site's eyebrow. */}
+        <Eyebrow className="mt-6">{t("notFound.eyebrow", "404 · Page not found")}</Eyebrow>
+        <h1 className="font-home-display mt-4 max-w-2xl text-balance text-4xl text-primary sm:text-5xl">
           {t("notFound.heading", "This page isn't in the archive.")}
         </h1>
         <p className="mt-4 max-w-lg text-lg leading-8 text-muted-foreground">
