@@ -147,6 +147,18 @@ export const advisors: TeamMember[] = [
     tags: ["General Member", "Advisor"],
     contacts: [],
   },
+  // Name, role and links from his signed advisor acceptance form
+  // (2026-11-19, invitation letter ५१६), which consents to this listing.
+  // Nepali name as he wrote it in his own bio (दीपेन्द्र); photo sent by him.
+  {
+    displayName: { en: "Dr. Dipendra KC", ne: "डा. दीपेन्द्र केसी" },
+    thumb: "/assets/teammembers/dipendra.webp",
+    description: "Associate Professor, Ritsumeikan Asia Pacific University (APU), Japan",
+    tags: ["Advisor"],
+    contacts: [
+      { type: "linkedin", value: "https://www.linkedin.com/in/kcdipendra/" },
+    ],
+  },
 ];
 
 // Rendered as "Consultants and Volunteers".
