@@ -148,7 +148,7 @@ describe("ArchiveBrowser", () => {
 
   it("keeps keyboard focus inside the phone Columns view while moving and drilling down", async () => {
     renderAt("/materials/?view=columns", { phone: true });
-    const first = await screen.findByRole("option", { name: /Government bodies/ });
+    const first = await screen.findByRole("option", { name: /Parliament/ });
     await catalogueLoaded();
     first.focus();
     fireEvent.keyDown(first, { key: "ArrowDown" });

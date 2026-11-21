@@ -54,7 +54,7 @@ describe("SourcesSummary", () => {
     const summary = await screen.findByText(/dataQuality.materialsBySource.summary/);
     expect(summary.textContent).toContain('"total":"3,63,169"');
     expect(summary.textContent).toContain('"sources":"7"');
-    expect(summary.textContent).toContain('"folders":"6"');
+    expect(summary.textContent).toContain('"folders":"7"');
 
     // Every top-level folder of the /materials archive, in its fixed order, with its
     // live count, each linking into that folder in place.
@@ -62,6 +62,7 @@ describe("SourcesSummary", () => {
     expect(folders).toEqual([
       "Judiciary53,842",
       "Government bodies3,09,323",
+      "Parliament0",
       "Laws0",
       "News0",
       "International0",
