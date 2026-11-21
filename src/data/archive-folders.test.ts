@@ -141,7 +141,36 @@ describe("archive folder tree", () => {
     expect(chainOf("nepal_police")).toEqual(["government", "nepal-police", "nepal-police-press-releases"]);
     expect(nodeCount(tree.find((folder) => folder.slug === "others")!, { ready: true, sources: [row("rajpatra", 120), row("nepal_police", 2)] })).toBe(0);
   });
+
+  it("shows each registry-added government office as a folder, not a loose source", () => {
+    const offices: [source: string, path: string[]][] = [
+      ["moha", ["government", "home-ministry", "moha-reports-directives-releases"]],
+      ["election_commission", ["government", "election-commission", "election-commission-documents"]],
+      ["nhrc", ["government", "nhrc", "nhrc-reports-releases"]],
+      ["psc", ["government", "psc", "psc-reports-releases"]],
+      ["trc", ["government", "trc", "trc-reports-notices"]],
+      ["nta", ["government", "regulators", "telecom-authority", "nta-reports-directives"]],
+      ["erc", ["government", "regulators", "electricity-commission", "erc-reports-decisions-directives"]],
+    ];
+    const sources = offices.map(([source], index) => row(source, index + 1));
+    const tree = withUnfiled({
+      ready: true,
+      folders: [
+        { key: "government", name: { en: "Government bodies", ne: "सरकारी निकाय" }, subfolders: [{ key: "regulators", name: { en: "Regulators", ne: "नियामक निकाय" } }] },
+        { key: "others", name: { en: "Others", ne: "अन्य" } },
+      ],
+      sources,
+    });
+    for (const [source, path] of offices) {
+      const chain = findLeafChain(tree, (leaf) => leaf.source === source)!;
+      expect(chain.map((node) => node.slug)).toEqual(path);
+      expect(chain.at(-2)!.type).toBe("branch");
+      expect(leafHref(chain.at(-1) as ArchiveLeafNode)).toContain("series=");
+    }
+  });
 });
+
+type ArchiveLeafNode = Parameters<typeof leafHref>[0];
 
 describe("archive folders from the API (JAW-87)", () => {
   const folders = [
