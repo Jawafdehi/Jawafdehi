@@ -114,6 +114,8 @@ const LAW_KINDS = [
   "court-rules",
 ] as const;
 
+const PAC_KINDS = ["pac-annual-report", "pac-meeting-decisions", "pac-subcommittee-report", "pac-attendance"] as const;
+
 /**
  * The office and series shelves, in no particular order: each lands in the
  * folder the API files its sources under, and every level below the top folders
@@ -197,6 +199,26 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
     leaf("insurance-enforcement", "nia", W.enforcement),
   ]),
 
+  // Parliament
+  // House of Representatives Public Accounts Committee, all three House terms
+  // (2074, 2079, 2082) in one shelf. Kinds are `jawafdehi:datasetBucket`, set
+  // when the documents were sourced; a document with no kind lands in "Other".
+  branch("public-accounts-committee", { ne: "सार्वजनिक लेखा समिति", en: "Public Accounts Committee" }, 4, [
+    leaf("pac-annual-reports", "parliament_pac", W.annualReports, { kind: "pac-annual-report" }),
+    leaf("pac-meeting-decisions", "parliament_pac", { ne: "बैठकका निर्णय", en: "Meeting decisions" }, {
+      kind: "pac-meeting-decisions",
+    }),
+    leaf("pac-subcommittee-reports", "parliament_pac", { ne: "उपसमितिका प्रतिवेदन", en: "Sub-committee reports" }, {
+      kind: "pac-subcommittee-report",
+    }),
+    leaf("pac-attendance", "parliament_pac", { ne: "उपस्थिति विवरण", en: "Attendance records" }, {
+      kind: "pac-attendance",
+    }),
+    leaf("pac-other", "parliament_pac", { ne: "अन्य", en: "Other" }, {
+      kindExclude: PAC_KINDS,
+    }),
+  ]),
+
   // Laws
   // legal_corpus split by kind (`jawafdehi:datasetBucket`, written by the
   // API's classify_legal_corpus). A document with no kind lands in "Other".
@@ -265,6 +287,7 @@ export const DEFAULT_FOLDERS: readonly DocumentSourceFolder[] = [
     name: { ne: "सरकारी निकाय", en: "Government bodies" },
     subfolders: [{ key: "regulators", name: { ne: "नियामक निकाय", en: "Regulators" } }],
   },
+  { key: "parliament", name: { ne: "संघीय संसद", en: "Parliament" } },
   { key: "laws", name: { ne: "कानुन", en: "Laws" } },
   { key: "news", name: { ne: "समाचार", en: "News" } },
   { key: "international", name: { ne: "अन्तर्राष्ट्रिय", en: "International" } },
@@ -276,6 +299,7 @@ const FOLDER_TINT: Record<string, number> = {
   judiciary: 2,
   government: 1,
   regulators: 3,
+  parliament: 4,
   laws: 5,
   news: 6,
   international: 7,

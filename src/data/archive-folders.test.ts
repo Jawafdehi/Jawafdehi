@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ARCHIVE_SHELVES, childrenAt, findLeafChain, leafSeries, leavesUnder, nodeCount, nodeName, shelfLeafBySlug, unfiledSlug, validPath, withUnfiled, leafHref, archiveSeriesBySlug } from "@/data/archive-folders";
+import { ARCHIVE_SHELVES, childrenAt, findLeafChain, leafSeries, leavesUnder, nodeCount, nodeName, shelfLeafBySlug, unfiledSlug, validPath, withUnfiled, leafHref, archiveSeriesBySlug, DEFAULT_FOLDERS } from "@/data/archive-folders";
 import { filedRow } from "@/data/archive-folders.fixtures";
 import type { DocumentSourcesResponse } from "@/lib/document-sources";
 
@@ -70,6 +70,7 @@ describe("archive folder tree", () => {
     expect(withUnfiled(catalogue, "en").map((folder) => nodeName(folder, "en"))).toEqual([
       "Judiciary",
       "Government bodies",
+      "Parliament",
       "Laws",
       "News",
       "International",
@@ -78,6 +79,7 @@ describe("archive folder tree", () => {
     expect(withUnfiled(catalogue, "ne").map((folder) => nodeName(folder, "ne"))).toEqual([
       "न्यायपालिका",
       "सरकारी निकाय",
+      "संघीय संसद",
       "कानुन",
       "समाचार",
       "अन्तर्राष्ट्रिय",
@@ -140,6 +142,33 @@ describe("archive folder tree", () => {
     expect(chainOf("rajpatra")).toEqual(["laws", "rajpatra"]);
     expect(chainOf("nepal_police")).toEqual(["government", "nepal-police", "nepal-police-press-releases"]);
     expect(nodeCount(tree.find((folder) => folder.slug === "others")!, { ready: true, sources: [row("rajpatra", 120), row("nepal_police", 2)] })).toBe(0);
+  });
+});
+
+describe("the Parliament folder", () => {
+  it("files the Public Accounts Committee under Parliament, one shelf per kind", () => {
+    const catalogue = { ready: true, sources: [row("parliament_pac", 138)] };
+    const tree = withUnfiled(catalogue);
+    const committee = findLeafChain(tree, (leaf) => leaf.slug === "pac-meeting-decisions")!;
+    expect(committee.map((node) => node.slug)).toEqual([
+      "parliament",
+      "public-accounts-committee",
+      "pac-meeting-decisions",
+    ]);
+    const shelf = committee[1];
+    expect(shelf.type === "branch" && shelf.children.map((child) => child.slug).sort()).toEqual([
+      "pac-annual-reports",
+      "pac-attendance",
+      "pac-meeting-decisions",
+      "pac-other",
+      "pac-subcommittee-reports",
+    ]);
+    expect(nodeCount(tree.find((folder) => folder.slug === "others")!, catalogue)).toBe(0);
+  });
+
+  it("draws Parliament right after Government bodies before the catalogue arrives", () => {
+    const keys = DEFAULT_FOLDERS.map((folder) => folder.key);
+    expect(keys.indexOf("parliament")).toBe(keys.indexOf("government") + 1);
   });
 });
 

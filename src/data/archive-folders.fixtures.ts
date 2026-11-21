@@ -31,6 +31,7 @@ export const PRODUCTION_FOLDERS: Record<string, readonly [string, string?]> = {
   nrb: ["government", "regulators"],
   sebon: ["government", "regulators"],
   nia: ["government", "regulators"],
+  parliament_pac: ["parliament"],
   legal_corpus: ["laws"],
   legal_template: ["laws"],
   rajpatra: ["laws"],
